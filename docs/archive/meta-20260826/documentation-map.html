@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Axiom — карта документации</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --muted: #6b6b6b;
+    --line: #e3e3e3;
+    --link: #0000ee;
+    --paper: #ffffff;
+    --accent-ok: #1e7a34;
+    --accent-plan: #8a5a00;
+    --accent-old: #9a9a9a;
+    --accent-dup: #b3261e;
+    --accent-meta: #3b5b8a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+    line-height: 1.55;
+    font-size: 16px;
+  }
+  .wrap { max-width: 68ch; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+  header { border-bottom: 2px solid var(--ink); margin-bottom: 2rem; padding-bottom: 1rem; }
+  h1 { font-size: 1.7rem; font-weight: 700; margin: 0 0 .4rem; letter-spacing: -.01em; }
+  .sub { color: var(--muted); font-size: .95rem; }
+  h2 { font-size: 1.15rem; margin: 2.2rem 0 .6rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+  p { margin: .5rem 0; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: .88em; background: #f4f4f4; padding: .1em .35em; border-radius: 3px; }
+  table { border-collapse: collapse; width: 100%; margin: .8rem 0 1.2rem; font-size: .9rem; }
+  th, td { text-align: left; padding: .45rem .55rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 600; border-bottom: 2px solid var(--ink); white-space: nowrap; }
+  .metric-row { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1.2rem 0; }
+  .metric { flex: 1 1 9rem; border: 1px solid var(--line); padding: .9rem 1rem; }
+  .metric .num { font-size: 1.9rem; font-weight: 700; }
+  .metric .lbl { color: var(--muted); font-size: .82rem; }
+  .badge { display: inline-block; font-size: .72rem; font-weight: 600; padding: .1em .55em; border-radius: 3px; white-space: nowrap; }
+  .b-ok    { background: #e6f4ea; color: var(--accent-ok); }
+  .b-plan  { background: #fdf3e0; color: var(--accent-plan); }
+  .b-old   { background: #efefef; color: var(--accent-old); }
+  .b-dup   { background: #fdecea; color: var(--accent-dup); }
+  .b-meta  { background: #eaf0f8; color: var(--accent-meta); }
+  .muted { color: var(--muted); }
+  ul { padding-left: 1.2rem; }
+  li { margin: .25rem 0; }
+  .foot { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .82rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Карта документации Axiom</h1>
+  <div class="sub">Инвентаризация Markdown-документов и восстановление целостной картины проекта · 26 августа 2026</div>
+</header>
+
+<p>Репозиторий <code>C:\Axiom</code> содержал 100 файлов <code>.md</code> (кроме <code>node_modules/</code> и <code>.git/</code>), разложенных по <code>docs/</code>, корню, навыкам и служебным папкам. Со временем актуальные документы смешались с историческими, а ранние отчёты аудитов — с полными. Ниже — итог наведения порядка.</p>
+
+<div class="metric-row">
+  <div class="metric"><div class="num">100</div><div class="lbl">файлов .md учтено</div></div>
+  <div class="metric"><div class="num">56</div><div class="lbl">актуальных</div></div>
+  <div class="metric"><div class="num">9</div><div class="lbl">планируемых</div></div>
+  <div class="metric"><div class="num">18</div><div class="lbl">исторических</div></div>
+  <div class="metric"><div class="num">10</div><div class="lbl">дублирующих</div></div>
+</div>
+
+<h2>1. Классификация</h2>
+<p>Каждый файл отнесён к одному из статусов. Правила — в <code>docs/archive/meta-20260826/CLASSIFICATION.md</code>.</p>
+<table>
+  <tr><th>Статус</th><th>Смысл</th><th>Как поступать</th></tr>
+  <tr><td><span class="badge b-ok">актуальное</span></td><td>текущий источник правды</td><td>читать первым</td></tr>
+  <tr><td><span class="badge b-plan">планируемое</span></td><td>будет, но ещё не сделано</td><td>не считать реализованным</td></tr>
+  <tr><td><span class="badge b-old">историческое</span></td><td>как было раньше</td><td>только для контекста</td></tr>
+  <tr><td><span class="badge b-dup">дублирующее</span></td><td>есть более свежая версия</td><td>читать замену</td></tr>
+  <tr><td><span class="badge b-meta">инфраструктура</span></td><td>не проектный документ</td><td>исключить</td></tr>
+</table>
+
+<h2>2. Реализовано — запланировано — недоделано</h2>
+<p>Сквозная карта в <code>docs/archive/meta-20260826/FEATURE_LEDGER.md</code> связывает функции с состоянием, файлами и хвостами.</p>
+<table>
+  <tr><th>Направление</th><th>Состояние</th><th>Главный хвост</th></tr>
+  <tr><td>Ядро: lexer / parser / binder / интерпретатор / BytecodeVm</td><td><span class="badge b-ok">реализовано</span></td><td>полный паритет VM на покрытом срезе</td></tr>
+  <tr><td>Типы: скаляры, массивы, TYPE (методы/конструкторы), замыкания, DATE/TIME/DATETIME</td><td><span class="badge b-ok">реализовано</span></td><td>reserved enum-иды строковых форм дат</td></tr>
+  <tr><td>Графика: SCREEN + CANVAS + спрайты + тайлы</td><td><span class="badge b-plan">частично</span></td><td>аудит рендеринга: Этапы 4–7 отложены</td></tr>
+  <tr><td>Ввод-вывод: PRINT / INPUT / интерполяция <code>$"…"</code></td><td><span class="badge b-ok">реализовано</span></td><td>—</td></tr>
+  <tr><td>DATA / READ / RESTORE</td><td><span class="badge b-plan">запланировано</span></td><td>подсистема отсутствует, есть дорожная карта</td></tr>
+  <tr><td>Многофайловые модули / namespaces</td><td><span class="badge b-plan">запланировано</span></td><td>только проектирование</td></tr>
+  <tr><td>Литералы массивов, FOR EACH, словари, лямбды, необязательные параметры</td><td><span class="badge b-plan">запланировано</span></td><td>описаны в <code>docs/archive/root-documents-20261011/FUTURE.md</code>, в коде нет</td></tr>
+  <tr><td>IDE (WPF, подсветка, форматирование)</td><td><span class="badge b-ok">реализовано</span></td><td>4 ранее существовавших падения тестов</td></tr>
+</table>
+
+<h2>3. Дубликаты (заменены более полными)</h2>
+<p>Ранние отчёты аудитов в корне <code>docs/</code> заменены файлами в <code>docs/audit/</code>:</p>
+<ul>
+  <li><code>STRING_AUDIT_REPORT.md</code> → <code>docs/archive/audits-legacy/STRING_AUDIT_REPORT.md</code></li>
+  <li><code>TYPE_AUDIT_REPORT.md</code> → <code>docs/archive/audits-legacy/TYPE_AUDIT_REPORT.md</code></li>
+  <li><code>IO_AUDIT_REPORT.md</code> → <code>docs/archive/audits-legacy/IO_AUDIT_REPORT.md</code></li>
+  <li><code>FILE_SYSTEM_AUDIT_REPORT.md</code> → <code>docs/archive/audits-legacy/FILE_SYSTEM_AUDIT_REPORT.md</code></li>
+  <li><code>ERROR_HANDLING_AUDIT.md</code> → <code>docs/archive/audits-legacy/ERROR_HANDLING_AUDIT.md</code></li>
+  <li><code>MODULES_AUDIT.md</code> → <code>docs/archive/audits-legacy/MODULES_AUDIT.md</code></li>
+  <li><code>IDE_FORENSIC_AUDIT.md</code> → <code>docs/archive/audits-legacy/IDE_FORENSIC_AUDIT.md</code></li>
+  <li><code>BYTECODE_VM_AUDIT_REPORT.md</code> → <code>docs/archive/audits-legacy/BYTECODE_VM_AUDIT_REPORT.md</code></li>
+  <li><code>LANGUAGE_FEATURE_INVENTORY.md</code> → <code>docs/archive/audits-legacy/LANGUAGE_FEATURE_INVENTORY.md</code></li>
+  <li><code>DATETIME_FORENSIC_AUDIT_old_version.md</code> → <code>docs/archive/audits-legacy/DATETIME_FORENSIC_AUDIT_old_version.md</code></li>
+</ul>
+
+<h2>4. Целевая структура</h2>
+<p>Исторические и дублирующие файлы перенесены в <code>docs/archive/</code> <strong>без удаления</strong> (выполнено 2026-08-26). Детали и таблица ссылок — в <code>docs/archive/meta-20260826/MIGRATION_PLAN.md</code>.</p>
+<ul>
+  <li><code>docs/archive/spec/</code> — SPECIFICATION, SPECIFICATION2</li>
+  <li><code>docs/archive/plans/</code> — PLANS, PLANS2, PLANS3</li>
+  <li><code>docs/archive/worklog/</code> — WORKLOG…WORKLOG4</li>
+  <li><code>docs/archive/audits-legacy/</code> — ранние отчёты и дубликаты</li>
+</ul>
+<p class="muted">Проверка ссылок показала: дублирующие отчёты цитировались из <code>PLANS4.md</code>, <code>WORKLOG5.md</code> и <code>LANGUAGE_INVENTORY.md</code>. Перенос выполнен с одновременной правкой ссылок; повторная проверка дала 0 битых ссылок.</p>
+
+<h2>5. Точки входа</h2>
+<table>
+  <tr><th>Кто</th><th>С чего начать</th></tr>
+  <tr><td>Человек</td><td><code>README.md</code> → <code>docs/INDEX.md</code> → <code>docs/archive/meta-20260826/FEATURE_LEDGER.md</code></td></tr>
+  <tr><td>Агент</td><td><code>AGENTS.md</code> → <code>docs/agent/README.md</code> → <code>docs/PLANS4.md</code></td></tr>
+  <tr><td>Ищущий документ</td><td><code>docs/archive/meta-20260826/DOC_REGISTRY.md</code></td></tr>
+  <tr><td>Изучающий язык</td><td><code>docs/manual/index.html</code></td></tr>
+</table>
+
+<div class="foot">Создано 26.08.2026 · мета-слой <code>docs/meta/</code> · стиль — информационная архитектура (контент прежде оформления).</div>
+
+</div>
+</body>
+</html>

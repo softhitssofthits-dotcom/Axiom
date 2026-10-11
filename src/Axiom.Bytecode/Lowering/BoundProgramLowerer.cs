@@ -932,7 +932,7 @@ public sealed class BoundProgramLowerer
 
     private static void LowerInput(BoundInputStatement input, List<LoweredInstruction> instructions)
     {
-        instructions.Add(LoweredInstruction.Input(input.Location, input.Variables, input.PromptText));
+        instructions.Add(LoweredInstruction.Input(input.Location, input.Variables, input.DisplayPrompt));
     }
 
     private void LowerOnKey(BoundOnKeyStatement onKey, List<LoweredInstruction> instructions)

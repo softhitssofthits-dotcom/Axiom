@@ -27,8 +27,8 @@ $projectFiles = [ordered]@{
     "README" = (Join-Path $repoRoot "README.md")
     "SPECIFICATION3" = (Join-Path $repoRoot "docs/SPECIFICATION3.md")
     "ARCHITECTURE" = (Join-Path $repoRoot "docs/ARCHITECTURE.md")
-    "PLANS3" = (Join-Path $repoRoot "docs/PLANS3.md")
-    "WORKLOG4" = (Join-Path $repoRoot "docs/WORKLOG4.md")
+    "PLANS4" = (Join-Path $repoRoot "docs/PLANS4.md")
+    "WORKLOG5" = (Join-Path $repoRoot "docs/WORKLOG5.md")
     "BYTECODE_COVERAGE" = (Join-Path $repoRoot "docs/BYTECODE_COVERAGE.md")
     "BYTECODE_PERF_MATRIX" = (Join-Path $repoRoot "docs/BYTECODE_PERF_MATRIX.md")
 }
@@ -243,14 +243,20 @@ function Add-Block {
 
 $projectText = Get-FileText -Path $projectFiles.PROJECT
 $readmeText = Get-FileText -Path $projectFiles.README
-$plansText = Get-FileText -Path $projectFiles.PLANS3
-$worklogText = Get-FileText -Path $projectFiles.WORKLOG4
+$plansText = Get-FileText -Path $projectFiles.PLANS4
+$worklogText = Get-FileText -Path $projectFiles.WORKLOG5
 
 $planSection = Get-LastMarkdownSection -Text $plansText -HeadingPrefixRegex '^##\s+Обновление плана'
+if (-not $planSection) {
+    $planSection = Get-LastMarkdownSection -Text $plansText -HeadingPrefixRegex '^##\s+Следующий точный шаг'
+}
 $worklogSection = Get-LastMarkdownSection -Text $worklogText -HeadingPrefixRegex '^##\s+Session\s+\d+\s+-'
 
 $projectName = Get-MarkdownHeadingFirstLine -Text $projectText -Heading '## Project name'
 $projectSummary = Get-MarkdownHeadingFirstLine -Text $projectText -Heading '## One-sentence summary'
+if (-not $projectName) { $projectName = 'Axiom IDE' }
+if (-not $projectSummary) { $projectSummary = Get-MarkdownHeadingFirstLine -Text $projectText -Heading '## Назначение продукта' }
+
 $readmeStatusBlock = Get-FirstMatch -Text $readmeText -Pattern '^## Текущий статус\s*\r?\n(.+?)\r?\n## '
 $readmeStatus = if ($readmeStatusBlock) { (($readmeStatusBlock -split "`r?`n" | Select-Object -First 1) -join '') } else { $null }
 
@@ -291,7 +297,7 @@ $sampleFileCount = (& rg --files samples | Measure-Object).Count
 $testFileCount = (& rg --files tests | Measure-Object).Count
 
 $builder = [System.Text.StringBuilder]::new()
-[void]$builder.AppendLine("# AI Context Brief")
+[void]$builder.AppendLine("# Краткая сводка Axiom")
 [void]$builder.AppendLine()
 [void]$builder.AppendLine("Сгенерировано: $(Get-Date -Format 'yyyy-MM-dd HH:mm')")
 [void]$builder.AppendLine()
@@ -325,8 +331,9 @@ else {
 [void]$builder.AppendLine('- `README.md`')
 [void]$builder.AppendLine('- `docs/SPECIFICATION3.md`')
 [void]$builder.AppendLine('- `docs/ARCHITECTURE.md`')
-[void]$builder.AppendLine('- `docs/PLANS3.md`')
-[void]$builder.AppendLine('- `docs/WORKLOG4.md`')
+[void]$builder.AppendLine('- `docs/PLANS4.md`')
+[void]$builder.AppendLine('- `docs/WORKLOG5.md`')
+[void]$builder.AppendLine('- `docs/plans/UNFINISHED_WORK.md`')
 [void]$builder.AppendLine('- `docs/BYTECODE_COVERAGE.md`')
 [void]$builder.AppendLine('- `docs/BYTECODE_PERF_MATRIX.md`')
 [void]$builder.AppendLine()
@@ -341,8 +348,8 @@ if ($Topic -and $Topic.Count -gt 0) {
         $projectFiles.README
         $projectFiles.SPECIFICATION3
         $projectFiles.ARCHITECTURE
-        $projectFiles.PLANS3
-        $projectFiles.WORKLOG4
+        $projectFiles.PLANS4
+        $projectFiles.WORKLOG5
         (Join-Path $repoRoot "docs/agent/CURRENT_STATE.md")
         (Join-Path $repoRoot "docs/agent/ARCHITECTURE_MAP.md")
     ) | Where-Object { Test-Path $_ }

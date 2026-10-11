@@ -198,12 +198,13 @@ public sealed class BoundPrintUsingStatement : BoundStatement
 
 public sealed class BoundInputStatement : BoundStatement
 {
-    public BoundInputStatement(TextLocation location, IReadOnlyList<VariableSymbol> variables, string? promptText)
+    public BoundInputStatement(TextLocation location, IReadOnlyList<VariableSymbol> variables, string? promptText, bool appendQuestionMark = true)
         : base(location)
     {
         ArgumentNullException.ThrowIfNull(variables);
         Variables = variables;
         PromptText = promptText;
+        AppendQuestionMark = appendQuestionMark;
     }
 
     public override BoundNodeKind Kind => BoundNodeKind.InputStatement;
@@ -211,6 +212,8 @@ public sealed class BoundInputStatement : BoundStatement
     public IReadOnlyList<VariableSymbol> Variables { get; }
 
     public string? PromptText { get; }
+    public bool AppendQuestionMark { get; }
+    public string DisplayPrompt => PromptText is null ? "? " : PromptText + (AppendQuestionMark ? "? " : string.Empty);
 }
 
 public sealed class BoundSleepStatement : BoundStatement

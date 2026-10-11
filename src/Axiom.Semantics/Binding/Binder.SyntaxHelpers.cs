@@ -45,6 +45,9 @@ public sealed partial class Binder
         return expression switch
         {
             LiteralExpressionSyntax literalExpression => literalExpression.LiteralToken.Location,
+            InterpolatedStringExpressionSyntax interpolatedExpression => interpolatedExpression.StartToken.Location,
+            RangeExpressionSyntax rangeExpression => rangeExpression.ToKeyword.Location,
+            NamedArgumentExpressionSyntax namedArgumentExpression => namedArgumentExpression.IdentifierToken.Location,
             NameExpressionSyntax nameExpression => nameExpression.IdentifierToken.Location,
             UnaryExpressionSyntax unaryExpression => unaryExpression.OperatorToken.Location,
             BinaryExpressionSyntax binaryExpression => binaryExpression.OperatorToken.Location,

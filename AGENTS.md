@@ -1,4 +1,4 @@
-﻿﻿# AGENTS.md
+﻿# AGENTS.md
 
 ## Purpose
 This repository must be developed in a structured, document-driven way.
@@ -202,7 +202,7 @@ Active registry of bytecode coverage:
 - whether they have automated tests;
 - whether they have runnable `.axm` samples;
 - whether they are reflected in `docs/manual/`;
-- whether bytecode/interpreter parity is explicitly checked;
+- whether the exact form has independent BytecodeVm expectations;
 - whether the area is performance-hot or only functionally covered.
 
 ### `docs/BYTECODE_PERF_MATRIX.md`
@@ -250,9 +250,9 @@ Minimum required manual follow-up:
 
 Постоянные требования:
 - если задача добавляет или меняет оператор, встроенную функцию, тип данных или другой пользовательский синтаксический токен, в том же задании нужно обновить IDE-подсветку;
-- нужно синхронно править обе схемы подсветки: `src/Axiom.Ide/Editor/Highlighting/Axiom.xshd` и `src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd`;
+- нужно обновлять словарь Monaco, категории токенов и семантическую раскраску Electron: `ide/src/renderer/lang-features.js`, `semantic-colors.js` и связанные темы;
 - сущность должна попасть в правильную категорию подсветки: операторы и ключевые слова, типы данных, встроенные функции;
-- нужно обновить или добавить проверки в `tests/Axiom.Ide.Tests/`, чтобы новые слова были покрыты и через словарь подсветки, и через форматирование кода;
+- нужно обновить или добавить проверки в `ide/tests/` и `ide/e2e/specs/`, чтобы новые слова были покрыты через словарь Monaco, форматирование и реальный редактор;
 - нельзя оставлять runnable `.axm`-примеры в состоянии, где новый оператор или новая функция уже работает в языке, но не раскрашивается в IDE.
 
 ### 4.1. Manual style must follow current Microsoft Visual Basic references by genre
@@ -425,7 +425,7 @@ This is a permanent workflow rule for:
 
 Mandatory requirements:
 - automated tests alone are not enough when language behavior changes;
-- add or update a short runnable `.axm` program that can be opened in `Axiom.Ide` and run manually;
+- add or update a short runnable `.axm` program that can be opened in the Electron IDE and run manually;
 - place the sample in the correct thematic subfolder under `samples/`;
 - use the sample as a manual acceptance test for the changed behavior;
 - mention the sample explicitly in the final task report.
@@ -489,7 +489,7 @@ If a task changes language behavior, it is complete only if:
   - which automated tests were added or updated;
   - which `.axm` sample was added or updated;
   - the exact sample subfolder;
-  - how to open and run it manually in `Axiom.Ide`.
+  - how to open and run it manually in the Electron IDE.
 
 If language behavior changed but the correct `.axm` sample is missing, the task is not done.
 
@@ -502,14 +502,14 @@ This repository is for a custom BASIC-like programming language and its own IDE.
 High-level intent:
 - recreate the feel of QuickBASIC, but not limit the project to a small first-version slice or strict historical compatibility;
 - implement a clean modern BASIC-like language on C#;
-- start with an interpreter and IDE, not native compilation;
+- develop the compiler, BytecodeVm and Electron IDE together;
 - grow the language and IDE toward a complete usable product while keeping each change coherent and reviewable;
 - treat Russian-language specification documents as normative.
 
 Правила продуктового объёма:
 - не считать старые ограничения первой версии продуктовой истиной; крупные возможности вроде графики, файлов, многофайловых модулей, ООП или полной совместимости с QuickBASIC могут проектироваться, когда они явно запланированы в документах;
 - не переводить проект с C# на другой стек без явного решения в документах;
-- не заменять интерпретаторную архитектуру компиляторной без явного архитектурного решения.
+- сохранять компилятор и BytecodeVm в .NET; Electron представляет интерфейс и не исполняет язык самостоятельно.
 
 Implementation preference:
 - prioritize language core and diagnostics before advanced IDE features;
@@ -617,7 +617,7 @@ Report:
 
 ## Готовые проверки новой оболочки — 11 октября 2026 года
 
-Для новой Electron IDE использовать существующий набор ide/e2e, инструкцию ide/e2e/README.md и полный каталог ide/e2e/SCENARIOS.json. На дату публикации это 71 сценарий в 27 файлах. Не пересоздавать уже имеющиеся сценарии и общую автоматизацию при продолжении на другом компьютере; сначала найти существующую проверку и дополнить её. Команда полного запуска: npm --prefix ide/e2e test. Этот набор не включает тесты старой WPF-оболочки. DesktopHost/CLI остаются служебными компонентами новой IDE и не исключаются из её проверок. После изменения состава обновить каталог командой node ide/e2e/runner.js --list > ide/e2e/SCENARIOS.json.
+Для новой Electron IDE использовать существующий набор ide/e2e, инструкцию ide/e2e/README.md и полный каталог ide/e2e/SCENARIOS.json. На дату публикации это 85 сценариев в 27 файлах. Не пересоздавать уже имеющиеся сценарии и общую автоматизацию при продолжении на другом компьютере; сначала найти существующую проверку и дополнить её. Команда полного запуска: npm --prefix ide/e2e test. DesktopHost/CLI остаются служебными компонентами новой IDE и не исключаются из её проверок. После изменения состава обновить каталог командой node ide/e2e/runner.js --list > ide/e2e/SCENARIOS.json.
 
 ## Общие свойства интерфейса Electron
 
@@ -638,3 +638,8 @@ Report:
 Обязательна полнота: отдельная карточка каждой встроенной функции, все зарегистрированные формы вызова, все операторы и формы инструкций, ключевые слова, типы и операции в выражениях. Перечень проверяется по реестру `BuiltinFunctions`, парсеру и синтаксическим узлам, а не по случайным упоминаниям в тексте.
 
 Редакционный порядок, источники описаний, сборка каталогов и команды проверки закреплены в `docs/manual/README.md`. При изменениях справочника выполнять `node scripts/check-manual.mjs`; при изменениях реестра или синтаксиса сначала обновлять снимок и сверять его с загруженным реестром компилятора. Требования раздела 4.1.b к прямому определению сущности, параметрам, ограничениям, диагностике и примерам сохраняются.
+
+
+## Действующая карта документов — 11 октября 2026 года
+
+По прямому поручению автора завершена одноразовая ревизия и архивирование старого массива. Активные источники: PROJECT, README, SPECIFICATION3, ARCHITECTURE, PLANS4, WORKLOG5, BYTECODE_COVERAGE, BYTECODE_PERF_MATRIX. Работа выполняется в Electron через DesktopHost и BytecodeVm. Полный текущий остаток находится в docs/plans/UNFINISHED_WORK.md; навигация — docs/INDEX.md. Журнал продолжает нумерацию с Session 1364, прежние записи до 1363 сохранены в docs/archive/state-before-20261011/docs/WORKLOG5.md. Старые архивные планы не задают текущую очередь и не должны возвращаться в активные документы. Новые записи активных журналов снова добавляются только в конец.

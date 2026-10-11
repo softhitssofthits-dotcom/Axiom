@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   function normalize(text) {
     return String(text || "").toLowerCase();
   }

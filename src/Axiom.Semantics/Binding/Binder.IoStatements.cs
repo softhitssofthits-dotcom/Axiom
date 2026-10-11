@@ -46,7 +46,8 @@ public sealed partial class Binder
         }
 
         var promptText = statement.PromptToken?.Value as string;
-        return new BoundInputStatement(GetLocation(statement), variables, promptText);
+        return new BoundInputStatement(GetLocation(statement), variables, promptText,
+            statement.PromptSeparatorToken?.Kind != SyntaxKind.CommaToken);
     }
 
     private BoundStatement BindSleepStatement(SleepStatementSyntax statement)

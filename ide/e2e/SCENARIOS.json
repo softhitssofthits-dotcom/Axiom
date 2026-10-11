@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 85,
+  "count": 87,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -246,6 +246,16 @@
       "id": "input-name-age-sample",
       "spec": "input-prompts.spec.js",
       "name": "Учебный пример имени и возраста запускается в Electron"
+    },
+    {
+      "id": "input-prompt-separators",
+      "spec": "input-prompts.spec.js",
+      "name": "INPUT: разделители приглашения, пустая строка и пунктуация"
+    },
+    {
+      "id": "interpolation-print-typo-location",
+      "spec": "interpolation-typo.spec.js",
+      "name": "Опечатка PRIN перед интерполяцией: русская ошибка на строке 9"
     },
     {
       "id": "language-runtime-diagnostic-switch",

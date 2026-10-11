@@ -440,7 +440,7 @@ body.splitter-y { cursor: row-resize; }
   overflow: hidden;
   display: none;
   white-space: normal;
-  background: #1e1e1e;
+  background: var(--xs-console-bg);
 }
 
 #console-content.active {
@@ -450,7 +450,7 @@ body.splitter-y { cursor: row-resize; }
 #terminal {
   width: 100%;
   height: 100%;
-  background: #1e1e1e;
+  background: var(--xs-console-bg);
 }
 
 #terminal .xterm,
@@ -464,16 +464,16 @@ body.splitter-y { cursor: row-resize; }
 }
 
 #terminal .xterm-viewport::-webkit-scrollbar-track {
-  background: #1e1e1e;
+  background: var(--xs-console-bg);
 }
 
 #terminal .xterm-viewport::-webkit-scrollbar-thumb {
-  background: #3a3a3a;
+  background: var(--xs-console-scrollbar);
   border-radius: 5px;
 }
 
 #terminal .xterm-viewport::-webkit-scrollbar-thumb:hover {
-  background: #4f4f4f;
+  background: var(--xs-surface-active);
 }
 
 /* Diagnostics */
@@ -654,10 +654,10 @@ body.splitter-y { cursor: row-resize; }
 /* F5: outline panel (Bottom panel tab "Structure") */
 #outline-list { overflow-y: auto; padding: 4px 0; }
 .outline-item { display: flex; align-items: center; gap: 8px; padding: 4px 12px; cursor: pointer; font-size: 13px; }
-.outline-item:hover { background: rgba(255,255,255,.04); }
-.outline-icon { width: 20px; text-align: center; font-weight: 700; color: #4da3ff; flex-shrink: 0; }
+.outline-item:hover { background: var(--xs-surface-hover); }
+.outline-icon { width: 20px; text-align: center; font-weight: 700; color: var(--xs-accent); flex-shrink: 0; }
 .outline-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.outline-line { color: var(--muted, #8ba1b7); font-size: 11px; flex-shrink: 0; }
-.trace-breakpoint { background: radial-gradient(circle, #e95656 0 35%, transparent 40%); }
-.trace-current-arrow::before { content: '➜'; color: #d8a522; font-weight: bold; }
-.trace-current-line { background: #d8a52233; border-left: 2px solid #d8a522; }
+.outline-line { color: var(--xs-text-faint); font-size: 11px; flex-shrink: 0; }
+.trace-breakpoint { background: radial-gradient(circle, var(--xs-danger) 0 35%, transparent 40%); }
+.trace-current-arrow::before { content: '➜'; color: var(--xs-warning); font-weight: bold; }
+.trace-current-line { background: color-mix(in srgb, var(--xs-warning) 20%, transparent); border-left: 2px solid var(--xs-warning); }

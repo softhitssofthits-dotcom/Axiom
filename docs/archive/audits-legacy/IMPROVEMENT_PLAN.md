@@ -149,8 +149,8 @@
 - `docs/agent/CURRENT_STATE.md` — 4 ссылки
 - `docs/agent/README.md` — ~3 ссылки
 - `docs/agent/PLAYBOOKS.md` — ~4 ссылки
-- `docs/agent/HEADROOM_PILOT.md` — ~2 ссылки
-- `docs/agent/EXTERNAL_TOOLS_EVALUATION.md` — ~6 ссылок
+- `docs/archive/state-before-20261011/docs/agent/HEADROOM_PILOT.md` — ~2 ссылки
+- `docs/archive/state-before-20261011/docs/agent/EXTERNAL_TOOLS_EVALUATION.md` — ~6 ссылок
 
 ### 4.2. Ротация WORKLOG4
 

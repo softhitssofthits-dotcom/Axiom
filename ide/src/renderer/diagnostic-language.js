@@ -31,6 +31,11 @@
     [/^Константное числовое значение выходит за диапазон (.+)\.$/, (_m,type) => 'Constant numeric value is outside the range of '+type+'.'],
   ];
   function text(d, locale) {
+    if (d.code === 'IDE0001') {
+      return `${d.code}: ${locale === 'en'
+        ? 'An internal error occurred while preparing or running the program. See the IDE log for technical details.'
+        : 'Внутренняя ошибка при подготовке или выполнении программы. Технические подробности находятся в журнале IDE.'}`;
+    }
     if (locale !== 'en' || !/^MB\d{4}$/.test(d.code)) return `${d.code}: ${d.message}`;
     if (d.messageEn) return `${d.code}: ${d.messageEn}`;
     if (!/[А-Яа-яЁё]/.test(String(d.message))) return `${d.code}: ${d.message}`;

@@ -1,4 +1,4 @@
-const { ipcMain, dialog, app, BrowserWindow, clipboard, shell } = require('electron');
+const { ipcMain, dialog, app, BrowserWindow, clipboard, shell, Menu } = require('electron');
 const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -332,6 +332,17 @@ function setupIpc(logger) {
   ipcMain.handle('read-clipboard-text', async () => {
     try { return clipboard.readText(); } catch { return ''; }
   });
+  ipcMain.handle('console-context-menu', (event, options = {}) => new Promise(resolve => {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    if (!window || window.isDestroyed()) { resolve(null); return; }
+    let action = null;
+    const menu = Menu.buildFromTemplate([
+      { label: String(options.copyLabel || 'Копировать'), enabled: options.canCopy === true, click: () => { action = 'copy'; } },
+      { type: 'separator' },
+      { label: String(options.clearLabel || 'Очистить консоль'), click: () => { action = 'clear'; } },
+    ]);
+    menu.popup({ window, callback: () => resolve(action) });
+  }));
   ipcMain.handle('write-clipboard-text', async (_e, text) => {
     if (typeof text !== 'string') return false;
     try {

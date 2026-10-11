@@ -1,70 +1,27 @@
-# Axiom — главный навигационный индекс документации
+# Рабочая документация Axiom
 
-Единая входная точка: отсюда за несколько шагов можно дойти до любого ответа о проекте — что реализовано, что запланировано, где хвосты, где история. Для человека и для агента.
+Действующий продукт: Electron IDE и компилятор/BytecodeVm на .NET. Для продолжения читать текущие документы ниже; архив предназначен для истории.
 
-## 1. Быстрые ответы
+| Вопрос | Документ |
+|---|---|
+| Что за продукт и его границы? | [PROJECT.md](../PROJECT.md) |
+| Как подготовить и запустить? | [README.md](../README.md) |
+| Как работать агенту? | [AGENTS.md](../AGENTS.md) |
+| Какой договор реализован? | [SPECIFICATION3.md](SPECIFICATION3.md) |
+| Как устроено? | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| Где остановились и что дальше? | [PLANS4.md](PLANS4.md), [WORKLOG5.md](WORKLOG5.md) |
+| Что осталось недоделанным? | [UNFINISHED_WORK.md](plans/UNFINISHED_WORK.md) |
+| Какие сущности языка есть? | [Реестр языка](registries/LANGUAGE.md) |
+| Что покрывает VM? | [BYTECODE_COVERAGE.md](BYTECODE_COVERAGE.md) |
+| Какие измерения есть? | [BYTECODE_PERF_MATRIX.md](BYTECODE_PERF_MATRIX.md) |
+| Как устроен обмен IDE/.NET? | [Протокол](plans/IDE_SHELL_PROTOCOL.md) |
+| Какие условия Electron ещё не приняты? | [Матрица](plans/IDE_SHELL_FEATURE_MATRIX.csv) |
+| Где справочник? | [manual/index.html](manual/index.html), [правила сопровождения](manual/README.md) |
+| Где договор тайлов? | [TILEMAP.md](contracts/TILEMAP.md) |
+| Где результаты последнего этапа? | [Сохранность документов](reports/electron/ELECTRON_LOCKED_SAVE_RECOVERY_RESULT.md) |
+| Что проверено при ревизии документов? | [Отчёт](reports/DOCUMENTATION_REVIEW_20261011.md) |
+| Где история и карта переносов? | [archive/README.md](archive/README.md), [реестр документов](registries/DOCUMENTS.csv) |
 
-| Вопрос | Куда идти |
-| --- | --- |
-| Что это за проект? | [`PROJECT.md`](../PROJECT.md) |
-| Как собрать, запустить, открыть IDE? | [`README.md`](../README.md) |
-| Как агенту правильно работать с репозиторием? | [`AGENTS.md`](../AGENTS.md) |
-| Что сейчас реализовано (точный договор языка)? | [`docs/SPECIFICATION3.md`](SPECIFICATION3.md) |
-| Как устроена архитектура? | [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) |
-| Что делать дальше? | [`docs/PLANS4.md`](PLANS4.md) |
-| Что делалось в последних сессиях? | [`docs/WORKLOG5.md`](WORKLOG5.md) |
-| Что запланировано, но ещё не сделано? | [`docs/FUTURE.md`](FUTURE.md) + [`docs/meta/FEATURE_LEDGER.md`](meta/FEATURE_LEDGER.md) |
-| Где незакрытые хвосты? | [`docs/meta/FEATURE_LEDGER.md`](meta/FEATURE_LEDGER.md) §«Открытые хвосты» |
-| Где исторические документы? | [`docs/meta/DOC_REGISTRY.md`](meta/DOC_REGISTRY.md) зона 5 |
-| Как пользоваться языком (справочник)? | [`docs/manual/index.html`](manual/index.html) |
+Папки: `contracts/` — действующие тематические договоры; `plans/` — очередь и приёмка; `reports/` — результаты; `registries/` — реестры; `agent/` — краткий вход; `manual/` — пользовательские статьи; `audit/bytecode-only/` — текущий экспорт проверок; `archive/` — исторические материалы.
 
-## 2. Карта документации по зонам
-
-```
-docs/
-├── INDEX.md                ← вы здесь
-├── SPECIFICATION3.md       активная спецификация (договор языка)
-├── ARCHITECTURE.md         техническая структура и решения
-├── PLANS4.md               текущий план
-├── WORKLOG5.md             активный журнал сессий
-├── BYTECODE_COVERAGE.md    что покрыто BytecodeVm
-├── BYTECODE_PERF_MATRIX.md какие сценарии производительности есть
-├── LANGUAGE_INVENTORY.md   каноническая инвентаризация языка (356 фич)
-├── DOCUMENTATION-STYLE.md  стандарт HTML-справочника
-├── FUTURE.md               будущие предложения
-├── meta/                   мета-слой (реестр, карта функций, план миграции, гид)
-├── agent/                  быстрый вход для агента
-├── audit/                  глубокие аудиты подсистем
-├── manual/                 HTML-справочник для человека
-└── archive/                исторический архив (перенесено 2026-08-26)
-```
-
-## 3. Маршруты для агента
-
-**Начало работы:** `AGENTS.md` → `docs/agent/README.md` → `docs/agent/CURRENT_STATE.md` → `docs/PLANS4.md`.
-
-**Задача про конкретную подсистему:** `docs/audit/<ПОДСИСТЕМА>.md` → сверка с `docs/SPECIFICATION3.md` и кодом.
-
-**Задача про байткод/паритет:** `docs/BYTECODE_COVERAGE.md` + `docs/BYTECODE_PERF_MATRIX.md` + `docs/audit/BYTECODE_VM_PERFORMANCE.md`.
-
-**Проверка статуса документа:** `docs/meta/DOC_REGISTRY.md`.
-
-**Проверка состояния функции/хвоста:** `docs/meta/FEATURE_LEDGER.md`.
-
-## 4. Маршруты для человека
-
-**Понять продукт:** `PROJECT.md` → `README.md`.
-
-**Научиться языку:** `docs/manual/index.html` → `getting-started.html`.
-
-**Узнать, что сделано и что дальше:** `docs/INDEX.md` (эта страница) → `docs/meta/FEATURE_LEDGER.md`.
-
-## 5. Правило единого источника правды
-
-При расхождении документов побеждают (в порядке убывания):
-1. исходный код, тесты, запускаемые примеры `samples/`;
-2. `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS4.md`, `docs/WORKLOG5.md`;
-3. реестры `docs/LANGUAGE_INVENTORY.md`, `docs/BYTECODE_COVERAGE.md`;
-4. остальные документы.
-
-Если документ не найден или его статус неясен — смотреть `docs/meta/DOC_REGISTRY.md`.
+Обязательное начало сессии остаётся по AGENTS.md. Краткий агентный слой помогает после чтения основных источников, не заменяет их.

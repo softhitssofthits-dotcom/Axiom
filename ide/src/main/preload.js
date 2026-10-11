@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('axiom', {
   backendReady: () => ipcRenderer.invoke('backend-ready'),
+  consoleContextMenu: options => ipcRenderer.invoke('console-context-menu', options),
   documentCommand: (method, snapshot) => ipcRenderer.invoke('backend-document', method, snapshot),
   startExecution: document => ipcRenderer.invoke('backend-start', document),
   stopExecution: sessionId => ipcRenderer.invoke('backend-stop', sessionId),

@@ -1,3 +1,0 @@
-[  749719ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:4177/samples/operators/sub/byval_record_copy.axm:0
-[  756839ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:4177/samples/control-flow/return/sub_early_exit.axm:0
-[  763061ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:4177/samples/operators/sub/capture_outer_local.axm:0

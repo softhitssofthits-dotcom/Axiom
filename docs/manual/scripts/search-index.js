@@ -80,7 +80,7 @@ window.AxiomSearchIndex = [
     "href": "examples.html",
     "kind": "Раздел",
     "category": "Примеры и справочные приложения",
-    "description": "Запускаемые примеры из samples для ручной проверки поведения языка в Axiom.Ide.",
+    "description": "Запускаемые примеры из samples для ручной проверки поведения языка в Electron IDE.",
     "keywords": [
       "samples",
       "examples",

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "interpolation-print-typo-location",
+    "spec": "interpolation-typo.spec.js",
+    "name": "Опечатка PRIN перед интерполяцией: русская ошибка на строке 9",
+    "ms": 4673,
+    "passed": 6,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58097/80a8d078-a72b-46a4-8f95-59904a20f5bc\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

@@ -420,12 +420,12 @@
 Сделано:
 - после пользовательского подтверждения по скриншоту и журналу зафиксировано, что `transparent_text.axm` ведёт себя правильно и в интерпретаторе, и в `BytecodeVm`;
 - обсуждение автопереноса и прокрутки не смешивалось с текущим графическим шагом: принято решение не расширять сейчас общий договор `SCREEN`;
-- создан новый файл `docs/FUTURE.md` для отложенных и будущих задач, которые нельзя терять между сессиями, но которые не должны засорять активный ближайший план;
-- в `docs/FUTURE.md` записана тема будущей вертикальной прокрутки `SCREEN 0` с отдельным договором и причиной, почему она отложена;
+- создан новый файл `docs/archive/root-documents-20261011/FUTURE.md` для отложенных и будущих задач, которые нельзя терять между сессиями, но которые не должны засорять активный ближайший план;
+- в `docs/archive/root-documents-20261011/FUTURE.md` записана тема будущей вертикальной прокрутки `SCREEN 0` с отдельным договором и причиной, почему она отложена;
 - в `docs/PLANS3.md` зафиксировано, что следующим самостоятельным графическим срезом выбран `PAINT`, а не дальнейшее расширение текстового слоя.
 
 Изменённые файлы:
-- `docs/FUTURE.md`
+- `docs/archive/root-documents-20261011/FUTURE.md`
 - `docs/PLANS3.md`
 - `docs/WORKLOG4.md`
 
@@ -1158,7 +1158,7 @@
 
 Что сделано:
 - перечитаны актуальные разделы `docs/manual/graphics-primitives.html`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md` и `README.md`, чтобы не плодить второй противоречащий источник по `LINE`, `CIRCLE` и `PAINT`;
-- создан новый файл `docs/GRAPHICS_OPERATORS_FLAGS.md` с разработческим описанием:
+- создан новый файл `docs/archive/root-documents-20261011/GRAPHICS_OPERATORS_FLAGS.md` с разработческим описанием:
   - пользовательских форм операторов;
   - значений по умолчанию для цветов и необязательных параметров;
   - правил `STEP`, относительных координат и обновления текущей графической позиции;
@@ -1166,10 +1166,10 @@
   - соответствия между этими флагами, helper-структурами runtime и host-вызовами;
   - списка файлов и типов, которые нужно менять вместе при развитии графического договора;
 - `README.md` дополнен ссылкой на новый developer-документ;
-- `docs/ARCHITECTURE.md` дополнен указанием, что разработческий договор графического runtime-слоя ведётся в `docs/GRAPHICS_OPERATORS_FLAGS.md`.
+- `docs/ARCHITECTURE.md` дополнен указанием, что разработческий договор графического runtime-слоя ведётся в `docs/archive/root-documents-20261011/GRAPHICS_OPERATORS_FLAGS.md`.
 
 Изменённые файлы:
-- `docs/GRAPHICS_OPERATORS_FLAGS.md`
+- `docs/archive/root-documents-20261011/GRAPHICS_OPERATORS_FLAGS.md`
 - `docs/ARCHITECTURE.md`
 - `README.md`
 - `docs/PLANS3.md`
@@ -1180,7 +1180,7 @@
 - документ сверён с актуальными `docs/SPECIFICATION3.md`, `docs/manual/graphics-primitives.html`, `GraphicsInstructionArguments.cs`, `GraphicsPaintRequest.cs` и `IGraphicsHost.cs`.
 
 Решение:
-- считать `docs/GRAPHICS_OPERATORS_FLAGS.md` главным developer-ориентиром по внутренним флагам и параметрам графических операторов;
+- считать `docs/archive/root-documents-20261011/GRAPHICS_OPERATORS_FLAGS.md` главным developer-ориентиром по внутренним флагам и параметрам графических операторов;
 - сохранять разделение ролей: manual объясняет пользовательское поведение, спецификация фиксирует проектный договор, а новый файл помогает сопровождать bytecode/runtime/helper-слой.
 
 Следующий точный шаг:
@@ -1261,13 +1261,13 @@
   - для `LINE` явно зафиксирован допустимый диапазон координат после `STEP`;
   - для `CIRCLE` зафиксированы диапазон координат центра, верхняя граница `aspect`, полная окружность при совпавших после нормализации углах и расширенный состав случаев `MB3007`;
 - `docs/manual/graphics-primitives.html` обновлён под пользовательское описание новых ограничений и ожидаемого поведения: диапазон координат `LINE`/`CIRCLE`, полный оборот через `0` и `2 * PI`, правило радиальных линий при отрицательных углах и ссылка на новый runnable sample `samples/graphics/primitives/circle_full_turn.axm`;
-- `docs/GRAPHICS_OPERATORS_FLAGS.md` синхронизирован с фактическим helper-путём `TryCreateLine(...)` / `TryCreateCircle(...)`, абсолютным центром `CIRCLE` после нормализации и новыми ограничениями по координатам и `aspect`;
+- `docs/archive/root-documents-20261011/GRAPHICS_OPERATORS_FLAGS.md` синхронизирован с фактическим helper-путём `TryCreateLine(...)` / `TryCreateCircle(...)`, абсолютным центром `CIRCLE` после нормализации и новыми ограничениями по координатам и `aspect`;
 - `docs/BYTECODE_COVERAGE.md` дополнен отдельной записью про этот графический срез, чтобы в активном реестре не терялись новые тесты, sample и негативный паритет.
 
 Изменённые файлы:
 - `docs/SPECIFICATION3.md`
 - `docs/manual/graphics-primitives.html`
-- `docs/GRAPHICS_OPERATORS_FLAGS.md`
+- `docs/archive/root-documents-20261011/GRAPHICS_OPERATORS_FLAGS.md`
 - `docs/BYTECODE_COVERAGE.md`
 - `docs/PLANS3.md`
 - `docs/WORKLOG4.md`
@@ -2214,7 +2214,7 @@
 Решение:
 - считать текущую реализацию графических операторов и связанных функций проверенной по адресному набору и smoke-маршрутам;
 - не открывать новый графический оператор без отдельного договора в спецификации;
-- ближайшим графическим долгом, если пользователь продолжит эту ветку, считать отрицательные runnable `.axm`-samples для `VIEW`, `WINDOW` и полного `PAINT` либо отдельный договор прокрутки `SCREEN 0` из `docs/FUTURE.md`.
+- ближайшим графическим долгом, если пользователь продолжит эту ветку, считать отрицательные runnable `.axm`-samples для `VIEW`, `WINDOW` и полного `PAINT` либо отдельный договор прокрутки `SCREEN 0` из `docs/archive/root-documents-20261011/FUTURE.md`.
 
 Следующий точный шаг:
 - выбрать один из трёх вариантов: добавить отрицательные графические acceptance-samples для `VIEW`, `WINDOW` и `PAINT`; открыть договор прокрутки `SCREEN 0`; либо перейти к следующей неграфической стабилизационной задаче.
@@ -2252,15 +2252,15 @@
 
 Что сделано:
 - по запросу пользователя открыт отдельный договор прокрутки `SCREEN 0`;
-- перечитаны активные документы проекта, текущий договор `SCREEN 0`, запись `docs/FUTURE.md` про отложенную прокрутку и фактический путь вывода через `ProgramConsoleService` / `ScreenTextBuffer`;
+- перечитаны активные документы проекта, текущий договор `SCREEN 0`, запись `docs/archive/root-documents-20261011/FUTURE.md` про отложенную прокрутку и фактический путь вывода через `ProgramConsoleService` / `ScreenTextBuffer`;
 - в `docs/SPECIFICATION3.md` зафиксирован целевой договор ближайшего кодового среза: вертикальная прокрутка только в явном `SCREEN 0`, без word wrap, без горизонтальной прокрутки и без изменения графических режимов `SCREEN 1..10`;
 - в `docs/PLANS3.md` записан следующий кодовый шаг по реализации прокрутки;
-- в `docs/FUTURE.md` добавлена отметка, что тема прокрутки активирована и перенесена в текущий план.
+- в `docs/archive/root-documents-20261011/FUTURE.md` добавлена отметка, что тема прокрутки активирована и перенесена в текущий план.
 
 Изменённые файлы:
 - `docs/SPECIFICATION3.md`
 - `docs/PLANS3.md`
-- `docs/FUTURE.md`
+- `docs/archive/root-documents-20261011/FUTURE.md`
 - `docs/WORKLOG4.md`
 
 Решение:
@@ -2269,7 +2269,7 @@
 - графические режимы остаются без автопрокрутки, потому что текст в них используется как координатная надпись поверх framebuffer.
 
 Проверка:
-- `git diff --check -- docs/SPECIFICATION3.md docs/PLANS3.md docs/FUTURE.md docs/WORKLOG4.md` прошёл без ошибок пробелов; остались только предупреждения Git о будущей нормализации LF/CRLF.
+- `git diff --check -- docs/SPECIFICATION3.md docs/PLANS3.md docs/archive/root-documents-20261011/FUTURE.md docs/WORKLOG4.md` прошёл без ошибок пробелов; остались только предупреждения Git о будущей нормализации LF/CRLF.
 
 Следующий точный шаг:
 - реализовать договор в `ProgramConsoleService` и `ScreenTextBuffer`, добавить IDE-регрессии и runnable sample в `samples/graphics/screen/`, затем обновить manual уже по факту работающего поведения.
@@ -2282,7 +2282,7 @@
 - добавлены IDE-регрессии для прокрутки `SCREEN 0`, пустого `PRINT` на последней строке, клиппинга длинной строки и контроля отсутствия прокрутки в графическом `SCREEN`;
 - добавлена end-to-end проверка через `ProgramRunService` и acceptance-проверка `BytecodeVm` для нового runnable sample;
 - добавлен runnable sample `samples/graphics/screen/text_scroll.axm`;
-- обновлены `docs/SPECIFICATION3.md`, `docs/FUTURE.md`, `docs/manual/screen.html`, `docs/manual/graphics-text.html`, `docs/manual/scripts/search-index.js`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md`.
+- обновлены `docs/SPECIFICATION3.md`, `docs/archive/root-documents-20261011/FUTURE.md`, `docs/manual/screen.html`, `docs/manual/graphics-text.html`, `docs/manual/scripts/search-index.js`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS3.md`.
 
 Изменённые файлы:
 - `src/Axiom.Ide/Graphics/ScreenTextBuffer.cs`
@@ -2292,7 +2292,7 @@
 - `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs`
 - `samples/graphics/screen/text_scroll.axm`
 - `docs/SPECIFICATION3.md`
-- `docs/FUTURE.md`
+- `docs/archive/root-documents-20261011/FUTURE.md`
 - `docs/manual/screen.html`
 - `docs/manual/graphics-text.html`
 - `docs/manual/scripts/search-index.js`
@@ -3230,7 +3230,7 @@
 ## Session 926 - 2026-06-02 19:33 - большой план современной графики
 
 Что сделано:
-- по решению пользователя создан отдельный документ `docs/MODERN_GRAPHICS_PLAN.md`;
+- по решению пользователя создан отдельный документ `docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md`;
 - в документе зафиксирована концепция двух графических слоёв: совместимый BASIC-слой и современный графический слой;
 - совместимый слой оставляет `SCREEN`, `PSET`, `LINE`, `CIRCLE`, `PAINT`, `DRAW`, `GET`, `PUT`, `PALETTE`, `PCOPY`, `POINT` и связанный текстовый вывод как поддерживаемую историческую линию;
 - современный слой выбран главным направлением для будущих 2D-игр и визуальных программ на Axiom;
@@ -3239,7 +3239,7 @@
 - `README.md`, `docs/ARCHITECTURE.md`, `docs/SPECIFICATION3.md` и `docs/PLANS3.md` подключены к новому документу, чтобы следующий графический код начинался с выбора пункта этого плана.
 
 Изменённые файлы:
-- `docs/MODERN_GRAPHICS_PLAN.md`
+- `docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md`
 - `README.md`
 - `docs/ARCHITECTURE.md`
 - `docs/SPECIFICATION3.md`
@@ -3257,7 +3257,7 @@
 - после записи документов нужно выполнить проверку пробелов через `git diff --check`.
 
 Следующий точный шаг:
-- выбрать первый современный графический срез из `docs/MODERN_GRAPHICS_PLAN.md` и зафиксировать в `docs/SPECIFICATION3.md` точный договор имён, синтаксиса, диагностики, tests, manual и samples; основной кандидат: современное окно или режим рисования, начало кадра, показ кадра, `RGB`, очистка цветом, `DRAWRECT` и `FILLRECT` с интеграцией `DRAWIMAGE` и `DRAWSPRITE`.
+- выбрать первый современный графический срез из `docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md` и зафиксировать в `docs/SPECIFICATION3.md` точный договор имён, синтаксиса, диагностики, tests, manual и samples; основной кандидат: современное окно или режим рисования, начало кадра, показ кадра, `RGB`, очистка цветом, `DRAWRECT` и `FILLRECT` с интеграцией `DRAWIMAGE` и `DRAWSPRITE`.
 
 ## Session 927 - 2026-06-02 21:13 - договор первого современного графического среза
 
@@ -3274,7 +3274,7 @@
 
 Решения:
 - `RGB` выбран как BASIC-узнаваемое имя для полноцветного значения `0xRRGGBB`;
-- `CANVAS`, `BEGINFRAME` и `PRESENT` записаны как проектное решение Axiom из `docs/MODERN_GRAPHICS_PLAN.md`, а не как исторические QuickBASIC-имена;
+- `CANVAS`, `BEGINFRAME` и `PRESENT` записаны как проектное решение Axiom из `docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md`, а не как исторические QuickBASIC-имена;
 - `CLS color` разрешается только в современном `CANVAS`, чтобы не менять палитровый договор исторического `SCREEN`.
 
 Проверки:
@@ -3290,13 +3290,13 @@
 - после обязательного перечитывания активных документов проекта отдельно разобрана идея внешнего сжатия контекста для агентных сессий над `Axiom`;
 - напрямую проверены актуальные источники `Headroom`: README проекта, документация по proxy, MCP, ограничениям и оптимизации кэша;
 - для репозитория добавлен локальный скрипт `scripts/ai-context.ps1`, который собирает компактный бриф из активных документов и умеет добавлять тематические фрагменты по ключевым словам;
-- добавлен документ `docs/agent/HEADROOM_PILOT.md` с конкретным планом пилота `Headroom` в двух режимах: `headroom wrap codex` и MCP-инструменты;
+- добавлен документ `docs/archive/state-before-20261011/docs/agent/HEADROOM_PILOT.md` с конкретным планом пилота `Headroom` в двух режимах: `headroom wrap codex` и MCP-инструменты;
 - обновлён `docs/agent/CURRENT_STATE.md`, чтобы короткий ручной снимок состояния больше не вёл в старую ветку date/time и отражал реальный современный графический шаг;
 - `docs/agent/README.md` и `README.md` дополнены инструкциями по локальному AI-контексту и связанным агентным документам.
 
 Изменённые файлы:
 - `scripts/ai-context.ps1`
-- `docs/agent/HEADROOM_PILOT.md`
+- `docs/archive/state-before-20261011/docs/agent/HEADROOM_PILOT.md`
 - `docs/agent/CURRENT_STATE.md`
 - `docs/agent/README.md`
 - `README.md`
@@ -3340,7 +3340,7 @@
 - `git diff --check` не показал ошибок пробелов, остались только предупреждения Git о будущей нормализации LF/CRLF и о посторонних изменениях рабочего дерева вне этой задачи.
 
 Следующий точный шаг:
-- если продолжаем линию внешнего сжатия контекста, запускать пилот `Headroom` по сценарию из `docs/agent/HEADROOM_PILOT.md`;
+- если продолжаем линию внешнего сжатия контекста, запускать пилот `Headroom` по сценарию из `docs/archive/state-before-20261011/docs/agent/HEADROOM_PILOT.md`;
 - по основной продуктовой линии вернуться к реализации `CANVAS`, `BEGINFRAME`, `PRESENT`, `RGB`, `CLS color`, `DRAWRECT` и `FILLRECT`.
 
 ## Session 930 - 2026-06-05 02:52 - синхронизация второго CANVAS-среза и maze_chase
@@ -3356,7 +3356,7 @@
 - `docs/manual/graphics.html`
 - `docs/manual/scripts/search-index.js`
 - `docs/SPECIFICATION3.md`
-- `docs/MODERN_GRAPHICS_PLAN.md`
+- `docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md`
 - `docs/PLANS3.md`
 - `docs/BYTECODE_COVERAGE.md`
 - `docs/WORKLOG4.md`
@@ -3398,7 +3398,7 @@
 - `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj -v minimal --filter "FullyQualifiedName~ModernHudTextAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~ModernCameraAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~ModernLinesAndCirclesAcceptanceSample_RunsOnBytecodeVm|FullyQualifiedName~MazeChaseAcceptanceSample_RunsOnBytecodeVm"` проходит: 4 из 4;
 - `node --check docs/manual/scripts/manual.js` проходит;
 - `node --check docs/manual/scripts/search-index.js` проходит;
-- `git diff --check -- docs/manual/modern-graphics.html docs/manual/graphics.html docs/manual/scripts/search-index.js docs/SPECIFICATION3.md docs/MODERN_GRAPHICS_PLAN.md docs/PLANS3.md docs/BYTECODE_COVERAGE.md docs/WORKLOG4.md samples/graphics/game/maze_chase.axm` не находит ошибок пробелов, выводит только предупреждения Git о будущей нормализации LF/CRLF.
+- `git diff --check -- docs/manual/modern-graphics.html docs/manual/graphics.html docs/manual/scripts/search-index.js docs/SPECIFICATION3.md docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md docs/PLANS3.md docs/BYTECODE_COVERAGE.md docs/WORKLOG4.md samples/graphics/game/maze_chase.axm` не находит ошибок пробелов, выводит только предупреждения Git о будущей нормализации LF/CRLF.
 
 Следующий точный шаг:
 - отдельным решением выбрать, нужен ли короткий детерминированный `samples/smoke/engine-compare/` сценарий на основе `maze_chase`;
@@ -4677,17 +4677,17 @@
 
 Что сделано:
 - после обязательного перечитывания `AGENTS.md`, `PROJECT.md`, `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS3.md`, `docs/WORKLOG4.md`, `docs/BYTECODE_COVERAGE.md` и `docs/BYTECODE_PERF_MATRIX.md` отдельно разобран запрос на экономию токенов через внешние агентные репозитории;
-- проверено, что линия `Headroom` у проекта уже частично есть: `docs/agent/HEADROOM_PILOT.md`, `docs/agent/README.md`, `README.md` и локальный `scripts/ai-context.ps1`;
+- проверено, что линия `Headroom` у проекта уже частично есть: `docs/archive/state-before-20261011/docs/agent/HEADROOM_PILOT.md`, `docs/agent/README.md`, `README.md` и локальный `scripts/ai-context.ps1`;
 - в `AGENTS.md` добавлен постоянный раздел `Правило компактного агентного режима и экономии токенов`, который закрепляет приоритет локального `docs/agent/`-слоя, обязательное тематическое сужение контекста и запрет превращать внешние task/memory-инструменты во второй источник правды;
 - устаревший `docs/agent/CURRENT_STATE.md` переписан под реальное текущее состояние проекта вместо старого шага с первым modern-graphics-срезом;
-- добавлен `docs/agent/EXTERNAL_TOOLS_EVALUATION.md` с проектным решением по `Headroom`, `RTK`, `Task Master` и `Caveman`;
+- добавлен `docs/archive/state-before-20261011/docs/agent/EXTERNAL_TOOLS_EVALUATION.md` с проектным решением по `Headroom`, `RTK`, `Task Master` и `Caveman`;
 - `docs/agent/README.md`, `docs/agent/PLAYBOOKS.md` и `README.md` синхронизированы с новым агентным контуром.
 
 Изменённые файлы:
 - `AGENTS.md`
 - `README.md`
 - `docs/agent/CURRENT_STATE.md`
-- `docs/agent/EXTERNAL_TOOLS_EVALUATION.md`
+- `docs/archive/state-before-20261011/docs/agent/EXTERNAL_TOOLS_EVALUATION.md`
 - `docs/agent/PLAYBOOKS.md`
 - `docs/agent/README.md`
 - `docs/PLANS3.md`
@@ -5268,7 +5268,7 @@
 - выровнять текущее понимание состояния без переписывания истории в append-only документах.
 
 Что сделано:
-1. Перечитаны хвосты `docs/PLANS3.md` и `docs/WORKLOG4.md` вместе с актуальными опорными документами `docs/SPECIFICATION3.md` и `docs/MODERN_GRAPHICS_PLAN.md`.
+1. Перечитаны хвосты `docs/PLANS3.md` и `docs/WORKLOG4.md` вместе с актуальными опорными документами `docs/SPECIFICATION3.md` и `docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md`.
 2. Подтверждено, что последние реальные работы шли по одной большой ветке: редакционный проход по `docs/manual/`, а не по нескольким несвязанным направлениям.
 3. Зафиксировано, что хвост `docs/WORKLOG4.md` читается неоднозначно из-за того, что `Session 994 - 2026-06-07 11:30` была добавлена в конец файла уже после `Session 992 - 14:25` и `Session 993 - 14:50`: порядок записей append-only сохранён, но временная последовательность в хвосте нарушена.
 4. Уточнён следующий шаг в `docs/PLANS3.md`: после завершения manual фокус нужно возвращать не к абстрактному выбору нового этапа, а к modern graphics и флагманскому примеру `samples/graphics/game/maze_chase.axm`.
@@ -5321,7 +5321,7 @@
 - одновременно проверить, не требуют ли уже реализованные canvas-операторы отдельного улучшения по итогам просмотра `maze_chase`.
 
 Что сделано:
-1. Перечитаны активные проектные документы `AGENTS.md`, `PROJECT.md`, `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS4.md`, `docs/WORKLOG4.md`, `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md` и `docs/MODERN_GRAPHICS_PLAN.md`.
+1. Перечитаны активные проектные документы `AGENTS.md`, `PROJECT.md`, `README.md`, `docs/SPECIFICATION3.md`, `docs/ARCHITECTURE.md`, `docs/PLANS4.md`, `docs/WORKLOG4.md`, `docs/BYTECODE_COVERAGE.md`, `docs/BYTECODE_PERF_MATRIX.md` и `docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md`.
 2. Просмотрен флагманский пример `samples/graphics/game/maze_chase.axm` именно как практический тест современного графического слоя, а не как изолированная игра.
 3. Подтверждено, что главный текущий зазор находится не в отсутствии анимаций, столкновений или тайловой карты, а в отсутствии прямоугольной области вывода для мира внутри `CANVAS`.
 4. Зафиксировано, что `maze_chase` сейчас компенсирует этот зазор вручную через `BACKGROUND_OFFSET_Y`, `WorldOffsetX()`, `WorldOffsetY()`, отдельные функции границ подложки и явные переключения `RESETCAMERA` между миром, HUD и калибровочным оверлеем.
@@ -5565,8 +5565,8 @@
 - сразу начать реальный перенос с первого такого шага.
 
 Что сделано:
-1. Старый черновой файл `docs/План разработки графических операторов для 2D игр.txt` сверен с актуальным живым документом `docs/MODERN_GRAPHICS_PLAN.md`, а в сам markdown-план добавлен отдельный раздел про выборочный перенос части BASIC-базы в `CANVAS`.
-2. В `docs/MODERN_GRAPHICS_PLAN.md` зафиксирована очередь этого этапа: `POINT(x, y)`, затем `PSET` / `PRESET`, затем `PAINT`, затем `GET` / `PUT`.
+1. Старый черновой файл `docs/План разработки графических операторов для 2D игр.txt` сверен с актуальным живым документом `docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md`, а в сам markdown-план добавлен отдельный раздел про выборочный перенос части BASIC-базы в `CANVAS`.
+2. В `docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md` зафиксирована очередь этого этапа: `POINT(x, y)`, затем `PSET` / `PRESET`, затем `PAINT`, затем `GET` / `PUT`.
 3. В том же плане отдельно записано, что в эту волну сознательно не входят `VIEW`, `WINDOW`, `PMAP`, `VIEW PRINT`, `PALETTE`, `PCOPY` и экранные страницы.
 4. В runtime-слое изменён договор `POINT`: форма `POINT(x, y)` теперь требует не только `SCREEN`, а любую активную рисуемую поверхность `SCREEN` или `CANVAS`, тогда как форма `POINT(selector)` по-прежнему остаётся screen-only.
 5. В `docs/SPECIFICATION3.md` записан новый modern-шаг: `POINT(x, y)` в `CANVAS` читает физический пиксель холста, не применяет к аргументам `CAMERA` и `VIEWPORT`, а полноцветный пиксель возвращает как ближайший индекс стандартной палитры Axiom.
@@ -5577,7 +5577,7 @@
 10. Обновлены `docs/BYTECODE_COVERAGE.md` и `docs/PLANS4.md`, чтобы новый шаг не потерялся после этой сессии.
 
 Затронутые файлы:
-- `docs/MODERN_GRAPHICS_PLAN.md`
+- `docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md`
 - `docs/SPECIFICATION3.md`
 - `docs/PLANS4.md`
 - `docs/WORKLOG4.md`
@@ -5597,7 +5597,7 @@
 - `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj --no-restore --filter "FullyQualifiedName~Point"` проходит, `18` тестов зелёные;
 - `dotnet restore tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj` проходит;
 - `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj --no-restore --filter "FullyQualifiedName~PointCanvasAcceptanceSample"` проходит, `1` тест зелёный;
-- `git diff --check -- docs/MODERN_GRAPHICS_PLAN.md docs/SPECIFICATION3.md docs/PLANS4.md docs/WORKLOG4.md docs/BYTECODE_COVERAGE.md docs/manual/graphics-primitives.html docs/manual/modern-graphics.html docs/manual/scripts/search-index.js src/Axiom.Runtime/Execution/Interpreter.Graphics.cs src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs tests/Axiom.Runtime.Tests/InterpreterTests.cs tests/Axiom.Runtime.Tests/BytecodeVmTests.cs tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs samples/functions/point/canvas_pixel_read.axm` не нашёл ошибок diff; Git сообщает только стандартные предупреждения о будущей нормализации `LF/CRLF`.
+- `git diff --check -- docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md docs/SPECIFICATION3.md docs/PLANS4.md docs/WORKLOG4.md docs/BYTECODE_COVERAGE.md docs/manual/graphics-primitives.html docs/manual/modern-graphics.html docs/manual/scripts/search-index.js src/Axiom.Runtime/Execution/Interpreter.Graphics.cs src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs tests/Axiom.Runtime.Tests/InterpreterTests.cs tests/Axiom.Runtime.Tests/BytecodeVmTests.cs tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs samples/functions/point/canvas_pixel_read.axm` не нашёл ошибок diff; Git сообщает только стандартные предупреждения о будущей нормализации `LF/CRLF`.
 
 Решение:
 - считать подход с выборочным переносом зафиксированным как основной путь следующего этапа modern graphics;
@@ -5622,10 +5622,10 @@
 6. В `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` добавлена acceptance-проверка `PSetCanvasAcceptanceSample_RunsOnBytecodeVm`, которая прогоняет новый sample через `BytecodeVm` без отката на интерпретатор.
 7. В `docs/SPECIFICATION3.md` записан отдельный второй перенос: `PSET` в `CANVAS` принимает мировые координаты, подчиняется `CAMERA` и `VIEWPORT`, пишет индексный цвет `0..255`, сохраняет `STEP`, а `PRESET` остаётся screen-only.
 8. Обновлены `docs/manual/graphics-primitives.html`, `docs/manual/modern-graphics.html` и `docs/manual/scripts/search-index.js`, чтобы `PSET` в `CANVAS` был отражён в справочнике прямо на страницах графики, а `PRESET` не был ошибочно объявлен modern-совместимым.
-9. Обновлены `docs/MODERN_GRAPHICS_PLAN.md`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS4.md`, чтобы второй шаг выборочного переноса считался закрытым, а следующим точным шагом остался только `PRESET`.
+9. Обновлены `docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md`, `docs/BYTECODE_COVERAGE.md` и `docs/PLANS4.md`, чтобы второй шаг выборочного переноса считался закрытым, а следующим точным шагом остался только `PRESET`.
 
 Затронутые файлы:
-- `docs/MODERN_GRAPHICS_PLAN.md`
+- `docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md`
 - `docs/SPECIFICATION3.md`
 - `docs/PLANS4.md`
 - `docs/WORKLOG4.md`
@@ -5688,7 +5688,7 @@
 4. В `tests/Axiom.Runtime.Tests/BytecodeVmTests.cs` добавлены те же проверки для байткодного пути, а прежняя негативная проверка `PRESET` при активном `CANVAS` заменена на новый успешный договор.
 5. В `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` добавлена сквозная проверка `PResetCanvasAcceptanceSample_RunsOnBytecodeVm`, подтверждающая runnable sample без отката на интерпретатор.
 6. Добавлен runnable sample `samples/operators/preset/canvas_background_pixel.axm`, который показывает `PRESET` в мировых координатах `CANVAS`, работу `VIEWPORT` и использование фонового индекса по умолчанию.
-7. Обновлены `docs/SPECIFICATION3.md`, `docs/MODERN_GRAPHICS_PLAN.md`, `docs/BYTECODE_COVERAGE.md`, `docs/PLANS4.md`, `docs/manual/graphics-primitives.html`, `docs/manual/modern-graphics.html` и `docs/manual/scripts/search-index.js`, чтобы `PRESET` в `CANVAS` был отражён в спецификации, manual и активных реестрах как уже закрытый шаг.
+7. Обновлены `docs/SPECIFICATION3.md`, `docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md`, `docs/BYTECODE_COVERAGE.md`, `docs/PLANS4.md`, `docs/manual/graphics-primitives.html`, `docs/manual/modern-graphics.html` и `docs/manual/scripts/search-index.js`, чтобы `PRESET` в `CANVAS` был отражён в спецификации, manual и активных реестрах как уже закрытый шаг.
 
 Проверки:
 - выполнить адресные `dotnet test` для `Axiom.Runtime.Tests` по `PReset`;
@@ -5712,7 +5712,7 @@
 5. В `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs` добавлена проверка `Paint_FillsCanvasRegionInsideViewport`, подтверждающая тот же договор на IDE-host уровне.
 6. В `tests/Axiom.Execution.Tests/AcceptanceProgramTests.cs` добавлена сквозная проверка `PaintCanvasAcceptanceSample_RunsOnBytecodeVm`, подтверждающая runnable sample без отката на интерпретатор.
 7. Добавлен runnable sample `samples/operators/paint/canvas_region_fill.axm`, который показывает заливку мировой области в `CANVAS` через `VIEWPORT` и `CAMERA`.
-8. Обновлены `docs/SPECIFICATION3.md`, `docs/MODERN_GRAPHICS_PLAN.md`, `docs/BYTECODE_COVERAGE.md`, `docs/PLANS4.md`, `docs/manual/graphics-primitives.html`, `docs/manual/modern-graphics.html` и `docs/manual/scripts/search-index.js`, чтобы `PAINT` в `CANVAS` был отражён в спецификации, manual и активных реестрах как уже закрытый шаг.
+8. Обновлены `docs/SPECIFICATION3.md`, `docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md`, `docs/BYTECODE_COVERAGE.md`, `docs/PLANS4.md`, `docs/manual/graphics-primitives.html`, `docs/manual/modern-graphics.html` и `docs/manual/scripts/search-index.js`, чтобы `PAINT` в `CANVAS` был отражён в спецификации, manual и активных реестрах как уже закрытый шаг.
 
 Проверки:
 - выполнить адресные `dotnet test` для `Axiom.Runtime.Tests` по `Paint`;
@@ -5736,7 +5736,7 @@
 4. Полностью переписана страница `docs/manual/get-put.html`: теперь она описывает `GET` и `PUT` и для `SCREEN`, и для `CANVAS`, прямо фиксирует мировой договор `CANVAS`, буфер `0..255`, форму `PUT STEP` и действие `PUT` по умолчанию `XOR`.
 5. В `docs/manual/modern-graphics.html` добавлено прямое упоминание `GET` / `PUT` как индексного блочного helper-слоя внутри `CANVAS`, а также ссылки на новые runnable-примеры.
 6. В `docs/manual/scripts/search-index.js` обновлены поисковые записи для `CANVAS`, `VIEWPORT`, `GET` и `PUT`, чтобы поиск находил новые формы по словам `canvas`, `viewport`, `camera`, `world`.
-7. В `docs/SPECIFICATION3.md` добавлен отдельный новый раздел про перенос `GET` / `PUT` в `CANVAS`, а в `docs/MODERN_GRAPHICS_PLAN.md`, `docs/PLANS4.md` и `docs/BYTECODE_COVERAGE.md` зафиксировано, что базовая выборочная волна `POINT`, `PSET`, `PRESET`, `PAINT`, `GET`, `PUT` теперь закрыта полностью.
+7. В `docs/SPECIFICATION3.md` добавлен отдельный новый раздел про перенос `GET` / `PUT` в `CANVAS`, а в `docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md`, `docs/PLANS4.md` и `docs/BYTECODE_COVERAGE.md` зафиксировано, что базовая выборочная волна `POINT`, `PSET`, `PRESET`, `PAINT`, `GET`, `PUT` теперь закрыта полностью.
 
 Затронутые файлы:
 - `tests/Axiom.Ide.Tests/ProgramConsoleServiceTests.cs`
@@ -5747,7 +5747,7 @@
 - `docs/manual/modern-graphics.html`
 - `docs/manual/scripts/search-index.js`
 - `docs/SPECIFICATION3.md`
-- `docs/MODERN_GRAPHICS_PLAN.md`
+- `docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md`
 - `docs/PLANS4.md`
 - `docs/BYTECODE_COVERAGE.md`
 - `docs/WORKLOG4.md`
@@ -5938,24 +5938,24 @@
 - опереться на Tiled как на модель и формат карты, на MonoGame/pygame как на способ рисования, а для имён оставить BASIC-стиль.
 
 Что сделано:
-1. Создан новый документ `docs/TILEMAP_CONTRACT.md`. В нём зафиксирован полный первый договор тайловой карты: сущности `TILESET` и `TILEMAP`, набор пользовательских функций и операторов, границы первого поддерживаемого объёма, правила рисования, свойства, объектные слои, диагностика и порядок внедрения.
-2. В `docs/TILEMAP_CONTRACT.md` прямо принято проектное решение не выносить наружу сырые Tiled `gid`, а нормализовать клетку в публичный договор `tilesetIndex`, `tileIndex`, `flags`, чтобы слой был удобен для Axiom-кода.
-3. В `docs/TILEMAP_CONTRACT.md` зафиксировано, что первый утверждённый объём не будет размываться: он сразу включает свойства карты/слоёв/тайлов/объектов, чтение и изменение клеток, объектные слои и реальный договор видимой отрисовки поверх `CANVAS`, `CAMERA` и `VIEWPORT`.
-4. В `docs/MODERN_GRAPHICS_PLAN.md` расплывчатый шестой срез заменён ссылкой на отдельный договор и точным порядком внедрения.
-5. В `docs/SPECIFICATION3.md` добавлена короткая активная фиксация, что подробный рабочий договор тайловой карты теперь живёт в `docs/TILEMAP_CONTRACT.md`.
+1. Создан новый документ `docs/archive/root-documents-20261011/TILEMAP_CONTRACT.md`. В нём зафиксирован полный первый договор тайловой карты: сущности `TILESET` и `TILEMAP`, набор пользовательских функций и операторов, границы первого поддерживаемого объёма, правила рисования, свойства, объектные слои, диагностика и порядок внедрения.
+2. В `docs/archive/root-documents-20261011/TILEMAP_CONTRACT.md` прямо принято проектное решение не выносить наружу сырые Tiled `gid`, а нормализовать клетку в публичный договор `tilesetIndex`, `tileIndex`, `flags`, чтобы слой был удобен для Axiom-кода.
+3. В `docs/archive/root-documents-20261011/TILEMAP_CONTRACT.md` зафиксировано, что первый утверждённый объём не будет размываться: он сразу включает свойства карты/слоёв/тайлов/объектов, чтение и изменение клеток, объектные слои и реальный договор видимой отрисовки поверх `CANVAS`, `CAMERA` и `VIEWPORT`.
+4. В `docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md` расплывчатый шестой срез заменён ссылкой на отдельный договор и точным порядком внедрения.
+5. В `docs/SPECIFICATION3.md` добавлена короткая активная фиксация, что подробный рабочий договор тайловой карты теперь живёт в `docs/archive/root-documents-20261011/TILEMAP_CONTRACT.md`.
 6. В `README.md` новый документ добавлен в список основных документов, чтобы он не потерялся.
 7. В `docs/PLANS4.md` зафиксирован следующий технический шаг по этому договору: сначала `TILESET` / `LOADTILESET` / `DRAWTILE`, затем `TILEMAP` / `LOADTILEMAP` / `DRAWTILEMAP`.
 
 Затронутые файлы:
-- `docs/TILEMAP_CONTRACT.md`
+- `docs/archive/root-documents-20261011/TILEMAP_CONTRACT.md`
 - `README.md`
-- `docs/MODERN_GRAPHICS_PLAN.md`
+- `docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md`
 - `docs/SPECIFICATION3.md`
 - `docs/PLANS4.md`
 - `docs/WORKLOG4.md`
 
 Проверки:
-- `git diff --check -- docs/TILEMAP_CONTRACT.md README.md docs/MODERN_GRAPHICS_PLAN.md docs/SPECIFICATION3.md docs/PLANS4.md docs/WORKLOG4.md`
+- `git diff --check -- docs/archive/root-documents-20261011/TILEMAP_CONTRACT.md README.md docs/archive/root-documents-20261011/MODERN_GRAPHICS_PLAN.md docs/SPECIFICATION3.md docs/PLANS4.md docs/WORKLOG4.md`
 
 Решение:
 - считать полный проектный договор тайловой карты зафиксированным отдельным документом;
@@ -5964,7 +5964,7 @@
 ## Session 1018 - 2026-06-08 19:19 - первый срез TILESET синхронизирован с manual и реестрами
 
 Задача:
-- начать реальную работу по `docs/TILEMAP_CONTRACT.md` с уже реализованного первого шага `TILESET` / `LOADTILESET` / `DRAWTILE`;
+- начать реальную работу по `docs/archive/root-documents-20261011/TILEMAP_CONTRACT.md` с уже реализованного первого шага `TILESET` / `LOADTILESET` / `DRAWTILE`;
 - закрыть документационный хвост этого среза, не уходя пока в `TILEMAP`.
 
 Что сделано:
@@ -5994,7 +5994,7 @@
 - для кодового среза в этом рабочем ходе уже были получены зелёные проверки: `dotnet test tests/Axiom.Parsing.Tests/Axiom.Parsing.Tests.csproj -nologo`, `dotnet test tests/Axiom.Semantics.Tests/Axiom.Semantics.Tests.csproj -nologo`, `dotnet test tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj -nologo`, `dotnet test tests/Axiom.Execution.Tests/Axiom.Execution.Tests.csproj -nologo --filter "FullyQualifiedName~DrawTile|FullyQualifiedName~Tileset|DisplayName~drawtile|DisplayName~tileset"`.
 
 Решение:
-- считать первый реальный шаг по `docs/TILEMAP_CONTRACT.md` закрытым не только кодом и sample, но и пользовательской документацией;
+- считать первый реальный шаг по `docs/archive/root-documents-20261011/TILEMAP_CONTRACT.md` закрытым не только кодом и sample, но и пользовательской документацией;
 - следующий шаг не расширять внутри `TILESET`, а переводить работу на `TILEMAP` / `LOADTILEMAP` / `DRAWTILEMAP` / `DRAWTILELAYER`.
 
 ## Session 1019 - 2026-06-08 19:29 - IDE-подсветка tile-слоя закреплена
@@ -6024,7 +6024,7 @@
 
 Решение:
 - считать обязательное правило по IDE-раскраске новых языковых сущностей зафиксированным на уровне репозитория;
-- следующий шаг по `docs/TILEMAP_CONTRACT.md` не меняется: переходить к `TILEMAP` / `LOADTILEMAP` / `DRAWTILEMAP` / `DRAWTILELAYER`, сразу добавляя им IDE-подсветку в том же наборе правок.
+- следующий шаг по `docs/archive/root-documents-20261011/TILEMAP_CONTRACT.md` не меняется: переходить к `TILEMAP` / `LOADTILEMAP` / `DRAWTILEMAP` / `DRAWTILELAYER`, сразу добавляя им IDE-подсветку в том же наборе правок.
 
 ## Session 1020 - 2026-06-08 21:47 - IDE-подсветка TILEMAP добавлена
 
@@ -6057,7 +6057,7 @@
 ## Session 1021 - 2026-06-08 23:24 - первый runtime-срез TILEMAP закрыт
 
 Задача:
-- продолжить работу по `docs/TILEMAP_CONTRACT.md` без повторной разведки;
+- продолжить работу по `docs/archive/root-documents-20261011/TILEMAP_CONTRACT.md` без повторной разведки;
 - довести `TILEMAP` / `LOADTILEMAP` / `MAP*` / `DRAWTILEMAP` / `DRAWTILELAYER` до тестов, runnable-примера, manual и активных реестров.
 
 Что сделано:
@@ -6095,12 +6095,12 @@
 
 Решение:
 - считать первый runtime/VM/manual-срез `TILEMAP` закрытым;
-- следующий шаг по `docs/TILEMAP_CONTRACT.md`: реализовать `MAPTILE`, `MAPTILESET`, `MAPTILEFLAGS` и `SETMAPTILE` с обязательной IDE-подсветкой, тестами, runnable-примером и manual.
+- следующий шаг по `docs/archive/root-documents-20261011/TILEMAP_CONTRACT.md`: реализовать `MAPTILE`, `MAPTILESET`, `MAPTILEFLAGS` и `SETMAPTILE` с обязательной IDE-подсветкой, тестами, runnable-примером и manual.
 
 ## Session 1022 - 2026-06-08 23:56 - чтение и запись клеток TILEMAP закрыты
 
 Задача:
-- продолжить работу по `docs/TILEMAP_CONTRACT.md`;
+- продолжить работу по `docs/archive/root-documents-20261011/TILEMAP_CONTRACT.md`;
 - закрыть срез `MAPTILE`, `MAPTILESET`, `MAPTILEFLAGS` и `SETMAPTILE` без пропуска IDE-подсветки.
 
 Что сделано:
@@ -6155,7 +6155,7 @@
 
 Решение:
 - считать срез `MAPTILE` / `MAPTILESET` / `MAPTILEFLAGS` / `SETMAPTILE` закрытым;
-- следующий шаг по `docs/TILEMAP_CONTRACT.md`: свойства карты, слоёв и тайлов.
+- следующий шаг по `docs/archive/root-documents-20261011/TILEMAP_CONTRACT.md`: свойства карты, слоёв и тайлов.
 
 ## Session 1023 - 2026-08-18 - диагностические коды runtime вынесены в централизованный класс DiagnosticCodes
 
@@ -6251,8 +6251,8 @@
 - `docs/agent/CURRENT_STATE.md` — 4 ссылки исправлены.
 - `docs/agent/README.md` — 2 ссылки исправлены.
 - `docs/agent/PLAYBOOKS.md` — 4 ссылки исправлены.
-- `docs/agent/HEADROOM_PILOT.md` — 3 ссылки исправлены.
-- `docs/agent/EXTERNAL_TOOLS_EVALUATION.md` — 6 ссылок исправлено.
+- `docs/archive/state-before-20261011/docs/agent/HEADROOM_PILOT.md` — 3 ссылки исправлены.
+- `docs/archive/state-before-20261011/docs/agent/EXTERNAL_TOOLS_EVALUATION.md` — 6 ссылок исправлено.
 
 Итого: 19 ссылок в 5 файлах.
 

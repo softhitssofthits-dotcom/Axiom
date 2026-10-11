@@ -108,6 +108,7 @@ class AxiomIDE {
     // Retired settings from earlier Electron profiles must not change editor behavior.
     for (const key of ['formatOnBlur', 'formatOnSave', 'checkOnChange']) delete this.settings[key];
     this.updateFormatMenuChecks();
+    this.updateThemeMenuChecks();
   }
 
   saveSettings(patch) {
@@ -273,11 +274,7 @@ class AxiomIDE {
         { token: 'delimiter', foreground: '705A00' },
       ],
       colors: {
-        'editor.background': '#ffffff',
-        'editor.foreground': '#182231',
-        'editor.lineHighlightBackground': '#f3f7fc',
-        'editor.selectionBackground': '#b9d7fb',
-        'editorCursor.foreground': '#0969da',
+        ...AxiomIDE.monacoSurface('light'),
         'editorLineNumber.foreground': '#8a98ab',
         'editorLineNumber.activeForeground': '#536174',
         'editorIndentGuide.background1': '#e6ebf2',
@@ -307,11 +304,7 @@ class AxiomIDE {
         { token: 'delimiter', foreground: 'D7BA7D' },
       ],
       colors: {
-        'editor.background': '#1a1e27',
-        'editor.foreground': '#dce3ec',
-        'editor.lineHighlightBackground': '#202633',
-        'editor.selectionBackground': '#2d568b',
-        'editorCursor.foreground': '#62a8ff',
+        ...AxiomIDE.monacoSurface('dark'),
         'editorLineNumber.foreground': '#5f6c80',
         'editorLineNumber.activeForeground': '#a5afbf',
         'editorIndentGuide.background1': '#2a3240',
@@ -341,14 +334,10 @@ class AxiomIDE {
         { token: 'invalid', foreground: 'FFAAAA' },
       ],
       colors: {
-        'editor.background': '#000080', 'editor.foreground': '#FFFFFF',
-        'editor.lineHighlightBackground': '#101090', 'editor.selectionBackground': '#5050B0',
-        'editorCursor.foreground': '#FFFF55', 'editorLineNumber.foreground': '#B8C7E8',
+        ...AxiomIDE.monacoSurface('basic'),
+        'editorLineNumber.foreground': '#B8C7E8',
         'editorLineNumber.activeForeground': '#FFFFFF', 'editorIndentGuide.background1': '#3030A0',
-        'editorIndentGuide.activeBackground1': '#B8C7E8', 'editorWidget.background': '#101080',
-        'editorWidget.border': '#C0C0C0', 'editorSuggestWidget.background': '#101080',
-        'editorSuggestWidget.foreground': '#FFFFFF', 'editorSuggestWidget.selectedBackground': '#4040A0',
-        'editorError.foreground': '#FFAAAA', 'editorWarning.foreground': '#FFFF55',
+        'editorIndentGuide.activeBackground1': '#B8C7E8', 'editorError.foreground': '#FFAAAA', 'editorWarning.foreground': '#FFFF55',
       },
     });
 
@@ -372,6 +361,7 @@ class AxiomIDE {
       // the tab strip/toolbar.
       hover: { above: false },
       scrollBeyondLastLine: false,
+      renderLineHighlight: 'none',
       tabSize: 4,
       insertSpaces: true,
       acceptSuggestionOnEnter: 'off',
@@ -394,6 +384,7 @@ class AxiomIDE {
       if (this.settings.smartIdentifierEnabled) this.formatWholeDocument('ax-smart-blur', this.activeFile, 'document.normalizeIdentifiers');
     });
     this.editor.onDidChangeModelContent((event) => {
+      this.closeDiagnosticPeek();
       this.clearUsageAdvice();
       this.editedLines.record(this.editor.getModel(),event.changes,!this._autoFormatting);
       if (this.activeFile) this.markDirty(this.activeFile, true);
@@ -1409,6 +1400,32 @@ class AxiomIDE {
     },
   };
 
+  static monacoSurface(theme) {
+    const root = document.documentElement, previous = root.dataset.theme;
+    root.dataset.theme = theme;
+    const styles = getComputedStyle(root), read = name => styles.getPropertyValue(name).trim();
+    const editor = read('--xs-editor');
+    const colors = {
+      'editor.background': editor, 'editor.foreground': read('--xs-text'),
+      'editor.lineHighlightBackground': editor,
+      'editor.selectionBackground': read('--xs-editor-selection'),
+      'editorCursor.foreground': read('--xs-editor-cursor'),
+      'editorWidget.background': read('--xs-surface-raised'), 'editorWidget.border': read('--xs-border'),
+      'editorSuggestWidget.background': read('--xs-surface-raised'), 'editorSuggestWidget.foreground': read('--xs-text'),
+      'editorSuggestWidget.selectedBackground': read('--xs-surface-active'),
+    };
+    if (previous === undefined) delete root.dataset.theme; else root.dataset.theme = previous;
+    return colors;
+  }
+
+  consoleTheme() {
+    const styles = getComputedStyle(document.documentElement), read = name => styles.getPropertyValue(name).trim();
+    return { ...AxiomIDE.CONSOLE_THEMES[this.settings.theme],
+      background: read('--xs-console-bg'), foreground: read('--xs-text'),
+      cursor: read('--xs-editor-cursor'), selectionBackground: read('--xs-editor-selection'),
+    };
+  }
+
   // Lazy xterm.js setup: the Terminal exists only after the first console run (or tab
   // switch), so startup stays cheap.
   ensureConsole() {
@@ -1423,12 +1440,27 @@ class AxiomIDE {
       cursorBlink: true,
       fontSize: 13,
       fontFamily: 'Consolas, "Cascadia Mono", "Courier New", monospace',
-      theme: AxiomIDE.CONSOLE_THEMES[this.settings.theme],
+      theme: this.consoleTheme(),
     });
     this.fitAddon = new window.FitAddon.FitAddon();
     this.term.loadAddon(this.fitAddon);
     this.term.open(document.getElementById('terminal'));
     this.log('terminal.created');
+    document.getElementById('terminal').addEventListener('contextmenu', async event => {
+      event.preventDefault();
+      event.stopPropagation();
+      const selected = this.term.getSelection();
+      const action = await API.consoleContextMenu({
+        canCopy: selected.length > 0,
+        copyLabel: I18N.t('menu.edit.copy'), clearLabel: I18N.t('console.clear'),
+      });
+      if (action === 'copy' && selected) await API.writeClipboardText(selected);
+      if (action === 'clear') {
+        if (this.execution) this.execution.clearConsole();
+        else this.term.reset();
+      }
+      this.term.focus();
+    });
     this.fitConsole();
     this.term.onData((d) => this.consoleInput(d)); // keystrokes go through the type-ahead hold
     // INKEY, KEYPRESS, KEYDOWN и SLEEP должны видеть клавиши консоли и отпускание модификаторов.
@@ -1685,7 +1717,13 @@ class AxiomIDE {
     return null;
   }
 
+  closeDiagnosticPeek() {
+    // Карточка относится к предыдущему тексту; новый результат проверки обновит маркеры.
+    this.editor.trigger('axiom.diagnostics', 'closeMarkersNavigation', {});
+  }
+
   clearDiagnostics() {
+    this.closeDiagnosticPeek();
     this.log('diagnostics.clear');
     document.getElementById('diagnostics-content').innerHTML = '';
     this._lastDiagnostics = [];
@@ -1728,6 +1766,7 @@ class AxiomIDE {
   }
 
   applyDiagnostics(diags, onlyActive = false) {
+    this.closeDiagnosticPeek();
     this.log('diagnostics.apply.start', { count: Array.isArray(diags) ? diags.length : 0, onlyActive, focus: this.focusState() });
     const monaco = this.monaco;
     const byModel = new Map();
@@ -1791,6 +1830,13 @@ class AxiomIDE {
     }
 
     for (const [model, markers] of byModel) monaco.editor.setModelMarkers(model, 'axiom', markers);
+    if ([...byModel.values()].some(markers => markers.some(marker => marker.severity === monaco.MarkerSeverity.Error))) {
+      // Показываем ошибки сразу, даже если панель скрыта или выбран другой фильтр.
+      // Фокус редактора сохраняется, чтобы пользователь мог продолжить набор.
+      this._diagnosticFilter = 'all';
+      this.showPanel();
+      this.switchPanel('diagnostics');
+    }
     this.updateDiagnosticFilters();
     this.log('diagnostics.apply.end', { count: diags.length, focus: this.focusState() });
   }
@@ -1924,12 +1970,19 @@ class AxiomIDE {
 
   // ================= theme / language =================
 
+  updateThemeMenuChecks() {
+    for (const theme of ['light', 'dark', 'basic']) {
+      UIControls.setMenuChecked(document.querySelector(`.menu-check[data-check="theme-${theme}"]`), this.settings.theme === theme);
+    }
+  }
+
   setTheme(theme) {
     if (!['dark', 'light', 'basic'].includes(theme)) return;
     this.saveSettings({ theme });
     document.documentElement.setAttribute('data-theme', theme);
     this.monaco?.editor.setTheme('axiom-' + theme);
-    if (this.term) this.term.options.theme = AxiomIDE.CONSOLE_THEMES[theme];
+    if (this.term) this.term.options.theme = this.consoleTheme();
+    this.updateThemeMenuChecks();
   }
 
   setLanguage(lang) {

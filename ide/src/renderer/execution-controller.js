@@ -7,7 +7,7 @@ class ExecutionController {
   }
   async start(file, launchKind = 'run', breakpoints = [], stopFirst = true) {
     const ide = this.ide;
-    ide.running = true; this.starting = true; this.pendingStop = false; this.pendingEvents = []; this.outputText = ''; this.streamedOutputText = ''; this.inputPrompt = ''; this.inputText = ''; this.inputRequestId = null; this.stopId = null;
+    ide.running = true; this.starting = true; this.pendingStop = false; this.pendingEvents = []; this.outputText = ''; this.streamedOutputText = ''; this.clearedOutputPrefix = ''; this.inputPrompt = ''; this.inputText = ''; this.inputRequestId = null; this.stopId = null;
     this.canStepBack=false;this.callDepth=0;this.line=null;this.debugBusy=false;ide.trace?.clearMarker();ide.trace?.update();
     ide._stopRequested = false; ide.clearDiagnostics(); ide.showPanel(); ide.switchPanel('console');
     ide.setStatus(I18N.t('trace.preparing'));
@@ -34,6 +34,7 @@ class ExecutionController {
         this.ide.setStatus(I18N.t(({Compiling:'trace.compiling',Running:'status.running',WaitingForInput:'trace.waiting',Paused:'trace.running'})[payload.state] || 'trace.running'));
         break;
       case 'output.append': case 'output.replace':
+        if (message.event === 'output.replace') this.clearedOutputPrefix = '';
         // Снимок INPUT может опережать таймер вывода. append относится только
         // к опубликованному потоку, а не к уже полученному полному снимку.
         this.streamedOutputText = message.event === 'output.append' ? this.streamedOutputText + payload.text : payload.text;
@@ -70,10 +71,24 @@ class ExecutionController {
     if(message.event==='execution.finished') this.ide.trace?.finished();
     else this.ide.trace?.update();
   }
+  clearConsole() {
+    this.clearedOutputPrefix = this.outputText || '';
+    this.renderOutput();
+  }
   renderOutput() {
     if (!this.ide.term) return;
-    const text = (this.outputText || '') + (this.inputRequestId ? this.inputPrompt + this.inputText : '');
-    this.ide.term.reset(); this.ide.term.write(text.replace(/\r?\n/g, '\r\n'));
+    // Снимок службы консоли разделяет завершённые строки, но не содержит
+    // завершающего перевода строки. Следующий INPUT начинается новой строкой.
+    const fullHistory = this.outputText || '';
+    const prefix = this.clearedOutputPrefix || '';
+    if (prefix && !fullHistory.startsWith(prefix)) this.clearedOutputPrefix = '';
+    const history = prefix && fullHistory.startsWith(prefix)
+      ? fullHistory.slice(prefix.length).replace(/^\r?\n/, '') : fullHistory;
+    const separator = this.inputRequestId && history && !history.endsWith('\n') ? '\n' : '';
+    const text = history + separator + (this.inputRequestId ? this.inputPrompt + this.inputText : '');
+    // write() асинхронен: синхронный reset() не удаляет ожидающие записи.
+    // RIS сбрасывает терминал внутри той же очереди перед новым снимком.
+    this.ide.term.write('\x1bc' + text.replace(/\r?\n/g, '\r\n'));
   }
   async input(data) {
     if (data === '\u0003') { await this.stop(); return; }

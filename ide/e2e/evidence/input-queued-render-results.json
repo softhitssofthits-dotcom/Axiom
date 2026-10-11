@@ -1,0 +1,60 @@
+[
+  {
+    "id": "input-sequential-prompts",
+    "spec": "input-prompts.spec.js",
+    "name": "Два последовательных INPUT: приглашение и введённое имя не повторяются",
+    "ms": 6142,
+    "passed": 19,
+    "failures": [],
+    "notes": [
+      "Консоль во время второго INPUT: Введите ваше имя: Анна\nВведите ваш возраст?\n\n"
+    ],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57381/d05e2630-3c22-483c-b9f1-895034a52972\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "input-snapshot-stream-order",
+    "spec": "input-prompts.spec.js",
+    "name": "Снимок INPUT и запоздалый поток вывода: согласование и сохранность набора",
+    "ms": 4335,
+    "passed": 6,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57387/fa757d74-b44f-4b59-bfab-cadfa86c471d\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "input-name-age-sample",
+    "spec": "input-prompts.spec.js",
+    "name": "Учебный пример имени и возраста запускается в Electron",
+    "ms": 4020,
+    "passed": 3,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57392/d5e78bb1-14d7-4ca2-989e-46d3463e2645\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "input-prompt-separators",
+    "spec": "input-prompts.spec.js",
+    "name": "INPUT: разделители приглашения, пустая строка и пунктуация",
+    "ms": 4252,
+    "passed": 7,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57398/d2c544a5-62e4-44d0-b3c6-3e540a4f72ce\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

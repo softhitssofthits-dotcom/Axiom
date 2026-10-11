@@ -10,10 +10,10 @@ DIM HUD_HEIGHT AS INTEGER = 30 ' Высота верхней панели со �
 DIM PLAYER_SPEED AS INTEGER = 4                                                                 ' Скорость героя в пикселях за кадр.
 DIM GHOST_SPEED AS INTEGER = 3                                                                  ' Скорость призрака в пикселях за кадр.
 
-DIM DIR_LEFT AS INTEGER = 1                                                                     ' Код направления влево.
+Dim DIR_LEFT As Integer = 1                                                                     ' Код направления влево.
 DIM DIR_RIGHT AS INTEGER = 2                                                                    ' Код направления вправо.
-DIM DIR_UP AS INTEGER = 3                                                                       ' Код направления вверх.
-DIM DIR_DOWN AS INTEGER = 4                                                                     ' Код направления вниз.
+Dim DIR_UP As Integer = 3                                                                       ' Код направления вверх.
+Dim DIR_DOWN As Integer = 4                                                                     ' Код направления вниз.
 
 DIM WALL_FILL_COLOR AS INTEGER = RGB(12, 40, 118)                                              ' Цвет заливки стен, оставлен как часть палитры примера.
 DIM WALL_LIGHT_COLOR AS INTEGER = RGB(90, 214, 255)                                            ' Светлая голубая линия для HUD и декоративных контуров.

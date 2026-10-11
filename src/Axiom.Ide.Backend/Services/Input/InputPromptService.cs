@@ -174,16 +174,9 @@ public sealed class InputPromptService : ViewModelBase
 
     private static string CreateConsolePrompt(ProgramInputRequest request)
     {
-        var promptText = request.PromptText?.TrimEnd();
-
-        if (string.IsNullOrWhiteSpace(promptText))
-        {
-            return "? ";
-        }
-
-        return promptText.EndsWith('?') || promptText.EndsWith(':')
-            ? $"{promptText} "
-            : $"{promptText}? ";
+        // Компилятор уже сформировал приглашение по разделителю INPUT.
+        // Пустое приглашение и пробелы сохраняются буквально.
+        return request.PromptText ?? "? ";
     }
 
     private static string SanitizeForLog(string text)

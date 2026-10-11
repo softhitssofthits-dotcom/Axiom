@@ -1,96 +1,25 @@
-# Architecture Map
+# Карта исходников Axiom
 
-## Code Hotspots
+| Область | Путь |
+|---|---|
+| Координаты и диагностики | `src/Axiom.Core/` |
+| Токены и синтаксис | `src/Axiom.Lexing/`, `src/Axiom.Syntax/` |
+| Разбор | `src/Axiom.Parsing/Parser.*.cs` |
+| Связывание и формы функций | `src/Axiom.Semantics/`, `Symbols/Builtins/` |
+| Понижение и байт-код | `src/Axiom.Bytecode/` |
+| Исполнение и встроенные функции | `src/Axiom.Runtime/Execution/BytecodeVm*.cs` |
+| Сквозной путь | `src/Axiom.Execution/Pipeline/AxiomExecutionPipeline.cs` |
+| Форматирование | `src/Axiom.Formatting/` |
+| Контракты документов | `src/Axiom.Ide.Contracts/` |
+| Общие службы | `src/Axiom.Ide.Backend/` |
+| Служебный процесс и запись | `src/Axiom.DesktopHost/`, `FileCommands.cs` |
+| Связь и восстановление | `ide/src/main/backend-client.js`, `backend-ipc.js`, `recovery-store.js` |
+| Редактор и документы | `ide/src/renderer/app.js`, `documents.js`, `document-save.js` |
+| Вывод и ввод | `ide/src/renderer/execution-controller.js`, `program-keys.js` |
+| Графика и трассировка | `ide/src/renderer/canvas.js`, `trace-controller.js` |
+| Элементы управления | `ide/src/renderer/ui-controls.js`, `design-system.css` |
+| Electron-приёмка | `ide/e2e/specs/`, `SCENARIOS.json` |
+| Проверки служебных модулей | `ide/tests/`, `tests/` |
+| Справочник и полнота | `docs/manual/`, `scripts/check-manual.mjs` |
 
-### Language Frontend
-
-- `src/Axiom.Lexing/` - tokenization
-- `src/Axiom.Syntax/` - syntax tree and syntax node model
-- `src/Axiom.Parsing/` - parser split by responsibility
-- `src/Axiom.Semantics/` - symbols, scopes, binding, semantic diagnostics
-
-### Runtime And Execution
-
-- `src/Axiom.Runtime/` - runtime values, interpreter, built-ins, runtime diagnostics
-- `src/Axiom.Execution/` - `parse -> bind -> execute` orchestration boundary
-
-### CLI And Formatting
-
-- `src/Axiom.Cli/` - headless CLI `axiom` (run/check/fmt/metadata/version) over `AxiomExecutionPipeline`
-- `src/Axiom.Formatting/` - UI-independent code formatting (LineFormatter, AxiomCodeFormattingService)
-
-### IDE
-
-- `src/Axiom.Ide/` - WPF shell, document handling, output/diagnostics, commands, services
-- `src/Axiom.Ide.SmokeHarness/` - automated live WPF smoke runner
-- `ide/` - Electron IDE (Monaco + xterm.js), talks to the language only via `axiom` CLI; see `docs/ELECTRON_IDE_PLAN.md`
-
-## Test Ownership Map
-
-- `tests/Axiom.Lexing.Tests/` - lexer behavior
-- `tests/Axiom.Parsing.Tests/` - parser behavior and syntax diagnostics
-- `tests/Axiom.Semantics.Tests/` - binder rules and semantic diagnostics
-- `tests/Axiom.Runtime.Tests/` - interpreter and built-in runtime behavior
-- `tests/Axiom.Execution.Tests/` - end-to-end language pipeline
-- `tests/Axiom.Ide.Tests/` - non-UI and shell-level IDE regressions
-- `tests/Axiom.Cli.Tests/` - CLI stream/exit-code contract, metadata, fmt
-- `ide/e2e/` - Playwright Electron suite (`node runner.js`)
-
-## Manual And Acceptance Samples
-
-- `docs/manual/` - user-facing reference and getting-started docs
-- `docs/manual/scripts/manual.js` - manual index/search metadata
-- `samples/functions/<name>/` - runnable built-in acceptance samples
-- `samples/operators/<name>/` - runnable operator acceptance samples
-- `samples/control-flow/<name>/` - runnable control-flow acceptance samples
-- `samples/expressions/<name>/` - runnable expression acceptance samples
-- `samples/smoke/` - integrated runnable scenarios
-
-## Fast Lookup By Task Type
-
-### Add Or Change Built-In Function
-
-Look at:
-
-- `src/Axiom.Semantics/Symbols/BuiltinFunctionId.cs`
-- `src/Axiom.Semantics/Symbols/Builtins/`
-- `src/Axiom.Runtime/Execution/Interpreter.Builtins*.cs`
-- `tests/Axiom.Semantics.Tests/`
-- `tests/Axiom.Runtime.Tests/`
-- `tests/Axiom.Execution.Tests/`
-- `docs/manual/`
-- `samples/functions/`
-
-### Change Syntax Or Parsing
-
-Look at:
-
-- `src/Axiom.Syntax/`
-- `src/Axiom.Parsing/`
-- `tests/Axiom.Parsing.Tests/`
-- `docs/SPECIFICATION3.md`
-
-### Change Semantic Rules
-
-Look at:
-
-- `src/Axiom.Semantics/`
-- `tests/Axiom.Semantics.Tests/`
-- `docs/SPECIFICATION3.md`
-
-### Change IDE Shell Behavior
-
-Look at:
-
-- `src/Axiom.Ide/`
-- `tests/Axiom.Ide.Tests/`
-- `src/Axiom.Ide.SmokeHarness/`
-- `docs/archive/ide/IDE_REDESIGN.md`
-- `docs/ARCHITECTURE.md`
-
-## Retrieval Notes
-
-- Prefer this file for orientation, not for detailed contracts.
-- For exact language behavior, always fall back to `docs/SPECIFICATION3.md`.
-- For exact session continuity, always fall back to `docs/WORKLOG5.md`.
-
+Точные договоры находятся в текущей спецификации, коде, примерах и проверках. Эта карта не является самостоятельной спецификацией.
