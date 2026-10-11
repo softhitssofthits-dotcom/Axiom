@@ -1,16 +1,30 @@
 [
   {
-    "id": "console-background-screen-light-theme",
-    "spec": "console-background.spec.js",
-    "name": "SCREEN не оставляет чёрную полосу в светлой консоли",
-    "ms": 3399,
-    "passed": 4,
+    "id": "graphics-close-ide-owns-host",
+    "spec": "graphics-shutdown.spec.js",
+    "name": "Выход из Electron при INPUT, SCREEN/SLEEP и цикле CANVAS освобождает свой процесс",
+    "ms": 14891,
+    "passed": 6,
     "failures": [],
     "notes": [],
     "crashed": false,
     "consoleTail": [],
     "pageErrors": [],
-    "mainStderrTail": "Debugger ending on ws://127.0.0.1:53585/141de69e-f499-42e3-94c7-5051f8b546ac\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "mainStderrTail": "Waiting for the debugger to disconnect...\r\nWaiting for the debugger to disconnect...\r\nWaiting for the debugger to disconnect...\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "graphics-host-fault-recover",
+    "spec": "graphics-shutdown.spec.js",
+    "name": "После отказа своего DesktopHost Electron отклоняет старый ввод и запускает новую VM",
+    "ms": 7940,
+    "passed": 5,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58506/e8d62aad-a917-412b-b3b5-f5398e2e8f00\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
     "rendererDialogs": []
   }
 ]

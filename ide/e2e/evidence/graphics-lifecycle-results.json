@@ -1,0 +1,44 @@
+[
+  {
+    "id": "graphics-canvas-input-close-repeat",
+    "spec": "graphics-lifecycle.spec.js",
+    "name": "Закрытие CANVAS при INPUT отменяет запрос и допускает новый ввод",
+    "ms": 5324,
+    "passed": 4,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58311/36110827-2029-4ed6-9657-a21b9c5f2371\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "graphics-mouse-scale-buttons-wheel",
+    "spec": "graphics-lifecycle.spec.js",
+    "name": "CANVAS: размеры, масштаб, три кнопки, отпускание и колесо",
+    "ms": 8292,
+    "passed": 12,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58317/e6da6415-1d5d-41d7-8d5e-68e3c360c191\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "graphics-surfaces-stop-repeat",
+    "spec": "graphics-lifecycle.spec.js",
+    "name": "Повтор SCREEN и CANVAS не наследует поверхность или удержанные клавиши",
+    "ms": 8319,
+    "passed": 7,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58324/cf23222f-3e4e-47be-8fb5-4fec98dd2ff3\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]
