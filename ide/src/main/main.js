@@ -4,7 +4,7 @@ const fs = require('fs');
 const { setupIpc, killActivePty } = require('./ipc');
 const { ensureFreshAxiom } = require('./axiom-ensure');
 const { IdeLogger } = require('./ide-logger');
-const { setupBackendIpc, closeBackend } = require('./backend-ipc');
+const { setupBackendIpc, closeBackend, recoverBackend } = require('./backend-ipc');
 
 // Explicit profile injection keeps UI checks away from the user's real settings.
 if (process.env.AXIOM_IDE_USER_DATA_DIR) {
@@ -125,6 +125,7 @@ function createWindow() {
     },
     show: false,
   });
+  const createdWindow = mainWindow;
 
   if (state.maximized) mainWindow.maximize();
 
@@ -135,7 +136,27 @@ function createWindow() {
   mainWindow.on('responsive', () => log.info('window.responsive'));
   mainWindow.on('closed', () => log.info('window.closed'));
   mainWindow.webContents.on('did-finish-load', () => log.info('renderer.loaded'));
-  mainWindow.webContents.on('render-process-gone', (_event, details) => log.error('renderer.gone', details));
+  mainWindow.webContents.on('render-process-gone', async (_event, details) => {
+    log.error('renderer.gone', details);
+    const window = createdWindow;
+    killActivePty();
+    try {
+      await recoverBackend();
+      if (!window || window.isDestroyed()) return;
+      const { dialog } = require('electron');
+      await dialog.showMessageBox(window, {
+        type: 'error', title: 'Axiom IDE — сбой интерфейса',
+        message: 'Процесс интерфейса завершился. Выполнение программы остановлено.',
+        detail: 'Интерфейс будет загружен заново. Несохранённые изменения могли быть потеряны. Сохранённые файлы остаются на диске.',
+        buttons: ['Восстановить интерфейс'],
+      });
+      if (!window.isDestroyed()) {
+        saveState();
+        createWindow();
+        window.destroy();
+      }
+    } catch (error) { log.error('renderer.recovery.failed', error); }
+  });
   mainWindow.webContents.on('console-message', (details) => {
     const { level, message, lineNumber, sourceId } = details;
     const severity = level === 'error' ? 'error' : level === 'warning' ? 'warn' : 'info';
@@ -160,7 +181,7 @@ function createWindow() {
   mainWindow.once('closed', () => {
     ipcMain.removeListener('window-close-approved', approveClose);
     ipcMain.removeListener('window-close-handler-ready', handlerReady);
-    if (process.platform !== 'darwin') app.quit();
+    if (process.platform !== 'darwin' && mainWindow === createdWindow) app.quit();
   });
   mainWindow.on('close', event => {
     if (closeHandlerReady && !closeApproved && !mainWindow.webContents.isDestroyed() && !mainWindow.webContents.isCrashed()) {

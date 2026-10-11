@@ -13,6 +13,7 @@ let owner;
 let sessionId;
 let graphicsSessionId;
 let closing;
+let recovering;
 const canvas = new CanvasWindow({
   acknowledge: (id, frameId) => id === graphicsSessionId ? getClient().request('graphics.ack', { frameId }, id) : Promise.resolve(),
   stop: id => id === sessionId ? getClient().request('execution.stop', {}, id) : Promise.resolve(),
@@ -48,7 +49,7 @@ function getClient() {
 function setupBackendIpc() {
   const handle = (name, action) => ipcMain.handle(name, async (event, ...args) => {
     checkSender(event);
-    try { return { ok: true, payload: await action(...args) }; }
+    try { await recovering; return { ok: true, payload: await action(...args) }; }
     catch (error) { return { ok: false, error: { code: error.code || 'HOST_DISCONNECTED', message: error.message } }; }
   });
   handle('backend-ready', () => getClient().ready());
@@ -106,4 +107,16 @@ function setupBackendIpc() {
   });
 }
 function closeBackend() { graphicsSessionId = null; canvas.reset(); if (!closing) closing = client?.close() || Promise.resolve(); return closing; }
-module.exports = { setupBackendIpc, closeBackend };
+function recoverBackend() {
+  if (recovering) return recovering;
+  sessionId = null; graphicsSessionId = null; canvas.reset();
+  const previous = client;
+  // Поздние события прежнего процесса не должны менять новую сессию.
+  previous?.removeAllListeners('event'); previous?.removeAllListeners('frame'); previous?.removeAllListeners('fault');
+  recovering = (previous?.close() || Promise.resolve()).finally(() => {
+    if (client === previous) client = null;
+    recovering = null;
+  });
+  return recovering;
+}
+module.exports = { setupBackendIpc, closeBackend, recoverBackend };

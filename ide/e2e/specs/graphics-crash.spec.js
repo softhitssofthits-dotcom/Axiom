@@ -43,3 +43,55 @@ module.exports = [{
     }
   },
 }];
+module.exports.push({
+  id:'graphics-renderer-crash',
+  name:'Отказ основного интерфейса прекращает VM и закрывает графику',
+  async fn({S,C}) {
+    const file = writeAxm(testWorkspace('renderer-crash'), 'input.axm', 'CANVAS 40,30\nBEGINFRAME\nCLS RGB(0,255,0)\nPRESENT\nDIM value AS INTEGER\nINPUT value\n');
+    await S.launch(); await S.page.evaluate(async p => { await window.__ide.openFile(p); await window.__ide.run(); }, file);
+    await S.waitStatus('Ожидание ввода');
+    const {pid} = await ownedHost(S);
+    await S.electronApp.evaluate(({dialog}) => { dialog.showMessageBox = async () => ({response:0}); });
+    const restored = S.electronApp.waitForEvent('window', {timeout:20000, predicate: async page => {
+      try { await page.waitForURL('**/index.html', {timeout:10000}); return true; } catch { return false; }
+    }});
+    await S.electronApp.evaluate(({BrowserWindow}) => { const window = BrowserWindow.getAllWindows().find(w => w.webContents.getURL().endsWith('/index.html')); setTimeout(() => window.webContents.forcefullyCrashRenderer(),100); });
+    for(let i=0;i<100 && alive(pid);i++) await new Promise(r => setTimeout(r,50));
+    C.eq(alive(pid), false, 'DesktopHost завершён после отказа интерфейса');
+    C.eq(S.electronApp.windows().filter(page => page.url().endsWith('/canvas.html')).length,0,'Графическое окно закрыто');
+    S.page = await restored;
+    await S.page.waitForSelector('#app.ready', {timeout:20000});
+    C.eq(await S.page.evaluate(() => window.__ide.running),false,'Восстановленный интерфейс не запускает прежнюю VM');
+    await S.page.evaluate(async p => { await window.__ide.openFile(p); await window.__ide.run(); }, writeAxm(testWorkspace('renderer-recover'),'recover.axm','PRINT 2718\n'));
+    await S.waitIdle(); await S.waitConsole('2718');
+    C.eq(await S.page.locator('#diagnostics-content .diagnostic-icon.error').count(),0,'Новая VM работает после восстановления');
+    await S.close();
+  },
+});
+
+module.exports.push({
+  id:'graphics-renderer-bounded-stall',
+  name:'После ограниченного зависания интерфейса запрос закрытия завершает собственную VM',
+  async fn({S,C}) {
+    const file = writeAxm(testWorkspace('renderer-stall'),'sleep.axm','SCREEN 10\nCIRCLE (20,20),10,14\nSLEEP\n');
+    await S.launch();
+    await S.page.evaluate(async p => {
+      for(const path of [...window.__ide.openFiles.keys()]) if(path.startsWith('untitled')) await window.__ide.closeFile(path,true);
+      await window.__ide.openFile(p); await window.__ide.run();
+    },file);
+    await S.page.waitForFunction(() => window.__ide.execution.surface?.windowVisible === true);
+    const {pid} = await ownedHost(S);
+    const closed = S.electronApp.waitForEvent('close',{timeout:15000});
+    await S.electronApp.evaluate(({BrowserWindow}) => {
+      const window = BrowserWindow.getAllWindows().find(w => w.webContents.getURL().endsWith('/index.html'));
+      setTimeout(() => window.close(),300);
+    });
+    // Блокируется только интерфейс на две секунды; VM и основной процесс независимы.
+    await S.page.evaluate(() => { const until = Date.now()+2000; while(Date.now()<until) {} });
+    await closed;
+    for(let i=0;i<100 && alive(pid);i++) await new Promise(r => setTimeout(r,50));
+    C.eq(alive(pid),false,'После восстановления интерфейса закрытие завершило DesktopHost');
+    await S.close();
+  },
+});
+
