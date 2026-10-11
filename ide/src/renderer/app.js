@@ -70,6 +70,7 @@ class AxiomIDE {
       this.setupEditorContextMenu();
       this.setupMenubar();
       this.setupToolbar();
+      this.setToolbarVisible(this.settings.toolbarVisible !== false);
       this.setupProjectExplorer();
       this.setupPanelTabs();
       document.querySelectorAll('[data-diagnostic-filter]').forEach(button => button.addEventListener('click', () => {
@@ -585,6 +586,13 @@ class AxiomIDE {
     this.sidebarSplitter?.layout();
   }
 
+  setToolbarVisible(visible) {
+    document.getElementById('toolbar').hidden = !visible;
+    this.saveSettings({toolbarVisible: visible});
+    UIControls.setMenuChecked(document.querySelector('[data-check="toolbarVisible"]'), visible);
+    requestAnimationFrame(() => { this.editor?.layout(); this.fitAddon?.fit(); });
+  }
+
   setupKeyboardShortcuts() {
     // Capture phase: the integrated terminal's keydown handling stops the event before
     // bubble-phase listeners once xterm has focus, so F5 / Ctrl chords would never reach
@@ -701,6 +709,7 @@ class AxiomIDE {
       case 'check': this.check(true); break;
       case 'stop': this.stop(); break;
       case 'toggle-output': this.togglePanel(); break;
+      case 'toggle-toolbar': this.setToolbarVisible(this.settings.toolbarVisible === false); break;
       case 'toggle-sidebar': this.setSidebarVisible(this.settings.sidebarVisible === false); break;
       case 'toggle-project-explorer': this.toggleProjectExplorer(); break;
       case 'theme-light': this.setTheme('light'); break;

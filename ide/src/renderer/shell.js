@@ -5,34 +5,43 @@ Object.assign(icons,{format:'M4 5h16M4 10h12M4 15h16M4 20h12',search:'M10 3a7 7 
 const iconMarkup = key => icons[key] ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+icons[key]+'"/></svg>' : '<span class="codicon codicon-'+key+'" aria-hidden="true"></span>';
 const toolbar=document.getElementById('toolbar');
 const buttons=[['tb-new','new'],['tb-open','open'],['tb-save','save'],['tb-check','check'],['tb-run','run'],['tb-stop','stop'],['tb-format','format'],['tb-find','search'],['tb-toggle-output','output']];
-buttons.forEach(([id,key])=>{const b=document.getElementById(id);if(id==='tb-save'){b.querySelectorAll('span').forEach(s=>{s.className='tb-save-icon';s.innerHTML=iconMarkup(key);});}else b.innerHTML=iconMarkup(key);});
+buttons.forEach(([id,key])=>{const b=document.getElementById(id);if(id==='tb-save'){b.querySelectorAll('span').forEach(s=>{s.className='tb-save-icon';s.innerHTML=iconMarkup(s.id==='tb-save-as'?'save-as':key);});}else b.innerHTML=iconMarkup(key);});
 function add(id,key,label,action){const b=UIControls.createIconButton({id,label,markup:iconMarkup(key),onClick:action});toolbar.append(b);return b;}
 const traceCommand=command=>window.__ide.trace.command(command);
-const startDebug=()=>traceCommand('start');
 add('tb-save-all','all',I18N.t('menu.file.saveAll'),()=>window.__ide.saveAll()).setAttribute('data-i18n-title','menu.file.saveAll');
 for(const [command,key] of [['undo','discard'],['redo','redo']])
   add('tb-'+command,key,I18N.t('tb.'+command),()=>window.__ide.handleAction(command)).setAttribute('data-i18n-title','tb.'+command);
 add('tb-toggle-sidebar','sidebar',I18N.t('menu.view.sidebar'),()=>window.__ide.handleAction('toggle-sidebar')).setAttribute('data-i18n-title','menu.view.sidebar');
-add('tb-debug','debug',I18N.t('trace.start'),startDebug).dataset.traceCommand='start';
-for(const [key,command] of [['over','stepOver'],['into','stepInto'],['out','stepOut'],['back','stepBack']])
-  add('tb-'+command,key,I18N.t('trace.'+command),()=>traceCommand(command)).dataset.traceCommand=command;
 const shortcuts={start:'F5',stepOver:'F10',stepInto:'F11',stepOut:'Shift+F11',stepBack:'Ctrl+F10',stop:'Shift+F5',restart:'Ctrl+Shift+F5',breakpoint:'F9',clear:'Ctrl+Shift+F9'};
+const traceIcons={start:'debug',stepBack:'back',stepInto:'into',stepOver:'over',stepOut:'out',stop:'stop',restart:'restart',breakpoint:'point',clear:'clear-all'};
+for(const [command,key] of Object.entries(traceIcons)) {
+ const id=command==='start'?'tb-debug':'tb-'+command;
+ const label=I18N.t(command==='stop'?'menu.run.stop':'trace.'+command);
+ const button=command==='stop'?document.getElementById(id):add(id,key,label,()=>traceCommand(command));
+ button.innerHTML=iconMarkup(key);button.dataset.traceCommand=command;
+}
+// Одинаковые команды меню и панели используют единственное описание значка.
+const menuIcons={new:'new',open:'open','open-project':'folder-opened',save:'save','save-all':'all','save-as':'save-as',undo:'discard',redo:'redo',check:'check',run:'run',stop:'stop',format:'format',find:'search'};
+for(const [action,key] of Object.entries(menuIcons)) {
+ const icon=document.querySelector('.menu-dropdown-item[data-action="'+action+'"] .menu-icon');
+ if(icon){icon.className='menu-icon';icon.removeAttribute('style');icon.innerHTML=iconMarkup(key);}
+}
 const traceMenu=document.createElement('div');traceMenu.className='menu-item';traceMenu.id='menu-trace';
 traceMenu.innerHTML='<span class="menu-label" data-i18n="menu.trace">'+I18N.t('menu.trace')+'</span><div class="menu-dropdown"></div>';
-for(const command of ['start','stepBack','stepInto','stepOver','stepOut','stop','restart','breakpoint','clear']) {
+for(const command of Object.keys(traceIcons)) {
  const item=document.createElement('div');item.className='menu-dropdown-item';item.dataset.action='trace-'+command;item.dataset.traceCommand=command;
  const key=command==='stop'?'menu.run.stop':'trace.'+command;
- item.innerHTML='<span class="menu-icon"></span><span class="menu-text" data-i18n="'+key+'">'+I18N.t(key)+'</span><span class="menu-shortcut">'+shortcuts[command]+'</span>';
+ item.innerHTML='<span class="menu-icon" aria-hidden="true">'+iconMarkup(traceIcons[command])+'</span><span class="menu-text" data-i18n="'+key+'">'+I18N.t(key)+'</span><span class="menu-shortcut">'+shortcuts[command]+'</span>';
  traceMenu.lastElementChild.append(item);
 }
 document.querySelector('[data-i18n="menu.view"]').parentElement.before(traceMenu);
 function translateTrace(){
- toolbar.querySelectorAll('[data-trace-command]').forEach(b=>UIControls.setLabel(b,I18N.t('trace.'+b.dataset.traceCommand)+' ('+shortcuts[b.dataset.traceCommand]+')'));
+ toolbar.querySelectorAll('[data-trace-command]').forEach(b=>UIControls.setLabel(b,I18N.t(b.dataset.traceCommand==='stop'?'menu.run.stop':'trace.'+b.dataset.traceCommand)+' ('+shortcuts[b.dataset.traceCommand]+')'));
  window.__ide?.trace?.update();
 }
 new MutationObserver(translateTrace).observe(traceMenu.querySelector('.menu-label'),{childList:true});
 translateTrace();
-const groups=[['tb-new','tb-open','tb-save','tb-save-all'],['tb-undo','tb-redo'],['tb-check','tb-run','tb-debug','tb-stop'],['tb-stepOver','tb-stepInto','tb-stepOut','tb-stepBack'],['tb-format','tb-find','tb-toggle-sidebar','tb-toggle-output']];
+const groups=[['tb-new','tb-open','tb-save','tb-save-all'],['tb-undo','tb-redo'],['tb-check','tb-run'],Object.keys(traceIcons).map(command=>command==='start'?'tb-debug':'tb-'+command),['tb-format','tb-find','tb-toggle-sidebar','tb-toggle-output']];
 toolbar.querySelectorAll('.toolbar-sep').forEach(s=>s.remove());groups.forEach(ids=>{const group=document.createElement('div');group.className='command-group';ids.forEach(id=>group.append(document.getElementById(id)));toolbar.append(group);});
 toolbar.querySelectorAll('button').forEach(b=>UIControls.setLabel(b,b.title));
 const bar=document.getElementById('menubar'),menus=[...bar.querySelectorAll(':scope > .menu-item')];
