@@ -1,0 +1,20 @@
+name: Проверка версий
+on: [push, pull_request]
+jobs:
+  versions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/versioning.mjs check
+      - name: Проверить повышение относительно исходной ревизии
+        env:
+          BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -n "$BASE_REVISION" ] && [ "$BASE_REVISION" != "0000000000000000000000000000000000000000" ]; then
+            node scripts/versioning.mjs check --base "$BASE_REVISION"
+          fi

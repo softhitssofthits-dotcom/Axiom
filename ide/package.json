@@ -1,10 +1,12 @@
 {
   "name": "axiom-ide",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Desktop IDE for the Axiom language (Electron + Monaco Editor)",
   "main": "src/main/main.js",
   "scripts": {
-    "prepare": "node scripts/prepare.js",
+    "prepare": "node ../scripts/versioning.mjs check && node ../scripts/versioning.mjs install-hooks && node scripts/prepare.js",
+    "prestart": "node ../scripts/versioning.mjs check",
+    "version:check": "node ../scripts/versioning.mjs check",
     "start": "electron ."
   },
   "license": "MIT",

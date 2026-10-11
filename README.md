@@ -44,6 +44,18 @@ powershell -NoProfile -File scripts/ai-context.ps1 -StdoutOnly
 
 Проверки языка и служебных компонентов: `dotnet test Axiom.sln` (последовательный запуск). Проверка CLI без исполнения: `dotnet run --project src/Axiom.Cli -- check samples/smoke/bytecode-only/compiler_execution.axm --json`.
 
+## Версии
+
+Номера языка, компилятора и IDE независимы и задаются в [versions.json](versions.json). Текущие номера и изменения — в [истории версий](docs/CHANGELOG.md), порядок повышения — в [VERSIONING.md](docs/VERSIONING.md). Начальная основа новой нумерации — 0.1.0; дальнейшие правки повышают затронутые компоненты.
+
+```powershell
+node scripts/versioning.mjs install-hooks
+node scripts/versioning.mjs check
+node scripts/versioning.mjs bump ide patch "Описание исправления IDE"
+```
+
+Обработчик Git проверяет версии перед коммитом, GitHub Actions — при публикации. `npm --prefix ide run prepare` подключает локальный обработчик автоматически. В «Справка → О программе» отображаются IDE, язык Axiom и компилятор/CLI без Git-ревизии.
+
 ## Структура репозитория
 
 | Путь | Назначение |

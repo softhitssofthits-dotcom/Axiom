@@ -34,6 +34,7 @@ At the beginning of every session, do this in order:
    - `docs/WORKLOG5.md`
    - `docs/BYTECODE_COVERAGE.md`
    - `docs/BYTECODE_PERF_MATRIX.md`
+   - `versions.json`, `docs/VERSIONING.md` и последнюю запись `docs/CHANGELOG.md`
    - `docs/archive/spec/SPECIFICATION2.md`, `docs/archive/plans/PLANS3.md`, `docs/archive/plans/PLANS2.md`, `docs/archive/worklog/WORKLOG3.md`, `docs/archive/spec/SPECIFICATION.md`, `docs/archive/plans/PLANS.md`, `docs/archive/worklog/WORKLOG2.md`, `docs/archive/worklog/WORKLOG.md` only when older historical context is needed
 
 Then:
@@ -215,6 +216,12 @@ Active registry of performance scenarios:
 ---
 
 ## Core working rules
+
+### 0. Обязательное сопровождение версий
+
+Единственный источник номеров — `versions.json`; порядок — `docs/VERSIONING.md`. Каждая завершённая задача с изменением поведения, действующей документации или инструментов получает повышение затронутых компонентов и запись в конец `docs/CHANGELOG.md`. Не завершать такую задачу без повышения. Изменение языка повышает язык и компилятор; изменение Electron/служб IDE повышает IDE; совмещённая задача повышает все затронутые номера. Обычно использовать `node scripts/versioning.mjs bump <language|compiler|ide|all> patch "Описание"`; новая подсистема/несовместимость до 1.0 — `minor`. Переход 1.0.0/MAJOR требует прямого решения автора. Повторные попытки внутри одной задачи не являются отдельной версией.
+
+Перед завершением выполнить `node scripts/versioning.mjs check` и `node scripts/versioning.mjs check --base HEAD`, записать номера в WORKLOG и итоговый отчёт. При подготовке окружения подключить `.githooks/pre-commit` командой `node scripts/versioning.mjs install-hooks`; обработчик проверяет подготовленный набор. Производные Versions.props/AxiomVersionInfo.cs/npm-номера вручную не менять. Только исторические материалы, записи журнала и результаты проверок не требуют повышения.
 
 ### 1. Read before acting
 Always read `PROJECT.md` before proposing project structure or implementation.

@@ -31,6 +31,9 @@ $projectFiles = [ordered]@{
     "WORKLOG5" = (Join-Path $repoRoot "docs/WORKLOG5.md")
     "BYTECODE_COVERAGE" = (Join-Path $repoRoot "docs/BYTECODE_COVERAGE.md")
     "BYTECODE_PERF_MATRIX" = (Join-Path $repoRoot "docs/BYTECODE_PERF_MATRIX.md")
+    "VERSIONS" = (Join-Path $repoRoot "versions.json")
+    "VERSIONING" = (Join-Path $repoRoot "docs/VERSIONING.md")
+    "CHANGELOG" = (Join-Path $repoRoot "docs/CHANGELOG.md")
 }
 
 function Get-FileText {

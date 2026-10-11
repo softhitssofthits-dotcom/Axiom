@@ -378,17 +378,24 @@ function setupIpc(logger) {
       // the fallback is only for packaged builds, where it is the app version.
       ide = pkg.version;
     } catch { ide = null; }
-    const base = { electron: process.versions.electron, node: process.versions.node, ide: ide || app.getVersion(), axiom: null };
+    const base = { electron: process.versions.electron, node: process.versions.node, ide: ide || app.getVersion(), language: null, compiler: null };
     if (!axiom) return base;
     return new Promise((resolve) => {
-      const child = spawn(axiom, ['--version'], { windowsHide: true, env: buildEnv() });
+      const child = spawn(axiom, ['metadata'], { windowsHide: true, env: buildEnv() });
       const timer = setTimeout(() => child.kill(), 10000);
       let out = '';
       let err = '';
       child.stdout.on('data', (d) => (out += d.toString()));
       child.stderr.on('data', (d) => (err += d.toString()));
       child.on('error', () => { clearTimeout(timer); resolve(base); });
-      child.on('close', () => { clearTimeout(timer); resolve({ ...base, axiom: (out + err).trim() }); });
+      child.on('close', () => {
+        clearTimeout(timer);
+        try {
+          const metadata = JSON.parse(out);
+          const version = value => typeof value === 'string' && /^\d+\.\d+\.\d+$/.test(value) ? value : null;
+          resolve({ ...base, language: version(metadata.languageVersion), compiler: version(metadata.compilerVersion) });
+        } catch { resolve(base); }
+      });
     });
   });
 

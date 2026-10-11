@@ -77,6 +77,8 @@ public static class AxiomLanguageMetadata
 
         builder.Append("],").Append(Q).Append("sourceRevision").Append(Q).Append(':').Append(Q)
             .Append(Escape(sourceRevision)).Append(Q)
+            .Append(',').Append(Q).Append("languageVersion").Append(Q).Append(':').Append(Q).Append(AxiomVersionInfo.LanguageVersion).Append(Q)
+            .Append(',').Append(Q).Append("compilerVersion").Append(Q).Append(':').Append(Q).Append(AxiomVersionInfo.CompilerVersion).Append(Q)
             .Append('}');
         return builder.ToString();
     }

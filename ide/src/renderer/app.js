@@ -720,7 +720,6 @@ class AxiomIDE {
     let p;
     do { this.untitled++; p = `untitled${this.untitled}.axm`; } while (this.openFiles.has(p));
     this.openFiles.set(p, { model, viewState: null });
-    this.dirty.add(p);
     this.createTab(p);
     this.switchToFile(p);
   }
@@ -1009,7 +1008,7 @@ class AxiomIDE {
 
   markDirty(p, d) {
     if (!d) this.openFiles.markSaved(p);
-    else d = p.startsWith('untitled') || this.openFiles.isDirty(p);
+    else d = p.startsWith('untitled') ? this.openFiles.get(p)?.model.getValue().length > 0 : this.openFiles.isDirty(p);
     if (d) this.dirty.add(p); else this.dirty.delete(p);
     const tab = [...document.querySelectorAll('.editor-tab')].find((t) => t.dataset.path === p);
     if (tab) tab.querySelector('.dirty-indicator').style.display = d ? 'inline' : 'none';
@@ -1047,6 +1046,7 @@ class AxiomIDE {
   async prepareClose(path, discarded = null) {
     const entry = this.openFiles.get(path);
     if (!entry) return true;
+    if (path.startsWith('untitled') && entry.model.getValue().length === 0) return true;
     if (!path.startsWith('untitled') && !this.openFiles.isDirty(path)) {
       let unavailable = false;
       try { await API.readFileContent(path); }
@@ -2063,9 +2063,8 @@ class AxiomIDE {
           <h3>${I18N.t('about.title')}</h3>
         </div>
         <div class="about-row"><span>${I18N.t('about.ide')}</span><code>${info.ide || I18N.t('about.notFound')}</code></div>
-        <div class="about-row"><span>${I18N.t('about.cli')}</span><code>${info.axiom || I18N.t('about.notFound')}</code></div>
-        <div class="about-row"><span>${I18N.t('about.electron')}</span><code>${info.electron}</code></div>
-        <div class="about-row"><span>${I18N.t('about.node')}</span><code>${info.node}</code></div>
+        <div class="about-row"><span>${I18N.t('about.lang')}</span><code>${info.language || I18N.t('about.notFound')}</code></div>
+        <div class="about-row"><span>${I18N.t('about.cli')}</span><code>${info.compiler || I18N.t('about.notFound')}</code></div>
         <button id="about-close">${I18N.t('about.ok')}</button>
       </div>`;
     document.body.appendChild(overlay);
@@ -2099,7 +2098,7 @@ class AxiomIDE {
       const discarded = this._discardedOnExit?.has(f);
       if (discarded && p.startsWith('untitled')) continue;
       tabs.push({ path: p, isActive: p === this.activeFile, content: discarded ? f.savedText : f.model.getValue(),
-        savedText: f.savedText, isDirty: !discarded && (p.startsWith('untitled') || this.openFiles.isDirty(p)),
+        savedText: f.savedText, isDirty: !discarded && (p.startsWith('untitled') ? f.model.getValue().length > 0 : this.openFiles.isDirty(p)),
         missing: !!f.missing, readonly: !!f.readonly });
     }
     const result = API.saveRecoverySync(tabs);

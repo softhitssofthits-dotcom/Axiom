@@ -1,0 +1,2 @@
+#!/bin/sh
+node scripts/versioning.mjs check --staged

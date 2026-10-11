@@ -7,6 +7,7 @@
 | Что за продукт и его границы? | [PROJECT.md](../PROJECT.md) |
 | Как подготовить и запустить? | [README.md](../README.md) |
 | Как работать агенту? | [AGENTS.md](../AGENTS.md) |
+| Какие версии и как их повышать? | [VERSIONING.md](VERSIONING.md), [CHANGELOG.md](CHANGELOG.md), [versions.json](../versions.json) |
 | Какой договор реализован? | [SPECIFICATION3.md](SPECIFICATION3.md) |
 | Как устроено? | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | Где остановились и что дальше? | [PLANS4.md](PLANS4.md), [WORKLOG5.md](WORKLOG5.md) |

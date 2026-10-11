@@ -76,6 +76,10 @@ function staleness(exePath, srcRoot, opts = {}) {
   if (!exePath || !fs.existsSync(exePath)) return 'missing';
   const actual = opts.installedVersion ? opts.installedVersion(exePath) : installedVersion(exePath);
   if (!actual) return 'broken';
+  try {
+    const expected = JSON.parse(fs.readFileSync(path.join(srcRoot, 'versions.json'), 'utf8')).compiler;
+    if (actual !== expected) return 'stale';
+  } catch { /* В готовой поставке исходный файл версий может отсутствовать. */ }
   const expectedSource = opts.expectedRevision !== undefined ? opts.expectedRevision : expectedRevision(srcRoot);
   if (!expectedSource) return 'fresh'; // no repo layout — nothing to compare against
   const installedSource = opts.installedRevision ? opts.installedRevision(exePath) : installedRevision(exePath);

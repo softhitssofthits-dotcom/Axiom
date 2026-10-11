@@ -14,7 +14,7 @@ namespace Axiom.Cli;
 /// </summary>
 internal static class CliApp
 {
-    public const string Version = "0.1.0";
+    public const string Version = AxiomVersionInfo.CompilerVersion;
 
     private const int MaxSourceBytes = 16 * 1024 * 1024;
 
@@ -347,7 +347,7 @@ internal static class CliApp
 
     private static int ShowVersion(TextWriter stderr)
     {
-        stderr.WriteLine($"axiom {Version} (revision {AxiomMetadata.SourceRevision})");
+        stderr.WriteLine($"axiom {Version} (language Axiom {AxiomVersionInfo.LanguageVersion}; revision {AxiomMetadata.SourceRevision})");
         return 0;
     }
 
