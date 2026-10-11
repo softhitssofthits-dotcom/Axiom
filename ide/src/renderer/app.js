@@ -1532,28 +1532,31 @@ class AxiomIDE {
 
   // ================= external file changes (watcher) =================
 
-  handleExternalChange(ev) {
+  async handleExternalChange(ev) {
     const p = ev && ev.path;
     if (!p || !this.openFiles.has(p) || p.startsWith('untitled')) return;
     if (this.fileChangePrompts.has(p)) return;
+    const entry = this.openFiles.get(p);
+    const documentId = entry.documentId;
+    const revision = entry.revision;
     this.fileChangePrompts.add(p);
-    const name = p.split(/[/\\]/).pop();
-    const message = ev.exists ? I18N.t('dialog.fileChangedReload', name) : I18N.t('dialog.fileDeleted', name);
-    const reload = confirm(message);
-    this.fileChangePrompts.delete(p);
-    if (!reload) return; // keep the in-editor version; the next external change re-prompts
-    API.readFileContent(p)
-      .then((content) => {
-        const f = this.openFiles.get(p);
-        if (!f) return;
-        f.model.setValue(content);
-        this.markDirty(p, false);
-        this.setStatus(I18N.t('status.reloaded'));
-        if (this.activeFile === p) this.editor.focus();
-      })
-      .catch(() => {
-        alert(I18N.t('dialog.openFailed', p));
-      });
+    try {
+      const name = p.split(/[/\\]/).pop();
+      const message = ev.exists ? I18N.t('dialog.fileChangedReload', name) : I18N.t('dialog.fileDeleted', name);
+      const reload = confirm(message);
+      if (!reload) return;
+      const content = await API.readFileContent(p);
+      const f = this.openFiles.get(p);
+      if (f !== entry || f.documentId !== documentId || f.revision !== revision || f.path !== p) return;
+      f.model.setValue(content);
+      this.markDirty(p, false);
+      this.setStatus(I18N.t('status.reloaded'));
+      if (this.activeFile === p) this.editor.focus();
+    } catch {
+      alert(I18N.t('dialog.openFailed', p));
+    } finally {
+      this.fileChangePrompts.delete(p);
+    }
   }
 
   // ================= diagnostics =================

@@ -1,0 +1,58 @@
+[
+  {
+    "id": "document-host-format-undo",
+    "spec": "documents.spec.js",
+    "name": "Форматирование несохранённого документа через Host и отмена",
+    "ms": 2857,
+    "passed": 5,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:62213/216086e2-92a5-4746-a86a-5869cc2c5b6f\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "document-host-structural-enter",
+    "spec": "documents.spec.js",
+    "name": "Общий планировщик вставляет блок и сохраняет отмену",
+    "ms": 2380,
+    "passed": 3,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:62217/69ad2d9a-21b9-4b9f-ada9-700b5144a2cb\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "document-host-stale-format",
+    "spec": "documents.spec.js",
+    "name": "Запоздавший результат не заменяет новую правку Monaco",
+    "ms": 2521,
+    "passed": 1,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:62222/68a139d0-2da6-4745-ae4b-fe1e1bc0f4b9\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "document-host-stale-analysis",
+    "spec": "documents.spec.js",
+    "name": "Запоздавшая диагностика не возвращает исправленную ошибку",
+    "ms": 3278,
+    "passed": 3,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:62226/f148a46a-b205-498c-bf55-e64848d5b1c4\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]
