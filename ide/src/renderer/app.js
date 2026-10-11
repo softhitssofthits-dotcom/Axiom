@@ -1,11 +1,5 @@
 const API = window.axiom;
 
-const DEFAULT_TEMPLATE = [
-  "' Новая программа на Axiom.",
-  'PRINT "Привет, мир!"',
-  '',
-].join('\n');
-
 class AxiomIDE {
   constructor() {
     this.monaco = null;
@@ -63,7 +57,8 @@ class AxiomIDE {
     window.addEventListener('unhandledrejection', (e) => this.log('window.unhandledrejection', { reason: String(e.reason?.stack || e.reason || '') }, 'error'));
     try {
       await this.loadSettings();
-      document.documentElement.setAttribute('data-theme', this.settings.theme === 'light' ? 'light' : 'dark');
+      if (!['dark', 'light', 'basic'].includes(this.settings.theme)) this.settings.theme = 'dark';
+      document.documentElement.setAttribute('data-theme', this.settings.theme);
       I18N.setLocale(this.settings.language);
       await this.loadMonaco();
       await this.loadLanguageMetadata();
@@ -74,6 +69,7 @@ class AxiomIDE {
       this.setupToolbar();
       this.setupProjectExplorer();
       this.setupPanelTabs();
+      this.setupDocumentTabs();
       this.setupPanelResizer();
       this.updateOutputMenuCheck();
       this.setupKeyboardShortcuts();
@@ -314,6 +310,39 @@ class AxiomIDE {
       },
     });
 
+    monaco.editor.defineTheme('axiom-basic', {
+      base: 'vs-dark', inherit: true, semanticHighlighting: true,
+      rules: [
+        { token: 'comment', foreground: 'B8C7E8', fontStyle: 'italic' },
+        { token: 'keyword', foreground: 'FFFF55' },
+        { token: 'type', foreground: 'FFFFFF' },
+        { token: 'support.function', foreground: '55FFFF' },
+        { token: 'function', foreground: '55FFFF' },
+        { token: 'identifier', foreground: 'FFFFFF' },
+        { token: 'variable', foreground: 'FFFFFF' },
+        { token: 'variable.readonly', foreground: 'FFFFAA' },
+        { token: 'array', foreground: 'AAFFAA' },
+        { token: 'string', foreground: 'AAFFAA' },
+        { token: 'string.escape', foreground: '55FFFF' },
+        { token: 'delimiter.interpolation', foreground: '55FFFF' },
+        { token: 'number', foreground: 'FFFFAA' },
+        { token: 'number.hex', foreground: 'FFFFAA' },
+        { token: 'operator', foreground: 'FFFF55' },
+        { token: 'delimiter', foreground: 'FFFFFF' },
+        { token: 'invalid', foreground: 'FFAAAA' },
+      ],
+      colors: {
+        'editor.background': '#000080', 'editor.foreground': '#FFFFFF',
+        'editor.lineHighlightBackground': '#101090', 'editor.selectionBackground': '#5050B0',
+        'editorCursor.foreground': '#FFFF55', 'editorLineNumber.foreground': '#B8C7E8',
+        'editorLineNumber.activeForeground': '#FFFFFF', 'editorIndentGuide.background1': '#3030A0',
+        'editorIndentGuide.activeBackground1': '#B8C7E8', 'editorWidget.background': '#101080',
+        'editorWidget.border': '#C0C0C0', 'editorSuggestWidget.background': '#101080',
+        'editorSuggestWidget.foreground': '#FFFFFF', 'editorSuggestWidget.selectedBackground': '#4040A0',
+        'editorError.foreground': '#FFAAAA', 'editorWarning.foreground': '#FFFF55',
+      },
+    });
+
     // Completion + signature help + hover — builtins from the language registry
     // (ide.langMeta, loaded from `axiom metadata`), document locals from a light model scan.
     if (window.LangFeatures) LangFeatures.register(monaco, this);
@@ -323,7 +352,7 @@ class AxiomIDE {
     this.editor = this.monaco.editor.create(document.getElementById('editor'), {
       value: '',
       language: 'axiom',
-      theme: this.settings.theme === 'light' ? 'axiom-light' : 'axiom-dark',
+      theme: 'axiom-' + this.settings.theme,
       automaticLayout: true,
       'semanticHighlighting.enabled': true,
       fontSize: 14,
@@ -663,6 +692,7 @@ class AxiomIDE {
       case 'toggle-project-explorer': this.toggleProjectExplorer(); break;
       case 'theme-light': this.setTheme('light'); break;
       case 'theme-dark': this.setTheme('dark'); break;
+      case 'theme-basic': this.setTheme('basic'); break;
       case 'lang-ru': this.setLanguage('ru'); break;
       case 'lang-en': this.setLanguage('en'); break;
       case 'open-log-folder': this.openLogFolder(); break;
@@ -673,7 +703,7 @@ class AxiomIDE {
   // ================= files / tabs =================
 
   newFile() {
-    const model = this.monaco.editor.createModel(DEFAULT_TEMPLATE, 'axiom');
+    const model = this.monaco.editor.createModel('', 'axiom');
     let p;
     do { this.untitled++; p = `untitled${this.untitled}.axm`; } while (this.openFiles.has(p));
     this.openFiles.set(p, { model, viewState: null });
@@ -714,7 +744,7 @@ class AxiomIDE {
     if (!selectedPath) return;
     if (this.projectDir !== projectRoot) return;
     if (this.openFiles.has(selectedPath)) { alert(I18N.t('dialog.alreadyOpen', selectedPath)); return; }
-    const result = await API.createProjectFile(projectRoot, selectedPath, "' Новая программа на Axiom.\n");
+    const result = await API.createProjectFile(projectRoot, selectedPath, '');
     if (!result.ok) { alert(result.message); return; }
     const files = await API.listProjectFiles(this.projectDir);
     this.renderProjectFiles(files);
@@ -875,6 +905,24 @@ class AxiomIDE {
     this.renderMiscellaneousFiles();
   }
 
+  setupDocumentTabs() {
+    const tabs = document.getElementById('editor-tabs');
+    const left = document.getElementById('tabs-scroll-left');
+    const right = document.getElementById('tabs-scroll-right');
+    const update = () => {
+      left.disabled = tabs.scrollLeft <= 1;
+      right.disabled = tabs.scrollLeft + tabs.clientWidth >= tabs.scrollWidth - 1;
+    };
+    left.addEventListener('click', () => tabs.scrollBy({ left: -Math.max(100, tabs.clientWidth * 0.7) }));
+    right.addEventListener('click', () => tabs.scrollBy({ left: Math.max(100, tabs.clientWidth * 0.7) }));
+    tabs.addEventListener('scroll', update);
+    this.tabResizeObserver = new ResizeObserver(update);
+    this.tabResizeObserver.observe(tabs);
+    this.tabMutationObserver = new MutationObserver(update);
+    this.tabMutationObserver.observe(tabs, { childList: true, subtree: true, characterData: true });
+    update();
+  }
+
   switchToFile(p) {
     const f = this.openFiles.get(p);
     if (!f) return;
@@ -888,6 +936,15 @@ class AxiomIDE {
     this.trace?.update();
     document.getElementById('status-file-path').textContent = p;
     document.querySelectorAll('.editor-tab').forEach((t) => t.classList.toggle('active', t.dataset.path === p));
+    const tabs = document.getElementById('editor-tabs');
+    const activeTab = tabs.querySelector('.editor-tab.active');
+    if (activeTab) {
+      const bounds = tabs.getBoundingClientRect();
+      const tabBounds = activeTab.getBoundingClientRect();
+      if (activeTab === tabs.firstElementChild) tabs.scrollLeft = 0;
+      else if (tabBounds.left < bounds.left) tabs.scrollLeft += tabBounds.left - bounds.left;
+      else if (tabBounds.right > bounds.right) tabs.scrollLeft += tabBounds.right - bounds.right;
+    }
     document.querySelectorAll('.project-file').forEach((t) => t.classList.toggle('active', t.dataset.path === p || t.title === p));
     this.renderMiscellaneousFiles();
     this.updateSaveButton();
@@ -1290,6 +1347,13 @@ class AxiomIDE {
   // its familiar contrast; in the light theme, a light terminal avoids making the bottom
   // panel look like a separate embedded application.
   static CONSOLE_THEMES = {
+    basic: {
+      background: '#000080', foreground: '#FFFFFF', cursor: '#FFFF55',
+      selectionBackground: '#5050B0', black: '#000000', red: '#AA0000', green: '#00AA00',
+      yellow: '#AAAA00', blue: '#0000AA', magenta: '#AA00AA', cyan: '#00AAAA', white: '#AAAAAA',
+      brightBlack: '#555555', brightRed: '#FF5555', brightGreen: '#55FF55', brightYellow: '#FFFF55',
+      brightBlue: '#5555FF', brightMagenta: '#FF55FF', brightCyan: '#55FFFF', brightWhite: '#FFFFFF',
+    },
     dark: {
       // background matches the dark console surface in design-system.css (#151820):
       // the terminal is created lazily on the first run, and a different xterm
@@ -1325,7 +1389,7 @@ class AxiomIDE {
       cursorBlink: true,
       fontSize: 13,
       fontFamily: 'Consolas, "Cascadia Mono", "Courier New", monospace',
-      theme: AxiomIDE.CONSOLE_THEMES[this.settings.theme === 'light' ? 'light' : 'dark'],
+      theme: AxiomIDE.CONSOLE_THEMES[this.settings.theme],
     });
     this.fitAddon = new window.FitAddon.FitAddon();
     this.term.loadAddon(this.fitAddon);
@@ -1771,10 +1835,11 @@ class AxiomIDE {
   // ================= theme / language =================
 
   setTheme(theme) {
+    if (!['dark', 'light', 'basic'].includes(theme)) return;
     this.saveSettings({ theme });
     document.documentElement.setAttribute('data-theme', theme);
-    this.monaco?.editor.setTheme(theme === 'dark' ? 'axiom-dark' : 'axiom-light');
-    if (this.term) this.term.options.theme = AxiomIDE.CONSOLE_THEMES[theme === 'light' ? 'light' : 'dark'];
+    this.monaco?.editor.setTheme('axiom-' + theme);
+    if (this.term) this.term.options.theme = AxiomIDE.CONSOLE_THEMES[theme];
   }
 
   setLanguage(lang) {
@@ -1790,6 +1855,14 @@ class AxiomIDE {
 
   applyLocale() {
     I18N.apply();
+    for (const direction of ['left', 'right']) {
+      const button = document.getElementById('tabs-scroll-' + direction);
+      const label = this.settings.language === 'en'
+        ? 'Scroll tabs ' + direction
+        : 'Прокрутить вкладки ' + (direction === 'left' ? 'влево' : 'вправо');
+      button.title = label;
+      button.setAttribute('aria-label', label);
+    }
     this.rebuildOutline();
     this.setProjectExplorerVisible(this.settings.projectExplorer !== false);
     this.renderMiscellaneousFiles();

@@ -10,7 +10,7 @@ module.exports = [{ id: 'files-create-without-overwrite', name: 'Создани�
   const target = require('path').join(root, 'Новая программа.axm'); await S.stubSaveDialog(target);
   await S.page.evaluate(() => window.__ide.newProjectFile());
   C.eq(await S.page.evaluate(() => window.__ide.activeFile), target, 'Созданный файл открыт');
-  C.eq(await S.page.evaluate(p => window.axiom.readFileContent(p), target), "' Новая программа на Axiom.\n", 'Русский текст записан');
+  C.eq(await S.page.evaluate(p => window.axiom.readFileContent(p), target), '', 'Новый файл пуст');
   C.ok(await S.page.evaluate(p => [...document.querySelectorAll('.project-file')].some(b => b.title === p), target), 'Дерево обновлено');
 } }];
 module.exports.push({ id: 'files-mixed-line-endings-run', name: 'Run запускает сохранённый файл со смешанными окончаниями строк', async fn({ S, C }) {

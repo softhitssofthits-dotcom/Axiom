@@ -348,15 +348,32 @@ html[data-theme="light"] .logo-dark { display: none; }
   overflow: hidden;
 }
 
-#editor-tabs {
+#document-tab-bar {
   display: flex;
+  height: var(--tab-height);
+  flex: 0 0 var(--tab-height);
+  min-width: 0;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
-  overflow-x: auto;
-  min-height: var(--tab-height);
 }
 
+#editor-tabs {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-secondary);
+  overflow: hidden;
+  height: 100%;
+}
+
+#document-tab-controls { display: flex; flex: 0 0 64px; }
+#document-tab-controls button { width: 32px; height: 100%; border: 0; background: transparent; color: var(--text-primary); cursor: pointer; }
+#document-tab-controls button:hover:not(:disabled) { background: var(--bg-tertiary); }
+#document-tab-controls button:disabled { opacity: 0.35; cursor: default; }
+#document-tab-controls button:focus-visible { outline: 1px solid var(--accent-color); outline-offset: -2px; }
+
 .editor-tab {
+  flex: 0 0 auto;
   padding: 8px 16px;
   background: var(--bg-secondary);
   border: none;

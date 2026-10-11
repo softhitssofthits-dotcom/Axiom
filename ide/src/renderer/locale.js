@@ -2,6 +2,7 @@
 const I18N = (() => {
   const STRINGS = {
     ru: {
+      'menu.view.themeBasic': 'Тема QuickBASIC',
       'menu.trace': 'Трассировка',
       'trace.start': 'Начать / продолжить',
       'trace.stepInto': 'Шаг с заходом',
@@ -142,6 +143,7 @@ const I18N = (() => {
       'fmt.off': 'выкл',
     },
     en: {
+      'menu.view.themeBasic': 'QuickBASIC theme',
       'menu.trace': 'Debug',
       'trace.start': 'Start / Continue',
       'trace.stepInto': 'Step Into',

@@ -1,4 +1,14 @@
 /* Утверждённое оформление Axiom; размеры не ограничивают ширину окна. */
+html[data-theme=basic]{--xs-canvas:#000080;--xs-surface:#000080;--xs-surface-raised:#101080;--xs-surface-hover:#3030a0;--xs-surface-active:#4040a0;--xs-border:#c0c0c0;--xs-border-subtle:#8080c0;--xs-text:#fff;--xs-text-muted:#c0c0e0;--xs-text-faint:#b8c7e8;--xs-accent:#ffff55;--xs-accent-strong:#ffffaa;--xs-accent-wash:#303090;--xs-editor:#000080;--xs-success:#aaffaa;--xs-danger:#ffaaaa;--xs-warning:#ffff55;--xs-radius-sm:0px;--xs-radius-md:0px}
+[data-theme=basic] #menubar,[data-theme=basic] #status-bar{background:#c0c0c0;color:#000080}
+[data-theme=basic] #menubar .menu-label,[data-theme=basic] #menu-overflow{color:#000080}
+[data-theme=basic] #menubar .menu-dropdown{color:#fff}
+[data-theme=basic] #menubar .menu-label:hover,[data-theme=basic] #menubar .menu-item.open>.menu-label{color:#fff}
+[data-theme=basic] #status-bar span{color:#000080}
+[data-theme=basic] #console-content,[data-theme=basic] #terminal,[data-theme=basic] #terminal .xterm-viewport{background:#000080}
+[data-theme=basic] #editor-tabs,[data-theme=basic] #document-tab-bar{border-color:#c0c0c0}
+[data-theme=basic] .editor-tab.active{color:#ffff55;border-top-color:#ffff55}
+[data-theme=basic] .logo-light{display:none}
 :root{--xs-canvas:#141922;--xs-surface:#1c2330;--xs-surface-raised:#252e3e;--xs-border:#354157;--xs-text:#e4ebf5;--xs-text-muted:#99a8bc;--xs-accent:#79b4ff;--xs-editor:#171d27;--xs-success:#85d2ad;--xs-danger:#ff928c;--xs-warning:#edc381}
 [data-theme=light]{--xs-canvas:#e9eef5;--xs-surface:#f4f7fb;--xs-surface-raised:#fff;--xs-border:#cbd5e3;--xs-text:#233247;--xs-text-muted:#596c84;--xs-accent:#235fa9;--xs-editor:#fff;--xs-success:#227453;--xs-danger:#b72d2d;--xs-warning:#8a591a}
 [hidden]{display:none!important}#menubar{height:36px;min-width:0;gap:2px;padding:0 8px}.shell-brand{flex-shrink:0;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--xs-accent);padding-right:12px}.menu-item{flex-shrink:0}.menu-label{margin:0;padding:0 8px;height:30px}.menu-dropdown{min-width:min(240px,calc(100vw - 16px));max-width:calc(100vw - 16px)}#menu-overflow{border:0;background:none;color:var(--xs-text);padding:6px 10px;cursor:pointer;margin-left:auto}#menu-overflow-content{position:absolute;right:8px;top:36px;z-index:2100;min-width:150px;padding:5px;background:var(--xs-surface-raised);border:1px solid var(--xs-border);border-radius:5px;box-shadow:var(--xs-shadow-menu)}#menu-overflow-content .menu-item{height:32px;display:block}#menu-overflow-content .menu-label{width:100%}#menu-overflow-content .menu-dropdown{position:fixed;top:72px;left:auto;right:165px}

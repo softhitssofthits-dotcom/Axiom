@@ -30,3 +30,65 @@ C.eq(await S.page.evaluate(()=>window.__ide._lastDiagnostics.length),0,'Уста
 C.eq(await S.page.evaluate(()=>window.__ide.monaco.editor.getModelMarkers({owner:'axiom',resource:window.__ide.editor.getModel().uri}).length),0,'Редактор не получил устаревшие маркеры');
 }}
 ];
+module.exports.push({ id: 'document-empty-tabs-scroll', name: 'Пустые документы и горизонтальная прокрутка множества вкладок кнопками', async fn({ S, C }) {
+  await S.launch();
+  await S.electronApp.evaluate(({ BrowserWindow }) => { const w = BrowserWindow.getAllWindows()[0]; w.unmaximize(); w.setMinimumSize(0, 0); w.setSize(520, 500); });
+  await S.page.waitForFunction(() => innerWidth < 600);
+  await S.page.evaluate(() => { for (let n = 0; n < 18; n++) window.__ide.newFile(); });
+  C.eq(await S.page.evaluate(() => window.__ide.editor.getValue()), '', 'Новые документы пусты');
+  await S.page.waitForFunction(() => document.getElementById('editor-tabs').scrollLeft > 0);
+  C.ok(await S.page.evaluate(() => { const t = document.getElementById('editor-tabs'); return t.scrollHeight <= t.clientHeight && t.scrollWidth > t.clientWidth; }), 'Вкладки в одну строку без вертикальной прокрутки');
+  const before = await S.page.locator('#editor-tabs').evaluate(el => el.scrollLeft);
+  await S.page.locator('#tabs-scroll-left').click();
+  await S.page.waitForFunction(v => document.getElementById('editor-tabs').scrollLeft < v, before);
+  C.ok(await S.page.locator('#tabs-scroll-right').isEnabled(), 'Доступна прокрутка вправо');
+  await S.page.locator('#tabs-scroll-right').click();
+  await S.page.waitForFunction(v => document.getElementById('editor-tabs').scrollLeft >= v - 1, before);
+  await S.page.evaluate(() => window.__ide.switchToFile([...window.__ide.openFiles.keys()][0]));
+  await S.page.waitForFunction(() => document.getElementById('editor-tabs').scrollLeft <= 1);
+  C.ok(await S.page.locator('#tabs-scroll-left').isDisabled(), 'У левого края кнопка выключена');
+  C.ok(await S.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Окно не переполняется');
+  await S.screenshot('document-tabs-scroll');
+  await S.page.evaluate(() => { window.__ide.setTheme('light'); window.__ide.setLanguage('en'); });
+  C.eq(await S.page.locator('#tabs-scroll-right').getAttribute('aria-label'), 'Scroll tabs right', 'Подсказка переводится');
+  await S.electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1280, 800));
+  await S.page.waitForFunction(() => innerWidth > 1000);
+  C.ok(await S.page.evaluate(() => { const t = document.getElementById('editor-tabs'); return t.scrollHeight <= t.clientHeight && document.documentElement.scrollWidth <= innerWidth; }), 'Широкое светлое окно без переполнения');
+  await S.screenshot('document-tabs-light');
+} });
+module.exports.push({ id: 'document-basic-theme-persistence', name: 'Тема QuickBASIC окрашивает оболочку, код и консоль и сохраняется после запуска', async fn({ S, C }) {
+  await S.launch();
+  await S.page.evaluate(() => {
+    const i = window.__ide; i.handleAction('theme-basic');
+    i.editor.getModel().setValue("' Проверка цветов QuickBASIC\nDIM value AS INTEGER = 42\nPRINT LEN(\"Строка\") + value\n");
+    i.ensureConsole();
+  });
+  await S.page.waitForFunction(() => getComputedStyle(document.querySelector('.monaco-editor')).backgroundColor === 'rgb(0, 0, 128)');
+  await S.page.waitForFunction(() => [...document.querySelectorAll('.view-lines span')].some(el => el.textContent.trim() === 'LEN' && getComputedStyle(el).color === 'rgb(85, 255, 255)'));
+  const colors = await S.page.evaluate(() => ({
+    theme: document.documentElement.dataset.theme,
+    frame: getComputedStyle(document.getElementById('document-tab-bar')).borderBottomColor,
+    console: window.__ide.term.options.theme.background,
+    viewport: getComputedStyle(document.querySelector('.xterm-viewport')).backgroundColor,
+    tokens: [...document.querySelectorAll('.view-line span')].map(el => ({ text: el.textContent, color: getComputedStyle(el).color })),
+  }));
+  C.eq(colors.theme, 'basic', 'Тема выбрана через команду меню');
+  C.eq(colors.frame, 'rgb(192, 192, 192)', 'Светлая рамка');
+  C.eq(colors.console, '#000080', 'Синий фон консоли');
+  C.eq(colors.viewport, 'rgb(0, 0, 128)', 'Прокручиваемая область консоли тоже синяя');
+  C.ok(colors.tokens.some(t => t.text.includes('DIM') && t.color === 'rgb(255, 255, 85)'), 'Оператор жёлтый');
+  C.ok(colors.tokens.some(t => t.text.includes('INTEGER') && t.color === 'rgb(255, 255, 255)'), 'Тип белый');
+  C.ok(colors.tokens.some(t => t.text.includes('LEN') && t.color === 'rgb(85, 255, 255)'), 'Функция светло-циановая');
+  const menu = await S.page.evaluate(() => {
+    const items = [...document.querySelectorAll('[data-action^="theme-"]')];
+    return items.map(item => { const text = item.querySelector('.menu-text'); const style = getComputedStyle(text); return { name: text.textContent, icons: item.querySelectorAll('.codicon').length, font: style.fontSize + '/' + style.fontWeight }; });
+  });
+  C.eq(menu.find(item => item.name.includes('QuickBASIC'))?.name, 'Тема QuickBASIC', 'Название темы согласовано с меню');
+  C.ok(menu.length === 3 && menu.every(item => item.icons === 0 && item.font === menu[0].font), 'Все три пункта без пиктограмм с одинаковым шрифтом');
+  await S.screenshot('quickbasic-theme');
+  await S.page.locator('[data-menu="view"] .menu-label').click();
+  await S.screenshot('quickbasic-theme-menu');
+  await S.page.keyboard.press('Escape');
+  await S.close(); await S.launch();
+  C.eq(await S.page.evaluate(() => document.documentElement.dataset.theme), 'basic', 'Тема восстановлена после запуска');
+} });

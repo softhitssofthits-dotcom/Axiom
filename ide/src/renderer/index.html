@@ -83,8 +83,9 @@
           <div class="menu-separator"></div>
           <div class="menu-dropdown-item" data-action="toggle-output"><span class="menu-check" data-check="outputPanel">✓</span><span class="menu-text" data-i18n="menu.view.panel">Нижняя панель</span><span class="menu-shortcut">Ctrl+Shift+O</span></div>
           <div class="menu-separator"></div>
-          <div class="menu-dropdown-item" data-action="theme-light"><span class="menu-icon codicon codicon-sun"></span><span class="menu-text" data-i18n="menu.view.themeLight">Светлая тема</span></div>
-          <div class="menu-dropdown-item" data-action="theme-dark"><span class="menu-icon codicon codicon-moon"></span><span class="menu-text" data-i18n="menu.view.themeDark">Тёмная тема</span></div>
+          <div class="menu-dropdown-item" data-action="theme-light"><span class="menu-icon"></span><span class="menu-text" data-i18n="menu.view.themeLight">Светлая тема</span></div>
+          <div class="menu-dropdown-item" data-action="theme-dark"><span class="menu-icon"></span><span class="menu-text" data-i18n="menu.view.themeDark">Тёмная тема</span></div>
+          <div class="menu-dropdown-item" data-action="theme-basic"><span class="menu-icon"></span><span class="menu-text" data-i18n="menu.view.themeBasic">Тема QuickBASIC</span></div>
           <div class="menu-separator"></div>
           <div class="menu-item-submenu" id="lang-submenu">
             <div class="menu-dropdown-item submenu-trigger">
@@ -146,7 +147,13 @@
       <aside id="project-explorer"><div id="project-explorer-header"><button id="project-title" class="project-open" data-i18n="project.open">Открыть проект</button><button id="project-new-file" class="project-explorer-control" title="Добавить файл в проект" aria-label="Добавить файл в проект"><span class="codicon codicon-new-file"></span></button><button id="project-explorer-close" class="project-explorer-close" title="Закрыть" aria-label="Закрыть"><span class="codicon codicon-close"></span></button></div><div id="project-files"></div><div id="external-files" class="hidden"><div id="external-files-header" data-i18n="project.miscellaneous">Прочие файлы</div><div id="external-files-list"></div></div></aside>
       <div id="main-content">
         <div id="editor-container">
-          <div id="editor-tabs"></div>
+          <div id="document-tab-bar">
+            <div id="editor-tabs"></div>
+            <div id="document-tab-controls">
+              <button id="tabs-scroll-left" type="button" title="Прокрутить вкладки влево" aria-label="Прокрутить вкладки влево"><span class="codicon codicon-chevron-left"></span></button>
+              <button id="tabs-scroll-right" type="button" title="Прокрутить вкладки вправо" aria-label="Прокрутить вкладки вправо"><span class="codicon codicon-chevron-right"></span></button>
+            </div>
+          </div>
           <div id="editor"></div>
         </div>
 

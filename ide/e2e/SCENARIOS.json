@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 75,
+  "count": 77,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -91,6 +91,16 @@
       "id": "document-host-stale-analysis",
       "spec": "documents.spec.js",
       "name": "Запоздавшая диагностика не возвращает исправленную ошибку"
+    },
+    {
+      "id": "document-empty-tabs-scroll",
+      "spec": "documents.spec.js",
+      "name": "Пустые документы и горизонтальная прокрутка множества вкладок кнопками"
+    },
+    {
+      "id": "document-basic-theme-persistence",
+      "spec": "documents.spec.js",
+      "name": "Тема QuickBASIC окрашивает оболочку, код и консоль и сохраняется после запуска"
     },
     {
       "id": "enter-declaration-with-suggestions",

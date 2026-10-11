@@ -11,7 +11,7 @@ module.exports = [
       const tab = await S.activeTab();
       C.ok(tab && /\.axm$/.test(tab.name), 'untitled .axm tab is active', JSON.stringify(tab));
       const value = await S.editorValue();
-      C.contains(value, 'PRINT', 'new-file template contains PRINT');
+      C.eq(value, '', 'Новый документ пуст');
       const lang = await S.page.evaluate(() => window.__ide && window.__ide.editor.getModel().getLanguageId());
       C.eq(lang, 'axiom', 'model language is axiom');
       const meta = await S.page.evaluate(() => window.__ide && window.__ide.langMeta);
