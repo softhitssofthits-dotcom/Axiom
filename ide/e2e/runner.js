@@ -14,6 +14,18 @@ for (const f of specFiles) {
   for (const t of mod) tests.push({ ...t, spec: f });
 }
 
+// Каталог готовых сценариев: без запуска Electron и проверки бинарных сборок.
+if (FILTER === '--list') {
+  const ids = new Set();
+  for (const test of tests) {
+    if (ids.has(test.id)) throw new Error('Повтор идентификатора сценария: ' + test.id);
+    ids.add(test.id);
+  }
+  console.log(JSON.stringify({ suite: 'Axiom Electron IDE', count: tests.length,
+    scenarios: tests.map(({ id, spec, name }) => ({ id, spec, name })) }, null, 2));
+  process.exit(0);
+}
+
 (async () => {
   const results = [];
   // Refuse to run against a missing/self-reported-broken CLI. Specs that deliberately

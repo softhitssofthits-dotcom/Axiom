@@ -1,0 +1,361 @@
+{
+  "suite": "Axiom Electron IDE",
+  "count": 71,
+  "scenarios": [
+    {
+      "id": "backend-maze-chase-controls",
+      "spec": "backend.spec.js",
+      "name": "Настоящий Maze Chase: движение героя и единственное окно"
+    },
+    {
+      "id": "backend-canvas-keyboard",
+      "spec": "backend.spec.js",
+      "name": "Клавиши CANVAS, отпускание, потеря фокуса и закрытие"
+    },
+    {
+      "id": "backend-input-stop-and-repeat",
+      "spec": "backend.spec.js",
+      "name": "Отмена INPUT и чистый повтор"
+    },
+    {
+      "id": "backend-screen-native-window",
+      "spec": "backend.spec.js",
+      "name": "Настоящее окно SCREEN из Electron"
+    },
+    {
+      "id": "backend-canvas-present-pixel",
+      "spec": "backend.spec.js",
+      "name": "Настоящее отдельное окно CANVAS, пиксели и закрытие"
+    },
+    {
+      "id": "backend-canvas-finished-frame",
+      "spec": "backend.spec.js",
+      "name": "Последний кадр завершённой программы и повторный запуск"
+    },
+    {
+      "id": "backend-debug-step-and-continue",
+      "spec": "backend.spec.js",
+      "name": "Пауза, шаг и продолжение в Electron"
+    },
+    {
+      "id": "canvas-mouse-world-click",
+      "spec": "canvas-mouse.spec.js",
+      "name": "Настоящий щелчок CANVAS передаёт кнопку и мировые координаты в ON MOUSE"
+    },
+    {
+      "id": "console-background-screen-light-theme",
+      "spec": "console-background.spec.js",
+      "name": "SCREEN не оставляет чёрную полосу в светлой консоли"
+    },
+    {
+      "id": "console-key-inkey-poll-keys-axm",
+      "spec": "console-keys.spec.js",
+      "name": "Консоль Electron передаёт клавиши для inkey/poll_keys.axm"
+    },
+    {
+      "id": "console-key-keypress-single-press-axm",
+      "spec": "console-keys.spec.js",
+      "name": "Консоль Electron передаёт клавиши для keypress/single_press.axm"
+    },
+    {
+      "id": "console-key-keypress-modified-keypress-axm",
+      "spec": "console-keys.spec.js",
+      "name": "Консоль Electron передаёт клавиши для keypress/modified_keypress.axm"
+    },
+    {
+      "id": "console-key-keydown-held-modifiers-axm",
+      "spec": "console-keys.spec.js",
+      "name": "Консоль Electron передаёт клавиши для keydown/held_modifiers.axm"
+    },
+    {
+      "id": "console-key-keydown-canonical-aliases-axm",
+      "spec": "console-keys.spec.js",
+      "name": "Консоль Electron передаёт клавиши для keydown/canonical_aliases.axm"
+    },
+    {
+      "id": "document-host-format-undo",
+      "spec": "documents.spec.js",
+      "name": "Форматирование несохранённого документа через Host и отмена"
+    },
+    {
+      "id": "document-host-structural-enter",
+      "spec": "documents.spec.js",
+      "name": "Общий планировщик вставляет блок и сохраняет отмену"
+    },
+    {
+      "id": "document-host-stale-format",
+      "spec": "documents.spec.js",
+      "name": "Запоздавший результат не заменяет новую правку Monaco"
+    },
+    {
+      "id": "document-host-stale-analysis",
+      "spec": "documents.spec.js",
+      "name": "Запоздавшая диагностика не возвращает исправленную ошибку"
+    },
+    {
+      "id": "enter-declaration-with-suggestions",
+      "spec": "enter-declaration.spec.js",
+      "name": "Один Enter после набранного DIM с открытым дополнением"
+    },
+    {
+      "id": "files-create-without-overwrite",
+      "spec": "files.spec.js",
+      "name": "Создание файла не перезаписывает существующий и сохраняет открытую модель"
+    },
+    {
+      "id": "files-mixed-line-endings-run",
+      "spec": "files.spec.js",
+      "name": "Run запускает сохранённый файл со смешанными окончаниями строк"
+    },
+    {
+      "id": "format-menu-triggers",
+      "spec": "format-triggers.spec.js",
+      "name": "Проверка всегда включена, сохранение и смена фокуса не форматируют документ"
+    },
+    {
+      "id": "graphics-shell-hard-crash",
+      "spec": "graphics-crash.spec.js",
+      "name": "Аварийное завершение своей оболочки освобождает DesktopHost при CANVAS/INPUT и SCREEN/SLEEP"
+    },
+    {
+      "id": "graphics-renderer-crash",
+      "spec": "graphics-crash.spec.js",
+      "name": "Отказ основного интерфейса прекращает VM и закрывает графику"
+    },
+    {
+      "id": "graphics-renderer-bounded-stall",
+      "spec": "graphics-crash.spec.js",
+      "name": "После ограниченного зависания интерфейса запрос закрытия завершает собственную VM"
+    },
+    {
+      "id": "graphics-canvas-input-close-repeat",
+      "spec": "graphics-lifecycle.spec.js",
+      "name": "Закрытие CANVAS при INPUT отменяет запрос и допускает новый ввод"
+    },
+    {
+      "id": "graphics-mouse-scale-buttons-wheel",
+      "spec": "graphics-lifecycle.spec.js",
+      "name": "CANVAS: размеры, масштаб, три кнопки, отпускание и колесо"
+    },
+    {
+      "id": "graphics-surfaces-stop-repeat",
+      "spec": "graphics-lifecycle.spec.js",
+      "name": "Повтор SCREEN и CANVAS не наследует поверхность или удержанные клавиши"
+    },
+    {
+      "id": "graphics-close-ide-owns-host",
+      "spec": "graphics-shutdown.spec.js",
+      "name": "Выход из Electron при INPUT, SCREEN/SLEEP и цикле CANVAS освобождает свой процесс"
+    },
+    {
+      "id": "graphics-host-fault-recover",
+      "spec": "graphics-shutdown.spec.js",
+      "name": "После отказа своего DesktopHost Electron отклоняет старый ввод и запускает новую VM"
+    },
+    {
+      "id": "highlight-punctuation-and-maze",
+      "spec": "highlighting.spec.js",
+      "name": "Пунктуация не обрывает подсветку операторов, типов и комментариев"
+    },
+    {
+      "id": "highlight-user-symbols",
+      "spec": "highlighting.spec.js",
+      "name": "Пользовательские имена и операции имеют отдельные цвета"
+    },
+    {
+      "id": "i18n-parity",
+      "spec": "i18n.spec.js",
+      "name": "ru and en dictionaries have identical keys covering index.html"
+    },
+    {
+      "id": "i18n-switch-to-en-and-back",
+      "spec": "i18n.spec.js",
+      "name": "Switching the locale re-inks the menu labels"
+    },
+    {
+      "id": "identifier-alphabet-diagnostics",
+      "spec": "identifier-alphabet.spec.js",
+      "name": "Русские имена запрещены, строки и комментарии разрешены; диагностика ru/en"
+    },
+    {
+      "id": "input-sequential-prompts",
+      "spec": "input-prompts.spec.js",
+      "name": "Два последовательных INPUT: приглашение и введённое имя не повторяются"
+    },
+    {
+      "id": "input-snapshot-stream-order",
+      "spec": "input-prompts.spec.js",
+      "name": "Снимок INPUT и запоздалый поток вывода: согласование и сохранность набора"
+    },
+    {
+      "id": "input-name-age-sample",
+      "spec": "input-prompts.spec.js",
+      "name": "Учебный пример имени и возраста запускается в Electron"
+    },
+    {
+      "id": "language-runtime-diagnostic-switch",
+      "spec": "language-format.spec.js",
+      "name": "Ошибка выполнения переключает язык без повторного запуска"
+    },
+    {
+      "id": "language-diagnostics-switch",
+      "spec": "language-format.spec.js",
+      "name": "Язык диагностик списка и Monaco переключается без повторного анализа"
+    },
+    {
+      "id": "format-one-enter-two-styles",
+      "spec": "language-format.spec.js",
+      "name": "Один Enter форматирует строку и создаёт цикл в Classic и Modern"
+    },
+    {
+      "id": "menu-persistent-diagonal",
+      "spec": "menu-interaction.spec.js",
+      "name": "Меню остаётся открытым при уходе мыши и переходе по диагонали"
+    },
+    {
+      "id": "menu-fixed-check-column",
+      "spec": "menu-layout.spec.js",
+      "name": "В меню только команды, названия не сдвигаются при включении галочек"
+    },
+    {
+      "id": "navigation-keeps-saved-document",
+      "spec": "navigation-clean.spec.js",
+      "name": "Щелчки по строкам не форматируют неизменённый файл и не требуют сохранения"
+    },
+    {
+      "id": "panels-visibility-persistence",
+      "spec": "panels.spec.js",
+      "name": "Боковая панель закрывается и восстанавливается через меню, кнопку и профиль"
+    },
+    {
+      "id": "panels-drag-cancel-keyboard",
+      "spec": "panels.spec.js",
+      "name": "Оба разделителя изменяют размер, отменяют жест и поддерживают клавиатуру"
+    },
+    {
+      "id": "panels-window-size-bounds",
+      "spec": "panels.spec.js",
+      "name": "Размеры ограничены окном и возвращаются при его расширении"
+    },
+    {
+      "id": "live-check-marks-syntax-error",
+      "spec": "problems.spec.js",
+      "name": "A syntax error squiggles while typing (live check, no save)"
+    },
+    {
+      "id": "explicit-check-opens-problems-panel",
+      "spec": "problems.spec.js",
+      "name": "Check command surfaces the Problems panel with the error list"
+    },
+    {
+      "id": "check-ok-confirms-no-problems",
+      "spec": "problems.spec.js",
+      "name": "A clean file checks to \"Проблем нет\""
+    },
+    {
+      "id": "unused-variable-warning",
+      "spec": "problems.spec.js",
+      "name": "Неиспользуемая переменная отмечается жёлтым предупреждением и не блокирует запуск"
+    },
+    {
+      "id": "circle-text-mode-check-run-diagnostic",
+      "spec": "problems.spec.js",
+      "name": "Check находит графику в SCREEN 0 и блокирует Run; сообщение сохраняется при смене языка"
+    },
+    {
+      "id": "run-prints-output-and-finishes",
+      "spec": "run.spec.js",
+      "name": "F5 runs the active saved file; output lands in the console"
+    },
+    {
+      "id": "run-input-program-accepts-typed-line",
+      "spec": "run.spec.js",
+      "name": "A program with INPUT reads a typed line from the console"
+    },
+    {
+      "id": "stop-kills-running-program",
+      "spec": "run.spec.js",
+      "name": "Stop (Shift+F5) terminates an infinite loop; status shows Остановлено"
+    },
+    {
+      "id": "run-screen-program-uses-shared-graphics-host",
+      "spec": "run.spec.js",
+      "name": "SCREEN выполняется через общие службы и завершается без ограничения CLI"
+    },
+    {
+      "id": "save-all-background-format",
+      "spec": "save.spec.js",
+      "name": "Сохранить всё записывает обе модели без дополнительного форматирования"
+    },
+    {
+      "id": "save-write-failure",
+      "spec": "save.spec.js",
+      "name": "Ошибка записи сохраняет вкладку и несохранённый текст"
+    },
+    {
+      "id": "save-window-discard-persistence",
+      "spec": "save.spec.js",
+      "name": "Не сохранять исключает правки из восстановления при следующем запуске"
+    },
+    {
+      "id": "save-all-documents",
+      "spec": "save.spec.js",
+      "name": "Сохранить всё записывает обе вкладки и сохраняет выбранную"
+    },
+    {
+      "id": "save-close-decisions",
+      "spec": "save.spec.js",
+      "name": "Отмена сохраняет вкладку, Сохранить записывает и закрывает"
+    },
+    {
+      "id": "save-close-untitled-cancel",
+      "spec": "save.spec.js",
+      "name": "Отмена Сохранить как сохраняет безымянную вкладку"
+    },
+    {
+      "id": "save-window-cancel",
+      "spec": "save.spec.js",
+      "name": "Отмена выхода оставляет окно и изменённый текст"
+    },
+    {
+      "id": "shell-responsive-commands",
+      "spec": "shell.spec.js",
+      "name": "Утверждённая оболочка: темы, меню, размеры и команды"
+    },
+    {
+      "id": "smart-identifier-legacy",
+      "spec": "smart-identifier.spec.js",
+      "name": "Умный идентификатор: меню, Enter, мышь, отмена и сохранение настройки"
+    },
+    {
+      "id": "startup-ready",
+      "spec": "startup.spec.js",
+      "name": "IDE boots to #app.ready with an untitled .axm tab"
+    },
+    {
+      "id": "startup-opens-existing-file",
+      "spec": "startup.spec.js",
+      "name": "Open dialog stub loads an existing .axm file into a tab"
+    },
+    {
+      "id": "trace-context-menu",
+      "spec": "trace.spec.js",
+      "name": "Прежние команды точек остановки в контекстном меню ru/en"
+    },
+    {
+      "id": "trace-function-and-loop",
+      "spec": "trace.spec.js",
+      "name": "Функция, другая вкладка и повторная точка в цикле"
+    },
+    {
+      "id": "trace-all-steps",
+      "spec": "trace.spec.js",
+      "name": "Все шаги трассировки, откат и обход вызова"
+    },
+    {
+      "id": "trace-breakpoints-restart-language",
+      "spec": "trace.spec.js",
+      "name": "Точки остановки, продолжение, перезапуск и перевод"
+    }
+  ]
+}
