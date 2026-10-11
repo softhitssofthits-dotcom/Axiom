@@ -16,17 +16,15 @@
 <p class="lead">Раздел обработки ошибок описывает средства Axiom для создания и перехвата ошибок времени выполнения: блок <code>TRY ... CATCH ... FINALLY ... END TRY</code>, оператор <code>ERROR</code> и встроенный тип <code>ERROR</code>.</p>
 
 <section class="article-section">
-<h2>Как работает обработка</h2>
+<h2>Порядок обработки ошибок</h2>
 <p>Оператор <code>ERROR</code> создаёт пользовательскую ошибку времени выполнения или повторно поднимает уже пойманное значение ошибки. Если выполнение находится внутри подходящего блока <code>TRY</code>, управление переходит к <code>CATCH</code>. Если обработчика нет, программа завершается диагностикой времени выполнения с указанным кодом и сообщением.</p>
 <p>Здесь важно различать два похожих имени. <code>ERROR</code> как оператор создаёт или повторно поднимает ошибку. <code>ERROR</code> как встроенный тип — это значение, которое получает переменная в строке <code>CATCH err</code>.</p>
-<blockquote>
-    <p><em>В QuickBASIC обработка ошибок строилась вокруг <code>ON ERROR GOTO</code> и перехода к метке. В Axiom используется блочный <code>TRY ... CATCH ... FINALLY</code>, а оператор <code>ERROR</code> служит для создания или повторного проброса значения ошибки.</em></p>
-</blockquote>
+<p>Ошибки перехватываются блоком <code>TRY ... CATCH ... FINALLY</code>. Оператор <code>ERROR</code> создаёт или повторно передаёт ошибку.</p>
 </section>
 
 <section class="article-section">
 <h2>Основные формы</h2>
-<pre><code class="language-basic">ERROR код
+<pre><code class="language-axiom">ERROR код
 ERROR код, сообщение
 ERROR ошибка</code></pre>
 <p><code>код</code> и <code>сообщение</code> являются выражениями типа <code>STRING</code>. Код может быть проектным кодом вроде <code>"APP001"</code>. Если сообщение не указано, Axiom формирует сообщение по умолчанию. <code>ошибка</code> должна иметь тип <code>ERROR</code> и обычно берётся из <code>CATCH err</code>.</p>
@@ -34,7 +32,7 @@ ERROR ошибка</code></pre>
 
 <section class="article-section">
 <h2>Перехват</h2>
-<pre><code class="language-basic">TRY
+<pre><code class="language-axiom">TRY
     ERROR "APP001", "Manual failure"
 CATCH err
     PRINT err.Code
@@ -47,7 +45,7 @@ PRINT "after"</code></pre>
 
 <section class="article-section">
 <h2>Передача ошибки дальше</h2>
-<pre><code class="language-basic">TRY
+<pre><code class="language-axiom">TRY
     TRY
         ERROR "APP003", "Original failure"
     CATCH err
@@ -84,7 +82,7 @@ END TRY</code></pre>
 </section>
 
 <section class="article-section">
-<h2>Ручная проверка</h2>
+<h2>Запускаемые примеры</h2>
 <ul class="resource-list"><li><a href="../../samples/operators/error/user_code_catch.axm">ERROR: пользовательский код и перехват через CATCH</a></li><li><a href="../../samples/operators/error/rethrow_caught_error.axm">ERROR: повторный проброс пойманной ошибки</a></li><li><a href="../../samples/operators/try/handled_runtime_error.axm">TRY: перехват системной ошибки времени выполнения и FINALLY</a></li></ul>
 </section>
 

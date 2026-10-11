@@ -34,7 +34,7 @@
             <p class="lead">Раздел типов данных описывает, какого рода значения хранит программа Axiom и как язык различает их назначение: скалярные типы, включая дату и время, строки, файлы, записи, массивы и преобразования между типами.</p>
 
         <section class="article-section">
-            <h2>Главные правила</h2>
+            <h2>Основные правила</h2>
             <ul>
                 <li>Каждая переменная и константа имеет определённый тип.</li>
                 <li>Тип задаётся явно через <code>AS</code> или выводится из инициализатора там, где такая форма поддержана.</li>
@@ -65,7 +65,7 @@
         <section class="article-section" id="strings">
             <h2>Строковые типы</h2>
             <p>Строка хранит текст. Обычная форма <code>STRING</code> используется для строк переменной длины, а форма <code>STRING * N</code> задаёт фиксированную длину хранения там, где такая запись поддержана: в переменных <code>DIM</code>, полях <code>TYPE</code> и разрешённых постоянных формах внутри записей.</p>
-            <pre><code class="language-basic">DIM title AS STRING
+            <pre><code class="language-axiom">DIM title AS STRING
 DIM code AS STRING * 4
 
 title = "Axiom"
@@ -76,20 +76,18 @@ code = "AB"</code></pre>
         <section class="article-section" id="boolean">
             <h2>Логический тип</h2>
             <p><code>BOOLEAN</code> хранит одно из двух значений: <code>TRUE</code> или <code>FALSE</code>. Этот тип используется в условиях <code>IF</code>, циклах с условием, логических выражениях и функциях, которые отвечают на вопрос «да или нет».</p>
-            <pre><code class="language-basic">DIM ready AS BOOLEAN = TRUE
+            <pre><code class="language-axiom">DIM ready AS BOOLEAN = TRUE
 
 IF ready THEN
     PRINT "ready"
 END IF</code></pre>
-            <blockquote>
-                <p><em>В QuickBASIC в условных выражениях часто использовалась числовая модель: ноль означал ложь, ненулевое значение — истину. В Axiom условие документируемых управляющих конструкций должно иметь тип <code>BOOLEAN</code>, поэтому числовое выражение нужно явно превратить в сравнение, например <code>count &gt; 0</code>.</em></p>
-            </blockquote>
+            <p>Условие документируемых управляющих конструкций должно иметь тип <code>BOOLEAN</code>, поэтому числовое выражение нужно явно превратить в сравнение, например <code>count &gt; 0</code>.</p>
         </section>
 
         <section class="article-section" id="temporal">
             <h2>Типы даты и времени</h2>
             <p>Типы <code>DATE</code>, <code>TIME</code> и <code>DATETIME</code> хранят календарные и суточные значения: <code>DATE</code> хранит дату, <code>TIME</code> хранит время суток, а <code>DATETIME</code> хранит дату и время вместе. Это скалярные типы, поэтому такие значения объявляются, присваиваются, выводятся и сравниваются как обычные данные.</p>
-            <pre><code class="language-basic">DIM day AS DATE
+            <pre><code class="language-axiom">DIM day AS DATE
 DIM moment AS TIME
 DIM stamp AS DATETIME
 
@@ -129,7 +127,7 @@ stamp = "2026-08-25 14:05:06"</code></pre>
         <section class="article-section" id="records">
             <h2>Пользовательские типы TYPE</h2>
             <p>Если несколько значений описывают один предмет, их удобно объединить в запись. В Axiom такая запись объявляется через <code>TYPE ... END TYPE</code>, а её поля получают собственные имена и типы.</p>
-            <pre><code class="language-basic">TYPE Student
+            <pre><code class="language-axiom">TYPE Student
     Id AS INTEGER
     Name AS STRING * 20
     Score AS DOUBLE
@@ -142,7 +140,7 @@ DIM item AS Student</code></pre>
         <section class="article-section" id="arrays">
             <h2>Массивные типы</h2>
             <p>Массив хранит группу элементов одного типа. В типе массива важны два свойства: тип элемента и число измерений. Запись <code>INTEGER()</code> означает одномерный массив целых чисел, а <code>INTEGER(,)</code> — двумерный массив целых чисел.</p>
-            <pre><code class="language-basic">DIM values(1 TO 3) AS INTEGER
+            <pre><code class="language-axiom">DIM values(1 TO 3) AS INTEGER
 DIM names() AS STRING
 DIM board(,) AS INTEGER</code></pre>
             <p>Массивы могут быть сразу выделены с границами или объявлены как динамические и позже получить область элементов через <code>REDIM</code>.</p>
@@ -176,17 +174,13 @@ DIM board(,) AS INTEGER</code></pre>
         </section>
 
         <section class="article-section" id="differences">
-            <h2>Отличия, важные при чтении старых BASIC-материалов</h2>
-            <blockquote>
-                <p><em>В QuickBASIC были типы <code>SINGLE</code>, суффиксы имён вроде <code>%</code>, <code>&amp;</code>, <code>!</code>, <code>#</code>, <code>$</code> и операторы семейства <code>DEF...</code> для задания типа по первой букве имени. В Axiom документируемая модель другая: поддержанные скалярные типы перечислены явно, тип задаётся через <code>AS</code> или выводится из инициализатора, а суффиксы имён и <code>DEF...</code>-операторы не являются частью текущего синтаксиса.</em></p>
-            </blockquote>
-            <blockquote>
-                <p><em>В QuickBASIC строки описывались через байтовую модель исторической кодировки. В Axiom строковые значения работают как современные строки, а точные правила ввода, вывода, длины и символьных функций описываются на страницах строковых функций справочника.</em></p>
-            </blockquote>
+            <h2>Дополнительные правила типов</h2>
+            <p>Поддержанные скалярные типы перечислены явно, тип задаётся через <code>AS</code> или выводится из инициализатора, а суффиксы имён и <code>DEF...</code>-операторы не являются частью текущего синтаксиса.</p>
+            <p>Строковые значения работают как современные строки, а точные правила ввода, вывода, длины и символьных функций описываются на страницах строковых функций справочника.</p>
         </section>
 
         <section class="article-section">
-            <h2>Ручная проверка</h2>
+            <h2>Запускаемые примеры</h2>
             <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и использовать как короткие проверки объявлений, строк, записей и преобразований.</p>
             <ul class="resource-list">
                 <li><a href="../../samples/operators/dim/basic_declaration.axm">DIM: базовое объявление</a></li>

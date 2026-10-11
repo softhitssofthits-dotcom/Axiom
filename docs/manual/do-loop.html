@@ -37,45 +37,45 @@
                 <p>Формы с <code>WHILE</code> продолжают цикл, пока условие истинно. Формы с <code>UNTIL</code> продолжают цикл, пока условие ещё ложно, и завершаются, когда оно становится истинным. Если условие стоит после <code>LOOP</code>, тело выполняется минимум один раз.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Синтаксис</h2>
-                <pre><code class="language-basic">DO WHILE &lt;условие&gt;
+                <pre><code class="language-axiom">DO WHILE &lt;условие&gt;
     &lt;инструкции&gt;
     [CONTINUE DO]
     [&lt;инструкции&gt;]
 LOOP</code></pre>
-                <pre><code class="language-basic">DO UNTIL &lt;условие&gt;
+                <pre><code class="language-axiom">DO UNTIL &lt;условие&gt;
     &lt;инструкции&gt;
     [CONTINUE DO]
     [&lt;инструкции&gt;]
 LOOP</code></pre>
-                <pre><code class="language-basic">DO
+                <pre><code class="language-axiom">DO
     &lt;инструкции&gt;
     [CONTINUE DO]
     [&lt;инструкции&gt;]
 LOOP WHILE &lt;условие&gt;</code></pre>
-                <pre><code class="language-basic">DO
+                <pre><code class="language-axiom">DO
     &lt;инструкции&gt;
     [CONTINUE DO]
     [&lt;инструкции&gt;]
 LOOP UNTIL &lt;условие&gt;</code></pre>
-                <pre><code class="language-basic">DO
+                <pre><code class="language-axiom">DO
     &lt;инструкции&gt;
     [CONTINUE DO]
     [&lt;инструкции&gt;]
 LOOP</code></pre>
-                <pre><code class="language-basic">EXIT DO</code></pre>
+                <pre><code class="language-axiom">EXIT DO</code></pre>
             </section>
 
-            <section class="article-section">
-                <h2>Части записи</h2>
+        <section class="article-section">
+                <h2>Параметры и части синтаксиса</h2>
                 <p><code>&lt;условие&gt;</code> - логическое выражение типа <code>BOOLEAN</code>.</p>
                 <p><code>&lt;инструкции&gt;</code> - тело цикла между <code>DO</code> и <code>LOOP</code>.</p>
                 <p><code>EXIT DO</code> немедленно завершает ближайший окружающий цикл <code>DO ... LOOP</code> и передаёт управление инструкции после <code>LOOP</code>.</p>
                 <p><code>CONTINUE DO</code> пропускает оставшуюся часть текущей итерации и переходит к проверке условия (для форм с <code>LOOP WHILE</code> или <code>LOOP UNTIL</code>) или к началу следующей итерации. Подробнее — на странице <a href="continue.html">оператора CONTINUE</a>.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Выход из середины цикла</h2>
                 <ul>
                     <li><code>DO WHILE</code> и <code>DO UNTIL</code> проверяют условие до первого прохода.</li>
@@ -83,14 +83,21 @@ LOOP</code></pre>
                     <li>Форма <code>DO ... LOOP</code> без условия должна иметь понятный путь завершения, обычно через <code>EXIT DO</code>.</li>
                     <li>Вложенный <code>EXIT DO</code> выходит только из ближайшего цикла <code>DO ... LOOP</code>.</li>
                 </ul>
-                <blockquote>
-                    <p><em>В QuickBASIC <code>DO ... LOOP</code> также служил более гибкой заменой переходам и способом получить прямой выход через <code>EXIT DO</code>. В Axiom эта идея сохранена, но используются только подтверждённые формы, перечисленные в синтаксисе этой страницы.</em></p>
-                </blockquote>
+                <p>Оператор <code>EXIT DO</code> завершает ближайший охватывающий цикл <code>DO ... LOOP</code>. Поддерживаемые формы условия перечислены в разделе «Синтаксис».</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
+                <h2>Диагностика</h2>
+                <p>Ошибка возникает, если условие цикла не имеет тип <code>BOOLEAN</code>, если <code>DO</code> не закрыт соответствующим <code>LOOP</code> или если <code>EXIT DO</code> записан вне цикла <code>DO ... LOOP</code>.</p>
+                <ul>
+                    <li><code>MB2014</code> — <code>EXIT DO</code> используется вне цикла <code>DO ... LOOP</code>.</li>
+                    <li><code>MB2039</code> — <code>CONTINUE DO</code> используется вне цикла <code>DO ... LOOP</code>.</li>
+                </ul>
+            </section>
+
+        <section class="article-section">
                 <h2>Пример выхода по событию</h2>
-                <pre><code class="language-basic">' Ожидаемый вывод:
+                <pre><code class="language-axiom">' Ожидаемый вывод:
 ' 0
 ' 1
 ' done
@@ -108,8 +115,8 @@ LOOP
 PRINT "done"</code></pre>
             </section>
 
-            <section class="article-section">
-                <h2>Ручная проверка</h2>
+        <section class="article-section">
+                <h2>Запускаемые примеры</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/control-flow/do/do_while_loop.axm">DO WHILE: условие в начале</a></li>
                     <li><a href="../../samples/control-flow/do/do_until_loop.axm">DO UNTIL: повторение до условия</a></li>
@@ -121,16 +128,7 @@ PRINT "done"</code></pre>
                 </ul>
             </section>
 
-            <section class="article-section">
-                <h2>Диагностика</h2>
-                <p>Ошибка возникает, если условие цикла не имеет тип <code>BOOLEAN</code>, если <code>DO</code> не закрыт соответствующим <code>LOOP</code> или если <code>EXIT DO</code> записан вне цикла <code>DO ... LOOP</code>.</p>
-                <ul>
-                    <li><code>MB2014</code> — <code>EXIT DO</code> используется вне цикла <code>DO ... LOOP</code>.</li>
-                    <li><code>MB2039</code> — <code>CONTINUE DO</code> используется вне цикла <code>DO ... LOOP</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
+        <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="loops.html">Циклы</a>

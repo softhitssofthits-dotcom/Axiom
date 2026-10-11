@@ -21,9 +21,9 @@
 <p>Поддержанные формы <code>TRY/CATCH/FINALLY</code> компилируются в байт-код и выполняются <code>BytecodeVm</code>. Неподдержанными остаются старые формы продолжения с точки ошибки и фильтры обработчиков.</p>
 </section>
 
-<section class="article-section">
+        <section class="article-section">
 <h2>Синтаксис</h2>
-<pre><code class="language-basic">TRY
+<pre><code class="language-axiom">TRY
     [tryStatements]
 CATCH errorVariable
     [catchStatements]
@@ -33,8 +33,8 @@ END TRY</code></pre>
 <p>Должна быть указана хотя бы одна часть: <code>CATCH</code> или <code>FINALLY</code>. Если обработка ошибки не нужна, можно оставить только <code>FINALLY</code>. Если отдельная очистка не нужна, можно оставить только <code>CATCH</code>.</p>
 </section>
 
-<section class="article-section">
-<h2>Части записи</h2>
+        <section class="article-section">
+<h2>Параметры и части синтаксиса</h2>
 <p><code>TRY</code>, <code>CATCH</code>, <code>FINALLY</code> и <code>END TRY</code> — ключевые слова одного блочного оператора. Имена <code>tryStatements</code>, <code>catchStatements</code>, <code>finallyStatements</code> и <code>errorVariable</code> в синтаксисе — не слова языка, а обозначения мест, куда в реальном коде вставляются инструкции и имя переменной.</p>
 <p><code>tryStatements</code> — инструкции, при выполнении которых может возникнуть ошибка времени выполнения.</p>
 <p><code>errorVariable</code> — локальная переменная только для чтения. Она доступна только внутри блока <code>CATCH</code> и имеет встроенный тип <code>ERROR</code>.</p>
@@ -42,7 +42,7 @@ END TRY</code></pre>
 <p><code>finallyStatements</code> — инструкции завершения. Они выполняются при обычном выходе, после <code>CATCH</code> и перед выходом с необработанной ошибкой.</p>
 </section>
 
-<section class="article-section">
+        <section class="article-section">
 <h2>Значение ERROR</h2>
 <p>Встроенный тип <code>ERROR</code> описывает значение ошибки. Это не сам оператор <code>ERROR</code>, а тип данных у переменной после <code>CATCH</code>:</p>
 <table class="data-table"><thead><tr><th>Поле</th><th>Тип</th><th>Назначение</th></tr></thead><tbody>
@@ -53,9 +53,21 @@ END TRY</code></pre>
 </tbody></table>
 </section>
 
-<section class="article-section">
+        <section class="article-section">
+<h2>Правила и ограничения</h2>
+<ul>
+<li><code>CATCH</code> в текущем срезе не фильтрует ошибки по типу: он перехватывает любую ошибку времени выполнения из соответствующего <code>TRY</code>.</li>
+<li>Поддерживается не более одного <code>CATCH</code> в одном блоке <code>TRY</code>.</li>
+<li>Пользовательскую runtime-ошибку можно создать оператором <code>ERROR</code>; пойманную ошибку можно передать дальше формой <code>ERROR err</code>.</li>
+<li><code>FINALLY</code> выполняется гарантированно: после обычного тела <code>TRY</code>, после обработанной в <code>CATCH</code> ошибки, а также перед выходом с необработанной ошибкой. Это касается и повторного выброса (<code>ERROR err</code>), и новой ошибки, возникшей внутри тела <code>CATCH</code>: сначала выполняется <code>FINALLY</code>, и только затем ошибка передаётся внешнему обработчику или останавливает программу.</li>
+<li><code>RESUME</code>, <code>ON ERROR GOTO</code> и продолжение с точки ошибки не поддерживаются.</li>
+<li>Тело <code>TRY</code>, <code>CATCH</code> и <code>FINALLY</code> образуют отдельные блочные области видимости.</li>
+</ul>
+</section>
+
+        <section class="article-section">
 <h2>Пример перехвата ошибки</h2>
-<pre><code class="language-basic">TRY
+<pre><code class="language-axiom">TRY
     PRINT "before"
     PRINT 10 \ 0
 CATCH err
@@ -70,24 +82,12 @@ PRINT "after"</code></pre>
 <p>Деление на ноль не завершает программу: управление переходит в <code>CATCH</code>, затем выполняется <code>FINALLY</code>, после чего программа продолжает работу после <code>END TRY</code>.</p>
 </section>
 
-<section class="article-section">
-<h2>Правила и ограничения</h2>
-<ul>
-<li><code>CATCH</code> в текущем срезе не фильтрует ошибки по типу: он перехватывает любую ошибку времени выполнения из соответствующего <code>TRY</code>.</li>
-<li>Поддерживается не более одного <code>CATCH</code> в одном блоке <code>TRY</code>.</li>
-<li>Пользовательскую runtime-ошибку можно создать оператором <code>ERROR</code>; пойманную ошибку можно передать дальше формой <code>ERROR err</code>.</li>
-<li><code>FINALLY</code> выполняется гарантированно: после обычного тела <code>TRY</code>, после обработанной в <code>CATCH</code> ошибки, а также перед выходом с необработанной ошибкой. Это касается и повторного выброса (<code>ERROR err</code>), и новой ошибки, возникшей внутри тела <code>CATCH</code>: сначала выполняется <code>FINALLY</code>, и только затем ошибка передаётся внешнему обработчику или останавливает программу.</li>
-<li><code>RESUME</code>, <code>ON ERROR GOTO</code> и продолжение с точки ошибки не поддерживаются.</li>
-<li>Тело <code>TRY</code>, <code>CATCH</code> и <code>FINALLY</code> образуют отдельные блочные области видимости.</li>
-</ul>
-</section>
-
-<section class="article-section">
-<h2>Ручная проверка</h2>
+        <section class="article-section">
+<h2>Запускаемые примеры</h2>
 <ul class="resource-list"><li><a href="../../samples/operators/try/handled_runtime_error.axm">TRY: перехват ошибки времени выполнения и FINALLY</a></li><li><a href="../../samples/operators/try/rethrow_from_catch_runs_finally.axm">TRY: FINALLY при повторном выбросе из CATCH</a></li><li><a href="../../samples/operators/error/user_code_catch.axm">ERROR: пользовательский код и перехват через CATCH</a></li><li><a href="../../samples/operators/error/rethrow_caught_error.axm">ERROR: повторный проброс пойманной ошибки</a></li></ul>
 </section>
 
-<section class="article-section">
+        <section class="article-section">
 <h2>См. также</h2>
 <div class="link-list"><a href="error-handling.html">Обработка ошибок</a><a href="error.html">Оператор ERROR</a><a href="diagnostics.html">Диагностика</a><a href="return.html">Оператор RETURN</a><a href="examples.html">Примеры программ</a></div>
 </section>

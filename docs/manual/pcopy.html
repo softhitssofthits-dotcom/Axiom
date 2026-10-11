@@ -26,24 +26,24 @@
 
             <section class="article-section">
                 <h2>Когда использовать PCOPY</h2>
-                <p>Оператор <code>PCOPY</code> нужен для работы с экранными страницами исторического графического пути <code>SCREEN</code>.</p>
+                <p>Оператор <code>PCOPY</code> нужен для работы с экранными страницами палитрового графического режима <code>SCREEN</code>.</p>
                 <p>Обычный сценарий такой: оператор <code>SCREEN</code> делает страницу <code>1</code> активной для рисования и страницу <code>0</code> видимой для показа, программа собирает следующий кадр на странице <code>1</code>, а оператор <code>PCOPY 1, 0</code> переносит готовый кадр на страницу <code>0</code>.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Где работает оператор PCOPY</h2>
                 <p>Оператор <code>PCOPY</code> работает только в графических режимах <code>SCREEN 1</code> ... <code>SCREEN 10</code>.</p>
                 <p>Оператор <code>PCOPY</code> не работает в <code>SCREEN 0</code> и не относится к современному графическому слою <code>CANVAS</code>.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Синтаксис</h2>
-<pre><code class="language-basic">PCOPY sourcePage, destinationPage</code></pre>
+<pre><code class="language-axiom">PCOPY sourcePage, destinationPage</code></pre>
                 <p>На этой странице показана одна форма оператора <code>PCOPY</code>. Оператор <code>PCOPY</code> всегда требует номер исходной страницы и номер страницы назначения.</p>
             </section>
 
-            <section class="article-section">
-                <h2>Части записи</h2>
+        <section class="article-section">
+                <h2>Параметры и части синтаксиса</h2>
                 <table>
                     <thead>
                         <tr><th>Часть</th><th>Описание</th></tr>
@@ -55,13 +55,13 @@
                 </table>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Что делает оператор PCOPY</h2>
                 <p>Оператор <code>PCOPY</code> копирует кадровый буфер исходной страницы в страницу назначения.</p>
                 <p>Оператор <code>PCOPY</code> копирует индексный слой, полноцветный слой и палитру исходной страницы. Поэтому кадр с <code>PSET</code>, <code>LINE</code>, <code>DRAWIMAGE</code>, <code>DRAWSPRITE</code> и <code>PALETTE</code> переносится как единое изображение.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Правила работы</h2>
                 <p>Оператор <code>PCOPY</code> работает только после выбора графического режима <code>SCREEN 1</code> ... <code>SCREEN 10</code>. Если графический режим не активен, оператор <code>PCOPY</code> сообщает ошибку времени выполнения <code>MB3010</code>.</p>
                 <p>Номера <code>sourcePage</code> и <code>destinationPage</code> должны находиться в диапазоне <code>0..3</code>. Если программа передаёт номер страницы вне этого диапазона, оператор <code>PCOPY</code> сообщает ошибку времени выполнения <code>MB3007</code>.</p>
@@ -69,9 +69,17 @@
                 <p>Текстовый слой графического режима <code>SCREEN</code>, выведенный через <code>PRINT</code> и <code>LOCATE</code>, относится к той же экранной странице. Поэтому оператор <code>PCOPY</code> переносит и такой текст вместе с остальным содержимым страницы.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3010</code>: графический режим <code>SCREEN</code> не активен.</li>
+                    <li><code>MB3007</code>: номер исходной страницы или страницы назначения находится вне диапазона <code>0..3</code>.</li>
+                </ul>
+            </section>
+
+        <section class="article-section">
                 <h2>Пример</h2>
-<pre><code class="language-basic">SCREEN 1, , 1, 0
+<pre><code class="language-axiom">SCREEN 1, , 1, 0
 CLS
 LINE (20, 40)-(180, 40), 1
 PALETTE 1, 196
@@ -82,16 +90,8 @@ PRINT POINT(20, 40)</code></pre>
                 <p>В этом примере оператор <code>PCOPY</code> переносит со скрытой страницы <code>1</code> на видимую страницу <code>0</code> и линию, и изменённую палитру. После переключения активной страницы функция <code>POINT</code> всё равно возвращает индекс <code>1</code>, потому что оператор <code>PALETTE</code> меняет видимый цвет, а не сохранённый индекс пикселя.</p>
             </section>
 
-            <section class="article-section">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li><code>MB3010</code>: графический режим <code>SCREEN</code> не активен.</li>
-                    <li><code>MB3007</code>: номер исходной страницы или страницы назначения находится вне диапазона <code>0..3</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Ручная проверка</h2>
+        <section class="article-section">
+                <h2>Запускаемые примеры</h2>
                 <p>Готовые примеры для ручной проверки оператора <code>PCOPY</code> находятся в <code>samples/operators/pcopy/</code>.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/operators/pcopy/page_copy_buffer.axm">PCOPY: перенос страницы с палитрой</a></li>
@@ -100,7 +100,7 @@ PRINT POINT(20, 40)</code></pre>
                 </ul>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="graphics.html">Графика</a>

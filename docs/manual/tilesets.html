@@ -44,7 +44,7 @@
 
             <section class="article-section">
                 <h2>Синтаксис</h2>
-<pre><code class="language-basic">DIM name AS TILESET
+<pre><code class="language-axiom">DIM name AS TILESET
 
 name = LOADTILESET(path, tileWidth, tileHeight)
 name = LOADTILESET(path, tileWidth, tileHeight, margin)
@@ -61,7 +61,7 @@ DRAWTILE tileset, tileIndex, x, y</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Части записи</h2>
+                <h2>Параметры и части синтаксиса</h2>
                 <table>
                     <thead>
                         <tr><th>Аргумент</th><th>Описание</th></tr>
@@ -101,7 +101,7 @@ DRAWTILE tileset, tileIndex, x, y</code></pre>
 
             <section class="article-section">
                 <h2>Пример</h2>
-<pre><code class="language-basic">DIM tiles AS TILESET
+<pre><code class="language-axiom">DIM tiles AS TILESET
 
 ' Загружаем атлас из примеров и берём тайлы размером 16 x 16 пикселей.
 tiles = LOADTILESET("../../graphics/sprites/assets/walk_sheet.png", 16, 16)
@@ -124,7 +124,7 @@ SLEEP</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Ручная проверка</h2>
+                <h2>Запускаемые примеры</h2>
                 <p>Этот файл можно открыть в <code>Axiom.Ide</code> и запустить как короткую проверку поведения типа <code>TILESET</code> и оператора <code>DRAWTILE</code>.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/operators/drawtile/basic_tileset.axm">DRAWTILE: вывод тайла из тайлсета</a></li>
@@ -162,7 +162,7 @@ SLEEP</code></pre>
             <section class="article-section"><h2>Короткие проверки функций</h2><p>Короткие примеры выводят ожидаемый результат в текстовую панель IDE. Примеры загрузки используют существующие ресурсы репозитория и реальные относительные пути; отдельный графический холст для чтения свойств не требуется.</p><ul>
                     <li><a href="../../samples/functions/loadtileset/loaded_resource_property.axm">LOADTILESET: короткая проверка результата</a></li>
                 </ul></section>
-<section class="article-section"><h2>Нулевой символ в пути ресурса</h2><p>Функции LOADIMAGE, LOADSPRITE, LOADTILESET и LOADTILEMAP требуют строковый путь без нулевого символа. Такой символ отклоняется до раскрытия переменных окружения: загрузчик не использует часть пути перед ним. Неверный путь даёт MB3005, которую можно перехватить оператором TRY/CATCH; программа продолжает работу после обработки ошибки.</p><p>Короткий запускаемый пример: <a href="../../samples/smoke/resources/null_path.axm">отказ загрузки изображения по пути с нулевым символом</a>.</p><pre><code class="language-basic">DIM picture AS IMAGE
+<section class="article-section"><h2>Нулевой символ в пути ресурса</h2><p>Функции LOADIMAGE, LOADSPRITE, LOADTILESET и LOADTILEMAP требуют строковый путь без нулевого символа. Такой символ отклоняется до раскрытия переменных окружения: загрузчик не использует часть пути перед ним. Неверный путь даёт MB3005, которую можно перехватить оператором TRY/CATCH; программа продолжает работу после обработки ошибки.</p><p>Короткий запускаемый пример: <a href="../../samples/smoke/resources/null_path.axm">отказ загрузки изображения по пути с нулевым символом</a>.</p><pre><code class="language-axiom">DIM picture AS IMAGE
 TRY
     picture = LOADIMAGE("рисунок.png" + CHR(0) + "другой.png")
 CATCH err

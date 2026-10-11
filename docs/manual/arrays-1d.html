@@ -35,20 +35,20 @@
             <p class="lead">Раздел одномерных массивов описывает объявление, доступ к элементам и обход по индексам — простой список значений одного типа с доступом по номеру.</p>
 
             <section class="article-section">
-                <h2>Как одномерный массив хранит список</h2>
+                <h2>Хранение элементов</h2>
                 <p>Одномерный массив хранит последовательность значений одного типа под общим именем. Каждый элемент массива выбирается по одному индексу, а диапазон допустимых индексов задаётся при объявлении или при последующем изменении размера через <code>REDIM</code>.</p>
             </section>
 
             <section class="article-section">
                 <h2>Синтаксис</h2>
-                <pre><code class="language-basic">DIM &lt;имя массива&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;) AS &lt;тип элемента&gt;</code></pre>
-                <pre><code class="language-basic">DIM &lt;имя массива&gt;() AS &lt;тип элемента&gt;</code></pre>
-                <pre><code class="language-basic">&lt;имя массива&gt;(&lt;индекс&gt;) = &lt;выражение&gt;
+                <pre><code class="language-axiom">DIM &lt;имя массива&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;) AS &lt;тип элемента&gt;</code></pre>
+                <pre><code class="language-axiom">DIM &lt;имя массива&gt;() AS &lt;тип элемента&gt;</code></pre>
+                <pre><code class="language-axiom">&lt;имя массива&gt;(&lt;индекс&gt;) = &lt;выражение&gt;
 &lt;переменная&gt; = &lt;имя массива&gt;(&lt;индекс&gt;)</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Части записи</h2>
+                <h2>Параметры и части синтаксиса</h2>
                 <ul>
                     <li><code>&lt;имя массива&gt;</code> — имя массива.</li>
                     <li><code>&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;</code> — включительный диапазон допустимых индексов.</li>
@@ -72,7 +72,7 @@
 
             <section class="article-section">
                 <h2>Пример заполнения и обхода списка</h2>
-                <pre><code class="language-basic">' Программа заполняет массив и печатает все его элементы
+                <pre><code class="language-axiom">' Программа заполняет массив и печатает все его элементы
 ' Ожидаемый вывод:
 ' 10
 ' 20
@@ -90,7 +90,7 @@ NEXT</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Ручная проверка</h2>
+                <h2>Запускаемые примеры</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/operators/dim/array_declaration.axm">DIM: объявление массива</a></li>
                     <li><a href="../../samples/expressions/arrays/index_access.axm">Доступ к элементу массива</a></li>

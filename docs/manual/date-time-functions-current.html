@@ -19,10 +19,10 @@
 <h2>DATE</h2>
 <p>Функция <code>DATE</code> возвращает текущую дату в формате <code>yyyy-MM-dd</code>.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">dateText = DATE([timeZone])</code></pre>
+<pre><code class="language-axiom">dateText = DATE([timeZone])</code></pre>
 <h3>Аргументы</h3><p>Если <code>timeZone</code> не указан, используется локальный часовой пояс. Если он указан, возвращается текущая дата для этого пояса.</p>
 <h3>Пример текущей даты</h3>
-<pre><code class="language-basic">' Текущая локальная дата и дата в UTC
+<pre><code class="language-axiom">' Текущая локальная дата и дата в UTC
 PRINT DATE()
 PRINT DATE("UTC")</code></pre>
 </section>
@@ -31,10 +31,10 @@ PRINT DATE("UTC")</code></pre>
 <h2>TIME</h2>
 <p>Функция <code>TIME</code> возвращает текущее время в формате <code>HH:mm:ss</code>.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">timeText = TIME([timeZone])</code></pre>
+<pre><code class="language-axiom">timeText = TIME([timeZone])</code></pre>
 <h3>Аргументы</h3><p>Если <code>timeZone</code> не указан, используется локальный часовой пояс. Если он указан, время вычисляется для этого пояса.</p>
 <h3>Пример текущего времени</h3>
-<pre><code class="language-basic">' Текущее локальное время и время в UTC
+<pre><code class="language-axiom">' Текущее локальное время и время в UTC
 PRINT TIME()
 PRINT TIME("UTC")</code></pre>
 </section>
@@ -43,10 +43,10 @@ PRINT TIME("UTC")</code></pre>
 <h2>NOW</h2>
 <p>Функция <code>NOW</code> возвращает текущие дату и время в формате <code>yyyy-MM-dd HH:mm:ss</code>.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">dateTimeText = NOW([timeZone])</code></pre>
+<pre><code class="language-axiom">dateTimeText = NOW([timeZone])</code></pre>
 <h3>Аргументы</h3><p>Если <code>timeZone</code> не указан, используется локальный часовой пояс. Если он указан, дата и время вычисляются для него.</p>
 <h3>Пример текущих даты и времени</h3>
-<pre><code class="language-basic">' Текущие дата и время в локальном поясе и в UTC
+<pre><code class="language-axiom">' Текущие дата и время в локальном поясе и в UTC
 PRINT NOW()
 PRINT NOW("UTC")</code></pre>
 </section>
@@ -55,38 +55,38 @@ PRINT NOW("UTC")</code></pre>
 <h2>UTCDATE</h2>
 <p>Функция <code>UTCDATE</code> возвращает текущую дату в UTC.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">dateText = UTCDATE()</code></pre>
+<pre><code class="language-axiom">dateText = UTCDATE()</code></pre>
 </section>
 
 <section class="article-section" id="utctime">
 <h2>UTCTIME</h2>
 <p>Функция <code>UTCTIME</code> возвращает текущее время в UTC.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">timeText = UTCTIME()</code></pre>
+<pre><code class="language-axiom">timeText = UTCTIME()</code></pre>
 </section>
 
 <section class="article-section" id="utcnow">
 <h2>UTCNOW</h2>
 <p>Функция <code>UTCNOW</code> возвращает текущие дату и время в UTC.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">dateTimeText = UTCNOW()</code></pre>
+<pre><code class="language-axiom">dateTimeText = UTCNOW()</code></pre>
 </section>
 
 <section class="article-section" id="timer">
 <h2>TIMER</h2>
 <p>Функция <code>TIMER</code> возвращает число секунд, прошедших с локальной полуночи текущего дня.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">seconds = TIMER()</code></pre>
+<pre><code class="language-axiom">seconds = TIMER()</code></pre>
 <h3>Аргументы</h3><p>Результат имеет тип <code>DOUBLE</code>.</p>
 <h3>Измерение внутри одного дня</h3>
 <p>Эта функция удобна для простых измерений времени внутри одного дня.</p>
 <h3>Пример секунд от полуночи</h3>
-<pre><code class="language-basic">' Количество секунд от полуночи
+<pre><code class="language-axiom">' Количество секунд от полуночи
 PRINT TIMER()</code></pre>
 </section>
 
 <section class="article-section">
-<h2>Ручная проверка</h2>
+<h2>Запускаемые примеры</h2>
 <ul class="resource-list">
 <li><a href="../../samples/functions/date/basic_usage.axm">DATE</a></li>
 <li><a href="../../samples/functions/time/basic_usage.axm">TIME</a></li>

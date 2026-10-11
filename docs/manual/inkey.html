@@ -38,7 +38,7 @@
 
         <section class="article-section">
             <h2>Синтаксис</h2>
-<pre><code class="language-basic">INKEY()</code></pre>
+<pre><code class="language-axiom">INKEY()</code></pre>
             <p>Встроенная функция <code>INKEY</code> поддерживает только форму без аргументов.</p>
         </section>
 
@@ -68,8 +68,15 @@
         </section>
 
         <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB2004</code>: вызов встроенной функции <code>INKEY</code> получил один или несколько аргументов.</li>
+            </ul>
+        </section>
+
+        <section class="article-section">
             <h2>Пример</h2>
-<pre><code class="language-basic">DIM pressedKey AS STRING
+<pre><code class="language-axiom">DIM pressedKey AS STRING
 
 pressedKey = INKEY()
 IF pressedKey = "" THEN
@@ -81,16 +88,9 @@ END IF</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Ручная проверка</h2>
+            <h2>Запускаемые примеры</h2>
             <ul class="resource-list">
                 <li><a href="../../samples/functions/inkey/poll_keys.axm">INKEY: опрос клавиатуры в цикле</a></li>
-            </ul>
-        </section>
-
-        <section class="article-section">
-            <h2>Диагностика</h2>
-            <ul>
-                <li><code>MB2004</code>: вызов встроенной функции <code>INKEY</code> получил один или несколько аргументов.</li>
             </ul>
         </section>
 

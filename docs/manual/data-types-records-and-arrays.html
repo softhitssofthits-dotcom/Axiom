@@ -39,7 +39,7 @@
             <h2>Запись и массив: две разные идеи</h2>
             <p><strong>Запись</strong> похожа на карточку или анкету. В ней есть разные графы: имя, возраст, город. У каждой графы своё имя и свой тип.</p>
             <p><strong>Массив</strong> похож на ряд ячеек или таблицу. В нём много однотипных элементов: оценки, строки, клетки поля, записи сотрудников.</p>
-            <pre><code class="language-basic">TYPE Person
+            <pre><code class="language-axiom">TYPE Person
     Name AS STRING
     Age AS INTEGER
 END TYPE
@@ -52,7 +52,7 @@ DIM scores(1 TO 3) AS INTEGER</code></pre>
         <section class="article-section" id="when-to-use-type">
             <h2>Когда нужен TYPE</h2>
             <p><code>TYPE</code> нужен, когда несколько разных значений описывают один предмет. Например, человек состоит не из одного числа и не из одной строки: у него есть имя, возраст, город и другие свойства.</p>
-            <pre><code class="language-basic">TYPE Player
+            <pre><code class="language-axiom">TYPE Player
     Name AS STRING
     Score AS INTEGER
     Active AS BOOLEAN
@@ -68,7 +68,7 @@ current.Active = TRUE</code></pre>
         <section class="article-section" id="when-to-use-array">
             <h2>Когда нужен массив</h2>
             <p>Массив нужен, когда значений много и они однотипные. Вместо отдельных переменных <code>score1</code>, <code>score2</code>, <code>score3</code> можно завести один массив <code>scores</code>.</p>
-            <pre><code class="language-basic">DIM scores(1 TO 3) AS INTEGER
+            <pre><code class="language-axiom">DIM scores(1 TO 3) AS INTEGER
 
 scores(1) = 80
 scores(2) = 95
@@ -81,7 +81,7 @@ PRINT scores(2)</code></pre>
         <section class="article-section" id="array-of-records">
             <h2>Массив записей</h2>
             <p>Самое частое сочетание — массив записей. Это уже не одна карточка, а целая картотека: каждый элемент массива хранит одну запись <code>Person</code>.</p>
-            <pre><code class="language-basic">TYPE Person
+            <pre><code class="language-axiom">TYPE Person
     Name AS STRING
     Age AS INTEGER
 END TYPE
@@ -102,7 +102,7 @@ PRINT people(2).Age</code></pre>
         <section class="article-section" id="array-field">
             <h2>Массив внутри записи</h2>
             <p>Иногда список принадлежит одной записи. Например, у одного ученика может быть несколько оценок. Тогда массив делают полем внутри <code>TYPE</code>.</p>
-            <pre><code class="language-basic">TYPE Student
+            <pre><code class="language-axiom">TYPE Student
     Name AS STRING
     Marks(1 TO 3) AS INTEGER
 END TYPE
@@ -122,7 +122,7 @@ PRINT pupil.Marks(3)</code></pre>
         <section class="article-section" id="nested-record">
             <h2>Запись внутри записи</h2>
             <p>Поле записи может быть другой записью. Так удобно выделять отдельную часть данных, например адрес.</p>
-            <pre><code class="language-basic">TYPE Address
+            <pre><code class="language-axiom">TYPE Address
     City AS STRING
     Street AS STRING
 END TYPE
@@ -145,13 +145,13 @@ PRINT user.Home.City</code></pre>
         <section class="article-section" id="grouped-dim">
             <h2>Групповые объявления DIM</h2>
             <p><code>DIM</code> может объявлять несколько имён в одной строке. Общий <code>AS &lt;тип&gt;</code> относится к ближайшей группе имён слева.</p>
-            <pre><code class="language-basic">DIM left, right AS BOOLEAN
+            <pre><code class="language-axiom">DIM left, right AS BOOLEAN
 DIM total = 10, title AS STRING = "Result"</code></pre>
             <p>В первой строке обе переменные получают тип <code>BOOLEAN</code>. Во второй строке <code>total</code> получает тип из значения <code>10</code>, а <code>title</code> явно объявляется как <code>STRING</code>.</p>
         </section>
 
         <section class="article-section" id="where-to-read">
-            <h2>Куда идти за подробностями</h2>
+            <h2>Связанные разделы</h2>
             <ul>
                 <li>Если нужно понять сам оператор <code>TYPE</code>, поля, точку и создание записи, откройте <a href="type.html">Оператор TYPE</a>. Там же разобраны методы записи: <code>SELF</code> как ссылка на текущую запись, <code>SUB New</code> как конструктор и <code>IsValid</code> как проверка после конструктора.</li>
                 <li>Если нужна работа со списками, таблицами, индексами, <code>REDIM</code>, срезами и границами, откройте <a href="arrays.html">Массивы</a>.</li>
@@ -160,7 +160,7 @@ DIM total = 10, title AS STRING = "Result"</code></pre>
         </section>
 
         <section class="article-section" id="manual-check">
-            <h2>Ручная проверка</h2>
+            <h2>Запускаемые примеры</h2>
             <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки записей, массивов и групповых объявлений.</p>
             <ul class="resource-list">
                 <li><a href="../../samples/operators/type/field_access.axm">TYPE: доступ к полям</a></li>

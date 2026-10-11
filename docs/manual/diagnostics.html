@@ -78,7 +78,7 @@
             </section>
 
             <section class="article-section" id="remarks">
-                <h2>Как читать сообщения</h2>
+                <h2>Структура сообщения</h2>
                 <ul>
                     <li>Сначала полезно определить не точный код, а общий вид ошибки: чтение текста, проверка смысла или выполнение программы.</li>
                     <li>Если сообщение кажется неожиданным, проверьте несколько строк выше: в блочных конструкциях реальная причина часто находится раньше, чем место окончательной остановки.</li>
@@ -89,7 +89,7 @@
             </section>
 
             <section class="article-section">
-                <h2>Ручная проверка</h2>
+                <h2>Запускаемые примеры</h2>
                 <p>Для ручной проверки в IDE удобно использовать короткие отрицательные примеры, каждый из которых показывает один основной вид ошибки.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/acceptance/negative/undeclared_variable.axm">Необъявленное имя</a></li>
@@ -109,22 +109,22 @@
 
             <section class="article-section" id="examples">
                 <h2>Примеры ошибок</h2>
-                <pre><code class="language-basic">IF TRUE THEN
+                <pre><code class="language-axiom">IF TRUE THEN
     DIM LOCAL_NAME AS STRING = "A"
 END IF
 
 PRINT LOCAL_NAME</code></pre>
                 <p>Этот пример читается правильно, но завершается смысловой ошибкой: имя <code>LOCAL_NAME</code> существует только внутри блока <code>IF</code>.</p>
 
-                <pre><code class="language-basic">DIM AGE AS INTEGER
+                <pre><code class="language-axiom">DIM AGE AS INTEGER
 INPUT AGE
 PRINT AGE</code></pre>
                 <p>Если пользователь введёт текст вместо числа, программа дойдёт до оператора <code>INPUT</code> и завершится ошибкой времени выполнения.</p>
 
-                <pre><code class="language-basic">PRINT 1 / 0</code></pre>
+                <pre><code class="language-axiom">PRINT 1 / 0</code></pre>
                 <p>Деление на ноль не мешает прочитать программу, но делает невозможным корректное вычисление выражения при запуске.</p>
 
-                <pre><code class="language-basic">PRINT Outer()
+                <pre><code class="language-axiom">PRINT Outer()
 
 FUNCTION Outer() AS DOUBLE
     RETURN Inner()

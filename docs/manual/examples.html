@@ -41,7 +41,7 @@
             </section>
 
             <section class="article-section" id="summary">
-                <h2>Когда полезны примеры</h2>
+                <h2>Назначение примеров</h2>
                 <ul>
                     <li>когда нужен законченный пример, а не отдельная справочная статья;</li>
                     <li>когда нужно проверить несколько конструкций в одном файле;</li>
@@ -76,7 +76,7 @@
 
             <section class="article-section">
                 <h2>1. Карточка студента</h2>
-                <pre><code class="language-basic">DIM name AS STRING
+                <pre><code class="language-axiom">DIM name AS STRING
 DIM year AS INTEGER
 
 INPUT "Имя: "; name
@@ -96,7 +96,7 @@ END IF</code></pre>
 
             <section class="article-section">
                 <h2>2. Классификация оценки через SELECT CASE</h2>
-                <pre><code class="language-basic">DIM score AS INTEGER
+                <pre><code class="language-axiom">DIM score AS INTEGER
 INPUT "Баллы: "; score
 
 SELECT CASE score
@@ -114,7 +114,7 @@ END SELECT</code></pre>
 
             <section class="article-section">
                 <h2>3. Функция нормализации строки</h2>
-                <pre><code class="language-basic">FUNCTION NormalizeName(text AS STRING) AS STRING
+                <pre><code class="language-axiom">FUNCTION NormalizeName(text AS STRING) AS STRING
     IF LEN(text) = 0 THEN
         RETURN ""
     END IF
@@ -135,7 +135,7 @@ PRINT NormalizeName(rawName)</code></pre>
 
             <section class="article-section">
                 <h2>4. Работа с массивом оценок</h2>
-                <pre><code class="language-basic">DIM marks(1 TO 3) AS INTEGER
+                <pre><code class="language-axiom">DIM marks(1 TO 3) AS INTEGER
 DIM total AS INTEGER = 0
 DIM i AS INTEGER
 
@@ -154,7 +154,7 @@ PRINT "Среднее = "; total / 3</code></pre>
 
             <section class="article-section">
                 <h2>5. Повторный ввод через DO ... LOOP UNTIL</h2>
-                <pre><code class="language-basic">DIM answer AS STRING
+                <pre><code class="language-axiom">DIM answer AS STRING
 
 DO
     INPUT "Введите ДА для подтверждения: "; answer
@@ -166,7 +166,7 @@ PRINT "Подтверждение принято"</code></pre>
             </section>
 
             <section class="article-section" id="work">
-                <h2>Как работать с этими примерами</h2>
+                <h2>Порядок запуска примеров</h2>
                 <ul>
                     <li>изменяйте входные данные и наблюдайте, как меняется поведение программы;</li>
                     <li>намеренно вызывайте ошибку и отмечайте, на каком этапе она возникает;</li>
@@ -182,7 +182,7 @@ PRINT "Подтверждение принято"</code></pre>
                     <a href="reference.html">Алфавитный и тематический указатель</a>
                     <a href="data-and-input.html">Данные, ввод и вывод</a>
                     <a href="arrays-and-builtins.html">Массивы и встроенные функции</a>
-                    <a href="cheat-sheet.html">Шпаргалка</a>
+                    <a href="cheat-sheet.html">Краткая справка</a>
                 </div>
             </section>
 

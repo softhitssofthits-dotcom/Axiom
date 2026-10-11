@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom — Оператор EXIT</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="exit">
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Справочник по реализованному языку Axiom</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <nav id="manual-nav"></nav>
+        </div>
+    </aside>
+    <main class="content"><nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><a href="operator-reference.html">Операторы</a><span>/</span><span>Оператор EXIT</span></nav><p class="eyebrow">Справочная статья</p><h1 class="page-title">Оператор EXIT</h1><p class="lead"><code>EXIT</code> — оператор языка Axiom, который немедленно завершает охватывающий цикл <code>FOR</code> или <code>DO</code>. Выполнение продолжается после соответствующего оператора завершения цикла.</p>
+<section class="article-section"><h2>Контекст</h2><p>Форма <code>EXIT FOR</code> допускается внутри цикла <code>FOR</code>; форма <code>EXIT DO</code> — внутри цикла <code>DO ... LOOP</code>. Параметров у оператора нет. Во вложенных циклах завершается ближайший охватывающий цикл указанного вида.</p></section>
+<section class="article-section" id="exit-for"><h2>Синтаксис EXIT FOR</h2><pre><code class="language-axiom">EXIT FOR</code></pre><p>Управление передаётся на инструкцию после соответствующего <code>NEXT</code>. Счётчик этого цикла за его пределами недоступен.</p></section>
+<section class="article-section" id="exit-do"><h2>Синтаксис EXIT DO</h2><pre><code class="language-axiom">EXIT DO</code></pre><p>Управление передаётся на инструкцию после соответствующего <code>LOOP</code>. Условие продолжения этого цикла повторно не проверяется.</p></section>
+<section class="article-section"><h2>Диагностика</h2><ul><li><code>MB2013</code> — <code>EXIT FOR</code> записан вне цикла <code>FOR</code>.</li><li><code>MB2014</code> — <code>EXIT DO</code> записан вне цикла <code>DO ... LOOP</code>.</li></ul></section>
+<section class="article-section"><h2>Пример</h2><pre><code class="language-axiom">FOR i = 1 TO 5
+    IF i = 3 THEN
+        EXIT FOR
+    END IF
+    PRINT i
+NEXT</code></pre><p>Результат:</p><pre><code>1
+2</code></pre></section><section class="article-section"><h2>См. также</h2><div class="link-list"><a href="for.html">FOR</a><a href="do-loop.html">DO ... LOOP</a><a href="continue.html">CONTINUE</a></div></section><div id="page-pager" class="pager"></div></main>
+</div>
+<script src="scripts/manual.js"></script>
+</body>
+</html>

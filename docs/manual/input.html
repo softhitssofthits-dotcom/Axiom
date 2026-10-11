@@ -43,14 +43,14 @@
 
         <section class="article-section">
             <h2>Синтаксис</h2>
-            <pre><code class="language-basic">INPUT &lt;переменная&gt;
+            <pre><code class="language-axiom">INPUT &lt;переменная&gt;
 INPUT &lt;переменная1&gt;, &lt;переменная2&gt;[, &lt;переменнаяN&gt;]
 INPUT &lt;приглашение&gt; ; &lt;переменная&gt;
 INPUT &lt;приглашение&gt; , &lt;переменная&gt;</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Части записи</h2>
+            <h2>Параметры и части синтаксиса</h2>
             <ul>
                 <li><code>&lt;приглашение&gt;</code> — строковая константа, которая выводится перед ожиданием ввода.</li>
                 <li><code>;</code> или <code>,</code> после приглашения отделяет текст приглашения от списка переменных. В текущем Axiom обе формы принимаются как синтаксические варианты одного договора.</li>
@@ -70,7 +70,7 @@ INPUT &lt;приглашение&gt; , &lt;переменная&gt;</code></pre>
         <section class="article-section">
             <h2>Приглашение</h2>
             <p>Если приглашение не указано, IDE показывает стандартное приглашение <code>? </code>. Если приглашение указано и не заканчивается символом <code>?</code> или <code>:</code>, видимое приглашение получает добавленный знак вопроса и пробел.</p>
-            <pre><code class="language-basic">DIM name AS STRING
+            <pre><code class="language-axiom">DIM name AS STRING
 INPUT "Enter name"; name
 PRINT name</code></pre>
             <p>Для строки приглашения <code>"Enter name"</code> пользователь увидит приглашение вида <code>Enter name? </code>.</p>
@@ -79,7 +79,7 @@ PRINT name</code></pre>
         <section class="article-section">
             <h2>Ввод нескольких значений</h2>
             <p>Если в операторе перечислено несколько переменных, пользователь должен ввести столько же значений через запятую.</p>
-            <pre><code class="language-basic">DIM name AS STRING
+            <pre><code class="language-axiom">DIM name AS STRING
 DIM age AS INTEGER
 
 INPUT name, age
@@ -99,15 +99,20 @@ PRINT name, age</code></pre>
                 <li>Для нескольких переменных число полей ввода должно точно совпадать с числом целей.</li>
                 <li>В активном <code>SCREEN</code> нижняя вкладка <code>Output</code> не принимает ввод для текущего <code>INPUT</code>; видимая поверхность ввода — окно <code>SCREEN</code>.</li>
             </ul>
-            <blockquote>
-                <p><em>В QuickBASIC разделитель после строки приглашения влиял на вывод знака вопроса: форма с <code>;</code> обычно добавляла <code>?</code>, а форма с <code>,</code> выводила приглашение без него. В Axiom текущий договор проще: обе формы синтаксически поддержаны, а видимое приглашение строится host-слоем по самой строке приглашения.</em></p>
-            </blockquote>
+            <p>После строки приглашения допускаются разделители <code>;</code> и <code>,</code>. Обе формы используют одинаковые правила отображения приглашения в среде исполнения программы.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB3003</code> — число введённых значений не совпадает с числом переменных или введённый текст нельзя преобразовать к требуемому типу.</li>
+            </ul>
         </section>
 
         <section class="article-section">
             <h2>Пример ввода двух значений</h2>
             <p>В этом примере программа запрашивает имя и возраст, затем выводит полученные значения.</p>
-            <pre><code class="language-basic">DIM name AS STRING
+            <pre><code class="language-axiom">DIM name AS STRING
 DIM age AS INTEGER
 
 INPUT "Name"; name
@@ -121,7 +126,7 @@ Age: 42</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Ручная проверка</h2>
+            <h2>Запускаемые примеры</h2>
             <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения <code>INPUT</code>.</p>
             <ul class="resource-list">
                 <li><a href="../../samples/operators/input/single_variable.axm">INPUT: одна переменная</a></li>
@@ -130,13 +135,6 @@ Age: 42</code></pre>
                 <li><a href="../../samples/operators/input/prompt_semicolon.axm">INPUT: приглашение через ;</a></li>
                 <li><a href="../../samples/operators/input/prompt_comma.axm">INPUT: приглашение через ,</a></li>
                 <li><a href="../../samples/graphics/input/text_screen_input.axm">INPUT: ввод в окне SCREEN 0</a></li>
-            </ul>
-        </section>
-
-        <section class="article-section">
-            <h2>Диагностика</h2>
-            <ul>
-                <li><code>MB3003</code> — число введённых значений не совпадает с числом переменных или введённый текст нельзя преобразовать к требуемому типу.</li>
             </ul>
         </section>
 

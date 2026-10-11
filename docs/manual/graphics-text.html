@@ -22,12 +22,12 @@
             </nav>
             <p class="eyebrow">Операторы</p>
             <h1 class="page-title">Текст на экране</h1>
-            <p class="lead">Эта страница описывает три оператора языка Axiom для экранного текста в режимах <code>SCREEN</code>: оператор <code>CLS</code>, оператор <code>COLOR</code> и оператор <code>LOCATE</code>. Оператор <code>CLS</code> очищает экран, оператор <code>COLOR</code> задаёт цвета последующего текста, а оператор <code>LOCATE</code> переносит текстовый курсор в нужную строку и нужный столбец.</p>
+            <p class="lead">Раздел экранного текста описывает операторы CLS, COLOR и LOCATE в режимах SCREEN. Оператор CLS очищает экран, оператор COLOR задаёт цвета последующего текста, а оператор LOCATE переносит текстовый курсор в заданную строку и столбец.</p>
 
             <section class="article-section">
                 <h2>Где работают эти операторы</h2>
                 <p>Операторы <code>CLS</code>, <code>COLOR</code> и <code>LOCATE</code> относятся к экранному договору <code>SCREEN</code>.</p>
-                <p>Оператор <code>CLS</code> работает и без оператора <code>SCREEN</code>, потому что этот оператор умеет очищать и обычный вывод во вкладке <code>Output</code>. Оператор <code>COLOR</code> в описанном на этой странице виде относится только к графическим режимам <code>SCREEN 1..10</code>. Оператор <code>LOCATE</code> относится к текстовой сетке экранного окна <code>SCREEN</code>.</p>
+                <p>Оператор <code>CLS</code> работает и без оператора <code>SCREEN</code>, потому что этот оператор умеет очищать и обычный вывод в области текстового вывода среды исполнения. Оператор <code>COLOR</code> в описанном на этой странице виде относится только к графическим режимам <code>SCREEN 1..10</code>. Оператор <code>LOCATE</code> относится к текстовой сетке экранного окна <code>SCREEN</code>.</p>
             </section>
 
             <section class="article-section">
@@ -36,23 +36,23 @@
                 <p>В режиме <code>SCREEN 0</code> видимая сетка имеет размер <code>80 x 25</code>. В режимах <code>SCREEN 1..9</code> размер сетки зависит от размеров графического окна. В режиме <code>SCREEN 10</code> количество столбцов и строк вычисляется как <code>SCREENWIDTH() \ 8</code> и <code>SCREENHEIGHT() \ 12</code>.</p>
             </section>
 
-            <section class="article-section">
+            <section class="article-section" id="cls">
                 <h2>Оператор CLS</h2>
                 <p><code>CLS</code> — оператор языка Axiom, который очищает экранный вывод.</p>
-<pre><code class="language-basic">CLS</code></pre>
+<pre><code class="language-axiom">CLS</code></pre>
                 <p>Если программа работает в режиме <code>SCREEN</code>, оператор <code>CLS</code> очищает текущее экранное окно и возвращает текстовый курсор в позицию <code>1, 1</code>.</p>
-                <p>Если программа не вызвала оператор <code>SCREEN</code>, оператор <code>CLS</code> очищает обычный вывод во вкладке <code>Output</code>.</p>
+                <p>Если программа не вызвала оператор <code>SCREEN</code>, оператор <code>CLS</code> очищает обычный вывод в области текстового вывода среды исполнения.</p>
                 <p>Если программа работает в графическом режиме <code>SCREEN</code>, оператор <code>CLS</code> очищает и экранный текст, и нарисованные пиксели.</p>
-<pre><code class="language-basic">SCREEN 3
+<pre><code class="language-axiom">SCREEN 3
 PRINT "Старая надпись"
 CLS
 PRINT "Экран очищен"</code></pre>
             </section>
 
-            <section class="article-section">
+            <section class="article-section" id="color">
                 <h2>Оператор COLOR</h2>
                 <p><code>COLOR</code> — оператор языка Axiom, который задаёт оформление последующего текста на графическом экране <code>SCREEN</code>.</p>
-<pre><code class="language-basic">COLOR foreground
+<pre><code class="language-axiom">COLOR foreground
 COLOR foreground, background
 COLOR foreground, TRANSPARENT</code></pre>
                 <p><code>foreground</code> — номер цвета символов.</p>
@@ -60,22 +60,22 @@ COLOR foreground, TRANSPARENT</code></pre>
                 <p><code>TRANSPARENT</code> — специальное слово, которое включает прозрачный фон под последующим текстом.</p>
                 <p>Оператор <code>COLOR foreground</code> меняет только цвет символов и сохраняет текущий режим фона. Оператор <code>COLOR foreground, background</code> меняет цвет символов и цвет непрозрачного фона. Оператор <code>COLOR foreground, TRANSPARENT</code> меняет цвет символов и включает прозрачный фон.</p>
                 <p>Оператор <code>COLOR</code> в этом договоре работает только после выбора графического режима <code>SCREEN 1..10</code>. В режиме <code>SCREEN 0</code> этот экранный цветовой договор не действует.</p>
-<pre><code class="language-basic">SCREEN 3
+<pre><code class="language-axiom">SCREEN 3
 COLOR 14, 1
 PRINT "Жёлтый текст на синем фоне"
 COLOR 15, TRANSPARENT
 PRINT "Белый текст поверх графики"</code></pre>
             </section>
 
-            <section class="article-section">
+            <section class="article-section" id="locate">
                 <h2>Оператор LOCATE</h2>
                 <p><code>LOCATE</code> — оператор языка Axiom, который переносит текстовый курсор в указанную строку и в указанный столбец экранной сетки.</p>
-<pre><code class="language-basic">LOCATE row, column</code></pre>
+<pre><code class="language-axiom">LOCATE row, column</code></pre>
                 <p><code>row</code> — номер строки экранной сетки, начиная с <code>1</code>.</p>
                 <p><code>column</code> — номер столбца экранной сетки, начиная с <code>1</code>.</p>
                 <p>После оператора <code>LOCATE</code> следующий текстовый вывод начинается в указанной ячейке.</p>
                 <p>Оператор <code>LOCATE</code> работает по текстовой сетке, а не по пикселям. Поэтому значения <code>row</code> и <code>column</code> должны укладываться в количество строк и столбцов текущего режима <code>SCREEN</code>.</p>
-<pre><code class="language-basic">SCREEN 1
+<pre><code class="language-axiom">SCREEN 1
 LOCATE 3, 5
 PRINT "Текст начинается с третьей строки и пятого столбца"</code></pre>
             </section>
@@ -89,7 +89,7 @@ PRINT "Текст начинается с третьей строки и пят�
 
             <section class="article-section">
                 <h2>Пример</h2>
-<pre><code class="language-basic">SCREEN 3
+<pre><code class="language-axiom">SCREEN 3
 CLS
 COLOR 14, 1
 LOCATE 3, 5

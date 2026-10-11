@@ -38,10 +38,10 @@
                 <h2>FILEEXISTS</h2>
                 <p>Функция <code>FILEEXISTS</code> проверяет, существует ли файл по указанному пути.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = FILEEXISTS(path)</code></pre>
+                <pre><code class="language-axiom">result = FILEEXISTS(path)</code></pre>
                 <h3>Аргументы</h3><p><code>path</code> задаёт путь к файлу. Функция возвращает <code>TRUE</code>, если файл найден, и <code>FALSE</code>, если файла нет.</p>
                 <h3>Пример вызова FILEEXISTS</h3>
-                <pre><code class="language-basic">' Проверка существования файла
+                <pre><code class="language-axiom">' Проверка существования файла
 PRINT FILEEXISTS("notes.txt")</code></pre>
             </section>
 
@@ -49,10 +49,10 @@ PRINT FILEEXISTS("notes.txt")</code></pre>
                 <h2>DIREXISTS</h2>
                 <p>Функция <code>DIREXISTS</code> проверяет, существует ли папка по указанному пути.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = DIREXISTS(path)</code></pre>
+                <pre><code class="language-axiom">result = DIREXISTS(path)</code></pre>
                 <h3>Аргументы</h3><p><code>path</code> задаёт путь к папке. Функция возвращает <code>TRUE</code>, если папка найдена.</p>
                 <h3>Пример вызова DIREXISTS</h3>
-                <pre><code class="language-basic">' Проверка существования папки
+                <pre><code class="language-axiom">' Проверка существования папки
 PRINT DIREXISTS(".")</code></pre>
             </section>
 
@@ -60,10 +60,10 @@ PRINT DIREXISTS(".")</code></pre>
                 <h2>PATHEXISTS</h2>
                 <p>Функция <code>PATHEXISTS</code> проверяет, существует ли по пути файл или папка.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = PATHEXISTS(path)</code></pre>
+                <pre><code class="language-axiom">result = PATHEXISTS(path)</code></pre>
                 <h3>Аргументы</h3><p><code>path</code> задаёт путь к объекту файловой системы. Результатом является логическое значение.</p>
                 <h3>Пример вызова PATHEXISTS</h3>
-                <pre><code class="language-basic">' Проверка любого объекта по пути
+                <pre><code class="language-axiom">' Проверка любого объекта по пути
 PRINT PATHEXISTS("notes.txt")
 PRINT PATHEXISTS("docs")</code></pre>
             </section>
@@ -72,11 +72,11 @@ PRINT PATHEXISTS("docs")</code></pre>
                 <h2>READFILE</h2>
                 <p><code>READFILE</code> — встроенная функция языка Axiom, которая читает весь текстовый файл целиком и возвращает одну строку.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">text = READFILE(path)</code></pre>
-                <h3>Форма с явной кодировкой</h3><pre><code class="language-basic">text = READFILE(path, encoding)</code></pre>
+                <pre><code class="language-axiom">text = READFILE(path)</code></pre>
+                <h3>Форма с явной кодировкой</h3><pre><code class="language-axiom">text = READFILE(path, encoding)</code></pre>
                 <h3>Аргументы</h3><p><code>path</code> задаёт путь к текстовому файлу. Результатом является строка с полным содержимым файла.</p>
                 <h3>Пример вызова READFILE</h3>
-                <pre><code class="language-basic">' Чтение всего файла одной строкой
+                <pre><code class="language-axiom">' Чтение всего файла одной строкой
 DIM text AS STRING
 
 text = READFILE("notes.txt")
@@ -87,14 +87,14 @@ PRINT text</code></pre>
                 <h2>READALLLINES</h2>
                 <p><code>READALLLINES</code> — встроенная функция языка Axiom, которая читает текстовый файл построчно и возвращает массив строк.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">lines = READALLLINES(path)</code></pre>
-                <h3>Форма с явной кодировкой</h3><pre><code class="language-basic">lines = READALLLINES(path, encoding)</code></pre>
+                <pre><code class="language-axiom">lines = READALLLINES(path)</code></pre>
+                <h3>Форма с явной кодировкой</h3><pre><code class="language-axiom">lines = READALLLINES(path, encoding)</code></pre>
                 <h3>Аргументы</h3><p><code>path</code> задаёт путь к текстовому файлу. Результатом является массив <code>STRING()</code> с границами <code>1 TO N</code>.</p>
                 <h3>Правила чтения строк</h3>
                 <p>Функция распознаёт CR, LF и CRLF как разделители строк и не включает их в результат. Два соседних разделителя сохраняют пустую строку между ними. Конечный разделитель не создаёт дополнительной строки. Пустой файл возвращает выделенный пустой массив с границами <code>1 TO 0</code>. Эти правила одинаковы для формы с явной кодировкой и без неё.</p>
                 <h3>Диагностика</h3><p>Если файл отсутствует, функция сообщает <code>MB3007</code> и не создаёт файл. Ошибка при чтении также обрабатывается через <code>TRY/CATCH</code>; присваивание результата не меняет прежний массив, если вызов завершился ошибкой.</p>
                 <h3>Пример разных переводов строки</h3>
-                <pre><code class="language-basic">PRINT MAKEDIR(".artifacts")
+                <pre><code class="language-axiom">PRINT MAKEDIR(".artifacts")
 PRINT WRITEFILE(".artifacts/lines.txt", "А" + CHRW(13) + "Б" + CHRW(10))
 DIM rows() AS STRING
 rows = READALLLINES(".artifacts/lines.txt")
@@ -102,7 +102,7 @@ PRINT JOIN(rows, "/") ' А/Б
 PRINT DELETEFILE(".artifacts/lines.txt")</code></pre>
                 <p>Запускаемая проверка: <a href="../../samples/functions/readalllines/carriage_return.axm">CR, LF и CRLF в одном файле</a>.</p>
                 <h3>Пример вызова READALLLINES</h3>
-                <pre><code class="language-basic">' Чтение файла в массив строк
+                <pre><code class="language-axiom">' Чтение файла в массив строк
 DIM lines() AS STRING
 
 lines = READALLLINES("notes.txt")
@@ -114,11 +114,11 @@ PRINT lines(1)</code></pre>
                 <h2>WRITEFILE</h2>
                 <p><code>WRITEFILE</code> — встроенная функция языка Axiom, которая записывает текст в файл с начала. Если файл уже существует, его содержимое заменяется.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = WRITEFILE(path, text)</code></pre>
-                <h3>Форма с явной кодировкой</h3><pre><code class="language-basic">result = WRITEFILE(path, text, encoding)</code></pre>
+                <pre><code class="language-axiom">result = WRITEFILE(path, text)</code></pre>
+                <h3>Форма с явной кодировкой</h3><pre><code class="language-axiom">result = WRITEFILE(path, text, encoding)</code></pre>
                 <h3>Аргументы</h3><p><code>path</code> задаёт путь к файлу. <code>text</code> задаёт строку для записи. Результат имеет тип <code>BOOLEAN</code>.</p>
                 <h3>Пример вызова WRITEFILE</h3>
-                <pre><code class="language-basic">' Полная перезапись файла
+                <pre><code class="language-axiom">' Полная перезапись файла
 PRINT WRITEFILE("notes.txt", "Первая строка")</code></pre>
             </section>
 
@@ -126,11 +126,11 @@ PRINT WRITEFILE("notes.txt", "Первая строка")</code></pre>
                 <h2>APPENDFILE</h2>
                 <p><code>APPENDFILE</code> — встроенная функция языка Axiom, которая дописывает текст в конец файла. Если файла ещё нет, он создаётся.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = APPENDFILE(path, text)</code></pre>
-                <h3>Форма с явной кодировкой</h3><pre><code class="language-basic">result = APPENDFILE(path, text, encoding)</code></pre>
+                <pre><code class="language-axiom">result = APPENDFILE(path, text)</code></pre>
+                <h3>Форма с явной кодировкой</h3><pre><code class="language-axiom">result = APPENDFILE(path, text, encoding)</code></pre>
                 <h3>Аргументы</h3><p><code>path</code> задаёт путь к файлу. <code>text</code> задаёт строку, которую нужно добавить в конец файла. Результат имеет тип <code>BOOLEAN</code>.</p>
                 <h3>Пример вызова APPENDFILE</h3>
-                <pre><code class="language-basic">' Добавление новой строки в конец файла
+                <pre><code class="language-axiom">' Добавление новой строки в конец файла
 PRINT APPENDFILE("notes.txt", CHR(10) + "Вторая строка")</code></pre>
             </section>
 
@@ -155,12 +155,12 @@ PRINT APPENDFILE("notes.txt", CHR(10) + "Вторая строка")</code></pre
                     <li><code>MB3007</code> при отсутствии файла для чтения, недоступной папке или другой ошибке файловой системы.</li>
                 </ul>
                 <h3>Пример записи и дописывания WINDOWS-1251</h3>
-                <pre><code class="language-basic">PRINT MAKEDIR(".artifacts/encoding_examples")
+                <pre><code class="language-axiom">PRINT MAKEDIR(".artifacts/encoding_examples")
 PRINT WRITEFILE(".artifacts/encoding_examples/letters.txt", "А", "WINDOWS-1251")
 PRINT APPENDFILE(".artifacts/encoding_examples/letters.txt", "я", "WINDOWS-1251")
 PRINT READFILE(".artifacts/encoding_examples/letters.txt", "WINDOWS-1251")</code></pre>
                 <h3>Пример чтения UTF-16LE построчно</h3>
-                <pre><code class="language-basic">PRINT MAKEDIR(".artifacts/encoding_examples")
+                <pre><code class="language-axiom">PRINT MAKEDIR(".artifacts/encoding_examples")
 DIM lines() AS STRING
 PRINT WRITEFILE(".artifacts/encoding_examples/lines.txt", "Первая" + CHR(10) + "Вторая", "UTF-16LE")
 lines = READALLLINES(".artifacts/encoding_examples/lines.txt", "UTF-16LE")
@@ -187,7 +187,7 @@ PRINT ARRAYLENGTH(lines)</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Ручная проверка</h2>
+                <h2>Запускаемые примеры</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/functions/fileexists/basic_usage.axm">FILEEXISTS: проверка файла</a></li>
                     <li><a href="../../samples/functions/direxists/basic_usage.axm">DIREXISTS: проверка папки</a></li>

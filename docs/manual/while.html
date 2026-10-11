@@ -37,23 +37,23 @@
                 <p><code>WHILE ... END WHILE</code> подходит для ситуаций, где продолжение работы зависит от состояния программы: пока индекс не дошёл до конца, пока найден следующий элемент, пока пользовательский флаг остаётся истинным. Если состояние уже не подходит перед первым проходом, управление сразу переходит к инструкции после <code>END WHILE</code>.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Синтаксис</h2>
-                <pre><code class="language-basic">WHILE &lt;условие&gt;
+                <pre><code class="language-axiom">WHILE &lt;условие&gt;
     &lt;инструкции&gt;
     [CONTINUE WHILE]
     [&lt;инструкции&gt;]
 END WHILE</code></pre>
             </section>
 
-            <section class="article-section">
-                <h2>Части записи</h2>
+        <section class="article-section">
+                <h2>Параметры и части синтаксиса</h2>
                 <p><code>&lt;условие&gt;</code> - логическое выражение типа <code>BOOLEAN</code>. Пока оно равно <code>TRUE</code>, цикл выполняет очередной проход.</p>
                 <p><code>&lt;инструкции&gt;</code> - тело цикла. В нём обычно меняют значение, от которого зависит условие, иначе цикл может не завершиться.</p>
                 <p><code>CONTINUE WHILE</code> — пропуск оставшейся части текущей итерации с переходом к проверке условия. Подробнее — на странице <a href="continue.html">оператора CONTINUE</a>.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Переход после END WHILE</h2>
                 <ul>
                     <li>Условие проверяется до входа в тело и затем перед каждым следующим проходом.</li>
@@ -61,14 +61,20 @@ END WHILE</code></pre>
                     <li>Для прямого выхода из середины предусловного цикла используйте <code>DO ... LOOP</code> и <code>EXIT DO</code>: отдельной формы <code>EXIT WHILE</code> в Axiom сейчас нет.</li>
                     <li><code>CONTINUE WHILE</code> пропускает оставшуюся часть тела и переходит к проверке условия в заголовке цикла.</li>
                 </ul>
-                <blockquote>
-                    <p><em>В QuickBASIC историческая форма записывалась как <code>WHILE ... WEND</code>, и у неё не было <code>EXIT WHILE</code>. В Axiom блок закрывается более явной парой <code>END WHILE</code>; прямой выход из цикла по-прежнему следует выражать через <code>DO ... LOOP</code> и <code>EXIT DO</code>.</em></p>
-                </blockquote>
+                <p>Блок цикла закрывается оператором <code>END WHILE</code>. Для цикла с прямым выходом используется <code>DO ... LOOP</code> с оператором <code>EXIT DO</code>.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
+                <h2>Диагностика</h2>
+                <p>Ошибка возникает, если условие <code>WHILE</code> не имеет тип <code>BOOLEAN</code>, если блок не закрыт <code>END WHILE</code> или если в тексте используется неподдержанная форма выхода вроде <code>EXIT WHILE</code>.</p>
+                <ul>
+                    <li><code>MB2038</code> — <code>CONTINUE WHILE</code> используется вне цикла <code>WHILE ... END WHILE</code>.</li>
+                </ul>
+            </section>
+
+        <section class="article-section">
                 <h2>Пример предусловного цикла</h2>
-                <pre><code class="language-basic">' Ожидаемый вывод:
+                <pre><code class="language-axiom">' Ожидаемый вывод:
 ' 0
 ' 1
 ' 2
@@ -80,23 +86,15 @@ WHILE i &lt; 3
 END WHILE</code></pre>
             </section>
 
-            <section class="article-section">
-                <h2>Ручная проверка</h2>
+        <section class="article-section">
+                <h2>Запускаемые примеры</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/control-flow/while/basic_loop.axm">WHILE: базовый предусловный цикл</a></li>
                     <li><a href="../../samples/control-flow/while/continue_while.axm">CONTINUE WHILE: пропуск итерации</a></li>
                 </ul>
             </section>
 
-            <section class="article-section">
-                <h2>Диагностика</h2>
-                <p>Ошибка возникает, если условие <code>WHILE</code> не имеет тип <code>BOOLEAN</code>, если блок не закрыт <code>END WHILE</code> или если в тексте используется неподдержанная форма выхода вроде <code>EXIT WHILE</code>.</p>
-                <ul>
-                    <li><code>MB2038</code> — <code>CONTINUE WHILE</code> используется вне цикла <code>WHILE ... END WHILE</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
+        <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="loops.html">Циклы</a>

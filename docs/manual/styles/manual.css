@@ -1,10 +1,10 @@
 :root {
-    --bg: #ece9df;
+    --bg: #f3f5f7;
     --paper: #ffffff;
-    --paper-soft: #f8f6ef;
+    --paper-soft: #f7f9fb;
     --ink: #22272f;
     --muted: #5c6673;
-    --rule: #d4cec1;
+    --rule: #d8dee6;
     --accent: #1d5d86;
     --accent-strong: #163f5a;
     --accent-soft: #eaf3f8;
@@ -12,8 +12,8 @@
     --warning: #fff7e1;
     --code-bg: #f3f6fb;
     --shadow: 0 12px 32px rgba(35, 48, 61, 0.08);
-    --font-ui: "Trebuchet MS", "Segoe UI", Verdana, sans-serif;
-    --font-body: Georgia, "Palatino Linotype", "Times New Roman", serif;
+    --font-ui: "Segoe UI", Arial, sans-serif;
+    --font-body: "Segoe UI", Arial, sans-serif;
     --font-code: Consolas, "Courier New", monospace;
 }
 
@@ -755,3 +755,8 @@ ol {
     font-size: 1rem;
     background: #fff;
 }
+
+/* Полные справочные каталоги. */
+.reference-form { margin: 1rem 0; padding-bottom: 0.75rem; border-bottom: 1px solid var(--rule); }
+.reference-details { margin: 1rem 0; }
+.article-section[id], tr[id] { scroll-margin-top: 5rem; }

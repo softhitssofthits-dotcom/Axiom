@@ -42,7 +42,7 @@
 
         <section class="article-section">
             <h2>Синтаксис</h2>
-<pre><code class="language-basic">KEYDOWN(keyText)</code></pre>
+<pre><code class="language-axiom">KEYDOWN(keyText)</code></pre>
         </section>
 
         <section class="article-section">
@@ -98,24 +98,9 @@
             <h2>Сочетания клавиш</h2>
             <p>Встроенная функция <code>KEYDOWN</code> умеет проверять строковый аккорд клавиш через знак <code>+</code>. В отличие от <code>KEYPRESS</code>, здесь все части строки равноправны: каждая перечисленная клавиша должна быть удержана прямо сейчас.</p>
             <p>Проще говоря, <code>KEYDOWN("CTRL+ALT+DELETE")</code> значит: <code>CTRL</code>, <code>ALT</code> и <code>DELETE</code> сейчас нажаты одновременно. Очередь событий при этом не читается и не расходуется.</p>
-<pre><code class="language-basic">IF KEYDOWN("CTRL+LEFT") THEN
+<pre><code class="language-axiom">IF KEYDOWN("CTRL+LEFT") THEN
     PRINT "CTRL+LEFT"
 END IF</code></pre>
-        </section>
-
-        <section class="article-section">
-            <h2>Пример проверки сочетания клавиш</h2>
-<pre><code class="language-basic">FOR i = 1 TO 20000
-    IF KEYDOWN("SHIFT+A") THEN
-        PRINT "SHIFT+A"
-        EXIT FOR
-    END IF
-NEXT</code></pre>
-        </section>
-
-        <section class="article-section">
-            <h2>Ручная проверка</h2>
-            <ul class="resource-list"><li><a href="../../samples/functions/keydown/held_modifiers.axm">KEYDOWN: удержание модификатора и стрелки</a></li><li><a href="../../samples/functions/keydown/canonical_aliases.axm">KEYDOWN: канонические имена и алиасы клавиш</a></li></ul>
         </section>
 
         <section class="article-section">
@@ -124,6 +109,21 @@ NEXT</code></pre>
                 <li><code>MB2004</code>: вызов встроенной функции <code>KEYDOWN</code> получен без аргумента или с лишними аргументами.</li>
                 <li><code>MB2003</code>: аргумент встроенной функции <code>KEYDOWN</code> нельзя связать как строку.</li>
             </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>Пример проверки сочетания клавиш</h2>
+<pre><code class="language-axiom">FOR i = 1 TO 20000
+    IF KEYDOWN("SHIFT+A") THEN
+        PRINT "SHIFT+A"
+        EXIT FOR
+    END IF
+NEXT</code></pre>
+        </section>
+
+        <section class="article-section">
+            <h2>Запускаемые примеры</h2>
+            <ul class="resource-list"><li><a href="../../samples/functions/keydown/held_modifiers.axm">KEYDOWN: удержание модификатора и стрелки</a></li><li><a href="../../samples/functions/keydown/canonical_aliases.axm">KEYDOWN: канонические имена и алиасы клавиш</a></li></ul>
         </section>
 
         <section class="article-section">

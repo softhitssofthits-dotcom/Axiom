@@ -43,7 +43,7 @@
 
         <section class="article-section">
             <h2>Синтаксис</h2>
-            <pre><code class="language-basic">SELECT CASE &lt;выражение выбора&gt;
+            <pre><code class="language-axiom">SELECT CASE &lt;выражение выбора&gt;
     CASE &lt;список селекторов&gt;
         [&lt;операторы&gt;]
     [CASE &lt;список селекторов&gt;
@@ -54,7 +54,7 @@ END SELECT</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Части записи</h2>
+            <h2>Параметры и части синтаксиса</h2>
             <ul>
                 <li><code>&lt;выражение выбора&gt;</code> — числовое, строковое или логическое выражение, значение которого сравнивается с селекторами в ветвях <code>CASE</code>.</li>
                 <li><code>&lt;список селекторов&gt;</code> — один селектор или несколько селекторов через запятую.</li>
@@ -67,7 +67,7 @@ END SELECT</code></pre>
         <section class="article-section">
             <h2>Формы селекторов</h2>
             <p>Селектор внутри <code>CASE</code> может быть записан одной из следующих форм:</p>
-            <pre><code class="language-basic">CASE &lt;значение&gt;
+            <pre><code class="language-axiom">CASE &lt;значение&gt;
 CASE &lt;значение 1&gt;, &lt;значение 2&gt;, &lt;значение 3&gt;
 CASE &lt;начало&gt; TO &lt;конец&gt;
 CASE IS &lt;оператор сравнения&gt; &lt;значение&gt;</code></pre>
@@ -99,9 +99,19 @@ CASE IS &lt;оператор сравнения&gt; &lt;значение&gt;</co
         </section>
 
         <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB2015</code> — диапазон <code>CASE ... TO</code> используется с типом, для которого диапазоны не поддержаны.</li>
+                <li><code>MB2003</code> — селектор или сравнение несовместимы с типом выражения выбора.</li>
+                <li><code>MB2001</code> — имя, объявленное внутри ветви, используется после выхода из области видимости.</li>
+                <li><code>MB1006</code> — в конструкции <code>SELECT CASE</code> допускается только один блок <code>CASE ELSE</code>.</li>
+            </ul>
+        </section>
+
+        <section class="article-section">
             <h2>Пример выбора CASE</h2>
             <p>В этом примере одно числовое значение сравнивается с точным значением, диапазоном и условием <code>CASE IS</code>. Значение <code>8</code> попадает в диапазон <code>5 TO 10</code>, поэтому выполняется первая ветвь.</p>
-            <pre><code class="language-basic">DIM value AS INTEGER = 8
+            <pre><code class="language-axiom">DIM value AS INTEGER = 8
 
 SELECT CASE value
     CASE 1, 5 TO 10, IS &gt; 100
@@ -114,7 +124,7 @@ END SELECT</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Ручная проверка</h2>
+            <h2>Запускаемые примеры</h2>
             <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения <code>SELECT CASE</code>.</p>
             <ul class="resource-list">
                 <li><a href="../../samples/control-flow/select_case/exact_values.axm">SELECT CASE: точные значения</a></li>
@@ -129,16 +139,6 @@ END SELECT</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Диагностика</h2>
-            <ul>
-                <li><code>MB2015</code> — диапазон <code>CASE ... TO</code> используется с типом, для которого диапазоны не поддержаны.</li>
-                <li><code>MB2003</code> — селектор или сравнение несовместимы с типом выражения выбора.</li>
-                <li><code>MB2001</code> — имя, объявленное внутри ветви, используется после выхода из области видимости.</li>
-                <li><code>MB1006</code> — в конструкции <code>SELECT CASE</code> допускается только один блок <code>CASE ELSE</code>.</li>
-            </ul>
-        </section>
-
-            <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="expressions-and-branching.html">Выражения и ветвление</a>

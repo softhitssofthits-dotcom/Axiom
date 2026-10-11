@@ -26,8 +26,8 @@
 
             <section class="article-section">
                 <h2>Назначение</h2>
-                <p>Исторический слой <code>SCREEN</code> остаётся основой для BASIC-графики: палитры, страницы, <code>VIEW</code>, <code>WINDOW</code>, <code>GET</code>, <code>PUT</code>, <code>PCOPY</code> и примитивы вроде <code>LINE</code> и <code>PAINT</code>. <code>CANVAS</code> решает другую задачу: даёт явный полноцветный кадр для новых 2D-игр и визуальных программ, где удобнее думать кадрами, мировыми координатами, спрайтами, HUD-текстом и публикацией готового кадра.</p>
-                <p><code>CANVAS</code> и графический <code>SCREEN</code> взаимоисключающие. Вызов <code>CANVAS</code> закрывает активный <code>SCREEN</code>, а последующий <code>SCREEN</code> закрывает активный <code>CANVAS</code> и возвращает программу к совместимому BASIC-договору.</p>
+                <p>Режим <code>SCREEN</code> предоставляет палитровую графику: палитры, страницы, <code>VIEW</code>, <code>WINDOW</code>, <code>GET</code>, <code>PUT</code>, <code>PCOPY</code> и примитивы вроде <code>LINE</code> и <code>PAINT</code>. <code>CANVAS</code> решает другую задачу: даёт явный полноцветный кадр для новых 2D-игр и визуальных программ, где удобнее думать кадрами, мировыми координатами, спрайтами, HUD-текстом и публикацией готового кадра.</p>
+                <p><code>CANVAS</code> и графический <code>SCREEN</code> взаимоисключающие. Вызов <code>CANVAS</code> закрывает активный <code>SCREEN</code>, а последующий <code>SCREEN</code> закрывает активный <code>CANVAS</code> и переключает графический вывод в экранный режим.</p>
             </section>
 
             <section class="article-section">
@@ -107,7 +107,7 @@ DRAWTILELAYER &lt;tilemap&gt;, &lt;слой&gt;, &lt;x&gt;, &lt;y&gt;</code></pr
                 <p><code>RESETCAMERA</code> возвращает смещение к <code>0, 0</code>. Это позволяет в одном кадре сначала нарисовать мир под камерой, а затем поверх него вывести HUD в экранных координатах теми же <code>FILLRECT</code>, <code>DRAWRECT</code> и <code>DRAWTEXT</code>.</p>
                 <p><code>VIEWPORT</code> без аргументов сбрасывает область рисования на весь <code>CANVAS</code>. Форма <code>VIEWPORT (left, top)-(right, bottom)</code> задаёт прямоугольную экранную область внутри холста, в которой становится видимым современный графический вывод.</p>
                 <p>Viewport измеряется в экранных координатах <code>CANVAS</code>, а не в мировых. Камера смещает мир внутри уже выбранного viewport. Оператор <code>RESETCAMERA</code> не сбрасывает viewport, а оператор <code>VIEWPORT</code> не сбрасывает камеру.</p>
-                <p>Форма <code>POINT(x, y)</code> тоже может читать пиксели из <code>CANVAS</code>, но делает это по физическим координатам холста. Аргументы <code>x</code> и <code>y</code> не проходят через <code>CAMERA</code> и <code>VIEWPORT</code>. Историческая форма <code>POINT(selector)</code> остаётся на стороне <code>SCREEN</code>.</p>
+                <p>Форма <code>POINT(x, y)</code> тоже может читать пиксели из <code>CANVAS</code>, но делает это по физическим координатам холста. Аргументы <code>x</code> и <code>y</code> не проходят через <code>CAMERA</code> и <code>VIEWPORT</code>. Форма <code>POINT(selector)</code> остаётся на стороне <code>SCREEN</code>.</p>
                 <p>Запускаемый пример <a href="../../samples/functions/point/physical_canvas_coordinates.axm">чтение физической точки после смещения камеры</a> показывает различие координат: мировая точка <code>(100, 50)</code> рисуется в физической точке <code>(10, 6)</code>, и её цвет читается через <code>POINT(10, 6)</code>.</p>
                 <p>Операторы <code>PSET</code>, <code>PRESET</code> и <code>PAINT</code> теперь тоже могут работать при активном <code>CANVAS</code>. В современном слое они принимают мировые координаты, проходят через <code>CAMERA</code> и попадают в активный <code>VIEWPORT</code>.</p>
                 <p>Правая и нижняя границы viewport исключающие. Если после обрезки по границам <code>CANVAS</code> прямоугольник становится пустым, выполнение сообщает ошибку. Все современные примитивы, <code>DRAWTEXT</code>, <code>DRAWIMAGE</code> и <code>DRAWSPRITE</code> обрезаются по активному viewport.</p>
@@ -166,7 +166,7 @@ SLEEP</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Ручная проверка</h2>
+                <h2>Запускаемые примеры</h2>
                 <p>Готовые примеры для ручной проверки лежат в <code>samples/graphics/modern/</code> и <code>samples/graphics/game/</code>.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/graphics/modern/rectangles_frame.axm">CANVAS: прямоугольники, IMAGE и SPRITE в двух кадрах</a></li>

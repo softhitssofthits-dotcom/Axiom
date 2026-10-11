@@ -37,18 +37,18 @@
                 <p><code>SUB ... END SUB</code> объявляет процедуру. Вызов процедуры записывается отдельной инструкцией по её имени. Если процедуре нужно завершиться раньше конца блока, внутри неё можно использовать <code>RETURN</code> без значения.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Синтаксис</h2>
-                <pre><code class="language-basic">SUB &lt;имя&gt;([&lt;список параметров&gt;])
+                <pre><code class="language-axiom">SUB &lt;имя&gt;([&lt;список параметров&gt;])
     &lt;инструкции&gt;
 END SUB</code></pre>
-                <pre><code class="language-basic">&lt;имя&gt;([&lt;список аргументов&gt;])</code></pre>
-                <pre><code class="language-basic">[BYVAL | BYREF] &lt;имя параметра&gt; AS &lt;тип параметра&gt;</code></pre>
-                <pre><code class="language-basic">RETURN</code></pre>
+                <pre><code class="language-axiom">&lt;имя&gt;([&lt;список аргументов&gt;])</code></pre>
+                <pre><code class="language-axiom">[BYVAL | BYREF] &lt;имя параметра&gt; AS &lt;тип параметра&gt;</code></pre>
+                <pre><code class="language-axiom">RETURN</code></pre>
             </section>
 
-            <section class="article-section">
-                <h2>Части записи</h2>
+        <section class="article-section">
+                <h2>Параметры и части синтаксиса</h2>
                 <p><code>&lt;имя&gt;</code> - имя объявляемой процедуры или имя процедуры при вызове.</p>
                 <p><code>&lt;список параметров&gt;</code> - объявления параметров через запятую. У каждого параметра указывается тип через <code>AS</code>; модификатор <code>BYVAL</code> можно не писать, потому что он действует по умолчанию.</p>
                 <p><code>BYVAL</code> и <code>BYREF</code> - модификаторы параметра. Они не выполняются как отдельная инструкция и не вызываются по имени; они только задают способ передачи аргумента в процедуру.</p>
@@ -56,12 +56,12 @@ END SUB</code></pre>
                 <p><code>&lt;инструкции&gt;</code> - тело процедуры.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Где работает процедура SUB</h2>
                 <p>Объявление <code>SUB</code> допустимо в любом контексте программы: на верхнем уровне, внутри другой процедуры или функции. Процедура не зависит от графического режима <code>SCREEN</code> и может работать в текстовом, графическом и консольном режимах одинаково.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Вызов, параметры и локальные имена</h2>
                 <ul>
                     <li><code>SUB</code> вызывается как инструкция и не может быть частью арифметического, строкового или логического выражения.</li>
@@ -71,15 +71,13 @@ END SUB</code></pre>
                     <li>Внутри <code>SUB</code> допустим <code>RETURN</code> без значения.</li>
                     <li>Внутри процедуры можно объявлять локальные <code>SUB</code> и <code>FUNCTION</code>.</li>
                 </ul>
-                <blockquote>
-                    <p><em>В QuickBASIC процедура <code>SUB</code> вызывалась как отдельный оператор и могла изменять значения через параметры. В Axiom сохраняется то же разделение между действием и значением, но вызов записывается напрямую по имени процедуры, без опоры на <code>CALL</code> и <code>DECLARE</code> из QuickBASIC. Если всё же написать <code>CALL Foo</code>, компилятор выдаст ошибку <code>MB2001</code> с подсказкой: оператора <code>CALL</code> в Axiom нет, пишите просто <code>Foo()</code>.</em></p>
-                </blockquote>
+                <p>Процедура вызывается непосредственно по имени, например <code>Foo()</code>. Запись <code>CALL Foo</code> недопустима и приводит к диагностике <code>MB2001</code> с указанием использовать прямой вызов.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>BYVAL: процедура получает копию</h2>
                 <p><code>BYVAL</code> полезен, когда процедура должна работать с переданными данными, но не должна менять переменную вызывающего кода. Для обычных чисел это выглядит как работа с локальным значением, а для <code>TYPE</code> особенно заметно: процедура получает копию всей записи.</p>
-                <pre><code class="language-basic">' Ожидаемый вывод: 10
+                <pre><code class="language-axiom">' Ожидаемый вывод: 10
 SUB AddOne(BYVAL value AS INTEGER)
     value = value + 1
 END SUB
@@ -91,10 +89,10 @@ AddOne(count)
 PRINT count</code></pre>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>BYREF: процедура меняет исходную переменную</h2>
                 <p><code>BYREF</code> нужен, когда процедура должна вернуть результат через параметр или изменить переданную запись. В месте вызова сейчас допускается простая переменная: имя переменной без обращения к полю, без индекса массива и без выражения.</p>
-                <pre><code class="language-basic">' Ожидаемый вывод: 11
+                <pre><code class="language-axiom">' Ожидаемый вывод: 11
 SUB AddOne(BYREF value AS INTEGER)
     value = value + 1
 END SUB
@@ -107,9 +105,20 @@ PRINT count</code></pre>
                 <p>Для <code>BYREF</code> допустим вызов <code>AddOne(count)</code>. Недопустимы формы вроде <code>AddOne(count + 1)</code>, <code>AddOne(user.Age)</code> и <code>AddOne(items(1))</code>, потому что это уже не простая переменная в текущем публичном договоре Axiom.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
+                <h2>Диагностика</h2>
+                <p>Ошибка возникает, если <code>SUB</code> используется как выражение, если процедура вызывается с неверным числом или типами аргументов, если аргумент для <code>BYREF</code> не является простой переменной или если внутри <code>SUB</code> записан <code>RETURN</code> со значением.</p>
+                <ul>
+                    <li><code>MB2004</code> — процедура вызвана с неверным числом аргументов.</li>
+                    <li><code>MB2006</code> — внутри <code>SUB</code> записан <code>RETURN</code> со значением.</li>
+                    <li><code>MB2019</code> — процедура <code>SUB</code> используется как значение в выражении.</li>
+                    <li><code>MB2028</code> — аргумент, передаваемый параметру <code>BYREF</code>, не является простой переменной подходящего типа.</li>
+                </ul>
+            </section>
+
+        <section class="article-section">
                 <h2>Пример вызова SUB</h2>
-                <pre><code class="language-basic">' Ожидаемый вывод: ==Axiom==
+                <pre><code class="language-axiom">' Ожидаемый вывод: ==Axiom==
 SUB ShowBanner(text AS STRING)
     PRINT "=="; text; "=="
 END SUB
@@ -117,8 +126,8 @@ END SUB
 ShowBanner("Axiom")</code></pre>
             </section>
 
-            <section class="article-section">
-                <h2>Ручная проверка</h2>
+        <section class="article-section">
+                <h2>Запускаемые примеры</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/operators/sub/basic_call.axm">SUB: базовый вызов</a></li>
                     <li><a href="../../samples/operators/sub/local_nested_call.axm">SUB: локальная вложенная процедура</a></li>
@@ -130,18 +139,7 @@ ShowBanner("Axiom")</code></pre>
                 </ul>
             </section>
 
-            <section class="article-section">
-                <h2>Диагностика</h2>
-                <p>Ошибка возникает, если <code>SUB</code> используется как выражение, если процедура вызывается с неверным числом или типами аргументов, если аргумент для <code>BYREF</code> не является простой переменной или если внутри <code>SUB</code> записан <code>RETURN</code> со значением.</p>
-                <ul>
-                    <li><code>MB2004</code> — процедура вызвана с неверным числом аргументов.</li>
-                    <li><code>MB2006</code> — внутри <code>SUB</code> записан <code>RETURN</code> со значением.</li>
-                    <li><code>MB2019</code> — процедура <code>SUB</code> используется как значение в выражении.</li>
-                    <li><code>MB2028</code> — аргумент, передаваемый параметру <code>BYREF</code>, не является простой переменной подходящего типа.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
+        <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="procedures-and-functions.html">Процедуры и функции</a>

@@ -17,15 +17,15 @@
 
 <section class="article-section">
 <h2>Как OPEN связывает файл с переменной</h2>
-<p>Оператор <code>OPEN</code> открывает текстовый файл и связывает его с переменной типа <code>FILE</code>. В Axiom файл открывается не по историческому номеру, а сразу в именованную переменную.</p>
+<p>Оператор <code>OPEN</code> открывает текстовый файл и связывает его с переменной типа <code>FILE</code>. Переменная типа <code>FILE</code> хранит открытый файл и передаётся файловым функциям.</p>
 </section>
 
-<section class="article-section">
+        <section class="article-section">
 <h2>Где работает оператор OPEN</h2>
 <p>Оператор <code>OPEN</code> работает в любом контексте программы и не зависит от графического режима <code>SCREEN</code>. Файловые операции доступны в текстовом, графическом и консольном режимах одинаково.</p>
 </section>
 
-<section class="article-section">
+        <section class="article-section">
 <h2>Синтаксис</h2>
 <h3>Чтение с автоматическим выбором кодировки</h3><pre><code>OPEN path FOR INPUT AS fileVariable</code></pre>
 <h3>Запись в UTF-8 без BOM</h3><pre><code>OPEN path FOR OUTPUT AS fileVariable</code></pre>
@@ -33,17 +33,17 @@
 <h3>Чтение с выбранной кодировкой</h3><pre><code>OPEN path FOR INPUT AS fileVariable USING encoding</code></pre>
 <h3>Запись с выбранной кодировкой</h3><pre><code>OPEN path FOR OUTPUT AS fileVariable USING encoding</code></pre>
 <h3>Дописывание с выбранной кодировкой</h3><pre><code>OPEN path FOR APPEND AS fileVariable USING encoding</code></pre>
-<p>USING encoding — расширение Axiom, а не историческая форма кодировки QuickBASIC.</p>
+<p><code>USING encoding</code> задаёт кодировку открываемого файла.</p>
 </section>
 
-<section class="article-section">
-<h2>Части записи</h2>
+        <section class="article-section">
+<h2>Параметры и части синтаксиса</h2>
 <p><code>path</code> задаёт путь к файлу. <code>fileVariable</code> обозначает переменную типа <code>FILE</code>, с которой будет связан открытый файл.</p>
 <p>Режим <code>INPUT</code> открывает существующий файл для чтения, <code>OUTPUT</code> создаёт новый файл или полностью перезаписывает существующий, а <code>APPEND</code> открывает файл для дописывания в конец.</p>
 <p>В режиме <code>INPUT</code> Axiom проверяет весь текст файла как UTF-8, включая первые байты и короткие файлы. Если текст не является корректным UTF-8, используется Windows-1251. Начальный BOM UTF-8 пропускается и не входит в позиции <code>FILEPOS</code>. При чтении функцией <code>READTEXT</code> один символ Unicode, в том числе emoji, читается целиком; байтовые позиции файла при этом сохраняются.</p>
 </section>
 
-<section class="article-section">
+        <section class="article-section">
 <h2>Явная кодировка и границы текста</h2>
 <p>Аргументы path и encoding должны быть строками. Допустимые имена кодировок: UTF-8, WINDOWS-1251, UTF-16LE, UTF-16BE; регистр и внешние пробелы не учитываются. Слово encoding остаётся обычным именем переменной.</p>
 <p>Относительный путь считается от рабочей папки текущего запуска. INPUT требует существующий файл; OUTPUT создаёт или перезаписывает его; APPEND создаёт отсутствующий файл или дописывает существующий. Родительские каталоги автоматически не создаются.</p>
@@ -58,10 +58,11 @@
 </ul>
 </section>
 
-<section class="article-section">
+        <section class="article-section">
 <h2>Диагностика</h2><p>Нестрочные аргументы и переменная неверного типа после AS отклоняются при проверке программы. MB3007 возникает при неизвестной кодировке, конфликтующем BOM, повреждённом Unicode в INPUT/APPEND, недоступном пути, отсутствии файла INPUT и повторном открытии занятой переменной. Отказ из-за неизвестной кодировки не стирает файл OUTPUT. При отказе проверки INPUT/APPEND файл не изменяется, а системный поток освобождается.</p></section>
-<section class="article-section"><h2>Пример явной кодировки</h2>
-<pre><code class="language-basic">DIM folder AS STRING = MAKETEMPDIR("open_encoding_")
+
+        <section class="article-section"><h2>Пример явной кодировки</h2>
+<pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("open_encoding_")
 DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
 DIM f AS FILE
 ' Создаём текст UTF-16LE с подписью.
@@ -75,7 +76,7 @@ PRINT READLINE(f)
 CLOSE f</code></pre>
 <p>Программа выводит TRUE, начальную позицию 0 и строку «Привет 😀». Запускаемый пример: <a href="../../samples/operators/open/explicit_utf16_read.axm">чтение UTF-16LE</a>.</p></section>
 
-<section class="article-section">
+        <section class="article-section">
 <h2>См. также</h2>
 <div class="link-list"><a href="file-system-functions.html">Файлы и файловая система</a><a href="file-system-functions-open-files.html">Открытые файлы типа FILE</a><a href="close.html">Оператор CLOSE</a><a href="data-types-strings-and-files.html">STRING и FILE</a><a href="diagnostics.html">Диагностика</a></div>
 </section>

@@ -1,10 +1,15 @@
 (function () {
   const nav = [
     {
-      title: "Начало работы и среда",
+      title: "Общие сведения",
       items: [
         { id: "home", href: "index.html", label: "Главная" },
-        { id: "getting-started", href: "getting-started.html", label: "Быстрый старт" },
+        { id: "language-syntax", href: "language-syntax.html", label: "Синтаксис и выражения" },
+        { id: "notation", href: "notation.html", label: "Обозначения синтаксиса" },
+        { id: "getting-started", href: "getting-started.html", label: "Структура программы" },
+        { id: "function-reference", href: "function-reference.html", label: "Все встроенные функции" },
+        { id: "operator-reference", href: "operator-reference.html", label: "Все операторы и инструкции" },
+        { id: "keyword-reference", href: "keyword-reference.html", label: "Ключевые слова и операции" },
         { id: "reference", href: "reference.html", label: "Алфавитный указатель" },
         { id: "search", href: "search.html", label: "Поиск по справочнику" }
       ]
@@ -27,7 +32,7 @@
           items: [
             { id: "variables-constants", href: "variables-and-constants.html", label: "Переменные и константы" },
             { id: "variables-scope", href: "variables-scope.html", label: "Имена, регистр и область видимости" },
-            { id: "variables-glossary", href: "variables-glossary.html", label: "Словарик терминов" }
+            { id: "variables-glossary", href: "variables-glossary.html", label: "Термины переменных и областей видимости" }
           ]
         }
       ]
@@ -36,6 +41,9 @@
       title: "Операторы описания и объявления",
       items: [
         { id: "dim", href: "dim.html", label: "Оператор DIM" },
+        { id: "redim", href: "redim.html", label: "Оператор REDIM" },
+        { id: "erase", href: "erase.html", label: "Оператор ERASE" },
+        { id: "assignment", href: "assignment.html", label: "Присваивание" },
         { id: "const", href: "const.html", label: "Оператор CONST" },
         { id: "type", href: "type.html", label: "Оператор TYPE" }
       ]
@@ -64,6 +72,7 @@
             { id: "for", href: "for.html", label: "FOR ... NEXT" },
             { id: "while", href: "while.html", label: "WHILE ... END WHILE" },
             { id: "do-loop", href: "do-loop.html", label: "DO ... LOOP" },
+            { id: "exit", href: "exit.html", label: "Оператор EXIT" },
             { id: "continue", href: "continue.html", label: "CONTINUE" }
           ]
         },
@@ -79,6 +88,7 @@
       title: "Процедуры и функции",
       items: [
         { id: "procedures-and-functions", href: "procedures-and-functions.html", label: "Процедуры и функции" },
+        { id: "calls", href: "calls.html", label: "Вызовы процедур и функций" },
         { id: "sub", href: "sub.html", label: "Процедура SUB" },
         { id: "function", href: "function.html", label: "Функция FUNCTION" },
         { id: "return", href: "return.html", label: "Оператор RETURN" }

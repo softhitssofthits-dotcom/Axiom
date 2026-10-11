@@ -33,7 +33,7 @@
             <p class="lead">Раздел ошибок массивов описывает, что проверить при ошибках границ, измерений и выделения памяти: невыделенный динамический массив, индекс за пределами границ или несоответствие формы среза выбранному измерению.</p>
 
             <section class="article-section">
-                <h2>Как искать причину</h2>
+                <h2>Условия возникновения ошибок</h2>
                 <p>Сначала проверьте, выделена ли память через <code>REDIM</code> и не был ли массив очищен через <code>ERASE</code>. Затем сравните индекс с границами <code>LBOUND</code> и <code>UBOUND</code>. Для многомерных массивов отдельно проверьте номер измерения и форму передаваемого среза.</p>
             </section>
 
@@ -91,7 +91,7 @@
             </section>
 
             <section class="article-section">
-                <h2>Ручная проверка</h2>
+                <h2>Запускаемые примеры</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/functions/arraybounds/multidimensional_shape.axm">Проверка формы через ARRAYBOUNDS</a></li>
                     <li><a href="../../samples/functions/arrayinsert/multidimensional_by_column.axm">ARRAYINSERT для двумерного массива</a></li>

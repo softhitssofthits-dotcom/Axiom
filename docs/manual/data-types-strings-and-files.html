@@ -38,13 +38,13 @@
         <section class="article-section" id="string">
             <h2>Обычная строка STRING</h2>
             <p><code>STRING</code> хранит последовательность символов. Строковый литерал записывается в двойных кавычках, а переменная типа <code>STRING</code> может получить значение из литерала, выражения, ввода или строковой функции.</p>
-            <pre><code class="language-basic">DIM title AS STRING = "Axiom"
+            <pre><code class="language-axiom">DIM title AS STRING = "Axiom"
 DIM greeting = "Привет"
 
 PRINT title
 PRINT greeting</code></pre>
             <p>Оператор <code>+</code> объединяет только две строки. Если нужно собрать строку из текста, чисел и логических значений, используйте оператор <code>&amp;</code>.</p>
-            <pre><code class="language-basic">DIM count AS INTEGER = 3
+            <pre><code class="language-axiom">DIM count AS INTEGER = 3
 
 PRINT "Count: " & count</code></pre>
         </section>
@@ -52,7 +52,7 @@ PRINT "Count: " & count</code></pre>
         <section class="article-section" id="fixed-string">
             <h2>Фиксированная строка STRING * N</h2>
             <p><code>STRING * N</code> задаёт место хранения ровно на <code>N</code> символов. При записи короткое значение дополняется пробелами справа, а слишком длинное значение обрезается справа.</p>
-            <pre><code class="language-basic">DIM code AS STRING * 4
+            <pre><code class="language-axiom">DIM code AS STRING * 4
 
 code = "AB"
 PRINT "[" + code + "]"
@@ -68,7 +68,7 @@ PRINT "[" + code + "]"</code></pre>
         <section class="article-section" id="fixed-string-support">
             <h2>Где поддержан STRING * N</h2>
             <p>Фиксированная строка поддержана только в местах, где программа действительно хранит значение: в переменной <code>DIM</code> и в поле пользовательской записи <code>TYPE</code>.</p>
-            <pre><code class="language-basic">DIM shortCode AS STRING * 4
+            <pre><code class="language-axiom">DIM shortCode AS STRING * 4
 
 TYPE Person
     Name AS STRING * 12
@@ -79,7 +79,7 @@ END TYPE</code></pre>
         <section class="article-section" id="file">
             <h2>Файловое значение FILE</h2>
             <p><code>FILE</code> - это не путь к файлу в виде строки. Это значение открытого файла. Его объявляют через <code>DIM</code>, открывают оператором <code>OPEN</code>, передают файловым функциям и закрывают оператором <code>CLOSE</code>.</p>
-            <pre><code class="language-basic">DIM path AS STRING = "notes.txt"
+            <pre><code class="language-axiom">DIM path AS STRING = "notes.txt"
 DIM f AS FILE
 
 OPEN path FOR INPUT AS f
@@ -93,7 +93,7 @@ CLOSE f</code></pre>
         </section>
 
         <section class="article-section" id="pitfalls">
-            <h2>Что важно не путать</h2>
+            <h2>Ограничения</h2>
             <ul>
                 <li><code>STRING</code> подходит для обычного текста, путей файловой системы, приглашений <code>INPUT</code> и результатов строковых функций.</li>
                 <li><code>STRING * N</code> полезен, когда нужна фиксированная ширина хранения, например в поле записи или коротком коде.</li>
@@ -113,7 +113,7 @@ CLOSE f</code></pre>
         </section>
 
         <section class="article-section" id="samples">
-            <h2>Ручная проверка</h2>
+            <h2>Запускаемые примеры</h2>
             <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки строк и файлового типа.</p>
             <ul class="resource-list">
                 <li><a href="../../samples/operators/dim/fixed_string.axm">DIM: фиксированная строка STRING * N</a></li>

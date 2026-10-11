@@ -43,10 +43,10 @@
                 <h2>ISOPEN</h2>
                 <p>Функция <code>ISOPEN</code> проверяет, связан ли объект <code>FILE</code> с открытым файлом в текущий момент.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = ISOPEN(file)</code></pre>
+                <pre><code class="language-axiom">result = ISOPEN(file)</code></pre>
                 <h3>Аргументы</h3><p><code>file</code> задаёт переменную типа <code>FILE</code>. Функция возвращает <code>TRUE</code>, если файл открыт, и <code>FALSE</code>, если переменная ещё не открыта или уже закрыта.</p>
                 <h3>Пример вызова ISOPEN</h3>
-                <pre><code class="language-basic">' Проверка состояния файла до и после открытия
+                <pre><code class="language-axiom">' Проверка состояния файла до и после открытия
 DIM f AS FILE
 
 PRINT ISOPEN(f)
@@ -59,10 +59,10 @@ CLOSE f</code></pre>
                 <h2>FILEPATH</h2>
                 <p>Функция <code>FILEPATH</code> возвращает полный путь файла, который сейчас связан с переменной <code>FILE</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">path = FILEPATH(file)</code></pre>
+                <pre><code class="language-axiom">path = FILEPATH(file)</code></pre>
                 <h3>Аргументы</h3><p><code>file</code> задаёт открытую переменную типа <code>FILE</code>. Результатом является строка с полным путём.</p>
                 <h3>Пример вызова FILEPATH</h3>
-                <pre><code class="language-basic">' Получение полного пути открытого файла
+                <pre><code class="language-axiom">' Получение полного пути открытого файла
 DIM f AS FILE
 
 OPEN "notes.txt" FOR INPUT AS f
@@ -74,10 +74,10 @@ CLOSE f</code></pre>
                 <h2>FILEMODE</h2>
                 <p>Функция <code>FILEMODE</code> возвращает режим, в котором файл был открыт.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">modeName = FILEMODE(file)</code></pre>
+                <pre><code class="language-axiom">modeName = FILEMODE(file)</code></pre>
                 <h3>Аргументы</h3><p><code>file</code> задаёт открытую переменную типа <code>FILE</code>. Результат обычно имеет вид <code>INPUT</code>, <code>OUTPUT</code> или <code>APPEND</code>.</p>
                 <h3>Пример вызова FILEMODE</h3>
-                <pre><code class="language-basic">' Определение режима открытого файла
+                <pre><code class="language-axiom">' Определение режима открытого файла
 DIM f AS FILE
 
 OPEN "notes.txt" FOR INPUT AS f
@@ -89,10 +89,10 @@ CLOSE f</code></pre>
                 <h2>FILEPOS</h2>
                 <p>Функция <code>FILEPOS</code> возвращает текущую позицию чтения или записи в открытом файле.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">position = FILEPOS(file)</code></pre>
+                <pre><code class="language-axiom">position = FILEPOS(file)</code></pre>
                 <h3>Аргументы</h3><p><code>file</code> задаёт открытую переменную типа <code>FILE</code>. Возвращаемое значение имеет тип <code>LONG</code>.</p>
                 <h3>Пример вызова FILEPOS</h3>
-                <pre><code class="language-basic">' Позиция меняется после чтения строки
+                <pre><code class="language-axiom">' Позиция меняется после чтения строки
 DIM f AS FILE
 
 OPEN "notes.txt" FOR INPUT AS f
@@ -106,10 +106,10 @@ CLOSE f</code></pre>
                 <h2>FILELENGTH</h2>
                 <p>Функция <code>FILELENGTH</code> возвращает длину открытого файла в тех же единицах, в которых работает <code>FILEPOS</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">length = FILELENGTH(file)</code></pre>
+                <pre><code class="language-axiom">length = FILELENGTH(file)</code></pre>
                 <h3>Аргументы</h3><p><code>file</code> задаёт открытую переменную типа <code>FILE</code>. Результатом является число типа <code>LONG</code>.</p>
                 <h3>Пример вызова FILELENGTH</h3>
-                <pre><code class="language-basic">' Получение длины открытого файла
+                <pre><code class="language-axiom">' Получение длины открытого файла
 DIM f AS FILE
 
 OPEN "notes.txt" FOR INPUT AS f
@@ -121,10 +121,10 @@ CLOSE f</code></pre>
                 <h2>EOF</h2>
                 <p>Функция <code>EOF</code> показывает, достигнута ли конечная позиция файла при чтении.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = EOF(file)</code></pre>
+                <pre><code class="language-axiom">result = EOF(file)</code></pre>
                 <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для чтения. Функция возвращает <code>TRUE</code>, когда позиция чтения уже дошла до конца файла.</p>
                 <h3>Пример вызова EOF</h3>
-                <pre><code class="language-basic">' Чтение файла до конца
+                <pre><code class="language-axiom">' Чтение файла до конца
 DIM f AS FILE
 
 OPEN "notes.txt" FOR INPUT AS f
@@ -138,10 +138,10 @@ CLOSE f</code></pre>
                 <h2>READTOEND</h2>
                 <p>Функция <code>READTOEND</code> читает остаток файла от текущей позиции до конца и возвращает его одной строкой.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">text = READTOEND(file)</code></pre>
+                <pre><code class="language-axiom">text = READTOEND(file)</code></pre>
                 <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для чтения. Возвращается строка с остатком содержимого без дополнительного преобразования в массив строк.</p>
                 <h3>Пример вызова READTOEND</h3>
-                <pre><code class="language-basic">' Чтение первой строки отдельно, а затем остатка файла
+                <pre><code class="language-axiom">' Чтение первой строки отдельно, а затем остатка файла
 DIM f AS FILE
 
 OPEN "notes.txt" FOR INPUT AS f
@@ -154,7 +154,7 @@ CLOSE f</code></pre>
                 <h2>READTEXT</h2>
                 <p><code>READTEXT</code> — встроенная функция языка Axiom, которая читает из открытого файла фрагмент текста длиной до указанного количества символов Unicode. Функция нужна для чтения текста небольшими порциями и работает с файлом, открытым оператором <code>OPEN</code> в режиме <code>FOR INPUT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">text = READTEXT(file, count)</code></pre>
+                <pre><code class="language-axiom">text = READTEXT(file, count)</code></pre>
                 <h3>Аргументы</h3><p>Аргумент <code>file</code> должен иметь тип <code>FILE</code> и задавать открытый файл для чтения. Аргумент <code>count</code> должен быть неотрицательным целым числом и задаёт максимальное количество символов Unicode в результате.</p>
                 <h3>Результат и правила чтения</h3>
                 <p>Функция возвращает строку. Один символ здесь означает одно скалярное значение Unicode: например, <code>😀</code> считается одним символом, хотя в строке он занимает два места UTF-16. Отдельный комбинируемый знак считается отдельным символом; функция не считает целые графемы. Функция <code>LEN</code> продолжает измерять длину строки в единицах UTF-16, поэтому длина результата <code>READTEXT(file, 1)</code> может равняться двум.</p>
@@ -162,21 +162,21 @@ CLOSE f</code></pre>
                 <p>Количество задаёт верхний предел: вызов <code>READTEXT(file, 2147483647)</code> на коротком файле читает только оставшийся текст и не выделяет заранее буфер на весь предел.</p>
                 <h3>Диагностика</h3>
                 <p>Закрытый файл, неподходящий режим чтения, отрицательный аргумент <code>count</code> или чтение UTF-8 с некорректной границы символа дают диагностику <code>MB3007</code>. При ошибке декодирования позиция возвращается к месту начала вызова; ошибку можно обработать через <code>TRY</code>/<code>CATCH</code>.</p>
-                <h3>Максимальный предел</h3><pre><code class="language-basic">DIM f AS FILE
+                <h3>Максимальный предел</h3><pre><code class="language-axiom">DIM f AS FILE
 ' Файл должен существовать; читается только оставшийся текст.
 OPEN "notes.txt" FOR INPUT AS f
 PRINT READTEXT(f, 2147483647)
 CLOSE f</code></pre>
                 <p>Самостоятельный пример с двумя символами Unicode: <a href="../../samples/functions/readtext/maximum_count.axm">maximum_count.axm</a>.</p>
                 <h3>Пример вызова READTEXT</h3>
-                <pre><code class="language-basic">' Чтение первых пяти символов
+                <pre><code class="language-axiom">' Чтение первых пяти символов
 DIM f AS FILE
 
 OPEN "notes.txt" FOR INPUT AS f
 PRINT READTEXT(f, 5)
 CLOSE f</code></pre>
                 <h3>Чтение emoji по одному символу</h3>
-                <pre><code class="language-basic">DIM path AS STRING = MAKETEMPFILE("readtext_unicode_")
+                <pre><code class="language-axiom">DIM path AS STRING = MAKETEMPFILE("readtext_unicode_")
 DIM f AS FILE
 PRINT WRITEFILE(path, "😀А")
 OPEN path FOR INPUT AS f
@@ -192,10 +192,10 @@ PRINT DELETEFILE(path)</code></pre>
                 <h2>READLINE</h2>
                 <p>Функция <code>READLINE</code> читает одну текстовую строку от текущей позиции и возвращает её без символов перевода строки.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">lineText = READLINE(file)</code></pre>
+                <pre><code class="language-axiom">lineText = READLINE(file)</code></pre>
                 <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для чтения. Результатом является одна строка текста.</p>
                 <h3>Пример вызова READLINE</h3>
-                <pre><code class="language-basic">' Последовательное чтение строк
+                <pre><code class="language-axiom">' Последовательное чтение строк
 DIM f AS FILE
 
 OPEN "notes.txt" FOR INPUT AS f
@@ -208,12 +208,12 @@ CLOSE f</code></pre>
                 <h2>READLINES</h2>
                 <p><code>READLINES</code> — встроенная функция языка Axiom, которая читает несколько строк подряд и возвращает их как массив <code>STRING()</code>. Она нужна для обработки очередной группы строк без отдельного вызова <code>READLINE</code> для каждой строки и работает с файлом, открытым оператором <code>OPEN</code> в режиме <code>FOR INPUT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">lines = READLINES(file, count)</code></pre>
+                <pre><code class="language-axiom">lines = READLINES(file, count)</code></pre>
                 <h3>Аргументы</h3><p><code>file</code> задаёт открытый дескриптор <code>FILE</code> для чтения. <code>count</code> должен быть неотрицательным целым числом и задаёт верхний предел количества строк.</p>
                 <h3>Результат и правила работы</h3><p>Функция возвращает новый массив фактически прочитанных строк и перемещает позицию чтения после них. Достигнув конца файла, функция останавливается, даже если <code>count</code> больше числа оставшихся строк. В конце файла возвращается пустой массив. Ноль также возвращает пустой массив без перемещения позиции, но требует открытого файла для чтения. Значение <code>2147483647</code> допустимо: для короткого файла оно не требует заранее выделять память под столько строк.</p>
                 <h3>Диагностика</h3><p>Отрицательное количество, неоткрытый или закрытый дескриптор, а также файл в другом режиме дают <code>MB3007</code>. Отказ из-за отрицательного количества не потребляет следующую строку. Ошибку можно обработать оператором <code>TRY</code>.</p>
                 <h3>Пример вызова READLINES</h3>
-                <pre><code class="language-basic">' Чтение двух строк одним вызовом
+                <pre><code class="language-axiom">' Чтение двух строк одним вызовом
 DIM f AS FILE
 DIM lines() AS STRING
 
@@ -222,7 +222,7 @@ lines = READLINES(f, 2)
 PRINT lines(1)
 PRINT lines(2)
 CLOSE f</code></pre>
-                <h3>Большой предел чтения</h3><pre><code class="language-basic">DIM f AS FILE
+                <h3>Большой предел чтения</h3><pre><code class="language-axiom">DIM f AS FILE
 DIM lines() AS STRING
 ' Файл должен существовать; читаются только оставшиеся в нём строки.
 OPEN "notes.txt" FOR INPUT AS f
@@ -236,10 +236,10 @@ CLOSE f</code></pre>
                 <h2>LINENUMBER</h2>
                 <p>Функция <code>LINENUMBER</code> возвращает номер текущей строки чтения в текстовом файле.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">lineNumber = LINENUMBER(file)</code></pre>
+                <pre><code class="language-axiom">lineNumber = LINENUMBER(file)</code></pre>
                 <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый в режиме <code>INPUT</code>. Результатом является номер строки типа <code>LONG</code>.</p>
                 <h3>Правила и диагностика</h3><p>Нумерация начинается с 1. CR, LF и CRLF увеличивают номер на одну строку. При явной UTF-16-кодировке номер считается по двухбайтовым единицам, поэтому байт перевода строки внутри другого символа не меняет номер. После SEEKFILE на нечётную позицию UTF-16 функция даёт MB3007; позиция сохраняется, ошибку можно обработать через TRY/CATCH. Сама функция LINENUMBER не перемещает указатель чтения.</p>
-                <h3>Пример неверной позиции UTF-16</h3><pre><code class="language-basic">DIM folder AS STRING = MAKETEMPDIR("line_seek_")
+                <h3>Пример неверной позиции UTF-16</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("line_seek_")
 DIM path AS STRING = COMBINEPATH(folder, "text.txt")
 DIM f AS FILE
 PRINT WRITEFILE(path, "А", "UTF-16LE")
@@ -254,7 +254,7 @@ END TRY
 PRINT FILEPOS(f)
 CLOSE f</code></pre><p>После отказа функция FILEPOS возвращает 1. Полный пример с восстановлением позиции: <a href="../../samples/functions/linenumber/utf16_seek_recovery.axm">номер строки и UTF-16</a>.</p>
                 <h3>Пример вызова LINENUMBER</h3>
-                <pre><code class="language-basic">' Номер строки увеличивается после чтения
+                <pre><code class="language-axiom">' Номер строки увеличивается после чтения
 DIM f AS FILE
 
 OPEN "notes.txt" FOR INPUT AS f
@@ -268,10 +268,10 @@ CLOSE f</code></pre>
                 <h2>SKIPLINE</h2>
                 <p>Функция <code>SKIPLINE</code> пропускает текущую строку и переводит позицию к началу следующей строки.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = SKIPLINE(file)</code></pre>
+                <pre><code class="language-axiom">result = SKIPLINE(file)</code></pre>
                 <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для чтения. Функция возвращает <code>TRUE</code>, если переход выполнен.</p>
                 <h3>Пример вызова SKIPLINE</h3>
-                <pre><code class="language-basic">' Пропуск первой строки
+                <pre><code class="language-axiom">' Пропуск первой строки
 DIM f AS FILE
 
 OPEN "notes.txt" FOR INPUT AS f
@@ -286,10 +286,10 @@ CLOSE f</code></pre>
                 <p>Каждый вызов отдельно кодирует строку в UTF-8 без BOM. Целая пара UTF-16, например <code>😀</code>, записывается четырьмя байтами. Изолированная половина пары заменяется символом <code>�</code> (U+FFFD), который занимает три байта. Половины из разных вызовов не объединяются; вызов <code>FLUSH</code> между ними не меняет текст или длину файла. Чтобы сохранить эмодзи, передайте целую пару в одном аргументе.</p>
                 <p><code>FILEPOS</code> и <code>FILELENGTH</code> учитывают уже закодированные байты, включая ещё не сброшенный буфер. Байты становятся доступны на диске после <code>FLUSH</code>, <code>CLOSE</code> или позиционирования выходного файла. Для закрытого файла или файла в режиме <code>INPUT</code> функция выдаёт диагностику <code>MB3007</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = WRITE(file, text)</code></pre>
+                <pre><code class="language-axiom">result = WRITE(file, text)</code></pre>
                 <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для записи. <code>text</code> задаёт строку, которую нужно записать. Результат имеет тип <code>BOOLEAN</code>.</p>
                 <h3>Запись фрагментов UTF-16</h3>
-                <pre><code class="language-basic">DIM path AS STRING = MAKETEMPFILE("axiom_write_unicode_")
+                <pre><code class="language-axiom">DIM path AS STRING = MAKETEMPFILE("axiom_write_unicode_")
 DIM f AS FILE
 OPEN path FOR OUTPUT AS f
 PRINT WRITE(f, LEFT("😀", 1))
@@ -300,7 +300,7 @@ PRINT READFILE(path) = "��" ' TRUE
 PRINT DELETEFILE(path)</code></pre>
                 <p>Полный запускаемый пример: <a href="../../samples/functions/write/utf16_fragment_bytes.axm">байты фрагментов UTF-16</a>.</p>
                 <h3>Явная кодировка и диагностика</h3><p>Если файл открыт через OPEN ... USING encoding, текст кодируется строго. Непредставимый символ Windows-1251 или непарный суррогат Unicode дают MB3007, которую можно обработать через TRY/CATCH. Неудачная запись не изменяет буфер, FILEPOS и FILELENGTH; последующая корректная запись остаётся возможной.</p>
-                <pre><code class="language-basic">DIM folder AS STRING = MAKETEMPDIR("strict_write_")
+                <pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("strict_write_")
 DIM path AS STRING = COMBINEPATH(folder, "text.txt")
 DIM f AS FILE
 OPEN path FOR OUTPUT AS f USING "WINDOWS-1251"
@@ -315,7 +315,7 @@ PRINT FILEPOS(f)
 PRINT WRITE(f, "я")
 CLOSE f</code></pre><p>Позиция после отказа равна 1; файл содержит «Ая». Полный пример: <a href="../../samples/functions/write/strict_encoding_recovery.axm">продолжение после отказа записи</a>.</p>
                 <h3>Пример вызова WRITE</h3>
-                <pre><code class="language-basic">' Запись двух фрагментов в одну строку
+                <pre><code class="language-axiom">' Запись двух фрагментов в одну строку
 DIM f AS FILE
 
 OPEN "notes.txt" FOR OUTPUT AS f
@@ -329,11 +329,11 @@ CLOSE f</code></pre>
                 <p>Функция <code>WRITELINE</code> записывает строку и сразу завершает её переводом строки. Перевод строки — один символ <code>LF</code> (U+000A), а не пара <code>CRLF</code>: это нужно учитывать при обмене файлами с программами, ожидающими классические текстовые концы строк Windows.</p>
                 <p>Этот договор действует также в Windows и в режиме <code>APPEND</code>. Добавленный перевод строки занимает один байт в UTF-8 и WINDOWS-1251, два байта в UTF-16LE и UTF-16BE. Если запись идёт в конец файла, на это число увеличиваются <code>FILEPOS</code> и <code>FILELENGTH</code>; при перезаписи внутри файла длина сохраняется, пока запись не выходит за прежний конец.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = WRITELINE(file, text)</code></pre>
+                <pre><code class="language-axiom">result = WRITELINE(file, text)</code></pre>
                 <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для записи. <code>text</code> задаёт содержимое строки. Возвращается <code>TRUE</code>, если запись выполнена.</p>
                 <h3>Диагностика явной кодировки</h3><p>При OPEN ... USING encoding действуют те же строгие правила, что у WRITE. Если текст нельзя закодировать, возникает MB3007; ни текст, ни завершающий перевод строки не попадают в буфер, а позиция и длина сохраняются.</p>
                 <h3>Пример вызова WRITELINE</h3>
-                <pre><code class="language-basic">' Запись двух строк
+                <pre><code class="language-axiom">' Запись двух строк
 DIM f AS FILE
 
 OPEN "notes.txt" FOR OUTPUT AS f
@@ -346,8 +346,8 @@ CLOSE f</code></pre>
                 <h2>NEWLINE</h2>
                 <p>Функция <code>NEWLINE</code> добавляет в открытый файл перевод строки без дополнительного текста. Как и у <code>WRITELINE</code>, записывается один символ <code>LF</code> (U+000A). Он занимает один байт в UTF-8 и WINDOWS-1251, два байта в UTF-16LE и UTF-16BE. При записи внутри файла существующий хвост сохраняется; длина увеличивается только при выходе записи за прежний конец.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = NEWLINE(file)</code></pre>
-                <h3>Позиции в UTF-16</h3><pre><code class="language-basic">DIM path AS STRING = MAKETEMPFILE("newline_utf16_")
+                <pre><code class="language-axiom">result = NEWLINE(file)</code></pre>
+                <h3>Позиции в UTF-16</h3><pre><code class="language-axiom">DIM path AS STRING = MAKETEMPFILE("newline_utf16_")
 DIM f AS FILE
 OPEN path FOR OUTPUT AS f USING "UTF-16LE"
 PRINT NEWLINE(f)
@@ -358,7 +358,7 @@ CLOSE f
 PRINT DELETEFILE(path)</code></pre><p>Запускаемая проверка: <a href="../../samples/functions/newline/utf16_byte_positions.axm">байтовые позиции переводов строк UTF-16</a>.</p>
                 <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для записи. Результат имеет тип <code>BOOLEAN</code>.</p>
                 <h3>Пример вызова NEWLINE</h3>
-                <pre><code class="language-basic">' Добавление пустой строки между двумя записями
+                <pre><code class="language-axiom">' Добавление пустой строки между двумя записями
 DIM f AS FILE
 
 OPEN "notes.txt" FOR OUTPUT AS f
@@ -372,10 +372,10 @@ CLOSE f</code></pre>
                 <h2>FLUSH</h2>
                 <p>Функция <code>FLUSH</code> принудительно сбрасывает накопленную запись в файл.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = FLUSH(file)</code></pre>
+                <pre><code class="language-axiom">result = FLUSH(file)</code></pre>
                 <h3>Аргументы</h3><p><code>file</code> задаёт файл, открытый для записи. Результатом является <code>TRUE</code> при успешном сбросе.</p>
                 <h3>Пример вызова FLUSH</h3>
-                <pre><code class="language-basic">' Немедленная запись буфера
+                <pre><code class="language-axiom">' Немедленная запись буфера
 DIM f AS FILE
 
 OPEN "notes.txt" FOR OUTPUT AS f
@@ -388,14 +388,14 @@ CLOSE f</code></pre>
                 <h2>SEEKFILE</h2>
                 <p><code>SEEKFILE</code> — встроенная функция языка Axiom, которая задаёт байтовую позицию следующего чтения или записи в открытом файле. Функция нужна для возврата к сохранённой позиции или перезаписи известного участка; она не выполняет замену целого символа текста.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = SEEKFILE(file, position)</code></pre>
+                <pre><code class="language-axiom">result = SEEKFILE(file, position)</code></pre>
                 <h3>Аргументы</h3><p><code>file</code> задаёт открытую переменную типа <code>FILE</code>. <code>position</code> задаёт целевую позицию типа <code>LONG</code>. Результатом является <code>TRUE</code>, если переход выполнен.</p>
                 <p><strong>Допустимые режимы.</strong> <code>SEEKFILE</code> разрешён для режимов <code>INPUT</code> и <code>OUTPUT</code>. Для режима <code>APPEND</code> явный переход по позиции не поддерживается.</p>
                 <h3>Байтовые позиции и многобайтовый текст</h3>
                 <p>Позиция начинается с 0 и измеряется в байтах текстового содержимого; распознанный BOM в неё не входит. Допустим диапазон от 0 до FILELENGTH(file) включительно. Неправильная позиция или режим APPEND дают MB3007, не меняя текущую позицию. В OUTPUT успешный переход сначала сбрасывает накопленную запись.</p>
                 <p>Функция SEEKFILE не проверяет границу Unicode-символа. В OUTPUT последующий WRITE заменяет только байты новой строки, сохраняя остальной хвост. Даже запись на границе символа может повредить текст, если новая строка короче прежнего символа: в UTF-8 запись «Z» на позиции 1 в файле «A😀B» оставляет три байта emoji. Строгий READFILE(path, "UTF-8") и OPEN ... USING "UTF-8" отклоняют такой файл с MB3007. Чтение без явной кодировки может выбрать WINDOWS-1251 и не является проверкой целостности UTF-8.</p>
                 <p>Для замены текста переменной длины прочитайте файл в строку, измените строку через REPLACE, затем запишите весь результат через WRITEFILE в той же кодировке. Такой способ требует размещения текста в памяти и не обещает атомарную замену файла. Пример ниже показывает только собственный временный файл.</p>
-                <pre><code class="language-basic">DIM path AS STRING = MAKETEMPFILE("replace_unicode_")
+                <pre><code class="language-axiom">DIM path AS STRING = MAKETEMPFILE("replace_unicode_")
 PRINT WRITEFILE(path, "A😀B", "UTF-8")
 DIM text AS STRING = READFILE(path, "UTF-8")
 PRINT WRITEFILE(path, REPLACE(text, "😀", "Z"), "UTF-8")
@@ -404,7 +404,7 @@ PRINT DELETEFILE(path)</code></pre>
                 <p>Запускаемая проверка байтовой перезаписи и полной замены: <a href="../../samples/functions/seekfile/multibyte_overwrite.axm">перезапись многобайтового текста</a>.</p>
 
                 <h3>Пример вызова SEEKFILE</h3>
-                <pre><code class="language-basic">' Замена одного символа в уже записанном тексте
+                <pre><code class="language-axiom">' Замена одного символа в уже записанном тексте
 ' Ожидаемый вывод: ABZDE
 DIM path AS STRING
 DIM f AS FILE
@@ -424,11 +424,11 @@ PRINT READFILE(path)</code></pre>
                 <h2>REWIND</h2>
                 <p>Функция <code>REWIND</code> возвращает позицию чтения или записи в начало открытого файла.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = REWIND(file)</code></pre>
+                <pre><code class="language-axiom">result = REWIND(file)</code></pre>
                 <h3>Аргументы</h3><p><code>file</code> задаёт открытую переменную типа <code>FILE</code>. Результат имеет тип <code>BOOLEAN</code>.</p>
                 <p><strong>Допустимые режимы.</strong> Как и <code>SEEKFILE</code>, функция используется с режимами <code>INPUT</code> и <code>OUTPUT</code>.</p>
                 <h3>Пример вызова REWIND</h3>
-                <pre><code class="language-basic">' Возврат в начало после чтения первой строки
+                <pre><code class="language-axiom">' Возврат в начало после чтения первой строки
 DIM f AS FILE
 
 OPEN "notes.txt" FOR INPUT AS f
@@ -459,7 +459,7 @@ CLOSE f</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Ручная проверка</h2>
+                <h2>Запускаемые примеры</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/functions/isopen/basic_usage.axm">ISOPEN: состояние файла</a></li>
                     <li><a href="../../samples/functions/filepath/basic_usage.axm">FILEPATH: путь открытого файла</a></li>

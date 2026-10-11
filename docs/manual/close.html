@@ -16,21 +16,21 @@
 <p class="lead"><code>CLOSE</code> — оператор языка Axiom, который завершает работу с переменной типа <code>FILE</code> и освобождает связанный с ней файловый ресурс.</p>
 
 <section class="article-section">
-<h2>Как CLOSE завершает работу с файлом</h2>
+<h2>Назначение и файловый контекст</h2>
 <p>Оператор <code>CLOSE</code> завершает работу с ранее открытым текстовым файлом. После этого переменная типа <code>FILE</code> снова считается закрытой и не может использоваться в файловых операциях, пока файл не будет открыт заново.</p>
 </section>
 
-<section class="article-section">
+        <section class="article-section">
 <h2>Синтаксис</h2>
-<pre><code class="language-basic">CLOSE fileVariable</code></pre>
+<pre><code class="language-axiom">CLOSE fileVariable</code></pre>
 </section>
 
-<section class="article-section">
-<h2>Части записи</h2>
+        <section class="article-section">
+<h2>Параметры и части синтаксиса</h2>
 <p><code>fileVariable</code> обозначает переменную типа <code>FILE</code>, которая уже содержит открытый файл.</p>
 </section>
 
-<section class="article-section">
+        <section class="article-section">
 <h2>Закрытое и открытое состояние</h2>
 <ul>
 <li>Закрывать можно только действительно открытый файл.</li>
@@ -39,26 +39,26 @@
 </ul>
 </section>
 
-<section class="article-section">
+        <section class="article-section">
+<h2>Диагностика</h2>
+<p>Закрытый файл даёт диагностику MB3007. Ошибка записи при завершении буфера также даёт MB3007; её можно обработать через TRY/CATCH. Файл после такого отказа закрыт, но сохранение всего текста не гарантируется: часть данных могла быть записана до ошибки.</p><p>При завершении программы оставшиеся открытые файлы закрываются автоматически. Ошибка одного файла не мешает попытке закрыть остальные; каждый отказ отражается диагностикой MB3007 и делает результат выполнения неуспешным.</p>
+</section>
+
+        <section class="article-section">
 <h2>Пример записи и закрытия файла</h2>
-<pre><code class="language-basic">DIM f AS FILE
+<pre><code class="language-axiom">DIM f AS FILE
 
 OPEN "notes.txt" FOR OUTPUT AS f
 WRITELINE(f, "Первая строка")
 CLOSE f</code></pre>
 </section>
 
-<section class="article-section">
-<h2>Ручная проверка</h2>
+        <section class="article-section">
+<h2>Запускаемые примеры</h2>
 <ul class="resource-list"><li><a href="../../samples/operators/close/basic_usage.axm">CLOSE: закрытие файла</a></li><li><a href="../../samples/operators/close/write_failure_state.axm">Состояние ресурсов после завершения записи</a></li><li><a href="../../samples/operators/open/basic_usage.axm">OPEN: базовое открытие файла</a></li></ul>
 </section>
 
-<section class="article-section">
-<h2>Диагностика</h2>
-<p>Закрытый файл даёт диагностику MB3007. Ошибка записи при завершении буфера также даёт MB3007; её можно обработать через TRY/CATCH. Файл после такого отказа закрыт, но сохранение всего текста не гарантируется: часть данных могла быть записана до ошибки.</p><p>При завершении программы оставшиеся открытые файлы закрываются автоматически. Ошибка одного файла не мешает попытке закрыть остальные; каждый отказ отражается диагностикой MB3007 и делает результат выполнения неуспешным.</p>
-</section>
-
-<section class="article-section">
+        <section class="article-section">
 <h2>См. также</h2>
 <div class="link-list"><a href="file-system-functions.html">Файлы и файловая система</a><a href="file-system-functions-open-files.html">Открытые файлы типа FILE</a><a href="open.html">Оператор OPEN</a><a href="data-types-strings-and-files.html">STRING и FILE</a><a href="diagnostics.html">Диагностика</a></div>
 </section>

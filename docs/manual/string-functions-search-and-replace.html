@@ -23,7 +23,7 @@
 <h2>CONTAINS, STARTSWITH, ENDSWITH</h2>
 <p>Эти функции проверяют, содержит ли строка фрагмент, начинается ли она с него и заканчивается ли им.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">result = CONTAINS(text, fragment)
+<pre><code class="language-axiom">result = CONTAINS(text, fragment)
 result = STARTSWITH(text, fragment)
 result = ENDSWITH(text, fragment)</code></pre>
 <h3>Аргументы</h3>
@@ -31,7 +31,7 @@ result = ENDSWITH(text, fragment)</code></pre>
 <h3>Правила сравнения</h3>
 <p>Поиск выполняется с учётом регистра. Пустой фрагмент считается найденным. Результат имеет тип <code>BOOLEAN</code>.</p>
 <h3>Пример проверки наличия фрагмента</h3>
-<pre><code class="language-basic">PRINT CONTAINS("banana", "na")
+<pre><code class="language-axiom">PRINT CONTAINS("banana", "na")
 PRINT STARTSWITH("banana", "ba")
 PRINT ENDSWITH("banana", "na")</code></pre>
 <p>Результат:</p>
@@ -44,13 +44,13 @@ TRUE</code></pre>
 <h2>REPLACE</h2>
 <p>Функция <code>REPLACE</code> заменяет все найденные вхождения фрагмента.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">result = REPLACE(text, oldText, newText)</code></pre>
+<pre><code class="language-axiom">result = REPLACE(text, oldText, newText)</code></pre>
 <h3>Аргументы</h3>
 <p><code>text</code> задаёт исходную строку, <code>oldText</code> задаёт заменяемый фрагмент, <code>newText</code> задаёт текст замены.</p>
 <h3>Ограничение заменяемого фрагмента</h3>
 <p>Пустой заменяемый фрагмент даёт <code>MB3007</code>.</p>
 <h3>Пример замены всех вхождений</h3>
-<pre><code class="language-basic">PRINT REPLACE("banana", "na", "NA")</code></pre>
+<pre><code class="language-axiom">PRINT REPLACE("banana", "na", "NA")</code></pre>
 <p>Результат:</p>
 <pre><code>baNANA</code></pre>
 </section>
@@ -60,13 +60,13 @@ TRUE</code></pre>
 <h2>REPLACEMANY</h2>
 <p><code>REPLACEMANY</code> применяет таблицу строковых замен за один проход по исходной строке. Функция нужна для случаев, где обычная цепочка из многих <code>REPLACE</code> слишком дорога: нормализация текста, исправление кодировки, пакетная замена маркеров.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">result = REPLACEMANY(text, oldItems, newItems)</code></pre>
+<pre><code class="language-axiom">result = REPLACEMANY(text, oldItems, newItems)</code></pre>
 <h3>Аргументы</h3>
 <p><code>oldItems</code> и <code>newItems</code> должны быть одномерными массивами строк одинаковой длины. Элемент <code>oldItems(i)</code> задаёт искомый фрагмент, а <code>newItems(i)</code> — замену для него.</p>
 <h3>Порядок применения правил</h3>
 <p>Поиск выполняется с учётом регистра и по точному порядковому сравнению символов. В каждой позиции выбирается самое длинное совпадение из таблицы; при равной длине используется более раннее правило. Пустой элемент в <code>oldItems</code> и разная длина массивов дают <code>MB3007</code>.</p>
 <h3>Пример табличной замены</h3>
-<pre><code class="language-basic">DIM oldItems(1 TO 2) AS STRING
+<pre><code class="language-axiom">DIM oldItems(1 TO 2) AS STRING
 DIM newItems(1 TO 2) AS STRING
 oldItems(1) = "ab"
 newItems(1) = "X"
@@ -81,26 +81,26 @@ PRINT REPLACEMANY("abc ab", oldItems, newItems)</code></pre>
 <p>Функции <code>INSTR</code> и <code>INSTRREV</code> возвращают позицию найденного фрагмента, считая с единицы.</p>
 <h3>Синтаксис</h3>
 <p>Поиск INSTR от начала строки:</p>
-<pre><code class="language-basic">position = INSTR(text, fragment)</code></pre>
+<pre><code class="language-axiom">position = INSTR(text, fragment)</code></pre>
 <p>Поиск INSTR от указанной позиции:</p>
-<pre><code class="language-basic">position = INSTR(start, text, fragment)</code></pre>
+<pre><code class="language-axiom">position = INSTR(start, text, fragment)</code></pre>
 <p>Поиск INSTRREV от конца строки:</p>
-<pre><code class="language-basic">position = INSTRREV(text, fragment)</code></pre>
+<pre><code class="language-axiom">position = INSTRREV(text, fragment)</code></pre>
 <p>Поиск INSTRREV в части строки до указанной позиции включительно:</p>
-<pre><code class="language-basic">position = INSTRREV(start, text, fragment)</code></pre>
+<pre><code class="language-axiom">position = INSTRREV(start, text, fragment)</code></pre>
 <h3>Аргументы</h3>
 <p><code>text</code> задаёт исходную строку, <code>fragment</code> задаёт искомый фрагмент. Необязательный <code>start</code> задаёт начальную позицию поиска.</p>
 <h3>Начальная позиция и отсутствие совпадения</h3>
 <p>Если аргумент <code>start</code> не указан, поиск начинается с естественного начала или конца строки. Если совпадение не найдено, результат равен <code>0</code>.</p>
 <p>Позиции INSTR и INSTRREV считаются с единицы в единицах UTF-16. Эмодзи вне основной плоскости занимает две позиции: в строке <code>А😀Б</code> буква Б находится на позиции 4. Поиск сравнивает точные единицы UTF-16, учитывает регистр и не нормализует Unicode. Поэтому <code>é</code> и <code>e</code> с отдельным знаком ударения различаются.</p>
 <p>Аргумент <code>start</code> должен быть целым числом не меньше 1; иначе возникает <code>MB3007</code>. Для INSTR позиция правее <code>LEN(text) + 1</code> даёт 0. Для INSTRREV слишком большая позиция ограничивается концом строки; найденный фрагмент должен целиком помещаться до этой позиции.</p>
-<p>Пустой <code>fragment</code> имеет отдельный договор: INSTR возвращает допустимую начальную позицию, включая позицию сразу после строки; INSTRREV с явным start возвращает меньшее из <code>start</code> и <code>LEN(text)</code>, увеличенное на 1. Без start вызов <code>INSTRREV("", "")</code> возвращает 0, а <code>INSTRREV(1, "", "")</code> — 1. Эти правила Axiom не следует заменять правилами исторического BASIC.</p>
-<pre><code class="language-basic">PRINT INSTR("А😀Б", "Б")       ' 4
+<p>Пустой <code>fragment</code> имеет отдельный договор: INSTR возвращает допустимую начальную позицию, включая позицию сразу после строки; INSTRREV с явным start возвращает меньшее из <code>start</code> и <code>LEN(text)</code>, увеличенное на 1. Без start вызов <code>INSTRREV("", "")</code> возвращает 0, а <code>INSTRREV(1, "", "")</code> — 1. </p>
+<pre><code class="language-axiom">PRINT INSTR("А😀Б", "Б")       ' 4
 PRINT INSTRREV(3, "А😀Б", "😀") ' 2
 PRINT INSTR(4, "abc", "")      ' 4</code></pre>
 <p><a href="../../samples/functions/instr/utf16_positions.axm">Позиции Unicode и извлечение найденного фрагмента</a></p>
 <h3>Пример поиска позиции</h3>
-<pre><code class="language-basic">PRINT INSTR("banana", "na")
+<pre><code class="language-axiom">PRINT INSTR("banana", "na")
 PRINT INSTRREV("banana", "na")</code></pre>
 <p>Результат:</p>
 <pre><code>3
@@ -111,17 +111,17 @@ PRINT INSTRREV("banana", "na")</code></pre>
 <h2>SUBSTRCOUNT</h2>
 <p>Функция <code>SUBSTRCOUNT</code> считает непересекающиеся вхождения фрагмента.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">count = SUBSTRCOUNT(text, fragment)</code></pre>
+<pre><code class="language-axiom">count = SUBSTRCOUNT(text, fragment)</code></pre>
 <h3>Аргументы</h3>
 <p><code>text</code> задаёт исходную строку, <code>fragment</code> задаёт искомый фрагмент.</p>
 <p>Пустой fragment вызывает <code>MB3007</code>, даже если исходная строка пустая. Пустая исходная строка с непустым fragment даёт 0. Подсчёт использует точное сравнение UTF-16 и не учитывает перекрывающиеся вхождения: <code>SUBSTRCOUNT("aaa", "aa")</code> возвращает 1.</p>
 <h3>Пример подсчёта вхождений</h3>
-<pre><code class="language-basic">PRINT SUBSTRCOUNT("banana", "na")</code></pre>
+<pre><code class="language-axiom">PRINT SUBSTRCOUNT("banana", "na")</code></pre>
 <p>Результат:</p>
 <pre><code>2</code></pre>
 </section>
 
-<section class="article-section"><h2>Ручная проверка</h2><ul class="resource-list"><li><a href="../../samples/functions/contains/basic_usage.axm">CONTAINS</a></li><li><a href="../../samples/functions/replace/basic_usage.axm">REPLACE</a></li><li><a href="../../samples/functions/replacemany/multiple_tokens.axm">REPLACEMANY</a></li><li><a href="../../samples/functions/instr/basic_usage.axm">INSTR</a></li><li><a href="../../samples/functions/instrrev/basic_usage.axm">INSTRREV</a></li><li><a href="../../samples/functions/substrcount/basic_usage.axm">SUBSTRCOUNT</a></li></ul></section>
+<section class="article-section"><h2>Запускаемые примеры</h2><ul class="resource-list"><li><a href="../../samples/functions/contains/basic_usage.axm">CONTAINS</a></li><li><a href="../../samples/functions/replace/basic_usage.axm">REPLACE</a></li><li><a href="../../samples/functions/replacemany/multiple_tokens.axm">REPLACEMANY</a></li><li><a href="../../samples/functions/instr/basic_usage.axm">INSTR</a></li><li><a href="../../samples/functions/instrrev/basic_usage.axm">INSTRREV</a></li><li><a href="../../samples/functions/substrcount/basic_usage.axm">SUBSTRCOUNT</a></li></ul></section>
 <section class="article-section"><h2>См. также</h2><div class="link-list"><a href="string-functions.html">Строковые функции</a><a href="string-functions-slices-and-length.html">Длина строки и фрагменты</a><a href="string-functions-trim-and-case.html">Обрезка, регистр и разворот строки</a><a href="string-functions-build-and-split.html">Построение строк и массивы строк</a><a href="regex-functions.html">Регулярные выражения</a><a href="data-types-strings-and-files.html">Тип STRING</a></div></section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>

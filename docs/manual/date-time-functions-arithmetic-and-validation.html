@@ -30,13 +30,13 @@
                 <h2>DATEADD</h2>
                 <p>Функция <code>DATEADD</code> добавляет к дате, времени или дате-времени указанное число интервалов.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = DATEADD(interval, number, value)</code></pre>
+                <pre><code class="language-axiom">result = DATEADD(interval, number, value)</code></pre>
                 <h3>Аргументы</h3><p><code>interval</code> задаёт токен интервала, <code>number</code> число шагов, а <code>value</code> исходную дату, время или дату-время.</p>
                 <p>Аргумент <code>value</code> принимает только нативное значение <code>DATE</code>, <code>TIME</code> либо <code>DATETIME</code> — строковые формы не поддерживаются (для получения нативного значения из строки используйте <code>DATESERIAL</code>, <code>TIMESERIAL</code>, <code>DATEVALUE</code> или <code>TIMEVALUE</code>). Функция возвращает нативное значение того же вида: <code>DATE</code> даёт <code>DATE</code>, <code>TIME</code> даёт <code>TIME</code>, <code>DATETIME</code> даёт <code>DATETIME</code>, без промежуточного преобразования в строку.</p>
                 <h3>Единицы прибавления даты и времени</h3>
                 <p>Поддерживаются токены <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>h</code>, <code>n</code>, <code>s</code>. Функция сохраняет форму исходного значения: дата остаётся датой, время остаётся временем, дата-время остаётся датой-временем. Интервалы <code>yyyy</code>, <code>q</code>, <code>m</code> и <code>d</code> требуют значения вида <code>DATE</code> или <code>DATETIME</code>, а интервалы <code>h</code>, <code>n</code> и <code>s</code> — значения вида <code>TIME</code> или <code>DATETIME</code>.</p>
                 <p>Для значения <code>TIME</code> функция DATEADD возвращает время суток: сдвиги <code>h</code>, <code>n</code> и <code>s</code> приводятся к одним суткам. Число интервалов может быть любым значением <code>INTEGER</code>, включая крайние значения. Например, большой сдвиг часов не вызывает переполнение промежуточной длительности. Для <code>DATETIME</code> сохраняется дата; выход за диапазон годов 1–9999 вызывает <code>MB3007</code>.</p>
-                <pre><code class="language-basic">PRINT DATEADD("h", 2147483647, TIMESERIAL(23, 59, 59)) ' 06:59:59
+                <pre><code class="language-axiom">PRINT DATEADD("h", 2147483647, TIMESERIAL(23, 59, 59)) ' 06:59:59
 PRINT DATEADD("h", (-2147483647 - 1), TIMESERIAL(0, 0, 0)) ' 16:00:00</code></pre>
                 <p><a href="../../samples/functions/dateadd/large_time_shift.axm">Большой сдвиг времени суток</a></p>
             </section>
@@ -45,7 +45,7 @@ PRINT DATEADD("h", (-2147483647 - 1), TIMESERIAL(0, 0, 0)) ' 16:00:00</code></pr
                 <h2>DATEDIFF</h2>
                 <p>Функция <code>DATEDIFF</code> возвращает разницу между двумя значениями в выбранных интервалах.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = DATEDIFF(interval, fromValue, toValue)</code></pre>
+                <pre><code class="language-axiom">result = DATEDIFF(interval, fromValue, toValue)</code></pre>
                 <h3>Аргументы</h3><p><code>interval</code> задаёт единицу измерения, <code>fromValue</code> начальное значение, а <code>toValue</code> конечное. Результат имеет тип <code>LONG</code>.</p>
                 <p>Аргументы <code>fromValue</code> и <code>toValue</code> принимают только нативные значения <code>DATE</code>, <code>TIME</code> либо <code>DATETIME</code>, причём оба значения должны быть одного вида. Строковые формы не поддерживаются.</p>
                 <h3>Одинаковый временной вид значений</h3>
@@ -56,7 +56,7 @@ PRINT DATEADD("h", (-2147483647 - 1), TIMESERIAL(0, 0, 0)) ' 16:00:00</code></pr
                 <h2>DATEPART</h2>
                 <p>Функция <code>DATEPART</code> извлекает указанную часть даты или времени по токену.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = DATEPART(part, value)</code></pre>
+                <pre><code class="language-axiom">result = DATEPART(part, value)</code></pre>
                 <h3>Аргументы</h3><p><code>part</code> задаёт требуемую часть, а <code>value</code> принимает только нативное значение <code>DATE</code>, <code>TIME</code> либо <code>DATETIME</code> (строковые формы не поддерживаются). Результат имеет тип <code>INTEGER</code>.</p>
                 <h3>Проверка перед разбором строки</h3>
                 <p>Поддерживаются токены <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>y</code>, <code>w</code>, <code>h</code>, <code>n</code>, <code>s</code>. Токены <code>yyyy</code>, <code>q</code>, <code>m</code>, <code>d</code>, <code>y</code> и <code>w</code> требуют значения вида <code>DATE</code> или <code>DATETIME</code>, а токены <code>h</code>, <code>n</code> и <code>s</code> — значения вида <code>TIME</code> или <code>DATETIME</code>.</p>
@@ -66,7 +66,7 @@ PRINT DATEADD("h", (-2147483647 - 1), TIMESERIAL(0, 0, 0)) ' 16:00:00</code></pr
                 <h2>DATEVALUE и TIMEVALUE</h2>
                 <p><code>DATEVALUE</code> возвращает дату из строки даты-времени, а <code>TIMEVALUE</code> возвращает время из той же формы записи.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = DATEVALUE(value)
+                <pre><code class="language-axiom">result = DATEVALUE(value)
 result = TIMEVALUE(value)</code></pre>
                 <h3>Аргументы</h3><p><code>value</code> задаёт строку даты-времени в каноническом формате. Функция <code>DATEVALUE</code> возвращает значение <code>DATE</code>, а функция <code>TIMEVALUE</code> — значение <code>TIME</code>.</p>
             </section>
@@ -75,13 +75,13 @@ result = TIMEVALUE(value)</code></pre>
                 <h2>ISDATE</h2>
                 <p>Функция <code>ISDATE</code> проверяет, является ли строка допустимой канонической датой, временем или датой-временем.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = ISDATE(value)</code></pre>
+                <pre><code class="language-axiom">result = ISDATE(value)</code></pre>
                 <h3>Аргументы</h3><p><code>value</code> задаёт строку для проверки. Результат имеет тип <code>BOOLEAN</code>.</p>
             </section>
 
             <section class="article-section">
                 <h2>Пример календарной арифметики и разбора</h2>
-                <pre><code class="language-basic">' Арифметика и разбор нативных значений даты и времени
+                <pre><code class="language-axiom">' Арифметика и разбор нативных значений даты и времени
 PRINT DATEADD("m", 1, DATEVALUE("2026-01-31"))
 PRINT DATEDIFF("d", DATEVALUE("2026-04-20 23:59:59"), DATEVALUE("2026-04-21 00:00:00"))
 PRINT DATEPART("y", DATEVALUE("2026-04-21"))
@@ -92,7 +92,7 @@ PRINT ISDATE("2026-04-20 14:05:06")</code></pre>
 
             <section class="article-section">
                 <h2>Пример с нативными значениями</h2>
-                <pre><code class="language-basic">' Типизированный стиль: нативные значения без преобразования в строку
+                <pre><code class="language-axiom">' Типизированный стиль: нативные значения без преобразования в строку
 DIM d AS DATE = DATESERIAL(2026, 1, 31)
 PRINT DATEADD("m", 1, d)                     ' 2026-02-28, результат имеет тип DATE
 DIM t AS TIME = TIMESERIAL(14, 5, 59)
@@ -118,7 +118,7 @@ PRINT DATEPART("q", d)                       ' 1</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Ручная проверка</h2>
+                <h2>Запускаемые примеры</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/functions/dateadd/month_end_shift.axm">DATEADD: сдвиг даты</a></li>
                     <li><a href="../../samples/functions/dateadd/typed_temporal_values.axm">DATEADD, DATEDIFF и DATEPART: нативные значения DATE, TIME и DATETIME</a></li>

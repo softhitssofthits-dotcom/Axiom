@@ -49,20 +49,20 @@
 
         <section class="article-section">
             <h2>Синтаксис</h2>
-            <pre><code class="language-basic">&lt;числовое выражение&gt; + &lt;числовое выражение&gt;
+            <pre><code class="language-axiom">&lt;числовое выражение&gt; + &lt;числовое выражение&gt;
 &lt;числовое выражение&gt; - &lt;числовое выражение&gt;
 &lt;числовое выражение&gt; * &lt;числовое выражение&gt;
 &lt;числовое выражение&gt; / &lt;числовое выражение&gt;
 &lt;целое выражение&gt; \ &lt;целое выражение&gt;
 &lt;целое выражение&gt; MOD &lt;целое выражение&gt;
 &lt;числовое выражение&gt; ^ &lt;числовое выражение&gt;</code></pre>
-            <pre><code class="language-basic">&lt;выражение&gt; = &lt;выражение&gt;
+            <pre><code class="language-axiom">&lt;выражение&gt; = &lt;выражение&gt;
 &lt;выражение&gt; &lt;&gt; &lt;выражение&gt;
 &lt;выражение&gt; &lt; &lt;выражение&gt;
 &lt;выражение&gt; &lt;= &lt;выражение&gt;
 &lt;выражение&gt; &gt; &lt;выражение&gt;
 &lt;выражение&gt; &gt;= &lt;выражение&gt;</code></pre>
-            <pre><code class="language-basic">NOT &lt;логическое или целое выражение&gt;
+            <pre><code class="language-axiom">NOT &lt;логическое или целое выражение&gt;
 &lt;логическое или целое выражение&gt; AND &lt;логическое или целое выражение&gt;
 &lt;логическое или целое выражение&gt; OR &lt;логическое или целое выражение&gt;
 &lt;логическое или целое выражение&gt; XOR &lt;логическое или целое выражение&gt;
@@ -70,13 +70,13 @@
 &lt;логическое или целое выражение&gt; IMP &lt;логическое или целое выражение&gt;
 &lt;целое выражение&gt; &lt;&lt; &lt;целое выражение&gt;
 &lt;целое выражение&gt; &gt;&gt; &lt;целое выражение&gt;</code></pre>
-            <pre><code class="language-basic">&lt;строковое выражение&gt; + &lt;строковое выражение&gt;
+            <pre><code class="language-axiom">&lt;строковое выражение&gt; + &lt;строковое выражение&gt;
 &lt;скалярное выражение&gt; &amp; &lt;скалярное выражение&gt;
 &amp;H&lt;шестнадцатеричные цифры&gt;</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Части записи</h2>
+            <h2>Параметры и части синтаксиса</h2>
             <ul>
                 <li><code>&lt;числовое выражение&gt;</code> — выражение типов <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code> или <code>DECIMAL</code>.</li>
                 <li><code>&lt;целое выражение&gt;</code> — выражение типов <code>INTEGER</code> или <code>LONG</code>.</li>
@@ -107,7 +107,7 @@
                 <li>сравнения;</li>
                 <li><code>AND</code>, затем <code>XOR</code>, затем <code>OR</code>, затем <code>EQV</code>, затем <code>IMP</code>.</li>
             </ol>
-            <pre><code class="language-basic">PRINT 3 + 6 / 12 * 3 - 2
+            <pre><code class="language-axiom">PRINT 3 + 6 / 12 * 3 - 2
 PRINT (3 + 6) / (12 * 3 - 2)</code></pre>
         </section>
 
@@ -115,14 +115,14 @@ PRINT (3 + 6) / (12 * 3 - 2)</code></pre>
             <h2>ANDALSO и ORELSE — логика с коротким замыканием</h2>
                 <p>Операторы <code>ANDALSO</code> и <code>ORELSE</code> работают только с логическими значениями и вычисляют правый операнд только тогда, когда он может повлиять на результат: <code>ANDALSO</code> пропускает правый операнд, если левый оказался ложью, <code>ORELSE</code> — если левый оказался истиной. Это делает безопасными проверки с защитой: правый операнд <code>i &lt;= UBOUND(a) ANDALSO a(i) &lt;&gt; 0</code> не обратится к элементу, когда индекс вне границ.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">&lt;логическое выражение&gt; ANDALSO &lt;логическое выражение&gt;
+                <pre><code class="language-axiom">&lt;логическое выражение&gt; ANDALSO &lt;логическое выражение&gt;
 &lt;логическое выражение&gt; ORELSE &lt;логическое выражение&gt;</code></pre>
                 <p>Оба операнда обязаны быть <code>BOOLEAN</code>: побитовая работа с целыми числами остаётся у операторов <code>AND</code> и <code>OR</code>. Приоритет совпадает с <code>AND</code> и <code>OR</code> соответственно.</p>
                 <h2>Сравнения</h2>
             <p>Операции сравнения возвращают <code>BOOLEAN</code>. Для чисел поддержаны все шесть сравнений. Для строк также поддержаны все шесть сравнений, и порядок определяется кодами символов. Для <code>BOOLEAN</code> допустимы только <code>=</code> и <code>&lt;&gt;</code>.</p>
-            <pre><code class="language-basic">PRINT 10 > 3
-PRINT "ABC" < "ABD"
-PRINT TRUE <> FALSE</code></pre>
+            <pre><code class="language-axiom">PRINT 10 &gt; 3
+PRINT "ABC" &lt; "ABD"
+PRINT TRUE &lt;&gt; FALSE</code></pre>
         </section>
 
         <section class="article-section">
@@ -130,7 +130,7 @@ PRINT TRUE <> FALSE</code></pre>
             <p><code>NOT</code>, <code>AND</code>, <code>OR</code>, <code>XOR</code>, <code>EQV</code> и <code>IMP</code> имеют два режима. С логическими значениями они возвращают <code>BOOLEAN</code>. С целыми числами они работают по битам и возвращают <code>INTEGER</code> или <code>LONG</code>.</p>
             <p><code>EQV</code> означает равнозначность: логический результат равен <code>TRUE</code>, когда оба операнда одинаковы. <code>IMP</code> означает импликацию: <code>TRUE IMP FALSE</code> даёт <code>FALSE</code>, остальные логические сочетания дают <code>TRUE</code>.</p>
             <p><code>AND</code> и <code>OR</code> всегда вычисляют оба операнда. Короткое замыкание (short-circuit) не используется: если правый операнд содержит вызов функции с побочными эффектами, он будет выполнен в любом случае.</p>
-            <pre><code class="language-basic">PRINT TRUE AND NOT FALSE
+            <pre><code class="language-axiom">PRINT TRUE AND NOT FALSE
 PRINT 6 AND 3
 PRINT 6 XOR 3
 PRINT TRUE IMP FALSE</code></pre>
@@ -146,24 +146,22 @@ PRINT TRUE IMP FALSE</code></pre>
             <h2>Строковые операции</h2>
             <p><code>+</code> объединяет строки только тогда, когда оба операнда имеют тип <code>STRING</code>. Это строгая форма: число или логическое значение нужно преобразовать отдельно либо использовать <code>&amp;</code>.</p>
             <p><code>&amp;</code> строит строку из скалярных значений. Он принимает строки, числа и <code>BOOLEAN</code>, переводит их в текстовый вид, близкий к выводу <code>PRINT</code>, и возвращает <code>STRING</code>.</p>
-            <pre><code class="language-basic">DIM name AS STRING = "Ada"
+            <pre><code class="language-axiom">DIM name AS STRING = "Ada"
 DIM age AS INTEGER = 36
 
 PRINT "Name: " + name
 PRINT "Age: " & age</code></pre>
-            <blockquote>
-                <p><em>В QuickBASIC основная строковая конкатенация обычно записывалась через <code>+</code> и работала со строковыми значениями. В Axiom <code>+</code> для строк тоже строгий, а отдельный <code>&amp;</code> нужен для явного построения строки из смешанных скалярных значений.</em></p>
-            </blockquote>
+            <p><code>+</code> для строк тоже строгий, а отдельный <code>&amp;</code> нужен для явного построения строки из смешанных скалярных значений.</p>
         </section>
 
         <section class="article-section">
             <h2>Пример вычисления выражений</h2>
             <p>В примере используются арифметика, сравнение, логика и строковое построение.</p>
-            <pre><code class="language-basic">DIM x AS INTEGER = 10
+            <pre><code class="language-axiom">DIM x AS INTEGER = 10
 DIM y AS INTEGER = 3
 DIM ok AS BOOLEAN
 
-ok = x > y AND y > 0
+ok = x &gt; y AND y &gt; 0
 
 PRINT x \ y
 PRINT x MOD y
@@ -177,7 +175,7 @@ ok=TRUE
         </section>
 
         <section class="article-section">
-            <h2>Ручная проверка</h2>
+            <h2>Запускаемые примеры</h2>
             <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки выражений.</p>
             <ul class="resource-list">
                 <li><a href="../../samples/expressions/arithmetic/basic_math.axm">Арифметика: базовые вычисления</a></li>

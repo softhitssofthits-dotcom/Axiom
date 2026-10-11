@@ -42,7 +42,7 @@
 
         <section class="article-section">
             <h2>Синтаксис</h2>
-<pre><code class="language-basic">KEYPRESS(keyText)</code></pre>
+<pre><code class="language-axiom">KEYPRESS(keyText)</code></pre>
         </section>
 
         <section class="article-section">
@@ -67,7 +67,7 @@
         <section class="article-section">
             <h2>Поведение очереди</h2>
             <p>Встроенная функция <code>KEYPRESS</code> ищет первое подходящее нажатие в клавиатурной очереди и удаляет только его. Неподходящие клавиши сохраняют порядок и остаются доступными для последующего <code>INKEY</code>, <code>KEYPRESS</code> или <code>ON KEY</code>.</p>
-<pre><code class="language-basic">PRINT KEYPRESS("LEFT")
+<pre><code class="language-axiom">PRINT KEYPRESS("LEFT")
 PRINT KEYPRESS("LEFT")</code></pre>
             <p>Если пользователь нажал <code>LEFT</code> один раз, первый вызов напечатает <code>TRUE</code>, а второй — <code>FALSE</code>.</p>
         </section>
@@ -87,7 +87,7 @@ PRINT KEYPRESS("LEFT")</code></pre>
             <h2>Модификаторы</h2>
             <p>Встроенная функция <code>KEYPRESS</code> умеет проверять строковый аккорд клавиш через знак <code>+</code>. Последняя часть строки считается основной клавишей события, а все предыдущие части должны быть удержаны.</p>
             <p>Проще говоря, <code>KEYPRESS("CTRL+ALT+DELETE")</code> значит: <code>CTRL</code> и <code>ALT</code> уже нажаты, а программа ждёт именно нажатие последней клавиши <code>DELETE</code>. Если оно пришло, событие <code>DELETE</code> расходуется.</p>
-<pre><code class="language-basic">IF KEYPRESS("CTRL+LEFT") THEN
+<pre><code class="language-axiom">IF KEYPRESS("CTRL+LEFT") THEN
     PRINT "CTRL+LEFT"
 END IF
 
@@ -99,8 +99,16 @@ END IF</code></pre>
         </section>
 
         <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB2004</code>: вызов встроенной функции <code>KEYPRESS</code> получен без аргумента или с лишними аргументами.</li>
+                <li><code>MB2003</code>: аргумент встроенной функции <code>KEYPRESS</code> нельзя связать как строку.</li>
+            </ul>
+        </section>
+
+        <section class="article-section">
             <h2>Пример одноразового нажатия</h2>
-<pre><code class="language-basic">FOR i = 1 TO 20000
+<pre><code class="language-axiom">FOR i = 1 TO 20000
     IF KEYPRESS("ESCAPE") THEN
         PRINT "ESC pressed once"
         EXIT FOR
@@ -109,16 +117,8 @@ NEXT</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Ручная проверка</h2>
+            <h2>Запускаемые примеры</h2>
             <ul class="resource-list"><li><a href="../../samples/functions/keypress/single_press.axm">KEYPRESS: одиночное нажатие клавиши</a></li><li><a href="../../samples/functions/keypress/modified_keypress.axm">KEYPRESS: нажатие с модификатором</a></li></ul>
-        </section>
-
-        <section class="article-section">
-            <h2>Диагностика</h2>
-            <ul>
-                <li><code>MB2004</code>: вызов встроенной функции <code>KEYPRESS</code> получен без аргумента или с лишними аргументами.</li>
-                <li><code>MB2003</code>: аргумент встроенной функции <code>KEYPRESS</code> нельзя связать как строку.</li>
-            </ul>
         </section>
 
         <section class="article-section">

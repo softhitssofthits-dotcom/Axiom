@@ -34,7 +34,7 @@
                 <p>В подписях встроенных функций IDE обозначение <code>T</code> означает тип элемента массива, а <code>T()</code> — массив этого типа. Это обозначения справочной подписи, а не новые типы языка. Формы <code>LBOUND(array, dimension)</code> и <code>UBOUND(array, dimension)</code> также доступны в подсказках редактора; номер измерения отсчитывается от единицы.</p>
 
             <section class="article-section">
-                <h2>Как выбрать функцию</h2>
+                <h2>Назначение функций</h2>
                 <ul>
                     <li><code>LBOUND</code> и <code>UBOUND</code> возвращают нижнюю и верхнюю границу измерения.</li>
                     <li><code>ARRAYRANK</code>, <code>ARRAYLENGTH</code> и <code>ARRAYBOUNDS</code> описывают форму массива.</li>
@@ -49,15 +49,15 @@
                 <h2>LBOUND</h2>
                 <p><code>LBOUND</code> возвращает нижнюю границу выбранного измерения массива.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">LBOUND(<массив>)
-LBOUND(<массив>, <измерение>)</code></pre>
+                <pre><code class="language-axiom">LBOUND(&lt;массив&gt;)
+LBOUND(&lt;массив&gt;, &lt;измерение&gt;)</code></pre>
                 <h3>Аргументы</h3>
                 <ul>
                     <li><code>&lt;массив&gt;</code> - массив, для которого определяется граница.</li>
                     <li><code>&lt;измерение&gt;</code> - номер измерения. Если аргумент не указан, используется первое измерение. Для двумерного массива <code>ROW</code> означает измерение <code>1</code>, а <code>COLUMN</code> - измерение <code>2</code>.</li>
                 </ul>
                 <h3>Пример нижней границы</h3>
-                <pre><code class="language-basic">DIM scores(1 TO 5) AS INTEGER
+                <pre><code class="language-axiom">DIM scores(1 TO 5) AS INTEGER
 PRINT LBOUND(scores)</code></pre>
             </section>
 
@@ -65,15 +65,15 @@ PRINT LBOUND(scores)</code></pre>
                 <h2>UBOUND</h2>
                 <p><code>UBOUND</code> возвращает верхнюю границу выбранного измерения массива.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">UBOUND(<массив>)
-UBOUND(<массив>, <измерение>)</code></pre>
+                <pre><code class="language-axiom">UBOUND(&lt;массив&gt;)
+UBOUND(&lt;массив&gt;, &lt;измерение&gt;)</code></pre>
                 <h3>Аргументы</h3>
                 <ul>
                     <li><code>&lt;массив&gt;</code> - массив, для которого определяется граница.</li>
                     <li><code>&lt;измерение&gt;</code> - номер измерения. Для двумерных массивов можно использовать предопределённые целочисленные константы <code>ROW</code> и <code>COLUMN</code>; это готовые имена для строк и столбцов, а не функции.</li>
                 </ul>
                 <h3>Пример верхней границы</h3>
-                <pre><code class="language-basic">DIM board(1 TO 3, 1 TO 4) AS INTEGER
+                <pre><code class="language-axiom">DIM board(1 TO 3, 1 TO 4) AS INTEGER
 PRINT UBOUND(board, COLUMN)</code></pre>
             </section>
 
@@ -81,11 +81,11 @@ PRINT UBOUND(board, COLUMN)</code></pre>
                 <h2>ARRAYLENGTH</h2>
                 <p><code>ARRAYLENGTH</code> возвращает общее число элементов, видимых через массив или представление.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">ARRAYLENGTH(<массив>)</code></pre>
+                <pre><code class="language-axiom">ARRAYLENGTH(&lt;массив&gt;)</code></pre>
                 <h3>Что считает ARRAYLENGTH</h3>
                 <p>Для одномерного массива это длина диапазона индексов. Для многомерного массива результатом является произведение длин всех измерений.</p>
                 <h3>Пример длины массива</h3>
-                <pre><code class="language-basic">DIM board(1 TO 2, 1 TO 3) AS INTEGER
+                <pre><code class="language-axiom">DIM board(1 TO 2, 1 TO 3) AS INTEGER
 PRINT ARRAYLENGTH(board)</code></pre>
             </section>
 
@@ -93,11 +93,11 @@ PRINT ARRAYLENGTH(board)</code></pre>
                 <h2>ARRAYISALLOCATED</h2>
                 <p><code>ARRAYISALLOCATED</code> показывает, выделена ли память для элементов массива.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">ARRAYISALLOCATED(<массив>)</code></pre>
+                <pre><code class="language-axiom">ARRAYISALLOCATED(&lt;массив&gt;)</code></pre>
                 <h3>Проверка перед доступом к элементам</h3>
                 <p>Функция полезна перед обращением к динамическому массиву. Она не сообщает границы и не заменяет <code>LBOUND</code> или <code>UBOUND</code>.</p>
                 <h3>Пример проверки выделения</h3>
-                <pre><code class="language-basic">DIM values() AS INTEGER
+                <pre><code class="language-axiom">DIM values() AS INTEGER
 PRINT ARRAYISALLOCATED(values)
 REDIM values(1 TO 3)
 PRINT ARRAYISALLOCATED(values)</code></pre>
@@ -107,11 +107,11 @@ PRINT ARRAYISALLOCATED(values)</code></pre>
                 <h2>ARRAYRANK</h2>
                 <p><code>ARRAYRANK</code> возвращает число измерений массива.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">ARRAYRANK(<массив>)</code></pre>
+                <pre><code class="language-axiom">ARRAYRANK(&lt;массив&gt;)</code></pre>
                 <h3>Ранг как число измерений</h3>
                 <p><code>ARRAYRANK</code> может работать и с ещё не выделенным динамическим массивом, потому что число измерений известно по объявлению.</p>
                 <h3>Пример ранга массива</h3>
-                <pre><code class="language-basic">DIM cube(,,) AS INTEGER
+                <pre><code class="language-axiom">DIM cube(,,) AS INTEGER
 PRINT ARRAYRANK(cube)</code></pre>
             </section>
 
@@ -119,11 +119,11 @@ PRINT ARRAYRANK(cube)</code></pre>
                 <h2>ARRAYBOUNDS</h2>
                 <p><code>ARRAYBOUNDS</code> возвращает таблицу границ массива по всем измерениям.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">ARRAYBOUNDS(<массив>)</code></pre>
+                <pre><code class="language-axiom">ARRAYBOUNDS(&lt;массив&gt;)</code></pre>
                 <h3>Таблица границ измерений</h3>
                 <p>Результатом является новый массив <code>INTEGER(1 TO &lt;ранг&gt;, 1 TO 2)</code>. В каждой строке хранится пара границ одного измерения: в первом столбце нижняя граница, во втором - верхняя.</p>
                 <h3>Пример чтения всех границ</h3>
-                <pre><code class="language-basic">DIM board(1 TO 2, 10 TO 11) AS INTEGER
+                <pre><code class="language-axiom">DIM board(1 TO 2, 10 TO 11) AS INTEGER
 DIM bounds(,) AS INTEGER
 
 bounds = ARRAYBOUNDS(board)
@@ -137,8 +137,8 @@ PRINT bounds(2, 2)</code></pre>
                 <h2>ARRAYSLICE</h2>
                 <p>ARRAYSLICE — встроенная функция языка Axiom, которая возвращает непрерывную часть массива по начальному индексу и количеству элементов или срезов. Функция работает в BytecodeVm без экранного или файлового режима.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">ARRAYSLICE(<массив>, <начальный индекс>, <количество>)</code></pre>
-<pre><code class="language-basic">ARRAYSLICE(<массив>, <начальный индекс>, <количество>, <измерение>)</code></pre>
+                <pre><code class="language-axiom">ARRAYSLICE(&lt;массив&gt;, &lt;начальный индекс&gt;, &lt;количество&gt;)</code></pre>
+<pre><code class="language-axiom">ARRAYSLICE(&lt;массив&gt;, &lt;начальный индекс&gt;, &lt;количество&gt;, &lt;измерение&gt;)</code></pre>
                 <h3>Аргументы</h3>
                 <ul>
                     <li><code>&lt;начальный индекс&gt;</code> - первый индекс выбранного участка.</li>
@@ -148,13 +148,13 @@ PRINT bounds(2, 2)</code></pre>
                 <h3>Правила и диагностика</h3>
                 <p>Исходный массив должен быть выделен. Начальный индекс, количество и номер измерения должны иметь тип INTEGER. Номер измерения отсчитывается от единицы и не должен превышать ARRAYRANK(array). Если номер явно указан для одномерного массива, допустимо только 1. Для многомерного массива номер требуется явно; отсутствие отклоняется при связывании.</p>
                 <p>Одномерный результат имеет компактные границы 1 TO count; многомерный результат сохраняет индексы выбранного участка и границы остальных измерений. Исходный массив не изменяется. Отрицательное количество, недопустимое измерение или непустой участок вне границ дают MB3007. Ошибку можно перехватить оператором TRY/CATCH.</p>
-                <pre><code class="language-basic">DIM values(5 TO 7) AS INTEGER
+                <pre><code class="language-axiom">DIM values(5 TO 7) AS INTEGER
 DIM part() AS INTEGER
 values(6) = 20
 part = ARRAYSLICE(values, 6, 1, 1)
 PRINT part(1)  ' 20; результат начинается с индекса 1</code></pre>
                 <p>Пустой многомерный результат сохраняет ранг и границы остальных измерений. Обычно пустое выбранное измерение задаётся парой соседних индексов: нижняя граница на единицу больше верхней. Если ARRAYSLICE с count=0 получает start=INTEGER.MinValue или ARRAYSKIP пропускает всё измерение с верхней границей INTEGER.MaxValue, такую пару нельзя задать допустимыми индексами; выбранное измерение получает границы 1 TO 0. Результат остаётся выделенным массивом длины 0. Нижняя граница исходного массива INTEGER.MinValue по-прежнему запрещена: это значение зарезервировано для поиска.</p>
-                <pre><code class="language-basic">DIM values(2147483647 TO 2147483647, 7 TO 7) AS INTEGER
+                <pre><code class="language-axiom">DIM values(2147483647 TO 2147483647, 7 TO 7) AS INTEGER
 DIM part(,) AS INTEGER
 part = ARRAYSKIP(values, 1, 1)
 PRINT ARRAYLENGTH(part)  ' 0
@@ -163,7 +163,7 @@ PRINT UBOUND(part, 1)    ' 0
 PRINT LBOUND(part, 2)    ' 7</code></pre>
                 <p>Запускаемый пример: <a href="../../samples/functions/arrayskip/empty_at_max_index.axm">Пустое измерение у крайнего индекса</a>.</p>
                 <h3>Пример выборки диапазона</h3>
-                <pre><code class="language-basic">DIM values(1 TO 5) AS INTEGER
+                <pre><code class="language-axiom">DIM values(1 TO 5) AS INTEGER
 DIM part() AS INTEGER
 
 part = ARRAYSLICE(values, 2, 3)</code></pre>
@@ -174,9 +174,9 @@ part = ARRAYSLICE(values, 2, 3)</code></pre>
                 <p>ARRAYPUSH — встроенная функция языка Axiom, которая добавляет элемент в конец одномерного динамического массива или целый срез в конец выбранного измерения многомерного массива. Функция нужна для последовательного накопления значений и работает в BytecodeVm; экранный и файловый режимы не требуются.</p>
                 <h3>Синтаксис</h3>
                 <p>Одномерная форма:</p>
-                <pre><code class="language-basic">ARRAYPUSH(<массив>, <значение>)</code></pre>
+                <pre><code class="language-axiom">ARRAYPUSH(&lt;массив&gt;, &lt;значение&gt;)</code></pre>
                 <p>Форма с явным выбором измерения:</p>
-                <pre><code class="language-basic">ARRAYPUSH(<массив>, <значение>, <измерение>)</code></pre>
+                <pre><code class="language-axiom">ARRAYPUSH(&lt;массив&gt;, &lt;значение&gt;, &lt;измерение&gt;)</code></pre>
                 <p>У многомерного массива измерение нужно указать явно. У одномерного массива допустим номер <code>1</code>.</p>
                 <h3>Как меняются границы после добавления</h3>
                 <p>Для массива ранга <code>2</code> и выше <code>&lt;значение&gt;</code> должно иметь форму, согласованную со всеми остальными измерениями.</p>
@@ -185,7 +185,7 @@ part = ARRAYSLICE(values, 2, 3)</code></pre>
                 <h3>Диагностика при расширении</h3>
                 <p>Невыделенный массив вызывает <code>MB3005</code> с именами функции и аргумента. Если верхняя граница равна <code>2147483647</code>, добавление вызывает <code>MB3007</code> до изменения массива; прежние границы и элементы сохраняются. <a href="../../samples/functions/arraypush/upper_bound_overflow.axm">Запускаемая проверка отказа</a>.</p>
                 <h3>Пример добавления элемента</h3>
-                <pre><code class="language-basic">DIM values() AS INTEGER
+                <pre><code class="language-axiom">DIM values() AS INTEGER
 
 REDIM values(1 TO 2)
 values(1) = 10
@@ -197,12 +197,12 @@ ARRAYPUSH(values, 30)</code></pre>
                 <h2>ARRAYPOP</h2>
                 <p><code>ARRAYPOP</code> снимает последний элемент или последний срез и возвращает его как результат.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">ARRAYPOP(<массив>)
-ARRAYPOP(<массив>, <измерение>)</code></pre>
+                <pre><code class="language-axiom">ARRAYPOP(&lt;массив&gt;)
+ARRAYPOP(&lt;массив&gt;, &lt;измерение&gt;)</code></pre>
                 <h3>Что возвращается при снятии элемента</h3>
                 <p>После вызова исходный массив уменьшается. Для многомерного массива результатом становится отдельный массив, представляющий снятый срез.</p>
                 <h3>Пример снятия последнего элемента</h3>
-                <pre><code class="language-basic">DIM values() AS INTEGER
+                <pre><code class="language-axiom">DIM values() AS INTEGER
 DIM lastValue AS INTEGER
 
 REDIM values(1 TO 3)
@@ -216,13 +216,13 @@ lastValue = ARRAYPOP(values)</code></pre>
                 <h2>ARRAYINSERT</h2>
                 <p>ARRAYINSERT — встроенная функция языка Axiom, которая вставляет элемент или срез по указанной позиции. Функция нужна для добавления значения перед уже существующими элементами и работает в BytecodeVm без специального режима.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">ARRAYINSERT(<массив>, <индекс>, <значение>)
-ARRAYINSERT(<массив>, <индекс>, <значение>, <измерение>)</code></pre>
+                <pre><code class="language-axiom">ARRAYINSERT(&lt;массив&gt;, &lt;индекс&gt;, &lt;значение&gt;)
+ARRAYINSERT(&lt;массив&gt;, &lt;индекс&gt;, &lt;значение&gt;, &lt;измерение&gt;)</code></pre>
                 <h3>Как сдвигаются элементы после вставки</h3>
                 <p>Все элементы после точки вставки сдвигаются. Для многомерного массива форма вставляемого значения должна соответствовать выбранному измерению.</p>
                 <p>Если выбранное измерение пусто, индекс вставки должен быть равен 1. После вставки выбранное измерение получает границы 1 TO 1, даже если пустая форма до вызова имела другие границы, например -4 TO -5. Границы остальных измерений сохраняются. Для одномерного пустого массива действует то же правило. Исходный массив должен быть выделен; изменение размера представления массива запрещено.</p>
                 <h3>Пример вставки в пустую таблицу</h3>
-                <pre><code class="language-basic">DIM seed(-4 TO -4, 7 TO 8) AS INTEGER
+                <pre><code class="language-axiom">DIM seed(-4 TO -4, 7 TO 8) AS INTEGER
 DIM table(,) AS INTEGER
 DIM values(7 TO 8) AS INTEGER
 values(7) = 42
@@ -234,7 +234,7 @@ PRINT UBOUND(table, 1)
 PRINT table(1, 7)</code></pre>
                 <p>Программа выводит 1, 1 и 42. Запускаемый пример: <a href="../../samples/functions/arrayinsert/empty_dimension.axm">empty_dimension.axm</a>.</p>
                 <h3>Пример вставки по индексу</h3>
-                <pre><code class="language-basic">DIM values() AS INTEGER
+                <pre><code class="language-axiom">DIM values() AS INTEGER
 
 REDIM values(1 TO 3)
 values(1) = 10
@@ -249,12 +249,12 @@ ARRAYINSERT(values, 2, 20)</code></pre>
                 <h2>ARRAYREMOVE</h2>
                 <p><code>ARRAYREMOVE</code> удаляет элемент или срез по указанной позиции и возвращает удалённое значение.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">ARRAYREMOVE(<массив>, <индекс>)
-ARRAYREMOVE(<массив>, <индекс>, <измерение>)</code></pre>
+                <pre><code class="language-axiom">ARRAYREMOVE(&lt;массив&gt;, &lt;индекс&gt;)
+ARRAYREMOVE(&lt;массив&gt;, &lt;индекс&gt;, &lt;измерение&gt;)</code></pre>
                 <h3>Как сдвигаются элементы после удаления</h3>
                 <p>После удаления хвост массива сдвигается, а размер массива уменьшается. Для многомерного массива возвращается удалённый срез.</p>
                 <h3>Пример удаления по индексу</h3>
-                <pre><code class="language-basic">DIM values() AS INTEGER
+                <pre><code class="language-axiom">DIM values() AS INTEGER
 DIM removedValue AS INTEGER
 
 REDIM values(1 TO 3)
@@ -267,7 +267,7 @@ removedValue = ARRAYREMOVE(values, 2)</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Ручная проверка</h2>
+                <h2>Запускаемые примеры</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/functions/lbound/basic_usage.axm">LBOUND</a></li>
                     <li><a href="../../samples/functions/ubound/basic_usage.axm">UBOUND</a></li>

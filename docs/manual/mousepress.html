@@ -42,7 +42,7 @@
 
         <section class="article-section">
             <h2>Синтаксис</h2>
-<pre><code class="language-basic">MOUSEPRESS(buttonNumber)</code></pre>
+<pre><code class="language-axiom">MOUSEPRESS(buttonNumber)</code></pre>
         </section>
 
         <section class="article-section">
@@ -75,24 +75,24 @@
         </section>
 
         <section class="article-section">
-            <h2>Пример одноразового нажатия</h2>
-<pre><code class="language-basic">IF MOUSEPRESS(1) THEN
-    PRINT "LEFT ONCE"
-END IF</code></pre>
-        </section>
-
-        <section class="article-section">
-            <h2>Ручная проверка</h2>
-            <ul class="resource-list"><li><a href="../../samples/functions/mousepress/button_presses.axm">MOUSEPRESS: одноразовые нажатия кнопок мыши</a></li></ul>
-        </section>
-
-        <section class="article-section">
             <h2>Диагностика</h2>
             <ul>
                 <li><code>MB2004</code>: в встроенную функцию <code>MOUSEPRESS</code> аргумент не передан.</li>
                 <li><code>MB2003</code>: в встроенную функцию <code>MOUSEPRESS</code> передан аргумент неподходящего типа.</li>
                 <li><code>MB3010</code>: встроенная функция <code>MOUSEPRESS</code> вызвана без активного графического режима <code>SCREEN</code> и без активного <code>CANVAS</code>.</li>
             </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>Пример одноразового нажатия</h2>
+<pre><code class="language-axiom">IF MOUSEPRESS(1) THEN
+    PRINT "LEFT ONCE"
+END IF</code></pre>
+        </section>
+
+        <section class="article-section">
+            <h2>Запускаемые примеры</h2>
+            <ul class="resource-list"><li><a href="../../samples/functions/mousepress/button_presses.axm">MOUSEPRESS: одноразовые нажатия кнопок мыши</a></li></ul>
         </section>
 
         <section class="article-section">

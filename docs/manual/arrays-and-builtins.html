@@ -65,7 +65,7 @@
                     </tbody>
                 </table>
                 <p>Номер измерения в <code>LBOUND(array, dimension)</code> и <code>UBOUND(array, dimension)</code> считается с единицы. Для двумерных массивов можно использовать предопределённые целочисленные константы <code>ROW</code> и <code>COLUMN</code>: <code>ROW</code> равно <code>1</code>, <code>COLUMN</code> равно <code>2</code>. Это не отдельные операторы, а готовые имена для чтения строк и столбцов.</p>
-                <pre><code class="language-basic">DIM board(1 TO 2, 1 TO 3) AS INTEGER
+                <pre><code class="language-axiom">DIM board(1 TO 2, 1 TO 3) AS INTEGER
 
 PRINT LBOUND(board, ROW)
 PRINT UBOUND(board, ROW)
@@ -87,7 +87,7 @@ PRINT ARRAYLENGTH(board)</code></pre>
                         <tr><td><code>ARRAYRESHAPE(values, template)</code></td><td>новый массив по форме образца</td><td>исходный массив любого ранга должен иметь столько же элементов, сколько образец</td></tr>
                     </tbody>
                 </table>
-                <pre><code class="language-basic">flat = ARRAYFLATTEN(board)
+                <pre><code class="language-axiom">flat = ARRAYFLATTEN(board)
 sorted = ARRAYTOSORTED(flat)
 reshaped = ARRAYRESHAPE(sorted, board)</code></pre>
             </section>
@@ -95,13 +95,13 @@ reshaped = ARRAYRESHAPE(sorted, board)</code></pre>
             <section class="article-section" id="reshape-contract">
                 <h2>ARRAYRESHAPE: новая форма массива</h2>
                 <p>ARRAYRESHAPE — встроенная функция языка Axiom, которая создаёт новый массив с границами и рангом образца. Функция нужна, когда те же значения следует расположить в таблице другой формы. Она работает в BytecodeVm без специального режима.</p>
-                <pre><code class="language-basic">result = ARRAYRESHAPE(source, template)</code></pre>
+                <pre><code class="language-axiom">result = ARRAYRESHAPE(source, template)</code></pre>
                 <p>Аргументы source и template должны быть выделенными массивами с одинаковым типом элементов и одинаковым общим числом видимых элементов. Ранги и границы исходного массива и образца могут различаться. Аргумент source может быть многомерным массивом или представлением; предварительный вызов ARRAYFLATTEN не обязателен. Значения template задают только форму и не переносятся в результат.</p>
                 <p>Функция читает значения source по возрастанию индексов: последнее измерение меняется быстрее остальных. В таком же порядке функция заполняет форму template. Результат имеет тип элементов source, ранг и все границы template. Изменение INTEGER-элемента результата не меняет исходный массив или образец. Пустые выделенные массивы с нулевым числом элементов также допустимы: результат сохраняет пустую форму образца.</p>
                 <h3>Диагностика</h3>
                 <p>Невыделенный source или template даёт MB3005. Разное число элементов даёт MB3007; обе ошибки перехватываются оператором TRY/CATCH. Разные типы элементов или аргумент, который не является массивом, отвергаются при проверке программы.</p>
                 <h3>Пример</h3>
-                <pre><code class="language-basic">DIM source(-2 TO -1, 4 TO 6) AS INTEGER
+                <pre><code class="language-axiom">DIM source(-2 TO -1, 4 TO 6) AS INTEGER
 DIM template(9 TO 11, -4 TO -3) AS INTEGER
 DIM result(,) AS INTEGER
 source(-2, 4) = 11
@@ -120,12 +120,12 @@ PRINT result(11, -3)</code></pre>
             <section class="article-section" id="flatten-contract">
                 <h2>ARRAYFLATTEN: элементы в одномерном массиве</h2>
                 <p>ARRAYFLATTEN — встроенная функция языка Axiom, которая собирает видимые элементы массива в новый одномерный массив. Функция нужна для последовательного вывода или сортировки элементов таблицы. Она работает в BytecodeVm без специального режима.</p>
-                <pre><code class="language-basic">result = ARRAYFLATTEN(array)</code></pre>
+                <pre><code class="language-axiom">result = ARRAYFLATTEN(array)</code></pre>
                 <p>Аргумент array должен быть выделенным массивом или представлением массива. Функция сохраняет тип элементов и читает их по возрастанию индексов, меняя последнее измерение быстрее остальных. Границы результата — 1 TO N, где N означает число видимых элементов. Для пустого выделенного массива результат также выделен и имеет границы 1 TO 0. Изменение INTEGER-элемента результата не меняет исходный массив.</p>
                 <h3>Диагностика</h3>
                 <p>Невыделенный массив даёт MB3005, которую можно перехватить оператором TRY/CATCH. Аргумент другого типа отвергается при проверке программы.</p>
                 <h3>Пример</h3>
-                <pre><code class="language-basic">DIM source(7 TO 7, -2 TO -1) AS INTEGER
+                <pre><code class="language-axiom">DIM source(7 TO 7, -2 TO -1) AS INTEGER
 DIM flat() AS INTEGER
 source(7, -2) = 10
 source(7, -1) = 20
@@ -140,19 +140,19 @@ PRINT flat(2)</code></pre>
                 <p>ARRAYTOSORTED, ARRAYTOREVERSED, ARRAYSORT, ARRAYREVERSE, ARRAYBINARYSEARCH, ARRAYPUSH, ARRAYPOP, ARRAYINSERT, ARRAYREMOVE и ARRAYCONCAT — встроенные функции языка Axiom, у которых номер измерения выбирает направление операции. Это разные функции; номер dimension добавляется последним аргументом к каждой её собственной форме. Все функции работают в BytecodeVm без экранного или файлового режима.</p>
                 <p>Аргумент dimension должен иметь тип INTEGER и лежать в диапазоне от 1 до ARRAYRANK(array). Для одномерного массива номер можно опустить или указать 1. Явно заданный номер проверяется даже для пустого массива и массива из одного элемента: отсутствие работы по сортировке не отменяет проверку аргумента. Для многомерного массива номер требуется явно.</p>
                 <h3>Примеры отдельных форм</h3>
-                <pre><code class="language-basic">sorted = ARRAYTOSORTED(values, 1)</code></pre>
-                <pre><code class="language-basic">reversed = ARRAYTOREVERSED(values, 1)</code></pre>
-                <pre><code class="language-basic">ARRAYSORT(values, 1)</code></pre>
-                <pre><code class="language-basic">ARRAYREVERSE(values, 1)</code></pre>
-                <pre><code class="language-basic">position = ARRAYBINARYSEARCH(values, value, 1)</code></pre>
-                <pre><code class="language-basic">ARRAYPUSH(values, value, 1)</code></pre>
-                <pre><code class="language-basic">last = ARRAYPOP(values, 1)</code></pre>
-                <pre><code class="language-basic">ARRAYINSERT(values, index, value, 1)</code></pre>
-                <pre><code class="language-basic">removed = ARRAYREMOVE(values, index, 1)</code></pre>
-                <pre><code class="language-basic">merged = ARRAYCONCAT(left, right, 1)</code></pre>
+                <pre><code class="language-axiom">sorted = ARRAYTOSORTED(values, 1)</code></pre>
+                <pre><code class="language-axiom">reversed = ARRAYTOREVERSED(values, 1)</code></pre>
+                <pre><code class="language-axiom">ARRAYSORT(values, 1)</code></pre>
+                <pre><code class="language-axiom">ARRAYREVERSE(values, 1)</code></pre>
+                <pre><code class="language-axiom">position = ARRAYBINARYSEARCH(values, value, 1)</code></pre>
+                <pre><code class="language-axiom">ARRAYPUSH(values, value, 1)</code></pre>
+                <pre><code class="language-axiom">last = ARRAYPOP(values, 1)</code></pre>
+                <pre><code class="language-axiom">ARRAYINSERT(values, index, value, 1)</code></pre>
+                <pre><code class="language-axiom">removed = ARRAYREMOVE(values, index, 1)</code></pre>
+                <pre><code class="language-axiom">merged = ARRAYCONCAT(left, right, 1)</code></pre>
                 <h3>Результат и диагностика</h3>
                 <p>ARRAYTOSORTED, ARRAYTOREVERSED и ARRAYCONCAT создают новый массив; ARRAYSORT, ARRAYREVERSE и операции добавления/удаления меняют исходный массив по своему договору. Недопустимый dimension даёт MB3007 до выполнения операции. На выделенном допустимом массиве отказ по измерению не меняет длину, порядок и значения элементов. Ошибка перехватывается оператором TRY/CATCH.</p>
-                <pre><code class="language-basic">DIM values(1 TO 3) AS INTEGER
+                <pre><code class="language-axiom">DIM values(1 TO 3) AS INTEGER
 values(1) = 30
 values(2) = 10
 values(3) = 20
@@ -184,7 +184,7 @@ PRINT values(1)      ' 10</code></pre>
                         <tr><td><code>ARRAYSORT(array[, dimension])</code></td><td>сортирует на месте</td><td>для многомерного массива сортируется выбранное измерение</td></tr>
                     </tbody>
                 </table>
-                <pre><code class="language-basic">DIM values(1 TO 3) AS INTEGER
+                <pre><code class="language-axiom">DIM values(1 TO 3) AS INTEGER
 values(1) = 30
 values(2) = 10
 values(3) = 20
@@ -194,7 +194,7 @@ ARRAYPUSH(values, 40)
 PRINT values(1)
 PRINT values(4)</code></pre>
                 <p>ARRAYSORT и ARRAYTOSORTED — встроенные функции сортировки массива. Многомерная сортировка обрабатывает каждую линию выбранного измерения и сохраняет все границы. ARRAYSORT меняет исходные элементы; ARRAYTOSORTED возвращает отдельную копию. Последний индекс INTEGER, равный 2147483647, допустим и для сортируемой линии.</p>
-                <pre><code class="language-basic">DIM edge(7 TO 7, 2147483646 TO 2147483647) AS INTEGER
+                <pre><code class="language-axiom">DIM edge(7 TO 7, 2147483646 TO 2147483647) AS INTEGER
 edge(7, 2147483646) = 30
 edge(7, 2147483647) = 10
 ARRAYSORT(edge, 2)
@@ -218,7 +218,7 @@ PRINT edge(7, 2147483647)</code></pre>
                         <tr><td><code>ARRAYDISTINCT(array)</code></td><td>уникальные значения</td><td>одномерный список значений в порядке первого появления</td></tr>
                     </tbody>
                 </table>
-                <pre><code class="language-basic">topRows = ARRAYTAKE(board, 2, ROW)
+                <pre><code class="language-axiom">topRows = ARRAYTAKE(board, 2, ROW)
 rightPart = ARRAYSKIP(board, 1, COLUMN)
 merged = ARRAYCONCAT(topRows, topRows, ROW)</code></pre>
             </section>
@@ -226,14 +226,14 @@ merged = ARRAYCONCAT(topRows, topRows, ROW)</code></pre>
             <section class="article-section" id="concat-bounds">
                 <h2>ARRAYCONCAT: границы многомерного результата</h2>
                 <p>ARRAYCONCAT — встроенная функция языка Axiom, которая создаёт новый массив, объединяя элементы двух массивов. Многомерная форма нужна для добавления строк, столбцов или слоёв; она работает в BytecodeVm без специального режима.</p>
-                <pre><code class="language-basic">merged = ARRAYCONCAT(left, right, dimension)</code></pre>
+                <pre><code class="language-axiom">merged = ARRAYCONCAT(left, right, dimension)</code></pre>
                 <p>Аргументы left и right должны быть выделенными массивами совместимой формы и типа элементов. Аргумент dimension должен быть целым номером измерения от 1 до ранга массива. Границы остальных измерений должны совпадать. Функция копирует элементы left, затем элементы right по выбранному измерению; исходные массивы не изменяются.</p>
                 <p>Если обе части непусты по выбранному измерению, нижняя граница результата совпадает с нижней границей left. Верхняя граница равна нижней границе плюс сумма длин обеих частей минус один. Индекс 2147483647 допустим: два элемента с началом 2147483646 помещаются в результат. Если одна часть пуста по выбранному измерению, функция копирует форму другой части.</p>
                 <p>Одномерная форма <code>ARRAYCONCAT(left, right)</code> при двух непустых частях создаёт компактный результат с началом 1. Если одна часть пуста, результат копирует границы другой части: например, непустой диапазон 4 TO 6 сохраняется. Это также действует для одномерных представлений.</p>
                 <h3>Диагностика</h3>
                 <p>Если вычисленная верхняя граница превышает 2147483647, функция выдаёт MB3007. Ошибку можно перехватить оператором TRY/CATCH. Отказ не меняет исходные массивы.</p>
                 <h3>Пример</h3>
-                <pre><code class="language-basic">DIM a(7 TO 7, 2147483646 TO 2147483646) AS INTEGER
+                <pre><code class="language-axiom">DIM a(7 TO 7, 2147483646 TO 2147483646) AS INTEGER
 DIM merged(,) AS INTEGER
 a(7, 2147483646) = 42
 merged = ARRAYCONCAT(a, a, 2)
@@ -247,17 +247,17 @@ PRINT merged(7, 2147483647)</code></pre>
                 <h2>ARRAYSLICE, ARRAYTAKE и ARRAYSKIP: выбор части массива</h2>
                 <p>ARRAYSLICE, ARRAYTAKE и ARRAYSKIP — встроенные функции языка Axiom для создания нового массива из выбранного участка. Синтаксис ниже относится к трём разным функциям. Все функции работают в BytecodeVm без экранного или файлового режима.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">part = ARRAYSLICE(array, start, count)</code></pre>
-                <pre><code class="language-basic">part = ARRAYSLICE(array, start, count, dimension)</code></pre>
-                <pre><code class="language-basic">part = ARRAYTAKE(array, count)</code></pre>
-                <pre><code class="language-basic">part = ARRAYTAKE(array, count, dimension)</code></pre>
-                <pre><code class="language-basic">part = ARRAYSKIP(array, count)</code></pre>
-                <pre><code class="language-basic">part = ARRAYSKIP(array, count, dimension)</code></pre>
+                <pre><code class="language-axiom">part = ARRAYSLICE(array, start, count)</code></pre>
+                <pre><code class="language-axiom">part = ARRAYSLICE(array, start, count, dimension)</code></pre>
+                <pre><code class="language-axiom">part = ARRAYTAKE(array, count)</code></pre>
+                <pre><code class="language-axiom">part = ARRAYTAKE(array, count, dimension)</code></pre>
+                <pre><code class="language-axiom">part = ARRAYSKIP(array, count)</code></pre>
+                <pre><code class="language-axiom">part = ARRAYSKIP(array, count, dimension)</code></pre>
                 <h3>Аргументы и результат</h3>
                 <p>array должен быть выделенным массивом. start задаёт исходный индекс, count — неотрицательное количество элементов или срезов. start, count и dimension должны иметь тип INTEGER. ARRAYSLICE выбирает участок с start; ARRAYTAKE берёт первые count элементов, ARRAYSKIP пропускает первые count элементов. TAKE и SKIP ограничивают количество длиной выбранного измерения. Результат сохраняет тип элементов и ранг массива; исходный массив не меняется.</p>
                 <p>Одномерные результаты компактны и начинаются с индекса 1; пустой результат имеет границы 1 TO 0. Многомерные результаты сохраняют индексы выбранного участка и остальные измерения. ARRAYCLONE, в отличие от этих одномерных выборок, сохраняет исходные границы.</p>
                 <p>Пустой многомерный результат сохраняет ранг и границы остальных измерений. Обычно пустое выбранное измерение задаётся парой соседних индексов: нижняя граница на единицу больше верхней. Если ARRAYSLICE с count=0 получает start=INTEGER.MinValue или ARRAYSKIP пропускает всё измерение с верхней границей INTEGER.MaxValue, такую пару нельзя задать допустимыми индексами; выбранное измерение получает границы 1 TO 0. Результат остаётся выделенным массивом длины 0. Нижняя граница исходного массива INTEGER.MinValue по-прежнему запрещена: это значение зарезервировано для поиска.</p>
-                <pre><code class="language-basic">DIM values(2147483647 TO 2147483647, 7 TO 7) AS INTEGER
+                <pre><code class="language-axiom">DIM values(2147483647 TO 2147483647, 7 TO 7) AS INTEGER
 DIM part(,) AS INTEGER
 part = ARRAYSKIP(values, 1, 1)
 PRINT ARRAYLENGTH(part)  ' 0
@@ -268,7 +268,7 @@ PRINT LBOUND(part, 2)    ' 7</code></pre>
                 <h3>Измерения и диагностика</h3>
                 <p>Для многомерного массива dimension требуется явно. Для одномерного массива dimension можно опустить или указать 1. Если dimension задан, он всегда проверяется: допустим диапазон от 1 до ARRAYRANK(array). Недопустимый номер, отрицательный count и непустой срез вне границ дают MB3007. Отсутствие обязательного измерения и неверные типы отклоняются при связывании.</p>
                 <h3>Пример проверки измерения</h3>
-                <pre><code class="language-basic">DIM values(5 TO 7) AS INTEGER
+                <pre><code class="language-axiom">DIM values(5 TO 7) AS INTEGER
 DIM part() AS INTEGER
 values(5) = 10
 part = ARRAYTAKE(values, 1, 1)
@@ -299,7 +299,7 @@ END TRY</code></pre>
                 <p>Аргумент array должен быть выделенным массивом. Аргумент test принимает элемент и возвращает BOOLEAN; аргумент transform принимает элемент и возвращает преобразованное значение. Аргумент combine принимает текущий накопитель и элемент, затем возвращает новое значение накопителя. Аргумент seed задаёт начальное значение накопителя.</p>
                 <p>ARRAYEVERY прекращает вызовы после первого FALSE, а ARRAYSOME — после первого TRUE. На пустом выделенном массиве функции не вызывают пользовательскую функцию: ARRAYEVERY возвращает TRUE, ARRAYSOME возвращает FALSE, ARRAYFILTER и ARRAYMAP создают пустой результат, ARRAYREDUCE возвращает seed. ARRAYMAP сохраняет видимые границы исходного массива; ARRAYFILTER собирает выбранные значения в одномерный массив с началом 1.</p>
                 <p>Последний допустимый индекс 2147483647 обрабатывается как обычный элемент. После его обработки обход завершается, не переходя к переполненному индексу. Например, следующий вызов преобразует единственный элемент и возвращает значение 84:</p>
-                <pre><code class="language-basic">DIM edge(2147483647 TO 2147483647) AS INTEGER
+                <pre><code class="language-axiom">DIM edge(2147483647 TO 2147483647) AS INTEGER
 DIM mapped() AS INTEGER
 edge(2147483647) = 42
 mapped = ARRAYMAP(edge, Twice)
@@ -310,7 +310,7 @@ END FUNCTION</code></pre>
                 <p>Проверка всех пяти функций: <a href="../../samples/functions/arraymap/maximum_callback_index.axm">maximum_callback_index.axm</a>. Невыделенный массив даёт MB3005; неподходящие параметры или тип результата пользовательской функции отвергаются при проверке программы.</p>
                 <p>При ошибке внутри пользовательской функции обработка останавливается на текущем элементе. Внешний TRY/CATCH вокруг ARRAYMAP может перехватить исходную ошибку, например MB3001 при делении на ноль. Если пользовательская функция содержит собственный TRY/CATCH, она может обработать ошибку и вернуть значение; её FINALLY выполняется до возврата или передачи необработанной ошибки вызывающему коду.</p>
                 <h3>Пример перехвата ошибки преобразования</h3>
-                <pre><code class="language-basic">DIM values(1 TO 3) AS INTEGER
+                <pre><code class="language-axiom">DIM values(1 TO 3) AS INTEGER
 DIM result() AS INTEGER
 values(1) = 1
 values(2) = 2
@@ -324,7 +324,7 @@ FUNCTION Quotient(value AS INTEGER) AS INTEGER
     RETURN CINT(10 / (value - 2))
 END FUNCTION</code></pre>
                 <p>При обработке второго элемента программа выводит MB3001; третий элемент не передаётся функции Quotient. Полный запускаемый пример со счётчиком вызовов: <a href="../../samples/functions/arraymap/catch_callback_error.axm">catch_callback_error.axm</a>.</p>
-                <pre><code class="language-basic">FUNCTION IsPositive(value AS INTEGER) AS BOOLEAN
+                <pre><code class="language-axiom">FUNCTION IsPositive(value AS INTEGER) AS BOOLEAN
     RETURN value &gt; 0
 END FUNCTION
 
@@ -358,7 +358,7 @@ mapped = ARRAYMAP(values, Twice)</code></pre>
                 <p>Многомерный ARRAYBINARYSEARCH требует номер измерения и отсортированность каждой линии вдоль этого измерения. Функция обходит остальные индексы по возрастанию и возвращает первое совпадение в первой подходящей линии; внутри линии выбирается первый повтор. Поэтому изменение dimension может менять найденные координаты. При отсутствии совпадения возвращается выделенный пустой массив координат с границами 1 TO 0.</p>
                 <p>Аргумент array должен быть выделенным массивом или представлением. Аргумент value проверяется на совместимость с типом элементов массива. Невыделенный массив даёт MB3005; несовместимый тип значения отвергается при проверке программы. Для ARRAYBINARYSEARCH недопустимый номер измерения даёт MB3007. Поиск не изменяет исходные элементы.</p>
                 <h3>Пример отсутствующего значения при отрицательных индексах</h3>
-                <pre><code class="language-basic">DIM values(-4 TO -2) AS INTEGER
+                <pre><code class="language-axiom">DIM values(-4 TO -2) AS INTEGER
 values(-4) = 2
 values(-3) = 2
 values(-2) = 4
@@ -366,7 +366,7 @@ PRINT ARRAYINDEXOF(values, 99)
 PRINT ARRAYLASTINDEXOF(values, 99)
 PRINT ARRAYBINARYSEARCH(values, 99)</code></pre>
                 <p>Все три вызова возвращают -5. Запускаемый пример: <a href="../../samples/functions/arrayindexof/negative_missing_index.axm">negative_missing_index.axm</a>.</p>
-                <pre><code class="language-basic">sortedValues = ARRAYTOSORTED(values)
+                <pre><code class="language-axiom">sortedValues = ARRAYTOSORTED(values)
 PRINT ARRAYBINARYSEARCH(sortedValues, 20)
 PRINT ARRAYCONTAINS(values, 99)
 hits = ARRAYFINDALL(board, 4)</code></pre>
@@ -376,7 +376,7 @@ hits = ARRAYFINDALL(board, 4)</code></pre>
                 <h2>Агрегаты: сумма, минимум, максимум и среднее</h2>
                 <p>Функции <code>ARRAYSUM</code>, <code>ARRAYMIN</code>, <code>ARRAYMAX</code> и <code>ARRAYAVERAGE</code> сводят элементы массива к одному итоговому значению и избавляют от ручного цикла накопления. Все четыре функции обходят видимые элементы массива любого ранга.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = ARRAYSUM(array)
+                <pre><code class="language-axiom">result = ARRAYSUM(array)
 result = ARRAYMIN(array)
 result = ARRAYMAX(array)
 result = ARRAYAVERAGE(array)</code></pre>
@@ -386,7 +386,7 @@ result = ARRAYAVERAGE(array)</code></pre>
                 <p>Функция <code>ARRAYAVERAGE</code> точно накапливает представленные значения DOUBLE и округляет среднее один раз, к ближайшему представимому значению; при равном расстоянии выбирается значение с чётным младшим разрядом. Поэтому среднее двух значений <code>1e308</code> равно <code>1e308</code>, хотя их обычная сумма не помещается в <code>DOUBLE</code>. Взаимное сокращение больших слагаемых сохраняет малый остаток: для <code>1e308</code>, <code>-1e308</code> и <code>1e-308</code> среднее равно <code>1e-308 / 3</code>, а не нулю. Результат остаётся приближённым числом <code>DOUBLE</code>; преобразование элементов других числовых типов в DOUBLE выполняется до накопления.</p>
                 <p>Числовой договор минимума и максимума проверяется и для массива из одного элемента. Массив <code>BOOLEAN</code> не допускается и сообщает <code>MB3007</code>. Все четыре агрегата работают с многомерными массивами без указания измерения и обходят все видимые элементы.</p>
                 <h3>Пример двумерного массива</h3>
-                <pre><code class="language-basic">DIM numbers(1 TO 2, 1 TO 2) AS INTEGER
+                <pre><code class="language-axiom">DIM numbers(1 TO 2, 1 TO 2) AS INTEGER
 numbers(1, 1) = 1
 numbers(1, 2) = 2
 numbers(2, 1) = 3
@@ -402,12 +402,12 @@ PRINT ARRAYAVERAGE(numbers) ' 2.5</code></pre>
                 </ul>
                 <h3>Пример агрегатов</h3>
                 <p>Функция <code>ARRAYAVERAGE</code> принимает также массив <code>DECIMAL</code>. Перед накоплением каждый элемент преобразуется в <code>DOUBLE</code>, поэтому точность исходного десятичного числа может уменьшиться. Например, среднее четверти и трёх четвертей равно половине:</p>
-                <pre><code class="language-basic">DIM fractions(-1 TO 0) AS DECIMAL
+                <pre><code class="language-axiom">DIM fractions(-1 TO 0) AS DECIMAL
 fractions(-1) = CDEC(1) / CDEC(4)
 fractions(0) = CDEC(3) / CDEC(4)
 PRINT ARRAYAVERAGE(fractions) ' 0.5</code></pre>
                 <p>Запускаемая проверка: <a href="../../samples/functions/arrayaverage/decimal_mean.axm">среднее десятичных элементов и сохранность массива</a>.</p>
-                <pre><code class="language-basic">' Сводка оценок без ручного цикла
+                <pre><code class="language-axiom">' Сводка оценок без ручного цикла
 DIM scores(1 TO 4) AS INTEGER
 scores(1) = 5
 scores(2) = 4
@@ -423,7 +423,7 @@ PRINT highest
 PRINT ARRAYAVERAGE(scores)</code></pre>
                 <h3>Переполнение суммы</h3>
                 <p>Если промежуточная сумма выходит за диапазон <code>INTEGER</code>, <code>LONG</code> или <code>DECIMAL</code>, функция <code>ARRAYSUM</code> сообщает диагностику <code>MB3008</code> на месте вызова. Для <code>DOUBLE</code> та же диагностика возникает, если итоговая сумма не является конечным числом. Ошибку можно обработать оператором <code>TRY</code>; блок <code>FINALLY</code> выполняется и после переполнения.</p>
-                <pre><code class="language-basic">DIM values(1 TO 2) AS INTEGER
+                <pre><code class="language-axiom">DIM values(1 TO 2) AS INTEGER
 values(1) = 2147483647
 values(2) = 1
 TRY
@@ -449,7 +449,7 @@ END TRY</code></pre>
                         <tr><td>Отсортировать</td><td><code>ARRAYSORT(array[, dimension])</code></td><td><code>ARRAYTOSORTED(array[, dimension])</code></td></tr>
                     </tbody>
                 </table>
-                <pre><code class="language-basic">copy = ARRAYTOSORTED(values)
+                <pre><code class="language-axiom">copy = ARRAYTOSORTED(values)
 ARRAYREVERSE(values)
 
 PRINT values(1)
@@ -457,7 +457,7 @@ PRINT copy(1)</code></pre>
             </section>
 
             <section class="article-section" id="samples">
-                <h2>Проверочные примеры</h2>
+                <h2>Запускаемые примеры</h2>
                 <p>Эти файлы можно открыть в IDE и выполнить вручную, чтобы проверить конкретные семейства функций массива.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/functions/lbound/basic_usage.axm">LBOUND: нижняя граница массива</a></li>

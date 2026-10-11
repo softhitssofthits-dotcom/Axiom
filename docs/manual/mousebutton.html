@@ -42,7 +42,7 @@
 
         <section class="article-section">
             <h2>Синтаксис</h2>
-<pre><code class="language-basic">MOUSEBUTTON(buttonNumber)</code></pre>
+<pre><code class="language-axiom">MOUSEBUTTON(buttonNumber)</code></pre>
         </section>
 
         <section class="article-section">
@@ -75,24 +75,24 @@
         </section>
 
         <section class="article-section">
-            <h2>Пример проверки левой кнопки</h2>
-<pre><code class="language-basic">IF MOUSEBUTTON(1) THEN
-    PRINT "LEFT"
-END IF</code></pre>
-        </section>
-
-        <section class="article-section">
-            <h2>Ручная проверка</h2>
-            <ul class="resource-list"><li><a href="../../samples/functions/mousebutton/button_states.axm">MOUSEBUTTON: состояние кнопок мыши</a></li></ul>
-        </section>
-
-        <section class="article-section">
             <h2>Диагностика</h2>
             <ul>
                 <li><code>MB2004</code>: в встроенную функцию <code>MOUSEBUTTON</code> аргумент не передан.</li>
                 <li><code>MB2003</code>: в встроенную функцию <code>MOUSEBUTTON</code> передан аргумент неподходящего типа.</li>
                 <li><code>MB3010</code>: встроенная функция <code>MOUSEBUTTON</code> вызвана без активного графического режима <code>SCREEN</code> и без активного <code>CANVAS</code>.</li>
             </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>Пример проверки левой кнопки</h2>
+<pre><code class="language-axiom">IF MOUSEBUTTON(1) THEN
+    PRINT "LEFT"
+END IF</code></pre>
+        </section>
+
+        <section class="article-section">
+            <h2>Запускаемые примеры</h2>
+            <ul class="resource-list"><li><a href="../../samples/functions/mousebutton/button_states.axm">MOUSEBUTTON: состояние кнопок мыши</a></li></ul>
         </section>
 
         <section class="article-section">

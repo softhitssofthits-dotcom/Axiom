@@ -47,7 +47,7 @@
         <section class="article-section">
             <h2>Выбор между SUB и FUNCTION</h2>
             <p>Выбор между процедурой и функцией лучше делать по смыслу результата. Если важен сам эффект выполнения — вывести текст, изменить переменную по <code>BYREF</code>, заполнить данные, выполнить проверку — обычно подходит <code>SUB</code>. Если нужен вычисленный результат для присваивания, условия, печати или передачи в другой вызов, используется <code>FUNCTION</code>.</p>
-<pre><code class="language-basic">SUB ShowBanner(text AS STRING)
+<pre><code class="language-axiom">SUB ShowBanner(text AS STRING)
     PRINT "=="; text; "=="
 END SUB
 
@@ -62,7 +62,7 @@ PRINT Square(5)</code></pre>
         <section class="article-section">
             <h2>Параметры и возврат</h2>
             <p><code>BYVAL</code> и <code>BYREF</code> — это не операторы и не функции. Это модификаторы параметров: служебные слова, которые пишутся только в объявлении параметра <code>SUB</code> или <code>FUNCTION</code> перед именем параметра.</p>
-<pre><code class="language-basic">SUB Touch(BYREF value AS INTEGER)
+<pre><code class="language-axiom">SUB Touch(BYREF value AS INTEGER)
     value = value + 1
 END SUB
 
@@ -82,9 +82,7 @@ END FUNCTION</code></pre>
 
         <section class="article-section">
             <h2>Область видимости и вложенные объявления</h2>
-            <blockquote>
-                <p><em>В QuickBASIC функция возвращала значение и участвовала в выражениях, а процедура вызывалась как отдельный оператор. В Axiom это разделение сохранено, но нет текущей необходимости в <code>DECLARE</code>, а возврат значения из функции оформляется оператором <code>RETURN</code>, а не присваиванием имени функции.</em></p>
-            </blockquote>
+            <p>Вызов процедуры выполняется как отдельная инструкция. Вызов функции возвращает значение и может входить в выражение. Возврат значения оформляется оператором <code>RETURN</code>.</p>
             <ul>
                 <li>И <code>SUB</code>, и <code>FUNCTION</code> могут быть объявлены на верхнем уровне программы.</li>
                 <li>Локальные <code>SUB</code> и <code>FUNCTION</code> можно объявлять внутри другой процедуры или функции.</li>

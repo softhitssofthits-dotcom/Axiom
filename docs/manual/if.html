@@ -43,7 +43,7 @@
 
         <section class="article-section">
             <h2>Синтаксис</h2>
-            <pre><code class="language-basic">IF &lt;логическое выражение&gt; THEN
+            <pre><code class="language-axiom">IF &lt;логическое выражение&gt; THEN
     [&lt;операторы&gt;]
 [ELSEIF &lt;логическое выражение&gt; THEN
     [&lt;операторы&gt;]]
@@ -53,7 +53,7 @@ END IF</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Части записи</h2>
+            <h2>Параметры и части синтаксиса</h2>
             <ul>
                 <li><code>&lt;логическое выражение&gt;</code> — выражение типа <code>BOOLEAN</code>, которое определяет, выполняется ли соответствующая ветвь.</li>
                 <li><code>THEN</code> отделяет условие от блока операторов, выполняемого при истинном значении условия.</li>
@@ -79,15 +79,22 @@ END IF</code></pre>
                 <li>Каждая ветвь образует собственную блочную область видимости. Имя, объявленное внутри ветви, недоступно после <code>END IF</code>.</li>
                 <li>Блоки <code>IF</code> можно вкладывать друг в друга, если внутренняя проверка относится только к одной ветви внешнего условия.</li>
             </ul>
-            <blockquote>
-                <p><em>В QuickBASIC условные выражения исторически могли опираться на числовую модель, где ноль означает ложь, а ненулевое значение — истину. В Axiom такая форма не является правилом <code>IF</code>: числовое выражение нужно явно сравнить или преобразовать так, чтобы результатом стало значение <code>BOOLEAN</code>.</em></p>
-            </blockquote>
+            <p>Такая форма не является правилом <code>IF</code>: числовое выражение нужно явно сравнить или преобразовать так, чтобы результатом стало значение <code>BOOLEAN</code>.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB2008</code> — условие после <code>IF</code> или <code>ELSEIF</code> не имеет тип <code>BOOLEAN</code>.</li>
+                <li><code>MB2001</code> — имя, объявленное внутри ветви, используется после выхода из области видимости.</li>
+                <li><code>MB1005</code> — в конструкции <code>IF</code> допускается только один блок <code>ELSE</code>.</li>
+            </ul>
         </section>
 
         <section class="article-section">
             <h2>Пример выбора ветви</h2>
             <p>В этом примере проверяется значение переменной <code>value</code>. Первое условие ложно, второе истинно, поэтому выполняется только ветвь <code>ELSEIF</code>.</p>
-            <pre><code class="language-basic">DIM value AS INTEGER = 7
+            <pre><code class="language-axiom">DIM value AS INTEGER = 7
 
 IF value &gt; 10 THEN
     PRINT "большой"
@@ -101,7 +108,7 @@ END IF</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Ручная проверка</h2>
+            <h2>Запускаемые примеры</h2>
             <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения <code>IF</code>.</p>
             <ul class="resource-list">
                 <li><a href="../../samples/control-flow/if/basic_if_else.axm">IF: базовая ветвь ELSE</a></li>
@@ -112,15 +119,6 @@ END IF</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Диагностика</h2>
-            <ul>
-                <li><code>MB2008</code> — условие после <code>IF</code> или <code>ELSEIF</code> не имеет тип <code>BOOLEAN</code>.</li>
-                <li><code>MB2001</code> — имя, объявленное внутри ветви, используется после выхода из области видимости.</li>
-                <li><code>MB1005</code> — в конструкции <code>IF</code> допускается только один блок <code>ELSE</code>.</li>
-            </ul>
-        </section>
-
-            <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="expressions-and-branching.html">Выражения и ветвление</a>

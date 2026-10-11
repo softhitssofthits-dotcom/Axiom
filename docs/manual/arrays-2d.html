@@ -35,20 +35,20 @@
             <p class="lead">Раздел двумерных массивов описывает табличную форму данных с двумя независимыми индексами — строками и столбцами.</p>
 
             <section class="article-section">
-                <h2>Как двумерный массив хранит таблицу</h2>
+                <h2>Хранение элементов</h2>
                 <p>Двумерный массив хранит значения одного типа в виде таблицы. Для доступа к элементу используются два индекса: первый выбирает строку, второй — столбец.</p>
             </section>
 
             <section class="article-section">
                 <h2>Синтаксис</h2>
-                <pre><code class="language-basic">DIM &lt;имя массива&gt;(&lt;нижняя строка&gt; TO &lt;верхняя строка&gt;, &lt;нижний столбец&gt; TO &lt;верхний столбец&gt;) AS &lt;тип элемента&gt;</code></pre>
-                <pre><code class="language-basic">DIM &lt;имя массива&gt;(,) AS &lt;тип элемента&gt;</code></pre>
-                <pre><code class="language-basic">&lt;имя массива&gt;(&lt;индекс строки&gt;, &lt;индекс столбца&gt;) = &lt;выражение&gt;
+                <pre><code class="language-axiom">DIM &lt;имя массива&gt;(&lt;нижняя строка&gt; TO &lt;верхняя строка&gt;, &lt;нижний столбец&gt; TO &lt;верхний столбец&gt;) AS &lt;тип элемента&gt;</code></pre>
+                <pre><code class="language-axiom">DIM &lt;имя массива&gt;(,) AS &lt;тип элемента&gt;</code></pre>
+                <pre><code class="language-axiom">&lt;имя массива&gt;(&lt;индекс строки&gt;, &lt;индекс столбца&gt;) = &lt;выражение&gt;
 &lt;переменная&gt; = &lt;имя массива&gt;(&lt;индекс строки&gt;, &lt;индекс столбца&gt;)</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Части записи</h2>
+                <h2>Параметры и части синтаксиса</h2>
                 <ul>
                     <li><code>&lt;имя массива&gt;</code> — имя двумерного массива.</li>
                     <li><code>&lt;нижняя строка&gt; TO &lt;верхняя строка&gt;</code> — включительный диапазон индексов по строкам.</li>
@@ -72,7 +72,7 @@
 
             <section class="article-section">
                 <h2>Пример записи и чтения ячеек таблицы</h2>
-                <pre><code class="language-basic">' Программа заполняет несколько ячеек таблицы и печатает их
+                <pre><code class="language-axiom">' Программа заполняет несколько ячеек таблицы и печатает их
 ' Ожидаемый вывод:
 ' 20
 ' 99
@@ -87,7 +87,7 @@ PRINT board(2, 3)</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Ручная проверка</h2>
+                <h2>Запускаемые примеры</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/smoke/multidimensional-arrays/two_dimensional_grid.axm">Двумерная таблица с изменением границ</a></li>
                     <li><a href="../../samples/functions/arraybounds/multidimensional_shape.axm">ARRAYBOUNDS: форма двумерного массива</a></li>

@@ -22,7 +22,7 @@
             </nav>
             <p class="eyebrow">Операторы и функция</p>
             <h1 class="page-title">Операторы рисования</h1>
-            <p class="lead">Эта страница описывает классические операторы рисования исторического графического пути <code>SCREEN</code>: операторы <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code> и функцию <code>POINT</code>. Основной договор этой страницы относится к <code>SCREEN 1..10</code>, но формы <code>POINT(x, y)</code>, <code>PSET</code>, <code>PRESET</code> и <code>PAINT</code> дополнительно получили отдельный согласованный договор и для современного <code>CANVAS</code>.</p>
+            <p class="lead">Раздел графических примитивов описывает операторы PSET, PRESET, LINE, CIRCLE, PAINT, DRAW и встроенную функцию POINT. Основные формы работают в палитровых режимах SCREEN 1..10. Формы POINT(x, y), PSET, PRESET и PAINT также поддерживаются на холсте CANVAS; правила каждого контекста приведены отдельно.</p>
 
             <section class="article-section">
                 <h2>Где работают эти операторы</h2>
@@ -37,24 +37,24 @@
                 <h2>Координаты и цвета</h2>
                 <p>Во всех формах этой страницы координаты по умолчанию задаются в пикселях.</p>
                 <p>Координата <code>x</code> растёт слева направо. Координата <code>y</code> растёт сверху вниз.</p>
-                <p>Цвет задаётся номером палитрового цвета. В историческом графическом пути <code>SCREEN</code> это не полноцветное значение <code>RGB(...)</code>, а номер цвета из текущей палитры.</p>
+                <p>Цвет задаётся номером палитрового цвета. В палитровом графическом режиме <code>SCREEN</code> это не полноцветное значение <code>RGB(...)</code>, а номер цвета из текущей палитры.</p>
                 <p>Если программа использует оператор <code>VIEW</code>, оператор <code>WINDOW</code> или слово <code>STEP</code>, смысл координат меняется согласно текущему экранному договору этих операторов.</p>
             </section>
 
-            <section class="article-section">
+            <section class="article-section" id="pset">
                 <h2>Оператор PSET</h2>
                 <p><code>PSET</code> — оператор языка Axiom, который закрашивает одну точку графического экрана.</p>
-<pre><code class="language-basic">PSET (x, y)
+<pre><code class="language-axiom">PSET (x, y)
 PSET (x, y), color
 PSET STEP (x, y)
 PSET STEP (x, y), color</code></pre>
                 <p>Оператор <code>PSET</code> принимает координаты точки и необязательный номер цвета.</p>
                 <p>Если цвет не указан, оператор <code>PSET</code> использует текущий цвет рисования.</p>
-                <p>При активном <code>SCREEN</code> оператор <code>PSET</code> работает по историческому экранному договору, включая влияние <code>VIEW</code> и <code>WINDOW</code>.</p>
+                <p>При активном <code>SCREEN</code> оператор <code>PSET</code> работает по правилам экранного режима, включая влияние <code>VIEW</code> и <code>WINDOW</code>.</p>
                 <p>При активном <code>CANVAS</code> оператор <code>PSET</code> принимает мировые координаты. Эти координаты проходят через <code>CAMERA</code> и затем попадают внутрь активного <code>VIEWPORT</code>.</p>
                 <p>При активном <code>CANVAS</code> оператор <code>PSET</code> записывает индексный цвет <code>0..255</code>, а не полноцветное значение <code>RGB(...)</code>. Если цвет выходит за диапазон, применяется обычное графическое правило приведения индекса.</p>
                 <p>Слово <code>STEP</code> означает, что координаты задаются как смещение от текущей графической позиции, а не как абсолютная точка экрана. В режиме <code>CANVAS</code> это смещение считается от текущей мировой графической позиции.</p>
-<pre><code class="language-basic">CANVAS 24, 18
+<pre><code class="language-axiom">CANVAS 24, 18
 CLS RGB(0, 0, 0)
 VIEWPORT (10, 6)-(14, 10)
 CAMERA 100, 50
@@ -65,20 +65,20 @@ PRINT POINT(9, 6)</code></pre>
                 <p>В этом примере мировой пиксель <code>100, 50</code> становится видимым в физической точке <code>10, 6</code> внутри viewport. Соседняя точка <code>9, 6</code> остаётся фоном.</p>
             </section>
 
-            <section class="article-section">
+            <section class="article-section" id="preset">
                 <h2>Оператор PRESET</h2>
                 <p><code>PRESET</code> — оператор языка Axiom, который работает как оператор <code>PSET</code>, но без явно указанного цвета использует фоновый цвет.</p>
-<pre><code class="language-basic">PRESET (x, y)
+<pre><code class="language-axiom">PRESET (x, y)
 PRESET (x, y), color
 PRESET STEP (x, y)
 PRESET STEP (x, y), color</code></pre>
                 <p>Оператор <code>PRESET</code> обычно используют для стирания отдельной точки или линии цветом фона.</p>
-                <p>При активном <code>SCREEN</code> оператор <code>PRESET</code> работает по историческому экранному договору, включая влияние <code>VIEW</code> и <code>WINDOW</code>.</p>
+                <p>При активном <code>SCREEN</code> оператор <code>PRESET</code> работает по правилам экранного режима, включая влияние <code>VIEW</code> и <code>WINDOW</code>.</p>
                 <p>При активном <code>CANVAS</code> оператор <code>PRESET</code> принимает мировые координаты. Эти координаты проходят через <code>CAMERA</code> и затем попадают внутрь активного <code>VIEWPORT</code>.</p>
                 <p>При активном <code>CANVAS</code> оператор <code>PRESET</code> записывает индексный цвет <code>0..255</code>, а не полноцветное значение <code>RGB(...)</code>. Если цвет выходит за диапазон, применяется обычное графическое правило приведения индекса.</p>
                 <p>Если цвет не указан, оператор <code>PRESET</code> использует текущий фоновый индекс. После вызова <code>CANVAS</code> таким индексом по умолчанию считается <code>0</code>.</p>
                 <p>Слово <code>STEP</code> означает, что координаты задаются как смещение от текущей графической позиции. В режиме <code>CANVAS</code> это смещение считается от текущей мировой графической позиции.</p>
-<pre><code class="language-basic">CANVAS 24, 18
+<pre><code class="language-axiom">CANVAS 24, 18
 CLS RGB(255, 255, 255)
 VIEWPORT (10, 6)-(14, 10)
 CAMERA 100, 50
@@ -89,10 +89,10 @@ PRINT POINT(9, 6)</code></pre>
                 <p>В этом примере оператор <code>PRESET</code> записывает фоновый индекс в мировую точку <code>100, 50</code>. На экране он становится видимым в физической точке <code>10, 6</code> внутри viewport.</p>
             </section>
 
-            <section class="article-section">
+            <section class="article-section" id="line">
                 <h2>Оператор LINE</h2>
                 <p><code>LINE</code> — оператор языка Axiom, который рисует отрезок или прямоугольник.</p>
-<pre><code class="language-basic">LINE (x1, y1)-(x2, y2)
+<pre><code class="language-axiom">LINE (x1, y1)-(x2, y2)
 LINE (x1, y1)-(x2, y2), color
 LINE (x1, y1)-(x2, y2), color, B
 LINE (x1, y1)-(x2, y2), color, BF</code></pre>
@@ -101,10 +101,10 @@ LINE (x1, y1)-(x2, y2), color, BF</code></pre>
                 <p>Форма с суффиксом <code>BF</code> рисует заполненный прямоугольник.</p>
             </section>
 
-            <section class="article-section">
+            <section class="article-section" id="circle">
                 <h2>Оператор CIRCLE</h2>
                 <p><code>CIRCLE</code> — оператор языка Axiom, который рисует окружность, дугу или эллипс.</p>
-<pre><code class="language-basic">CIRCLE (x, y), radius
+<pre><code class="language-axiom">CIRCLE (x, y), radius
 CIRCLE (x, y), radius, color
 CIRCLE (x, y), radius, color, startAngle, endAngle
 CIRCLE (x, y), radius, color, startAngle, endAngle, aspect</code></pre>
@@ -115,10 +115,10 @@ CIRCLE (x, y), radius, color, startAngle, endAngle, aspect</code></pre>
                 <p>Если <code>color</code> не указан, используется цвет <code>15</code> (белый в стандартной палитре), а не текущий цвет переднего плана — в отличие от <code>LINE</code> и <code>PSET</code>, которые по умолчанию берут текущий цвет переднего плана.</p>
             </section>
 
-            <section class="article-section">
+            <section class="article-section" id="paint">
                 <h2>Оператор PAINT</h2>
                 <p><code>PAINT</code> — оператор языка Axiom, который заполняет замкнутую область, начиная от указанной точки.</p>
-<pre><code class="language-basic">PAINT (x, y)
+<pre><code class="language-axiom">PAINT (x, y)
 PAINT (x, y), fillColor
 PAINT (x, y), fillColor, borderColor
 PAINT STEP (x, y)
@@ -127,12 +127,12 @@ PAINT STEP (x, y), fillColor, borderColor</code></pre>
                 <p>Оператор <code>PAINT</code> начинает заполнение из точки <code>x, y</code>.</p>
                 <p>Если указан только цвет заливки, оператор <code>PAINT</code> заполняет область до естественной границы цвета.</p>
                 <p>Если указан <code>borderColor</code>, оператор <code>PAINT</code> использует этот цвет как цвет границы.</p>
-                <p>При активном <code>SCREEN</code> оператор <code>PAINT</code> работает по историческому экранному договору, включая влияние <code>VIEW</code>, <code>WINDOW</code> и формы <code>STEP</code>.</p>
+                <p>При активном <code>SCREEN</code> оператор <code>PAINT</code> работает по правилам экранного режима, включая влияние <code>VIEW</code>, <code>WINDOW</code> и формы <code>STEP</code>.</p>
                 <p>При активном <code>CANVAS</code> оператор <code>PAINT</code> принимает мировые координаты. Эти координаты проходят через <code>CAMERA</code> и затем попадают внутрь активного <code>VIEWPORT</code>.</p>
                 <p>При активном <code>CANVAS</code> оператор <code>PAINT</code> остаётся индексной заливкой. Цвет заливки и цвет границы приводятся к диапазону <code>0..255</code> обычным графическим правилом. Полноцветная форма через <code>RGB(...)</code> сюда не входит.</p>
                 <p>Слово <code>STEP</code> сохраняется и в режиме <code>CANVAS</code>: смещение считается от текущей мировой графической позиции.</p>
                 <p>После выполнения оператор <code>PAINT</code> обновляет текущую графическую позицию до стартовой мировой точки заливки.</p>
-<pre><code class="language-basic">CANVAS 24, 18
+<pre><code class="language-axiom">CANVAS 24, 18
 CLS RGB(0, 0, 0)
 VIEWPORT (10, 6)-(15, 11)
 CAMERA 100, 50
@@ -151,10 +151,10 @@ PRINT POINT(10, 6)</code></pre>
                 <p>В этом примере мировая внутренняя точка <code>101, 51</code> после камеры и viewport попадает в экранную точку <code>11, 7</code> и заливается цветом <code>6</code>. Граница остаётся цветом <code>9</code>.</p>
             </section>
 
-            <section class="article-section">
+            <section class="article-section" id="draw">
                 <h2>Оператор DRAW</h2>
-                <p><code>DRAW</code> — оператор языка Axiom, который выполняет строку графических команд в историческом стиле BASIC.</p>
-<pre><code class="language-basic">DRAW commandString</code></pre>
+                <p><code>DRAW</code> — оператор языка Axiom, который выполняет строку графических команд для перемещения графической позиции и рисования.</p>
+<pre><code class="language-axiom">DRAW commandString</code></pre>
                 <p>Оператор <code>DRAW</code> принимает строку, внутри которой записаны команды перемещения, поворота и рисования.</p>
                 <p>Эта строка не является синтаксисом языка Axiom целиком. Это отдельный мини-язык, который понимает только оператор <code>DRAW</code>.</p>
             </section>
@@ -162,14 +162,14 @@ PRINT POINT(10, 6)</code></pre>
             <section class="article-section">
                 <h2 id="point">Функция POINT</h2>
                 <p><code>POINT</code> — встроенная функция языка Axiom, которая читает цвет точки или сообщает текущую графическую позицию.</p>
-<pre><code class="language-basic">POINT(x, y)
+<pre><code class="language-axiom">POINT(x, y)
 POINT(selector)</code></pre>
                 <p>Форма <code>POINT(x, y)</code> возвращает цвет точки в указанных координатах.</p>
-                <p>При активном <code>SCREEN</code> эта форма читает пиксель по историческому экранному договору, включая влияние <code>VIEW</code> и <code>WINDOW</code>.</p>
+                <p>При активном <code>SCREEN</code> эта форма читает пиксель по правилам экранного режима, включая влияние <code>VIEW</code> и <code>WINDOW</code>.</p>
                 <p>При активном <code>CANVAS</code> форма <code>POINT(x, y)</code> читает физический пиксель холста. В этом режиме аргументы не проходят через <code>CAMERA</code> и <code>VIEWPORT</code>: если нужно проверить точку экрана <code>12, 12</code>, нужно вызывать именно <code>POINT(12, 12)</code>.</p>
                 <p>Если в точке <code>CANVAS</code> лежит полноцветный пиксель, функция <code>POINT(x, y)</code> возвращает ближайший индекс стандартной палитры Axiom.</p>
-                <p>Форма <code>POINT(selector)</code> возвращает одну из координат текущей графической позиции. Точное значение зависит от селектора и от договоров <code>VIEW</code> и <code>WINDOW</code>. Эта форма остаётся частью исторического <code>SCREEN</code> и не переносится в <code>CANVAS</code>.</p>
-<pre><code class="language-basic">CANVAS 16, 16
+                <p>Форма <code>POINT(selector)</code> возвращает одну из координат текущей графической позиции. Точное значение зависит от селектора и от договоров <code>VIEW</code> и <code>WINDOW</code>. Эта форма остаётся частью режима <code>SCREEN</code> и не переносится в <code>CANVAS</code>.</p>
+<pre><code class="language-axiom">CANVAS 16, 16
 CLS RGB(0, 0, 0)
 VIEWPORT (8, 8)-(16, 16)
 CAMERA 4, 4
@@ -191,7 +191,7 @@ PRINT POINT(12, 12)</code></pre>
 
             <section class="article-section">
                 <h2>Пример</h2>
-<pre><code class="language-basic">SCREEN 1
+<pre><code class="language-axiom">SCREEN 1
 PSET (10, 10), 12
 LINE (20, 20)-(120, 20), 14
 LINE (30, 30)-(90, 70), 11, B

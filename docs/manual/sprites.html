@@ -22,9 +22,9 @@
             </nav>
             <p class="eyebrow">Тип, функции и операторы</p>
             <h1 class="page-title">Спрайты SPRITE</h1>
-            <p class="lead">Эта страница описывает встроенный тип данных <code>SPRITE</code>, встроенные функции <code>LOADSPRITE</code>, <code>SPRITEWIDTH</code>, <code>SPRITEHEIGHT</code>, <code>SPRITECOUNT</code> и оператор <code>DRAWSPRITE</code>. Тип <code>SPRITE</code> хранит спрайтовый лист, то есть одно изображение, разбитое на одинаковые кадры.</p>
+            <p class="lead">Раздел спрайтов описывает тип данных SPRITE, встроенные функции LOADSPRITE, SPRITEWIDTH, SPRITEHEIGHT, SPRITECOUNT и оператор DRAWSPRITE. Тип SPRITE хранит спрайтовый лист — изображение, разбитое на одинаковые кадры.</p>
 
-            <section class="article-section">
+            <section class="article-section" id="type">
                 <h2>Что такое тип SPRITE</h2>
                 <p><code>SPRITE</code> — встроенный ссылочный тип данных языка Axiom.</p>
                 <p>Значение типа <code>SPRITE</code> хранит спрайтовый лист и сведения о размере одного кадра. Программа обычно получает такое значение через функцию <code>LOADSPRITE</code>, а затем выбирает кадры по номеру через оператор <code>DRAWSPRITE</code>.</p>
@@ -33,12 +33,12 @@
             <section class="article-section">
                 <h2>Где работают функции и оператор</h2>
                 <p>Функции <code>LOADSPRITE</code>, <code>SPRITEWIDTH</code>, <code>SPRITEHEIGHT</code> и <code>SPRITECOUNT</code> работают с самим значением типа <code>SPRITE</code>.</p>
-                <p>Оператор <code>DRAWSPRITE</code> работает только при активном графическом выводе. Этот оператор можно использовать либо в историческом графическом режиме <code>SCREEN 1..10</code>, либо в современном графическом режиме <code>CANVAS</code>.</p>
+                <p>Оператор <code>DRAWSPRITE</code> работает только при активном графическом выводе. Этот оператор можно использовать либо в палитровом графическом режиме <code>SCREEN 1..10</code>, либо в полноцветном графическом режиме <code>CANVAS</code>.</p>
             </section>
 
             <section class="article-section">
                 <h2>Синтаксис</h2>
-<pre><code class="language-basic">DIM name AS SPRITE
+<pre><code class="language-axiom">DIM name AS SPRITE
 name = LOADSPRITE(path, frameWidth, frameHeight)
 
 SPRITEWIDTH(sprite)
@@ -50,7 +50,7 @@ DRAWSPRITE sprite, frame, x, y, width, height</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Части записи</h2>
+                <h2>Параметры и части синтаксиса</h2>
                 <table>
                     <thead>
                         <tr><th>Часть</th><th>Описание</th></tr>
@@ -67,28 +67,28 @@ DRAWSPRITE sprite, frame, x, y, width, height</code></pre>
                 </table>
             </section>
 
-            <section class="article-section">
+            <section class="article-section" id="loadsprite">
                 <h2>Функция LOADSPRITE</h2>
                 <p><code>LOADSPRITE</code> — встроенная функция языка Axiom, которая загружает изображение и разбивает его на кадры одинакового размера.</p>
-<pre><code class="language-basic">LOADSPRITE(path, frameWidth, frameHeight)</code></pre>
+<pre><code class="language-axiom">LOADSPRITE(path, frameWidth, frameHeight)</code></pre>
                 <p>Аргумент <code>path</code> должен быть строкой.</p>
                 <p>Аргументы <code>frameWidth</code> и <code>frameHeight</code> задают размер одного кадра спрайтового листа.</p>
             </section>
 
-            <section class="article-section">
+            <section class="article-section" id="parts">
                 <h2>Функции SPRITEWIDTH, SPRITEHEIGHT и SPRITECOUNT</h2>
                 <p><code>SPRITEWIDTH</code> возвращает ширину одного кадра в пикселях.</p>
                 <p><code>SPRITEHEIGHT</code> возвращает высоту одного кадра в пикселях.</p>
                 <p><code>SPRITECOUNT</code> возвращает количество доступных кадров.</p>
-<pre><code class="language-basic">SPRITEWIDTH(sprite)
+<pre><code class="language-axiom">SPRITEWIDTH(sprite)
 SPRITEHEIGHT(sprite)
 SPRITECOUNT(sprite)</code></pre>
             </section>
 
-            <section class="article-section">
+            <section class="article-section" id="drawsprite">
                 <h2>Оператор DRAWSPRITE</h2>
                 <p><code>DRAWSPRITE</code> — оператор языка Axiom, который выводит выбранный кадр спрайтового листа на активную графическую поверхность.</p>
-<pre><code class="language-basic">DRAWSPRITE sprite, frame, x, y
+<pre><code class="language-axiom">DRAWSPRITE sprite, frame, x, y
 DRAWSPRITE sprite, frame, x, y, width, height</code></pre>
                 <p>Первая форма выводит кадр в натуральном размере.</p>
                 <p>Вторая форма выводит кадр с масштабированием до размера <code>width x height</code> пикселей.</p>
@@ -105,7 +105,7 @@ DRAWSPRITE sprite, frame, x, y, width, height</code></pre>
 
             <section class="article-section">
                 <h2>Пример</h2>
-<pre><code class="language-basic">SCREEN 1
+<pre><code class="language-axiom">SCREEN 1
 DIM walk AS SPRITE
 walk = LOADSPRITE("assets/walk_sheet.png", 16, 16)
 
@@ -116,7 +116,7 @@ SLEEP</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Ручная проверка</h2>
+                <h2>Запускаемые примеры</h2>
                 <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения типа <code>SPRITE</code> и оператора <code>DRAWSPRITE</code>.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/graphics/sprites/walk_cycle.axm">SPRITE: анимация ходьбы</a></li>
@@ -153,7 +153,7 @@ SLEEP</code></pre>
                     <li><a href="../../samples/functions/spritecount/loaded_resource_property.axm">SPRITECOUNT: короткая проверка результата</a></li>
                     <li><a href="../../samples/functions/loadsprite/loaded_resource_property.axm">LOADSPRITE: короткая проверка результата</a></li>
                 </ul></section>
-<section class="article-section"><h2>Нулевой символ в пути ресурса</h2><p>Функции LOADIMAGE, LOADSPRITE, LOADTILESET и LOADTILEMAP требуют строковый путь без нулевого символа. Такой символ отклоняется до раскрытия переменных окружения: загрузчик не использует часть пути перед ним. Неверный путь даёт MB3005, которую можно перехватить оператором TRY/CATCH; программа продолжает работу после обработки ошибки.</p><p>Короткий запускаемый пример: <a href="../../samples/smoke/resources/null_path.axm">отказ загрузки изображения по пути с нулевым символом</a>.</p><pre><code class="language-basic">DIM picture AS IMAGE
+<section class="article-section"><h2>Нулевой символ в пути ресурса</h2><p>Функции LOADIMAGE, LOADSPRITE, LOADTILESET и LOADTILEMAP требуют строковый путь без нулевого символа. Такой символ отклоняется до раскрытия переменных окружения: загрузчик не использует часть пути перед ним. Неверный путь даёт MB3005, которую можно перехватить оператором TRY/CATCH; программа продолжает работу после обработки ошибки.</p><p>Короткий запускаемый пример: <a href="../../samples/smoke/resources/null_path.axm">отказ загрузки изображения по пути с нулевым символом</a>.</p><pre><code class="language-axiom">DIM picture AS IMAGE
 TRY
     picture = LOADIMAGE("рисунок.png" + CHR(0) + "другой.png")
 CATCH err

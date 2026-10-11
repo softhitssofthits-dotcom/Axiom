@@ -36,20 +36,20 @@
         <p class="lead"><code>CONTINUE</code> — оператор языка Axiom, который пропускает оставшуюся часть текущей итерации цикла и переходит к следующей итерации. Оператор имеет три формы: <code>CONTINUE FOR</code>, <code>CONTINUE WHILE</code> и <code>CONTINUE DO</code>, каждая из которых работает с соответствующим типом цикла.</p>
 
         <section class="article-section">
-            <h2>Когда использовать CONTINUE</h2>
+            <h2>Назначение</h2>
             <p>Оператор <code>CONTINUE</code> удобен, когда внутри тела цикла встречается условие, при котором оставшаяся часть итерации не нужна. Вместо вложенного <code>IF ... END IF</code> вокруг остатка тела оператор <code>CONTINUE</code> явно показывает, что программа должна перейти к следующему проходу.</p>
             <p>Форма оператора должна совпадать с типом окружающего цикла. Использование <code>CONTINUE FOR</code> вне цикла <code>FOR ... NEXT</code>, <code>CONTINUE WHILE</code> вне цикла <code>WHILE ... END WHILE</code> или <code>CONTINUE DO</code> вне цикла <code>DO ... LOOP</code> приводит к ошибке диагностики.</p>
         </section>
 
         <section class="article-section">
             <h2>Синтаксис</h2>
-            <pre><code class="language-basic">CONTINUE FOR</code></pre>
-            <pre><code class="language-basic">CONTINUE WHILE</code></pre>
-            <pre><code class="language-basic">CONTINUE DO</code></pre>
+            <pre><code class="language-axiom">CONTINUE FOR</code></pre>
+            <pre><code class="language-axiom">CONTINUE WHILE</code></pre>
+            <pre><code class="language-axiom">CONTINUE DO</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Части записи</h2>
+            <h2>Параметры и части синтаксиса</h2>
             <ul>
                 <li><code>CONTINUE FOR</code> — пропускает оставшуюся часть тела цикла <code>FOR ... NEXT</code> и переходит к инкременту счётчика (оператору <code>NEXT</code>), после чего выполняется проверка условия следующей итерации.</li>
                 <li><code>CONTINUE WHILE</code> — пропускает оставшуюся часть тела цикла <code>WHILE ... END WHILE</code> и переходит к проверке условия в заголовке цикла.</li>
@@ -70,9 +70,37 @@
         </section>
 
         <section class="article-section">
+            <h2>Вложенные циклы</h2>
+            <p>Оператор <code>CONTINUE</code> действует только на ближайший окружающий цикл указанного типа. Во вложенных циклах <code>CONTINUE</code> во внутреннем цикле не влияет на внешний.</p>
+            <pre><code class="language-axiom">' Ожидаемый вывод:
+' j=0 i=0
+' j=0 i=1
+' j=1 i=0
+' j=1 i=1
+FOR j = 0 TO 1
+    FOR i = 0 TO 2
+        IF i = 2 THEN
+            CONTINUE FOR
+        END IF
+
+        PRINT "j=" & j & " i=" & i
+    NEXT
+NEXT</code></pre>
+        </section>
+
+        <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB2037</code> — <code>CONTINUE FOR</code> используется вне цикла <code>FOR ... NEXT</code>.</li>
+                <li><code>MB2038</code> — <code>CONTINUE WHILE</code> используется вне цикла <code>WHILE ... END WHILE</code>.</li>
+                <li><code>MB2039</code> — <code>CONTINUE DO</code> используется вне цикла <code>DO ... LOOP</code>.</li>
+            </ul>
+        </section>
+
+        <section class="article-section">
             <h2>Пример: CONTINUE FOR</h2>
             <p>В этом примере цикл проходит от 1 до 5, но печатает только нечётные числа: при чётном значении <code>CONTINUE FOR</code> пропускает оператор <code>PRINT</code>.</p>
-            <pre><code class="language-basic">' Ожидаемый вывод:
+            <pre><code class="language-axiom">' Ожидаемый вывод:
 ' 1
 ' 3
 ' 5
@@ -88,7 +116,7 @@ NEXT</code></pre>
         <section class="article-section">
             <h2>Пример: CONTINUE WHILE</h2>
             <p>В этом примере цикл <code>WHILE</code> печатает числа от 0 до 4, пропуская значение 2.</p>
-            <pre><code class="language-basic">' Ожидаемый вывод:
+            <pre><code class="language-axiom">' Ожидаемый вывод:
 ' 0
 ' 1
 ' 3
@@ -109,7 +137,7 @@ END WHILE</code></pre>
         <section class="article-section">
             <h2>Пример: CONTINUE DO</h2>
             <p>В этом примере цикл <code>DO ... LOOP</code> печатает числа от 0 до 4, пропуская значение 3.</p>
-            <pre><code class="language-basic">' Ожидаемый вывод:
+            <pre><code class="language-axiom">' Ожидаемый вывод:
 ' 0
 ' 1
 ' 2
@@ -128,40 +156,12 @@ LOOP</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Вложенные циклы</h2>
-            <p>Оператор <code>CONTINUE</code> действует только на ближайший окружающий цикл указанного типа. Во вложенных циклах <code>CONTINUE</code> во внутреннем цикле не влияет на внешний.</p>
-            <pre><code class="language-basic">' Ожидаемый вывод:
-' j=0 i=0
-' j=0 i=1
-' j=1 i=0
-' j=1 i=1
-FOR j = 0 TO 1
-    FOR i = 0 TO 2
-        IF i = 2 THEN
-            CONTINUE FOR
-        END IF
-
-        PRINT "j=" & j & " i=" & i
-    NEXT
-NEXT</code></pre>
-        </section>
-
-        <section class="article-section">
-            <h2>Ручная проверка</h2>
+            <h2>Запускаемые примеры</h2>
             <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения <code>CONTINUE</code>.</p>
             <ul class="resource-list">
                 <li><a href="../../samples/control-flow/for/continue_for.axm">CONTINUE FOR: пропуск итерации счётного цикла</a></li>
                 <li><a href="../../samples/control-flow/while/continue_while.axm">CONTINUE WHILE: пропуск итерации предусловного цикла</a></li>
                 <li><a href="../../samples/control-flow/do/continue_do.axm">CONTINUE DO: пропуск итерации цикла DO ... LOOP</a></li>
-            </ul>
-        </section>
-
-        <section class="article-section">
-            <h2>Диагностика</h2>
-            <ul>
-                <li><code>MB2037</code> — <code>CONTINUE FOR</code> используется вне цикла <code>FOR ... NEXT</code>.</li>
-                <li><code>MB2038</code> — <code>CONTINUE WHILE</code> используется вне цикла <code>WHILE ... END WHILE</code>.</li>
-                <li><code>MB2039</code> — <code>CONTINUE DO</code> используется вне цикла <code>DO ... LOOP</code>.</li>
             </ul>
         </section>
 

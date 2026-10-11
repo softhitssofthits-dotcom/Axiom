@@ -27,7 +27,7 @@
 
         <p class="eyebrow">Оператор</p>
         <h1 class="page-title">Оператор ON MOUSE</h1>
-        <p class="lead"><code>ON MOUSE</code> — оператор языка Axiom, который связывает событие мыши с процедурой <code>SUB</code>. Оператор нужен для интерактивных программ, которым удобнее реагировать на нажатие, отпускание или перемещение между обычными операторами, а не постоянно опрашивать состояние мыши через <a href="mousex.html"><code>MOUSEX</code></a>, <a href="mousey.html"><code>MOUSEY</code></a> и <a href="mousebutton.html"><code>MOUSEBUTTON</code></a>.</p>
+        <p class="lead">ON MOUSE — оператор языка Axiom, который связывает событие мыши с процедурой SUB. Обработчик вызывается при нажатии, отпускании или перемещении мыши между обычными инструкциями программы.</p>
 
         <section class="article-section">
             <h2>Когда использовать ON MOUSE</h2>
@@ -43,7 +43,7 @@
 
         <section class="article-section">
             <h2>Синтаксис</h2>
-<pre><code class="language-basic">ON MOUSE(buttonNumber), HandlerName
+<pre><code class="language-axiom">ON MOUSE(buttonNumber), HandlerName
 ON MOUSE(buttonNumber), ON
 ON MOUSE(buttonNumber), STOP
 ON MOUSE(buttonNumber), OFF
@@ -65,7 +65,7 @@ ON MOUSE("WHEEL"), OFF</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Части записи</h2>
+            <h2>Параметры и части синтаксиса</h2>
             <p><code>buttonNumber</code> и <code>HandlerName</code> в синтаксисе — метапеременные. В реальном коде вместо <code>buttonNumber</code> пишут выражение с номером кнопки, а вместо <code>HandlerName</code> — имя своей процедуры <code>SUB</code>. Строки <code>"UP"</code>, <code>"MOVE"</code> и <code>"WHEEL"</code> — имена событий мыши.</p>
             <table>
                 <thead><tr><th>Часть</th><th>Описание</th></tr></thead>
@@ -82,7 +82,7 @@ ON MOUSE("WHEEL"), OFF</code></pre>
         <section class="article-section">
             <h2>Процедура-обработчик</h2>
             <p>Процедура-обработчик может быть объявлена без параметров или с тремя параметрами события:</p>
-<pre><code class="language-basic">SUB HandleMouse()
+<pre><code class="language-axiom">SUB HandleMouse()
 END SUB
 
 SUB HandleMouse(value AS INTEGER, x AS LONG, y AS LONG)
@@ -118,8 +118,17 @@ END SUB</code></pre>
         </section>
 
         <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB2035</code>: обработчик оператора <code>ON MOUSE</code> не является подходящей процедурой <code>SUB</code>. Для обработчика события допустимы только формы без параметров или с параметрами <code>INTEGER, LONG, LONG</code>.</li>
+                <li><code>MB2036</code>: в операторе <code>ON MOUSE</code> указано недопустимое имя события мыши.</li>
+                <li><code>MB3010</code>: оператор <code>ON MOUSE</code> вызван без активного графического режима <code>SCREEN</code> и без активного <code>CANVAS</code>.</li>
+            </ul>
+        </section>
+
+        <section class="article-section">
             <h2>Пример обработчика мыши</h2>
-<pre><code class="language-basic">ON MOUSE(1), HandleMouse
+<pre><code class="language-axiom">ON MOUSE(1), HandleMouse
 ON MOUSE(1, "UP"), HandleMouse
 ON MOUSE("MOVE"), HandleMouse
 ON MOUSE("WHEEL"), HandleMouse
@@ -134,17 +143,8 @@ END SUB</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Ручная проверка</h2>
+            <h2>Запускаемые примеры</h2>
             <ul class="resource-list"><li><a href="../../samples/operators/on-mouse/left_button_handler.axm">ON MOUSE: обработчик левой кнопки мыши в SCREEN</a></li><li><a href="../../samples/operators/on-mouse/canvas_world_handler.axm">ON MOUSE: мировые координаты в CANVAS</a></li><li><a href="../../samples/operators/on-mouse/release_move_handler.axm">ON MOUSE: отпускание и перемещение</a></li><li><a href="../../samples/operators/on-mouse/wheel_handler.axm">ON MOUSE: колесо мыши</a></li></ul>
-        </section>
-
-        <section class="article-section">
-            <h2>Диагностика</h2>
-            <ul>
-                <li><code>MB2035</code>: обработчик оператора <code>ON MOUSE</code> не является подходящей процедурой <code>SUB</code>. Для обработчика события допустимы только формы без параметров или с параметрами <code>INTEGER, LONG, LONG</code>.</li>
-                <li><code>MB2036</code>: в операторе <code>ON MOUSE</code> указано недопустимое имя события мыши.</li>
-                <li><code>MB3010</code>: оператор <code>ON MOUSE</code> вызван без активного графического режима <code>SCREEN</code> и без активного <code>CANVAS</code>.</li>
-            </ul>
         </section>
 
         <section class="article-section">

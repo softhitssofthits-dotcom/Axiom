@@ -41,13 +41,13 @@
 
         <section class="article-section">
             <h2>Синтаксис</h2>
-<pre><code class="language-basic">RETURN &lt;выражение&gt;</code></pre>
-<pre><code class="language-basic">RETURN</code></pre>
+<pre><code class="language-axiom">RETURN &lt;выражение&gt;</code></pre>
+<pre><code class="language-axiom">RETURN</code></pre>
             <p>Оператор <code>RETURN</code> поддерживает две формы: с выражением для функций и без выражения для процедур.</p>
         </section>
 
         <section class="article-section">
-            <h2>Части записи</h2>
+            <h2>Параметры и части синтаксиса</h2>
             <table>
                 <thead><tr><th>Часть</th><th>Описание</th></tr></thead>
                 <tbody>
@@ -64,14 +64,23 @@
                 <li><code>RETURN &lt;выражение&gt;</code> должен вернуть значение, совместимое с типом результата текущей функции.</li>
                 <li><code>RETURN</code> без значения в <code>SUB</code> удобен для проверки особого случая в начале процедуры.</li>
             </ul>
-            <blockquote>
-                <p><em>В QuickBASIC слово <code>RETURN</code> прежде всего связано с подпрограммами <code>GOSUB</code>, а выход из <code>FUNCTION</code> часто оформлялся через присваивание имени функции и <code>EXIT FUNCTION</code>. В Axiom <code>GOSUB</code> не относится к текущей реализованной справке, а <code>RETURN</code> явно обслуживает <code>SUB</code> и <code>FUNCTION</code>.</em></p>
-            </blockquote>
+            <p>Оператор <code>RETURN</code> завершает вызов процедуры или функции. В процедуре <code>SUB</code> значение не указывается; в функции <code>FUNCTION</code> указывается возвращаемое выражение.</p>
+        </section>
+
+        <section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li>Оператор <code>RETURN</code> записан вне <code>SUB</code> или <code>FUNCTION</code>.</li>
+                <li><code>SUB</code> возвращает значение через <code>RETURN</code>.</li>
+                <li><code>FUNCTION</code> использует <code>RETURN</code> без значения.</li>
+                <li>Тип возвращаемого выражения не подходит к типу результата функции.</li>
+                <li>Функция завершилась без возвращённого значения.</li>
+            </ul>
         </section>
 
         <section class="article-section">
             <h2>Пример досрочного возврата</h2>
-<pre><code class="language-basic">' Ожидаемый вывод:
+<pre><code class="language-axiom">' Ожидаемый вывод:
 ' 42
 ' before return
 ' after if
@@ -94,22 +103,11 @@ Show(FALSE)</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Ручная проверка</h2>
+            <h2>Запускаемые примеры</h2>
             <ul class="resource-list">
                 <li><a href="../../samples/control-flow/return/function_value.axm">RETURN: возврат значения из FUNCTION</a></li>
                 <li><a href="../../samples/control-flow/return/sub_early_exit.axm">RETURN: досрочный выход из SUB</a></li>
                 <li><a href="../../samples/operators/function/returned_closure.axm">FUNCTION: возврат функции с захваченными данными</a></li>
-            </ul>
-        </section>
-
-        <section class="article-section">
-            <h2>Диагностика</h2>
-            <ul>
-                <li>Оператор <code>RETURN</code> записан вне <code>SUB</code> или <code>FUNCTION</code>.</li>
-                <li><code>SUB</code> возвращает значение через <code>RETURN</code>.</li>
-                <li><code>FUNCTION</code> использует <code>RETURN</code> без значения.</li>
-                <li>Тип возвращаемого выражения не подходит к типу результата функции.</li>
-                <li>Функция завершилась без возвращённого значения.</li>
             </ul>
         </section>
 

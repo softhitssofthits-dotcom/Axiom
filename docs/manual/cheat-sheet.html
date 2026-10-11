@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Шпаргалка</title>
+    <title>Справочник Axiom - Краткая справка</title>
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="cheat-sheet">
@@ -24,11 +24,11 @@
             <nav class="breadcrumbs" aria-label="Хлебные крошки">
                 <a href="index.html">Главная</a>
                 <span>/</span>
-                <span>Шпаргалка</span>
+                <span>Краткая справка</span>
             </nav>
             <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Краткая шпаргалка</h1>
-            <p class="lead">Краткая шпаргалка собирает опорные формы синтаксиса Axiom в одном месте: объявления, ввод и вывод, условия, циклы, процедуры, массивы и небольшую выборку встроенных функций.</p>
+            <h1 class="page-title">Краткая справка</h1>
+            <p class="lead">Краткая справка содержит основные формы синтаксиса Axiom: объявления, ввод и вывод, условия, циклы, процедуры, массивы и небольшую выборку встроенных функций.</p>
 
             <section class="article-section">
                 <h2>Основные группы синтаксиса</h2>
@@ -42,7 +42,7 @@
 
             <section class="article-section">
                 <h2>Типы и объявления</h2>
-                <pre><code class="language-basic">DIM age AS INTEGER
+                <pre><code class="language-axiom">DIM age AS INTEGER
 DIM price AS DOUBLE = 1.5
 DIM title = "Пример"
 CONST APP_NAME AS STRING = "Demo"</code></pre>
@@ -50,7 +50,7 @@ CONST APP_NAME AS STRING = "Demo"</code></pre>
 
             <section class="article-section">
                 <h2>Ввод и вывод</h2>
-                <pre><code class="language-basic">PRINT "Привет"
+                <pre><code class="language-axiom">PRINT "Привет"
 PRINT 10, 20
 PRINT "Имя: "; "Анна"
 PRINT
@@ -66,9 +66,9 @@ INPUT x, y</code></pre>
 
             <section class="article-section">
                 <h2>Условия</h2>
-                <pre><code class="language-basic">IF score >= 90 THEN
+                <pre><code class="language-axiom">IF score &gt;= 90 THEN
     PRINT "Отлично"
-ELSEIF score >= 70 THEN
+ELSEIF score &gt;= 70 THEN
     PRINT "Хорошо"
 ELSE
     PRINT "Нужно доработать"
@@ -90,15 +90,15 @@ END SELECT</code></pre>
 
             <section class="article-section">
                 <h2>Циклы</h2>
-                <pre><code class="language-basic">FOR i = 1 TO 10 STEP 2
+                <pre><code class="language-axiom">FOR i = 1 TO 10 STEP 2
     PRINT i
 NEXT
 
-WHILE total < 100
+WHILE total &lt; 100
     total = total + 10
 END WHILE
 
-DO WHILE value <> 0
+DO WHILE value &lt;&gt; 0
     INPUT "Введите число"; value
 LOOP
 
@@ -112,7 +112,7 @@ LOOP WHILE keepRunning
 
 DO
     total = total + 1
-LOOP UNTIL total >= 10
+LOOP UNTIL total &gt;= 10
 
 DO
     PRINT "Повторение до EXIT DO"
@@ -122,7 +122,7 @@ LOOP</code></pre>
 
             <section class="article-section">
                 <h2>Процедуры и функции</h2>
-                <pre><code class="language-basic">SUB ShowMessage(text AS STRING)
+                <pre><code class="language-axiom">SUB ShowMessage(text AS STRING)
     PRINT text
 END SUB
 
@@ -133,7 +133,7 @@ END FUNCTION</code></pre>
 
             <section class="article-section">
                 <h2>Массивы</h2>
-                <pre><code class="language-basic">DIM numbers(1 TO 3) AS INTEGER
+                <pre><code class="language-axiom">DIM numbers(1 TO 3) AS INTEGER
 numbers(1) = 10
 PRINT numbers(1)</code></pre>
             </section>
@@ -169,7 +169,7 @@ PRINT numbers(1)</code></pre>
 
             <section class="article-section">
                 <h2>Чего здесь нет</h2>
-                <p>Шпаргалка покрывает ядро языка. За остальными возможностями переходите в разделы справочника:</p>
+                <p>Краткая справка содержит основные конструкции языка. За остальными возможностями переходите в разделы справочника:</p>
                 <div class="link-list">
                     <a href="error-handling.html">Обработка ошибок TRY и ERROR</a>
                     <a href="graphics.html">Графика и экран</a>

@@ -6,6 +6,13 @@
   function score(entry, query) {
     let value = 0;
     const tokens = [entry.title, entry.kind, entry.category, entry.description, ...(entry.keywords || [])].map(normalize);
+    if (normalize(entry.title) === query) {
+      value += 100;
+      // DATE и TIME также являются именами типов: точное имя функции ведёт к её карточке.
+      if (entry.kind === "Функция") {
+        value += 10;
+      }
+    }
     if (normalize(entry.title).startsWith(query)) {
       value += 5;
     }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Преобразование чисел и классические функции</title>
+    <title>Справочник Axiom - Округление и преобразование чисел</title>
     <link rel="stylesheet" href="styles/manual.css">
 </head>
 <body data-page="numeric-functions-conversion-and-legacy">
@@ -28,22 +28,22 @@
                 <span>/</span>
                 <a href="numeric-functions.html">Числовые функции</a>
                 <span>/</span>
-                <span>Преобразование чисел и классические функции</span>
+                <span>Округление и преобразование чисел</span>
             </nav>
             <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Преобразование чисел и классические функции</h1>
-            <p class="lead">Раздел преобразования чисел и классических функций описывает средства <code>INT</code>, <code>STR</code> и <code>VAL</code> — переход от строки к числу, от числа к строке и получение целой части значения в стиле BASIC.</p>
+            <h1 class="page-title">Округление и преобразование чисел</h1>
+            <p class="lead">Раздел округления и преобразования чисел описывает встроенные функции <code>INT</code>, <code>STR</code> и <code>VAL</code> — переход от строки к числу, от числа к строке и округление числа вниз.</p>
 
             <section class="article-section" id="int">
                 <h2>INT</h2>
                 <p>Функция <code>INT</code> округляет число вниз и возвращает результат в типе <code>INTEGER</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = INT(value)</code></pre>
+                <pre><code class="language-axiom">result = INT(value)</code></pre>
                 <h3>Аргументы</h3><p><code>value</code> задаёт числовое выражение. Результат всегда имеет тип <code>INTEGER</code>, даже если исходное значение было <code>DOUBLE</code> или <code>LONG</code>.</p>
                 <h3>Округление вниз</h3>
                 <p><code>INT</code> округляет именно вниз, а не к нулю. Поэтому <code>INT(3.9)</code> даёт <code>3</code>, а <code>INT(-3.9)</code> даёт <code>-4</code>. Если итоговое значение не помещается в диапазон <code>INTEGER</code>, выполнение завершается диагностикой переполнения.</p>
                 <h3>Пример округления вниз</h3>
-                <pre><code class="language-basic">' Округление вниз для положительных и отрицательных значений
+                <pre><code class="language-axiom">' Округление вниз для положительных и отрицательных значений
 PRINT INT(7.8)
 PRINT INT(-7.8)</code></pre>
                 <p>Результат:</p>
@@ -55,12 +55,12 @@ PRINT INT(-7.8)</code></pre>
                 <h2>STR</h2>
                 <p>Функция <code>STR</code> преобразует число в строку.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">text = STR(value)</code></pre>
+                <pre><code class="language-axiom">text = STR(value)</code></pre>
                 <h3>Аргументы</h3><p><code>value</code> задаёт числовое выражение любого поддерживаемого числового типа. Результат имеет тип <code>STRING</code>.</p>
                 <h3>Текстовое представление числа</h3>
                 <p><code>STR</code> удобна, когда числовое значение нужно объединить с другим текстом, записать в файл или показать через <code>PRINT</code> как часть более длинной строки. Для обратного преобразования используется <code>VAL</code>.</p>
                 <h3>Пример STR</h3>
-                <pre><code class="language-basic">' Преобразование числа в строку перед объединением
+                <pre><code class="language-axiom">' Преобразование числа в строку перед объединением
 DIM amount AS DOUBLE
 
 amount = 12.5
@@ -73,7 +73,7 @@ PRINT "Сумма: " + STR(amount)</code></pre>
                 <h2>VAL</h2>
                 <p>Функция <code>VAL</code> читает число из строки и возвращает результат в типе <code>DOUBLE</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = VAL(text)</code></pre>
+                <pre><code class="language-axiom">result = VAL(text)</code></pre>
                 <h3>Аргументы</h3><p><code>text</code> задаёт строку, которую нужно интерпретировать как число.</p>
                 <h3>Некорректный текст</h3>
                 <p>Если строка не содержит корректного числового представления, <code>VAL</code> возвращает <code>0</code>. Поэтому при чтении пользовательского ввода удобно заранее понимать, допускается ли такое значение как осмысленный результат, или дополнительно проверять исходный текст.</p>
@@ -89,7 +89,7 @@ PRINT "Сумма: " + STR(amount)</code></pre>
                 <li>если число стоит в начале строки, а дальше следует текст, числовая часть читается: <code>VAL("12abc")</code> даёт <code>12</code>.</li>
                 </ul>
                 <h3>Пример чтения числа из строки</h3>
-                <pre><code class="language-basic">' Преобразование строкового значения в число
+                <pre><code class="language-axiom">' Преобразование строкового значения в число
 DIM text AS STRING
 
 text = "125.75"
@@ -102,10 +102,10 @@ PRINT VAL(text) + 10</code></pre>
                 <h2>CINT, CLNG, CDBL и CDEC</h2>
                 <p>Функции <code>CINT</code>, <code>CLNG</code>, <code>CDBL</code> и <code>CDEC</code> явно преобразуют числовое значение к целевому типу: <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code> и <code>DECIMAL</code>. Явные сужающие присваивания в языке запрещены, поэтому эти функции — законная дверь для сужения.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = CINT(value)</code></pre>
-<pre><code class="language-basic">result = CLNG(value)</code></pre>
-<pre><code class="language-basic">result = CDBL(value)</code></pre>
-<pre><code class="language-basic">result = CDEC(value)</code></pre>
+                <pre><code class="language-axiom">result = CINT(value)</code></pre>
+<pre><code class="language-axiom">result = CLNG(value)</code></pre>
+<pre><code class="language-axiom">result = CDBL(value)</code></pre>
+<pre><code class="language-axiom">result = CDEC(value)</code></pre>
                 <h3>Аргументы</h3><p>Аргумент <code>value</code> задаёт числовое значение любого числового типа.</p>
                 <h3>Правила преобразования</h3>
                 <ul>
@@ -119,7 +119,7 @@ PRINT VAL(text) + 10</code></pre>
                 <h3>Явный переход из DECIMAL в DOUBLE</h3>
                 <p>CDBL — встроенная функция языка Axiom, которая возвращает DOUBLE для числового аргумента. Она работает в BytecodeVm без экранного или файлового режима. Аргумент может иметь тип INTEGER, LONG, DOUBLE или DECIMAL. Преобразование не меняет исходную переменную, но может уменьшить точность результата.</p>
                 <p>MIN, MAX и CLAMP не принимают DECIMAL вместе с DOUBLE без явного преобразования. Если для расчёта выбрана двоичная арифметика, используйте CDBL для десятичного аргумента. Весь диапазон конечных значений DECIMAL помещается в диапазон DOUBLE; это не означает сохранения всех значащих цифр. Неверный нечисловой аргумент отклоняется при проверке типов.</p>
-                <pre><code class="language-basic">DIM exact AS DECIMAL = CDEC(CLNG(9007199254740993))
+                <pre><code class="language-axiom">DIM exact AS DECIMAL = CDEC(CLNG(9007199254740993))
 ' DOUBLE округляет это целое до соседнего представимого значения.
 PRINT CLNG(CDBL(exact))  ' 9007199254740992
 ' Исходное десятичное значение осталось точным.
@@ -127,7 +127,7 @@ PRINT exact = CDEC(CLNG(9007199254740993))  ' TRUE
 PRINT MIN(CDBL(CDEC(2)), 3.0)  ' 2</code></pre>
                 <p>Запускаемый пример: <a href="../../samples/functions/cdbl/decimal_precision.axm">Десятичное значение и точность DOUBLE</a>.</p>
                 <h3>Пример явного сужения</h3>
-                <pre><code class="language-basic">' LONG в INTEGER через явное преобразование
+                <pre><code class="language-axiom">' LONG в INTEGER через явное преобразование
 DIM big AS LONG
 DIM small AS INTEGER
 big = 42
@@ -135,7 +135,7 @@ small = CINT(big)
 PRINT small</code></pre>
                 <h3>Обработка ошибки CINT</h3>
                 <p>Диагностику <code>MB3008</code> функции <code>CINT</code> можно обработать в блоке <code>CATCH</code>. Блок <code>FINALLY</code> выполняется после ошибки, а после завершения оператора <code>TRY</code> программа продолжает работу.</p>
-                <pre><code class="language-basic">TRY
+                <pre><code class="language-axiom">TRY
     ' Число выходит за диапазон INTEGER.
     PRINT CINT(2147483648.0)
 CATCH err
@@ -152,7 +152,7 @@ END TRY</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Ручная проверка</h2>
+                <h2>Запускаемые примеры</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/functions/int/basic_usage.axm">INT: округление вниз</a></li>
                     <li><a href="../../samples/functions/int/overflow_error.axm">INT: переполнение результата</a></li>

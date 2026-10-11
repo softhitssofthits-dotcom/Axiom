@@ -30,27 +30,27 @@
             </nav>
             <p class="eyebrow">Функция</p>
             <h1 class="page-title">Функция FUNCTION</h1>
-            <p class="lead">Функция <code>FUNCTION</code> описывает именованное вычисление. Она принимает параметры, выполняет инструкции и возвращает одно значение заданного типа. Поэтому функцию можно использовать в выражении: напечатать результат, присвоить его переменной, передать дальше или проверить в условии.</p>
+            <p class="lead"><code>FUNCTION</code> — оператор языка Axiom, который объявляет именованную функцию. Она принимает параметры, выполняет инструкции и возвращает одно значение заданного типа. Поэтому функцию можно использовать в выражении: напечатать результат, присвоить его переменной, передать дальше или проверить в условии.</p>
 
             <section class="article-section">
                 <h2>Когда нужен вычисляемый результат</h2>
                 <p><code>FUNCTION ... END FUNCTION</code> объявляет функцию. Тип результата указывается после списка параметров через <code>AS</code>. Возврат значения выполняется оператором <code>RETURN &lt;выражение&gt;</code>; если выполнение дошло до конца функции без такого возврата, это ошибка времени выполнения.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Синтаксис</h2>
-                <pre><code class="language-basic">FUNCTION &lt;имя&gt;([&lt;список параметров&gt;]) AS &lt;тип результата&gt;
+                <pre><code class="language-axiom">FUNCTION &lt;имя&gt;([&lt;список параметров&gt;]) AS &lt;тип результата&gt;
     &lt;инструкции&gt;
     RETURN &lt;выражение&gt;
 END FUNCTION</code></pre>
-                <pre><code class="language-basic">&lt;имя&gt;([&lt;список аргументов&gt;])</code></pre>
-                <pre><code class="language-basic">DIM &lt;переменная&gt; AS FUNCTION([&lt;типы параметров&gt;]) AS &lt;тип результата&gt;
+                <pre><code class="language-axiom">&lt;имя&gt;([&lt;список аргументов&gt;])</code></pre>
+                <pre><code class="language-axiom">DIM &lt;переменная&gt; AS FUNCTION([&lt;типы параметров&gt;]) AS &lt;тип результата&gt;
 &lt;переменная&gt; = &lt;имя функции&gt;</code></pre>
-                <pre><code class="language-basic">[BYVAL | BYREF] &lt;имя параметра&gt; AS &lt;тип параметра&gt;</code></pre>
+                <pre><code class="language-axiom">[BYVAL | BYREF] &lt;имя параметра&gt; AS &lt;тип параметра&gt;</code></pre>
             </section>
 
-            <section class="article-section">
-                <h2>Части записи</h2>
+        <section class="article-section">
+                <h2>Параметры и части синтаксиса</h2>
                 <p><code>&lt;имя&gt;</code> - имя объявляемой функции или имя функции при вызове.</p>
                 <p><code>&lt;список параметров&gt;</code> - объявления параметров через запятую. Каждый параметр имеет тип; <code>BYVAL</code> действует по умолчанию.</p>
                 <p><code>BYVAL</code> и <code>BYREF</code> - модификаторы параметра. Они не являются операторами и не возвращают значение; они только задают, получит функция копию значения или связь с исходной переменной.</p>
@@ -59,12 +59,12 @@ END FUNCTION</code></pre>
                 <p><code>&lt;типы параметров&gt;</code> в функциональном типе перечисляют только типы, без имён параметров.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Где работает функция FUNCTION</h2>
                 <p>Объявление <code>FUNCTION</code> допустимо в любом контексте программы: на верхнем уровне, внутри процедуры <code>SUB</code> или другой функции. Функция не зависит от графического режима <code>SCREEN</code> и может работать в текстовом, графическом и консольном режимах одинаково.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>RETURN и тип результата</h2>
                 <ul>
                     <li>Функция возвращает одно значение и может быть частью выражения.</li>
@@ -76,14 +76,36 @@ END FUNCTION</code></pre>
                     <li>Внутри функции можно объявлять локальные <code>SUB</code> и <code>FUNCTION</code>; локальные функции могут захватывать объявленные раньше внешние имена.</li>
                     <li>Типом параметра или результата может быть обычный тип, массивный тип вроде <code>INTEGER()</code> или функциональный тип. Форма <code>STRING * N</code> в таких местах сейчас не поддерживается.</li>
                 </ul>
-                <blockquote>
-                    <p><em>В QuickBASIC функция <code>FUNCTION</code> была более современной заменой <code>DEF FN</code>, могла участвовать в выражениях и обычно возвращала результат через присваивание имени функции. В Axiom <code>DEF FN</code> не используется, а результат явно возвращается оператором <code>RETURN</code>.</em></p>
-                </blockquote>
+                <p>Функция возвращает результат оператором <code>RETURN</code>. Возвращённое значение используется в выражении вызывающего кода.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
+                <h2>Ограничение: BYREF и значения функций</h2>
+                <p>Функцию с параметром <code>BYREF</code> нельзя передавать как значение функционального типа. Это ограничение существует потому, что <code>BYREF</code> требует простой переменной в месте вызова, а значение функции может быть вызвано из любого контекста, где подходящей переменной может не быть.</p>
+                <pre><code class="language-axiom">SUB Modify(BYREF value AS INTEGER)
+    value = value + 1
+END SUB
+
+' Нельзя: Modify имеет параметр BYREF
+' DIM action AS SUB(INTEGER)
+' action = Modify</code></pre>
+                <p>Функции без параметров <code>BYREF</code> можно свободно использовать как значения, передавать в другие функции и возвращать из функций.</p>
+            </section>
+
+        <section class="article-section">
+                <h2>Диагностика</h2>
+                <p>Ошибка возникает, если функция объявлена без типа результата, если <code>RETURN</code> внутри <code>FUNCTION</code> не возвращает значение, если возвращаемое выражение несовместимо с типом результата, если функция завершается без <code>RETURN</code> со значением или если функция с параметром <code>BYREF</code> используется как функциональное значение.</p>
+                <ul>
+                    <li><code>MB2003</code> — возвращаемое выражение несовместимо с объявленным типом результата.</li>
+                    <li><code>MB2007</code> — внутри <code>FUNCTION</code> записан <code>RETURN</code> без выражения.</li>
+                    <li><code>MB2029</code> — функция с параметром <code>BYREF</code> используется как функциональное значение.</li>
+                    <li><code>MB3006</code> — выполнилась ветвь <code>FUNCTION</code>, которая завершается без <code>RETURN</code> со значением; ошибка времени выполнения.</li>
+                </ul>
+            </section>
+
+        <section class="article-section">
                 <h2>Пример вызова FUNCTION</h2>
-                <pre><code class="language-basic">' Ожидаемый вывод: 25
+                <pre><code class="language-axiom">' Ожидаемый вывод: 25
 FUNCTION Square(value AS INTEGER) AS INTEGER
     RETURN value * value
 END FUNCTION
@@ -91,8 +113,8 @@ END FUNCTION
 PRINT Square(5)</code></pre>
             </section>
 
-            <section class="article-section">
-                <h2>Ручная проверка</h2>
+        <section class="article-section">
+                <h2>Запускаемые примеры</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/operators/function/basic_definition.axm">FUNCTION: базовое объявление и вызов</a></li>
                     <li><a href="../../samples/operators/function/local_nested_call.axm">FUNCTION: локальная вложенная функция</a></li>
@@ -104,31 +126,7 @@ PRINT Square(5)</code></pre>
                 </ul>
             </section>
 
-            <section class="article-section">
-                <h2>Ограничение: BYREF и значения функций</h2>
-                <p>Функцию с параметром <code>BYREF</code> нельзя передавать как значение функционального типа. Это ограничение существует потому, что <code>BYREF</code> требует простой переменной в месте вызова, а значение функции может быть вызвано из любого контекста, где подходящей переменной может не быть.</p>
-                <pre><code class="language-basic">SUB Modify(BYREF value AS INTEGER)
-    value = value + 1
-END SUB
-
-' Нельзя: Modify имеет параметр BYREF
-' DIM action AS SUB(INTEGER)
-' action = Modify</code></pre>
-                <p>Функции без параметров <code>BYREF</code> можно свободно использовать как значения, передавать в другие функции и возвращать из функций.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Диагностика</h2>
-                <p>Ошибка возникает, если функция объявлена без типа результата, если <code>RETURN</code> внутри <code>FUNCTION</code> не возвращает значение, если возвращаемое выражение несовместимо с типом результата, если функция завершается без <code>RETURN</code> со значением или если функция с параметром <code>BYREF</code> используется как функциональное значение.</p>
-                <ul>
-                    <li><code>MB2003</code> — возвращаемое выражение несовместимо с объявленным типом результата.</li>
-                    <li><code>MB2007</code> — внутри <code>FUNCTION</code> записан <code>RETURN</code> без выражения.</li>
-                    <li><code>MB2029</code> — функция с параметром <code>BYREF</code> используется как функциональное значение.</li>
-                    <li><code>MB3006</code> — выполнилась ветвь <code>FUNCTION</code>, которая завершается без <code>RETURN</code> со значением; ошибка времени выполнения.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
+        <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="procedures-and-functions.html">Процедуры и функции</a>

@@ -36,7 +36,7 @@
         <section class="article-section">
             <h2>Вывод типа</h2>
             <p>Если в объявлении <code>DIM</code> не указан тип, Axiom берёт тип из инициализатора. Это удобно для простых локальных значений, но явная форма <code>AS</code> остаётся главным способом записать намерение программы.</p>
-            <pre><code class="language-basic">DIM count = 10
+            <pre><code class="language-axiom">DIM count = 10
 DIM ratio = 1.5
 DIM ready = TRUE
 DIM name = "Алиса"</code></pre>
@@ -95,7 +95,7 @@ DIM name = "Алиса"</code></pre>
         <section class="article-section">
             <h2>Явный DECIMAL</h2>
             <p>Литерал <code>10.50</code> сам по себе имеет тип <code>DOUBLE</code>. Если значение должно участвовать в десятичных расчётах, целевой тип нужно указать явно.</p>
-            <pre><code class="language-basic">DIM price AS DECIMAL = 10.50
+            <pre><code class="language-axiom">DIM price AS DECIMAL = 10.50
 DIM tax AS DECIMAL = 0.20
 DIM total AS DECIMAL = price + tax
 
@@ -107,19 +107,19 @@ PRINT total</code></pre>
         <section class="article-section">
             <h2>VAL</h2>
             <p><code>VAL</code> преобразует строку в число типа <code>DOUBLE</code>. Строка читается в инвариантной числовой форме: десятичная часть отделяется точкой.</p>
-            <pre><code class="language-basic">DIM text AS STRING = "123.5"
+            <pre><code class="language-axiom">DIM text AS STRING = "123.5"
 DIM value AS DOUBLE = VAL(text)
 
 PRINT value / 2</code></pre>
             <p>Результат:</p>
             <pre><code>61.75</code></pre>
-            <p>Если строку нельзя разобрать как конечное число, <code>VAL</code> возвращает <code>0</code>. Это поведение полезно для простых проверок старого BASIC-стиля, но для строгого пользовательского ввода лучше отдельно проверять исходный текст.</p>
+            <p>Если строку нельзя разобрать как конечное число, <code>VAL</code> возвращает <code>0</code>. Для строгой проверки пользовательского ввода необходимо отдельно проверять исходный текст, поскольку нулевой результат не отличает ошибку разбора от числа ноль.</p>
         </section>
 
         <section class="article-section">
             <h2>STR</h2>
             <p><code>STR</code> преобразует число в строку. Результат использует тот же отображаемый вид значения, что и <code>PRINT</code>: целые числа печатаются без дробной части, <code>DOUBLE</code> использует общий числовой формат, а <code>DECIMAL</code> сохраняет десятичную запись.</p>
-            <pre><code class="language-basic">DIM count AS INTEGER = 42
+            <pre><code class="language-axiom">DIM count AS INTEGER = 42
 DIM price AS DECIMAL = 10.30
 
 PRINT "Count = " + STR(count)
@@ -132,7 +132,7 @@ Price = 10.30</code></pre>
         <section class="article-section">
             <h2>Особое правило деления</h2>
             <p>Оператор <code>/</code> возвращает <code>DECIMAL</code>, если в выражении участвует <code>DECIMAL</code> и не участвует <code>DOUBLE</code>. Во всех остальных числовых случаях результат обычного деления имеет тип <code>DOUBLE</code>.</p>
-            <pre><code class="language-basic">DIM price AS DECIMAL = 10.50
+            <pre><code class="language-axiom">DIM price AS DECIMAL = 10.50
 PRINT price / 2
 PRINT 7 / 2</code></pre>
             <p>Результат:</p>
@@ -141,7 +141,7 @@ PRINT 7 / 2</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Что не преобразуется автоматически</h2>
+            <h2>Запрещённые неявные преобразования</h2>
             <ul>
                 <li><code>STRING</code> не становится числом без <code>VAL</code>.</li>
                 <li>Число не становится строкой для оператора <code>+</code>; используйте <code>STR</code> или оператор <code>&amp;</code>.</li>
@@ -152,14 +152,12 @@ PRINT 7 / 2</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Отличия, важные при чтении старых BASIC-материалов</h2>
-            <blockquote>
-                <p>В Axiom встроенные функции <code>CINT</code>, <code>CLNG</code>, <code>CDBL</code> и <code>CDEC</code> выполняют явные числовые преобразования. Их аргументы и правила описаны на странице <a href="numeric-functions-conversion-and-legacy.html">числовых функций преобразования</a>. Для преобразования строки в <code>DOUBLE</code> используется функция <code>VAL</code>, а для получения строки из значения — функция <code>STR</code>.</p>
-            </blockquote>
+            <h2>Дополнительные правила типов</h2>
+            <p>В Axiom встроенные функции <code>CINT</code>, <code>CLNG</code>, <code>CDBL</code> и <code>CDEC</code> выполняют явные числовые преобразования. Их аргументы и правила описаны на странице <a href="numeric-functions-conversion-and-legacy.html">числовых функций преобразования</a>. Для преобразования строки в <code>DOUBLE</code> используется функция <code>VAL</code>, а для получения строки из значения — функция <code>STR</code>.</p>
         </section>
 
         <section class="article-section">
-            <h2>Ручная проверка</h2>
+            <h2>Запускаемые примеры</h2>
             <p>Эти программы можно открыть в <code>Axiom.Ide</code> и использовать как короткие проверки вывода типа, десятичных объявлений и строко-числовых переходов.</p>
             <ul class="resource-list">
                 <li><a href="../../samples/operators/dim/inferred_type_from_initializer.axm">DIM: вывод типа из инициализатора</a></li>

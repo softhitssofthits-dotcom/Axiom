@@ -30,7 +30,7 @@
                 <h2>DATESERIAL</h2>
                 <p>Функция <code>DATESERIAL</code> строит значение типа <code>DATE</code> из года, месяца и дня.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = DATESERIAL(year, month, day)</code></pre>
+                <pre><code class="language-axiom">result = DATESERIAL(year, month, day)</code></pre>
                 <h3>Аргументы</h3><p><code>year</code>, <code>month</code> и <code>day</code> задают числовые компоненты даты. Результат имеет тип <code>DATE</code> и при выводе записывается в формате <code>yyyy-MM-dd</code>. Год задаётся целым числом от 1 до 9999, месяц — от 1 до 12, день — от 1 до числа дней выбранного месяца. Годы от 1 до 99 обозначают именно эти годы, без преобразования в двадцатый или двадцать первый век.</p>
                 <h3>Проверка реальной календарной даты</h3>
                 <p>Компоненты должны образовывать реальную календарную дату. Автоматического переноса переполненных значений вроде тринадцатого месяца здесь нет.</p>
@@ -40,7 +40,7 @@
                 <h2>TIMESERIAL</h2>
                 <p>Функция <code>TIMESERIAL</code> строит значение типа <code>TIME</code> из часов, минут и секунд.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = TIMESERIAL(hour, minute, second)</code></pre>
+                <pre><code class="language-axiom">result = TIMESERIAL(hour, minute, second)</code></pre>
                 <h3>Аргументы</h3><p><code>hour</code>, <code>minute</code> и <code>second</code> задают числовые компоненты времени. Результат имеет тип <code>TIME</code> и при выводе записывается в формате <code>HH:mm:ss</code>. Часы задаются целым числом от 0 до 23, минуты и секунды — от 0 до 59. Функция TIMESERIAL не переносит переполнение: например, 60 секунд вызывают диагностику <code>MB3007</code>.</p>
             </section>
 
@@ -48,7 +48,7 @@
                 <h2>YEAR, MONTH, DAY</h2>
                 <p>Эти функции извлекают из канонической даты или даты-времени год, номер месяца и номер дня.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = YEAR(value)
+                <pre><code class="language-axiom">result = YEAR(value)
 result = MONTH(value)
 result = DAY(value)</code></pre>
                 <h3>Аргументы</h3><p><code>value</code> задаёт строку даты или даты-времени в каноническом формате. Результат каждой функции имеет тип <code>INTEGER</code>.</p>
@@ -58,7 +58,7 @@ result = DAY(value)</code></pre>
                 <h2>HOUR, MINUTE, SECOND</h2>
                 <p>Эти функции извлекают из канонического времени или даты-времени часы, минуты и секунды.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = HOUR(value)
+                <pre><code class="language-axiom">result = HOUR(value)
 result = MINUTE(value)
 result = SECOND(value)</code></pre>
             </section>
@@ -67,7 +67,7 @@ result = SECOND(value)</code></pre>
                 <h2>WEEKDAY и WEEKDAYNAME</h2>
                 <p><code>WEEKDAY</code> возвращает номер дня недели, а <code>WEEKDAYNAME</code> его полное английское имя.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = WEEKDAY(value)
+                <pre><code class="language-axiom">result = WEEKDAY(value)
 result = WEEKDAYNAME(weekday)</code></pre>
                 <h3>Аргументы</h3><p>Для <code>WEEKDAY</code> аргумент <code>value</code> задаёт строку даты или даты-времени. Функция возвращает номер по схеме <code>1 = Monday</code>, <code>7 = Sunday</code>. Для <code>WEEKDAYNAME</code> аргумент <code>weekday</code> задаёт номер дня недели.</p>
             </section>
@@ -76,14 +76,14 @@ result = WEEKDAYNAME(weekday)</code></pre>
                 <h2>MONTHNAME</h2>
                 <p>Функция <code>MONTHNAME</code> возвращает полное английское имя месяца по его номеру.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = MONTHNAME(month)</code></pre>
+                <pre><code class="language-axiom">result = MONTHNAME(month)</code></pre>
             </section>
 
             <section class="article-section" id="calendar-helpers">
                 <h2>ISLEAPYEAR, DAYSINMONTH, STARTOFMONTH, ENDOFMONTH, STARTOFYEAR, ENDOFYEAR</h2>
                 <p>Эти функции проверяют свойства календаря и возвращают границы месяца или года.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = ISLEAPYEAR(year)
+                <pre><code class="language-axiom">result = ISLEAPYEAR(year)
 result = DAYSINMONTH(year, month)
 result = STARTOFMONTH(value)
 result = ENDOFMONTH(value)
@@ -91,7 +91,7 @@ result = STARTOFYEAR(value)
 result = ENDOFYEAR(value)</code></pre>
                 <h3>Аргументы</h3><p><code>ISLEAPYEAR</code> возвращает <code>BOOLEAN</code>, <code>DAYSINMONTH</code> возвращает <code>INTEGER</code>, а функции начала и конца месяца или года возвращают значение типа <code>DATE</code>, которое при выводе записывается в формате <code>yyyy-MM-dd</code>.</p>
                 <h3>Пример сборки и чтения даты</h3>
-                <pre><code class="language-basic">' Сборка даты и работа с календарными частями
+                <pre><code class="language-axiom">' Сборка даты и работа с календарными частями
 PRINT DATESERIAL(2026, 4, 20)
 PRINT YEAR("2026-04-20 14:05:06")
 PRINT MONTHNAME(4)
@@ -109,7 +109,7 @@ PRINT ENDOFMONTH("2024-02-11")</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Ручная проверка</h2>
+                <h2>Запускаемые примеры</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/functions/dateserial/basic_usage.axm">DATESERIAL: построение даты</a></li>
                     <li><a href="../../samples/functions/timeserial/basic_usage.axm">TIMESERIAL: построение времени</a></li>

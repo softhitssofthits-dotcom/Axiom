@@ -33,22 +33,22 @@
             <p class="lead">Раздел срезов и представлений описывает выбор диапазона индексов без ручного копирования элементов — через <code>TO</code> в индексировании или функцию <code>ARRAYSLICE</code>.</p>
 
             <section class="article-section">
-                <h2>Как срез связан с исходным массивом</h2>
+                <h2>Связь среза с исходным массивом</h2>
                 <p>Обычный срез является представлением: он смотрит на выбранную часть исходного массива. Если изменить элемент через представление, меняется тот же элемент исходного массива. Это удобно для строк, столбцов и прямоугольных областей, но важно помнить, что представление не является независимой копией.</p>
             </section>
 
             <section class="article-section">
                 <h2>Синтаксис</h2>
-                <pre><code class="language-basic"><представление> = <массив>(<начало> TO <конец>)
-<представление> = <массив>(<строка>, <начало> TO <конец>)
-<представление> = <массив>(<начало строки> TO <конец строки>, <начало столбца> TO <конец столбца>)
+                <pre><code class="language-axiom">&lt;представление&gt; = &lt;массив&gt;(&lt;начало&gt; TO &lt;конец&gt;)
+&lt;представление&gt; = &lt;массив&gt;(&lt;строка&gt;, &lt;начало&gt; TO &lt;конец&gt;)
+&lt;представление&gt; = &lt;массив&gt;(&lt;начало строки&gt; TO &lt;конец строки&gt;, &lt;начало столбца&gt; TO &lt;конец столбца&gt;)
 
-<часть> = ARRAYSLICE(<массив>, <начальный индекс>, <количество>)
-<часть> = ARRAYSLICE(<массив>, <начальный индекс>, <количество>, <измерение>)</code></pre>
+&lt;часть&gt; = ARRAYSLICE(&lt;массив&gt;, &lt;начальный индекс&gt;, &lt;количество&gt;)
+&lt;часть&gt; = ARRAYSLICE(&lt;массив&gt;, &lt;начальный индекс&gt;, &lt;количество&gt;, &lt;измерение&gt;)</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Части записи</h2>
+                <h2>Параметры и части синтаксиса</h2>
                 <ul>
                     <li><code>&lt;начало&gt; TO &lt;конец&gt;</code> - включительный диапазон индексов в форме индексирования.</li>
                     <li><code>&lt;строка&gt;</code> - фиксированный индекс первого измерения, если выбирается часть одной строки.</li>
@@ -59,7 +59,7 @@
             </section>
 
             <section class="article-section">
-                <h2>Когда использовать срез</h2>
+                <h2>Назначение среза</h2>
                 <ul>
                     <li>Чтобы передать в процедуру только часть массива.</li>
                     <li>Чтобы обработать одну строку, один столбец или прямоугольный блок двумерного массива.</li>
@@ -71,7 +71,7 @@
 
             <section class="article-section">
                 <h2>Пример среза без ручного копирования</h2>
-                <pre><code class="language-basic">' Ожидаемый вывод:
+                <pre><code class="language-axiom">' Ожидаемый вывод:
 ' 20
 ' 99
 DIM board(1 TO 3, 1 TO 4) AS INTEGER
@@ -86,14 +86,14 @@ PRINT rowPart(2)
 
 rowPart(3) = 99
 PRINT board(2, 3)</code></pre>
-                <pre><code class="language-basic">DIM values(1 TO 5) AS INTEGER
+                <pre><code class="language-axiom">DIM values(1 TO 5) AS INTEGER
 DIM part() AS INTEGER
 
 part = ARRAYSLICE(values, 2, 3)</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Ручная проверка</h2>
+                <h2>Запускаемые примеры</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/smoke/multidimensional-arrays/range_indexing_view.axm">Представление на прямоугольный диапазон</a></li>
                     <li><a href="../../samples/smoke/multidimensional-arrays/partial_indexing_view.axm">Представление на часть строки</a></li>

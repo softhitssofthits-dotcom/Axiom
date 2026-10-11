@@ -42,12 +42,12 @@
 
         <section class="article-section">
             <h2>Синтаксис</h2>
-<pre><code class="language-basic">ON KEY(keyText), HandlerName
+<pre><code class="language-axiom">ON KEY(keyText), HandlerName
 ON KEY(keyText), ON
 ON KEY(keyText), STOP
 ON KEY(keyText), OFF</code></pre>
             <p>Процедура-обработчик может быть объявлена без параметров или с одним параметром <code>STRING</code>:</p>
-<pre><code class="language-basic">SUB HandlerName()
+<pre><code class="language-axiom">SUB HandlerName()
 END SUB
 
 SUB HandlerName(keyName AS STRING)
@@ -55,7 +55,7 @@ END SUB</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Части записи</h2>
+            <h2>Параметры и части синтаксиса</h2>
             <p><code>keyText</code> и <code>HandlerName</code> в синтаксисе — метапеременные, то есть обозначения частей записи. В реальной программе вместо <code>HandlerName</code> пишут имя своей процедуры <code>SUB</code>, например <code>HandleLeft</code>. Слова <code>ON</code>, <code>STOP</code> и <code>OFF</code> в этих формах — режимы оператора <code>ON KEY</code>, а не отдельные операторы программы.</p>
             <ul>
                 <li><code>keyText</code> — строковое выражение с именем клавиши, например <code>"LEFT"</code>, <code>"ESCAPE"</code> или <code>"A"</code>. Канонические имена и алиасы перечислены в <a href="keydown.html#key-names">общей таблице имён клавиш</a>. Специальная строка <code>"ANY"</code> задаёт обработчик любой клавиши.</li>
@@ -84,22 +84,8 @@ END SUB</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Пример обработчика клавиши</h2>
-<pre><code class="language-basic">ON KEY("LEFT"), HandleLeft
-
-FOR i = 1 TO 200000
-NEXT
-
-ON KEY("LEFT"), OFF
-
-SUB HandleLeft()
-    PRINT "LEFT handler"
-END SUB</code></pre>
-        </section>
-
-        <section class="article-section">
             <h2>Обработчик любой клавиши</h2>
-<pre><code class="language-basic">ON KEY("ANY"), HandleAny
+<pre><code class="language-axiom">ON KEY("ANY"), HandleAny
 
 FOR i = 1 TO 200000
 NEXT
@@ -113,7 +99,7 @@ END SUB</code></pre>
 
         <section class="article-section">
             <h2>Имя клавиши в обработчике</h2>
-<pre><code class="language-basic">ON KEY("ANY"), HandleKey
+<pre><code class="language-axiom">ON KEY("ANY"), HandleKey
 
 FOR i = 1 TO 200000
 NEXT
@@ -129,7 +115,7 @@ END SUB</code></pre>
             <h2>Аккорд клавиш</h2>
             <p>В строке <code>keyText</code> можно указать несколько клавиш через <code>+</code>. Последняя часть строки считается основной клавишей события, а все предыдущие части должны быть удержаны.</p>
             <p>Проще говоря, <code>ON KEY("CTRL+LEFT"), Handler</code> сработает, когда <code>CTRL</code> уже удержан, а событием пришла последняя клавиша <code>LEFT</code>. Это тот же договор, что у <code>KEYPRESS("CTRL+LEFT")</code>.</p>
-<pre><code class="language-basic">ON KEY("CTRL+LEFT"), HandleChord
+<pre><code class="language-axiom">ON KEY("CTRL+LEFT"), HandleChord
 
 FOR i = 1 TO 200000
 NEXT
@@ -144,7 +130,7 @@ END SUB</code></pre>
 
         <section class="article-section">
             <h2>Отключение обработчика</h2>
-<pre><code class="language-basic">ON KEY("ESC"), HandleEsc
+<pre><code class="language-axiom">ON KEY("ESC"), HandleEsc
 ' ...
 ON KEY("ESC"), OFF</code></pre>
         </section>
@@ -152,7 +138,7 @@ ON KEY("ESC"), OFF</code></pre>
         <section class="article-section">
             <h2>Пауза и возобновление</h2>
             <p>Оператор <code>STOP</code> временно выключает уже зарегистрированный обработчик, но не забывает его. Оператор <code>ON</code> снова разрешает вызов этого же обработчика.</p>
-<pre><code class="language-basic">ON KEY("LEFT"), HandleLeft
+<pre><code class="language-axiom">ON KEY("LEFT"), HandleLeft
 ON KEY("LEFT"), STOP
 
 ' Нажатие LEFT не вызовет HandleLeft,
@@ -164,15 +150,29 @@ ON KEY("LEFT"), ON
         </section>
 
         <section class="article-section">
-            <h2>Ручная проверка</h2>
-            <ul class="resource-list"><li><a href="../../samples/operators/on-key/left_handler.axm">ON KEY: обработчик клавиши LEFT</a></li><li><a href="../../samples/operators/on-key/any_key_handler.axm">ON KEY: обработчик любой клавиши</a></li><li><a href="../../samples/operators/on-key/handler_key_name.axm">ON KEY: передача имени клавиши в обработчик</a></li><li><a href="../../samples/operators/on-key/chord_handler.axm">ON KEY: обработчик аккорда клавиш</a></li><li><a href="../../samples/operators/on-key/stop_resume_handler.axm">ON KEY: пауза и возобновление обработчика</a></li></ul>
-        </section>
-
-        <section class="article-section">
             <h2>Диагностика</h2>
             <ul>
                 <li><code>MB2034</code>: в обработчик оператора <code>ON KEY</code> передана не процедура <code>SUB</code> без параметров или с одним параметром <code>STRING</code>.</li>
             </ul>
+        </section>
+
+        <section class="article-section">
+            <h2>Пример обработчика клавиши</h2>
+<pre><code class="language-axiom">ON KEY("LEFT"), HandleLeft
+
+FOR i = 1 TO 200000
+NEXT
+
+ON KEY("LEFT"), OFF
+
+SUB HandleLeft()
+    PRINT "LEFT handler"
+END SUB</code></pre>
+        </section>
+
+        <section class="article-section">
+            <h2>Запускаемые примеры</h2>
+            <ul class="resource-list"><li><a href="../../samples/operators/on-key/left_handler.axm">ON KEY: обработчик клавиши LEFT</a></li><li><a href="../../samples/operators/on-key/any_key_handler.axm">ON KEY: обработчик любой клавиши</a></li><li><a href="../../samples/operators/on-key/handler_key_name.axm">ON KEY: передача имени клавиши в обработчик</a></li><li><a href="../../samples/operators/on-key/chord_handler.axm">ON KEY: обработчик аккорда клавиш</a></li><li><a href="../../samples/operators/on-key/stop_resume_handler.axm">ON KEY: пауза и возобновление обработчика</a></li></ul>
         </section>
 
         <section class="article-section">

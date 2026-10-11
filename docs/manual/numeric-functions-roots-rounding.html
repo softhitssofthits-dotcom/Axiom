@@ -38,12 +38,12 @@
                 <h2>SQR</h2>
                 <p><code>SQR</code> — встроенная функция языка Axiom, которая возвращает квадратный корень числа. Функция работает в любом режиме программы без предварительного вызова оператора SCREEN.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = SQR(value)</code></pre>
+                <pre><code class="language-axiom">result = SQR(value)</code></pre>
                 <h3>Аргументы</h3><p><code>value</code> должен быть неотрицательным числом. Результат имеет тип <code>DOUBLE</code>.</p>
             <h3>Промежуточные вычисления и расстояние</h3>
 <p>Функция SQR получает результат своего аргумента уже после вычисления выражения. Поэтому формула <code>SQR(x*x + y*y)</code> может завершиться диагностикой MB3008 при умножении, даже если само расстояние помещается в DOUBLE. Для очень малых координат оба квадрата могут округлиться до нуля, и прямое выражение вернёт 0.</p>
 <p>Для конечных координат риск промежуточного переполнения можно уменьшить масштабированием: сначала разделить координаты на большую из их абсолютных величин, вычислить корень, затем вернуть масштаб. Для нулевого вектора нужно отдельно вернуть 0 до деления.</p>
-<pre><code class="language-basic">FUNCTION StableDistance(x AS DOUBLE, y AS DOUBLE) AS DOUBLE
+<pre><code class="language-axiom">FUNCTION StableDistance(x AS DOUBLE, y AS DOUBLE) AS DOUBLE
     DIM scale AS DOUBLE = MAX(ABS(x), ABS(y))
     IF scale = 0 THEN
         RETURN 0
@@ -65,21 +65,21 @@ PRINT StableDistance(VAL("3e-200"), VAL("4e-200"))</code></pre>
                 <h2>CBRT</h2>
                 <p>Функция <code>CBRT</code> возвращает кубический корень числа.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = CBRT(value)</code></pre>
+                <pre><code class="language-axiom">result = CBRT(value)</code></pre>
             </section>
 
             <section class="article-section" id="exp">
                 <h2>EXP</h2>
                 <p>Функция <code>EXP</code> вычисляет число <code>e</code> в заданной степени.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = EXP(value)</code></pre>
+                <pre><code class="language-axiom">result = EXP(value)</code></pre>
             </section>
 
             <section class="article-section" id="log">
                 <h2>LOG</h2>
                 <p>Функция <code>LOG</code> возвращает натуральный логарифм числа.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = LOG(value)</code></pre>
+                <pre><code class="language-axiom">result = LOG(value)</code></pre>
                 <h3>Аргументы</h3><p><code>value</code> должен быть строго больше нуля.</p>
             </section>
 
@@ -87,7 +87,7 @@ PRINT StableDistance(VAL("3e-200"), VAL("4e-200"))</code></pre>
                 <h2>LOG10</h2>
                 <p>Функция <code>LOG10</code> возвращает десятичный логарифм числа.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = LOG10(value)</code></pre>
+                <pre><code class="language-axiom">result = LOG10(value)</code></pre>
                 <h3>Аргументы</h3><p><code>value</code> должен быть строго больше нуля.</p>
             </section>
 
@@ -95,7 +95,7 @@ PRINT StableDistance(VAL("3e-200"), VAL("4e-200"))</code></pre>
                 <h2>LOG2</h2>
                 <p>Функция <code>LOG2</code> возвращает двоичный логарифм числа.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = LOG2(value)</code></pre>
+                <pre><code class="language-axiom">result = LOG2(value)</code></pre>
                 <h3>Аргументы</h3><p><code>value</code> должен быть строго больше нуля.</p>
             </section>
 
@@ -103,13 +103,13 @@ PRINT StableDistance(VAL("3e-200"), VAL("4e-200"))</code></pre>
                 <h2>POW</h2>
                 <p><code>POW</code> — встроенная функция языка Axiom, которая возводит число в степень и возвращает результат типа <code>DOUBLE</code>. Встроенная функция работает без графического режима.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = POW(value, power)</code></pre>
+                <pre><code class="language-axiom">result = POW(value, power)</code></pre>
                 <h3>Аргументы</h3><p><code>value</code> задаёт основание степени, а <code>power</code> показатель степени.</p>
                 <h3>Точность результата</h3>
                 <p>По принятому договору вычисление <code>POW</code> выполняется готовой функцией <code>System.Math.Pow</code>: конечный результат совпадает с результатом .NET в той же среде, включая округление и знак нуля. Axiom сохраняет собственные сообщения об ошибках: результат <code>NaN</code> преобразуется в <code>MB3007</code>, а бесконечность — в <code>MB3008</code>. Возврат этих особых значений вместо ошибки не поддерживается.</p>
                 <p>Оба движка преобразуют числовые аргументы в <code>DOUBLE</code> и вычисляют степень через <code>Math.Pow</code> среды .NET. Результат является приближённым: текущая реализация не обеспечивает математически правильное округление каждой степени к ближайшему значению <code>DOUBLE</code>. Последние разряды могут зависеть от операционной системы и архитектуры.</p>
                 <p>Например, точное значение <code>POW(2, -1075)</code> находится посередине между нулём и минимальным положительным <code>DOUBLE</code>. На проверенной Windows среда .NET возвращает <code>5E-324</code>; это наблюдение конкретной среды, а не переносимая гарантия результата. Если программе требуется правильно округлённая степень на всех границах, встроенная функция <code>POW</code> текущей реализации не подтверждает такое требование.</p>
-                <pre><code class="language-basic">' Наблюдаем результат конкретной среды на границе DOUBLE
+                <pre><code class="language-axiom">' Наблюдаем результат конкретной среды на границе DOUBLE
 PRINT POW(2, -1074)
 PRINT POW(2, -1075)
 PRINT POW(2, -1076)</code></pre>
@@ -117,7 +117,7 @@ PRINT POW(2, -1076)</code></pre>
                 <h3>Диагностика</h3>
                 <p>При отрицательном основании и нецелой степени встроенная функция сообщает <code>MB3007</code>. Если вычисление даёт бесконечный результат, функция сообщает <code>MB3008</code>. Уход слишком малого результата к нулю не вызывает диагностику.</p>
                 <h3>Пример корней и степеней</h3>
-                <pre><code class="language-basic">' Степень, логарифм и квадратный корень
+                <pre><code class="language-axiom">' Степень, логарифм и квадратный корень
 PRINT POW(2, 8)
 PRINT LOG10(1000)
 PRINT SQR(81)</code></pre>
@@ -131,21 +131,21 @@ PRINT SQR(81)</code></pre>
                 <h2>FLOOR</h2>
                 <p>Функция <code>FLOOR</code> округляет число вниз и сохраняет числовой тип аргумента.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = FLOOR(value)</code></pre>
+                <pre><code class="language-axiom">result = FLOOR(value)</code></pre>
             </section>
 
             <section class="article-section" id="ceil">
                 <h2>CEIL</h2>
                 <p>Функция <code>CEIL</code> округляет число вверх и сохраняет числовой тип аргумента.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = CEIL(value)</code></pre>
+                <pre><code class="language-axiom">result = CEIL(value)</code></pre>
             </section>
 
             <section class="article-section" id="round">
                 <h2>ROUND</h2>
                 <p>Функция <code>ROUND</code> округляет число к ближайшему целому и сохраняет числовой тип аргумента.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = ROUND(value)</code></pre>
+                <pre><code class="language-axiom">result = ROUND(value)</code></pre>
                 <h3>Округление и отбрасывание дробной части</h3>
                 <p>В Axiom половины округляются от нуля. Поэтому <code>ROUND(2.5)</code> даёт <code>3</code>, а <code>ROUND(-2.5)</code> даёт <code>-3</code>.</p>
             </section>
@@ -154,9 +154,9 @@ PRINT SQR(81)</code></pre>
                 <h2>FIX</h2>
                 <p>Функция <code>FIX</code> отбрасывает дробную часть числа по направлению к нулю и сохраняет числовой тип аргумента.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-basic">result = FIX(value)</code></pre>
+                <pre><code class="language-axiom">result = FIX(value)</code></pre>
                 <h3>Пример округления чисел</h3>
-                <pre><code class="language-basic">' Разница между INT, FLOOR, ROUND и FIX
+                <pre><code class="language-axiom">' Разница между INT, FLOOR, ROUND и FIX
 PRINT INT(-3.9)
 PRINT FLOOR(-3.9)
 PRINT ROUND(-3.9)
@@ -174,7 +174,7 @@ PRINT FIX(-3.9)</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Ручная проверка</h2>
+                <h2>Запускаемые примеры</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/functions/sqr/basic_usage.axm">SQR: квадратный корень</a></li>
                     <li><a href="../../samples/functions/sqr/negative_error.axm">SQR: отрицательный аргумент</a></li>

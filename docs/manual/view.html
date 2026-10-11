@@ -30,14 +30,14 @@
                 <p>Оператор <code>VIEW PRINT</code> нужен тогда, когда программе требуется ограничить диапазон строк экранного текста на графическом экране.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Где работает оператор VIEW</h2>
                 <p>Оператор <code>VIEW</code> и оператор <code>VIEW PRINT</code> работают только после выбора графического режима <code>SCREEN 1..10</code>.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Синтаксис оператора VIEW</h2>
-<pre><code class="language-basic">VIEW
+<pre><code class="language-axiom">VIEW
 VIEW SCREEN (left, top)-(right, bottom)
 VIEW SCREEN (left, top)-(right, bottom), fillColor
 VIEW SCREEN (left, top)-(right, bottom), fillColor, borderColor
@@ -46,14 +46,14 @@ VIEW (left, top)-(right, bottom), fillColor
 VIEW (left, top)-(right, bottom), fillColor, borderColor</code></pre>
             </section>
 
-            <section class="article-section">
+        <section class="article-section" id="view-print">
                 <h2>Синтаксис оператора VIEW PRINT</h2>
-<pre><code class="language-basic">VIEW PRINT
+<pre><code class="language-axiom">VIEW PRINT
 VIEW PRINT topRow TO bottomRow</code></pre>
             </section>
 
-            <section class="article-section">
-                <h2>Части записи</h2>
+        <section class="article-section">
+                <h2>Параметры и части синтаксиса</h2>
                 <table>
                     <thead>
                         <tr><th>Часть</th><th>Описание</th></tr>
@@ -68,7 +68,7 @@ VIEW PRINT topRow TO bottomRow</code></pre>
                 </table>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Что делает оператор VIEW</h2>
                 <p>Форма <code>VIEW</code> без аргументов сбрасывает viewport и возвращает рисование ко всему экрану.</p>
                 <p>Форма <code>VIEW SCREEN (...)</code> ограничивает область рисования, но сохраняет координаты как абсолютные экранные координаты.</p>
@@ -76,13 +76,13 @@ VIEW PRINT topRow TO bottomRow</code></pre>
                 <p>Если программа указала цвет заливки, оператор <code>VIEW</code> заполняет внутреннюю область viewport этим цветом. Если программа указала цвет рамки, оператор <code>VIEW</code> рисует рамку viewport.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Что делает оператор VIEW PRINT</h2>
                 <p>Форма <code>VIEW PRINT</code> без аргументов сбрасывает текстовое окно и возвращает экранный текст ко всей доступной текстовой сетке графического режима.</p>
                 <p>Форма <code>VIEW PRINT topRow TO bottomRow</code> ограничивает строки, в которых прокручиваются последующие <code>PRINT</code>, <code>PRINT USING</code> и подтверждённый <code>INPUT</code> на графическом экране.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Правила работы</h2>
                 <p>Оператор <code>VIEW</code> ограничивает физическую область вывода графических операторов. Оператор <code>WINDOW</code> поверх этого viewport может дополнительно задать логическую систему координат.</p>
                 <p>Оператор <code>VIEW PRINT</code> не управляет пикселями. Этот оператор управляет только текстовыми строками.</p>
@@ -95,9 +95,17 @@ VIEW PRINT topRow TO bottomRow</code></pre>
                 </ul>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3010</code>: оператор <code>VIEW</code> или оператор <code>VIEW PRINT</code> вызваны без активного графического режима <code>SCREEN 1..10</code>.</li>
+                    <li><code>MB3007</code>: координаты viewport или номера строк имеют недопустимое значение.</li>
+                </ul>
+            </section>
+
+        <section class="article-section">
                 <h2>Пример</h2>
-<pre><code class="language-basic">SCREEN 1
+<pre><code class="language-axiom">SCREEN 1
 VIEW SCREEN (10, 10)-(60, 40), 3, 9
 LINE (10, 10)-(60, 40), 14, B
 
@@ -108,8 +116,8 @@ SLEEP</code></pre>
                 <p>В этом примере оператор <code>VIEW</code> ограничивает физическую область рисования и одновременно задаёт заливку и рамку viewport. Затем оператор <code>VIEW PRINT</code> ограничивает строки экранного текста внутри графического режима.</p>
             </section>
 
-            <section class="article-section">
-                <h2>Ручная проверка</h2>
+        <section class="article-section">
+                <h2>Запускаемые примеры</h2>
                 <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения операторов <code>VIEW</code> и <code>VIEW PRINT</code>.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/operators/view/screen_and_relative.axm">VIEW: экранные и относительные координаты</a></li>
@@ -119,15 +127,7 @@ SLEEP</code></pre>
                 </ul>
             </section>
 
-            <section class="article-section">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li><code>MB3010</code>: оператор <code>VIEW</code> или оператор <code>VIEW PRINT</code> вызваны без активного графического режима <code>SCREEN 1..10</code>.</li>
-                    <li><code>MB3007</code>: координаты viewport или номера строк имеют недопустимое значение.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
+        <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="screen.html">Оператор SCREEN</a>

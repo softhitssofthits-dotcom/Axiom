@@ -22,9 +22,9 @@
             </nav>
             <p class="eyebrow">Тип, функции и операторы</p>
             <h1 class="page-title">Изображения IMAGE</h1>
-            <p class="lead">Эта страница описывает встроенный тип данных <code>IMAGE</code>, встроенные функции <code>LOADIMAGE</code>, <code>IMAGEWIDTH</code>, <code>IMAGEHEIGHT</code> и оператор <code>DRAWIMAGE</code>. Тип <code>IMAGE</code> хранит уже загруженное полноцветное изображение, а оператор <code>DRAWIMAGE</code> выводит это изображение на графический экран или на современный холст.</p>
+            <p class="lead">Раздел изображений описывает тип данных IMAGE, встроенные функции LOADIMAGE, IMAGEWIDTH, IMAGEHEIGHT и оператор DRAWIMAGE. Тип IMAGE хранит загруженное полноцветное изображение. Оператор DRAWIMAGE выводит изображение на графический экран или холст CANVAS.</p>
 
-            <section class="article-section">
+            <section class="article-section" id="type">
                 <h2>Что такое тип IMAGE</h2>
                 <p><code>IMAGE</code> — встроенный ссылочный тип данных языка Axiom.</p>
                 <p>Значение типа <code>IMAGE</code> содержит загруженное изображение. Программа обычно получает такое значение через функцию <code>LOADIMAGE</code> и затем передаёт его в оператор <code>DRAWIMAGE</code>.</p>
@@ -33,12 +33,12 @@
             <section class="article-section">
                 <h2>Где работают функции и оператор</h2>
                 <p>Функции <code>LOADIMAGE</code>, <code>IMAGEWIDTH</code> и <code>IMAGEHEIGHT</code> работают с самим значением типа <code>IMAGE</code>.</p>
-                <p>Оператор <code>DRAWIMAGE</code> работает только при активном графическом выводе. Этот оператор можно использовать либо в историческом графическом режиме <code>SCREEN 1..10</code>, либо в современном графическом режиме <code>CANVAS</code>.</p>
+                <p>Оператор <code>DRAWIMAGE</code> работает только при активном графическом выводе. Этот оператор можно использовать либо в палитровом графическом режиме <code>SCREEN 1..10</code>, либо в полноцветном графическом режиме <code>CANVAS</code>.</p>
             </section>
 
             <section class="article-section">
                 <h2>Синтаксис</h2>
-<pre><code class="language-basic">DIM name AS IMAGE
+<pre><code class="language-axiom">DIM name AS IMAGE
 name = LOADIMAGE(path)
 
 IMAGEWIDTH(image)
@@ -49,7 +49,7 @@ DRAWIMAGE image, x, y, width, height</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Части записи</h2>
+                <h2>Параметры и части синтаксиса</h2>
                 <table>
                     <thead>
                         <tr><th>Часть</th><th>Описание</th></tr>
@@ -64,28 +64,28 @@ DRAWIMAGE image, x, y, width, height</code></pre>
                 </table>
             </section>
 
-            <section class="article-section">
+            <section class="article-section" id="loadimage">
                 <h2>Функция LOADIMAGE</h2>
                 <p><code>LOADIMAGE</code> — встроенная функция языка Axiom, которая загружает файл изображения и возвращает значение типа <code>IMAGE</code>.</p>
-<pre><code class="language-basic">LOADIMAGE(path)</code></pre>
+<pre><code class="language-axiom">LOADIMAGE(path)</code></pre>
                 <p>Аргумент <code>path</code> должен быть строкой.</p>
                 <p>Если путь абсолютный, функция использует его как есть. Если путь относительный и программа сохранена, путь считается от каталога файла <code>.axm</code>.</p>
             </section>
 
-            <section class="article-section">
+            <section class="article-section" id="size">
                 <h2>Функции IMAGEWIDTH и IMAGEHEIGHT</h2>
                 <p><code>IMAGEWIDTH</code> и <code>IMAGEHEIGHT</code> — встроенные функции языка Axiom, которые возвращают размеры изображения в пикселях.</p>
-<pre><code class="language-basic">IMAGEWIDTH(image)
+<pre><code class="language-axiom">IMAGEWIDTH(image)
 IMAGEHEIGHT(image)</code></pre>
                 <p>Функция <code>IMAGEWIDTH</code> возвращает ширину изображения.</p>
                 <p>Функция <code>IMAGEHEIGHT</code> возвращает высоту изображения.</p>
                 <p>Если значение <code>IMAGE</code> пустое, обе функции возвращают <code>0</code>.</p>
             </section>
 
-            <section class="article-section">
+            <section class="article-section" id="drawimage">
                 <h2>Оператор DRAWIMAGE</h2>
                 <p><code>DRAWIMAGE</code> — оператор языка Axiom, который выводит изображение на активную графическую поверхность.</p>
-<pre><code class="language-basic">DRAWIMAGE image, x, y
+<pre><code class="language-axiom">DRAWIMAGE image, x, y
 DRAWIMAGE image, x, y, width, height</code></pre>
                 <p>Первая форма выводит изображение в его натуральном размере.</p>
                 <p>Вторая форма выводит изображение с масштабированием до размера <code>width x height</code> пикселей.</p>
@@ -102,7 +102,7 @@ DRAWIMAGE image, x, y, width, height</code></pre>
 
             <section class="article-section">
                 <h2>Пример</h2>
-<pre><code class="language-basic">SCREEN 1
+<pre><code class="language-axiom">SCREEN 1
 DIM logo AS IMAGE
 logo = LOADIMAGE("../../../src/Axiom.Ide/Assets/axiom.ico")
 
@@ -114,7 +114,7 @@ SLEEP</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Ручная проверка</h2>
+                <h2>Запускаемые примеры</h2>
                 <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения типа <code>IMAGE</code> и оператора <code>DRAWIMAGE</code>.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/graphics/images/load_and_draw_image.axm">IMAGE: загрузка и вывод изображения</a></li>
@@ -147,7 +147,7 @@ SLEEP</code></pre>
                     <li><a href="../../samples/functions/imageheight/loaded_resource_property.axm">IMAGEHEIGHT: короткая проверка результата</a></li>
                     <li><a href="../../samples/functions/loadimage/loaded_resource_property.axm">LOADIMAGE: короткая проверка результата</a></li>
                 </ul></section>
-<section class="article-section"><h2>Нулевой символ в пути ресурса</h2><p>Функции LOADIMAGE, LOADSPRITE, LOADTILESET и LOADTILEMAP требуют строковый путь без нулевого символа. Такой символ отклоняется до раскрытия переменных окружения: загрузчик не использует часть пути перед ним. Неверный путь даёт MB3005, которую можно перехватить оператором TRY/CATCH; программа продолжает работу после обработки ошибки.</p><p>Короткий запускаемый пример: <a href="../../samples/smoke/resources/null_path.axm">отказ загрузки изображения по пути с нулевым символом</a>.</p><pre><code class="language-basic">DIM picture AS IMAGE
+<section class="article-section"><h2>Нулевой символ в пути ресурса</h2><p>Функции LOADIMAGE, LOADSPRITE, LOADTILESET и LOADTILEMAP требуют строковый путь без нулевого символа. Такой символ отклоняется до раскрытия переменных окружения: загрузчик не использует часть пути перед ним. Неверный путь даёт MB3005, которую можно перехватить оператором TRY/CATCH; программа продолжает работу после обработки ошибки.</p><p>Короткий запускаемый пример: <a href="../../samples/smoke/resources/null_path.axm">отказ загрузки изображения по пути с нулевым символом</a>.</p><pre><code class="language-axiom">DIM picture AS IMAGE
 TRY
     picture = LOADIMAGE("рисунок.png" + CHR(0) + "другой.png")
 CATCH err

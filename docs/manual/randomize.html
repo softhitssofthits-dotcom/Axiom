@@ -20,14 +20,14 @@
 <p>Оператор <code>RANDOMIZE</code> нужен там, где случайность должна быть воспроизводимой: повторяемые тесты, одинаковые расклады уровней игры, отладка сценариев. Без явного посева источник случайности управляется средой запуска, и последовательность <code>RND</code> от программы не контролируется.</p>
 </section>
 
-<section class="article-section">
+        <section class="article-section">
 <h2>Синтаксис</h2>
-<pre><code class="language-basic">RANDOMIZE
+<pre><code class="language-axiom">RANDOMIZE
 RANDOMIZE seed</code></pre>
 <p>Аргумент <code>seed</code> задаёт зерно генератора — число типа <code>INTEGER</code> или <code>LONG</code>. Форма без аргумента оставляет посев на усмотрение среды запуска.</p>
 </section>
 
-<section class="article-section">
+        <section class="article-section">
 <h2>Правила работы</h2>
 <ul>
 <li>после <code>RANDOMIZE seed</code> последовательность <code>RND()</code> одинакова при каждом прогоне программы с тем же зерном;</li>
@@ -36,10 +36,10 @@ RANDOMIZE seed</code></pre>
 </ul>
 </section>
 
-<section class="article-section">
+        <section class="article-section">
 <h2>Пример повторяемой последовательности</h2>
 <p>Повторный посев одинаковым зерном начинает ту же последовательность заново и в IDE, и при запуске через CLI. Консольный запуск использует отдельный генератор для программы. Повторяемость проверяется на текущей версии платформы; одинаковые значения между разными версиями .NET этим договором не обещаны.</p>
-<pre><code class="language-basic">' Одна и та же серия случайных чисел при каждом запуске
+<pre><code class="language-axiom">' Одна и та же серия случайных чисел при каждом запуске
 RANDOMIZE 42
 PRINT RND()
 PRINT RND()
@@ -49,12 +49,12 @@ RANDOMIZE 42
 PRINT RND()</code></pre>
 </section>
 
-<section class="article-section">
-<h2>Ручная проверка</h2>
+        <section class="article-section">
+<h2>Запускаемые примеры</h2>
 <ul class="resource-list"><li><a href="../../samples/operators/randomize/basic_usage.axm">RANDOMIZE: повторяемая последовательность RND</a></li></ul>
 </section>
 
-<section class="article-section">
+        <section class="article-section">
 <h2>См. также</h2>
 <div class="link-list"><a href="numeric-functions-core.html">RND</a><a href="arithmetic-and-logic.html">Арифметика и логика</a></div>
 </section>

@@ -35,20 +35,20 @@
             <p class="lead">Раздел динамических массивов описывает изменение границ массива после объявления — когда размер данных неизвестен заранее и может меняться во время выполнения.</p>
 
             <section class="article-section">
-                <h2>Как REDIM выделяет границы</h2>
+                <h2>Выделение памяти массива</h2>
                 <p>Динамический массив объявляется без конкретных границ, а затем получает их через <code>REDIM</code>. Такой подход удобен, когда размер массива становится известен только во время выполнения программы.</p>
             </section>
 
             <section class="article-section">
                 <h2>Синтаксис</h2>
-                <pre><code class="language-basic">DIM &lt;имя массива&gt;() AS &lt;тип элемента&gt;</code></pre>
-                <pre><code class="language-basic">REDIM &lt;имя массива&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;)</code></pre>
-                <pre><code class="language-basic">REDIM PRESERVE &lt;имя массива&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;)</code></pre>
-                <pre><code class="language-basic">ERASE &lt;имя массива&gt;</code></pre>
+                <pre><code class="language-axiom">DIM &lt;имя массива&gt;() AS &lt;тип элемента&gt;</code></pre>
+                <pre><code class="language-axiom">REDIM &lt;имя массива&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;)</code></pre>
+                <pre><code class="language-axiom">REDIM PRESERVE &lt;имя массива&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;)</code></pre>
+                <pre><code class="language-axiom">ERASE &lt;имя массива&gt;</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Части записи</h2>
+                <h2>Параметры и части синтаксиса</h2>
                 <ul>
                     <li><code>&lt;имя массива&gt;</code> — имя динамического массива.</li>
                     <li><code>&lt;тип элемента&gt;</code> — тип элементов массива.</li>
@@ -69,7 +69,7 @@
 
             <section class="article-section">
                 <h2>Пример расширения с сохранением значений</h2>
-                <pre><code class="language-basic">' Программа создаёт массив, расширяет его и сохраняет первые значения
+                <pre><code class="language-axiom">' Программа создаёт массив, расширяет его и сохраняет первые значения
 ' Ожидаемый вывод:
 ' 10
 ' 30
@@ -88,7 +88,7 @@ ERASE values</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Ручная проверка</h2>
+                <h2>Запускаемые примеры</h2>
                 <ul class="resource-list">
                     <li><a href="../../samples/operators/dim/dynamic_array_declaration.axm">DIM: объявление динамического массива</a></li>
                     <li><a href="../../samples/operators/redim/basic_usage.axm">REDIM: базовое изменение размера</a></li>

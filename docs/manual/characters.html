@@ -22,29 +22,29 @@
             </nav>
 <p class="eyebrow">Встроенные функции</p>
 <h1 class="page-title">Символы CHR, ASC, CHRW и ASCW</h1>
-<p class="lead">Функции <code>CHR()</code>, <code>ASC()</code>, <code>CHRW()</code> и <code>ASCW()</code> — встроенные функции языка Axiom, которые переводят числовые коды в строки и обратно. В диапазоне <code>0..255</code> Axiom использует таблицу IBM CP866, чтобы русские буквы, рамки и блочные символы из BASIC/DOS-программ имели устойчивые числовые коды. Пара <code>CHRW()</code> и <code>ASCW()</code> нужна для прямой работы с Unicode-кодами без этой совместимой подмены.</p>
+<p class="lead">Функции <code>CHR()</code>, <code>ASC()</code>, <code>CHRW()</code> и <code>ASCW()</code> — встроенные функции языка Axiom, которые переводят числовые коды в строки и обратно. В диапазоне <code>0..255</code> Axiom использует таблицу IBM CP866, чтобы русские буквы, рамки и блочные символы таблицы CP866 имели устойчивые числовые коды. Пара <code>CHRW()</code> и <code>ASCW()</code> нужна для прямой работы с Unicode-кодами без преобразования через CP866.</p>
 
             <section class="article-section" id="contract">
                 <h2>Синтаксис и аргументы</h2>
                 <p>Четыре записи ниже относятся к разным встроенным функциям. Все функции работают со строковыми значениями в BytecodeVm, без экранного или файлового режима.</p>
-                <pre><code class="language-basic">code = ASC(text)</code></pre>
-                <pre><code class="language-basic">unicodeCode = ASCW(text)</code></pre>
-                <pre><code class="language-basic">text = CHR(code)</code></pre>
-                <pre><code class="language-basic">text = CHRW(unicodeCode)</code></pre>
+                <pre><code class="language-axiom">code = ASC(text)</code></pre>
+                <pre><code class="language-axiom">unicodeCode = ASCW(text)</code></pre>
+                <pre><code class="language-axiom">text = CHR(code)</code></pre>
+                <pre><code class="language-axiom">text = CHRW(unicodeCode)</code></pre>
                 <p>Аргумент <code>text</code> должен быть непустой строкой. ASC и ASCW возвращают INTEGER для первого символа; оставшаяся строка не участвует в результате. Целая пара UTF-16 считается одним символом: ASCW("😀Я") возвращает 128512. Если первая единица UTF-16 является изолированным суррогатом, обе функции возвращают код замещающего символа U+FFFD, то есть 65533; исходная строка при этом не изменяется.</p>
                 <p>Аргументы CHR и CHRW должны иметь тип INTEGER. Допустимы значения от 0 до 1114111, кроме диапазона суррогатов 55296..57343. Возвращаемое значение имеет тип STRING и содержит один символ Unicode; его длина LEN может равняться двум единицам UTF-16.</p>
                 <h3>Обратное преобразование</h3>
                 <p>Для допустимого символа Unicode используйте пару ASCW/CHRW: CHRW(ASCW("é")) возвращает "é". Пара ASC/CHR не обеспечивает такого преобразования для произвольного Unicode: ASC("é") возвращает 233, но CHR(233) берёт символ из CP866. Для каждого кода 0..255 выполняется ASC(CHR(code)) = code.</p>
                 <h3>Диагностика</h3>
                 <p>ASC("") и ASCW("") дают MB3007: в пустой строке нет первого символа. CHR и CHRW дают MB3007 для отрицательного кода, суррогатного кода и значения больше 1114111. Ошибку можно перехватить оператором TRY/CATCH. Неверный тип аргумента отклоняется при проверке типов до исполнения.</p>
-                <h3>Пример Unicode и исторических кодов</h3>
-                <pre><code class="language-basic">' Один и тот же символ имеет разные коды в двух системах.
+                <h3>Пример кодов Unicode и CP866</h3>
+                <pre><code class="language-axiom">' Один и тот же символ имеет разные коды в двух системах.
 PRINT ASC("Я")     ' 159 в CP866
 PRINT ASCW("Я")    ' 1071 в Unicode
 ' Unicode-преобразование сохраняет символ за пределами CP866.
 PRINT CHRW(ASCW("é")) = "é"  ' TRUE
 PRINT ASCW("😀Я")  ' 128512, код первого символа</code></pre>
-                <p>Запускаемый пример: <a href="../../samples/functions/ascw/unicode_round_trip.axm">Unicode и исторические коды</a>.</p>
+                <p>Запускаемый пример: <a href="../../samples/functions/ascw/unicode_round_trip.axm">Коды Unicode и CP866</a>.</p>
             </section>
 
             <section class="article-section" id="rules">
@@ -57,7 +57,7 @@ PRINT ASCW("😀Я")  ' 128512, код первого символа</code></pre
                     <li><code>CHRW(code)</code> всегда трактует аргумент как Unicode-код, включая диапазон <code>0..255</code>.</li>
                     <li><code>ASCW(text)</code> всегда возвращает Unicode-код первого символа строки.</li>
                 </ul>
-<pre><code class="language-basic">PRINT CHR(159)   ' Я
+<pre><code class="language-axiom">PRINT CHR(159)   ' Я
 PRINT CHR(196)   ' ─
 PRINT CHR(219)   ' █
 PRINT ASC("Я")   ' 159

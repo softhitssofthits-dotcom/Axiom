@@ -29,17 +29,17 @@
                 <p>Функция <code>PMAP</code> нужна тогда, когда программе одновременно требуется логическая шкала <code>WINDOW</code> и реальные пиксельные координаты viewport.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Где работает функция PMAP</h2>
                 <p>Функция <code>PMAP</code> работает только после выбора графического режима <code>SCREEN 1..10</code>.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Синтаксис</h2>
-<pre><code class="language-basic">PMAP(coordinate, selector)</code></pre>
+<pre><code class="language-axiom">PMAP(coordinate, selector)</code></pre>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Аргументы</h2>
                 <table>
                     <thead>
@@ -52,12 +52,12 @@
                 </table>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Что возвращает функция PMAP</h2>
                 <p>Функция <code>PMAP</code> возвращает одну преобразованную координату. Для оси <code>X</code> и для оси <code>Y</code> используются разные селекторы.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Селекторы</h2>
                 <table>
                     <thead>
@@ -72,13 +72,13 @@
                 </table>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Правила работы</h2>
                 <p>Если программа не включила оператор <code>WINDOW</code>, функция <code>PMAP</code> работает относительно текущего договора viewport.</p>
                 <p>Если программа изменила оператор <code>VIEW</code> или оператор <code>WINDOW</code>, результат функции <code>PMAP</code> тоже меняется, потому что меняется связь между логическими и физическими координатами.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Диагностика</h2>
                 <ul>
                     <li><code>MB3010</code>: функция <code>PMAP</code> вызвана без активного графического режима <code>SCREEN 1..10</code>.</li>
@@ -86,9 +86,9 @@
                 </ul>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>Пример</h2>
-<pre><code class="language-basic">SCREEN 1
+<pre><code class="language-axiom">SCREEN 1
 VIEW SCREEN (10, 10)-(20, 20)
 WINDOW SCREEN (100, 200)-(110, 210)
 
@@ -100,7 +100,7 @@ SLEEP</code></pre>
                 <p>В этом примере функция <code>PMAP</code> сначала переводит логические координаты <code>WINDOW</code> в физические координаты viewport, а затем переводит координаты viewport обратно в логическую шкалу.</p>
             </section>
 
-            <section class="article-section">
+        <section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="view.html">Оператор VIEW</a>

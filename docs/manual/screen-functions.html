@@ -22,7 +22,7 @@
             </nav>
             <p class="eyebrow">Встроенные функции</p>
             <h1 class="page-title">Функции состояния SCREEN</h1>
-            <p class="lead">Эта страница описывает встроенные функции языка Axiom, которые сообщают текущее состояние экранного режима <code>SCREEN</code>: активен ли графический экран, какой режим выбран, какие размеры имеет текущее окно и где находится текущая графическая позиция.</p>
+            <p class="lead">Раздел экранных функций описывает встроенные функции SCREENISACTIVE, SCREENMODE, SCREENWIDTH, SCREENHEIGHT и форму POINT(selector). Функции возвращают состояние режима SCREEN, размеры экранного окна и координаты текущей графической позиции.</p>
 
             <section class="article-section">
                 <h2>Где работают эти функции</h2>
@@ -30,33 +30,33 @@
                 <p>Часть функций работает и в <code>SCREEN 0</code>, и в графических режимах <code>SCREEN 1..10</code>. Часть функций имеет смысл именно в графическом режиме.</p>
             </section>
 
-            <section class="article-section">
+            <section class="article-section" id="screenisactive">
                 <h2>SCREENISACTIVE</h2>
                 <p><code>SCREENISACTIVE</code> — встроенная функция языка Axiom, которая сообщает, активен ли графический режим <code>SCREEN 1..10</code>.</p>
-<pre><code class="language-basic">SCREENISACTIVE()</code></pre>
+<pre><code class="language-axiom">SCREENISACTIVE()</code></pre>
                 <p>Функция возвращает <code>TRUE</code>, если активен графический режим <code>SCREEN 1..10</code>.</p>
                 <p>Функция возвращает <code>FALSE</code> в режиме <code>SCREEN 0</code>.</p>
             </section>
 
-            <section class="article-section">
+            <section class="article-section" id="screenmode">
                 <h2>SCREENMODE</h2>
                 <p><code>SCREENMODE</code> — встроенная функция языка Axiom, которая возвращает номер текущего режима <code>SCREEN</code>.</p>
-<pre><code class="language-basic">SCREENMODE()</code></pre>
+<pre><code class="language-axiom">SCREENMODE()</code></pre>
                 <p>В режиме <code>SCREEN 0</code> функция возвращает <code>0</code>.</p>
             </section>
 
-            <section class="article-section">
+            <section class="article-section" id="screenwidth">
                 <h2>SCREENWIDTH</h2>
                 <p><code>SCREENWIDTH</code> — встроенная функция языка Axiom, которая возвращает ширину текущего окна <code>SCREEN</code> в пикселях.</p>
-<pre><code class="language-basic">SCREENWIDTH()</code></pre>
+<pre><code class="language-axiom">SCREENWIDTH()</code></pre>
                 <p>Для режима <code>SCREEN 0</code> функция возвращает <code>640</code>.</p>
                 <p>Для режима <code>SCREEN 10</code> функция возвращает фактически выбранную ширину адаптивного окна.</p>
             </section>
 
-            <section class="article-section">
+            <section class="article-section" id="screenheight">
                 <h2>SCREENHEIGHT</h2>
                 <p><code>SCREENHEIGHT</code> — встроенная функция языка Axiom, которая возвращает высоту текущего окна <code>SCREEN</code> в пикселях.</p>
-<pre><code class="language-basic">SCREENHEIGHT()</code></pre>
+<pre><code class="language-axiom">SCREENHEIGHT()</code></pre>
                 <p>Для режима <code>SCREEN 0</code> функция возвращает <code>300</code>.</p>
                 <p>Для режима <code>SCREEN 10</code> функция возвращает фактически выбранную высоту адаптивного окна.</p>
             </section>
@@ -75,7 +75,7 @@
 
             <section class="article-section">
                 <h2>Пример</h2>
-<pre><code class="language-basic">SCREEN 1
+<pre><code class="language-axiom">SCREEN 1
 PRINT SCREENISACTIVE()
 PRINT SCREENMODE()
 PRINT SCREENWIDTH()
@@ -85,7 +85,7 @@ SLEEP</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Ручная проверка</h2>
+                <h2>Запускаемые примеры</h2>
                 <p>Эти файлы можно открыть в <code>Axiom.Ide</code> и запустить как короткие проверки поведения функций состояния <code>SCREEN</code>.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/graphics/screen/mode_info.axm">SCREEN: информация о текущем режиме</a></li>

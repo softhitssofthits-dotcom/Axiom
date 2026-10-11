@@ -80,14 +80,12 @@
         <section class="article-section">
             <h2>Логический тип</h2>
             <p><code>BOOLEAN</code> хранит только два значения: <code>TRUE</code> и <code>FALSE</code>. Такой тип используется в условиях <code>IF</code>, <code>WHILE</code>, <code>DO ... LOOP</code>, в результатах сравнений и во встроенных функциях, которые отвечают на вопрос «да или нет».</p>
-            <pre><code class="language-basic">DIM ready AS BOOLEAN = TRUE
+            <pre><code class="language-axiom">DIM ready AS BOOLEAN = TRUE
 
 IF ready THEN
     PRINT "готово"
 END IF</code></pre>
-            <blockquote>
-                <p><em>В QuickBASIC условие часто опиралось на числовую модель: ноль означал ложь, ненулевое значение — истину. В Axiom условие документируемых управляющих конструкций должно иметь тип <code>BOOLEAN</code>, поэтому числовое значение нужно явно сравнить, например <code>count &gt; 0</code>.</em></p>
-            </blockquote>
+            <p>Условие документируемых управляющих конструкций должно иметь тип <code>BOOLEAN</code>, поэтому числовое значение нужно явно сравнить, например <code>count &gt; 0</code>.</p>
         </section>
 
         <section class="article-section" id="temporal">
@@ -119,7 +117,7 @@ END IF</code></pre>
                 </tbody>
             </table>
             <p>Значения этих типов объявляются через <code>AS</code>, как любой другой скалярный тип:</p>
-            <pre><code class="language-basic">DIM day AS DATE
+            <pre><code class="language-axiom">DIM day AS DATE
 DIM moment AS TIME
 DIM stamp AS DATETIME
 
@@ -154,17 +152,17 @@ stamp = "2026-08-25 14:05:06"</code></pre>
         <section class="article-section">
             <h2>Явное объявление и вывод типа</h2>
             <p>В объявлении <code>DIM</code> тип можно указать явно через <code>AS</code> или дать Axiom вывести тип из инициализатора. Явный тип полезен, когда важен именно договор переменной, а не только форма первого значения.</p>
-            <pre><code class="language-basic">DIM count AS INTEGER = 10
+            <pre><code class="language-axiom">DIM count AS INTEGER = 10
 DIM big AS LONG = 21474836479
 DIM ratio AS DOUBLE = 1.5
 DIM price AS DECIMAL = 10.50
 DIM ready AS BOOLEAN = TRUE</code></pre>
             <p>Если тип не указан, <code>DIM</code> берёт его из инициализатора:</p>
-            <pre><code class="language-basic">DIM total = 10
+            <pre><code class="language-axiom">DIM total = 10
 DIM fraction = 1.5
 DIM flag = FALSE</code></pre>
             <p>Дробный литерал сам по себе выводится как <code>DOUBLE</code>. Чтобы получить <code>DECIMAL</code>, укажите целевой тип явно:</p>
-            <pre><code class="language-basic">DIM amount AS DECIMAL = 10.50</code></pre>
+            <pre><code class="language-axiom">DIM amount AS DECIMAL = 10.50</code></pre>
         </section>
 
         <section class="article-section">
@@ -175,7 +173,7 @@ DIM flag = FALSE</code></pre>
 
         <section class="article-section">
             <h2>Пример объявления скалярных значений</h2>
-            <pre><code class="language-basic">DIM count AS INTEGER = 10
+            <pre><code class="language-axiom">DIM count AS INTEGER = 10
 DIM big = 21474836479
 DIM ratio = 1.5
 DIM price AS DECIMAL = 10.50
@@ -198,17 +196,13 @@ YES</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Отличия, важные при чтении старых BASIC-материалов</h2>
-            <blockquote>
-                <p><em>В QuickBASIC <code>INTEGER</code> был 16-битным целым типом с диапазоном от <code>-32768</code> до <code>32767</code>, <code>LONG</code> был 32-битным типом с диапазоном от <code>-2147483648</code> до <code>2147483647</code>, а для вещественных чисел отдельно использовался <code>SINGLE</code>. В Axiom <code>INTEGER</code> является 32-битным типом, <code>LONG</code> — 64-битным, а отдельного типа <code>SINGLE</code> в текущем договоре языка нет.</em></p>
-            </blockquote>
-            <blockquote>
-                <p><em>В QuickBASIC тип переменной мог задаваться суффиксом имени или операторами семейства <code>DEF...</code>. В Axiom тип записывается через <code>AS</code> или выводится из инициализатора в поддержанных формах; суффиксы имён не являются частью текущего синтаксиса.</em></p>
-            </blockquote>
+            <h2>Дополнительные правила типов</h2>
+            <p><code>INTEGER</code> является 32-битным типом, <code>LONG</code> — 64-битным, а отдельного типа <code>SINGLE</code> в языке нет.</p>
+            <p>Тип записывается через <code>AS</code> или выводится из инициализатора в поддержанных формах; суффиксы имён не являются частью текущего синтаксиса.</p>
         </section>
 
         <section class="article-section">
-            <h2>Ручная проверка</h2>
+            <h2>Запускаемые примеры</h2>
             <p>Эти короткие программы можно открыть в <code>Axiom.Ide</code> и запустить как проверку скалярных объявлений, вывода типа и числовых преобразований.</p>
             <ul class="resource-list">
                 <li><a href="../../samples/operators/dim/basic_declaration.axm">DIM: объявление INTEGER</a></li>

@@ -19,7 +19,7 @@
 <h2>UTCOFFSET</h2>
 <p>Функция <code>UTCOFFSET</code> возвращает смещение часового пояса относительно UTC в минутах.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">offsetMinutes = UTCOFFSET([value[, timeZone]])</code></pre>
+<pre><code class="language-axiom">offsetMinutes = UTCOFFSET([value[, timeZone]])</code></pre>
 <h3>Аргументы</h3><p>Без аргументов функция возвращает текущее локальное смещение. Если указан <code>value</code>, он должен быть строкой даты и времени вида <code>yyyy-MM-dd HH:mm:ss</code>. Если также указан <code>timeZone</code>, смещение вычисляется для этого пояса.</p>
 </section>
 
@@ -27,7 +27,7 @@
 <h2>TOUTC</h2>
 <p>Функция <code>TOUTC</code> переводит локальную дату и время или дату и время указанного часового пояса в каноническое значение UTC.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">utcValue = TOUTC(value[, timeZone])</code></pre>
+<pre><code class="language-axiom">utcValue = TOUTC(value[, timeZone])</code></pre>
 <h3>Аргументы</h3><p><code>value</code> задаёт строку даты и времени вида <code>yyyy-MM-dd HH:mm:ss</code>. Если <code>timeZone</code> не указан, исходное значение трактуется как локальное время.</p>
 </section>
 
@@ -35,7 +35,7 @@
 <h2>FROMUTC</h2>
 <p>Функция <code>FROMUTC</code> переводит каноническую дату и время UTC в локальное время или во время указанного часового пояса.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">localValue = FROMUTC(value[, timeZone])</code></pre>
+<pre><code class="language-axiom">localValue = FROMUTC(value[, timeZone])</code></pre>
 <h3>Аргументы</h3><p><code>value</code> задаёт строку даты и времени в UTC вида <code>yyyy-MM-dd HH:mm:ss</code>. Если <code>timeZone</code> не указан, используется локальный часовой пояс.</p>
 </section>
 
@@ -50,7 +50,7 @@
 
 <section class="article-section">
 <h2>Пример перевода между локальным временем и UTC</h2>
-<pre><code class="language-basic">' Смещение и переводы между локальным временем и UTC
+<pre><code class="language-axiom">' Смещение и переводы между локальным временем и UTC
 PRINT UTCOFFSET()
 PRINT UTCOFFSET("2026-04-20 14:05:06")
 PRINT UTCOFFSET("2026-04-20 14:05:06", "UTC")
@@ -68,7 +68,7 @@ PRINT FROMUTC("2026-04-20 11:05:06")</code></pre>
 </section>
 
 <section class="article-section">
-<h2>Ручная проверка</h2>
+<h2>Запускаемые примеры</h2>
 <ul class="resource-list">
 <li><a href="../../samples/functions/utcoffset/current_local_offset.axm">UTCOFFSET</a></li>
 <li><a href="../../samples/functions/utcoffset/named_timezone_specific_offset.axm">UTCOFFSET для указанного пояса</a></li>

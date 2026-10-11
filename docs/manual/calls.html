@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom — Вызовы процедур и функций</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="calls">
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Справочник по реализованному языку Axiom</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <nav id="manual-nav"></nav>
+        </div>
+    </aside>
+    <main class="content"><nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><a href="operator-reference.html">Операторы</a><span>/</span><span>Вызовы процедур и функций</span></nav><p class="eyebrow">Справочная статья</p><h1 class="page-title">Вызовы процедур и функций</h1><p class="lead">Вызов — форма языка Axiom, которая передаёт управление процедуре, функции или методу и связывает аргументы с параметрами. Функция возвращает результат; процедура выполняет действие.</p>
+<section class="article-section"><h2>Синтаксис</h2><pre><code class="language-axiom">&lt;имя&gt;(&lt;аргументы&gt;)</code></pre><pre><code class="language-axiom">&lt;получатель&gt;.&lt;метод&gt;(&lt;аргументы&gt;)</code></pre><p>Для вызова без аргументов скобки сохраняются: <code>Name()</code>. Вызов функции может входить в выражение или записываться отдельной инструкцией; в последнем случае результат не используется.</p></section><section class="article-section"><h2>Аргументы</h2><p>Аргументы записываются через запятую в порядке параметров. Число аргументов и их типы должны соответствовать выбранной форме вызова. Формы всех встроенных функций перечислены в <a href="function-reference.html">полном справочнике функций</a>.</p><p>Параметр <code>BYVAL</code> получает значение по правилам копирования соответствующего типа. Параметр <code>BYREF</code> связывается с изменяемым местом хранения; подробные ограничения определены в статьях <a href="sub.html">SUB</a> и <a href="function.html">FUNCTION</a>.</p><p>Именованная запись <code>FieldName := expression</code> служит для полей литерала записи <code>TYPE</code>. Она не является общей формой именованных аргументов процедур и встроенных функций.</p></section><section class="article-section"><h2>Функциональные значения</h2><p>Функция без параметров <code>BYREF</code> может использоваться как значение: сохраняться в переменной функционального типа, передаваться другой функции и возвращаться из функции. Вызов такого значения записывается со скобками.</p><p>Массивные функции обработки принимают функциональные значения с указанным договором: <code>ARRAYEVERY</code>, <code>ARRAYSOME</code> и <code>ARRAYFILTER</code> — <code>FUNCTION(T) AS BOOLEAN</code>; <code>ARRAYMAP</code> — <code>FUNCTION(T) AS U</code>; <code>ARRAYREDUCE</code> — <code>FUNCTION(A, T) AS A</code>. Массивный результат <code>U</code> у функции преобразования не допускается.</p></section><section class="article-section"><h2>Диагностика</h2><ul><li><code>MB2004</code> — число аргументов не соответствует форме вызова.</li><li><code>MB2003</code> — тип аргумента несовместим с типом параметра.</li><li><code>MB2020</code> — значение нельзя вызвать.</li><li><code>MB2029</code> — функция с параметром <code>BYREF</code> используется как функциональное значение.</li><li><code>MB2040</code> — отдельная инструкция содержит выражение без вызова, например одиночный литерал или имя.</li></ul></section><section class="article-section"><h2>Пример</h2><pre><code class="language-axiom">FUNCTION DoubleValue(value AS INTEGER) AS INTEGER
+    RETURN value * 2
+END FUNCTION
+
+PRINT DoubleValue(7)</code></pre><p>Результат:</p><pre><code>14</code></pre></section><section class="article-section"><h2>См. также</h2><div class="link-list"><a href="sub.html">SUB</a><a href="function.html">FUNCTION</a><a href="return.html">RETURN</a><a href="type.html">Методы и литералы TYPE</a></div></section><div id="page-pager" class="pager"></div></main>
+</div>
+<script src="scripts/manual.js"></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Справочник Axiom — Присваивание</title>
+    <link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="assignment">
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="index.html">Справочник Axiom</a>
+        <div class="topbar__meta">Справочник по реализованному языку Axiom</div>
+        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
+    </div>
+</header>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <nav id="manual-nav"></nav>
+        </div>
+    </aside>
+    <main class="content"><nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><a href="operator-reference.html">Операторы</a><span>/</span><span>Присваивание</span></nav><p class="eyebrow">Справочная статья</p><h1 class="page-title">Присваивание</h1><p class="lead">Присваивание — инструкция языка Axiom, которая записывает вычисленное значение в переменную, элемент массива или поле записи.</p>
+<section class="article-section"><h2>Синтаксис</h2><pre><code class="language-axiom">&lt;цель&gt; = &lt;выражение&gt;</code></pre></section><section class="article-section"><h2>Части синтаксиса</h2><p><code>&lt;цель&gt;</code> — объявленная изменяемая переменная, доступный элемент массива или поле записи. <code>&lt;выражение&gt;</code> — выражение совместимого типа.</p></section><section class="article-section"><h2>Правила работы</h2><p>Правая часть вычисляется, затем результат записывается в цель. Допустимые неявные преобразования определены <a href="data-types-conversions.html">правилами преобразования типов</a>. Константе присвоить новое значение нельзя.</p><p>Знак <code>=</code> внутри выражения означает сравнение. Запись <code>FieldName := expression</code> применяется к именованным полям литерала записи <code>TYPE</code>; она не заменяет обычное присваивание.</p><p>Правила копирования записей и связи массивных представлений с исходным хранилищем определены на страницах <a href="type.html">TYPE</a> и <a href="arrays-slices.html">срезов массива</a>.</p></section><section class="article-section"><h2>Диагностика</h2><ul><li><code>MB2001</code> — имя цели или имя в выражении не объявлено.</li><li><code>MB2003</code> — тип значения несовместим с типом цели.</li><li><code>MB2010</code> — попытка присвоить значение константе.</li><li><code>MB3005</code> — хранилище индексируемого массива не выделено.</li><li><code>MB3007</code> — индекс элемента выходит за границы.</li></ul></section><section class="article-section"><h2>Пример</h2><pre><code class="language-axiom">DIM total AS INTEGER = 10
+total = total + 5
+PRINT total</code></pre><p>Результат:</p><pre><code>15</code></pre></section><section class="article-section"><h2>См. также</h2><div class="link-list"><a href="dim.html">DIM</a><a href="const.html">CONST</a><a href="arithmetic-and-logic.html">Выражения</a></div></section><div id="page-pager" class="pager"></div></main>
+</div>
+<script src="scripts/manual.js"></script>
+</body>
+</html>

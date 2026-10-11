@@ -10,7 +10,7 @@
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Временная остановка программы</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
 <div class="layout"><aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content">
-<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Операторы передачи управления</a><span>/</span><span>Оператор SLEEP</span></nav>
+<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Операторы передачи управления</span><span>/</span><span>Оператор SLEEP</span></nav>
 <p class="eyebrow">Оператор</p>
 <h1 class="page-title">Оператор SLEEP</h1>
 <p class="lead"><code>SLEEP</code> — оператор языка Axiom, который временно приостанавливает выполнение программы. Оператор используют, когда программе нужно сделать короткую задержку, дать пользователю время увидеть результат или дождаться нажатия любой клавиши без ручного цикла ожидания.</p>
@@ -20,36 +20,41 @@
 <p><code>SLEEP</code> с числовым аргументом ждёт указанное число миллисекунд. <code>SLEEP</code> без аргумента ждёт, пока в очереди клавиатуры появится любая клавиша, и забирает эту клавишу из очереди ввода.</p>
 </section>
 
-<section class="article-section">
+        <section class="article-section">
 <h2>Где работает оператор SLEEP</h2>
 <p>Оператор <code>SLEEP</code> работает в любом контексте программы и не зависит от графического режима <code>SCREEN</code>. Задержка и ожидание клавиши доступны в текстовом, графическом и консольном режимах одинаково.</p>
 </section>
 
-<section class="article-section">
+        <section class="article-section">
 <h2>Синтаксис</h2>
-<pre><code class="language-basic">SLEEP [milliseconds]</code></pre>
+<pre><code class="language-axiom">SLEEP [milliseconds]</code></pre>
 </section>
 
-<section class="article-section">
-<h2>Части записи</h2>
+        <section class="article-section">
+<h2>Параметры и части синтаксиса</h2>
 <p><code>milliseconds</code> задаёт длительность паузы в миллисекундах. Выражение приводится к типу <code>LONG</code> и должно давать неотрицательное значение, которое помещается в поддерживаемый диапазон ожидания среды выполнения.</p>
 <p>Если <code>milliseconds</code> не указан, оператор переходит в режим ожидания любой клавиши.</p>
 </section>
 
-<section class="article-section">
+        <section class="article-section">
 <h2>Точность паузы и очередь клавиатуры</h2>
 <ul>
 <li><code>SLEEP 0</code> допустим и сразу возвращает управление программе.</li>
 <li><code>SLEEP 500</code> делает паузу примерно на 500 миллисекунд. Фактическая точность зависит от планировщика операционной системы.</li>
 <li><code>SLEEP</code> без аргумента удаляет первую доступную клавишу из очереди, поэтому следующий вызов <code>INKEY()</code> или <code>KEYPRESS(...)</code> уже не увидит именно это событие.</li>
 <li><code>SLEEP</code> является оператором, а не функцией: его нельзя использовать внутри выражения.</li>
-<li>Имя <code>SLEEP</code> выбрано как привычное BASIC-подобное имя для временной остановки, но в Axiom аргумент указывается в миллисекундах.</li>
+<li>Аргумент оператора <code>SLEEP</code> задаёт длительность паузы в миллисекундах.</li>
 </ul>
 </section>
 
-<section class="article-section">
+        <section class="article-section">
+<h2>Диагностика</h2>
+<p>Диагностика времени выполнения <code>MB3007</code> возникает, если длительность отрицательная или слишком большая для текущей реализации ожидания.</p>
+</section>
+
+        <section class="article-section">
 <h2>Пример задержки и ожидания клавиши</h2>
-<pre><code class="language-basic">PRINT "Пауза 500 мс..."
+<pre><code class="language-axiom">PRINT "Пауза 500 мс..."
 SLEEP 500
 
 PRINT "Нажмите любую клавишу."
@@ -58,17 +63,12 @@ SLEEP
 PRINT "Готово"</code></pre>
 </section>
 
-<section class="article-section">
-<h2>Ручная проверка</h2>
+        <section class="article-section">
+<h2>Запускаемые примеры</h2>
 <ul class="resource-list"><li><a href="../../samples/operators/sleep/delay_and_key_wait.axm">SLEEP: задержка и ожидание клавиши</a></li></ul>
 </section>
 
-<section class="article-section">
-<h2>Диагностика</h2>
-<p>Диагностика времени выполнения <code>MB3007</code> возникает, если длительность отрицательная или слишком большая для текущей реализации ожидания.</p>
-</section>
-
-<section class="article-section">
+        <section class="article-section">
 <h2>См. также</h2>
 <div class="link-list"><a href="loops.html">Операторы передачи управления</a><a href="do-loop.html">Оператор цикла DO ... LOOP</a><a href="inkey.html">Функция INKEY</a><a href="keypress.html">Функция KEYPRESS</a><a href="keydown.html">Функция KEYDOWN</a></div>
 </section>

@@ -31,15 +31,15 @@
 <p>Встроенная функция <code>TRIM</code> убирает символы с обоих краёв строки.</p>
 <h3>Синтаксис</h3>
 <p>Удаление пробельных символов:</p>
-<pre><code class="language-basic">result = TRIM(text)</code></pre>
+<pre><code class="language-axiom">result = TRIM(text)</code></pre>
 <p>Удаление указанного набора:</p>
-<pre><code class="language-basic">result = TRIM(text, chars)</code></pre>
+<pre><code class="language-axiom">result = TRIM(text, chars)</code></pre>
 <h3>Аргументы</h3>
 <p><code>text</code> задаёт исходную строку. Необязательный <code>chars</code> задаёт набор символов, которые удаляются по краям.</p>
 <h3>Удаляемые символы</h3>
 <p>Без аргумента <code>chars</code> удаляются пробельные символы. Если <code>chars</code> указан, по краям убираются все символы из этого набора.</p>
 <h3>Пример удаления пробелов с двух сторон</h3>
-<pre><code class="language-basic">PRINT "[" + TRIM("abc   ") + "]"
+<pre><code class="language-axiom">PRINT "[" + TRIM("abc   ") + "]"
 PRINT "[" + TRIM("   abc") + "]"
 PRINT "[" + TRIM("...abc...", ".") + "]"</code></pre>
 <p>Результат:</p>
@@ -53,15 +53,15 @@ PRINT "[" + TRIM("...abc...", ".") + "]"</code></pre>
 <p>Встроенная функция <code>LTRIM</code> убирает символы только слева.</p>
 <h3>Синтаксис</h3>
 <p>Удаление пробельных символов:</p>
-<pre><code class="language-basic">result = LTRIM(text)</code></pre>
+<pre><code class="language-axiom">result = LTRIM(text)</code></pre>
 <p>Удаление указанного набора:</p>
-<pre><code class="language-basic">result = LTRIM(text, chars)</code></pre>
+<pre><code class="language-axiom">result = LTRIM(text, chars)</code></pre>
 <h3>Аргументы</h3>
 <p><code>text</code> задаёт исходную строку. Необязательный <code>chars</code> задаёт набор символов, которые удаляются слева.</p>
 <h3>Удаляемые символы</h3>
 <p>Без аргумента <code>chars</code> убираются пробельные символы слева. Если <code>chars</code> указан, убираются символы из этого набора.</p>
 <h3>Пример удаления начальных пробелов</h3>
-<pre><code class="language-basic">PRINT "[" + LTRIM("   abc") + "]"
+<pre><code class="language-axiom">PRINT "[" + LTRIM("   abc") + "]"
 PRINT "[" + LTRIM("...abc", ".") + "]"</code></pre>
 <p>Результат:</p>
 <pre><code>[abc]
@@ -73,15 +73,15 @@ PRINT "[" + LTRIM("...abc", ".") + "]"</code></pre>
 <p>Встроенная функция <code>RTRIM</code> убирает символы только справа.</p>
 <h3>Синтаксис</h3>
 <p>Удаление пробельных символов:</p>
-<pre><code class="language-basic">result = RTRIM(text)</code></pre>
+<pre><code class="language-axiom">result = RTRIM(text)</code></pre>
 <p>Удаление указанного набора:</p>
-<pre><code class="language-basic">result = RTRIM(text, chars)</code></pre>
+<pre><code class="language-axiom">result = RTRIM(text, chars)</code></pre>
 <h3>Аргументы</h3>
 <p><code>text</code> задаёт исходную строку. Необязательный <code>chars</code> задаёт набор символов, которые удаляются справа.</p>
 <h3>Удаляемые символы</h3>
 <p>Без аргумента <code>chars</code> убираются пробельные символы справа. Если <code>chars</code> указан, убираются символы из этого набора.</p>
 <h3>Пример удаления конечных пробелов</h3>
-<pre><code class="language-basic">PRINT "[" + RTRIM("abc   ") + "]"
+<pre><code class="language-axiom">PRINT "[" + RTRIM("abc   ") + "]"
 PRINT "[" + RTRIM("abc...", ".") + "]"</code></pre>
 <p>Результат:</p>
 <pre><code>[abc]
@@ -92,14 +92,14 @@ PRINT "[" + RTRIM("abc...", ".") + "]"</code></pre>
 <h2>LCASE и UCASE</h2>
 <p>Функции <code>LCASE</code> и <code>UCASE</code> возвращают строку в нижнем или верхнем регистре.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">lowerText = LCASE(text)</code></pre>
-<pre><code class="language-basic">upperText = UCASE(text)</code></pre>
+<pre><code class="language-axiom">lowerText = LCASE(text)</code></pre>
+<pre><code class="language-axiom">upperText = UCASE(text)</code></pre>
 <h3>Аргументы</h3>
 <p><code>text</code> задаёт исходную строку.</p>
 <h3>Возвращаемое значение</h3>
 <p>Обе функции возвращают новое значение и не меняют исходную строку автоматически.</p>
 <h3>Пример смены регистра</h3>
-<pre><code class="language-basic">PRINT LCASE("ПРИМЕР")
+<pre><code class="language-axiom">PRINT LCASE("ПРИМЕР")
 PRINT UCASE("пример")</code></pre>
 <p>Результат:</p>
 <pre><code>пример
@@ -111,16 +111,16 @@ PRINT UCASE("пример")</code></pre>
 <p>Функция <code>REVERSE</code> возвращает строку в обратном порядке символов.</p>
 <p>Корректные пары UTF-16 остаются целыми: <code>REVERSE("А😀Б")</code> возвращает <code>"Б😀А"</code>. Изолированные единицы UTF-16, полученные, например, функцией <code>LEFT</code>, сохраняются без подмены символом <code>U+FFFD</code>. Комбинируемые знаки разворачиваются отдельно от букв; функция не объединяет графемы. Пустая строка возвращается без изменений.</p>
 <h3>Синтаксис</h3>
-<pre><code class="language-basic">result = REVERSE(text)</code></pre>
+<pre><code class="language-axiom">result = REVERSE(text)</code></pre>
 <h3>Аргументы</h3>
 <p><code>text</code> задаёт исходную строку.</p>
 <h3>Пример обратного порядка символов</h3>
-<pre><code class="language-basic">PRINT REVERSE("abcd")</code></pre>
+<pre><code class="language-axiom">PRINT REVERSE("abcd")</code></pre>
 <p>Результат:</p>
 <pre><code>dcba</code></pre>
 </section>
 
-<section class="article-section"><h2>Ручная проверка</h2><ul class="resource-list"><li><a href="../../samples/functions/trim/basic_usage.axm">TRIM</a></li><li><a href="../../samples/functions/ltrim/basic_usage.axm">LTRIM</a></li><li><a href="../../samples/functions/rtrim/basic_usage.axm">RTRIM</a></li><li><a href="../../samples/functions/lcase/basic_usage.axm">LCASE</a></li><li><a href="../../samples/functions/ucase/basic_usage.axm">UCASE</a></li></ul></section>
+<section class="article-section"><h2>Запускаемые примеры</h2><ul class="resource-list"><li><a href="../../samples/functions/trim/basic_usage.axm">TRIM</a></li><li><a href="../../samples/functions/ltrim/basic_usage.axm">LTRIM</a></li><li><a href="../../samples/functions/rtrim/basic_usage.axm">RTRIM</a></li><li><a href="../../samples/functions/lcase/basic_usage.axm">LCASE</a></li><li><a href="../../samples/functions/ucase/basic_usage.axm">UCASE</a></li></ul></section>
 <section class="article-section"><h2>См. также</h2><div class="link-list"><a href="string-functions.html">Строковые функции</a><a href="string-functions-slices-and-length.html">Длина строки и фрагменты</a><a href="string-functions-search-and-replace.html">Поиск и замена в строках</a><a href="string-functions-build-and-split.html">Построение строк и массивы строк</a><a href="data-types-strings-and-files.html">Тип STRING</a></div></section>
 
 <div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
