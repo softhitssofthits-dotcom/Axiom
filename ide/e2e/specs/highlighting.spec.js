@@ -1,4 +1,5 @@
 const { ROOT } = require('../helpers');
+const interpolationColors = [['dark', 'rgb(215, 186, 125)'], ['light', 'rgb(238, 0, 0)'], ['basic', 'rgb(85, 255, 255)']];
 module.exports = [{ id: 'highlight-punctuation-and-maze', name: 'Пунктуация не обрывает подсветку операторов, типов и комментариев', async fn({ S, C }) {
   await S.launch();
   const sample = require('fs').readFileSync(require('path').join(ROOT, 'samples/graphics/game/maze_chase.axm'), 'utf8');
@@ -43,3 +44,15 @@ module.exports = [{ id: 'highlight-punctuation-and-maze', name: 'Пунктуа�
   C.ok(true,'Процедура из пользовательского maze_chase имеет отдельный цвет');
   await S.screenshot('maze-symbol-colors');
 } }];
+module.exports.push({ id: 'highlight-interpolation-dollar', name: 'Знак доллара интерполяции совпадает по цвету с фигурными скобками', async fn({ S, C }) {
+  await S.launch();
+  await S.page.evaluate(() => { const i = window.__ide; i.editor.getModel().setValue('PRINT $"Число {42}"\nPRINT "$"'); });
+  const tokens = await S.page.evaluate(() => window.__ide.monaco.editor.tokenize(window.__ide.editor.getValue(), 'axiom'));
+  C.ok(tokens[0].some(t => t.offset === 6 && t.type === 'delimiter.interpolation.axiom'), 'Префикс $ имеет отдельную категорию интерполяции');
+  for (const [theme, color] of interpolationColors) {
+    await S.page.evaluate(t => window.__ide.setTheme(t), theme);
+    await S.page.waitForFunction(expected => [...document.querySelector('.view-line').querySelectorAll('span')].some(el => el.textContent.trim() === '$' && getComputedStyle(el).color === expected), color);
+    const markers = await S.page.evaluate(() => [...document.querySelector('.view-line').querySelectorAll('span')].filter(el => ['$','{','}'].includes(el.textContent.trim())).map(el => ({ text: el.textContent.trim(), color: getComputedStyle(el).color })));
+    C.ok(markers.length === 3 && markers.every(m => m.color === color), '$ и обе скобки имеют цвет интерполяции в теме ' + theme);
+  }
+} });

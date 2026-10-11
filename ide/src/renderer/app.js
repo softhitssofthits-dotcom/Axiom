@@ -162,7 +162,7 @@ class AxiomIDE {
         root: [
           [/(rem\b).*/, 'comment'],
           [/'.*$/, 'comment'],
-          [/\$"/, { token: 'string.quote', bracket: '@open', next: '@interpolatedString' }],
+          [/(\$)(")/, ['delimiter.interpolation', { token: 'string.quote', bracket: '@open', next: '@interpolatedString' }]],
           [/"/, { token: 'string.quote', bracket: '@open', next: '@string' }],
           [/&H[0-9a-fA-F]+&?/, 'number.hex'],
           [/\d+\.\d*(#[DRFdrf]?|\d*)/, 'number'],

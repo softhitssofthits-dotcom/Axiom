@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 77,
+  "count": 78,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -191,6 +191,11 @@
       "id": "highlight-user-symbols",
       "spec": "highlighting.spec.js",
       "name": "Пользовательские имена и операции имеют отдельные цвета"
+    },
+    {
+      "id": "highlight-interpolation-dollar",
+      "spec": "highlighting.spec.js",
+      "name": "Знак доллара интерполяции совпадает по цвету с фигурными скобками"
     },
     {
       "id": "i18n-parity",

@@ -1,16 +1,44 @@
 [
   {
-    "id": "menu-fixed-check-column",
-    "spec": "menu-layout.spec.js",
-    "name": "В меню только команды, названия не сдвигаются при включении галочек",
-    "ms": 2570,
-    "passed": 5,
+    "id": "highlight-punctuation-and-maze",
+    "spec": "highlighting.spec.js",
+    "name": "Пунктуация не обрывает подсветку операторов, типов и комментариев",
+    "ms": 2552,
+    "passed": 9,
     "failures": [],
     "notes": [],
     "crashed": false,
     "consoleTail": [],
     "pageErrors": [],
-    "mainStderrTail": "Debugger ending on ws://127.0.0.1:62878/b6dc9643-3546-47b7-9167-c744876881d7\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:62928/b8fdf0cb-ffe7-4a02-a56d-3b07223a0a83\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "highlight-user-symbols",
+    "spec": "highlighting.spec.js",
+    "name": "Пользовательские имена и операции имеют отдельные цвета",
+    "ms": 4004,
+    "passed": 11,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:62932/1746be56-1a1b-4ef6-a9b0-f0c84a25f100\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "highlight-interpolation-dollar",
+    "spec": "highlighting.spec.js",
+    "name": "Знак доллара интерполяции совпадает по цвету с фигурными скобками",
+    "ms": 2378,
+    "passed": 4,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:62936/6f80687a-0a18-4a56-af7f-e89c227a67e1\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
     "rendererDialogs": []
   }
 ]
