@@ -24,7 +24,7 @@ public static class VariableUsageAnalysis
             switch (statement)
             {
                 case BoundVariableDeclarationStatement declaration:
-                    declarations.TryAdd(declaration.Variable, declaration.Location);
+                    declarations.TryAdd(declaration.Variable, declaration.IdentifierLocation);
                     break;
                 case BoundVariableDeclarationsStatement grouped:
                     foreach (var declaration in grouped.Declarations) VisitStatement(declaration);

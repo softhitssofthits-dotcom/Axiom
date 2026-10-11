@@ -24,7 +24,8 @@ public sealed class BoundVariableDeclarationStatement : BoundStatement
         TextLocation location,
         VariableSymbol variable,
         BoundExpression? initializer,
-        IReadOnlyList<BoundArrayBound> arrayBounds)
+        IReadOnlyList<BoundArrayBound> arrayBounds,
+        TextLocation? identifierLocation = null)
         : base(location)
     {
         ArgumentNullException.ThrowIfNull(variable);
@@ -33,11 +34,14 @@ public sealed class BoundVariableDeclarationStatement : BoundStatement
         Variable = variable;
         Initializer = initializer;
         ArrayBounds = arrayBounds;
+        IdentifierLocation = identifierLocation ?? location;
     }
 
     public override BoundNodeKind Kind => BoundNodeKind.VariableDeclarationStatement;
 
     public VariableSymbol Variable { get; }
+
+    public TextLocation IdentifierLocation { get; }
 
     public BoundExpression? Initializer { get; }
 

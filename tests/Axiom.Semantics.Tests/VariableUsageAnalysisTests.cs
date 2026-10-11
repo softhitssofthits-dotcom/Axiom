@@ -26,6 +26,18 @@ public sealed class VariableUsageAnalysisTests
     [InlineData("DIM finish AS INTEGER = 3\nFOR value = 1 TO finish\nPRINT value\nNEXT")]
     public void ReadValue_DoesNotProduceWarning(string source) => Assert.Empty(Analyze(source));
 
+    [Theory]
+    [InlineData("DIM spare AS INTEGER = 42", "spare")]
+    [InlineData("DIM first, second AS INTEGER", "first")]
+    [InlineData("DIM first, second AS INTEGER", "second")]
+    [InlineData("CONST limit AS INTEGER = 42", "limit")]
+    [InlineData("' Комментарий\r\n    DIM spare AS INTEGER", "spare")]
+    public void WarningRange_CoversOnlyDeclaredName(string source, string name)
+    {
+        var warning = Assert.Single(Analyze(source), d => d.Message.Contains($"'{name}'"));
+        Assert.Equal(name, source.Substring(warning.Location.Span.Start, warning.Location.Span.Length));
+    }
+
     private static IReadOnlyList<Diagnostic> Analyze(string source)
     {
         var syntax = Parser.Parse(source, out var syntaxDiagnostics);

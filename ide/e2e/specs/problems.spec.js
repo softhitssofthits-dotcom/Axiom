@@ -73,24 +73,46 @@ module.exports = [
   },
   {
     id: 'unused-variable-warning',
-    name: 'Неиспользуемая переменная отмечается жёлтым предупреждением и не блокирует запуск',
+    name: 'Совет о неиспользуемой переменной выделяет имя, отделён от ошибок и обновляется после чтения',
     async fn({ S, C }) {
-      const file = writeAxm(testWorkspace('unused-variable'), 'unused.axm', 'DIM spare AS INTEGER = 42\nPRINT "Программа выполнена"\n');
+      const file = path.resolve(__dirname, '..', '..', '..', 'samples', 'operators', 'dim', 'unused_value_warning.axm');
       await S.launch(); await S.stubOpenDialog([file]);
       await S.page.evaluate(() => window.__ide.handleAction('open'));
       await S.page.waitForFunction(p => window.__ide.activeFile === p, file);
       await S.page.evaluate(() => window.__ide.handleAction('check'));
       await S.page.waitForFunction(() => document.getElementById('diagnostics-content').textContent.includes('MB2047'));
-      C.ok(await S.page.locator('#diagnostics-content .diagnostic-icon.warning').count() > 0, 'предупреждение имеет жёлтый значок');
-      const markers = await S.markers();
-      C.ok(markers.some(marker => marker.message.includes('MB2047') && marker.severity === 4), 'Monaco показывает предупреждение, а не ошибку');
+      C.ok(await S.page.locator('#diagnostics-content .diagnostic-icon.advice').count() > 0, 'Сообщение показано как совет');
+      const markers = await S.page.evaluate(() => window.monaco.editor.getModelMarkers({ owner: 'axiom' }));
+      C.ok(markers.some(marker => marker.message.includes('MB2047') && marker.severity === 1 && marker.startColumn === 5 && marker.endColumn === 10), 'Совет указывает только на имя spare и не рисует предупреждение');
+      await S.page.locator('[data-diagnostic-filter="error"]').click();
+      C.eq(await S.page.locator('#diagnostics-content .diagnostic-item:visible').count(), 0, 'Совет не попадает в список ошибок');
+      await S.page.locator('[data-diagnostic-filter="advice"]').click();
+      C.eq(await S.page.locator('#diagnostics-content .diagnostic-item:visible').count(), 1, 'Совет доступен отдельно');
+      await S.page.setViewportSize({ width: 520, height: 720 });
+      C.ok(await S.page.locator('#diagnostic-filters').evaluate(el => el.getBoundingClientRect().right <= innerWidth), 'Категории помещаются в узком окне');
+      await S.screenshot('unused-variable-advice');
+      await S.page.setViewportSize({ width: 1280, height: 800 });
       await S.page.evaluate(() => window.__ide.run()); await S.waitIdle();
-      await S.waitConsole('Программа выполнена');
+      await S.waitConsole('Предупреждение не мешает выполнению программы.');
       C.ok(true, 'предупреждение не блокирует запуск');
       await S.page.evaluate(() => window.__ide.setLanguage('en'));
       await S.page.evaluate(() => window.__ide.handleAction('check'));
       await S.page.waitForFunction(() => document.getElementById('diagnostics-content').textContent.includes('MB2047'));
       C.ok(await S.page.evaluate(() => document.getElementById('diagnostics-content').textContent.includes('never used')), 'предупреждение переведено на английский');
+      await S.page.evaluate(() => window.__ide.editor.getModel().setValue('DIM spare AS INTEGER = 42\nspare = 123\n'));
+      C.ok(!(await S.markers()).some(marker => marker.message.includes('MB2047')), 'Устаревший совет снят сразу после правки');
+      await S.page.waitForFunction(() => window.__ide._lastDiagnostics?.some(d => d.code === 'MB2047'));
+      C.ok(true, 'Присваивание без чтения по-прежнему не использует значение');
+      await S.page.evaluate(() => window.__ide.editor.getModel().setValue('DIM spare AS INTEGER = 42\nPRINT spare\n'));
+      await S.page.waitForFunction(() => !window.__ide._lastDiagnostics?.some(d => d.code === 'MB2047'));
+      await S.page.evaluate(() => window.__ide.runLiveCheck());
+      C.ok(!(await S.markers()).some(marker => marker.message.includes('MB2047')), 'Чтение значения устраняет совет после нового анализа');
+      await S.page.evaluate(() => window.__ide.editor.getModel().setValue('DIM spare AS INTEGER\n'));
+      await S.page.evaluate(() => window.__ide.runLiveCheck());
+      await S.page.evaluate(p => window.__ide.closeFile(p, true), file);
+      C.ok(await S.page.locator('[data-diagnostic-filter="advice"]').textContent().then(text => text.includes('(0)')), 'Закрытие документа обновляет число советов');
+      await S.page.evaluate(() => window.__ide.switchPanel('console'));
+      C.ok(!await S.page.locator('#diagnostic-filters').isVisible(), 'Категории сообщений скрыты в консоли');
     },
   },
   {

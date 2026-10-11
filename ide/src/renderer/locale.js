@@ -2,6 +2,11 @@
 const I18N = (() => {
   const STRINGS = {
     ru: {
+      'problems.all': 'Все',
+      'problems.error': 'Ошибки',
+      'problems.warning': 'Предупреждения',
+      'problems.advice': 'Советы',
+      'problems.filteredEmpty': 'В этой категории сообщений нет.',
       'menu.view.themeBasic': 'Тема QuickBASIC',
       'menu.trace': 'Трассировка',
       'trace.start': 'Начать / продолжить',
@@ -143,6 +148,11 @@ const I18N = (() => {
       'fmt.off': 'выкл',
     },
     en: {
+      'problems.all': 'All',
+      'problems.error': 'Errors',
+      'problems.warning': 'Warnings',
+      'problems.advice': 'Suggestions',
+      'problems.filteredEmpty': 'No messages in this category.',
       'menu.view.themeBasic': 'QuickBASIC theme',
       'menu.trace': 'Debug',
       'trace.start': 'Start / Continue',

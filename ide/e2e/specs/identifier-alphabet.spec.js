@@ -15,6 +15,7 @@ module.exports=[{id:'identifier-alphabet-diagnostics',name:'Русские им�
  await S.page.evaluate(source=>window.__ide.editor.getModel().setValue(source),valid);await S.page.evaluate(()=>window.__ide.check(false));
  const validMarkers=await S.markers();
  C.eq(validMarkers.filter(marker=>marker.severity===8).length,0,'Строки и комментарии с русскими буквами допустимы');
- C.ok(validMarkers.some(marker=>marker.severity===4 && marker.message.includes('MB2047')),'Неиспользуемая константа Limit отмечена предупреждением');
+ C.ok(validMarkers.some(marker=>marker.severity===1 && marker.message.includes('MB2047')),'Неиспользуемая константа Limit отмечена советом');
+ C.ok(await S.page.evaluate(()=>window.monaco.editor.getModelMarkers({owner:'axiom'}).some(m=>m.code==='MB2047' && m.startLineNumber===2 && m.startColumn===7 && m.endColumn===12)),'Совет отмечает только имя константы Limit');
  await S.page.evaluate(()=>window.__ide.save());await S.page.evaluate(()=>window.__ide.run());await S.waitIdle();await S.waitConsole('Русский текст');C.ok(true,'Русский текст реально выведен');
 }}];

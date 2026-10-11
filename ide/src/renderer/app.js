@@ -19,6 +19,7 @@ class AxiomIDE {
     this._stopRequested = false;
     this._consoleT0 = null;
     this.fileChangePrompts = new Set(); // paths with an open external-change prompt
+    this._diagnosticFilter = 'all';
     // The program always runs in the integrated ConPTY terminal — the console is the only run mode.
     this.settings = { theme: 'dark', language: 'ru', recentFiles: [], projectExplorer: true };
     this._autoFormatting = false; // Защищает от повторного форматирования и регистрации автоматических правок как пользовательских.
@@ -69,6 +70,10 @@ class AxiomIDE {
       this.setupToolbar();
       this.setupProjectExplorer();
       this.setupPanelTabs();
+      document.querySelectorAll('[data-diagnostic-filter]').forEach(button => button.addEventListener('click', () => {
+        this._diagnosticFilter = button.dataset.diagnosticFilter;
+        this.updateDiagnosticFilters();
+      }));
       this.setupDocumentTabs();
       this.setupPanelResizer();
       this.updateOutputMenuCheck();
@@ -385,6 +390,7 @@ class AxiomIDE {
       if (this.settings.smartIdentifierEnabled) this.formatWholeDocument('ax-smart-blur', this.activeFile, 'document.normalizeIdentifiers');
     });
     this.editor.onDidChangeModelContent((event) => {
+      this.clearUsageAdvice();
       this.editedLines.record(this.editor.getModel(),event.changes,!this._autoFormatting);
       if (this.activeFile) this.markDirty(this.activeFile, true);
       if (this.activeFile && !this.openFiles.isDirty(this.activeFile)) this.editedLines.clear(this.editor.getModel());
@@ -973,6 +979,7 @@ class AxiomIDE {
     document.querySelectorAll('#diagnostics-content .diagnostic-item').forEach((it) => {
       if (it.dataset.file === p) it.remove();
     });
+    this.updateDiagnosticFilters();
     document.querySelectorAll('.editor-tab').forEach((t) => { if (t.dataset.path === p) t.remove(); });
     if (this.activeFile === p) {
       const rest = [...this.openFiles.keys()];
@@ -1640,6 +1647,43 @@ class AxiomIDE {
   clearDiagnostics() {
     this.log('diagnostics.clear');
     document.getElementById('diagnostics-content').innerHTML = '';
+    this._lastDiagnostics = [];
+    this.updateDiagnosticFilters();
+  }
+
+  diagnosticCategory(d) {
+    return d.severity === 'error' ? 'error' : d.code === 'MB2047' ? 'advice' : 'warning';
+  }
+
+  updateDiagnosticFilters() {
+    const diags = this._lastDiagnostics || [];
+    for (const button of document.querySelectorAll('[data-diagnostic-filter]')) {
+      const category = button.dataset.diagnosticFilter;
+      const count = category === 'all' ? diags.length : diags.filter(d => this.diagnosticCategory(d) === category).length;
+      button.textContent = I18N.t('problems.' + category) + ' (' + count + ')';
+      button.setAttribute('aria-pressed', String(category === this._diagnosticFilter));
+    }
+    const content = document.getElementById('diagnostics-content');
+    content.querySelector('#diagnostic-empty')?.remove();
+    const items = [...content.querySelectorAll('.diagnostic-item')];
+    for (const item of items) item.hidden = this._diagnosticFilter !== 'all' && item.dataset.category !== this._diagnosticFilter;
+    if (!items.some(item => !item.hidden)) {
+      const empty = document.createElement('div'); empty.id = 'diagnostic-empty'; empty.className = 'recent-empty';
+      empty.textContent = I18N.t(diags.length ? 'problems.filteredEmpty' : 'problems.empty');
+      content.appendChild(empty);
+    }
+  }
+
+  clearUsageAdvice() {
+    const model = this.editor.getModel();
+    if (!model || !this._lastDiagnostics?.some(d => d.code === 'MB2047' && d.file === this.activeFile)) return;
+    const markers = this.monaco.editor.getModelMarkers({ owner: 'axiom', resource: model.uri });
+    this.monaco.editor.setModelMarkers(model, 'axiom', markers.filter(m => m.code !== 'MB2047'));
+    this._lastDiagnostics = this._lastDiagnostics.filter(d => d.code !== 'MB2047' || d.file !== this.activeFile);
+    document.querySelectorAll('#diagnostics-content .diagnostic-item').forEach(item => {
+      if (item.dataset.code === 'MB2047' && item.dataset.file === this.activeFile) item.remove();
+    });
+    this.updateDiagnosticFilters();
   }
 
   applyDiagnostics(diags, onlyActive = false) {
@@ -1659,17 +1703,15 @@ class AxiomIDE {
     this._lastDiagnosticsOnlyActive = onlyActive;
 
     if (!diags.length) {
-      const empty = document.createElement('div');
-      empty.className = 'recent-empty';
-      empty.textContent = I18N.t('problems.empty');
-      el.appendChild(empty);
       for (const model of byModel.keys()) monaco.editor.setModelMarkers(model, 'axiom', []);
+      this.updateDiagnosticFilters();
       this.log('diagnostics.apply.end', { count: 0, focus: this.focusState() });
       return;
     }
 
     for (const d of diags) {
-      const sev = d.severity === 'error' ? monaco.MarkerSeverity.Error : monaco.MarkerSeverity.Warning;
+      const category = this.diagnosticCategory(d);
+      const sev = category === 'advice' ? monaco.MarkerSeverity.Hint : d.severity === 'error' ? monaco.MarkerSeverity.Error : monaco.MarkerSeverity.Warning;
       const line = Math.max(1, d.line || 1);
       const col = Math.max(1, d.col || 1);
       const len = Math.max(1, d.length || 1);
@@ -1681,14 +1723,18 @@ class AxiomIDE {
           endLineNumber: line, endColumn: col + len,
           message: this.localizedDiagText(d),
           severity: sev,
+          code: d.code,
+          ...(category === 'advice' ? { tags: [monaco.MarkerTag.Unnecessary] } : {}),
         });
       }
 
       const item = document.createElement('div');
       item.className = 'diagnostic-item';
+      item.dataset.category = category;
+      item.dataset.code = d.code;
       const icon = document.createElement('span');
-      icon.className = 'diagnostic-icon ' + d.severity;
-      icon.textContent = d.severity === 'error' ? '\u2716' : '\u26A0\uFE0E';
+      icon.className = 'diagnostic-icon ' + category + (category === 'advice' ? ' codicon codicon-lightbulb' : '');
+      icon.textContent = category === 'advice' ? '' : d.severity === 'error' ? '\u2716' : '\u26A0\uFE0E';
       const message = document.createElement('span');
       message.className = 'diagnostic-message';
       message.textContent = this.localizedDiagText(d);
@@ -1704,6 +1750,7 @@ class AxiomIDE {
     }
 
     for (const [model, markers] of byModel) monaco.editor.setModelMarkers(model, 'axiom', markers);
+    this.updateDiagnosticFilters();
     this.log('diagnostics.apply.end', { count: diags.length, focus: this.focusState() });
   }
 
@@ -1801,6 +1848,7 @@ class AxiomIDE {
   }
 
   switchPanel(name) {
+    document.getElementById('diagnostic-filters').hidden = name !== 'diagnostics';
     this.log('panel.switch', { name, focus: this.focusState() });
     document.querySelectorAll('.panel-tab').forEach((t) => {
       t.classList.toggle('active', t.dataset.tab === name);

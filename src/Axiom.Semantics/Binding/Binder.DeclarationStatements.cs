@@ -29,7 +29,7 @@ public sealed partial class Binder
                 TryDeclareScopedVariable(variable, declarator.Identifier.Location);
 
                 var arrayBounds = BindDeclaratorArrayBounds(declarator);
-                declarations.Add(new BoundVariableDeclarationStatement(GetLocation(statement), variable, initializer, arrayBounds));
+                declarations.Add(new BoundVariableDeclarationStatement(GetLocation(statement), variable, initializer, arrayBounds, declarator.Identifier.Location));
             }
         }
 
@@ -124,7 +124,7 @@ public sealed partial class Binder
             _boundIntegralConstants[constant] = integralValue;
         }
 
-        return new BoundVariableDeclarationStatement(GetLocation(statement), constant, initializer, arrayBounds: []);
+        return new BoundVariableDeclarationStatement(GetLocation(statement), constant, initializer, arrayBounds: [], identifierLocation: declaration.Identifier.Location);
     }
 
     private BoundStatement BindAssignmentStatement(AssignmentStatementSyntax statement)

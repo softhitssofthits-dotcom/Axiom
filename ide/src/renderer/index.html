@@ -164,6 +164,12 @@
             <button class="panel-tab active" data-tab="console" data-i18n="panel.console">Консоль</button>
             <button class="panel-tab" data-tab="diagnostics" data-i18n="panel.problems">Проблемы</button>
             <button class="panel-tab" data-tab="structure" data-i18n="panel.structure">Структура</button>
+            <div id="diagnostic-filters" hidden role="group" aria-label="Категории сообщений">
+              <button type="button" data-diagnostic-filter="all" aria-pressed="true">Все</button>
+              <button type="button" data-diagnostic-filter="error" aria-pressed="false">Ошибки</button>
+              <button type="button" data-diagnostic-filter="warning" aria-pressed="false">Предупреждения</button>
+              <button type="button" data-diagnostic-filter="advice" aria-pressed="false">Советы</button>
+            </div>
           </div>
           <div id="panel-content">
             <!-- no whitespace between these tags: .tab-content inherited pre-wrap and

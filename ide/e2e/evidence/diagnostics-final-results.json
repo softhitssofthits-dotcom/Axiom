@@ -1,0 +1,72 @@
+[
+  {
+    "id": "live-check-marks-syntax-error",
+    "spec": "problems.spec.js",
+    "name": "A syntax error squiggles while typing (live check, no save)",
+    "ms": 5831,
+    "passed": 3,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:65358/7e492e03-e1dd-4053-9f13-ebb48b962079\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "explicit-check-opens-problems-panel",
+    "spec": "problems.spec.js",
+    "name": "Check command surfaces the Problems panel with the error list",
+    "ms": 5015,
+    "passed": 2,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:65364/583fe742-ed55-42f4-9258-41e12036a38d\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "check-ok-confirms-no-problems",
+    "spec": "problems.spec.js",
+    "name": "A clean file checks to \"Проблем нет\"",
+    "ms": 4467,
+    "passed": 1,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:65378/424f1ce6-80dd-4e98-a779-ca735ca283bc\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "unused-variable-warning",
+    "spec": "problems.spec.js",
+    "name": "Совет о неиспользуемой переменной выделяет имя, отделён от ошибок и обновляется после чтения",
+    "ms": 6317,
+    "passed": 12,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:65382/879676b3-ac5d-4dab-8b0c-7f49b2a77b84\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "circle-text-mode-check-run-diagnostic",
+    "spec": "problems.spec.js",
+    "name": "Check находит графику в SCREEN 0 и блокирует Run; сообщение сохраняется при смене языка",
+    "ms": 9566,
+    "passed": 5,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:65389/a5c3d7c4-aad9-485a-89ed-f23e05faa7b1\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]
