@@ -455,7 +455,7 @@ SUB DrawMazeWorld()                                                             
     DIM firstRow AS INTEGER = 1                                                                  ' Рисуем карту с самой первой строки.
     DIM lastRow AS INTEGER = mazeRows                                                            ' Рисуем карту до самой последней строки.
 
-    VIEWPORT (WorldViewportLeft(), WorldViewportTop())-(WorldViewportRight(), WorldViewportBottom()) ' Отдаём отдельный прямоугольник под мир и оставляем HUD вне него.
+    VIEWPORT (WorldViewportLeft(), WorldViewportTop()) - (WorldViewportRight(), WorldViewportBottom()) ' Отдаём отдельный прямоугольник под мир и оставляем HUD вне него.
     CAMERA cameraX, cameraY                                                                     ' Включаем камеру мира для последующего рисования.
 
     DrawVisibleWalls(firstRow, lastRow, firstCol, lastCol)                                      ' Рисуем фон лабиринта.
@@ -563,7 +563,7 @@ END SUB                                                                         
 
 SUB DrawCalibrationOverlay()                                                                    ' Процедура рисует подсказки и направляющую линию калибровки.
     RESETCAMERA                                                                                 ' Рисуем оверлей в экранных координатах, чтобы он не зависел от камеры.
-    VIEWPORT (WorldViewportLeft(), WorldViewportTop())-(WorldViewportRight(), WorldViewportBottom()) ' Ограничиваем сетку и направляющие только областью игрового поля.
+    VIEWPORT (WorldViewportLeft(), WorldViewportTop()) - (WorldViewportRight(), WorldViewportBottom()) ' Ограничиваем сетку и направляющие только областью игрового поля.
     DrawCalibrationGrid()                                                                       ' Сначала рисуем тонкую сетку поверх поля для точной ручной подгонки.
 
     IF calibrationTarget = CALIBRATION_ROW_MODE THEN                                            ' Если выбрана строка...
@@ -935,7 +935,7 @@ END FUNCTION                                                                    
 FUNCTION DirX(dir AS INTEGER) AS INTEGER                                                        ' Функция возвращает горизонтальную составляющую направления.
     SELECT CASE dir                                                                             ' Выбираем код направления.
         CASE DIR_LEFT                                                                           ' Для движения влево...
-            RETURN -1                                                                           ' ...смещение по X равно минус один столбец.
+            RETURN - 1                                                                           ' ...смещение по X равно минус один столбец.
         CASE DIR_RIGHT                                                                          ' Для движения вправо...
             RETURN 1                                                                            ' ...смещение по X равно плюс один столбец.
         CASE ELSE                                                                               ' Для вертикального движения или нулевого направления...
@@ -946,7 +946,7 @@ END FUNCTION                                                                    
 FUNCTION DirY(dir AS INTEGER) AS INTEGER                                                        ' Функция возвращает вертикальную составляющую направления.
     SELECT CASE dir                                                                             ' Выбираем код направления.
         CASE DIR_UP                                                                             ' Для движения вверх...
-            RETURN -1                                                                           ' ...смещение по Y равно минус одна строка.
+            RETURN - 1                                                                           ' ...смещение по Y равно минус одна строка.
         CASE DIR_DOWN                                                                           ' Для движения вниз...
             RETURN 1                                                                            ' ...смещение по Y равно плюс одна строка.
         CASE ELSE                                                                               ' Для горизонтального движения или нулевого направления...
@@ -987,7 +987,7 @@ END FUNCTION                                                                    
 
 FUNCTION AbsInt(value AS INTEGER) AS INTEGER                                                    ' Функция возвращает модуль целого числа.
     IF value < 0 THEN                                                                           ' Если число отрицательное...
-        RETURN -value                                                                           ' ...меняем знак и возвращаем положительное значение.
+        RETURN - value                                                                           ' ...меняем знак и возвращаем положительное значение.
     END IF                                                                                      ' Завершаем проверку знака.
 
     RETURN value                                                                                ' Для неотрицательного числа возвращаем его как есть.

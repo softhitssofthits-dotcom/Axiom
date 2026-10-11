@@ -5,6 +5,7 @@ const { pathToFileURL } = require('node:url');
 const { randomUUID } = require('node:crypto');
 const { BackendClient } = require('./backend-client');
 const { sourceFingerprint } = require('./backend-fingerprint');
+const { resolveHostPath } = require('./host-ensure');
 const { CanvasWindow } = require('./canvas-window');
 const { sameSourceText } = require('./file-service');
 
@@ -32,7 +33,7 @@ function checkSender(event) {
 function send(channel, payload) { if (owner && !owner.isDestroyed()) owner.send(channel, payload); }
 function getClient() {
   if (client && !client.failure && !client.closed) return client;
-  const executable = process.env.AXIOM_DESKTOP_HOST_EXE || path.join(root, '.artifacts/bin/Axiom.DesktopHost/Debug/net10.0-windows/Axiom.DesktopHost.exe');
+  const executable = resolveHostPath(process.env, root).exe;
   client = new BackendClient({ executable, expectedFingerprint: sourceFingerprint(root) });
   client.on('event', message => {
     if (message.sessionId && message.sessionId !== sessionId) return;

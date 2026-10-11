@@ -3,8 +3,9 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const fs = require('node:fs');
 const { BackendClient } = require('../src/main/backend-client');
+const { resolveHostPath } = require('../src/main/host-ensure');
 const root = path.resolve(__dirname, '../..');
-const executable = path.join(root, '.artifacts/bin/Axiom.DesktopHost/Debug/net10.0-windows/Axiom.DesktopHost.exe');
+const executable = resolveHostPath({}, root).exe;
 
 test('Мост получает ready, Unicode-вывод и завершает только свой процесс', async () => {
   const client = new BackendClient({ executable });

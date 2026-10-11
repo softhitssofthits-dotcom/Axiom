@@ -5,8 +5,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const net = require('node:net');
 const { randomUUID } = require('node:crypto');
+const { resolveHostPath } = require('../src/main/host-ensure');
 const root = path.resolve(__dirname, '../..');
-const exe = process.env.AXIOM_DESKTOP_HOST_EXE || path.join(root, '.artifacts/bin/Axiom.DesktopHost/Debug/net10.0-windows/Axiom.DesktopHost.exe');
+const exe = process.env.AXIOM_DESKTOP_HOST_EXE || resolveHostPath({}, root).exe;
 
 class Host {
   constructor(framePipe) {

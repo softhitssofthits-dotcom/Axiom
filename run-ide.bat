@@ -30,6 +30,17 @@ if errorlevel 1 (
     exit /b 1
 )
 
+rem --- 2b. Build/refresh the shared DesktopHost service process when missing or stale
+rem     (freshness guard: a missing host is spawn ENOENT on the first backend request, a
+rem     host built from older sources is rejected with HOST_STALE).
+node "%~dp0ide\scripts\ensure-desktop-host.js"
+if errorlevel 1 (
+    echo.
+    echo DesktopHost build FAILED.
+    pause
+    exit /b 1
+)
+
 rem --- 3. Install/update IDE dependencies when package.json changed after a git pull
 rem     (dependency freshness guard: node_modules existing is NOT enough — a pull that
 rem     adds a dependency once silently broke the console for exactly that reason).
