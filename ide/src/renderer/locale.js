@@ -2,6 +2,8 @@
 const I18N = (() => {
   const STRINGS = {
     ru: {
+      'tb.undo': 'Отменить (Ctrl+Z)',
+      'tb.redo': 'Повторить (Ctrl+Y)',
       'problems.all': 'Все',
       'problems.error': 'Ошибки',
       'problems.warning': 'Предупреждения',
@@ -148,6 +150,8 @@ const I18N = (() => {
       'fmt.off': 'выкл',
     },
     en: {
+      'tb.undo': 'Undo (Ctrl+Z)',
+      'tb.redo': 'Redo (Ctrl+Y)',
       'problems.all': 'All',
       'problems.error': 'Errors',
       'problems.warning': 'Warnings',
@@ -318,7 +322,7 @@ const I18N = (() => {
     });
     document.querySelectorAll('[data-i18n-title]').forEach((el) => {
       const k = el.dataset.i18nTitle;
-      if (k) { el.title = t(k); if (el.tagName === 'BUTTON' || el.getAttribute('role') === 'separator') el.setAttribute('aria-label', t(k)); }
+      if (k) UIControls.setLabel(el, t(k));
     });
   }
 

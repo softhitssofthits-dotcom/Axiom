@@ -469,8 +469,8 @@ class AxiomIDE {
         row.className = 'xs-context-item';
         row.dataset.action = item.id;
         row.setAttribute('role', 'menuitem');
-        row.setAttribute('aria-label', item.translation ? I18N.t(item.translation) : item.label);
-        row.disabled = !!item.trace && (!this.trace.allowed(item.trace) || (item.trace === 'breakpoint' && !contextLine));
+        UIControls.setLabel(row, item.translation ? I18N.t(item.translation) : item.label, { tooltip: false });
+        UIControls.setEnabled(row, !item.trace || (this.trace.allowed(item.trace) && (item.trace !== 'breakpoint' || !!contextLine)));
         row.innerHTML = `<span class="xs-context-item-icon codicon ${item.icon}"></span><span class="xs-context-item-label">${item.translation ? I18N.t(item.translation) : item.label}</span>${item.key ? `<span class="xs-context-item-key">${item.key}</span>` : ''}`;
         menu.appendChild(row);
       });
@@ -498,7 +498,7 @@ class AxiomIDE {
     let openMenu = null;
     const closeSubmenus = () => document.querySelectorAll('.menu-item-submenu.open').forEach(item => {
       item.classList.remove('open');
-      item.querySelector('.submenu-trigger')?.setAttribute('aria-expanded', 'false');
+      UIControls.setExpanded(item.querySelector('.submenu-trigger'), false);
     });
     const closeAll = () => {
       closeSubmenus();
@@ -513,9 +513,9 @@ class AxiomIDE {
     });
     document.querySelectorAll('.menu-item-submenu').forEach(item => {
       const trigger = item.querySelector('.submenu-trigger'); const dropdown = item.querySelector('.submenu-dropdown');
-      trigger.tabIndex = 0; trigger.setAttribute('aria-haspopup', 'menu'); trigger.setAttribute('aria-expanded', 'false');
+      trigger.tabIndex = 0; trigger.setAttribute('aria-haspopup', 'menu'); UIControls.setExpanded(trigger, false);
       const open = () => {
-        closeSubmenus(); item.classList.add('open'); trigger.setAttribute('aria-expanded', 'true');
+        closeSubmenus(); item.classList.add('open'); UIControls.setExpanded(trigger, true);
         const anchor = trigger.getBoundingClientRect(); const size = dropdown.getBoundingClientRect();
         dropdown.style.position = 'fixed';
         const right = anchor.right; const left = right + size.width <= innerWidth - 8 ? right : anchor.left - size.width;
@@ -546,6 +546,18 @@ class AxiomIDE {
     document.getElementById('tb-format').onclick = () => this.handleAction('format');
     document.getElementById('tb-find').onclick = () => this.handleAction('find');
     document.getElementById('tb-toggle-output').onclick = () => this.handleAction('toggle-output');
+    const refreshHistory = () => queueMicrotask(() => this.updateHistoryButtons());
+    this.editor.onDidChangeModel(refreshHistory);
+    this.editor.onDidChangeModelContent(refreshHistory);
+    this.editor.onDidChangeConfiguration(refreshHistory);
+    this.updateHistoryButtons();
+  }
+
+  updateHistoryButtons() {
+    const model = this.editor.getModel();
+    const editable = model && !this.editor.getOption(this.monaco.editor.EditorOption.readOnly);
+    UIControls.setEnabled(document.getElementById('tb-undo'), editable && model.canUndo());
+    UIControls.setEnabled(document.getElementById('tb-redo'), editable && model.canRedo());
   }
 
   setupPanelTabs() {
@@ -573,8 +585,8 @@ class AxiomIDE {
     document.getElementById('shell-sidebar').hidden = !visible;
     document.getElementById('sidebar-resizer').hidden = !visible;
     this.saveSettings({sidebarVisible: visible});
-    document.querySelector('[data-check="sidebarVisible"]')?.classList.toggle('on', visible);
-    document.getElementById('tb-toggle-sidebar')?.setAttribute('aria-pressed', String(visible));
+    UIControls.setMenuChecked(document.querySelector('[data-check="sidebarVisible"]'), visible);
+    UIControls.setPressed(document.getElementById('tb-toggle-sidebar'), visible);
     this.sidebarSplitter?.layout();
   }
 
@@ -863,7 +875,7 @@ class AxiomIDE {
     document.getElementById('project-explorer').classList.toggle('hidden', !visible);
     this.saveSettings({ projectExplorer: visible });
     const check = document.querySelector('.menu-check[data-check="projectExplorer"]');
-    if (check) check.classList.toggle('on', visible);
+    UIControls.setMenuChecked(check, visible);
     setTimeout(() => this.editor?.layout(), 0);
   }
 
@@ -916,8 +928,8 @@ class AxiomIDE {
     const left = document.getElementById('tabs-scroll-left');
     const right = document.getElementById('tabs-scroll-right');
     const update = () => {
-      left.disabled = tabs.scrollLeft <= 1;
-      right.disabled = tabs.scrollLeft + tabs.clientWidth >= tabs.scrollWidth - 1;
+      UIControls.setEnabled(left, tabs.scrollLeft > 1);
+      UIControls.setEnabled(right, tabs.scrollLeft + tabs.clientWidth < tabs.scrollWidth - 1);
     };
     left.addEventListener('click', () => tabs.scrollBy({ left: -Math.max(100, tabs.clientWidth * 0.7) }));
     right.addEventListener('click', () => tabs.scrollBy({ left: Math.max(100, tabs.clientWidth * 0.7) }));
@@ -1198,9 +1210,9 @@ class AxiomIDE {
   }
 
   updateFormatMenuChecks() {
-    document.querySelector('.menu-check[data-check="smartIdentifier"]')?.classList.toggle('on',!!this.settings.smartIdentifierEnabled);
+    UIControls.setMenuChecked(document.querySelector('.menu-check[data-check="smartIdentifier"]'), this.settings.smartIdentifierEnabled);
     for (const [key, style] of [['formatClassic', 'Classic'], ['formatModern', 'Modern']]) {
-      document.querySelector('.menu-check[data-check="' + key + '"]')?.classList.toggle('on', (this.settings.formattingStyle || 'Classic') === style);
+      UIControls.setMenuChecked(document.querySelector('.menu-check[data-check="' + key + '"]'), (this.settings.formattingStyle || 'Classic') === style);
     }
   }
 
@@ -1661,7 +1673,7 @@ class AxiomIDE {
       const category = button.dataset.diagnosticFilter;
       const count = category === 'all' ? diags.length : diags.filter(d => this.diagnosticCategory(d) === category).length;
       button.textContent = I18N.t('problems.' + category) + ' (' + count + ')';
-      button.setAttribute('aria-pressed', String(category === this._diagnosticFilter));
+      UIControls.setPressed(button, category === this._diagnosticFilter);
     }
     const content = document.getElementById('diagnostics-content');
     content.querySelector('#diagnostic-empty')?.remove();
@@ -1875,9 +1887,10 @@ class AxiomIDE {
 
   // View menu affordance: "Нижняя панель" shows its ✓ exactly when the panel is visible.
   updateOutputMenuCheck() {
+    const visible = document.getElementById('bottom-panel').style.display !== 'none';
+    UIControls.setPressed(document.getElementById('tb-toggle-output'), visible);
     const check = document.querySelector('.menu-check[data-check="outputPanel"]');
-    if (check) check.classList.toggle('on',
-      document.getElementById('bottom-panel').style.display !== 'none');
+    UIControls.setMenuChecked(check, visible);
   }
 
   // ================= theme / language =================
@@ -1908,8 +1921,7 @@ class AxiomIDE {
       const label = this.settings.language === 'en'
         ? 'Scroll tabs ' + direction
         : 'Прокрутить вкладки ' + (direction === 'left' ? 'влево' : 'вправо');
-      button.title = label;
-      button.setAttribute('aria-label', label);
+      UIControls.setLabel(button, label);
     }
     this.rebuildOutline();
     this.setProjectExplorerVisible(this.settings.projectExplorer !== false);

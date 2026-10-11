@@ -44,7 +44,7 @@
       <div class="menu-item" data-menu="edit">
         <span class="menu-label" data-i18n="menu.edit">Правка</span>
         <div class="menu-dropdown">
-          <div class="menu-dropdown-item" data-action="undo"><span class="menu-icon codicon codicon-arrow-left"></span><span class="menu-text" data-i18n="menu.edit.undo">Отменить</span><span class="menu-shortcut">Ctrl+Z</span></div>
+          <div class="menu-dropdown-item" data-action="undo"><span class="menu-icon codicon codicon-discard"></span><span class="menu-text" data-i18n="menu.edit.undo">Отменить</span><span class="menu-shortcut">Ctrl+Z</span></div>
           <div class="menu-dropdown-item" data-action="redo"><span class="menu-icon codicon codicon-redo"></span><span class="menu-text" data-i18n="menu.edit.redo">Повторить</span><span class="menu-shortcut">Ctrl+Y</span></div>
           <div class="menu-separator"></div>
           <div class="menu-dropdown-item" data-action="cut"><span class="menu-icon codicon codicon-screen-cut"></span><span class="menu-text" data-i18n="menu.edit.cut">Вырезать</span><span class="menu-shortcut">Ctrl+X</span></div>
@@ -71,7 +71,7 @@
         <span class="menu-label" data-i18n="menu.run">Запуск</span>
         <div class="menu-dropdown">
           <div class="menu-dropdown-item" data-action="run"><span class="menu-icon codicon codicon-run" style="color:#63c174"></span><span class="menu-text" data-i18n="menu.run.run">Запустить</span><span class="menu-shortcut">Ctrl+F5</span></div>
-          <div class="menu-dropdown-item" data-action="check"><span class="menu-icon codicon codicon-pass"></span><span class="menu-text" data-i18n="menu.run.check">Проверить</span><span class="menu-shortcut">Ctrl+Shift+C</span></div>
+          <div class="menu-dropdown-item" data-action="check"><span class="menu-icon codicon codicon-check"></span><span class="menu-text" data-i18n="menu.run.check">Проверить</span><span class="menu-shortcut">Ctrl+Shift+C</span></div>
           <div class="menu-dropdown-item" data-action="stop"><span class="menu-icon codicon codicon-debug-stop" style="color:#ff7b72"></span><span class="menu-text" data-i18n="menu.run.stop">Остановить</span><span class="menu-shortcut">Shift+F5</span></div>
         </div>
       </div>
@@ -128,7 +128,7 @@
         <span class="codicon codicon-debug-stop"></span>
       </button>
       <button class="toolbar-btn" id="tb-check" title="Проверить (Ctrl+Shift+C)" data-i18n-title="tb.check">
-        <span class="codicon codicon-pass"></span>
+        <span class="codicon codicon-check"></span>
       </button>
       <button class="toolbar-btn" id="tb-format" title="Форматировать документ (Shift+Alt+F)" data-i18n-title="tb.format">
         <span class="codicon codicon-indent"></span>
@@ -197,6 +197,7 @@
   <script src="../../node_modules/@xterm/xterm/lib/xterm.js"></script>
   <script src="../../node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
   <script src="vs/loader.js"></script>
+  <script src="ui-controls.js"></script>
   <script src="locale.js"></script>
   <script src="lang-features.js"></script>
   <script src="execution-controller.js"></script>

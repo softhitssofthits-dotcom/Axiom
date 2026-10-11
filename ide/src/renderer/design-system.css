@@ -4,26 +4,33 @@
    styles.css, so controls keep the same event handlers and keyboard behaviour. */
 
 :root {
-  --xs-canvas: #171a21;
-  --xs-surface: #1d212b;
-  --xs-surface-raised: #252b37;
+  --xs-canvas: #141922;
+  --xs-surface: #1c2330;
+  --xs-surface-raised: #252e3e;
   --xs-surface-hover: #2c3442;
   --xs-surface-active: #353f50;
-  --xs-editor: #1a1e27;
-  --xs-border: #343d4d;
+  --xs-editor: #171d27;
+  --xs-border: #354157;
   --xs-border-subtle: #293140;
-  --xs-text: #e6eaf0;
-  --xs-text-muted: #a5afbf;
+  --xs-text: #e4ebf5;
+  --xs-text-muted: #99a8bc;
   --xs-text-faint: #768296;
-  --xs-accent: #62a8ff;
+  --xs-accent: #79b4ff;
   --xs-accent-strong: #3e8cf5;
   --xs-accent-wash: rgba(98, 168, 255, .16);
-  --xs-danger: #ff7b72;
-  --xs-warning: #e5b567;
-  --xs-success: #63c174;
+  --xs-danger: #ff928c;
+  --xs-warning: #edc381;
+  --xs-success: #85d2ad;
   --xs-shadow-menu: 0 14px 34px rgba(0, 0, 0, .34), 0 2px 7px rgba(0, 0, 0, .28);
   --xs-radius-sm: 4px;
   --xs-radius-md: 7px;
+  --xs-icon-button-size: 32px;
+  --xs-icon-size: 21px;
+  --xs-icon-button-radius: 5px;
+  --xs-disabled-opacity: .4;
+  --xs-console-bg: #151820;
+  --xs-console-scrollbar: #465064;
+  --xs-status-bg: #242d3a;
 
   --bg-primary: var(--xs-editor);
   --bg-secondary: var(--xs-surface);
@@ -39,34 +46,63 @@
   --success-color: var(--xs-success);
   --status-bar-height: 25px;
   --tab-height: 38px;
+  --panel-height: 200px;
 }
 
 [data-theme="light"] {
-  --xs-canvas: #edf1f7;
-  --xs-surface: #f7f9fc;
+  --xs-canvas: #e9eef5;
+  --xs-surface: #f4f7fb;
   --xs-surface-raised: #ffffff;
   --xs-surface-hover: #e7edf6;
   --xs-surface-active: #dce7f5;
   --xs-editor: #ffffff;
-  --xs-border: #cbd5e1;
+  --xs-border: #cbd5e3;
   --xs-border-subtle: #dde5ef;
-  --xs-text: #182231;
-  --xs-text-muted: #536174;
+  --xs-text: #233247;
+  --xs-text-muted: #596c84;
   --xs-text-faint: #718096;
-  --xs-accent: #0969da;
+  --xs-accent: #235fa9;
   --xs-accent-strong: #0758ba;
   --xs-accent-wash: rgba(9, 105, 218, .12);
-  --xs-danger: #cf222e;
-  --xs-warning: #9a6700;
-  --xs-success: #1a7f37;
+  --xs-danger: #b72d2d;
+  --xs-warning: #8a591a;
+  --xs-success: #227453;
+  --xs-console-bg: var(--xs-editor);
+  --xs-console-scrollbar: #aeb8c6;
+  --xs-status-bg: #e8eef7;
   --xs-shadow-menu: 0 14px 34px rgba(30, 41, 59, .16), 0 2px 8px rgba(30, 41, 59, .10);
+}
+
+html[data-theme="basic"] {
+  --xs-canvas: #000080;
+  --xs-surface: #000080;
+  --xs-surface-raised: #101080;
+  --xs-surface-hover: #3030a0;
+  --xs-surface-active: #4040a0;
+  --xs-border: #c0c0c0;
+  --xs-border-subtle: #8080c0;
+  --xs-text: #fff;
+  --xs-text-muted: #c0c0e0;
+  --xs-text-faint: #b8c7e8;
+  --xs-accent: #ffff55;
+  --xs-accent-strong: #ffffaa;
+  --xs-accent-wash: #303090;
+  --xs-editor: #000080;
+  --xs-success: #aaffaa;
+  --xs-danger: #ffaaaa;
+  --xs-warning: #ffff55;
+  --xs-radius-sm: 0px;
+  --xs-radius-md: 0px;
+  --xs-console-bg: var(--xs-editor);
+  --xs-chrome-bg: var(--xs-border);
+  --xs-chrome-text: var(--xs-editor);
 }
 
 body {
   background: var(--xs-canvas);
   color: var(--xs-text);
   font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
-  letter-spacing: .005em;
+  letter-spacing: 0;
 }
 
 button, .menu-dropdown-item, .recent-item, .project-file, .outline-item {
@@ -149,9 +185,16 @@ button:focus-visible, .menu-dropdown-item:focus-visible, .recent-item:focus-visi
 }
 
 .toolbar-btn {
-  width: 30px;
-  height: 29px;
-  border-radius: var(--xs-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--xs-icon-button-size);
+  height: var(--xs-icon-button-size);
+  border: 1px solid transparent;
+  border-radius: var(--xs-icon-button-radius);
+  background: none;
+  padding: 0;
+  cursor: pointer;
   color: var(--xs-text-muted);
 }
 
@@ -162,7 +205,10 @@ button:focus-visible, .menu-dropdown-item:focus-visible, .recent-item:focus-visi
 }
 
 .toolbar-btn:active { background: var(--xs-surface-active); }
-.toolbar-btn .codicon { font-size: 16px; line-height: 1; }
+.toolbar-btn .codicon { font-size: var(--xs-icon-size); line-height: 1; }
+button[aria-pressed="true"] { background: var(--xs-surface-raised); color: var(--xs-accent); }
+button:disabled, [aria-disabled="true"] { opacity: var(--xs-disabled-opacity); cursor: default; }
+.toolbar-btn:disabled { background: none; border-color: transparent; }
 .toolbar-btn.tb-run { color: var(--xs-success); }
 .toolbar-btn.tb-stop { color: var(--xs-danger); }
 .toolbar-btn.tb-run:hover { color: var(--xs-success); background: rgba(99, 193, 116, .13); }
@@ -296,11 +342,9 @@ button:focus-visible, .menu-dropdown-item:focus-visible, .recent-item:focus-visi
 .panel-tab.active { color: var(--xs-text); border-bottom-color: var(--xs-accent); }
 .panel-tab:hover { color: var(--xs-text); background: var(--xs-surface-hover); }
 .tab-content { color: var(--xs-text-muted); }
-#console-content, #terminal { background: #151820; }
-[data-theme="light"] #console-content, [data-theme="light"] #terminal { background: #ffffff; }
+#console-content, #terminal { background: var(--xs-console-bg); }
 /* Незанятые строками пиксели терминала должны иметь фон текущей темы. */
-#terminal .xterm-viewport { background-color: #151820; }
-[data-theme="light"] #terminal .xterm-viewport { background-color: #ffffff; }
+#terminal .xterm-viewport { background-color: var(--xs-console-bg); }
 .diagnostic-item { min-height: 32px; padding: 6px 12px; border-bottom-color: var(--xs-border-subtle); color: var(--xs-text-muted); }
 .diagnostic-item:hover { background: var(--xs-surface-hover); }
 .diagnostic-location { color: var(--xs-text-faint); }
@@ -312,13 +356,12 @@ button:focus-visible, .menu-dropdown-item:focus-visible, .recent-item:focus-visi
 
 /* Status bar and scrollbars */
 #status-bar {
-  background: #242d3a;
+  background: var(--xs-status-bg);
   border-top: 1px solid var(--xs-border-subtle);
   color: var(--xs-text-muted);
   padding: 0 10px;
   font-size: 11px;
 }
-[data-theme="light"] #status-bar { background: #e8eef7; }
 #status-text { color: var(--xs-accent); font-weight: 600; }
 
 ::-webkit-scrollbar { width: 11px; height: 11px; }
@@ -326,10 +369,8 @@ button:focus-visible, .menu-dropdown-item:focus-visible, .recent-item:focus-visi
 ::-webkit-scrollbar-thumb { background: transparent; border: 3px solid transparent; border-radius: 999px; background-clip: content-box; }
 *:hover::-webkit-scrollbar-thumb { background-color: var(--xs-border); }
 ::-webkit-scrollbar-thumb:hover { background-color: var(--xs-text-faint); }
-#terminal .xterm-viewport::-webkit-scrollbar-track { background: #151820; }
-#terminal .xterm-viewport::-webkit-scrollbar-thumb { background-color: #465064; border: 3px solid #151820; }
-[data-theme="light"] #terminal .xterm-viewport::-webkit-scrollbar-track { background: #ffffff; }
-[data-theme="light"] #terminal .xterm-viewport::-webkit-scrollbar-thumb { background-color: #aeb8c6; border-color: #ffffff; }
+#terminal .xterm-viewport::-webkit-scrollbar-track { background: var(--xs-console-bg); }
+#terminal .xterm-viewport::-webkit-scrollbar-thumb { background-color: var(--xs-console-scrollbar); border: 3px solid var(--xs-console-bg); }
 
 /* Dialogs use the same elevated surface as menus. */
 .modal-overlay { background: rgba(8, 12, 18, .62); backdrop-filter: blur(3px); }

@@ -68,8 +68,7 @@ class TraceController {
     }
     document.querySelectorAll('[data-trace-command]').forEach(el=>{
       const enabled=this.allowed(el.dataset.traceCommand);
-      el.classList.toggle('disabled',!enabled);el.setAttribute('aria-disabled',String(!enabled));
-      if(el.tagName==='BUTTON') el.disabled=!enabled;
+      UIControls.setEnabled(el, enabled);
     });
     const model=ide.editor.getModel(), runModel=ide.openFiles.get(ide._runFile)?.model;
     ide.editor.updateOptions({ readOnly:!!ide.openFiles.get(ide.activeFile)?.readonly || (!!ide.running && model===runModel) });
