@@ -1,0 +1,74 @@
+' Ручная приёмка физической мыши в нативном окне SCREEN.
+' Проверьте все три кнопки, отпускание, движение, колесо и возврат фокуса.
+' Для завершения нажмите ESC; итоговые счётчики появятся в консоли IDE.
+Screen 7
+Dim presses As Integer = 0
+Dim releases As Integer = 0
+Dim moves As Integer = 0
+Dim wheels As Integer = 0
+Dim lastButton As Integer = 0
+Dim lastX As Long = 0
+Dim lastY As Long = 0
+Dim lastWheel As Integer = 0
+
+' События нажатия и отпускания считаются отдельно для каждой кнопки.
+On Mouse (1), OnPress
+On Mouse (2), OnPress
+On Mouse (3), OnPress
+On Mouse (1, "UP"), OnRelease
+On Mouse (2, "UP"), OnRelease
+On Mouse (3, "UP"), OnRelease
+On Mouse ("MOVE"), OnMove
+On Mouse ("WHEEL"), OnWheel
+
+Do While Not Keypress("ESC")
+    ' Координаты и состояния обновляются, пока вы проверяете мышь.
+    Locate 1, 1
+    Print "Мышь SCREEN: три кнопки, колесо, фокус. ESC — завершить."
+    Locate 3, 1
+    Print "Координаты: "; Mousex(); ", "; Mousey(); "                 "
+    Locate 4, 1
+    Print "Кнопки: "; Mousebutton(1); " "; Mousebutton(2); " "; Mousebutton(3); "             "
+    Locate 5, 1
+    Print "Нажатия: "; presses; " Отпускания: "; releases; "             "
+    Locate 6, 1
+    Print "Движения: "; moves; " Колесо: "; wheels; " Последнее: "; lastWheel; "            "
+    Sleep 20
+Loop
+
+' Закрываем графику и оставляем измеренный результат в консоли.
+Screen 0
+Print "Нажатия: "; presses
+Print "Отпускания: "; releases
+Print "Движения: "; moves
+Print "События колеса: "; wheels
+Print "Последняя кнопка: "; lastButton
+Print "Последние координаты: "; lastX; ", "; lastY
+Print "Последнее колесо: "; lastWheel
+
+Sub OnPress(button As Integer, x As Long, y As Long)
+    presses = presses + 1
+    lastButton = button
+    lastX = x
+    lastY = y
+End Sub
+
+Sub OnRelease(button As Integer, x As Long, y As Long)
+    releases = releases + 1
+    lastButton = button
+    lastX = x
+    lastY = y
+End Sub
+
+Sub OnMove(button As Integer, x As Long, y As Long)
+    moves = moves + 1
+    lastX = x
+    lastY = y
+End Sub
+
+Sub OnWheel(delta As Integer, x As Long, y As Long)
+    wheels = wheels + 1
+    lastWheel = delta
+    lastX = x
+    lastY = y
+End Sub

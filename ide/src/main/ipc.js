@@ -16,6 +16,7 @@ const { resolveAxiomPath } = require('./axiom-ensure');
 
 // File dialogs remember the last visited folder (settings.json `lastOpenDir`).
 const { resolveDefaultDir, dirOfPickedFile } = require('./last-dir');
+const { listProjectFiles } = require('./project-files');
 
 // IDE-synthetic diagnostics are not compiler diagnostics, so they carry a synthetic code.
 const IDE_CODE = 'AXIOM-IDE';
@@ -41,6 +42,7 @@ function axiomNotFound(filePath) {
 // DOTNET_ROOT (e.g. a bundled .NET 8), so point the child at the system .NET 10.
 function buildEnv() {
   const env = { ...process.env };
+  if (require('./portable-runtime').portableRuntime()) return env;
   const preferred = process.env.AXIOM_DOTNET_ROOT || 'C:\\Program Files\\dotnet';
   if (fs.existsSync(path.join(preferred, 'dotnet.exe'))) {
     env.DOTNET_ROOT = preferred;
@@ -400,11 +402,20 @@ function setupIpc(logger) {
   });
 
   ipcMain.handle('read-file-content', async (_e, filePath) => fs.readFileSync(filePath, 'utf-8'));
-  ipcMain.handle('write-file', async (_e, filePath, content, expectedText) => {
+  ipcMain.handle('file-readonly', async (_e, filePath) => {
+    try { await fs.promises.access(filePath, fs.constants.W_OK); return false; }
+    catch (error) {
+      if (['EPERM', 'EACCES'].includes(error.code)) return true;
+      throw error;
+    }
+  });
+  ipcMain.handle('write-file', async (event, filePath, content, expectedText) => {
+    const owner = BrowserWindow.fromWebContents(event.sender);
+    if (!owner || owner.isDestroyed()) return false;
     activeFileWrites.set(filePath, (activeFileWrites.get(filePath) || 0) + 1);
     try {
       const saved = await require('./file-service').writeDocumentFile(filePath, content, expectedText, async missing => {
-        const result = await dialog.showMessageBox({
+        const result = await dialog.showMessageBox(owner, {
           type: 'warning', title: 'Сохранение файла',
           message: missing ? 'Файл удалён с диска. Создать его заново?' : 'Файл изменён на диске. Заменить внешние изменения текстом редактора?',
           detail: filePath, buttons: ['Заменить', 'Отмена'], defaultId: 1, cancelId: 1,
@@ -439,11 +450,13 @@ function setupIpc(logger) {
     watchedFiles.delete(filePath);
   });
 
-  ipcMain.handle('open-file-dialog', async () => {
+  ipcMain.handle('open-file-dialog', async event => {
+    const owner = BrowserWindow.fromWebContents(event.sender);
+    if (!owner || owner.isDestroyed()) return null;
     // Start in the last visited folder; a stale dir is dropped (system default instead)
     const settings = loadSettings();
     const defaultPath = resolveDefaultDir(settings.lastOpenDir, (p) => fs.existsSync(p));
-    const r = await dialog.showOpenDialog({
+    const r = await dialog.showOpenDialog(owner, {
       defaultPath,
       properties: ['openFile'],
       filters: [{ name: 'Axiom Sources', extensions: ['axm'] }, { name: 'All Files', extensions: ['*'] }],
@@ -457,10 +470,12 @@ function setupIpc(logger) {
     return picked;
   });
 
-  ipcMain.handle('open-project-dialog', async () => {
+  ipcMain.handle('open-project-dialog', async event => {
+    const owner = BrowserWindow.fromWebContents(event.sender);
+    if (!owner || owner.isDestroyed()) return null;
     const settings = loadSettings();
     const defaultPath = resolveDefaultDir(settings.lastProjectDir, (p) => fs.existsSync(p));
-    const r = await dialog.showOpenDialog({ defaultPath, properties: ['openDirectory'] });
+    const r = await dialog.showOpenDialog(owner, { defaultPath, properties: ['openDirectory'] });
     const picked = r.filePaths[0] || null;
     if (picked && picked !== settings.lastProjectDir) {
       settings.lastProjectDir = picked;
@@ -470,22 +485,13 @@ function setupIpc(logger) {
   });
 
   ipcMain.handle('list-project-files', async (_e, projectDir) => {
-    if (typeof projectDir !== 'string' || !projectDir) return [];
-    const result = [];
-    const visit = (dir) => {
-      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-        const full = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === 'bin' || entry.name === 'obj') continue;
-          visit(full);
-        } else if (entry.isFile() && /\.axm$/i.test(entry.name)) result.push(full);
-      }
-    };
-    try { visit(projectDir); return result.sort((a, b) => a.localeCompare(b)); } catch { return []; }
+    return listProjectFiles(projectDir);
   });
 
-  ipcMain.handle('save-file-dialog', async (_e, defaultPath) => {
-    const r = await dialog.showSaveDialog({
+  ipcMain.handle('save-file-dialog', async (event, defaultPath) => {
+    const owner = BrowserWindow.fromWebContents(event.sender);
+    if (!owner || owner.isDestroyed()) return null;
+    const r = await dialog.showSaveDialog(owner, {
       defaultPath,
       filters: [{ name: 'Axiom Sources', extensions: ['axm'] }, { name: 'All Files', extensions: ['*'] }],
     });

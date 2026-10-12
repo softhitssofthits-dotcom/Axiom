@@ -7,6 +7,7 @@
 const { spawnSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const { portableRuntime } = require('./portable-runtime');
 
 // Resolution order: explicit AXIOM_EXE override, then Release, then Debug.
 // NOTE: this repo's Directory.Build.props redirects all build outputs to
@@ -14,6 +15,8 @@ const fs = require('fs');
 function resolveAxiomPath(env = process.env) {
   if (env.AXIOM_EXE && fs.existsSync(env.AXIOM_EXE)) return { exe: env.AXIOM_EXE, overridden: true };
   const root = path.join(__dirname, '..', '..', '..');
+  const portable = portableRuntime(root);
+  if (portable) return { exe: fs.existsSync(portable.cli) ? portable.cli : null, overridden: true };
   const candidates = [
     { config: 'Release', exe: path.join(root, '.artifacts', 'bin', 'Axiom.Cli', 'Release', 'net10.0', 'axiom.exe') },
     { config: 'Debug', exe: path.join(root, '.artifacts', 'bin', 'Axiom.Cli', 'Debug', 'net10.0', 'axiom.exe') },

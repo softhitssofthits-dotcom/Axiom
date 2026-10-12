@@ -73,7 +73,7 @@ module.exports.push({ id: 'document-basic-theme-persistence', name: 'Тема Qu
     tokens: [...document.querySelectorAll('.view-line span')].map(el => ({ text: el.textContent, color: getComputedStyle(el).color })),
   }));
   C.eq(colors.theme, 'basic', 'Тема выбрана через команду меню');
-  C.eq(colors.frame, 'rgb(192, 192, 192)', 'Светлая рамка');
+  C.eq(colors.frame, 'rgb(104, 104, 184)', 'Синий разделитель действующей палитры QuickBASIC');
   C.eq(colors.console, '#000080', 'Синий фон консоли');
   C.eq(colors.viewport, 'rgb(0, 0, 128)', 'Прокручиваемая область консоли тоже синяя');
   C.ok(colors.tokens.some(t => t.text.includes('DIM') && t.color === 'rgb(255, 255, 85)'), 'Оператор жёлтый');

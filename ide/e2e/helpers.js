@@ -70,7 +70,7 @@ class Session {
   }
 
   async launch(opts = {}) {
-    this.userData = opts.userData || path.join(os.tmpdir(), `axiom-ide-e2e-${this.tag}-${process.pid}`);
+    this.userData = opts.userData || path.join(TMP, 'profiles', this.tag);
     fs.mkdirSync(this.userData, { recursive: true });
     // NOTE: with --user-data-dir=X, app.getPath('userData') returns exactly X
     // (no app-name subfolder is appended), so the app reads X\settings.json directly.
@@ -90,9 +90,19 @@ class Session {
     if (opts.windowState) fs.writeFileSync(path.join(appDataDir, 'window-state.json'), typeof opts.windowState === 'string' ? opts.windowState : JSON.stringify(opts.windowState), 'utf-8');
 
     const env = isolatedEnvironment(process.env, this.userData, opts.axiomExe !== undefined ? opts.axiomExe : AXIOM);
+    if (opts.portable) {
+      delete env.AXIOM_EXE; delete env.AXIOM_DESKTOP_HOST_EXE;
+      env.PATH = path.join(process.env.SystemRoot, 'System32');
+      env.DOTNET_ROOT = path.join(TMP, 'no-dotnet');
+      env.DOTNET_MULTILEVEL_LOOKUP = '0';
+    }
     fs.mkdirSync(env.APPDATA, { recursive: true });
     fs.mkdirSync(env.LOCALAPPDATA, { recursive: true });
-    this.electronApp = await _electron.launch({ args: [MAIN_JS, `--user-data-dir=${this.userData}`], cwd: IDE_DIR, env });
+    this.electronApp = await _electron.launch({
+      ...(opts.executablePath ? { executablePath: opts.executablePath } : {}),
+      args: opts.portable ? [] : [MAIN_JS, `--user-data-dir=${this.userData}`],
+      cwd: opts.portable ? path.dirname(opts.executablePath) : IDE_DIR, env,
+    });
     try { this.electronApp.process().stderr.on('data', (d) => this.mainStderr.push(d.toString())); } catch {}
     this.processExit = new Promise((resolve) => {
       try { this.electronApp.process().once('exit', (code) => resolve(code)); } catch { resolve(null); }
@@ -255,6 +265,9 @@ class Session {
 
   // Types into whatever is focused — after a console run that is the xterm view.
   async typeConsole(text, opts = {}) {
+    await this.page.bringToFront();
+    await this.page.locator('#terminal').click({ position: { x: 20, y: 10 } });
+    await this.page.evaluate(() => window.__ide.term.focus());
     await this.page.keyboard.type(text, { delay: (opts && opts.delay) || 15 });
     await this.page.keyboard.press('Enter');
   }

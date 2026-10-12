@@ -20,6 +20,8 @@
 | Где справочник? | [manual/index.html](manual/index.html), [правила сопровождения](manual/README.md) |
 | Где договор тайлов? | [TILEMAP.md](contracts/TILEMAP.md) |
 | Где результаты последнего этапа? | [Сохранность документов](reports/electron/ELECTRON_LOCKED_SAVE_RECOVERY_RESULT.md) |
+| Где результат действующей очереди Electron? | [Зависание, документы и поставка](reports/electron/ELECTRON_ACTIVE_QUEUE_RESULT.md) |
+| Как проверить аппаратуру Electron? | [Мышь, системный DPI и мониторы](plans/ELECTRON_HARDWARE_ACCEPTANCE.md) |
 | Что проверено при ревизии документов? | [Отчёт](reports/DOCUMENTATION_REVIEW_20261011.md) |
 | Где история и карта переносов? | [archive/README.md](archive/README.md), [реестр документов](registries/DOCUMENTS.csv) |
 

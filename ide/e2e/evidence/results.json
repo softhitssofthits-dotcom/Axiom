@@ -1,16 +1,16 @@
 [
   {
-    "id": "interpolation-print-typo-location",
-    "spec": "interpolation-typo.spec.js",
-    "name": "Опечатка PRIN перед интерполяцией: русская ошибка на строке 9",
-    "ms": 5230,
-    "passed": 9,
+    "id": "files-save-as-renames-open-project-document",
+    "spec": "files.spec.js",
+    "name": "Сохранить как согласует новый файл, вкладку и дерево проекта",
+    "ms": 5775,
+    "passed": 7,
     "failures": [],
     "notes": [],
     "crashed": false,
     "consoleTail": [],
     "pageErrors": [],
-    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58219/36aa6b71-a4fd-4b87-a580-55c61d876e78\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:49577/5ad7468c-d526-4ff2-acee-a0ea28897738\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
     "rendererDialogs": []
   }
 ]

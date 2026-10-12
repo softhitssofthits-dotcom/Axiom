@@ -12,7 +12,7 @@ await S.electronApp.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0]
  C.ok(await S.page.locator('#tb-undo').isDisabled()&&await S.page.locator('#tb-redo').isDisabled(),'Свежий документ не имеет истории');
  C.eq(await S.page.locator('#tb-check .codicon-check').count(),1,'Проверка обозначена галочкой');
  const groups=await S.page.locator('#toolbar .command-group').evaluateAll(groups=>groups.map(g=>({ids:[...g.querySelectorAll('button')].map(b=>b.id),border:getComputedStyle(g).borderRightWidth})));
- C.ok(groups[0].ids.at(-1)==='tb-save-all'&&groups[1].ids.join(',')==='tb-undo,tb-redo'&&groups[0].border==='1px'&&groups[1].border==='1px','Стрелки идут после Сохранить всё и отделены с обеих сторон');
+ C.ok(groups[0].ids.at(-1)==='tb-save-all'&&groups[1].ids.join(',')==='tb-undo,tb-redo'&&parseFloat(groups[0].border)>0&&parseFloat(groups[1].border)>0,'Стрелки идут после Сохранить всё и отделены с обеих сторон',JSON.stringify(groups));
  await S.page.evaluate(()=>{const i=window.__ide,m=i.editor.getModel();m.pushStackElement();i.editor.executeEdits('test',[{range:new window.monaco.Range(1,7,1,9),text:'99'}]);m.pushStackElement();});
  await S.page.waitForFunction(()=>!document.getElementById('tb-undo').disabled);
  await S.page.locator('#tb-undo').click();C.eq(await S.page.evaluate(()=>window.__ide.editor.getValue()),'PRINT 42\n','Стрелка отменяет правку');

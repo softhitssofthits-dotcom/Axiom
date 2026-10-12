@@ -13,6 +13,73 @@ module.exports = [{ id: 'files-create-without-overwrite', name: 'Создани�
   C.eq(await S.page.evaluate(p => window.axiom.readFileContent(p), target), '', 'Новый файл пуст');
   C.ok(await S.page.evaluate(p => [...document.querySelectorAll('.project-file')].some(b => b.title === p), target), 'Дерево обновлено');
 } }];
+module.exports.push({ id: 'files-save-as-renames-open-project-document', name: 'Сохранить как согласует новый файл, вкладку и дерево проекта', async fn({ S, C }) {
+  const fs = require('node:fs'); const path = require('node:path');
+  const root = testWorkspace('project-save-as-rename');
+  const original = writeAxm(root, 'исходный.axm', 'PRINT 1\n');
+  const renamed = path.join(root, 'новое имя.axm');
+  await S.launch(); await S.page.evaluate(p => window.__ide.openProject(p), root);
+  await S.page.evaluate(p => window.__ide.openFile(p), original);
+  await S.page.evaluate(() => { window.__ide.settings.formatOnBlur = false; window.__ide.editor.getModel().setValue('PRINT 2\n'); });
+  await S.stubSaveDialog(renamed);
+  C.ok(await S.page.evaluate(() => window.__ide.saveAs()), 'Сохранить как завершилось успешно');
+  C.eq(await S.page.evaluate(() => window.__ide.activeFile), renamed, 'Активный путь вкладки обновлён');
+  C.ok(await S.page.evaluate(paths => window.__ide.openFiles.has(paths.renamed) && !window.__ide.openFiles.has(paths.original), { renamed, original }), 'Документ переименован в хранилище вкладок');
+  C.eq(fs.readFileSync(renamed, 'utf8'), 'PRINT 2\n', 'Новая копия создана с текущим текстом');
+  C.eq(fs.readFileSync(original, 'utf8'), 'PRINT 1\n', 'Исходный файл не изменён сохранением под новым именем');
+  C.ok(await S.page.evaluate(p => [...document.querySelectorAll('.editor-tab')].some(tab => tab.dataset.path === p && tab.querySelector('.tab-name').textContent === 'новое имя.axm'), renamed), 'Подпись вкладки соответствует новому имени');
+  C.ok(await S.page.evaluate(p => [...document.querySelectorAll('#project-files .project-file')].some(item => item.title === p), renamed), 'Новое имя сразу появилось в дереве проекта');
+} });
+module.exports.push({ id: 'files-project-external-open', name: 'Файл вне проекта открывается и остаётся доступен отдельно от дерева проекта', async fn({ S, C }) {
+  const root = testWorkspace('project-external-root');
+  const inside = writeAxm(root, 'внутри.axm', 'PRINT "В проекте"\n');
+  const outside = writeAxm(testWorkspace('project-external-outside'), 'снаружи.axm', 'PRINT "Вне проекта"\n');
+  await S.launch();
+  await S.page.evaluate(p => window.__ide.openProject(p), root);
+  C.ok(await S.page.evaluate(p => [...document.querySelectorAll('#project-files .project-file')].some(item => item.title === p), inside), 'Внутренний файл показан в дереве проекта');
+  await S.page.evaluate(p => window.__ide.openFile(p), inside);
+  await S.stubOpenDialog([outside]);
+  await S.page.evaluate(() => window.__ide.handleAction('open'));
+  await S.page.waitForFunction(p => window.__ide.activeFile === p, outside);
+  await S.page.evaluate(p => window.__ide.switchToFile(p), inside);
+  C.ok(await S.page.evaluate(p => { const section = document.getElementById('external-files'); return !section.classList.contains('hidden') && [...section.querySelectorAll('.project-file')].some(item => item.title === p); }, outside), 'Открытый внешний файл показан в отдельном разделе');
+  await S.page.locator('#external-files-list .project-file').click();
+  C.eq(await S.page.evaluate(() => window.__ide.activeFile), outside, 'Нажатие внешнего файла возвращает его вкладку');
+  C.eq(await S.editorValue(), 'PRINT "Вне проекта"\n', 'Текст внешнего файла доступен в редакторе');
+  await S.page.evaluate(() => window.__ide.closeProject());
+  C.ok(await S.page.evaluate(paths => window.__ide.openFiles.has(paths.outside) && !window.__ide.openFiles.has(paths.inside), { outside, inside }), 'Закрытие проекта оставляет внешний файл и закрывает внутренний');
+  C.ok(await S.page.evaluate(() => document.getElementById('external-files').classList.contains('hidden')), 'Внешняя группа скрывается после закрытия проекта');
+} });
+module.exports.push({ id: 'files-project-hides-windows-hidden-and-system-items', name: 'Дерево проекта исключает скрытые и системные файлы и папки Windows', async fn({ S, C }) {
+  const fs = require('node:fs'); const path = require('node:path');
+  const { execFileSync } = require('node:child_process');
+  const root = testWorkspace('project-windows-attributes');
+  const visible = writeAxm(root, 'обычный.axm', 'PRINT 1\n');
+  const hiddenFile = writeAxm(root, 'скрытый.axm', 'PRINT 2\n');
+  const systemFile = writeAxm(root, 'системный.axm', 'PRINT 3\n');
+  const hiddenDir = path.join(root, 'скрытая папка'); fs.mkdirSync(hiddenDir);
+  const hiddenChild = writeAxm(hiddenDir, 'внутри скрытой.axm', 'PRINT 4\n');
+  const systemDir = path.join(root, 'системная папка'); fs.mkdirSync(systemDir);
+  const systemChild = writeAxm(systemDir, 'внутри системной.axm', 'PRINT 5\n');
+  const attributed = [hiddenFile, systemFile, hiddenDir, systemDir];
+  try {
+    execFileSync('attrib.exe', ['+H', hiddenFile], { windowsHide: true });
+    execFileSync('attrib.exe', ['+S', systemFile], { windowsHide: true });
+    execFileSync('attrib.exe', ['+H', hiddenDir], { windowsHide: true });
+    execFileSync('attrib.exe', ['+S', systemDir], { windowsHide: true });
+    await S.launch();
+    const paths = await S.page.evaluate(p => window.axiom.listProjectFiles(p), root);
+    C.ok(paths.includes(visible), 'Обычный файл остаётся в дереве проекта');
+    C.ok(!paths.includes(hiddenFile), 'Файл с атрибутом «Скрытый» исключён');
+    C.ok(!paths.includes(systemFile), 'Файл с атрибутом «Системный» исключён');
+    C.ok(!paths.includes(hiddenChild), 'Обход не входит в скрытую папку');
+    C.ok(!paths.includes(systemChild), 'Обход не входит в системную папку');
+  } finally {
+    for (const item of attributed) {
+      try { execFileSync('attrib.exe', ['-H', '-S', item], { windowsHide: true }); } catch {}
+    }
+  }
+} });
 module.exports.push({ id: 'files-mixed-line-endings-run', name: 'Run запускает сохранённый файл со смешанными окончаниями строк', async fn({ S, C }) {
   const file = writeAxm(testWorkspace('mixed-lines'), 'mixed.axm', 'DIM value AS INTEGER = 7\r\nPRINT value\n');
   await S.launch(); await S.page.evaluate(p => window.__ide.openFile(p), file);

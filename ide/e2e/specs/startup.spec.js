@@ -41,4 +41,17 @@ module.exports = [
       C.contains(value, 'Привет, Axiom!', 'file content loaded');
     },
   },
+  {
+    id: 'startup-russian-path-deduplicates',
+    name: 'Русский путь открывается один раз, даже при повторном выборе файла',
+    async fn({ S, C }) {
+      const file = writeAxm(testWorkspace('russian-path'), 'проверка.axm', 'PRINT "Привет, Axiom!"\n');
+      await S.launch();
+      await S.page.evaluate(async p => { await window.__ide.openFile(p); await window.__ide.openFile(p); }, file);
+      C.eq(await S.page.evaluate(p => window.__ide.activeFile, file), file, 'Открыт документ с русским путём');
+      C.eq(await S.page.evaluate(p => [...document.querySelectorAll('.editor-tab')].filter(t => t.dataset.path === p).length, file), 1, 'Для пути создана одна вкладка');
+      C.eq(await S.editorValue(), 'PRINT "Привет, Axiom!"\n', 'Содержимое русского файла загружено');
+      C.eq(await S.page.evaluate(() => window.__ide.openFiles.size), 2, 'Повторное открытие не создало копию рядом с новой вкладкой');
+    },
+  },
 ];

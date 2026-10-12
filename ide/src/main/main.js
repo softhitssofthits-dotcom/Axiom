@@ -5,6 +5,7 @@ const { setupIpc, killActivePty } = require('./ipc');
 const { ensureFreshAxiom } = require('./axiom-ensure');
 const { IdeLogger } = require('./ide-logger');
 const { setupBackendIpc, closeBackend, recoverBackend } = require('./backend-ipc');
+const { attachWindowRecovery } = require('./window-recovery');
 
 // Explicit profile injection keeps UI checks away from the user's real settings.
 if (process.env.AXIOM_IDE_USER_DATA_DIR) {
@@ -132,30 +133,12 @@ function createWindow() {
   mainWindow.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
   mainWindow.on('focus', () => log.info('window.focus'));
   mainWindow.on('blur', () => log.info('window.blur'));
-  mainWindow.on('unresponsive', () => log.warn('window.unresponsive'));
-  mainWindow.on('responsive', () => log.info('window.responsive'));
   mainWindow.on('closed', () => log.info('window.closed'));
   mainWindow.webContents.on('did-finish-load', () => log.info('renderer.loaded'));
-  mainWindow.webContents.on('render-process-gone', async (_event, details) => {
-    log.error('renderer.gone', details);
-    const window = createdWindow;
-    killActivePty();
-    try {
-      await recoverBackend();
-      if (!window || window.isDestroyed()) return;
-      const { dialog } = require('electron');
-      await dialog.showMessageBox(window, {
-        type: 'error', title: 'Axiom IDE — сбой интерфейса',
-        message: 'Процесс интерфейса завершился. Выполнение программы остановлено.',
-        detail: 'Интерфейс будет загружен заново. Документы будут восстановлены из последнего целого снимка восстановления. Сохранённые файлы остаются на диске.',
-        buttons: ['Восстановить интерфейс'],
-      });
-      if (!window.isDestroyed()) {
-        saveState();
-        createWindow();
-        window.destroy();
-      }
-    } catch (error) { log.error('renderer.recovery.failed', error); }
+  const recovery = attachWindowRecovery({
+    window: createdWindow, app, dialog: require('electron').dialog, log,
+    stop: () => { killActivePty(); return recoverBackend(); },
+    replace: createWindow, saveState,
   });
   mainWindow.webContents.on('console-message', (details) => {
     const { level, message, lineNumber, sourceId } = details;
@@ -175,6 +158,7 @@ function createWindow() {
   const approveClose = event => {
     if (event.sender !== mainWindow?.webContents || event.senderFrame !== event.sender.mainFrame) return;
     closeApproved = true;
+    recovery.cancelClose();
     mainWindow.close();
   };
   ipcMain.on('window-close-approved', approveClose);
@@ -185,7 +169,7 @@ function createWindow() {
   });
   mainWindow.on('close', event => {
     if (closeHandlerReady && !closeApproved && !mainWindow.webContents.isDestroyed() && !mainWindow.webContents.isCrashed()) {
-      event.preventDefault(); mainWindow.webContents.send('window-close-requested'); return;
+      event.preventDefault(); recovery.requestClose(); mainWindow.webContents.send('window-close-requested'); return;
     }
     log.info('window.close'); saveState();
   });

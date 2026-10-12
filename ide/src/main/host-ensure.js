@@ -12,6 +12,7 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const { sourceFingerprint } = require('./backend-fingerprint');
+const { portableRuntime } = require('./portable-runtime');
 
 const HOST_PROJECT = 'Axiom.DesktopHost';
 const HOST_CONFIG = 'Debug'; // backend-ipc.js spawns the Debug build; keep in sync
@@ -23,6 +24,8 @@ const HOST_TFM = 'net10.0-windows';
 function resolveHostPath(env = process.env, srcRoot = path.join(__dirname, '..', '..', '..')) {
   if (env.AXIOM_DESKTOP_HOST_EXE && fs.existsSync(env.AXIOM_DESKTOP_HOST_EXE))
     return { exe: env.AXIOM_DESKTOP_HOST_EXE, overridden: true };
+  const portable = portableRuntime(srcRoot);
+  if (portable) return { exe: portable.host, overridden: true };
   const exe = path.join(srcRoot, '.artifacts', 'bin', HOST_PROJECT, HOST_CONFIG, HOST_TFM, HOST_PROJECT + '.exe');
   return { exe, overridden: false };
 }

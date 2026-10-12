@@ -118,6 +118,23 @@ module.exports.push({
 });
 
 module.exports.push({
+  id:'input-live-check-keeps-terminal-focus',
+  name:'Фоновая диагностика во время INPUT не переводит фокус из консоли в редактор',
+  async fn({S,C}) {
+    const file = writeAxm(testWorkspace('input-live-focus'),'ввод.axm','DIM value AS STRING\nINPUT "Ответ", value\nPRINT value\n');
+    await S.launch(); await S.page.evaluate(async p => { await window.__ide.openFile(p); await window.__ide.run(); },file);
+    await S.waitStatus('Ожидание ввода');
+    const focus = await S.page.evaluate(async () => {
+      const i=window.__ide; i.term.focus(); await i.runLiveCheck();
+      return document.activeElement === i.term.textarea;
+    });
+    C.eq(focus,true,'Применение диагностики сохраняет фокус активного INPUT');
+    await S.page.keyboard.type('Анна'); await S.page.keyboard.press('Enter');
+    if (focus) { await S.waitIdle(); await S.waitConsole('Анна'); C.ok(true,'Весь ответ и Enter получены программой'); }
+  },
+});
+
+module.exports.push({
   id: 'input-prompt-separators', name: 'INPUT: разделители приглашения, пустая строка и пунктуация',
   async fn({ S, C }) {
     const prompts = ['Текст', 'Текст? ', ':? ', '', '? ', '? '];

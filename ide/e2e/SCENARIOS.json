@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 87,
+  "count": 105,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -73,6 +73,56 @@
       "name": "Консоль Electron передаёт клавиши для keydown/canonical_aliases.axm"
     },
     {
+      "id": "documents-tab-selection-scroll-undo",
+      "spec": "document-acceptance.spec.js",
+      "name": "Смена вкладки сохраняет выделение, прокрутку и отдельную историю отмены"
+    },
+    {
+      "id": "documents-outline-crlf-string-comments",
+      "spec": "document-acceptance.spec.js",
+      "name": "Структура SUB/FUNCTION/TYPE не принимает объявления в строках и комментариях"
+    },
+    {
+      "id": "documents-find-direction-wrap",
+      "spec": "document-acceptance.spec.js",
+      "name": "Ctrl+F, F3 и Shift+F3 учитывают направление и оборачивание поиска"
+    },
+    {
+      "id": "documents-plain-text-not-formatted",
+      "spec": "document-acceptance.spec.js",
+      "name": "Неподдерживаемый файл остаётся обычным текстом без форматирования"
+    },
+    {
+      "id": "documents-windows-readonly",
+      "spec": "document-acceptance.spec.js",
+      "name": "Атрибут Windows только для чтения запрещает правку и форматирование документа"
+    },
+    {
+      "id": "documents-save-as-cancel-and-empty-close",
+      "spec": "document-acceptance.spec.js",
+      "name": "Отмена Сохранить как сохраняет путь и правку; пустая новая вкладка закрывается без вопроса"
+    },
+    {
+      "id": "documents-save-as-error-keeps-path-and-text",
+      "spec": "document-acceptance.spec.js",
+      "name": "Ошибка записи Сохранить как сохраняет прежний путь и несохранённый текст"
+    },
+    {
+      "id": "documents-inactive-model-dirty-indicator-sync",
+      "spec": "document-acceptance.spec.js",
+      "name": "Изменение модели неактивной вкладки сразу показывает признак несохранённого файла"
+    },
+    {
+      "id": "documents-save-dialog-owned-by-window",
+      "spec": "document-acceptance.spec.js",
+      "name": "Системное окно Сохранить как привязано к окну IDE"
+    },
+    {
+      "id": "documents-find-replace-options-undo",
+      "spec": "document-acceptance.spec.js",
+      "name": "Регистр, целые слова, регулярные выражения и отмена пакетной замены"
+    },
+    {
       "id": "document-host-format-undo",
       "spec": "documents.spec.js",
       "name": "Форматирование несохранённого документа через Host и отмена"
@@ -111,6 +161,21 @@
       "id": "files-create-without-overwrite",
       "spec": "files.spec.js",
       "name": "Создание файла не перезаписывает существующий и сохраняет открытую модель"
+    },
+    {
+      "id": "files-save-as-renames-open-project-document",
+      "spec": "files.spec.js",
+      "name": "Сохранить как согласует новый файл, вкладку и дерево проекта"
+    },
+    {
+      "id": "files-project-external-open",
+      "spec": "files.spec.js",
+      "name": "Файл вне проекта открывается и остаётся доступен отдельно от дерева проекта"
+    },
+    {
+      "id": "files-project-hides-windows-hidden-and-system-items",
+      "spec": "files.spec.js",
+      "name": "Дерево проекта исключает скрытые и системные файлы и папки Windows"
     },
     {
       "id": "files-mixed-line-endings-run",
@@ -171,6 +236,16 @@
       "id": "graphics-renderer-crash",
       "spec": "graphics-crash.spec.js",
       "name": "Отказ основного интерфейса прекращает VM и закрывает графику"
+    },
+    {
+      "id": "graphics-renderer-infinite-stall",
+      "spec": "graphics-crash.spec.js",
+      "name": "Бесконечное зависание допускает восстановление из основного процесса без потери завершённых правок"
+    },
+    {
+      "id": "graphics-renderer-infinite-exit",
+      "spec": "graphics-crash.spec.js",
+      "name": "Выход из бесконечно зависшего интерфейса закрывает SCREEN и сохраняет документы"
     },
     {
       "id": "graphics-renderer-bounded-stall",
@@ -246,6 +321,11 @@
       "id": "input-name-age-sample",
       "spec": "input-prompts.spec.js",
       "name": "Учебный пример имени и возраста запускается в Electron"
+    },
+    {
+      "id": "input-live-check-keeps-terminal-focus",
+      "spec": "input-prompts.spec.js",
+      "name": "Фоновая диагностика во время INPUT не переводит фокус из консоли в редактор"
     },
     {
       "id": "input-prompt-separators",
@@ -383,6 +463,11 @@
       "name": "Отмена выхода оставляет окно и изменённый текст"
     },
     {
+      "id": "save-all-error-preserves-dirty-documents",
+      "spec": "save.spec.js",
+      "name": "Ошибка одного файла сообщает путь и сохраняет остальные документы"
+    },
+    {
       "id": "save-recovery-main-crash",
       "spec": "save.spec.js",
       "name": "Авария основного процесса восстанавливает последнюю правку, безымянный и исчезнувший документы"
@@ -416,6 +501,11 @@
       "id": "startup-opens-existing-file",
       "spec": "startup.spec.js",
       "name": "Open dialog stub loads an existing .axm file into a tab"
+    },
+    {
+      "id": "startup-russian-path-deduplicates",
+      "spec": "startup.spec.js",
+      "name": "Русский путь открывается один раз, даже при повторном выборе файла"
     },
     {
       "id": "trace-context-menu",

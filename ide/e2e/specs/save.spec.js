@@ -65,7 +65,7 @@ module.exports = [
   } },
   { id: 'save-close-untitled-cancel', name: 'Отмена Сохранить как сохраняет безымянную вкладку', async fn({ S, C }) {
     await open(S, 'save-untitled');
-    const path = await S.page.evaluate(() => { window.__ide.newFile(); return window.__ide.activeFile; });
+    const path = await S.page.evaluate(() => { window.__ide.newFile(); window.__ide.editor.getModel().setValue('PRINT "Несохранённый документ"\n'); return window.__ide.activeFile; });
     await S.stubSaveDialog(null);
     await S.electronApp.evaluate(({ dialog }) => { dialog.showMessageBox = async () => ({ response: 0 }); });
     await S.page.evaluate(p => window.__ide.closeFile(p), path);
@@ -73,12 +73,28 @@ module.exports = [
     const saved = writeAxm(testWorkspace('save-untitled-target'), 'новый.axm', 'PRINT 0\n'); await S.stubSaveDialog(saved);
     await S.page.evaluate(p => window.__ide.closeFile(p), path);
     C.ok(!(await S.page.evaluate(p => window.__ide.openFiles.has(p), saved)), 'Безымянная вкладка сохранилась и закрылась');
+    C.eq(require('node:fs').readFileSync(saved,'utf8'),'PRINT "Несохранённый документ"\n','Сохранить как записал кириллический текст без потерь');
   } },
   { id: 'save-window-cancel', name: 'Отмена выхода оставляет окно и изменённый текст', async fn({ S, C }) {
     await open(S, 'save-window'); await S.page.evaluate(() => window.__ide.editor.getModel().setValue('PRINT 44\n'));
     await S.electronApp.evaluate(({ dialog, BrowserWindow }) => { dialog.showMessageBox = async () => ({ response: 2 }); BrowserWindow.getAllWindows().find(w => w.getTitle().includes('Axiom')).close(); });
     await S.page.waitForFunction(() => !window.__ide._closingWindow);
     C.eq(await S.page.evaluate(() => window.__ide.editor.getValue()), 'PRINT 44\n', 'Окно и несохранённый текст остались');
+  } },
+  { id: 'save-all-error-preserves-dirty-documents', name: 'Ошибка одного файла сообщает путь и сохраняет остальные документы', async fn({ S, C }) {
+    const a = writeAxm(testWorkspace('save-all-error-first'), 'первый.axm', 'PRINT 1\n');
+    const b = writeAxm(testWorkspace('save-all-error-second'), 'второй.axm', 'PRINT 2\n');
+    await S.launch({settings:{checkOnChange:false,formatOnBlur:false,smartIdentifierEnabled:false}});
+    await S.page.evaluate(async () => { const i=window.__ide; for (const p of [...i.openFiles.keys()]) await i.closeFile(p,true); });
+    await S.page.evaluate(async paths => { const i=window.__ide; await i.openFile(paths[0]); await i.openFile(paths[1]); i.openFiles.get(paths[0]).model.setValue('PRINT 11\n'); i.openFiles.get(paths[1]).model.setValue('PRINT 22\n'); }, [a,b]);
+    await S.electronApp.evaluate(({ipcMain}, failedPath) => { global.__saveAllAttempts=[]; ipcMain.removeHandler('write-file'); ipcMain.handle('write-file',async (_event,path,content)=>{global.__saveAllAttempts.push(path); if(path===failedPath) return false; process.getBuiltinModule('node:fs').writeFileSync(path,content,'utf8'); return true;}); }, a);
+    await S.page.evaluate(() => { window.__lastSaveError=null; window.alert=message=>{window.__lastSaveError=String(message);}; });
+    C.eq(await S.page.evaluate(() => window.__ide.saveAll()),false,'Сохранить всё сообщает отказ при первой ошибке');
+    C.eq(JSON.stringify(await S.electronApp.evaluate(() => global.__saveAllAttempts)),JSON.stringify([a,b]),'После отказа первого файла Сохранить всё продолжает обход');
+    C.contains(await S.page.evaluate(() => window.__lastSaveError),a,'Объяснение называет файл, который не удалось записать');
+    C.eq(JSON.stringify(await S.page.evaluate(paths => paths.map(p=>window.__ide.openFiles.isDirty(p)),[a,b])),JSON.stringify([true,false]),'Неудачная правка остаётся несохранённой, успешная очищает признак');
+    C.eq(await S.page.evaluate(p => window.axiom.readFileContent(p),a),'PRINT 1\n','Исходный файл остался без изменений');
+    C.eq(await S.page.evaluate(p => window.axiom.readFileContent(p),b),'PRINT 22\n','Следующий файл после ошибки сохранён');
   } },
 ];
 

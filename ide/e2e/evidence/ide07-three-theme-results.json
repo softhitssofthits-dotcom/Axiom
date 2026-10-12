@@ -1,0 +1,44 @@
+[
+  {
+    "id": "highlight-punctuation-and-maze",
+    "spec": "highlighting.spec.js",
+    "name": "Пунктуация не обрывает подсветку операторов, типов и комментариев",
+    "ms": 8810,
+    "passed": 20,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:49173/a13f99fb-8f35-4f13-85de-71f80dfcfe26\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "highlight-user-symbols",
+    "spec": "highlighting.spec.js",
+    "name": "Пользовательские имена и операции имеют отдельные цвета",
+    "ms": 5828,
+    "passed": 16,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:49202/3a408fa5-a567-4a1c-91fc-a7ef4bc3dd5c\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "highlight-interpolation-dollar",
+    "spec": "highlighting.spec.js",
+    "name": "Знак доллара интерполяции совпадает по цвету с фигурными скобками",
+    "ms": 3903,
+    "passed": 4,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:49210/bb36caef-047f-4842-9bb9-b52d80d006ab\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

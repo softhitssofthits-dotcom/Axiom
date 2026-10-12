@@ -19,5 +19,6 @@
 #sidebar-close:hover { background: var(--xs-surface-raised); color: var(--xs-text); }
 
 #toolbar[hidden] { display: none; }
+.command-group { max-width: 100%; flex-wrap: wrap; }
 .menu-icon svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .menu-icon > .codicon { font-size: 15px; }

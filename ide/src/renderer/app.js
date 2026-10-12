@@ -6,7 +6,7 @@ class AxiomIDE {
     this.langMeta = null; // language registry from `axiom metadata`; null until loaded
     this.editor = null;
     this._recoveryEnabled = false;
-    this.openFiles = new window.DocumentStore(() => this.persistRecovery());
+    this.openFiles = new window.DocumentStore(() => { this.refreshDirtyIndicators(); this.persistRecovery(); });
     this.editedLines = new window.EditedLines();
     this.documentServices = new window.DocumentServices(this.openFiles, API);
     this.documentSaver = new window.DocumentSaver(this.openFiles, API);
@@ -891,11 +891,11 @@ class AxiomIDE {
       }
       return;
     }
-    let content;
-    try { content = await API.readFileContent(p); }
+    let content, readonly;
+    try { content = await API.readFileContent(p); readonly = await API.fileReadonly(p); }
     catch { alert(I18N.t('dialog.openFailed', p)); return; }
     const model = this.monaco.editor.createModel(content.replace(/^\uFEFF/, ''), /\.axm$/i.test(p) ? 'axiom' : 'plaintext', this.monaco.Uri.file(p));
-    this.openFiles.set(p, { model, viewState: null });
+    this.openFiles.set(p, { model, viewState: null, readonly });
     this.createTab(p);
     this.switchToFile(p);
     // A freshly opened document is diagnosed right away (same debounced live check as
@@ -1015,6 +1015,18 @@ class AxiomIDE {
     this.renderProjectFiles(files);
   }
 
+  refreshDirtyIndicators() {
+    const open = new Set();
+    for (const [p, entry] of this.openFiles) {
+      open.add(p);
+      const changed = p.startsWith('untitled') ? entry.model.getValue().length > 0 : this.openFiles.isDirty(p);
+      if (changed) this.dirty.add(p); else this.dirty.delete(p);
+      const tab = [...document.querySelectorAll('.editor-tab')].find(item => item.dataset.path === p);
+      if (tab) tab.querySelector('.dirty-indicator').style.display = changed ? 'inline' : 'none';
+    }
+    for (const p of [...this.dirty]) if (!open.has(p)) this.dirty.delete(p);
+  }
+
   markDirty(p, d) {
     if (!d) this.openFiles.markSaved(p);
     else d = p.startsWith('untitled') ? this.openFiles.get(p)?.model.getValue().length > 0 : this.openFiles.isDirty(p);
@@ -1032,7 +1044,7 @@ class AxiomIDE {
     try {
       const result = await this.documentSaver.save(path, saveAs);
       if (!result) return false;
-      if (result.path !== result.oldPath) this.renameActive(result.path, result.oldPath);
+      if (result.path !== result.oldPath) await this.renameActive(result.path, result.oldPath);
       this.markDirty(result.path, this.openFiles.isDirty(result.path));
       this.setStatus(I18N.t('status.saved'));
       return !this.openFiles.isDirty(result.path);
@@ -1044,12 +1056,13 @@ class AxiomIDE {
   }
 
   async saveAll() {
+    let allSaved = true;
     for (const entry of [...this.openFiles.values()]) {
       if (entry.path.startsWith('untitled') || this.openFiles.isDirty(entry.path)) {
-        if (!await this.save(entry.path)) return false;
+        if (!await this.save(entry.path)) allSaved = false;
       }
     }
-    return true;
+    return allSaved;
   }
 
   async prepareClose(path, discarded = null) {
@@ -1100,7 +1113,7 @@ class AxiomIDE {
 
   async saveAs() { return this.save(this.activeFile, true); }
 
-  renameActive(newPath, old = this.activeFile) {
+  async renameActive(newPath, old = this.activeFile) {
     const f = this.openFiles.get(old) || this.openFiles.get(newPath);
     if (!f) return;
     if (this.openFiles.has(old)) this.openFiles.rename(old, newPath);
@@ -1126,6 +1139,7 @@ class AxiomIDE {
     this.renderMiscellaneousFiles();
     this.updateSaveButton();
     API.addRecentFile(newPath).then((recent) => { this.settings.recentFiles = recent; this.renderRecentFiles(); }).catch(() => {});
+    if (this.projectDir && (this.isProjectFile(old) || this.isProjectFile(newPath))) await this.refreshProjectFiles();
   }
 
   updateSaveButton() {
@@ -1728,7 +1742,15 @@ class AxiomIDE {
 
   closeDiagnosticPeek() {
     // Карточка относится к предыдущему тексту; новый результат проверки обновит маркеры.
+    const editorNode = this.editor.getDomNode();
+    const widget = editorNode?.querySelector('.marker-widget');
+    if (!widget || widget.getClientRects().length === 0) return;
+    // Команда Monaco закрывает карточку и сама переводит фокус в редактор.
+    // При INPUT или работе с другим полем сохраняем выбранный пользователем фокус.
+    const focused = document.activeElement;
+    const restoreFocus = focused && focused !== document.body && !editorNode.contains(focused);
     this.editor.trigger('axiom.diagnostics', 'closeMarkersNavigation', {});
+    if (restoreFocus && focused.isConnected) focused.focus();
   }
 
   clearDiagnostics() {
