@@ -479,8 +479,7 @@ body > .context-view > .monaco-menu .action-label {
   color: var(--xs-text) !important;
 }
 
-/* Editor context menu: deliberately uses the same geometry and tokens as pull-down
-   rows, while remaining a normal DOM menu that can be themed in Electron. */
+/* Общие меню редактора и консоли используют геометрию и палитру оболочки. */
 .xs-context-menu {
   position: fixed;
   z-index: 10000;
@@ -510,10 +509,12 @@ body > .context-view > .monaco-menu .action-label {
   text-align: left;
   cursor: default;
 }
-.xs-context-item:hover, .xs-context-item:focus-visible {
+.xs-context-item:not(:disabled):hover, .xs-context-item:focus-visible {
   background: var(--xs-accent-wash);
   outline: 0;
 }
+.xs-context-item:disabled { color: var(--xs-text-faint); opacity: var(--xs-disabled-opacity); }
+.xs-context-item:disabled .xs-context-item-icon { color: inherit; }
 .xs-context-item-icon { width: 18px; color: var(--xs-text-faint); font-size: 15px; text-align: center; }
 .xs-context-item-label { flex: 1; }
 .xs-context-item-key { margin-left: 20px; color: var(--xs-text-faint); font-size: 11px; }

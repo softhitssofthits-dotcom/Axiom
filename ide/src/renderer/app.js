@@ -47,7 +47,7 @@ class AxiomIDE {
       active: typeof name === 'string' ? name : String(name || ''),
       editor: !!this.editor?.hasTextFocus?.(),
       terminal: !!this.term && active === this.term.textarea,
-      menu: !!active?.closest?.('.monaco-menu, .context-view, .monaco-hover, .suggest-widget, .parameter-hints-widget, .peekview-widget'),
+      menu: !!active?.closest?.('.monaco-menu, .context-view, .monaco-hover, .suggest-widget, .parameter-hints-widget, .peekview-widget, .xs-context-menu'),
       modal: !!active?.closest?.('.modal-overlay'),
     };
   }
@@ -424,21 +424,21 @@ class AxiomIDE {
     const menu = document.getElementById('ax-context-menu');
     if (!menu) return;
     const items = [
-      { id: 'change-all', label: 'Change All Occurrences', key: 'Ctrl+F2', icon: 'codicon-edit' },
+      { id: 'change-all', translation: 'menu.editor.changeAll', key: 'Ctrl+F2', icon: 'codicon-edit' },
       { separator: true },
-      { id: 'cut', label: 'Cut', icon: 'codicon-screen-cut' },
-      { id: 'copy', label: 'Copy', icon: 'codicon-copy' },
-      { id: 'paste', label: 'Paste', icon: 'codicon-files' },
+      { id: 'cut', translation: 'menu.edit.cut', icon: 'codicon-screen-cut' },
+      { id: 'copy', translation: 'menu.edit.copy', icon: 'codicon-copy' },
+      { id: 'paste', translation: 'menu.edit.paste', icon: 'codicon-files' },
       { separator: true },
       { id: 'trace-breakpoint', translation: 'trace.breakpoint', key: 'F9', icon: 'codicon-debug-breakpoint', trace: 'breakpoint' },
       { id: 'trace-clear', translation: 'trace.clear', key: 'Ctrl+Shift+F9', icon: 'codicon-clear-all', trace: 'clear' },
       { separator: true },
-      { id: 'command-palette', label: 'Command Palette', key: 'F1', icon: 'codicon-symbol-misc' },
+      { id: 'command-palette', translation: 'menu.editor.commandPalette', key: 'F1', icon: 'codicon-symbol-misc' },
     ];
-    const close = () => { menu.hidden = true; menu.replaceChildren(); };
     let contextLine;
+    const popup = UIControls.createContextMenu(menu, {translate: I18N.t,
+      onClose: () => this.editor?.focus(), onAction: id => run(id)});
     const run = (id) => {
-      close();
       // The menu button temporarily owns focus. Restore Monaco first.
       this.editor?.focus();
       if (id === 'trace-breakpoint') { if (this.trace.allowed('breakpoint')) this.trace.toggle(contextLine); }
@@ -452,40 +452,10 @@ class AxiomIDE {
       event.preventDefault();
       event.stopPropagation();
       contextLine = this.editor.getTargetAtClientPoint(event.clientX, event.clientY)?.position?.lineNumber;
-      menu.replaceChildren();
-      items.forEach((item) => {
-        if (item.separator) {
-          const separator = document.createElement('div');
-          separator.className = 'xs-context-separator';
-          menu.appendChild(separator);
-          return;
-        }
-        const row = document.createElement('button');
-        row.type = 'button';
-        row.className = 'xs-context-item';
-        row.dataset.action = item.id;
-        row.setAttribute('role', 'menuitem');
-        UIControls.setLabel(row, item.translation ? I18N.t(item.translation) : item.label, { tooltip: false });
-        UIControls.setEnabled(row, !item.trace || (this.trace.allowed(item.trace) && (item.trace !== 'breakpoint' || !!contextLine)));
-        row.innerHTML = `<span class="xs-context-item-icon codicon ${item.icon}"></span><span class="xs-context-item-label">${item.translation ? I18N.t(item.translation) : item.label}</span>${item.key ? `<span class="xs-context-item-key">${item.key}</span>` : ''}`;
-        menu.appendChild(row);
-      });
-      menu.hidden = false;
-      const margin = 4;
-      const rect = menu.getBoundingClientRect();
-      menu.style.left = `${Math.min(event.clientX, window.innerWidth - rect.width - margin)}px`;
-      menu.style.top = `${Math.min(event.clientY, window.innerHeight - rect.height - margin)}px`;
+      popup.show(items.map(item => ({...item,
+        enabled: !item.trace || (this.trace.allowed(item.trace) && (item.trace !== 'breakpoint' || !!contextLine))
+      })), event.clientX, event.clientY);
     }, true);
-    menu.addEventListener('click', (event) => {
-      const item = event.target.closest?.('[data-action]');
-      if (item) run(item.dataset.action);
-    });
-    document.addEventListener('mousedown', (event) => {
-      if (!menu.hidden && !menu.contains(event.target)) close();
-    }, true);
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && !menu.hidden) { event.preventDefault(); close(); }
-    });
   }
 
   // ================= UI binding =================
@@ -1469,20 +1439,24 @@ class AxiomIDE {
     this.term.loadAddon(this.fitAddon);
     this.term.open(document.getElementById('terminal'));
     this.log('terminal.created');
-    document.getElementById('terminal').addEventListener('contextmenu', async event => {
+    let consoleSelection = '';
+    const consoleMenu = UIControls.createContextMenu(document.getElementById('ax-console-context-menu'), {
+      translate: I18N.t, onClose: () => this.term.focus(), onAction: async action => {
+        if (action === 'copy' && consoleSelection) await API.writeClipboardText(consoleSelection);
+        if (action === 'clear') {
+          if (this.execution) this.execution.clearConsole();
+          else this.term.reset();
+        }
+      },
+    });
+    document.getElementById('terminal').addEventListener('contextmenu', event => {
       event.preventDefault();
       event.stopPropagation();
-      const selected = this.term.getSelection();
-      const action = await API.consoleContextMenu({
-        canCopy: selected.length > 0,
-        copyLabel: I18N.t('menu.edit.copy'), clearLabel: I18N.t('console.clear'),
-      });
-      if (action === 'copy' && selected) await API.writeClipboardText(selected);
-      if (action === 'clear') {
-        if (this.execution) this.execution.clearConsole();
-        else this.term.reset();
-      }
-      this.term.focus();
+      consoleSelection = this.term.getSelection();
+      consoleMenu.show([
+        {id: 'copy', translation: 'menu.edit.copy', icon: 'codicon-copy', enabled: !!consoleSelection},
+        {separator: true}, {id: 'clear', translation: 'console.clear', icon: 'codicon-clear-all'},
+      ], event.clientX, event.clientY);
     });
     this.fitConsole();
     this.term.onData((d) => this.consoleInput(d)); // keystrokes go through the type-ahead hold
@@ -2029,6 +2003,9 @@ class AxiomIDE {
 
   applyLocale() {
     I18N.apply();
+    document.querySelectorAll('.xs-context-menu [data-translation]').forEach(row => {
+      UIControls.setLabel(row, I18N.t(row.dataset.translation), { tooltip: false });
+    });
     for (const direction of ['left', 'right']) {
       const button = document.getElementById('tabs-scroll-' + direction);
       const label = this.settings.language === 'en'

@@ -1,6 +1,38 @@
 // i18n: ru/en dictionaries stay in parity and every data-i18n key is translated.
 module.exports = [
   {
+    id: 'i18n-editor-context-menu',
+    name: 'Контекстное меню редактора полностью переводится и обновляет доступные имена',
+    async fn({ S, C }) {
+      await S.launch();
+      await S.page.evaluate(() => window.__ide.editor.getModel().setValue('DIM price AS DECIMAL = 1\nPRINT price'));
+      const expected = {
+        ru: ['Изменить все вхождения', 'Вырезать', 'Копировать', 'Вставить', 'Установить / снять точку остановки', 'Очистить все точки остановки', 'Палитра команд'],
+        en: ['Change All Occurrences', 'Cut', 'Copy', 'Paste', 'Toggle Breakpoint', 'Clear All Breakpoints', 'Command Palette'],
+      };
+      await S.page.locator('.monaco-editor .view-line').first().click({button: 'right'});
+      const menu = S.page.locator('#ax-context-menu');
+      await menu.waitFor({state: 'visible'});
+      for (const lang of ['ru', 'en', 'ru']) {
+        await S.page.evaluate(lang => window.__ide.setLanguage(lang), lang);
+        const rows = await menu.locator('[role="menuitem"]').evaluateAll(rows => rows.map(row => ({
+          label: row.querySelector('.xs-context-item-label').textContent, aria: row.getAttribute('aria-label'),
+          icon: !!row.querySelector('.xs-context-item-icon.codicon'), action: row.dataset.action,
+        })));
+        C.eq(rows.map(row => row.label).join('|'), expected[lang].join('|'), 'Все подписи меню: ' + lang);
+        C.ok(rows.every(row => row.aria === row.label), 'Доступные имена совпадают с подписями: ' + lang);
+        C.ok(rows.every(row => row.icon), 'Пиктограммы сохранены: ' + lang);
+        C.eq(rows.map(row => row.action).join(','), 'change-all,cut,copy,paste,trace-breakpoint,trace-clear,command-palette', 'Состав команд сохранён: ' + lang);
+      }
+      C.contains(await menu.innerText(), 'Ctrl+F2', 'Сочетание изменения всех вхождений сохранено');
+      C.contains(await menu.innerText(), 'F1', 'Сочетание палитры команд сохранено');
+      await S.page.keyboard.press('Escape');
+      C.ok(await menu.isHidden(), 'Escape закрывает меню');
+      await S.page.locator('.monaco-editor .view-line').first().click({button: 'right'});
+      C.eq(await menu.locator('[data-action="copy"] .xs-context-item-label').innerText(), 'Копировать', 'Повторное открытие использует текущий язык');
+    },
+  },
+  {
     id: 'i18n-parity',
     name: 'ru and en dictionaries have identical keys covering index.html',
     async fn({ S, C }) {

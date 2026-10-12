@@ -85,6 +85,55 @@ test('Общие правила допускают отсутствующий н
   controls.setLabel(null, 'Подсказка'); controls.setMenuChecked(null, true);
 });
 
+test('Общее контекстное меню создаёт доступные строки и пропускает недоступные команды', () => {
+  assert.equal(typeof controls.createContextMenu, 'function');
+  const events = new Map();
+  let menu, restored = 0;
+  const doc = { activeElement: null, defaultView: {innerWidth: 640, innerHeight: 400},
+    addEventListener: (name, callback) => events.set(name, callback), querySelectorAll: () => [menu],
+    createElement(tag) {
+      const node = element(tag === 'button');
+      node.children = []; node.style = {}; node.hidden = true;
+      node.handlers = {};
+      node.addEventListener = (name, callback) => { node.handlers[name] = callback; };
+      node.appendChild = child => { node.children.push(child); return child; };
+      node.replaceChildren = () => { node.children = []; };
+      node.querySelectorAll = () => node.children.filter(child => 'disabled' in child && !child.disabled);
+      node.getBoundingClientRect = () => ({width: 252, height: 86});
+      node.focus = () => { doc.activeElement = node; };
+      node.contains = target => node === target || node.children.includes(target);
+      node.closest = () => node;
+      return node;
+    },
+  };
+  menu = doc.createElement('div');
+  const actions = [];
+  const popup = controls.createContextMenu(menu, {translate: key => key === 'copy' ? 'Копировать' : 'Очистить',
+    onAction: id => actions.push(id), onClose: () => { restored++; }}, doc);
+  popup.show([{id: 'copy', translation: 'copy', icon: 'codicon-copy', enabled: false},
+    {separator: true}, {id: 'clear', translation: 'clear', icon: 'codicon-clear-all'}], 635, 395);
+  const [copy, separator, clear] = menu.children;
+  assert.equal(copy.getAttribute('aria-label'), 'Копировать');
+  assert.equal(copy.getAttribute('aria-disabled'), 'true');
+  assert.equal(copy.children[1].textContent, 'Копировать');
+  assert.equal(separator.getAttribute('role'), 'separator');
+  assert.equal(doc.activeElement, clear);
+  assert.equal(menu.style.left, '384px');
+  assert.equal(menu.style.top, '310px');
+  const press = key => events.get('keydown')({key, preventDefault() {}, stopPropagation() {}});
+  press('ArrowUp'); assert.equal(doc.activeElement, clear);
+  menu.handlers.click({target: copy}); assert.equal(actions.length, 0);
+  menu.handlers.click({target: clear}); assert.deepEqual(actions, ['clear']);
+  assert.equal(menu.hidden, true); assert.equal(restored, 1);
+  popup.show([{id: 'copy', translation: 'copy'}, {id: 'clear', translation: 'clear'}], 20, 20);
+  const [enabledCopy, enabledClear] = menu.children;
+  press('ArrowDown'); assert.equal(doc.activeElement, enabledClear);
+  press('ArrowUp'); assert.equal(doc.activeElement, enabledCopy);
+  press('End'); assert.equal(doc.activeElement, enabledClear);
+  press('Home'); assert.equal(doc.activeElement, enabledCopy);
+  press('Tab'); assert.equal(menu.hidden, true); assert.equal(restored, 2);
+});
+
 test('Повторяющиеся свойства и палитры не определяются повторно в обработчиках', () => {
   const directory = path.resolve(__dirname, '../src/renderer');
   for (const name of fs.readdirSync(directory).filter(name => name.endsWith('.js') && name !== 'ui-controls.js')) {

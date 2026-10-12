@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 107,
+  "count": 110,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -41,6 +41,16 @@
       "id": "canvas-mouse-world-click",
       "spec": "canvas-mouse.spec.js",
       "name": "Настоящий щелчок CANVAS передаёт кнопку и мировые координаты в ON MOUSE"
+    },
+    {
+      "id": "console-context-menu-themes",
+      "spec": "console-background.spec.js",
+      "name": "Меню консоли совпадает с меню редактора во всех трёх темах"
+    },
+    {
+      "id": "console-context-menu-input-actions",
+      "spec": "console-background.spec.js",
+      "name": "Копирование и очистка через меню сохраняют активный INPUT и набранный ответ"
     },
     {
       "id": "console-background-screen-light-theme",
@@ -291,6 +301,11 @@
       "id": "highlight-interpolation-dollar",
       "spec": "highlighting.spec.js",
       "name": "Знак доллара интерполяции совпадает по цвету с фигурными скобками"
+    },
+    {
+      "id": "i18n-editor-context-menu",
+      "spec": "i18n.spec.js",
+      "name": "Контекстное меню редактора полностью переводится и обновляет доступные имена"
     },
     {
       "id": "i18n-parity",
