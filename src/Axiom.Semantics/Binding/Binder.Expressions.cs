@@ -119,6 +119,9 @@ public sealed partial class Binder
 
         if (TryBindPredefinedConstant(expression.IdentifierToken.Text, expression.IdentifierToken.Location, out var predefinedConstant))
         {
+            var identifier = expression.IdentifierToken;
+            _editorConstants?.Add(new EditorHoverInfo(identifier.Span.Start, identifier.Span.Length,
+                identifier.Text, "constant", predefinedConstant.Type.Name));
             return predefinedConstant;
         }
 

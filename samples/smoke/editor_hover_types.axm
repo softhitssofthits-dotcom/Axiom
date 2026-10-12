@@ -1,0 +1,30 @@
+' Наведите указатель на имена в объявлениях и в выражениях.
+' Подсказка должна показывать категорию сущности и её настоящий тип.
+
+TYPE Product
+    Price AS DECIMAL
+END TYPE
+
+' Явные типы и тип, выведенный компилятором из выражения.
+DIM price AS DECIMAL = -10.5
+DIM title AS STRING = "Цена"
+DIM amount = CDEC(2) + CDEC(3)
+DIM item AS Product
+item.Price = price
+
+' Массив имеет ранг два; limit является константой.
+DIM grid(1 TO 2, 1 TO 3) AS INTEGER
+CONST limit AS INTEGER = 2
+
+' В карточке функции видны BYREF и возвращаемый тип.
+FUNCTION Twice(BYREF value AS DECIMAL) AS DECIMAL
+    RETURN value * 2
+END FUNCTION
+
+PRINT title; ": "; price
+PRINT "Поле записи: "; item.Price
+PRINT "Вычисленная сумма: "; amount
+PRINT "Элемент массива: "; grid(1, 1); ", предел: "; limit
+PRINT "Удвоенная цена: "; Twice(price)
+' price внутри интерполяции тоже получает подсказку; текст строки — нет.
+PRINT $"Цена в интерполяции: {price}"

@@ -7,6 +7,101 @@ async function open(S, source, tag) {
   return file;
 }
 module.exports = [
+  { id: 'language-hover-registry', name: 'Карточки всех встроенных функций, типов и ключевых слов соответствуют реестру', async fn({ S, C }) {
+    await open(S, 'PRINT 1\n', 'hover-registry');
+    const result = await S.page.evaluate(async () => {
+      const i = window.__ide, model = i.editor.getModel(), meta = i.langMeta;
+      const families = new Map();
+      for (const b of meta.builtins) {
+        if (!families.has(b.name)) families.set(b.name, []);
+        families.get(b.name).push(b);
+      }
+      const names = [...new Set([...families.keys(), ...meta.typeNames, ...meta.keywords])];
+      model.setValue(names.map(name => 'PRINT ' + name).join('\n'));
+      // Это список реестра, а не исполнимая программа: диагностика здесь проверяется отдельно.
+      clearTimeout(i._liveCheckTimer); i._liveCheckSeq++;
+      i.monaco.editor.setModelMarkers(model, 'axiom', []);
+      const failures = [];
+      for (let index = 0; index < names.length; index++) {
+        const name = names[index];
+        const card = await window.LangFeatures._hoverProvider.provideHover(model, {lineNumber: index + 1, column: 7});
+        const text = card?.contents.map(c => c.value).join('\n') || '';
+        if (families.has(name)) {
+          if (!text.includes('встроенная функция') || families.get(name).some(b => !text.includes('`' + window.LangFeatures.builtinSignature(b) + '`')))
+            failures.push(name);
+        } else if (!text.includes(meta.typeNames.includes(name) ? 'тип данных' : 'ключевое слово')) failures.push(name);
+      }
+      return { count: names.length, families: families.size, failures };
+    });
+    C.ok(result.count > 300, 'Проверен полный реестр (' + result.count + ' сущностей)');
+    C.eq(result.failures.join(', '), '', 'Все карточки и зарегистрированные подписи корректны');
+    C.note('Проверено семейств встроенных функций: ' + result.families);
+  } },
+  { id: 'language-hover-symbol-types', name: 'Подсказки Monaco показывают типы компилятора, сигнатуры и перегрузки', async fn({ S, C }) {
+    const source = [
+      'DIM price AS DECIMAL = -10.5', 'DIM title AS STRING = "Цена"',
+      'DIM grid(1 TO 2, 1 TO 3) AS INTEGER', 'CONST limit AS INTEGER = 2',
+      'TYPE Product', '    Price AS DECIMAL', 'END TYPE', 'DIM item AS Product',
+      'FUNCTION Twice(BYREF value AS DECIMAL) AS DECIMAL', '    RETURN value * 2', 'END FUNCTION',
+      'SUB Show(value AS STRING)', '    PRINT value', 'END SUB',
+      'PRINT price, title, grid(1, 1), limit, item.Price, Twice(price), LEN(title)',
+      'PRINT $"Цена {price}"', 'PRINT "price LEN"', "' price LEN", 'REM price LEN',
+    ].join('\n');
+    await open(S, source, 'hover-symbol-types');
+    await S.page.evaluate(() => window.__ide.check(false));
+    async function hover(needle, shift = 0) {
+      return S.page.evaluate(async ({needle, shift}) => {
+        const model = window.__ide.editor.getModel();
+        const offset = model.getValue().indexOf(needle) + shift;
+        const position = model.getPositionAt(offset);
+        const result = await window.LangFeatures._hoverProvider.provideHover(model, position);
+        return result?.contents.map(c => c.value).join('\n') || null;
+      }, {needle, shift});
+    }
+    C.contains(await hover('price AS'), 'Тип: `DECIMAL`', 'DECIMAL в объявлении');
+    C.contains(await hover('price, title'), 'Тип: `DECIMAL`', 'DECIMAL при использовании');
+    C.contains(await hover('title, grid'), 'Тип: `STRING`', 'Строковая переменная');
+    C.contains(await hover('grid(1, 1)'), 'Тип: `INTEGER(,)`', 'Ранг массива');
+    C.contains(await hover('limit, item'), 'константа', 'Категория CONST');
+    C.contains(await hover('value * 2'), 'Тип: `DECIMAL`', 'Параметр функции');
+    C.contains(await hover('value\nEND SUB'), 'Тип: `STRING`', 'Одноимённый параметр другой процедуры');
+    C.contains(await hover('item.Price', 5), 'Тип: `DECIMAL`', 'Поле TYPE');
+    C.contains(await hover('Product\n'), 'Price AS DECIMAL', 'Карточка пользовательского типа');
+    C.contains(await hover('Twice(price)'), 'FUNCTION Twice(BYREF value AS DECIMAL) AS DECIMAL', 'Подпись функции');
+    const signature = await S.page.evaluate(async () => {
+      const model = window.__ide.editor.getModel(), offset = model.getValue().indexOf('Twice(price)') + 'Twice(price'.length;
+      return (await window.LangFeatures._sigProvider.provideSignatureHelp(model, model.getPositionAt(offset))).value;
+    });
+    C.eq(signature.signatures[0].parameters[0].label, 'BYREF value AS DECIMAL', 'Параметр в подсказке вызова');
+    C.contains(await hover('Show(value'), 'SUB Show(value AS STRING)', 'Подпись процедуры');
+    C.contains(await hover('{price}', 1), 'Тип: `DECIMAL`', 'Символ в интерполяции');
+    const builtin = await hover('LEN(title)');
+    C.contains(builtin, 'встроенная функция', 'Категория встроенной функции');
+    const overloadCount = await S.page.evaluate(() => window.__ide.langMeta.builtins.filter(b => b.name === 'LEN').length);
+    C.eq((builtin.match(/`LEN\(/g) || []).length, overloadCount, 'Все зарегистрированные перегрузки LEN');
+    C.contains(await hover('PRINT price'), 'ключевое слово', 'Карточка оператора');
+    C.contains(await hover('DECIMAL ='), 'тип данных', 'Карточка встроенного типа');
+    for (const [needle, shift] of [['"price LEN"', 1], ["' price LEN", 2], ['REM price LEN', 4]])
+      C.eq(await hover(needle, shift), null, 'Подсказка скрыта в строке или комментарии: ' + needle);
+
+    await S.page.evaluate(async () => {
+      const i = window.__ide, model = i.editor.getModel();
+      i.editor.setPosition(model.getPositionAt(model.getValue().indexOf('price, title')));
+      i.editor.focus(); await i.editor.getAction('editor.action.showHover').run();
+    });
+    await S.page.waitForFunction(() => [...document.querySelectorAll('.monaco-hover')].some(el => el.textContent.includes('Тип: DECIMAL')));
+    C.ok(true, 'Настоящий тултип Monaco показывает DECIMAL');
+    await S.page.keyboard.press('Escape');
+    await S.page.evaluate(async () => {
+      const i = window.__ide; i.editor.getModel().setValue('DIM price AS STRING = "Цена"\nPRINT price'); await i.check(false);
+      i.editor.setPosition({lineNumber: 2, column: 7}); i.editor.focus(); await i.editor.getAction('editor.action.showHover').run();
+    });
+    await S.page.waitForFunction(() => [...document.querySelectorAll('.monaco-hover')].some(el => el.textContent.includes('Тип: STRING')));
+    C.ok(true, 'После правки реальный тултип показывает STRING');
+    await S.page.keyboard.press('Escape');
+    await S.page.evaluate(() => window.__ide.setLanguage('en'));
+    C.contains(await hover('PRINT price', 6), 'Type: `STRING`', 'Английская локализация');
+  } },
   { id: 'language-runtime-diagnostic-switch', name: 'Ошибка выполнения переключает язык без повторного запуска', async fn({ S, C }) {
     await open(S, 'DIM divisor AS INTEGER = 0\nPRINT 1 / divisor\n', 'language-runtime');
     await S.page.evaluate(() => { window.__ide.setLanguage('en'); return window.__ide.run(); });

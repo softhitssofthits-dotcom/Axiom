@@ -3,6 +3,9 @@ using Axiom.Execution;
 using Axiom.Formatting;
 using Axiom.Ide.Contracts;
 using Axiom.Ide.Models;
+using Axiom.Lexing;
+using Axiom.Parsing;
+using Axiom.Semantics;
 
 namespace Axiom.DesktopHost;
 
@@ -17,6 +20,15 @@ internal static class DocumentCommands
         if (string.IsNullOrWhiteSpace(snapshot.DocumentId) || snapshot.DocumentId.Length > 128 ||
             snapshot.DocumentRevision < 0 || snapshot.SourceText is null)
             throw new ArgumentException("Некорректный снимок документа.");
+        if (method == "document.hover")
+        {
+            var syntax = Parser.Parse(snapshot.SourceText, out _);
+            var identifiers = Lexer.Lex(snapshot.SourceText, out _)
+                .Where(token => token.Kind == TokenKind.IdentifierToken)
+                .Select(token => new EditorIdentifier(token.Text, token.Location.Span)).ToArray();
+            var hovers = Binder.GetEditorHovers(syntax, identifiers);
+            return new { snapshot.DocumentId, snapshot.DocumentRevision, hovers };
+        }
         var formatter = new AxiomCodeFormattingService();
         var style = CodeFormattingStyle.Classic;
         if (payload.TryGetProperty("formattingStyle", out var styleValue) &&

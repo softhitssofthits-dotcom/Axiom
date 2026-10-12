@@ -1,16 +1,74 @@
 [
   {
-    "id": "files-save-as-renames-open-project-document",
-    "spec": "files.spec.js",
-    "name": "Сохранить как согласует новый файл, вкладку и дерево проекта",
-    "ms": 5775,
-    "passed": 7,
+    "id": "language-hover-registry",
+    "spec": "language-format.spec.js",
+    "name": "Карточки всех встроенных функций, типов и ключевых слов соответствуют реестру",
+    "ms": 20926,
+    "passed": 2,
+    "failures": [],
+    "notes": [
+      "Проверено семейств встроенных функций: 271"
+    ],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:2443/17ef2700-9ed2-4ae7-9541-e41f8955483d\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "language-hover-symbol-types",
+    "spec": "language-format.spec.js",
+    "name": "Подсказки Monaco показывают типы компилятора, сигнатуры и перегрузки",
+    "ms": 3069,
+    "passed": 23,
     "failures": [],
     "notes": [],
     "crashed": false,
     "consoleTail": [],
     "pageErrors": [],
-    "mainStderrTail": "Debugger ending on ws://127.0.0.1:49577/5ad7468c-d526-4ff2-acee-a0ea28897738\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:2453/b65ff7da-f606-4393-a029-40df854a44bc\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "language-runtime-diagnostic-switch",
+    "spec": "language-format.spec.js",
+    "name": "Ошибка выполнения переключает язык без повторного запуска",
+    "ms": 2901,
+    "passed": 2,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:2458/f9ae1741-2265-479f-b19b-42d4e6630153\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "language-diagnostics-switch",
+    "spec": "language-format.spec.js",
+    "name": "Язык диагностик списка и Monaco переключается без повторного анализа",
+    "ms": 2860,
+    "passed": 6,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:2463/f710686f-5b03-42f0-bc39-85cff7d632d1\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "format-one-enter-two-styles",
+    "spec": "language-format.spec.js",
+    "name": "Один Enter форматирует строку и создаёт цикл в Classic и Modern",
+    "ms": 3069,
+    "passed": 9,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:2468/3fbd15be-ef57-4c56-955e-bd418b3e7fb1\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
     "rendererDialogs": []
   }
 ]

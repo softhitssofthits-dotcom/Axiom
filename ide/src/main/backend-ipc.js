@@ -57,7 +57,7 @@ function setupBackendIpc() {
   handle('backend-ready', () => getClient().ready());
   handle('backend-language-metadata', () => getClient().request('language.metadata'));
   handle('backend-document', (method, snapshot) => {
-    if (!['document.compile', 'document.analyse', 'document.format', 'document.editTransition', 'document.normalizeIdentifiers'].includes(method) ||
+    if (!['document.compile', 'document.analyse', 'document.hover', 'document.format', 'document.editTransition', 'document.normalizeIdentifiers'].includes(method) ||
         !snapshot || typeof snapshot.sourceText !== 'string' || typeof snapshot.documentId !== 'string' ||
         !Number.isInteger(snapshot.documentRevision) || snapshot.documentRevision < 0 || snapshot.documentRevision > 2147483647)
       throw new Error('Недопустимый запрос документа.');

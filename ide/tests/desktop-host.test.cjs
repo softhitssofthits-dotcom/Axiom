@@ -298,3 +298,24 @@ test('Диагностика снимка сохраняет UTF-16 диапаз
  assert.equal((await host.request('host.ping')).ok,true);
  }finally{await host.close();}
 });
+
+test('Подсказки Host сохраняют редакцию документа, UTF-16 позиции и типы после изменения', async () => {
+  await withHost(async host => {
+    for (const [revision, type, initializer] of [[1, 'DECIMAL', '-10.5'], [2, 'STRING', '"Цена"']]) {
+      const sourceText = `' 😀\r\nDIM price AS ${type} = ${initializer}\r\nPRINT price\r\n`;
+      const response = await host.request('document.hover', {documentId: 'hover', documentRevision: revision, sourceText});
+      assert.equal(response.ok, true);
+      assert.equal(response.payload.documentId, 'hover');
+      assert.equal(response.payload.documentRevision, revision);
+      const symbols = response.payload.hovers.filter(h => h.name === 'price');
+      assert.equal(symbols.length, 2);
+      for (const symbol of symbols) {
+        assert.equal(symbol.type, type);
+        assert.equal(sourceText.slice(symbol.start, symbol.start + symbol.length), 'price');
+      }
+    }
+    const invalid = await host.request('document.hover', {documentId: 'hover', sourceText: 'PRINT 1'});
+    assert.equal(invalid.ok, false);
+    assert.equal((await host.request('host.ping')).ok, true);
+  });
+});

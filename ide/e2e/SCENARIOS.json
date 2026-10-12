@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 105,
+  "count": 107,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -336,6 +336,16 @@
       "id": "interpolation-print-typo-location",
       "spec": "interpolation-typo.spec.js",
       "name": "Опечатка PRIN перед интерполяцией: русская ошибка на строке 9"
+    },
+    {
+      "id": "language-hover-registry",
+      "spec": "language-format.spec.js",
+      "name": "Карточки всех встроенных функций, типов и ключевых слов соответствуют реестру"
+    },
+    {
+      "id": "language-hover-symbol-types",
+      "spec": "language-format.spec.js",
+      "name": "Подсказки Monaco показывают типы компилятора, сигнатуры и перегрузки"
     },
     {
       "id": "language-runtime-diagnostic-switch",

@@ -18,7 +18,7 @@ public sealed partial class Binder
 
     private BoundStatement BindStatement(StatementSyntax statement)
     {
-        return statement switch
+        var bound = statement switch
         {
             DimStatementSyntax dimStatement => BindDimStatement(dimStatement),
             ConstStatementSyntax constStatement => BindConstStatement(constStatement),
@@ -84,6 +84,8 @@ public sealed partial class Binder
             ExpressionStatementSyntax expressionStatement => BindExpressionStatement(expressionStatement),
             _ => throw new ArgumentOutOfRangeException(nameof(statement), statement, "Unsupported statement.")
         };
+        if (_editorStatements is not null) _editorStatements[bound] = statement;
+        return bound;
     }
 
     private BoundStatement BindExpressionStatement(ExpressionStatementSyntax statement)

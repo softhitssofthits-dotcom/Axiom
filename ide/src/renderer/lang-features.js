@@ -1,8 +1,7 @@
 // Axiom IDE — language features: completion + signature help + hover.
 // Data source: the language registry via `axiom metadata` (keywords / typeNames / builtins with
 // signatures), cached in ide.langMeta. Document context (procedures, types, variables) is a
-// light client-side scan of the model — no semantics are invented here: everything offered is
-// either from the registry or from the user's own document.
+// document scan for completion. Hover symbols come from the compiler's semantic analysis.
 const LangFeatures = (() => {
 
   // ---- light document scan (BASIC) ----
@@ -10,12 +9,43 @@ const LangFeatures = (() => {
   // Strips trailing comments ('... and REM ...) and line continuations are not a thing in
   // Axiom, so a purely line-based scan is enough for the outline and completion locals.
   function codeOf(line) {
-    let text = line;
-    const rem = text.search(/(\s|^)rem(\s|$)/i);
-    if (rem >= 0) text = text.slice(0, rem);
-    const apostrophe = text.indexOf("'");
-    if (apostrophe >= 0) text = text.slice(0, apostrophe);
-    return text;
+    const { commentStart } = lexicalCode(line);
+    return line.slice(0, commentStart);
+  }
+
+  // Preserve offsets while hiding literal text, comments and interpolation formats.
+  function lexicalCode(line) {
+    const mask = line.split('');
+    const stack = [{ kind: 'code' }];
+    let commentStart = line.length;
+    for (let i = 0; i < line.length; i++) {
+      const state = stack[stack.length - 1], ch = line[i], next = line[i + 1];
+      if (state.kind === 'string') {
+        mask[i] = ' ';
+        if (ch === '"' && next === '"') { mask[++i] = ' '; continue; }
+        if (ch === '"') stack.pop();
+        else if (ch === '{' && state.interpolated) stack.push({kind: 'expression', depth: 0});
+        continue;
+      }
+      if (state.kind === 'format') {
+        mask[i] = ' ';
+        if (ch === '}') stack.pop();
+        continue;
+      }
+      if (state.kind === 'expression' && ch === '}' && state.depth === 0) {
+        mask[i] = ' '; stack.pop(); continue;
+      }
+      if (ch === '"') { mask[i] = ' '; stack.push({kind: 'string', interpolated: line[i - 1] === '$'}); continue; }
+      if (ch === "'" || (/^REM\b/i.test(line.slice(i)) && (i === 0 || !/[A-Za-z0-9_]/.test(line[i - 1])))) {
+        commentStart = i; mask.fill(' ', i); break;
+      }
+      if (state.kind === 'expression') {
+        if (ch === '(') state.depth++;
+        if (ch === ')') state.depth--;
+        if (ch === ':' && state.depth === 0) { mask[i] = ' '; state.kind = 'format'; }
+      }
+    }
+    return { mask: mask.join(''), commentStart };
   }
 
   function scanDoc(model) {
@@ -48,7 +78,7 @@ const LangFeatures = (() => {
         res.types.push(type);
         continue;
       }
-      if ((m = line.match(/^(?:DIM|CONST)\s+([A-Za-z_]\w*)\s*(?:\(|\s+AS\s+([A-Za-z_]\w*))?/i))) {
+      if ((m = line.match(/^(?:DIM|CONST)\s+([A-Za-z_]\w*)(?:\s*\([^)]*\))?(?:\s+AS\s+([A-Za-z_]\w*))?/i))) {
         res.vars.push({ name: m[1], type: m[2] || null, lineNo: lineIndex + 1 });
       }
     }
@@ -95,27 +125,7 @@ const LangFeatures = (() => {
   // excluded with a small scanner (no full parse).
   function isCodePosition(model, position) {
     const line = model.getLineContent(position.lineNumber);
-    const limit = Math.max(0, position.column - 1);
-    let inString = false;
-    let inInterpolation = false;
-    for (let i = 0; i < limit; i++) {
-      const ch = line[i];
-      const next = line[i + 1];
-      if (inString && !inInterpolation) {
-        if (ch === '"' && next === '"') { i++; continue; } // doubled quote — escaped
-        if (ch === '"') inString = false;
-        continue;
-      }
-      if (inInterpolation) {
-        if (ch === '}') inInterpolation = false;
-        continue;
-      }
-      if (ch === "'") return false; // comment — the rest of the line
-      if (/\s|^/.test('') && line.slice(i, i + 4).match(/^REM(\s|$)/i)) return false;
-      if (ch === '"') inString = true;
-      else if (ch === '{') inString = true, inInterpolation = true; // inside $"..."
-    }
-    return !inString;
+    return /\S/.test(lexicalCode(line).mask[position.column - 1] || '');
   }
 
   // ---- registration ----
@@ -185,24 +195,33 @@ const LangFeatures = (() => {
 
     const signatureProvider = {
       signatureHelpTriggerCharacters: ['(', ','],
-      provideSignatureHelp(model, position) {
+      async provideSignatureHelp(model, position, cancellation) {
+        const version = model.getVersionId?.();
         const line = model.getValueInRange({ startLineNumber: position.lineNumber, startColumn: 1, endLineNumber: position.lineNumber, endColumn: position.column });
+        const lexical = lexicalCode(model.getLineContent(position.lineNumber));
+        const code = lexical.mask.slice(0, line.length);
         const empty = { signatures: [], activeSignature: 0, activeParameter: 0 };
+        if (line.length > lexical.commentStart) return { value: empty, dispose() {} };
         let depth = 0;
         let callStart = -1;
-        for (let i = line.length - 1; i >= 0; i--) {
-          const ch = line[i];
+        for (let i = code.length - 1; i >= 0; i--) {
+          const ch = code[i];
           if (ch === ')') depth += 1;
           else if (ch === '(') {
             if (depth === 0) { callStart = i; break; }
             depth -= 1;
           }
         }
-        const nm = callStart >= 0 ? line.slice(0, callStart).match(/([A-Za-z_]\w*)\s*$/) : null;
+        const nm = callStart >= 0 ? code.slice(0, callStart).match(/([A-Za-z_]\w*)\s*$/) : null;
         if (!nm) return { value: empty, dispose() {} };
         const fnName = nm[1];
         const meta = getMeta();
-        const active = (line.slice(callStart + 1).match(/,/g) || []).length;
+        let active = 0, argumentDepth = 0;
+        for (const ch of code.slice(callStart + 1)) {
+          if (ch === '(') argumentDepth++;
+          else if (ch === ')') argumentDepth--;
+          else if (ch === ',' && argumentDepth === 0) active++;
+        }
 
         // 1. Builtin overload family from the registry — every overload becomes a signature.
         const family = meta && Array.isArray(meta.builtins)
@@ -211,15 +230,16 @@ const LangFeatures = (() => {
         if (family.length) {
           const signatures = family.map((b) => {
             const sig = builtinSignature(b);
-            const params = (b.params || []).map((p) => ({ label: p.name + (p.type ? ' AS ' + p.type : '') }));
+            const params = (b.params || []).map((p) => ({ label: p.name + ((p.displayType || p.type) ? ' AS ' + (p.displayType || p.type) : '') }));
             return { label: sig, parameters: params };
           });
-          const first = family[0];
-          const count = (first.params || []).length;
+          const matching = family.findIndex(b => (b.params || []).length > active);
+          const activeSignature = matching >= 0 ? matching : family.length - 1;
+          const count = (family[activeSignature].params || []).length;
           return {
             value: {
               signatures,
-              activeSignature: 0,
+              activeSignature,
               activeParameter: count ? Math.min(active, count - 1) : 0,
             },
             dispose() {},
@@ -227,6 +247,16 @@ const LangFeatures = (() => {
         }
 
         // 2. User-defined FUNCTION/SUB from the document.
+        const symbols = await semanticHovers(model);
+        if (cancellation?.isCancellationRequested || model.isDisposed?.() || model.getVersionId?.() !== version)
+          return { value: empty, dispose() {} };
+        const callOffset = model.getOffsetAt?.({lineNumber: position.lineNumber, column: nm.index + 1});
+        const callable = symbols?.find(item => item.start === callOffset && item.signature && item.parameters);
+        if (callable) return { value: {
+          signatures: [{label: callable.signature, parameters: callable.parameters.map(label => ({label}))}],
+          activeSignature: 0, activeParameter: Math.min(active, Math.max(0, callable.parameters.length - 1))
+        }, dispose() {} };
+        if (ide.documentServices) return { value: empty, dispose() {} };
         const doc = scanDoc(model);
         const user = doc.functions.find((f) => f.name.toUpperCase() === fnName.toUpperCase())
           || doc.subs.find((s) => s.name.toUpperCase() === fnName.toUpperCase());
@@ -249,8 +279,29 @@ const LangFeatures = (() => {
     LangFeatures._sigProvider = signatureProvider; // exposed for diagnostics
 
     // Hover provider: builtin signatures, user symbols, keywords and types.
+    const hoverCache = new WeakMap();
+    async function semanticHovers(model) {
+      if (!ide.documentServices || !ide.openFiles) return null;
+      const file = [...ide.openFiles].find(([, document]) => document.model === model)?.[0];
+      if (!file) return null;
+      const version = model.getVersionId();
+      let cached = hoverCache.get(model);
+      if (!cached || cached.version !== version) {
+        cached = { version, request: ide.documentServices.request(file, 'document.hover') };
+        hoverCache.set(model, cached);
+      }
+      try {
+        const result = await cached.request;
+        if (!result) hoverCache.delete(model);
+        return result?.hovers || null;
+      } catch (error) {
+        hoverCache.delete(model);
+        ide.log?.('hover.failed', { message: error.message });
+        return null;
+      }
+    }
     const hoverProvider = {
-      provideHover(model, position) {
+      async provideHover(model, position, cancellation) {
         if (!isCodePosition(model, position)) return null;
         const word = model.getWordAtPosition(position);
         if (!word || !word.word) return null;
@@ -260,16 +311,27 @@ const LangFeatures = (() => {
           endLineNumber: position.lineNumber, endColumn: word.endColumn,
         };
         const meta = getMeta();
-        const docScan = scanDoc(model);
+        const version = model.getVersionId?.();
         const overlapsErrorMarker = monaco.editor.getModelMarkers({ owner: 'axiom', resource: model.uri }).some((marker) =>
           marker.severity === monaco.MarkerSeverity.Error
-          && marker.startLineNumber === position.lineNumber
-          && marker.endLineNumber === position.lineNumber
-          && marker.startColumn < word.endColumn
-          && marker.endColumn > word.startColumn);
+          && marker.startLineNumber <= position.lineNumber && marker.endLineNumber >= position.lineNumber
+          && (marker.startLineNumber < position.lineNumber || marker.startColumn < word.endColumn)
+          && (marker.endLineNumber > position.lineNumber || marker.endColumn > word.startColumn));
         // Monaco already renders compiler errors in its marker hover. Suppress the normal
         // language card here so an invalid declaration does not look like a valid builtin.
         if (overlapsErrorMarker) return null;
+
+        const symbols = await semanticHovers(model);
+        if (cancellation?.isCancellationRequested || model.isDisposed?.() || model.getVersionId?.() !== version) return null;
+        const offset = model.getOffsetAt?.({lineNumber: position.lineNumber, column: word.startColumn});
+        const symbol = symbols?.find(item => item.start === offset && item.length === name.length);
+        if (symbol) {
+          let details = '';
+          if (symbol.type) details = I18N.t('hover.typeLabel') + ': `' + symbol.type + '`';
+          if (symbol.signature) details = '`' + symbol.signature + '`';
+          if (symbol.fields) details = I18N.t('hover.fields') + ': ' + (symbol.fields.join(', ') || I18N.t('hover.noFields'));
+          return { range, contents: [{ value: '**' + name + '** — ' + I18N.t('hover.' + symbol.kind) + '\n\n' + details }] };
+        }
 
         // 1. Builtin family: all overloads, one signature per line.
         const family = meta && Array.isArray(meta.builtins)
@@ -280,6 +342,8 @@ const LangFeatures = (() => {
           return { range, contents: [{ value: '**' + name + '** — ' + I18N.t('hover.builtin') + '\n\n' + lines.join('\n\n') }] };
         }
 
+        // Offline fallback is limited to explicit declarations; never invent a type.
+        const docScan = !ide.documentServices ? scanDoc(model) : { functions: [], subs: [], vars: [], types: [] };
         // 2. User-defined FUNCTION.
         const fn = docScan.functions.find((f) => f.name.toUpperCase() === name.toUpperCase());
         if (fn) {
@@ -295,7 +359,7 @@ const LangFeatures = (() => {
         // 4. Variables (DIM/CONST).
         const v = [...docScan.vars].reverse().find((x) => x.name.toUpperCase() === name.toUpperCase());
         if (v) {
-          const type = v.type || I18N.t('hover.typeLabel');
+          const type = v.type || I18N.t('hover.unknownType');
           return { range, contents: [{ value: '**' + name + '** — ' + I18N.t('hover.variable') + '\n\n' + I18N.t('hover.typeLabel') + ': `' + type + '`' }] };
         }
 

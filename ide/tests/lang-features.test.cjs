@@ -19,3 +19,110 @@ test('Измерение массива присутствует в подпис
   assert.equal(signature({name: 'LBOUND', params: [{name: 'array', displayType: 'T()'}, {name: 'dimension', type: 'INTEGER'}],
     returnType: 'INTEGER'}), 'LBOUND(array AS T(), dimension AS INTEGER) AS INTEGER');
 });
+
+test('Тип переменной DECIMAL сохраняется в разборе объявления', () => {
+  const doc = context.window.LangFeatures.scanDoc({getValue: () => 'DIM price AS DECIMAL = -10.5'});
+  assert.equal(doc.vars[0].type, 'DECIMAL');
+});
+
+function providers(source, hovers = []) {
+  let version = 1, requests = 0, markers = [];
+  const model = {
+    uri: 'test', getValue: () => source, getVersionId: () => version,
+    getLineContent: n => source.split('\n')[n - 1],
+    getOffsetAt: p => source.split('\n').slice(0, p.lineNumber - 1).reduce((n, line) => n + line.length + 1, 0) + p.column - 1,
+    getWordAtPosition(p) {
+      for (const match of this.getLineContent(p.lineNumber).matchAll(/[A-Za-z_]\w*/g))
+        if (p.column - 1 >= match.index && p.column - 1 < match.index + match[0].length)
+          return {word: match[0], startColumn: match.index + 1, endColumn: match.index + match[0].length + 1};
+      return null;
+    },
+    getValueInRange: r => model.getLineContent(r.startLineNumber).slice(r.startColumn - 1, r.endColumn - 1),
+  };
+  const runtime = {window: {}, document: {querySelectorAll: () => []}};
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/renderer/locale.js'), 'utf8'), runtime);
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/renderer/lang-features.js'), 'utf8'), runtime);
+  const features = runtime.window.LangFeatures;
+  const meta = {keywords: ['PRINT'], typeNames: ['DECIMAL'], builtins: [
+    {name: 'LEN', params: [{name: 'text', type: 'STRING'}], returnType: 'INTEGER'},
+    {name: 'LEN', params: [{name: 'text', type: 'STRING'}, {name: 'unit', type: 'STRING'}], returnType: 'INTEGER'},
+    {name: 'LEFT', params: [{name: 'text', type: 'STRING'}, {name: 'count', type: 'INTEGER'}], returnType: 'STRING'},
+  ]};
+  const ide = {langMeta: meta, openFiles: new Map([['test', {model}]]), documentServices: {
+    async request() { requests++; return {hovers}; }
+  }};
+  features.register({languages: {CompletionItemKind: {}, CompletionItemInsertTextRule: {},
+    registerCompletionItemProvider() {}, registerSignatureHelpProvider() {}, registerHoverProvider() {}},
+    editor: {getModelMarkers: () => markers}, MarkerSeverity: {Error: 8}}, ide);
+  return {model, features, requests: () => requests, edit: value => {source = value; version++;},
+    markers: value => {markers = value;}, language: locale => vm.runInNewContext(`I18N.setLocale('${locale}')`, runtime)};
+}
+
+test('Подсказка использует тип компилятора и обновляет кеш после правки', async () => {
+  const symbols = [{start: 6, length: 5, name: 'price', kind: 'variable', type: 'DECIMAL'}];
+  const p = providers('PRINT price', symbols);
+  const hover = () => p.features._hoverProvider.provideHover(p.model, {lineNumber: 1, column: 7});
+  assert.match((await hover()).contents[0].value, /Тип: `DECIMAL`/);
+  await hover(); assert.equal(p.requests(), 1);
+  p.edit('PRINT price'); symbols[0].type = 'STRING';
+  assert.match((await hover()).contents[0].value, /Тип: `STRING`/);
+  assert.equal(p.requests(), 2);
+  p.language('en'); assert.match((await hover()).contents[0].value, /Type: `STRING`/);
+});
+
+test('Строки, REM и апострофные комментарии не показывают языковые подсказки', async () => {
+  for (const [source, column] of [['PRINT "LEN"', 8], ["PRINT 1 ' LEN", 11], ['REM LEN', 5], ['PRINT """LEN"""', 10]]) {
+    const p = providers(source);
+    assert.equal(await p.features._hoverProvider.provideHover(p.model, {lineNumber: 1, column}), null, source);
+  }
+});
+
+test('Интерполяция после Unicode-текста показывает символ, её формат скрыт', async () => {
+  const source = 'PRINT $"😀 Цена {price:DECIMAL}"';
+  const start = source.indexOf('price');
+  const p = providers(source, [{start, length: 5, name: 'price', kind: 'variable', type: 'DECIMAL'}]);
+  assert.match((await p.features._hoverProvider.provideHover(p.model, {lineNumber: 1, column: start + 1})).contents[0].value, /DECIMAL/);
+  assert.equal(await p.features._hoverProvider.provideHover(p.model, {lineNumber: 1, column: source.indexOf(':') + 2}), null);
+});
+
+test('Встроенная функция показывает все формы, типы и слова получают свою категорию', async () => {
+  const p = providers('PRINT LEN("x") + DECIMAL');
+  const hover = column => p.features._hoverProvider.provideHover(p.model, {lineNumber: 1, column});
+  const text = (await hover(7)).contents[0].value;
+  assert.match(text, /LEN\(text AS STRING\)/);
+  assert.match(text, /LEN\(text AS STRING, unit AS STRING\)/);
+  assert.match((await hover(1)).contents[0].value, /ключевое слово/);
+  assert.match((await hover(18)).contents[0].value, /тип данных/);
+});
+
+test('Диагностика и отмена исключают обычную карточку символа', async () => {
+  const p = providers('PRINT price', [{start: 6, length: 5, name: 'price', kind: 'variable', type: 'DECIMAL'}]);
+  const pos = {lineNumber: 1, column: 7};
+  assert.equal(await p.features._hoverProvider.provideHover(p.model, pos, {isCancellationRequested: true}), null);
+  p.markers([{severity: 8, startLineNumber: 1, endLineNumber: 2, startColumn: 7, endColumn: 1}]);
+  assert.equal(await p.features._hoverProvider.provideHover(p.model, pos), null);
+});
+
+test('Подпись вызова считает только запятые аргументов верхнего уровня', async () => {
+  const source = 'LEFT(LEFT("а,б", 1), 2';
+  const p = providers(source);
+  const help = await p.features._sigProvider.provideSignatureHelp(p.model, {lineNumber: 1, column: source.length + 1});
+  assert.equal(help.value.activeParameter, 1);
+  assert.match(help.value.signatures[0].label, /^LEFT\(/);
+});
+
+test('Подпись выбирает перегрузку с нужным аргументом и остаётся после пробела', async () => {
+  const source = 'LEN("а,б", ';
+  const p = providers(source);
+  const help = await p.features._sigProvider.provideSignatureHelp(p.model, {lineNumber: 1, column: source.length + 1});
+  assert.equal(help.value.activeSignature, 1);
+  assert.equal(help.value.activeParameter, 1);
+});
+
+test('Подпись пользовательской функции берёт параметры компилятора', async () => {
+  const source = 'PRINT Twice (price';
+  const p = providers(source, [{start: 6, length: 5, name: 'Twice', kind: 'function',
+    signature: 'FUNCTION Twice(BYREF value AS DECIMAL) AS DECIMAL', parameters: ['BYREF value AS DECIMAL']}]);
+  const help = await p.features._sigProvider.provideSignatureHelp(p.model, {lineNumber: 1, column: source.length + 1});
+  assert.equal(help.value.signatures[0].parameters[0].label, 'BYREF value AS DECIMAL');
+});
