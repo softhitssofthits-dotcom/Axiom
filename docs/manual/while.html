@@ -1,115 +1,38 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Оператор цикла WHILE ... END WHILE</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="while">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Предусловный цикл</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="loops.html">Циклы</a>
-                <span>/</span>
-                <span>Оператор WHILE</span>
-            </nav>
-            <p class="eyebrow">Оператор</p>
-            <h1 class="page-title">Оператор WHILE</h1>
-            <p class="lead"><code>WHILE</code> — оператор языка Axiom, который повторяет блок инструкций до тех пор, пока заданное условие остаётся истинным. Условие проверяется перед каждым проходом, поэтому тело цикла может не выполниться ни одного раза.</p>
-
-            <section class="article-section">
-                <h2>Проверка перед входом в цикл</h2>
-                <p><code>WHILE ... END WHILE</code> подходит для ситуаций, где продолжение работы зависит от состояния программы: пока индекс не дошёл до конца, пока найден следующий элемент, пока пользовательский флаг остаётся истинным. Если состояние уже не подходит перед первым проходом, управление сразу переходит к инструкции после <code>END WHILE</code>.</p>
-            </section>
-
-        <section class="article-section">
-                <h2>Синтаксис</h2>
-                <pre><code class="language-axiom">WHILE &lt;условие&gt;
-    &lt;инструкции&gt;
-    [CONTINUE WHILE]
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Оператор WHILE — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="while"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор WHILE</span></nav>
+<p class="eyebrow">Справочная статья</p><h1 class="page-title">Оператор WHILE</h1><p class="lead">WHILE — оператор языка Axiom, который повторяет блок, пока условие истинно. Условие проверяется перед каждым проходом, включая первый.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Назначение и контекст</h2><p>Оператор работает на верхнем уровне программы и внутри подпрограмм и блоков, в консольной и графической программе. Специальный графический режим не требуется.</p><p>Цикл подходит для работы, продолжительность которой определяется состоянием данных. Если условие изначально ложно, тело полностью пропускается.</p></section>
+<section class="article-section" id="syntax"><h2>Синтаксис</h2><pre><code class="language-axiom">WHILE &lt;условие&gt;
     [&lt;инструкции&gt;]
-END WHILE</code></pre>
-            </section>
-
-        <section class="article-section">
-                <h2>Параметры и части синтаксиса</h2>
-                <p><code>&lt;условие&gt;</code> - логическое выражение типа <code>BOOLEAN</code>. Пока оно равно <code>TRUE</code>, цикл выполняет очередной проход.</p>
-                <p><code>&lt;инструкции&gt;</code> - тело цикла. В нём обычно меняют значение, от которого зависит условие, иначе цикл может не завершиться.</p>
-                <p><code>CONTINUE WHILE</code> — пропуск оставшейся части текущей итерации с переходом к проверке условия. Подробнее — на странице <a href="continue.html">оператора CONTINUE</a>.</p>
-            </section>
-
-        <section class="article-section">
-                <h2>Переход после END WHILE</h2>
-                <ul>
-                    <li>Условие проверяется до входа в тело и затем перед каждым следующим проходом.</li>
-                    <li>Когда условие становится <code>FALSE</code>, управление переходит к первой инструкции после <code>END WHILE</code>.</li>
-                    <li>Для прямого выхода из середины предусловного цикла используйте <code>DO ... LOOP</code> и <code>EXIT DO</code>: отдельной формы <code>EXIT WHILE</code> в Axiom сейчас нет.</li>
-                    <li><code>CONTINUE WHILE</code> пропускает оставшуюся часть тела и переходит к проверке условия в заголовке цикла.</li>
-                </ul>
-                <p>Блок цикла закрывается оператором <code>END WHILE</code>. Для цикла с прямым выходом используется <code>DO ... LOOP</code> с оператором <code>EXIT DO</code>.</p>
-            </section>
-
-        <section class="article-section">
+END WHILE</code></pre></section>
+<section class="article-section"><h2>Условие и тело</h2><p>Условие после <code>WHILE</code> должно иметь тип <code>BOOLEAN</code>. Инструкции тела расположены до <code>END WHILE</code>. После тела условие проверяется снова; значение <code>FALSE</code> завершает цикл.</p><p><code>CONTINUE WHILE</code> в непосредственном теле WHILE переходит к повторной проверке условия. Особенность переходов внутри разных вложенных видов циклов описана на странице <a href="continue.html">CONTINUE</a>. Изменяйте данные, от которых зависит условие, до такого перехода, если это нужно для завершения. Форма <code>EXIT WHILE</code> не поддержана; для выхода из середины тела используйте <code>DO … LOOP</code> и <code>EXIT DO</code>.</p></section>
+<section class="article-section">
                 <h2>Диагностика</h2>
                 <p>Ошибка возникает, если условие <code>WHILE</code> не имеет тип <code>BOOLEAN</code>, если блок не закрыт <code>END WHILE</code> или если в тексте используется неподдержанная форма выхода вроде <code>EXIT WHILE</code>.</p>
                 <ul>
+<li><code>MB2008</code> — условие цикла не имеет тип BOOLEAN.</li><li><code>MB1001</code> — отсутствует требуемое END WHILE.</li>
                     <li><code>MB2038</code> — <code>CONTINUE WHILE</code> используется вне цикла <code>WHILE ... END WHILE</code>.</li>
                 </ul>
             </section>
-
-        <section class="article-section">
-                <h2>Пример предусловного цикла</h2>
-                <pre><code class="language-axiom">' Ожидаемый вывод:
-' 0
-' 1
-' 2
-DIM i AS INTEGER = 0
-
-WHILE i &lt; 3
-    PRINT i
-    i = i + 1
-END WHILE</code></pre>
-            </section>
-
-        <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
+<section class="article-section"><h2>Пример</h2><p>Условие позволяет выполнить три прохода:</p>
+<pre><code class="language-axiom">DIM count AS INTEGER = 0
+WHILE count &lt; 3
+    PRINT count
+    count = count + 1
+END WHILE</code></pre><p>Результат:</p>
+<pre><code>0
+1
+2</code></pre></section>
+<section class="article-section"><h2>Запускаемые примеры</h2><p>Откройте нужный файл в IDE и запустите его. Примеры с ошибкой предназначены для проверки сообщения компилятора или выполнения.</p><ul class="resource-list">
                     <li><a href="../../samples/control-flow/while/basic_loop.axm">WHILE: базовый предусловный цикл</a></li>
                     <li><a href="../../samples/control-flow/while/continue_while.axm">CONTINUE WHILE: пропуск итерации</a></li>
-                </ul>
-            </section>
-
-        <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="loops.html">Циклы</a>
-                    <a href="continue.html">Оператор CONTINUE</a>
-                    <a href="do-loop.html">Оператор цикла DO ... LOOP</a>
-                    <a href="for.html">Оператор цикла FOR</a>
-                    <a href="if.html">Оператор IF</a>
-                    <a href="arithmetic-and-logic.html">Арифметика и логика</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+                </ul></section>
+<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="loops.html">Циклы</a><a href="do-loop.html">DO … LOOP</a><a href="continue.html">CONTINUE</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

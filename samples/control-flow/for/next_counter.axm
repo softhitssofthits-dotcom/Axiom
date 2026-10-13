@@ -1,0 +1,8 @@
+' NEXT с именем счётчика и без имени дают одинаковый результат.
+' Ожидается: 1, 2, 1, 2 на отдельных строках.
+FOR index = 1 TO 2
+    PRINT index
+NEXT INDEX
+FOR value = 1 TO 2
+    PRINT value
+NEXT

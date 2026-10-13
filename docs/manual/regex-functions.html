@@ -1,40 +1,19 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Функции регулярных выражений</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="regex-functions">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Проверка, извлечение, разбиение, замена и подсчёт по образцу</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный и тематический указатель</a>
-                <span>/</span>
-                <span>Функции регулярных выражений</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Функции регулярных выражений</h1>
-            <p class="lead">Раздел функций регулярных выражений описывает средства Axiom для поиска по образцу, проверки соответствия шаблону, извлечения совпадений и групп, разбиения строки и замены найденных фрагментов — там, где обычного поиска подстроки уже недостаточно.</p>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Регулярные выражения — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="regex-functions"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Регулярные выражения</span></nav>
+<p class="eyebrow">Глава 15</p><h1 class="page-title">Регулярные выражения</h1><p class="lead">Регулярное выражение — строковый шаблон для поиска текста по форме, а не по буквальному фрагменту. Встроенные функции REGEXISMATCH, REGEXMATCH, REGEXEXTRACT, REGEXMATCHES, REGEXEXTRACTALL, REGEXSPLIT, REGEXREPLACE и REGEXCOUNT проверяют, извлекают, разделяют, заменяют и считают совпадения.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+
+
 
             <section class="article-section">
                 <h2>Аргументы и режимы</h2>
-                <p>Первые два аргумента почти у всех функций одинаковы: <code>text</code> задаёт исходную строку, а <code>pattern</code> регулярное выражение. Необязательный аргумент <code>modes</code> задаётся строкой и может объединять несколько режимов сразу, например <code>"im"</code>.</p>
+                <p>Параметры STRING <code>text</code> и <code>pattern</code> задают текст и шаблон. Необязательный STRING <code>modes</code> объединяет режимы, например "im"; без него поиск выполняется в обычном режиме.</p>
                 <table class="reference-table">
                     <thead>
                         <tr>
@@ -49,21 +28,21 @@
                         <tr><td><code>x</code></td><td>Игнорировать незначащие пробелы в образце, если они не экранированы и не входят в набор символов.</td></tr>
                     </tbody>
                 </table>
-                <p>Axiom не вводит отдельный урезанный язык шаблонов: аргумент <code>pattern</code> передаётся в движок <code>.NET Regex</code>. В таблицах ниже показан основной рабочий синтаксис, который уже используется в справочных примерах; для редких возможностей .NET Regex проверяйте поведение отдельным коротким примером.</p>
+                <p>Шаблон обрабатывается движком .NET Regex. В таблицах приведены основные конструкции, применяемые в подтверждённых примерах Axiom; они составляют язык шаблона внутри строкового аргумента, а не синтаксис самой программы.</p>
             </section>
 
             <section class="article-section">
                 <h2>Основные правила</h2>
                 <ul>
-                    <li>Группа <code>0</code> означает всё совпадение. Нумерация захватывающих групп соответствует .NET; явно заданные числовые номера поддерживаются и не обязаны идти подряд.</li>
-                    <li><code>REGEXMATCHES</code>, <code>REGEXEXTRACTALL</code> и <code>REGEXSPLIT</code> возвращают массив строк. Если совпадений нет, результатом обычно становится пустой массив с границами <code>1 TO 0</code>.</li>
-                    <li>Неверный шаблон, неизвестный режим и отрицательный номер группы дают MB3007. Несуществующий положительный номер группы возвращает пустую строку. REGEXREPLACE с count=0 возвращает исходный текст без проверки шаблона и режимов, но выражения аргументов всё равно вычисляются.</li>
+                    <li>Нулевая группа представляет всё совпадение. Захватывающие группы нумеруются по правилам .NET, включая явно заданные непоследовательные номера.</li>
+                    <li>REGEXMATCHES и REGEXEXTRACTALL при отсутствии совпадений возвращают массив 1 TO 0. REGEXSPLIT также возвращает массив строк, но при отсутствии разделителя сохраняет непустой текст одним элементом.</li>
+                    <li>Неверный pattern, неизвестный modes и отрицательный groupNumber вызывают MB3007. Отсутствующая положительная группа даёт пустую строку. При count = 0 REGEXREPLACE пропускает проверку pattern и modes; выражения аргументов всё равно вычисляются.</li>
                 </ul>
             </section>
 
             <section class="article-section">
-                <h2>Unicode и пустые совпадения</h2><p>Шаблоны работают с единицами UTF-16 по правилам .NET. REGEXCOUNT("😀", ".") возвращает 2, а REGEXCOUNT("😀", "") возвращает 3: пустой шаблон совпадает на каждой границе UTF-16. Результат совпадения может содержать отдельную половину суррогатной пары.</p><p>REGEXMATCH возвращает пустую строку как при отсутствии совпадения, так и при успешном пустом совпадении. Эти случаи можно различить функцией REGEXISMATCH. REGEXMATCHES для пустого текста и пустого шаблона возвращает массив из одной пустой строки. REGEXSPLIT для пустого входного текста возвращает пустой массив; при непустом тексте сохраняет крайние пустые части и захватывающие группы разделителя.</p><h2>Ограничение поиска по времени</h2><p>Встроенный движок Regex настроен на предел поиска в пять секунд. Если отдельный поиск слишком долгий, функция даёт MB3007, которую можно перехватить через TRY/CATCH. Это защита от тяжёлого перебора шаблона, а не гарантия общего времени программы или всего набора совпадений.</p><h2>Синтаксис шаблонов</h2><p>Строки Axiom не используют обратную косую черту как специальное экранирование. Класс цифр записывается в pattern как <code>\d</code>, с одной косой чертой. Если требуется сопоставить саму обратную косую черту, удвоение необходимо уже по правилам регулярного выражения. Пример: <a href="../../samples/functions/regexextract/pattern_backslash.axm">запись класса цифр в строке Axiom</a>.</p>
-                <p>В таблицах ниже собраны основные конструкции, которые можно писать в аргументе <code>pattern</code>. Во всех случаях повторитель относится к предыдущему элементу шаблона: символу, классу, группе или подшаблону.</p>
+                <h2>Unicode и пустые совпадения</h2><p>Движок сопоставляет единицы UTF-16. Для текста "😀" шаблон "." имеет два совпадения, пустой шаблон — три, по одному на каждой границе. Извлечённый фрагмент может содержать половину суррогатной пары.</p><p>Пустой STRING от REGEXMATCH может означать отсутствие совпадения либо успешное пустое совпадение. REGEXISMATCH позволяет их различить. Для пустого text и пустого pattern функция REGEXMATCHES возвращает один пустой элемент; REGEXSPLIT при пустом text возвращает пустой массив. При непустом text разбиение сохраняет крайние пустые части и захватывающие группы разделителя.</p><h2>Ограничение поиска по времени</h2><p>Для отдельного поиска установлен предел пять секунд. Превышение вызывает MB3007, доступную для обработки в TRY/CATCH. Предел относится к поиску движка, а не к суммарному времени программы или всех совпадений.</p><h2>Синтаксис шаблонов</h2><p>Обратная косая черта в строке Axiom сохраняется буквально. Для класса цифр pattern содержит одну косую черту: <code>d</code>. Две косые черты нужны самому шаблону для поиска буквальной косой черты. Пример: <a href="../../samples/functions/regexextract/pattern_backslash.axm">pattern_backslash.axm</a>.</p>
+                <p>Повторители в таблице относятся к непосредственно предшествующему элементу: символу, классу или группе. Скобки позволяют объединить последовательность перед применением повторителя.</p>
 
                 <h3>Буквальные символы и классы</h3>
                 <table class="reference-table">
@@ -109,7 +88,7 @@
                         <tr><td><code>*?</code>, <code>+?</code>, <code>??</code>, <code>{n,m}?</code></td><td>Нежадные формы: берут минимально возможное совпадение.</td></tr>
                     </tbody>
                 </table>
-                <p>Например, в шаблоне <code>"[,;]\s*"</code> часть <code>[,;]</code> означает «запятая или точка с запятой», а <code>\s*</code> означает «после разделителя может идти ноль или больше пробельных символов».</p>
+                <p>Шаблон <code>"[,;]s*"</code> выбирает запятую либо точку с запятой и следующие за ней пробельные символы; повторитель * разрешает отсутствие таких пробелов.</p>
 
                 <h3>Границы, группы и ветвление</h3>
                 <table class="reference-table">
@@ -149,7 +128,7 @@
             </section>
 
             <section class="article-section">
-                <h2>Куда перейти за regex-задачей</h2>
+                <h2>Темы главы</h2>
                 <div class="link-list">
                     <a href="regex-functions-match-and-extract.html">Проверка, первое совпадение и группы</a>
                     <a href="regex-functions-arrays-and-split.html">Все совпадения, группы и разбиение</a>
@@ -159,7 +138,7 @@
 
             <section class="article-section">
                 <h2>Когда регулярное выражение лучше обычного поиска</h2>
-                <p>Этот раздел нужен для задач вроде проверки формата идентификатора, поиска всех чисел в тексте, извлечения частей по шаблону, разбиения строки по сложному разделителю или массовой замены по образцу. Если достаточно обычного поиска и замены без шаблонов, удобнее использовать <a href="string-functions.html">строковые функции</a>.</p>
+                <p>Шаблоны подходят для проверки формата, извлечения групп и работы с переменным разделителем. Для буквального фрагмента используйте <a href="string-functions-search-and-replace.html">строковый поиск и замену</a>.</p>
             </section>
 
             <section class="article-section">
@@ -172,21 +151,7 @@
                 </ul>
             </section>
 
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="regex-functions-match-and-extract.html">Проверка и извлечение</a>
-                    <a href="regex-functions-arrays-and-split.html">Массивы совпадений и разбиение</a>
-                    <a href="regex-functions-replace-and-count.html">Замена и подсчёт</a>
-                    <a href="string-functions.html">Строковые функции</a>
-                    <a href="arrays-functions.html">Функции массивов</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
 
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+
+            <section class="article-section"><h2>См. также</h2><div class="link-list"><a href="reference.html">Алфавитный указатель</a><a href="diagnostics.html">Каталог диагностик</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

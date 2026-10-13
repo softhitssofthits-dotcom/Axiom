@@ -1,64 +1,38 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - ISNUMERIC</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="isnumeric">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Проверка числовой строки</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный указатель</a>
-                <span>/</span>
-                <a href="numeric-functions.html">Числовые функции</a>
-                <span>/</span>
-                <span>ISNUMERIC</span>
-            </nav>
-            <p class="eyebrow">Встроенная функция</p>
-            <h1 class="page-title">ISNUMERIC</h1>
-            <p class="lead">ISNUMERIC — встроенная функция языка Axiom, которая проверяет, представляет ли вся строка конечное десятичное число типа DOUBLE.</p>
-            <section class="article-section"><h2>Назначение</h2><p>Функция ISNUMERIC помогает проверить введённый текст до вызова VAL. Например, строка «12abc» содержит числовой префикс, но не является числом целиком. Проверка возвращает FALSE, тогда как VAL возвращает 12.</p></section>
-
-        <section class="article-section"><h2>Где работает</h2><p>Функция работает в <code>BytecodeVm</code> после компиляции, в консольных и графических программах. Функция не зависит от языка интерфейса и региональных настроек Windows.</p></section>
-
-        <section class="article-section"><h2>Синтаксис</h2><pre><code class="language-axiom">result = ISNUMERIC(text)</code></pre></section>
-
-        <section class="article-section"><h2>Аргумент</h2><p>Аргумент text должен быть строкой. Числовой аргумент и BOOLEAN автоматически в строку не преобразуются.</p></section>
-
-        <section class="article-section"><h2>Результат</h2><p>Функция возвращает BOOLEAN: TRUE, если строка целиком разбирается в конечный DOUBLE, иначе FALSE. Строка не меняется; функция не возвращает само число.</p></section>
-
-        <section class="article-section"><h2>Правила и ограничения</h2><p>Допускаются цифры 0–9, знак + или -, десятичная точка и экспонента e или E со знаком. Например, «12», «.5», «1.» и «-12.5e2» дают TRUE. По краям допускаются обычный пробел и управляющие пробельные символы U+0009–U+000D; внутри числа пробел недопустим. Пустая строка и строка только из пробелов дают FALSE. Нулевой символ U+0000 в любой позиции даёт FALSE; неразрывный пробел и другие Unicode-пробелы также не считаются допустимыми краевыми пробелами.</p><p>Запятая, разделители групп разрядов, валютные знаки, шестнадцатеричные и восьмеричные формы не принимаются. Строки «1,234», «12,5», «&amp;HFF», «NaN», «Infinity», «12abc» дают FALSE. Переполнение «1e999» также даёт FALSE.</p><p>Проверка не гарантирует точного сохранения всех цифр или пригодности для INTEGER, LONG либо DECIMAL. Очень малое число, например «1e-999», округляется к конечному нулю и даёт TRUE. Для проверки конкретного числового диапазона нужны дополнительные условия.</p></section>
-
-        <section class="article-section"><h2>Диагностика</h2><p>При отсутствии аргумента или передаче нескольких аргументов компилятор сообщает неверное число аргументов. При передаче числа, BOOLEAN или массива компилятор сообщает несовместимый тип аргумента. Некорректное содержимое строкового аргумента не вызывает ошибку: результат равен FALSE.</p></section>
-
-        <section class="article-section"><h2>Пример</h2><pre><code class="language-axiom">DIM text AS STRING = "12abc"
-' Сначала проверяем строку целиком.
-PRINT ISNUMERIC(text)  ' FALSE
-' VAL по-прежнему читает числовой префикс.
-PRINT VAL(text)        ' 12
-PRINT ISNUMERIC("0")   ' TRUE
-PRINT ISNUMERIC("1e999") ' FALSE</code></pre><p><a href="../../samples/functions/isnumeric/full_number_check.axm">Запускаемый пример проверки полного числа</a></p></section>
-
-        <section class="article-section"><h2>См. также</h2><div class="link-grid"><a href="numeric-functions-conversion-and-legacy.html#val">VAL</a><a href="data-types-conversions.html">Преобразования типов</a><a href="input.html">INPUT</a></div></section>
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ISNUMERIC — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="isnumeric"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>ISNUMERIC</span></nav>
+<p class="eyebrow">Справочник языка</p><h1 class="page-title">ISNUMERIC</h1><p class="lead">ISNUMERIC — встроенная функция языка Axiom, которая возвращает признак полной записи конечного числа DOUBLE в строке.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="isnumeric"><h2>ISNUMERIC</h2>
+<p>ISNUMERIC — встроенная функция языка Axiom, которая возвращает признак полной записи конечного числа DOUBLE в строке.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет проверить пользовательский текст до преобразования в число.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">ISNUMERIC(&lt;текст&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте STRING с проверяемой записью; числовой аргумент автоматически строкой не становится.</p>
+<h3>Результат</h3>
+<p>Результат BOOLEAN: TRUE для полной конечной записи DOUBLE, FALSE в остальных случаях.</p>
+<h3>Правила и ограничения</h3>
+<p>Допустимы знак, десятичная точка, показатель e/E; на краях — обычный пробел и символы U+0009–U+000D. Пустая строка, U+0000, запятые, Unicode-пробелы, постороннее окончание, NaN, Infinity и переполнение дают FALSE. Очень малое число может округлиться к нулю и дать TRUE. TRUE не проверяет диапазон INTEGER, LONG или DECIMAL.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. Некорректное содержимое строки возвращает FALSE без ошибки выполнения.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT ISNUMERIC("12abc")
+PRINT ISNUMERIC(".5")
+PRINT ISNUMERIC("")
+PRINT ISNUMERIC("1e999")
+PRINT ISNUMERIC("1e-999")</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>FALSE
+TRUE
+FALSE
+FALSE
+TRUE</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

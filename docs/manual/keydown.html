@@ -1,48 +1,29 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Функция KEYDOWN</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="keydown">
-<header class="topbar">
-    <div class="topbar__inner">
-        <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Проверка удержания клавиши</div>
-        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-    </div>
-</header>
-<div class="layout">
-    <aside class="sidebar">
-        <div class="sidebar__inner">
-            <nav id="manual-nav"></nav>
-        </div>
-    </aside>
-    <main class="content">
-        <nav class="breadcrumbs" aria-label="Хлебные крошки">
-            <a href="index.html">Главная</a><span>/</span><a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a><span>/</span><span>Функция KEYDOWN</span>
-        </nav>
+<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<title>Функция KEYDOWN — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="keydown"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Функция KEYDOWN</span></nav>
+<p class="eyebrow">Встроенная функция</p><h1 class="page-title">Функция KEYDOWN</h1><p class="lead"><code>KEYDOWN</code> — встроенная функция языка Axiom, которая проверяет текущее удержание клавиши или сочетания клавиш. Повторные вызовы не изменяют очередь ввода.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
-        <p class="eyebrow">Встроенная функция</p>
-        <h1 class="page-title">Функция KEYDOWN</h1>
-        <p class="lead"><code>KEYDOWN</code> — встроенная функция языка Axiom, которая проверяет, удерживается ли указанная клавиша прямо сейчас. В отличие от <a href="inkey.html"><code>INKEY</code></a>, встроенная функция <code>KEYDOWN</code> не читает очередь клавиш и не удаляет событие ввода, поэтому функция подходит для циклов управления, проверки стрелок и сочетаний вроде <code>CTRL</code> вместе с другой клавишей.</p>
 
         <section class="article-section">
-            <h2>Для чего нужна функция KEYDOWN</h2>
-            <p>Встроенная функция <code>KEYDOWN</code> нужна для проверки текущего состояния клавиши или сочетания клавиш. Функция возвращает логическое значение. Если среда выполнения знает, что указанная клавиша сейчас нажата, результатом будет <code>TRUE</code>; иначе возвращается <code>FALSE</code>. В средах без источника состояния клавиатуры встроенная функция <code>KEYDOWN</code> также возвращает <code>FALSE</code>.</p>
+            <h2>Применение</h2>
+            <p>Функция подходит для непрерывного управления, например движения при удержании стрелки. Результат равен <code>TRUE</code>, пока нужная клавиша нажата, и <code>FALSE</code> в остальных случаях. Если среда не предоставляет состояние клавиатуры, возвращается <code>FALSE</code>.</p>
         </section>
 
         <section class="article-section">
-            <h2>Где работает функция KEYDOWN</h2>
-            <p>Встроенная функция <code>KEYDOWN</code> читает текущее состояние клавиатуры активной среды выполнения. Если программа работает без оператора <code>SCREEN</code>, состояние поступает из обычной поверхности ввода среды разработки. Если программа явно выбрала <code>SCREEN 0</code> или графический режим <code>SCREEN 1..10</code>, состояние поступает из окна <code>SCREEN</code>.</p>
-            <p>Встроенная функция <code>KEYDOWN</code> выполняется <code>BytecodeVm</code> после компиляции.</p>
+            <h2>Контекст выполнения</h2>
+            <p>Состояние поступает от активной поверхности ввода: текстовой области IDE либо открытого окна <code>SCREEN 0</code> или <code>SCREEN 1..10</code>.</p>
+            <p>Правила фокуса и очистки состояния описаны в <a href="keyboard-mouse-events.html">разделе ввода</a>.</p>
         </section>
 
         <section class="article-section">
             <h2>Синтаксис</h2>
-<pre><code class="language-axiom">KEYDOWN(keyText)</code></pre>
+<pre><code class="language-axiom">KEYDOWN(&lt;клавиша&gt;)</code></pre>
         </section>
 
         <section class="article-section">
@@ -50,14 +31,14 @@
             <table>
                 <thead><tr><th>Аргумент</th><th>Тип</th><th>Описание</th></tr></thead>
                 <tbody>
-                    <tr><td><code>keyText</code></td><td><code>STRING</code></td><td>Имя клавиши. Обычные буквенно-цифровые клавиши можно указывать как <code>"A"</code> или <code>"1"</code>; специальные клавиши задаются именами вроде <code>"LEFT"</code>, <code>"ESC"</code>, <code>"F5"</code>.</td></tr>
+                    <tr><td><code>&lt;клавиша&gt;</code></td><td><code>STRING</code></td><td>Имя клавиши. Обычные буквенно-цифровые клавиши можно указывать как <code>"A"</code> или <code>"1"</code>; специальные клавиши задаются именами вроде <code>"LEFT"</code>, <code>"ESC"</code>, <code>"F5"</code>.</td></tr>
                 </tbody>
             </table>
         </section>
 
         <section class="article-section">
             <h2>Что возвращает функция KEYDOWN</h2>
-            <p>Тип результата: <code>BOOLEAN</code>.</p>
+            <p>Функция возвращает значение типа <code>BOOLEAN</code>.</p>
             <ul>
                 <li><code>TRUE</code>, если указанная клавиша сейчас удерживается.</li>
                 <li><code>FALSE</code>, если клавиша не удерживается, имя пустое или среда выполнения не предоставляет состояние клавиатуры.</li>
@@ -66,7 +47,7 @@
 
         <section class="article-section" id="key-names">
             <h2>Имена клавиш</h2>
-            <p>Имена специальных клавиш общие для <code>INKEY</code>, <code>KEYDOWN</code>, <code>KEYPRESS</code> и <code>ON KEY</code>. Функция <code>INKEY</code> возвращает каноническое имя, а остальные формы принимают как каноническое имя, так и алиасы из таблицы. Регистр букв не важен; пробелы, дефисы и подчёркивания в алиасах не меняют смысл. Для <code>ON KEY</code> дополнительно зарезервировано псевдоимя <code>"ANY"</code>, которое означает обработчик любой клавиши, а не физическую клавишу.</p>
+            <p>Таблица имён общая для <code>INKEY</code>, <code>KEYDOWN</code>, <code>KEYPRESS</code> и <code>ON KEY</code>. Функция <code>INKEY</code> возвращает каноническое имя, остальные формы принимают и его, и перечисленные варианты записи. Регистр, пробелы, дефисы и подчёркивания в альтернативных именах не меняют смысл. Имя <code>"ANY"</code> зарезервировано только для запасного обработчика <code>ON KEY</code> и не обозначает физическую клавишу.</p>
             <table>
                 <thead><tr><th>Каноническое имя</th><th>Допустимые алиасы</th></tr></thead>
                 <tbody>
@@ -91,17 +72,19 @@
                     <tr><td><code>"F1"</code> ... <code>"F12"</code></td><td>-</td></tr>
                 </tbody>
             </table>
-            <p>Обычные печатные клавиши задаются как односимвольные строки, например <code>"A"</code>, <code>"a"</code> или <code>"1"</code>. Такие строки не становятся ключевыми словами языка и не конфликтуют с функциями вроде <code>LEFT()</code> и <code>RIGHT()</code>, потому что имена клавиш передаются как строковые значения.</p>
+            <p>Печатную клавишу обозначают односимвольной строкой, например <code>"A"</code>, <code>"a"</code> или <code>"1"</code>. Строковое имя клавиши не является ключевым словом и не конфликтует с функциями <code>LEFT()</code> или <code>RIGHT()</code>.</p>
         </section>
 
         <section class="article-section">
             <h2>Сочетания клавиш</h2>
-            <p>Встроенная функция <code>KEYDOWN</code> умеет проверять строковый аккорд клавиш через знак <code>+</code>. В отличие от <code>KEYPRESS</code>, здесь все части строки равноправны: каждая перечисленная клавиша должна быть удержана прямо сейчас.</p>
-            <p>Проще говоря, <code>KEYDOWN("CTRL+ALT+DELETE")</code> значит: <code>CTRL</code>, <code>ALT</code> и <code>DELETE</code> сейчас нажаты одновременно. Очередь событий при этом не читается и не расходуется.</p>
+            <p>В строке сочетания части разделяются знаком <code>+</code>. Каждая из перечисленных клавиш должна удерживаться в момент вызова.</p>
+            <p>Например, <code>KEYDOWN("CTRL+ALT+DELETE")</code> проверяет одновременное удержание всех трёх клавиш. События их нажатия остаются в очереди.</p>
 <pre><code class="language-axiom">IF KEYDOWN("CTRL+LEFT") THEN
     PRINT "CTRL+LEFT"
 END IF</code></pre>
         </section>
+<section class="article-section"><h2>Аргумент функции</h2><p>Передайте <code>STRING</code> с именем клавиши либо сочетанием, например "CTRL+LEFT". <code>KEYDOWN</code> возвращает <code>BOOLEAN</code> и не извлекает события. Для пустой строки или строки из пробелов возвращается <code>FALSE</code>; неподдержанное имя не обозначает физическую клавишу и не создаёт ошибку аргумента.</p></section>
+
 
         <section class="article-section">
             <h2>Диагностика</h2>
@@ -131,4 +114,7 @@ NEXT</code></pre>
             <div class="link-list"><a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a><a href="inkey.html">Функция INKEY</a><a href="keypress.html">Функция KEYPRESS</a><a href="on-key.html">Оператор ON KEY</a><a href="input.html">Оператор INPUT</a><a href="screen.html">Оператор SCREEN</a></div>
         </section>
 
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
+
+
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

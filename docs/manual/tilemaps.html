@@ -1,109 +1,92 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Тайловые карты TILEMAP</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="tilemaps">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Графика</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Тайловые карты TILEMAP</span>
-            </nav>
-            <p class="eyebrow">Тип, функции и операторы</p>
-            <h1 class="page-title">Тайловые карты TILEMAP</h1>
-            <p class="lead"><code>TILEMAP</code> — встроенный тип данных языка Axiom, который хранит загруженную ортогональную карту Tiled. На этой странице собраны тип <code>TILEMAP</code>, встроенная функция <code>LOADTILEMAP</code>, функции размеров <code>MAPWIDTH</code>, <code>MAPHEIGHT</code>, <code>MAPPIXELWIDTH</code>, <code>MAPPIXELHEIGHT</code>, <code>MAPTILEWIDTH</code>, <code>MAPTILEHEIGHT</code>, <code>MAPLAYERCOUNT</code>, функции чтения клеток <code>MAPTILE</code>, <code>MAPTILESET</code>, <code>MAPTILEFLAGS</code> и операторы <code>DRAWTILEMAP</code>, <code>DRAWTILELAYER</code>, <code>SETMAPTILE</code>. Дополнительно описаны функции <code>MAPTILESETCOUNT</code>, <code>MAPPROPERTY</code>, <code>MAPLAYERPROPERTY</code>, <code>MAPTILEPROPERTY</code>, <code>MAPOBJECTPROPERTY</code>, <code>MAPLAYERNAME</code>, <code>MAPLAYERTYPE</code>, <code>MAPLAYERVISIBLE</code>, <code>MAPOBJECTCOUNT</code>, <code>MAPOBJECTNAME</code>, <code>MAPOBJECTCLASS</code>, <code>MAPOBJECTKIND</code>, <code>MAPOBJECTVISIBLE</code>, <code>MAPOBJECTX</code>, <code>MAPOBJECTY</code>, <code>MAPOBJECTWIDTH</code>, <code>MAPOBJECTHEIGHT</code>, <code>MAPCOLUMN</code>, <code>MAPROW</code>, <code>MAPWORLDX</code>, <code>MAPWORLDY</code>. Синтаксис ниже относится к разным функциям и операторам, а не к одной общей конструкции.</p>
+<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<title>Тайловые карты TILEMAP — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="tilemaps"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Тайловые карты TILEMAP</span></nav>
+<p class="eyebrow">Тип, функции и операторы</p><h1 class="page-title">Тайловые карты TILEMAP</h1><p class="lead"><code>TILEMAP</code> — тип данных языка Axiom для конечной ортогональной карты Tiled. Этот раздел описывает загрузку карты, чтение её размеров, слоёв, клеток, объектов и свойств, а также рисование и изменение клеток. Точные формы каждой функции и оператора приведены в соответствующих подразделах.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+
 
             <section class="article-section" id="type">
                 <h2>Что такое TILEMAP</h2>
-                <p><code>TILEMAP</code> — встроенный тип данных языка Axiom, который хранит карту из тайловых и объектных слоёв, размеры карты, размеры клетки и ссылки на тайлсеты.</p>
-                <p>Текущий срез поддерживает конечные ортогональные карты Tiled в формате JSON <code>.tmj</code> или <code>.json</code>. Номера слоёв для пользователя начинаются с <code>1</code>.</p>
+                <p>Значение карты содержит тайловые и объектные слои, размеры сетки и клетки, а также ссылки на тайлсеты.</p>
+                <p>Поддерживаются конечные ортогональные карты Tiled в JSON-файлах <code>.tmj</code> и <code>.json</code>. Пользовательские номера слоёв начинаются с <code>1</code>.</p>
             </section>
 
             <section class="article-section">
                 <h2>Когда использовать TILEMAP</h2>
-                <p>Тип <code>TILEMAP</code> нужен, когда уровень уже собран в редакторе карт и программа должна загрузить его как готовую карту, а не рисовать клетки ручными циклами.</p>
-                <p>Функция <code>LOADTILEMAP</code> загружает карту, функции <code>MAP...</code> читают её размеры, состав и клетки, оператор <code>DRAWTILEMAP</code> рисует видимые тайловые слои, оператор <code>DRAWTILELAYER</code> рисует один выбранный тайловый слой, а оператор <code>SETMAPTILE</code> изменяет одну клетку тайлового слоя.</p>
+                <p>Используйте карту, если уровень подготовлен в редакторе Tiled. Программа получает готовые слои и данные объектов вместо ручного построения сетки.</p>
+                <p>Загрузка выполняется функцией <code>LOADTILEMAP</code>. Функции <code>MAP...</code> читают данные; операторы <code>DRAWTILEMAP</code> и <code>DRAWTILELAYER</code> рисуют карту и отдельный слой; оператор <code>SETMAPTILE</code> меняет клетку.</p>
             </section>
 
             <section class="article-section">
                 <h2>Где работает TILEMAP</h2>
-                <p>Функция <code>LOADTILEMAP</code> и функции <code>MAP...</code> работают со значением карты как с данными. Путь <code>path</code> разрешается относительно каталога запускаемой программы в IDE.</p>
-                <p>Операторы <code>DRAWTILEMAP</code> и <code>DRAWTILELAYER</code> работают только при активном операторе <code>CANVAS</code>. Координаты <code>x</code> и <code>y</code> задаются в пикселях и обозначают левый верхний угол карты в мировых координатах <code>CANVAS</code>. Вывод учитывает <code>CAMERA</code> и обрезается активным <code>VIEWPORT</code>.</p>
+                <p>Загрузка и чтение данных не требуют графического окна. В IDE относительный <code>path</code> отсчитывается от каталога запускаемой программы.</p>
+                <p>Рисование карты требует <code>CANVAS</code>. Аргументы <code>x</code> и <code>y</code> задают левый верхний угол карты в мировых пикселях. Результат учитывает камеру и обрезается текущей областью <code>VIEWPORT</code>.</p>
             </section>
 
             <section class="article-section">
                 <h2>Синтаксис</h2>
-<pre><code class="language-axiom">DIM name AS TILEMAP
-
-name = LOADTILEMAP(path)
-
-MAPWIDTH(tilemap)
-MAPHEIGHT(tilemap)
-MAPPIXELWIDTH(tilemap)
-MAPPIXELHEIGHT(tilemap)
-MAPTILEWIDTH(tilemap)
-MAPTILEHEIGHT(tilemap)
-MAPLAYERCOUNT(tilemap)
-MAPTILE(tilemap, layerIndex, column, row)
-MAPTILESET(tilemap, layerIndex, column, row)
-MAPTILEFLAGS(tilemap, layerIndex, column, row)
-
-DRAWTILEMAP tilemap, x, y
-DRAWTILELAYER tilemap, layerIndex, x, y
-SETMAPTILE tilemap, layerIndex, column, row, tilesetIndex, tileIndex[, flags]</code></pre>
-                <p id="loadtilemap"><code>LOADTILEMAP</code> поддерживает одну форму и возвращает значение <code>TILEMAP</code>.</p>
-                <p id="map-size"><code>MAPWIDTH</code>, <code>MAPHEIGHT</code>, <code>MAPPIXELWIDTH</code>, <code>MAPPIXELHEIGHT</code>, <code>MAPTILEWIDTH</code>, <code>MAPTILEHEIGHT</code> и <code>MAPLAYERCOUNT</code> принимают одно значение <code>TILEMAP</code>.</p>
-                <p id="map-cell"><code>MAPTILE</code>, <code>MAPTILESET</code> и <code>MAPTILEFLAGS</code> читают одну клетку по 1-based номеру слоя, столбца и строки.</p>
-                <p id="drawtilemap"><code>DRAWTILEMAP</code> рисует карту целиком по её видимым тайловым слоям.</p>
-                <p id="drawtilelayer"><code>DRAWTILELAYER</code> рисует один слой по 1-based номеру <code>layerIndex</code>.</p>
-                <p id="setmaptile"><code>SETMAPTILE</code> записывает одну клетку тайлового слоя или очищает её формой <code>SETMAPTILE tilemap, layerIndex, column, row, 0, 0</code>.</p>
+<pre><code class="language-axiom">DIM &lt;имя&gt; AS TILEMAP</code></pre>
+<pre><code class="language-axiom">LOADTILEMAP(&lt;путь&gt;)</code></pre>
+<pre><code class="language-axiom">MAPWIDTH(&lt;тайловая карта&gt;)</code></pre>
+<pre><code class="language-axiom">MAPHEIGHT(&lt;тайловая карта&gt;)</code></pre>
+<pre><code class="language-axiom">MAPPIXELWIDTH(&lt;тайловая карта&gt;)</code></pre>
+<pre><code class="language-axiom">MAPPIXELHEIGHT(&lt;тайловая карта&gt;)</code></pre>
+<pre><code class="language-axiom">MAPTILEWIDTH(&lt;тайловая карта&gt;)</code></pre>
+<pre><code class="language-axiom">MAPTILEHEIGHT(&lt;тайловая карта&gt;)</code></pre>
+<pre><code class="language-axiom">MAPLAYERCOUNT(&lt;тайловая карта&gt;)</code></pre>
+<pre><code class="language-axiom">MAPTILE(&lt;тайловая карта&gt;, &lt;индекс слоя&gt;, &lt;столбец&gt;, &lt;строка&gt;)</code></pre>
+<pre><code class="language-axiom">MAPTILESET(&lt;тайловая карта&gt;, &lt;индекс слоя&gt;, &lt;столбец&gt;, &lt;строка&gt;)</code></pre>
+<pre><code class="language-axiom">MAPTILEFLAGS(&lt;тайловая карта&gt;, &lt;индекс слоя&gt;, &lt;столбец&gt;, &lt;строка&gt;)</code></pre>
+<pre><code class="language-axiom">DRAWTILEMAP &lt;карта&gt;, &lt;координата X&gt;, &lt;координата Y&gt;</code></pre>
+<pre><code class="language-axiom">DRAWTILELAYER &lt;карта&gt;, &lt;номер слоя&gt;, &lt;координата X&gt;, &lt;координата Y&gt;</code></pre>
+<pre><code class="language-axiom">SETMAPTILE &lt;тайловая карта&gt;, &lt;индекс слоя&gt;, &lt;столбец&gt;, &lt;строка&gt;, &lt;номер тайлсета&gt;, &lt;номер тайла&gt;[, &lt;флаги&gt;]</code></pre>
+                <p id="loadtilemap"><code>LOADTILEMAP</code> — встроенная функция языка Axiom, которая принимает путь типа <code>STRING</code>, читает карту Tiled и возвращает значение типа <code>TILEMAP</code>.</p>
+                <p id="map-size">Функции размеров и числа слоёв принимают одно значение карты. Единицы каждого результата указаны ниже.</p>
+                <p id="map-cell">Функции <code>MAPTILE</code>, <code>MAPTILESET</code> и <code>MAPTILEFLAGS</code> принимают номера слоя, столбца и строки, каждый начиная с <code>1</code>.</p>
+                <p id="drawtilemap">Оператор <code>DRAWTILEMAP</code> выводит все видимые тайловые слои карты.</p>
+                <p id="drawtilelayer">Оператор <code>DRAWTILELAYER</code> выводит один тайловый слой, выбранный номером <code>layerIndex</code> начиная с <code>1</code>.</p>
+                <p id="setmaptile">Оператор <code>SETMAPTILE</code> записывает клетку. Для очистки передайте нулевую пару тайлсета и тайла: <code>SETMAPTILE tilemap, layerIndex, column, row, 0, 0</code>.</p>
             </section>
 
             <section class="article-section">
-                <h2>Параметры и части синтаксиса</h2>
+                <h2>Параметры</h2>
                 <table>
                     <thead>
                         <tr><th>Аргумент</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
                         <tr><td><code>name</code></td><td>Переменная типа <code>TILEMAP</code>.</td></tr>
-                        <tr><td><code>path</code></td><td>Строковый путь к файлу карты Tiled <code>.tmj</code> или <code>.json</code>.</td></tr>
-                        <tr><td><code>tilemap</code></td><td>Выражение типа <code>TILEMAP</code>.</td></tr>
-                        <tr><td><code>layerIndex</code></td><td>Целый номер слоя, начиная с <code>1</code>.</td></tr>
-                        <tr><td><code>column</code>, <code>row</code></td><td>Целые 1-based координаты клетки внутри тайлового слоя.</td></tr>
-                        <tr><td><code>tilesetIndex</code></td><td>Целый 1-based номер тайлсета внутри карты. Значение <code>0</code> допустимо только вместе с <code>tileIndex = 0</code> для очистки клетки.</td></tr>
-                        <tr><td><code>tileIndex</code></td><td>Целый 1-based номер тайла внутри выбранного тайлсета. Значение <code>0</code> допустимо только вместе с <code>tilesetIndex = 0</code>.</td></tr>
-                        <tr><td><code>flags</code></td><td>Необязательная битовая маска отражения тайла: <code>1</code> — горизонтальное, <code>2</code> — вертикальное, <code>4</code> — диагональное. Если аргумент опущен, используется <code>0</code>.</td></tr>
-                        <tr><td><code>x</code>, <code>y</code></td><td>Пиксельные координаты левого верхнего угла карты или слоя на <code>CANVAS</code>.</td></tr>
+                        <tr><td><code>&lt;путь&gt;</code></td><td>Передайте строковый путь к файлу карты Tiled <code>.tmj</code> или <code>.json</code>. Передаваемое значение имеет тип <code>STRING</code>.</td></tr>
+                        <tr><td><code>&lt;карта&gt;</code></td><td>Передайте выражение типа <code>TILEMAP</code>.</td></tr>
+                        <tr><td><code>&lt;номер слоя&gt;</code></td><td>Передайте целый номер слоя, начиная с <code>1</code>. Передаваемое значение имеет тип <code>LONG</code>.</td></tr>
+                        <tr><td><code>&lt;столбец&gt;</code>, <code>&lt;строка&gt;</code></td><td>Передайте целые координаты, нумеруемые с 1, клетки внутри тайлового слоя. Каждый перечисленный аргумент имеет тип <code>LONG</code>.</td></tr>
+                        <tr><td><code>&lt;номер тайлсета&gt;</code></td><td>Передайте целый номер, начиная с 1, тайлсета внутри карты. Значение <code>0</code> допустимо только вместе с <code>tileIndex = 0</code> для очистки клетки. Передаваемое значение имеет тип <code>LONG</code>.</td></tr>
+                        <tr><td><code>&lt;номер тайла&gt;</code></td><td>Передайте целый номер, начиная с 1, тайла внутри выбранного тайлсета. Значение <code>0</code> допустимо только вместе с <code>tilesetIndex = 0</code>. Передаваемое значение имеет тип <code>LONG</code>.</td></tr>
+                        <tr><td><code>&lt;флаги&gt;</code></td><td>Передайте необязательную битовую маску отражения тайла: <code>1</code> — горизонтальное, <code>2</code> — вертикальное, <code>4</code> — диагональное. Если аргумент опущен, используется <code>0</code>. Передаваемое значение имеет тип <code>LONG</code>.</td></tr>
+                        <tr><td><code>&lt;координата X&gt;</code>, <code>&lt;координата Y&gt;</code></td><td>Передайте пиксельные координаты левого верхнего угла карты или слоя на <code>CANVAS</code>. Каждый перечисленный аргумент имеет тип <code>LONG</code>.</td></tr>
                     </tbody>
                 </table>
             </section>
 
             <section class="article-section">
                 <h2>Что делают операторы и функции</h2>
-                <p>Функция <code>LOADTILEMAP</code> загружает карту, связанные тайлсеты и изображения тайлсетов, затем возвращает значение <code>TILEMAP</code>.</p>
-                <p>При загрузке сохраняются пользовательские свойства карты, слоёв и тайлов, а также точечные и прямоугольные объекты. Имена свойств различают регистр. Строковые значения сохраняются буквально, булевы значения записываются как <code>TRUE</code> или <code>FALSE</code>, числовые значения сохраняют запись JSON без промежуточного преобразования в <code>DOUBLE</code>. Свойства доступны через функции MAPPROPERTY, MAPLAYERPROPERTY, MAPTILEPROPERTY и MAPOBJECTPROPERTY; объектные данные читаются функциями MAPOBJECT… ниже.</p>
-                <p>Объекты карты хранят имя, класс, видимость, координаты и размеры в локальных пикселях карты. Для точечного объекта ширина и высота равны нулю. Эллипсы, капсулы (<code>capsule</code>), многоугольники, ломаные, объекты-тайлы, текстовые объекты, шаблоны и поворот объектов пока не поддерживаются: такая карта не загружается. Поля тайлсета <code>wangsets</code> и <code>terrains</code>, а также поле тайла <code>terrain</code> пока не поддерживаются: наличие такого поля, даже с пустым массивом, вызывает отказ вместо потери метаданных. Это правило действует для встроенного тайлсета и внешнего файла <code>.tsj</code>. Неверный вид полей <code>properties</code> или <code>objects</code>, повторное имя свойства и неверный размер объекта также приводят к отказу загрузки. В текущей IDE функция <code>LOADTILEMAP</code> сообщает об отказе кодом <code>MB3005</code>. Поля <code>width</code> и <code>height</code> карты должны быть неотрицательными целыми числами INTEGER, а <code>tilewidth</code> и <code>tileheight</code> — положительными. Поля <code>layers</code> и <code>tilesets</code> должны присутствовать и быть массивами; поле <code>infinite</code>, если задано, должно быть BOOLEAN. Отказ загрузки не заменяет прежнее значение переменной карты. Текст причины от загрузчика сохраняется в <code>err.Message</code> обработчика <code>CATCH</code>, например: <code>LOADTILEMAP: Объекты ellipse пока не поддерживаются.</code> Ошибка не вызывает повторную загрузку карты; после обработки можно явно загрузить другой файл.</p>
-                <p>Геометрия регулярного тайлсета проверяется по фактическому изображению: отступ <code>margin</code> вычитается с обеих сторон, а <code>spacing</code> задаёт промежуток только между соседними тайлами. Невозможный большой отступ вызывает отказ; большой промежуток допустим для одного тайла, когда соседних тайлов нет. Эти правила совпадают с <a href="tilesets.html">ручной загрузкой тайлсета</a>.</p>
-                <p>Функция <code>LOADTILEMAP</code> принимает обычный режим смешивания слоя: поле <code>mode</code> отсутствует или содержит строку <code>normal</code>. Другие режимы, например <code>multiply</code>, <code>add</code> и <code>screen</code>, пока не поддерживаются и вызывают <code>MB3005</code>. Поле <code>tintcolor</code> может отсутствовать или задавать непрозрачный белый цвет <code>#FFFFFF</code> либо <code>#FFFFFFFF</code>: этот цвет не меняет изображение. Цветное окрашивание и прозрачность в <code>tintcolor</code> пока не поддерживаются и также вызывают отказ. Эти проверки действуют для тайловых и объектных слоёв; поля нельзя заменять числами или <code>null</code>. После отказа прежняя карта сохраняется.</p>
-                <p>Поля слоя <code>opacity</code>, <code>offsetx</code>, <code>offsety</code>, <code>parallaxx</code> и <code>parallaxy</code> должны содержать конечные числа, представимые типом <code>DOUBLE</code>. Непрозрачность <code>opacity</code> задаётся от <code>0</code> до <code>1</code> включительно. Смещения измеряются в пикселях и могут быть отрицательными; конечный отрицательный коэффициент параллакса тоже допускается. По умолчанию непрозрачность и коэффициенты параллакса равны <code>1</code>, смещения — <code>0</code>. Число вроде <code>1e400</code> вызывает <code>MB3005</code> при загрузке, а конкретное поле указано в <code>err.Message</code>.</p>
-                <p>Функции <code>MAPWIDTH</code> и <code>MAPHEIGHT</code> возвращают ширину и высоту карты в клетках. Функции <code>MAPPIXELWIDTH</code> и <code>MAPPIXELHEIGHT</code> возвращают размер карты в пикселях. Функции <code>MAPTILEWIDTH</code> и <code>MAPTILEHEIGHT</code> возвращают размер одной клетки в пикселях. Функция <code>MAPLAYERCOUNT</code> возвращает число слоёв карты.</p>
-                <p>Функция <code>MAPTILE</code> возвращает номер тайла внутри тайлсета. Функция <code>MAPTILESET</code> возвращает номер тайлсета внутри карты. Функция <code>MAPTILEFLAGS</code> возвращает битовую маску отражения. Для пустой клетки, координат за пределами карты, отсутствующего слоя, объектного слоя или пустого значения <code>TILEMAP</code> эти функции возвращают <code>0</code>.</p>
-                <p>При расчёте видимости смещение слоя и произведение координаты камеры на параллакс округляются до целого пикселя отдельно; половинные значения округляются от нуля. Разность вычисляется без насыщения каждого значения границами 64-разрядного целого, поэтому равные огромные конечные значения могут компенсироваться. Если произведение камеры на параллакс переполняет <code>DOUBLE</code>, слой находится за пределами области просмотра и пропускается, а произведение не заменяется нулём. <a href="../../samples/operators/drawtilemap/extreme_parallax.axm">Пример крайнего параллакса</a> показывает оба случая.</p>
-                <p>Координаты операторов <code>DRAWTILEMAP</code> и <code>DRAWTILELAYER</code> должны лежать в графическом диапазоне от <code>-1000000000</code> до <code>1000000000</code>. Смещения слоя и тайлсета учитываются при расчёте видимости. Если они взаимно компенсируются, тайл остаётся видимым; слой, целиком находящийся за пределами области просмотра, пропускается. Пример <a href="../../samples/operators/drawtilemap/culling_boundaries.axm">границ видимости</a> проверяет компенсированное смещение и далёкий слой при допустимых координатах оператора.</p>
-                <p>Оператор <code>DRAWTILEMAP</code> рисует все видимые тайловые слои и пропускает объектные слои. Оператор <code>DRAWTILELAYER</code> рисует указанный тайловый слой даже тогда, когда слой помечен в карте как невидимый.</p>
-                <p>Оператор <code>SETMAPTILE</code> изменяет одну существующую клетку тайлового слоя. Оператор <code>SETMAPTILE</code> не создаёт новые строки, столбцы, слои или тайлсеты. Пара значений <code>0, 0</code> для <code>tilesetIndex</code> и <code>tileIndex</code> очищает клетку.</p>
+                <p>При загрузке читается файл карты вместе со связанными тайлсетами и их изображениями. Значение присваивается только после успешной загрузки.</p>
+                <p>Загрузчик сохраняет свойства карты, слоёв и тайлов, а также точки и прямоугольные объекты. Имена свойств чувствительны к регистру. Строки остаются буквальными, логические значения представлены как <code>TRUE</code>/<code>FALSE</code>, а числа сохраняют исходную запись JSON без промежуточного <code>DOUBLE</code>. Свойства читают функции <code>MAPPROPERTY</code>, <code>MAPLAYERPROPERTY</code>, <code>MAPTILEPROPERTY</code> и <code>MAPOBJECTPROPERTY</code>; данные объектов — функции <code>MAPOBJECT...</code>.</p>
+                <p>Объект хранит имя, класс, видимость, координаты и размеры в локальных пикселях карты. У точки ширина и высота равны нулю. Загрузчик отклоняет эллипсы, капсулы (<code>capsule</code>), многоугольники, ломаные, объекты-тайлы, текст, шаблоны и повёрнутые объекты. Поля тайлсета <code>wangsets</code>, <code>terrains</code> и поле тайла <code>terrain</code> запрещены даже с пустым массивом; проверка распространяется на встроенные тайлсеты и внешние <code>.tsj</code>. Ошибками также считаются неверная форма <code>properties</code> или <code>objects</code>, повторяющееся имя свойства и недопустимый размер объекта. Размеры карты <code>width</code>/<code>height</code> должны быть неотрицательными целыми <code>INTEGER</code>, размеры клетки <code>tilewidth</code>/<code>tileheight</code> — положительными. Обязательные <code>layers</code> и <code>tilesets</code> должны быть массивами; необязательное <code>infinite</code> — значением <code>BOOLEAN</code>. В IDE отказ сообщает <code>MB3005</code> с причиной в <code>err.Message</code>, например <code>LOADTILEMAP: Объекты ellipse пока не поддерживаются.</code> Прежнее значение карты сохраняется. После <code>CATCH</code> можно явно загрузить другой файл; автоматической повторной попытки нет.</p>
+                <p>Сетка тайлсета проверяется по фактическому изображению. Отступ <code>margin</code> вычитается с двух сторон, а <code>spacing</code> действует только между соседними тайлами. Слишком большой отступ отклоняется; большой промежуток допустим, если в соответствующем направлении нет соседнего тайла. Те же правила действуют при <a href="tilesets.html">загрузке TILESET</a>.</p>
+                <p>Для слоя поддерживается обычное смешивание: поле <code>mode</code> отсутствует либо равно строке <code>normal</code>. Значения <code>multiply</code>, <code>add</code>, <code>screen</code> и другие режимы вызывают <code>MB3005</code>. Поле <code>tintcolor</code> может отсутствовать либо содержать непрозрачный белый <code>#FFFFFF</code> или <code>#FFFFFFFF</code>. Другие цвета и прозрачность не поддерживаются. Оба поля проверяются у тайловых и объектных слоёв; числа и <code>null</code> вместо строк недопустимы. Отказ сохраняет прежнее значение карты.</p>
+                <p>Поля <code>opacity</code>, <code>offsetx</code>, <code>offsety</code>, <code>parallaxx</code> и <code>parallaxy</code> должны быть конечными числами, представимыми как <code>DOUBLE</code>. Непрозрачность лежит в <code>0..1</code> включительно. Смещения в пикселях и коэффициенты параллакса могут быть отрицательными. По умолчанию смещения равны <code>0</code>, непрозрачность и параллакс — <code>1</code>. Непредставимое число, например <code>1e400</code>, вызывает <code>MB3005</code>; причина в <code>err.Message</code> называет поле.</p>
+                <p>Функции <code>MAPWIDTH</code>/<code>MAPHEIGHT</code> измеряют карту в клетках, <code>MAPPIXELWIDTH</code>/<code>MAPPIXELHEIGHT</code> — в пикселях, <code>MAPTILEWIDTH</code>/<code>MAPTILEHEIGHT</code> — размер одной клетки в пикселях. Функция <code>MAPLAYERCOUNT</code> возвращает число слоёв.</p>
+                <p>Результат <code>MAPTILE</code> — номер тайла внутри тайлсета, <code>MAPTILESET</code> — номер тайлсета карты, <code>MAPTILEFLAGS</code> — маска отражения. Пустая клетка, точка вне карты, отсутствующий или объектный слой и пустое значение карты дают <code>0</code>.</p>
+                <p>Смещение слоя и произведение камеры на параллакс округляются отдельно до целого пикселя; половина округляется от нуля. Их разность не ограничивается промежуточно диапазоном 64-разрядного целого, поэтому одинаковые огромные конечные значения могут компенсироваться. Переполнение произведения в <code>DOUBLE</code> приводит к пропуску невидимого слоя, а не к замене произведения нулём. Оба случая проверяет <a href="../../samples/operators/drawtilemap/extreme_parallax.axm">пример крайнего параллакса</a>.</p>
+                <p>Положение карты в операторах рисования ограничено диапазоном <code>-1000000000..1000000000</code>. При расчёте видимости учитываются смещения слоя и тайлсета: компенсирующиеся смещения сохраняют видимый тайл, полностью удалённый слой пропускается. Это показывает <a href="../../samples/operators/drawtilemap/culling_boundaries.axm">пример границ видимости</a>.</p>
+                <p>Объектные слои не выводятся автоматически. Оператор <code>DRAWTILEMAP</code> пропускает невидимые тайловые слои; явный <code>DRAWTILELAYER</code> рисует выбранный тайловый слой даже при его отметке невидимости.</p>
+                <p>Оператор <code>SETMAPTILE</code> меняет только существующую клетку. Новые строки, столбцы, слои и тайлсеты не создаются. Пара <code>tilesetIndex = 0</code>, <code>tileIndex = 0</code> очищает клетку.</p>
             </section>
 
             <section class="article-section">
@@ -116,42 +99,27 @@ SETMAPTILE tilemap, layerIndex, column, row, tilesetIndex, tileIndex[, flags]</c
                     <li>Оператор <code>SETMAPTILE</code> может изменять только тайловые слои. Объектные слои нельзя изменять как сетку тайлов.</li>
                     <li>Оператор <code>DRAWTILEMAP</code> пропускает невидимые тайловые слои и не рисует объектные слои.</li>
                     <li>Оператор <code>DRAWTILELAYER</code> требует существующий тайловый слой. Попытка нарисовать объектный слой считается ошибкой времени выполнения.</li>
-                    <li>Операторы <code>DRAWTILEMAP</code> и <code>DRAWTILELAYER</code> не меняют текущую графическую позицию Axiom.</li>
+                    <li>Операторы <code>DRAWTILEMAP</code> и <code>DRAWTILELAYER</code> устанавливают текущую графическую позицию в переданную точку начала карты.</li>
                     <li>Флаги отражения тайлов и <code>tileoffset</code> тайлсета применяются автоматически.</li>
                 </ul>
             </section>
-
-            <section class="article-section">
-                <h2>Пример</h2>
-<pre><code class="language-axiom">DIM level AS TILEMAP
-level = LOADTILEMAP("simple_map.tmj")
-
-CANVAS 160, 90
-
-BEGINFRAME
-CLS RGB(16, 20, 28)
-DRAWTEXT "Карта: " & MAPWIDTH(level) & "x" & MAPHEIGHT(level), 8, 8, RGB(240, 240, 240)
-DRAWTILEMAP level, 24, 32
-PRESENT
-SLEEP
-
-SETMAPTILE level, 1, 1, 2, 1, 2
-
-BEGINFRAME
-CLS RGB(10, 14, 22)
-DRAWTEXT "Клетка: " & MAPTILE(level, 1, 1, 2), 8, 8, RGB(240, 240, 240)
-DRAWTILEMAP level, 24, 32
-PRESENT
-SLEEP</code></pre>
-            </section>
-
-            <section class="article-section" id="maptilesetcount">
+<section class="article-section" id="mapwidth"><h2>MAPWIDTH</h2><p><code>MAPWIDTH</code> — встроенная функция языка Axiom, которая возвращает ширину карты в клетках. Она читает данные карты без открытия графической поверхности.</p><h3>Синтаксис</h3><pre><code class="language-axiom">MAPWIDTH(&lt;карта&gt;)</code></pre><h3>Аргументы</h3><p>Передайте значение <code>TILEMAP</code>, данные которого нужно прочитать. Пустое значение допустимо.</p><h3>Результат и ограничения</h3><p>Результат имеет тип <code>INTEGER</code>. Для пустой карты возвращается 0.</p><h3>Диагностика</h3><p>Отсутствие данных не вызывает ошибку выполнения. Несовместимый тип или неверное количество аргументов отклоняется компилятором до запуска.</p><h3>Пример</h3><pre><code class="language-axiom">DIM level AS TILEMAP
+PRINT MAPWIDTH(level)</code></pre><p>Программа печатает 0: переменная объявлена, но карта ещё не загружена. После успешного LOADTILEMAP функция читает фактические данные.</p><h3>См. также</h3><p><a href="#loadtilemap">LOADTILEMAP</a>, <a href="#setmaptile">SETMAPTILE</a>.</p></section><section class="article-section" id="mapheight"><h2>MAPHEIGHT</h2><p><code>MAPHEIGHT</code> — встроенная функция языка Axiom, которая возвращает высоту карты в клетках. Она читает данные карты без открытия графической поверхности.</p><h3>Синтаксис</h3><pre><code class="language-axiom">MAPHEIGHT(&lt;карта&gt;)</code></pre><h3>Аргументы</h3><p>Передайте значение <code>TILEMAP</code>, данные которого нужно прочитать. Пустое значение допустимо.</p><h3>Результат и ограничения</h3><p>Результат имеет тип <code>INTEGER</code>. Для пустой карты возвращается 0.</p><h3>Диагностика</h3><p>Отсутствие данных не вызывает ошибку выполнения. Несовместимый тип или неверное количество аргументов отклоняется компилятором до запуска.</p><h3>Пример</h3><pre><code class="language-axiom">DIM level AS TILEMAP
+PRINT MAPHEIGHT(level)</code></pre><p>Программа печатает 0: переменная объявлена, но карта ещё не загружена. После успешного LOADTILEMAP функция читает фактические данные.</p><h3>См. также</h3><p><a href="#loadtilemap">LOADTILEMAP</a>, <a href="#setmaptile">SETMAPTILE</a>.</p></section><section class="article-section" id="mappixelwidth"><h2>MAPPIXELWIDTH</h2><p><code>MAPPIXELWIDTH</code> — встроенная функция языка Axiom, которая возвращает ширину карты в пикселях. Она читает данные карты без открытия графической поверхности.</p><h3>Синтаксис</h3><pre><code class="language-axiom">MAPPIXELWIDTH(&lt;карта&gt;)</code></pre><h3>Аргументы</h3><p>Передайте значение <code>TILEMAP</code>, данные которого нужно прочитать. Пустое значение допустимо.</p><h3>Результат и ограничения</h3><p>Результат имеет тип <code>INTEGER</code>. Для пустой карты возвращается 0.</p><h3>Диагностика</h3><p>Отсутствие данных не вызывает ошибку выполнения. Несовместимый тип или неверное количество аргументов отклоняется компилятором до запуска.</p><h3>Пример</h3><pre><code class="language-axiom">DIM level AS TILEMAP
+PRINT MAPPIXELWIDTH(level)</code></pre><p>Программа печатает 0: переменная объявлена, но карта ещё не загружена. После успешного LOADTILEMAP функция читает фактические данные.</p><h3>См. также</h3><p><a href="#loadtilemap">LOADTILEMAP</a>, <a href="#setmaptile">SETMAPTILE</a>.</p></section><section class="article-section" id="mappixelheight"><h2>MAPPIXELHEIGHT</h2><p><code>MAPPIXELHEIGHT</code> — встроенная функция языка Axiom, которая возвращает высоту карты в пикселях. Она читает данные карты без открытия графической поверхности.</p><h3>Синтаксис</h3><pre><code class="language-axiom">MAPPIXELHEIGHT(&lt;карта&gt;)</code></pre><h3>Аргументы</h3><p>Передайте значение <code>TILEMAP</code>, данные которого нужно прочитать. Пустое значение допустимо.</p><h3>Результат и ограничения</h3><p>Результат имеет тип <code>INTEGER</code>. Для пустой карты возвращается 0.</p><h3>Диагностика</h3><p>Отсутствие данных не вызывает ошибку выполнения. Несовместимый тип или неверное количество аргументов отклоняется компилятором до запуска.</p><h3>Пример</h3><pre><code class="language-axiom">DIM level AS TILEMAP
+PRINT MAPPIXELHEIGHT(level)</code></pre><p>Программа печатает 0: переменная объявлена, но карта ещё не загружена. После успешного LOADTILEMAP функция читает фактические данные.</p><h3>См. также</h3><p><a href="#loadtilemap">LOADTILEMAP</a>, <a href="#setmaptile">SETMAPTILE</a>.</p></section><section class="article-section" id="maptilewidth"><h2>MAPTILEWIDTH</h2><p><code>MAPTILEWIDTH</code> — встроенная функция языка Axiom, которая возвращает ширину одной клетки в пикселях. Она читает данные карты без открытия графической поверхности.</p><h3>Синтаксис</h3><pre><code class="language-axiom">MAPTILEWIDTH(&lt;карта&gt;)</code></pre><h3>Аргументы</h3><p>Передайте значение <code>TILEMAP</code>, данные которого нужно прочитать. Пустое значение допустимо.</p><h3>Результат и ограничения</h3><p>Результат имеет тип <code>INTEGER</code>. Для пустой карты возвращается 0.</p><h3>Диагностика</h3><p>Отсутствие данных не вызывает ошибку выполнения. Несовместимый тип или неверное количество аргументов отклоняется компилятором до запуска.</p><h3>Пример</h3><pre><code class="language-axiom">DIM level AS TILEMAP
+PRINT MAPTILEWIDTH(level)</code></pre><p>Программа печатает 0: переменная объявлена, но карта ещё не загружена. После успешного LOADTILEMAP функция читает фактические данные.</p><h3>См. также</h3><p><a href="#loadtilemap">LOADTILEMAP</a>, <a href="#setmaptile">SETMAPTILE</a>.</p></section><section class="article-section" id="maptileheight"><h2>MAPTILEHEIGHT</h2><p><code>MAPTILEHEIGHT</code> — встроенная функция языка Axiom, которая возвращает высоту одной клетки в пикселях. Она читает данные карты без открытия графической поверхности.</p><h3>Синтаксис</h3><pre><code class="language-axiom">MAPTILEHEIGHT(&lt;карта&gt;)</code></pre><h3>Аргументы</h3><p>Передайте значение <code>TILEMAP</code>, данные которого нужно прочитать. Пустое значение допустимо.</p><h3>Результат и ограничения</h3><p>Результат имеет тип <code>INTEGER</code>. Для пустой карты возвращается 0.</p><h3>Диагностика</h3><p>Отсутствие данных не вызывает ошибку выполнения. Несовместимый тип или неверное количество аргументов отклоняется компилятором до запуска.</p><h3>Пример</h3><pre><code class="language-axiom">DIM level AS TILEMAP
+PRINT MAPTILEHEIGHT(level)</code></pre><p>Программа печатает 0: переменная объявлена, но карта ещё не загружена. После успешного LOADTILEMAP функция читает фактические данные.</p><h3>См. также</h3><p><a href="#loadtilemap">LOADTILEMAP</a>, <a href="#setmaptile">SETMAPTILE</a>.</p></section><section class="article-section" id="maplayercount"><h2>MAPLAYERCOUNT</h2><p><code>MAPLAYERCOUNT</code> — встроенная функция языка Axiom, которая возвращает число слоёв карты. Она читает данные карты без открытия графической поверхности.</p><h3>Синтаксис</h3><pre><code class="language-axiom">MAPLAYERCOUNT(&lt;карта&gt;)</code></pre><h3>Аргументы</h3><p>Передайте значение <code>TILEMAP</code>, данные которого нужно прочитать. Пустое значение допустимо.</p><h3>Результат и ограничения</h3><p>Результат имеет тип <code>INTEGER</code>. Для пустой карты возвращается 0.</p><h3>Диагностика</h3><p>Отсутствие данных не вызывает ошибку выполнения. Несовместимый тип или неверное количество аргументов отклоняется компилятором до запуска.</p><h3>Пример</h3><pre><code class="language-axiom">DIM level AS TILEMAP
+PRINT MAPLAYERCOUNT(level)</code></pre><p>Программа печатает 0: переменная объявлена, но карта ещё не загружена. После успешного LOADTILEMAP функция читает фактические данные.</p><h3>См. также</h3><p><a href="#loadtilemap">LOADTILEMAP</a>, <a href="#setmaptile">SETMAPTILE</a>.</p></section><section class="article-section" id="maptile"><h2>MAPTILE</h2><p><code>MAPTILE</code> — встроенная функция языка Axiom, которая возвращает номер тайла внутри тайлсета. Она читает данные карты без открытия графической поверхности.</p><h3>Синтаксис</h3><pre><code class="language-axiom">MAPTILE(&lt;карта&gt;, &lt;номер слоя&gt;, &lt;столбец&gt;, &lt;строка&gt;)</code></pre><h3>Аргументы</h3><p>Передайте значение <code>TILEMAP</code>, данные которого нужно прочитать. Пустое значение допустимо.</p><p>Номер слоя, столбец и строка приводятся к <code>LONG</code> и нумеруются с 1. Они выбирают одну клетку тайлового слоя.</p><h3>Результат и ограничения</h3><p>Результат имеет тип <code>INTEGER</code>. Для пустой карты возвращается 0. Пустая клетка, неверная координата и отсутствующий или объектный слой также возвращают 0.</p><h3>Диагностика</h3><p>Отсутствие данных не вызывает ошибку выполнения. Несовместимый тип или неверное количество аргументов отклоняется компилятором до запуска.</p><h3>Пример</h3><pre><code class="language-axiom">DIM level AS TILEMAP
+PRINT MAPTILE(level, 1, 1, 1)</code></pre><p>Программа печатает 0: переменная объявлена, но карта ещё не загружена. После успешного LOADTILEMAP функция читает фактические данные.</p><h3>См. также</h3><p><a href="#loadtilemap">LOADTILEMAP</a>, <a href="#setmaptile">SETMAPTILE</a>.</p></section><section class="article-section" id="maptileset"><h2>MAPTILESET</h2><p><code>MAPTILESET</code> — встроенная функция языка Axiom, которая возвращает номер тайлсета карты, к которому относится клетка. Она читает данные карты без открытия графической поверхности.</p><h3>Синтаксис</h3><pre><code class="language-axiom">MAPTILESET(&lt;карта&gt;, &lt;номер слоя&gt;, &lt;столбец&gt;, &lt;строка&gt;)</code></pre><h3>Аргументы</h3><p>Передайте значение <code>TILEMAP</code>, данные которого нужно прочитать. Пустое значение допустимо.</p><p>Номер слоя, столбец и строка приводятся к <code>LONG</code> и нумеруются с 1. Они выбирают одну клетку тайлового слоя.</p><h3>Результат и ограничения</h3><p>Результат имеет тип <code>INTEGER</code>. Для пустой карты возвращается 0. Пустая клетка, неверная координата и отсутствующий или объектный слой также возвращают 0.</p><h3>Диагностика</h3><p>Отсутствие данных не вызывает ошибку выполнения. Несовместимый тип или неверное количество аргументов отклоняется компилятором до запуска.</p><h3>Пример</h3><pre><code class="language-axiom">DIM level AS TILEMAP
+PRINT MAPTILESET(level, 1, 1, 1)</code></pre><p>Программа печатает 0: переменная объявлена, но карта ещё не загружена. После успешного LOADTILEMAP функция читает фактические данные.</p><h3>См. также</h3><p><a href="#loadtilemap">LOADTILEMAP</a>, <a href="#setmaptile">SETMAPTILE</a>.</p></section><section class="article-section" id="maptileflags"><h2>MAPTILEFLAGS</h2><p><code>MAPTILEFLAGS</code> — встроенная функция языка Axiom, которая возвращает битовую маску отражений тайла в клетке. Она читает данные карты без открытия графической поверхности.</p><h3>Синтаксис</h3><pre><code class="language-axiom">MAPTILEFLAGS(&lt;карта&gt;, &lt;номер слоя&gt;, &lt;столбец&gt;, &lt;строка&gt;)</code></pre><h3>Аргументы</h3><p>Передайте значение <code>TILEMAP</code>, данные которого нужно прочитать. Пустое значение допустимо.</p><p>Номер слоя, столбец и строка приводятся к <code>LONG</code> и нумеруются с 1. Они выбирают одну клетку тайлового слоя.</p><h3>Результат и ограничения</h3><p>Результат имеет тип <code>INTEGER</code>. Для пустой карты возвращается 0. Пустая клетка, неверная координата и отсутствующий или объектный слой также возвращают 0. Биты 1, 2 и 4 обозначают горизонтальное, вертикальное и диагональное отражение.</p><h3>Диагностика</h3><p>Отсутствие данных не вызывает ошибку выполнения. Несовместимый тип или неверное количество аргументов отклоняется компилятором до запуска.</p><h3>Пример</h3><pre><code class="language-axiom">DIM level AS TILEMAP
+PRINT MAPTILEFLAGS(level, 1, 1, 1)</code></pre><p>Программа печатает 0: переменная объявлена, но карта ещё не загружена. После успешного LOADTILEMAP функция читает фактические данные.</p><h3>См. также</h3><p><a href="#loadtilemap">LOADTILEMAP</a>, <a href="#setmaptile">SETMAPTILE</a>.</p></section><section class="article-section" id="map-property-values"><h2>Общие правила чтения свойств карты</h2><p>Функции карты читают уже загруженное значение без графической поверхности. Слои, объекты, строки и столбцы нумеруются с 1. Имена свойств различают регистр. Строки сохраняются буквально, логические свойства имеют вид TRUE или FALSE, числа сохраняют исходную запись JSON, структурные значения представлены JSON-текстом.</p></section><section class="article-section" id="maptilesetcount">
                 <h2>MAPTILESETCOUNT</h2>
-                <p><code>MAPTILESETCOUNT</code> — встроенная функция языка Axiom, которая возвращает число тайлсетов карты. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPTILESETCOUNT</code> — встроенная функция языка Axiom, которая возвращает число тайлсетов карты. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPTILESETCOUNT(tilemap)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li></ul>
+                <pre><code class="language-axiom">MAPTILESETCOUNT(&lt;карта&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li></ul>
                 <h3>Результат</h3><p>Функция возвращает число тайлсетов карты; тип результата — <code>INTEGER</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты или отсутствующего элемента возвращается 0.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -166,13 +134,13 @@ PRINT MAPTILESETCOUNT(level)
                 <p><a href="../../samples/functions/maptilesetcount/map_access.axm">Запускаемый пример MAPTILESETCOUNT</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="mapproperty">
+<section class="article-section" id="mapproperty">
                 <h2>MAPPROPERTY</h2>
-                <p><code>MAPPROPERTY</code> — встроенная функция языка Axiom, которая возвращает пользовательское свойство карты. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPPROPERTY</code> — встроенная функция языка Axiom, которая возвращает пользовательское свойство карты. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPPROPERTY(tilemap, name)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>name</code> — строка с именем свойства; регистр учитывается, значение не обрезается.</li></ul>
+                <pre><code class="language-axiom">MAPPROPERTY(&lt;карта&gt;, &lt;имя свойства&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;имя свойства&gt;</code>. Передайте <code>STRING</code> с точным именем свойства. Регистр значим, пробелы не обрезаются.</li></ul>
                 <h3>Результат</h3><p>Функция возвращает пользовательское свойство карты; тип результата — <code>STRING</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты, отсутствующего слоя, объекта или свойства возвращается пустая строка. Строковый результат измеряется в единицах UTF-16 обычными строковыми функциями; текст не обрезается. Строки свойств сохраняются буквально; BOOLEAN имеет вид TRUE/FALSE, числа сохраняют исходную запись JSON без DOUBLE, структурные значения представлены JSON-текстом.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -187,13 +155,13 @@ PRINT MAPPROPERTY(level, &quot;role&quot;)
                 <p><a href="../../samples/functions/mapproperty/map_access.axm">Запускаемый пример MAPPROPERTY</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="maplayerproperty">
+<section class="article-section" id="maplayerproperty">
                 <h2>MAPLAYERPROPERTY</h2>
-                <p><code>MAPLAYERPROPERTY</code> — встроенная функция языка Axiom, которая возвращает пользовательское свойство слоя. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPLAYERPROPERTY</code> — встроенная функция языка Axiom, которая возвращает пользовательское свойство слоя. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPLAYERPROPERTY(tilemap, layerIndex, name)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>layerIndex</code> — целый номер слоя от 1; порядок соответствует файлу карты.</li><li><code>name</code> — строка с именем свойства; регистр учитывается, значение не обрезается.</li></ul>
+                <pre><code class="language-axiom">MAPLAYERPROPERTY(&lt;карта&gt;, &lt;номер слоя&gt;, &lt;имя свойства&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;номер слоя&gt;</code>. Передайте <code>LONG</code> с номером нужного слоя, начиная с 1.</li><li><code>&lt;имя свойства&gt;</code>. Передайте <code>STRING</code> с точным именем свойства. Регистр значим, пробелы не обрезаются.</li></ul>
                 <h3>Результат</h3><p>Функция возвращает пользовательское свойство слоя; тип результата — <code>STRING</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты, отсутствующего слоя, объекта или свойства возвращается пустая строка. Строковый результат измеряется в единицах UTF-16 обычными строковыми функциями; текст не обрезается. Строки свойств сохраняются буквально; BOOLEAN имеет вид TRUE/FALSE, числа сохраняют исходную запись JSON без DOUBLE, структурные значения представлены JSON-текстом.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -208,13 +176,13 @@ PRINT MAPLAYERPROPERTY(level, 1, &quot;role&quot;)
                 <p><a href="../../samples/functions/maplayerproperty/map_access.axm">Запускаемый пример MAPLAYERPROPERTY</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="maptileproperty">
+<section class="article-section" id="maptileproperty">
                 <h2>MAPTILEPROPERTY</h2>
-                <p><code>MAPTILEPROPERTY</code> — встроенная функция языка Axiom, которая возвращает свойство фактического тайла в клетке. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPTILEPROPERTY</code> — встроенная функция языка Axiom, которая возвращает свойство фактического тайла в клетке. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPTILEPROPERTY(tilemap, layerIndex, column, row, name)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>layerIndex</code> — целый номер слоя от 1; порядок соответствует файлу карты.</li><li><code>column</code> — целый номер столбца от 1.</li><li><code>row</code> — целый номер строки от 1.</li><li><code>name</code> — строка с именем свойства; регистр учитывается, значение не обрезается.</li></ul>
+                <pre><code class="language-axiom">MAPTILEPROPERTY(&lt;карта&gt;, &lt;номер слоя&gt;, &lt;столбец&gt;, &lt;строка&gt;, &lt;имя свойства&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;номер слоя&gt;</code>. Передайте <code>LONG</code> с номером нужного слоя, начиная с 1.</li><li><code>&lt;столбец&gt;</code>. Передайте <code>LONG</code> с номером столбца клетки, начиная с 1.</li><li><code>&lt;строка&gt;</code>. Передайте <code>LONG</code> с номером строки клетки, начиная с 1.</li><li><code>&lt;имя свойства&gt;</code>. Передайте <code>STRING</code> с точным именем свойства. Регистр значим, пробелы не обрезаются.</li></ul>
                 <h3>Результат</h3><p>Функция возвращает свойство фактического тайла в клетке; тип результата — <code>STRING</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты, отсутствующего слоя, объекта или свойства возвращается пустая строка. Строковый результат измеряется в единицах UTF-16 обычными строковыми функциями; текст не обрезается. Пустая клетка, координаты за границами и объектный слой возвращают пустую строку. После SETMAPTILE функция читает свойство нового тайла; очистка клетки даёт пустую строку. Строки свойств сохраняются буквально; BOOLEAN имеет вид TRUE/FALSE, числа сохраняют исходную запись JSON без DOUBLE, структурные значения представлены JSON-текстом.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -229,13 +197,13 @@ PRINT MAPTILEPROPERTY(level, 1, 1, 1, &quot;solid&quot;)
                 <p><a href="../../samples/functions/maptileproperty/map_access.axm">Запускаемый пример MAPTILEPROPERTY</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="mapobjectproperty">
+<section class="article-section" id="mapobjectproperty">
                 <h2>MAPOBJECTPROPERTY</h2>
-                <p><code>MAPOBJECTPROPERTY</code> — встроенная функция языка Axiom, которая возвращает пользовательское свойство объекта. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPOBJECTPROPERTY</code> — встроенная функция языка Axiom, которая возвращает пользовательское свойство объекта. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPOBJECTPROPERTY(tilemap, layerIndex, objectIndex, name)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>layerIndex</code> — целый номер слоя от 1; порядок соответствует файлу карты.</li><li><code>objectIndex</code> — целый номер объекта от 1 в выбранном объектном слое.</li><li><code>name</code> — строка с именем свойства; регистр учитывается, значение не обрезается.</li></ul>
+                <pre><code class="language-axiom">MAPOBJECTPROPERTY(&lt;карта&gt;, &lt;номер слоя&gt;, &lt;номер объекта&gt;, &lt;имя свойства&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;номер слоя&gt;</code>. Передайте <code>LONG</code> с номером нужного слоя, начиная с 1.</li><li><code>&lt;номер объекта&gt;</code>. Передайте <code>LONG</code> с номером объекта внутри выбранного слоя, начиная с 1.</li><li><code>&lt;имя свойства&gt;</code>. Передайте <code>STRING</code> с точным именем свойства. Регистр значим, пробелы не обрезаются.</li></ul>
                 <h3>Результат</h3><p>Функция возвращает пользовательское свойство объекта; тип результата — <code>STRING</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты, отсутствующего слоя, объекта или свойства возвращается пустая строка. Строковый результат измеряется в единицах UTF-16 обычными строковыми функциями; текст не обрезается. Строки свойств сохраняются буквально; BOOLEAN имеет вид TRUE/FALSE, числа сохраняют исходную запись JSON без DOUBLE, структурные значения представлены JSON-текстом.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -250,13 +218,13 @@ PRINT MAPOBJECTPROPERTY(level, 3, 1, &quot;role&quot;)
                 <p><a href="../../samples/functions/mapobjectproperty/map_access.axm">Запускаемый пример MAPOBJECTPROPERTY</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="maplayername">
+<section class="article-section" id="maplayername">
                 <h2>MAPLAYERNAME</h2>
-                <p><code>MAPLAYERNAME</code> — встроенная функция языка Axiom, которая возвращает имя слоя. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPLAYERNAME</code> — встроенная функция языка Axiom, которая возвращает имя слоя. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPLAYERNAME(tilemap, layerIndex)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>layerIndex</code> — целый номер слоя от 1; порядок соответствует файлу карты.</li></ul>
+                <pre><code class="language-axiom">MAPLAYERNAME(&lt;карта&gt;, &lt;номер слоя&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;номер слоя&gt;</code>. Передайте <code>LONG</code> с номером нужного слоя, начиная с 1.</li></ul>
                 <h3>Результат</h3><p>Функция возвращает имя слоя; тип результата — <code>STRING</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты, отсутствующего слоя, объекта или свойства возвращается пустая строка. Строковый результат измеряется в единицах UTF-16 обычными строковыми функциями; текст не обрезается.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -271,13 +239,13 @@ PRINT MAPLAYERNAME(level, 1)
                 <p><a href="../../samples/functions/maplayername/map_access.axm">Запускаемый пример MAPLAYERNAME</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="maplayertype">
+<section class="article-section" id="maplayertype">
                 <h2>MAPLAYERTYPE</h2>
-                <p><code>MAPLAYERTYPE</code> — встроенная функция языка Axiom, которая возвращает вид слоя: TILE или OBJECT. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPLAYERTYPE</code> — встроенная функция языка Axiom, которая возвращает вид слоя: TILE или OBJECT. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPLAYERTYPE(tilemap, layerIndex)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>layerIndex</code> — целый номер слоя от 1; порядок соответствует файлу карты.</li></ul>
+                <pre><code class="language-axiom">MAPLAYERTYPE(&lt;карта&gt;, &lt;номер слоя&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;номер слоя&gt;</code>. Передайте <code>LONG</code> с номером нужного слоя, начиная с 1.</li></ul>
                 <h3>Результат</h3><p>Функция возвращает вид слоя: TILE или OBJECT; тип результата — <code>STRING</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты, отсутствующего слоя, объекта или свойства возвращается пустая строка. Строковый результат измеряется в единицах UTF-16 обычными строковыми функциями; текст не обрезается.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -292,13 +260,13 @@ PRINT MAPLAYERTYPE(level, 3)
                 <p><a href="../../samples/functions/maplayertype/map_access.axm">Запускаемый пример MAPLAYERTYPE</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="maplayervisible">
+<section class="article-section" id="maplayervisible">
                 <h2>MAPLAYERVISIBLE</h2>
-                <p><code>MAPLAYERVISIBLE</code> — встроенная функция языка Axiom, которая возвращает флаг видимости слоя. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPLAYERVISIBLE</code> — встроенная функция языка Axiom, которая возвращает флаг видимости слоя. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPLAYERVISIBLE(tilemap, layerIndex)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>layerIndex</code> — целый номер слоя от 1; порядок соответствует файлу карты.</li></ul>
+                <pre><code class="language-axiom">MAPLAYERVISIBLE(&lt;карта&gt;, &lt;номер слоя&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;номер слоя&gt;</code>. Передайте <code>LONG</code> с номером нужного слоя, начиная с 1.</li></ul>
                 <h3>Результат</h3><p>Функция возвращает флаг видимости слоя; тип результата — <code>BOOLEAN</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты, отсутствующего слоя или объекта возвращается FALSE.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -313,14 +281,14 @@ PRINT MAPLAYERVISIBLE(level, 2)
                 <p><a href="../../samples/functions/maplayervisible/map_access.axm">Запускаемый пример MAPLAYERVISIBLE</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="mapobjectcount">
+<section class="article-section" id="mapobjectcount">
                 <h2>MAPOBJECTCOUNT</h2>
-                <p><code>MAPOBJECTCOUNT</code> — встроенная функция языка Axiom, которая возвращает число объектов слоя. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPOBJECTCOUNT</code> — встроенная функция языка Axiom, которая возвращает число объектов слоя. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPOBJECTCOUNT(tilemap, layerIndex)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>layerIndex</code> — целый номер слоя от 1; порядок соответствует файлу карты.</li></ul>
-                <h3>Результат</h3><p>Функция возвращает число объектов слоя; тип результата — <code>INTEGER</code>.</p>
+                <pre><code class="language-axiom">MAPOBJECTCOUNT(&lt;карта&gt;, &lt;номер слоя&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;номер слоя&gt;</code>. Передайте <code>LONG</code> с номером нужного слоя, начиная с 1.</li></ul>
+                <h3>Результат</h3><p>Функция возвращает число объектов выбранного слоя; тип результата — <code>INTEGER</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты или отсутствующего элемента возвращается 0. Для тайлового слоя число объектов равно 0.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
                 <h3>Пример</h3><pre><code class="language-axiom">&#x27; Ожидаемый результат: 2. Пример запускается в IDE.
@@ -334,13 +302,13 @@ PRINT MAPOBJECTCOUNT(level, 3)
                 <p><a href="../../samples/functions/mapobjectcount/map_access.axm">Запускаемый пример MAPOBJECTCOUNT</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="mapobjectname">
+<section class="article-section" id="mapobjectname">
                 <h2>MAPOBJECTNAME</h2>
-                <p><code>MAPOBJECTNAME</code> — встроенная функция языка Axiom, которая возвращает имя объекта. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPOBJECTNAME</code> — встроенная функция языка Axiom, которая возвращает имя объекта. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPOBJECTNAME(tilemap, layerIndex, objectIndex)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>layerIndex</code> — целый номер слоя от 1; порядок соответствует файлу карты.</li><li><code>objectIndex</code> — целый номер объекта от 1 в выбранном объектном слое.</li></ul>
+                <pre><code class="language-axiom">MAPOBJECTNAME(&lt;карта&gt;, &lt;номер слоя&gt;, &lt;номер объекта&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;номер слоя&gt;</code>. Передайте <code>LONG</code> с номером нужного слоя, начиная с 1.</li><li><code>&lt;номер объекта&gt;</code>. Передайте <code>LONG</code> с номером объекта внутри выбранного слоя, начиная с 1.</li></ul>
                 <h3>Результат</h3><p>Функция возвращает имя объекта; тип результата — <code>STRING</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты, отсутствующего слоя, объекта или свойства возвращается пустая строка. Строковый результат измеряется в единицах UTF-16 обычными строковыми функциями; текст не обрезается. Координаты и размеры объекта заданы в локальных пикселях карты, без добавления положения карты или смещения камеры. Ширина и высота точки равны 0.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -355,13 +323,13 @@ PRINT MAPOBJECTNAME(level, 3, 1)
                 <p><a href="../../samples/functions/mapobjectname/map_access.axm">Запускаемый пример MAPOBJECTNAME</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="mapobjectclass">
+<section class="article-section" id="mapobjectclass">
                 <h2>MAPOBJECTCLASS</h2>
-                <p><code>MAPOBJECTCLASS</code> — встроенная функция языка Axiom, которая возвращает класс объекта из class или type. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPOBJECTCLASS</code> — встроенная функция языка Axiom, которая возвращает класс объекта из class или type. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPOBJECTCLASS(tilemap, layerIndex, objectIndex)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>layerIndex</code> — целый номер слоя от 1; порядок соответствует файлу карты.</li><li><code>objectIndex</code> — целый номер объекта от 1 в выбранном объектном слое.</li></ul>
+                <pre><code class="language-axiom">MAPOBJECTCLASS(&lt;карта&gt;, &lt;номер слоя&gt;, &lt;номер объекта&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;номер слоя&gt;</code>. Передайте <code>LONG</code> с номером нужного слоя, начиная с 1.</li><li><code>&lt;номер объекта&gt;</code>. Передайте <code>LONG</code> с номером объекта внутри выбранного слоя, начиная с 1.</li></ul>
                 <h3>Результат</h3><p>Функция возвращает класс объекта из class или type; тип результата — <code>STRING</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты, отсутствующего слоя, объекта или свойства возвращается пустая строка. Строковый результат измеряется в единицах UTF-16 обычными строковыми функциями; текст не обрезается. Координаты и размеры объекта заданы в локальных пикселях карты, без добавления положения карты или смещения камеры. Ширина и высота точки равны 0.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -376,13 +344,13 @@ PRINT MAPOBJECTCLASS(level, 3, 1)
                 <p><a href="../../samples/functions/mapobjectclass/map_access.axm">Запускаемый пример MAPOBJECTCLASS</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="mapobjectkind">
+<section class="article-section" id="mapobjectkind">
                 <h2>MAPOBJECTKIND</h2>
-                <p><code>MAPOBJECTKIND</code> — встроенная функция языка Axiom, которая возвращает вид объекта: POINT или RECT. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPOBJECTKIND</code> — встроенная функция языка Axiom, которая возвращает вид объекта: POINT или RECT. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPOBJECTKIND(tilemap, layerIndex, objectIndex)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>layerIndex</code> — целый номер слоя от 1; порядок соответствует файлу карты.</li><li><code>objectIndex</code> — целый номер объекта от 1 в выбранном объектном слое.</li></ul>
+                <pre><code class="language-axiom">MAPOBJECTKIND(&lt;карта&gt;, &lt;номер слоя&gt;, &lt;номер объекта&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;номер слоя&gt;</code>. Передайте <code>LONG</code> с номером нужного слоя, начиная с 1.</li><li><code>&lt;номер объекта&gt;</code>. Передайте <code>LONG</code> с номером объекта внутри выбранного слоя, начиная с 1.</li></ul>
                 <h3>Результат</h3><p>Функция возвращает вид объекта: POINT или RECT; тип результата — <code>STRING</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты, отсутствующего слоя, объекта или свойства возвращается пустая строка. Строковый результат измеряется в единицах UTF-16 обычными строковыми функциями; текст не обрезается. Координаты и размеры объекта заданы в локальных пикселях карты, без добавления положения карты или смещения камеры. Ширина и высота точки равны 0.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -397,13 +365,13 @@ PRINT MAPOBJECTKIND(level, 3, 2)
                 <p><a href="../../samples/functions/mapobjectkind/map_access.axm">Запускаемый пример MAPOBJECTKIND</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="mapobjectvisible">
+<section class="article-section" id="mapobjectvisible">
                 <h2>MAPOBJECTVISIBLE</h2>
-                <p><code>MAPOBJECTVISIBLE</code> — встроенная функция языка Axiom, которая возвращает флаг видимости объекта. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPOBJECTVISIBLE</code> — встроенная функция языка Axiom, которая возвращает флаг видимости объекта. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPOBJECTVISIBLE(tilemap, layerIndex, objectIndex)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>layerIndex</code> — целый номер слоя от 1; порядок соответствует файлу карты.</li><li><code>objectIndex</code> — целый номер объекта от 1 в выбранном объектном слое.</li></ul>
+                <pre><code class="language-axiom">MAPOBJECTVISIBLE(&lt;карта&gt;, &lt;номер слоя&gt;, &lt;номер объекта&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;номер слоя&gt;</code>. Передайте <code>LONG</code> с номером нужного слоя, начиная с 1.</li><li><code>&lt;номер объекта&gt;</code>. Передайте <code>LONG</code> с номером объекта внутри выбранного слоя, начиная с 1.</li></ul>
                 <h3>Результат</h3><p>Функция возвращает флаг видимости объекта; тип результата — <code>BOOLEAN</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты, отсутствующего слоя или объекта возвращается FALSE. Координаты и размеры объекта заданы в локальных пикселях карты, без добавления положения карты или смещения камеры. Ширина и высота точки равны 0.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -418,13 +386,13 @@ PRINT MAPOBJECTVISIBLE(level, 3, 2)
                 <p><a href="../../samples/functions/mapobjectvisible/map_access.axm">Запускаемый пример MAPOBJECTVISIBLE</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="mapobjectx">
+<section class="article-section" id="mapobjectx">
                 <h2>MAPOBJECTX</h2>
-                <p><code>MAPOBJECTX</code> — встроенная функция языка Axiom, которая возвращает координату X объекта. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPOBJECTX</code> — встроенная функция языка Axiom, которая возвращает координату X объекта. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPOBJECTX(tilemap, layerIndex, objectIndex)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>layerIndex</code> — целый номер слоя от 1; порядок соответствует файлу карты.</li><li><code>objectIndex</code> — целый номер объекта от 1 в выбранном объектном слое.</li></ul>
+                <pre><code class="language-axiom">MAPOBJECTX(&lt;карта&gt;, &lt;номер слоя&gt;, &lt;номер объекта&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;номер слоя&gt;</code>. Передайте <code>LONG</code> с номером нужного слоя, начиная с 1.</li><li><code>&lt;номер объекта&gt;</code>. Передайте <code>LONG</code> с номером объекта внутри выбранного слоя, начиная с 1.</li></ul>
                 <h3>Результат</h3><p>Функция возвращает координату X объекта; тип результата — <code>DOUBLE</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты или отсутствующего элемента возвращается 0. Координаты и размеры объекта заданы в локальных пикселях карты, без добавления положения карты или смещения камеры. Ширина и высота точки равны 0.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -439,13 +407,13 @@ PRINT MAPOBJECTX(level, 3, 1)
                 <p><a href="../../samples/functions/mapobjectx/map_access.axm">Запускаемый пример MAPOBJECTX</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="mapobjecty">
+<section class="article-section" id="mapobjecty">
                 <h2>MAPOBJECTY</h2>
-                <p><code>MAPOBJECTY</code> — встроенная функция языка Axiom, которая возвращает координату Y объекта. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPOBJECTY</code> — встроенная функция языка Axiom, которая возвращает координату Y объекта. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPOBJECTY(tilemap, layerIndex, objectIndex)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>layerIndex</code> — целый номер слоя от 1; порядок соответствует файлу карты.</li><li><code>objectIndex</code> — целый номер объекта от 1 в выбранном объектном слое.</li></ul>
+                <pre><code class="language-axiom">MAPOBJECTY(&lt;карта&gt;, &lt;номер слоя&gt;, &lt;номер объекта&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;номер слоя&gt;</code>. Передайте <code>LONG</code> с номером нужного слоя, начиная с 1.</li><li><code>&lt;номер объекта&gt;</code>. Передайте <code>LONG</code> с номером объекта внутри выбранного слоя, начиная с 1.</li></ul>
                 <h3>Результат</h3><p>Функция возвращает координату Y объекта; тип результата — <code>DOUBLE</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты или отсутствующего элемента возвращается 0. Координаты и размеры объекта заданы в локальных пикселях карты, без добавления положения карты или смещения камеры. Ширина и высота точки равны 0.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -460,13 +428,13 @@ PRINT MAPOBJECTY(level, 3, 1)
                 <p><a href="../../samples/functions/mapobjecty/map_access.axm">Запускаемый пример MAPOBJECTY</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="mapobjectwidth">
+<section class="article-section" id="mapobjectwidth">
                 <h2>MAPOBJECTWIDTH</h2>
-                <p><code>MAPOBJECTWIDTH</code> — встроенная функция языка Axiom, которая возвращает ширину объекта. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPOBJECTWIDTH</code> — встроенная функция языка Axiom, которая возвращает ширину объекта. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPOBJECTWIDTH(tilemap, layerIndex, objectIndex)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>layerIndex</code> — целый номер слоя от 1; порядок соответствует файлу карты.</li><li><code>objectIndex</code> — целый номер объекта от 1 в выбранном объектном слое.</li></ul>
+                <pre><code class="language-axiom">MAPOBJECTWIDTH(&lt;карта&gt;, &lt;номер слоя&gt;, &lt;номер объекта&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;номер слоя&gt;</code>. Передайте <code>LONG</code> с номером нужного слоя, начиная с 1.</li><li><code>&lt;номер объекта&gt;</code>. Передайте <code>LONG</code> с номером объекта внутри выбранного слоя, начиная с 1.</li></ul>
                 <h3>Результат</h3><p>Функция возвращает ширину объекта; тип результата — <code>DOUBLE</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты или отсутствующего элемента возвращается 0. Координаты и размеры объекта заданы в локальных пикселях карты, без добавления положения карты или смещения камеры. Ширина и высота точки равны 0.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -481,13 +449,13 @@ PRINT MAPOBJECTWIDTH(level, 3, 1)
                 <p><a href="../../samples/functions/mapobjectwidth/map_access.axm">Запускаемый пример MAPOBJECTWIDTH</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="mapobjectheight">
+<section class="article-section" id="mapobjectheight">
                 <h2>MAPOBJECTHEIGHT</h2>
-                <p><code>MAPOBJECTHEIGHT</code> — встроенная функция языка Axiom, которая возвращает высоту объекта. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPOBJECTHEIGHT</code> — встроенная функция языка Axiom, которая возвращает высоту объекта. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPOBJECTHEIGHT(tilemap, layerIndex, objectIndex)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>layerIndex</code> — целый номер слоя от 1; порядок соответствует файлу карты.</li><li><code>objectIndex</code> — целый номер объекта от 1 в выбранном объектном слое.</li></ul>
+                <pre><code class="language-axiom">MAPOBJECTHEIGHT(&lt;карта&gt;, &lt;номер слоя&gt;, &lt;номер объекта&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;номер слоя&gt;</code>. Передайте <code>LONG</code> с номером нужного слоя, начиная с 1.</li><li><code>&lt;номер объекта&gt;</code>. Передайте <code>LONG</code> с номером объекта внутри выбранного слоя, начиная с 1.</li></ul>
                 <h3>Результат</h3><p>Функция возвращает высоту объекта; тип результата — <code>DOUBLE</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты или отсутствующего элемента возвращается 0. Координаты и размеры объекта заданы в локальных пикселях карты, без добавления положения карты или смещения камеры. Ширина и высота точки равны 0.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -502,13 +470,13 @@ PRINT MAPOBJECTHEIGHT(level, 3, 1)
                 <p><a href="../../samples/functions/mapobjectheight/map_access.axm">Запускаемый пример MAPOBJECTHEIGHT</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="mapcolumn">
+<section class="article-section" id="mapcolumn">
                 <h2>MAPCOLUMN</h2>
-                <p><code>MAPCOLUMN</code> — встроенная функция языка Axiom, которая переводит мировую координату X в номер столбца карты. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPCOLUMN</code> — встроенная функция языка Axiom, которая переводит мировую координату X в номер столбца карты. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPCOLUMN(tilemap, originX, worldX)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>originX</code> — числовая мировая координата левого края карты в пикселях.</li><li><code>worldX</code> — числовая мировая координата точки по X в пикселях.</li></ul>
+                <pre><code class="language-axiom">MAPCOLUMN(&lt;карта&gt;, &lt;мировой X начала карты&gt;, &lt;мировой X точки&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;мировой X начала карты&gt;</code>. Передайте <code>DOUBLE</code> с мировым X левого края карты в пикселях.</li><li><code>&lt;мировой X точки&gt;</code>. Передайте <code>DOUBLE</code> с мировым X искомой точки в пикселях.</li></ul>
                 <h3>Результат</h3><p>Функция переводит мировую координату X в номер столбца карты; тип результата — <code>INTEGER</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты или отсутствующего элемента возвращается 0. Левый и верхний края входят в карту; правый и нижний края не входят. Точка вне карты возвращает 0. Смещения слоёв и камера в расчёт не входят.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -523,13 +491,13 @@ PRINT MAPCOLUMN(level, 100, 116)
                 <p><a href="../../samples/functions/mapcolumn/map_access.axm">Запускаемый пример MAPCOLUMN</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="maprow">
+<section class="article-section" id="maprow">
                 <h2>MAPROW</h2>
-                <p><code>MAPROW</code> — встроенная функция языка Axiom, которая переводит мировую координату Y в номер строки карты. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPROW</code> — встроенная функция языка Axiom, которая переводит мировую координату Y в номер строки карты. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPROW(tilemap, originY, worldY)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>originY</code> — числовая мировая координата верхнего края карты в пикселях.</li><li><code>worldY</code> — числовая мировая координата точки по Y в пикселях.</li></ul>
+                <pre><code class="language-axiom">MAPROW(&lt;карта&gt;, &lt;мировой Y начала карты&gt;, &lt;мировой Y точки&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;мировой Y начала карты&gt;</code>. Передайте <code>DOUBLE</code> с мировым Y верхнего края карты в пикселях.</li><li><code>&lt;мировой Y точки&gt;</code>. Передайте <code>DOUBLE</code> с мировым Y искомой точки в пикселях.</li></ul>
                 <h3>Результат</h3><p>Функция переводит мировую координату Y в номер строки карты; тип результата — <code>INTEGER</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты или отсутствующего элемента возвращается 0. Левый и верхний края входят в карту; правый и нижний края не входят. Точка вне карты возвращает 0. Смещения слоёв и камера в расчёт не входят.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -544,13 +512,13 @@ PRINT MAPROW(level, 200, 215.5)
                 <p><a href="../../samples/functions/maprow/map_access.axm">Запускаемый пример MAPROW</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="mapworldx">
+<section class="article-section" id="mapworldx">
                 <h2>MAPWORLDX</h2>
-                <p><code>MAPWORLDX</code> — встроенная функция языка Axiom, которая возвращает мировую координату левой границы столбца. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPWORLDX</code> — встроенная функция языка Axiom, которая возвращает мировую координату левой границы столбца. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPWORLDX(tilemap, originX, column)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>originX</code> — числовая мировая координата левого края карты в пикселях.</li><li><code>column</code> — целый номер столбца от 1.</li></ul>
+                <pre><code class="language-axiom">MAPWORLDX(&lt;карта&gt;, &lt;мировой X начала карты&gt;, &lt;столбец&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;мировой X начала карты&gt;</code>. Передайте <code>DOUBLE</code> с мировым X левого края карты в пикселях.</li><li><code>&lt;столбец&gt;</code>. Передайте <code>LONG</code> с номером столбца клетки, начиная с 1.</li></ul>
                 <h3>Результат</h3><p>Функция возвращает мировую координату левой границы столбца; тип результата — <code>DOUBLE</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты или отсутствующего элемента возвращается 0. Номер за границами карты возвращает 0; заполненность клетки не проверяется. Результат зависит только от начала карты, размера клетки и номера.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -565,13 +533,13 @@ PRINT MAPWORLDX(level, 100, 2)
                 <p><a href="../../samples/functions/mapworldx/map_access.axm">Запускаемый пример MAPWORLDX</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
             </section>
-            <section class="article-section" id="mapworldy">
+<section class="article-section" id="mapworldy">
                 <h2>MAPWORLDY</h2>
-                <p><code>MAPWORLDY</code> — встроенная функция языка Axiom, которая возвращает мировую координату верхней границы строки. Функция нужна для чтения данных уровня и его геометрии без ручного разбора файла карты.</p>
-                <p>Функция работает со значением карты и не требует операторов SCREEN или CANVAS. Карту обычно получают функцией LOADTILEMAP; результат чтения доступен сразу, без PRESENT.</p>
+                <p><code>MAPWORLDY</code> — встроенная функция языка Axiom, которая возвращает мировую координату верхней границы строки. </p>
+                <p>Функция работает со значением карты и не требует операторов <code>SCREEN</code> или <code>CANVAS</code>. Карту обычно получают функцией <code>LOADTILEMAP</code>; результат чтения доступен сразу, без оператора <code>PRESENT</code>.</p>
                 <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">MAPWORLDY(tilemap, originY, row)</code></pre>
-                <h3>Аргументы</h3><ul><li><code>tilemap</code> — значение типа TILEMAP; может быть пустым после DIM.</li><li><code>originY</code> — числовая мировая координата верхнего края карты в пикселях.</li><li><code>row</code> — целый номер строки от 1.</li></ul>
+                <pre><code class="language-axiom">MAPWORLDY(&lt;карта&gt;, &lt;мировой Y начала карты&gt;, &lt;строка&gt;)</code></pre>
+                <h3>Аргументы</h3><ul><li><code>&lt;карта&gt;</code>. Передайте значение типа <code>TILEMAP</code>, из которого нужно прочитать данные. Пустое значение допустимо.</li><li><code>&lt;мировой Y начала карты&gt;</code>. Передайте <code>DOUBLE</code> с мировым Y верхнего края карты в пикселях.</li><li><code>&lt;строка&gt;</code>. Передайте <code>LONG</code> с номером строки клетки, начиная с 1.</li></ul>
                 <h3>Результат</h3><p>Функция возвращает мировую координату верхней границы строки; тип результата — <code>DOUBLE</code>.</p>
                 <h3>Правила и ограничения</h3><p>Для пустой карты или отсутствующего элемента возвращается 0. Номер за границами карты возвращает 0; заполненность клетки не проверяется. Результат зависит только от начала карты, размера клетки и номера.</p>
                 <h3>Диагностика</h3><p>Неверное число аргументов или несовместимый тип отклоняется при семантической проверке до исполнения. Отсутствующий элемент не является ошибкой. Отказ LOADTILEMAP при чтении файла карты в текущей IDE сообщает MB3005.</p>
@@ -585,8 +553,7 @@ PRINT MAPWORLDY(level, 200, 2)
 </code></pre>
                 <p><a href="../../samples/functions/mapworldy/map_access.axm">Запускаемый пример MAPWORLDY</a></p>
                 <h3>См. также</h3><p><a href="tilemaps.html#map-cell">Чтение клеток</a>, <a href="tilemaps.html#setmaptile">SETMAPTILE</a>.</p>
-            </section>
-            <section class="article-section">
+            </section><section class="article-section"><h2>Аргументы рисования и изменения клетки</h2><p><code>LOADTILEMAP</code> принимает путь <code>STRING</code> и возвращает <code>TILEMAP</code>. Все файлы карты, тайлсетов и изображений должны существовать; загрузчик их не создаёт. Внешние ссылки разрешаются относительно содержащего их файла.</p><p><code>DRAWTILEMAP</code> принимает карту и две мировые координаты <code>LONG</code>; <code>DRAWTILELAYER</code> дополнительно принимает номер слоя <code>LONG</code>, начиная с 1. Неверный слой сообщает <code>MB3007</code>, объектный слой — <code>MB3005</code>. После рисования текущая графическая позиция становится переданной точкой начала карты. Рабочий кадр виден после оператора <code>PRESENT</code>.</p><p><code>SETMAPTILE</code> принимает карту и номера слоя, столбца, строки, тайлсета, тайла типа <code>LONG</code>; необязательные флаги имеют тип <code>LONG</code> и по умолчанию равны 0. Координаты клетки начинаются с 1. Оператор меняет данные без графического окна; для показа изменений нарисуйте карту снова.</p></section><section class="article-section">
                 <h2>Запускаемые примеры</h2>
                 <p>Эти файлы можно открыть в <code>Electron IDE</code> и запустить как короткие проверки поведения типа <code>TILEMAP</code> и операторов <code>DRAWTILEMAP</code> и <code>SETMAPTILE</code>.</p>
                 <ul class="resource-list">
@@ -647,10 +614,5 @@ TRY
 CATCH err
     PRINT "Отказ загрузки: "; err.Code
 END TRY</code></pre></section>
-            <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-<section><h2>Границы загрузки карты</h2><p>Функция LOADTILEMAP выбирает тайлсет по наибольшему firstgid, не превышающему номер клетки. Порядок тайлсетов в файле сохраняется для MAPTILESET. Диапазоны тайлсетов не должны пересекаться. Четвёртый старший бит номера клетки очищается у ортогональной карты; MAPTILEFLAGS возвращает только три поддерживаемых флага отражения.</p><p>Поля columns, tilecount, imagewidth и imageheight тайлсета, если заданы, должны соответствовать загруженному изображению и сетке. Поддерживается tilerendersize со значением tile; fillmode может быть stretch или preserve-aspect-fit и не меняет собственный размер тайла. Поля parallaxoriginx и parallaxoriginy карты допускают только числовой ноль. Ненулевое начало параллакса, tilerendersize со значением grid, transparentcolor, отдельные изображения и прямоугольники отдельных тайлов, chunks, сжатие и кодировка base64 пока не поддерживаются. Загрузчик выдаёт MB3005 с причиной вместо молчаливого изменения карты. Для прозрачности используйте альфа-канал изображения. Данные слоя должны быть массивом числовых номеров клеток; encoding, если задано, допускает только csv, compression — только пустую строку.</p><p>Пример <a href="../../samples/functions/loadtilemap/loader_boundaries.axm">loader_boundaries.axm</a> проверяет выбор тайлсета, очистку флага и диагностируемое неподдержанное начало параллакса.</p></section>
-</body>
-</html>
+            <div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

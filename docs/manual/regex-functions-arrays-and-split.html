@@ -1,116 +1,31 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Все совпадения, группы и разбиение</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="regex-functions-arrays-and-split">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">REGEXMATCHES, REGEXEXTRACTALL и REGEXSPLIT</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-<main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Встроенные функции</span><span>/</span><span>Регулярные выражения</span></nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Все совпадения, группы и разбиение</h1>
-            <p class="lead">Раздел всех совпадений, групп и разбиения описывает функции <code>REGEXMATCHES</code>, <code>REGEXEXTRACTALL</code> и <code>REGEXSPLIT</code> — сбор всех совпадений, извлечение групп из всех вхождений и разбиение строки по образцу.</p>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Все совпадения и разбиение — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="regex-functions-arrays-and-split"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Все совпадения и разбиение</span></nav>
+<p class="eyebrow">Глава 15</p><h1 class="page-title">Все совпадения и разбиение</h1><p class="lead">В этом разделе описаны три встроенные функции языка Axiom: REGEXMATCHES извлекает все полные совпадения, REGEXEXTRACTALL извлекает значения выбранной группы, а REGEXSPLIT разбивает текст по шаблону. Каждая функция имеет свой синтаксис и возвращает одномерный массив строк STRING().</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
-            <section class="article-section" id="regexmatches">
-                <h2>REGEXMATCHES</h2>
-                <p>Функция <code>REGEXMATCHES</code> собирает все найденные совпадения целиком в новый массив строк.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">results = REGEXMATCHES(text, pattern[, modes])</code></pre>
-                <h3>Аргументы</h3><p><code>text</code> задаёт исходную строку, <code>pattern</code> регулярное выражение, <code>modes</code> необязательные режимы. Результат имеет тип <code>STRING()</code>.</p>
-                <h3>Пустой массив без совпадений</h3>
-                <p>Если совпадений нет, функция возвращает пустой массив с границами <code>1 TO 0</code>.</p>
-                <h3>Пример массива совпадений</h3>
-                <pre><code class="language-axiom">DIM values() AS STRING
+<section class="article-section" id="regexmatches"><h2>REGEXMATCHES</h2><p>REGEXMATCHES — встроенная функция языка Axiom, которая возвращает все найденные совпадения с регулярным выражением как массив строк.</p><h3>Назначение и контекст</h3><p>Функция нужна, когда из текста требуется извлечь все подходящие фрагменты: например, числа из строки с заказами.</p><p>Функцию можно вызывать в выражениях без открытия экрана, холста или файла. Результат можно присвоить динамическому массиву строк и обработать обычным циклом.</p><h3>Синтаксис</h3><p>Вызов без дополнительных режимов:</p><pre><code class="language-axiom">REGEXMATCHES(&lt;текст&gt;, &lt;шаблон&gt;)</code></pre><p>Вызов с явно заданными режимами:</p><pre><code class="language-axiom">REGEXMATCHES(&lt;текст&gt;, &lt;шаблон&gt;, &lt;режимы&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте строку типа STRING, в которой функция должна искать совпадения.</td></tr><tr><td><code>&lt;шаблон&gt;</code></td><td>Передайте строку типа STRING с регулярным выражением, которое задаёт искомые совпадения.</td></tr><tr><td><code>&lt;режимы&gt;</code></td><td>Необязательная строка типа STRING задаёт режимы поиска. Буква <code>i</code> отключает различение регистра, <code>m</code> позволяет <code>^</code> и <code>$</code> обозначать границы отдельных строк, <code>s</code> позволяет точке совпадать с переводом строки, а <code>x</code> разрешает пробелы и комментарии в шаблоне. Буквы можно сочетать, например <code>"im"</code>; регистр букв не имеет значения. По умолчанию дополнительные режимы выключены.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция создаёт новый одномерный массив строк STRING(). Индекс первого элемента равен 1. Пустой результат остаётся выделенным массивом: его нижняя граница равна 1, верхняя — 0, а длина — 0.</p><p>Элементы содержат полные совпадения в порядке поиска слева направо.</p><h3>Правила и пограничные случаи</h3><p>Если совпадений нет, функция возвращает пустой массив. Пустой исходный текст не обязательно даёт пустой результат: шаблон <code>"^$"</code> совпадает с пустой строкой, поэтому результат содержит один элемент — пустую строку.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает, если шаблон содержит недопустимое регулярное выражение, строка режимов содержит символ помимо <code>i</code>, <code>m</code>, <code>s</code> и <code>x</code>. Та же ошибка возникает, если поиск превышает установленный предел времени в пять секунд. Отсутствие совпадений ошибкой не является.</p><h3>Пример</h3><pre><code class="language-axiom">DIM values() AS STRING
 values = REGEXMATCHES("Order 42 and 100", "\d+")
 PRINT values(1)
-PRINT values(2)</code></pre>
-                <p>Результат:</p>
-                <pre><code>42
-100</code></pre>
-            </section>
-
-            <section class="article-section" id="regexextractall">
-                <h2>REGEXEXTRACTALL</h2>
-                <p>Функция <code>REGEXEXTRACTALL</code> возвращает значения одной и той же группы из всех найденных совпадений.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">results = REGEXEXTRACTALL(text, pattern, groupNumber[, modes])</code></pre>
-                <h3>Аргументы</h3><p><code>groupNumber</code> задаёт номер группы. Группа <code>0</code> означает всё совпадение целиком.</p>
-                <h3>Явно заданный номер группы</h3><p>Аргумент groupNumber — номер захватывающей группы, который не обязан быть её порядковым местом. Конструкция (?&lt;10&gt;...) задаёт номер 10. Для отсутствующей положительной группы или необязательной группы без захвата в массив помещается пустая строка. Отрицательный номер даёт MB3007.</p><pre><code class="language-axiom">DIM values() AS STRING
-' Собираем значения одной группы из двух совпадений.
-values = REGEXEXTRACTALL("код12 код34", "код(?&lt;10&gt;[0-9]+)", 10)
-PRINT values(1)
-PRINT values(2)</code></pre><p>Результаты: «12» и «34». Запускаемый пример: <a href="../../samples/functions/regexextractall/explicit_group_values.axm">значения группы 10</a>.</p>
-<h3>Пустая строка вместо отсутствующей группы</h3>
-                <p>Если в отдельном совпадении нужной группы нет, соответствующий элемент массива получает пустую строку.</p>
-                <h3>Пример массива групп</h3>
-                <pre><code class="language-axiom">DIM values() AS STRING
+PRINT values(2)</code></pre><p>Программа выводит:</p><pre><code>42
+100</code></pre></section>
+<section class="article-section" id="regexextractall"><h2>REGEXEXTRACTALL</h2><p>REGEXEXTRACTALL — встроенная функция языка Axiom, которая возвращает значения выбранной группы для всех совпадений с регулярным выражением как массив строк.</p><h3>Назначение и контекст</h3><p>Функция позволяет извлечь нужную часть каждого совпадения: например, числовую часть кодов <code>A12</code> и <code>B34</code>.</p><p>Функцию можно вызывать в выражениях без открытия экрана, холста или файла. Результат можно присвоить динамическому массиву строк и обработать обычным циклом.</p><h3>Синтаксис</h3><p>Вызов без дополнительных режимов:</p><pre><code class="language-axiom">REGEXEXTRACTALL(&lt;текст&gt;, &lt;шаблон&gt;, &lt;номер группы&gt;)</code></pre><p>Вызов с явно заданными режимами:</p><pre><code class="language-axiom">REGEXEXTRACTALL(&lt;текст&gt;, &lt;шаблон&gt;, &lt;номер группы&gt;, &lt;режимы&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте строку типа STRING, в которой функция должна искать совпадения.</td></tr><tr><td><code>&lt;шаблон&gt;</code></td><td>Передайте строку типа STRING с регулярным выражением, которое задаёт искомые совпадения.</td></tr><tr><td><code>&lt;номер группы&gt;</code></td><td>Передайте неотрицательное целое число типа INTEGER. Ноль выбирает совпадение целиком; положительное число выбирает группу с этим номером.</td></tr><tr><td><code>&lt;режимы&gt;</code></td><td>Необязательная строка типа STRING задаёт режимы поиска. Буква <code>i</code> отключает различение регистра, <code>m</code> позволяет <code>^</code> и <code>$</code> обозначать границы отдельных строк, <code>s</code> позволяет точке совпадать с переводом строки, а <code>x</code> разрешает пробелы и комментарии в шаблоне. Буквы можно сочетать, например <code>"im"</code>; регистр букв не имеет значения. По умолчанию дополнительные режимы выключены.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция создаёт новый одномерный массив строк STRING(). Индекс первого элемента равен 1. Пустой результат остаётся выделенным массивом: его нижняя граница равна 1, верхняя — 0, а длина — 0.</p><p>Каждому полному совпадению соответствует один элемент массива. Если выбранная группа отсутствует в шаблоне или не захвачена в конкретном совпадении, соответствующий элемент содержит пустую строку.</p><h3>Правила и пограничные случаи</h3><p>Номер группы обозначает именно её номер в регулярном выражении. Например, <code>(?&lt;10&gt;...)</code> создаёт группу с номером 10. Номер 0 возвращает полные совпадения. Если совпадений нет, массив пуст. Для пустого текста результат зависит от того, может ли шаблон совпасть с пустой строкой.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает, если шаблон содержит недопустимое регулярное выражение, строка режимов содержит символ помимо <code>i</code>, <code>m</code>, <code>s</code> и <code>x</code>, либо номер группы отрицателен. Та же ошибка возникает, если поиск превышает установленный предел времени в пять секунд. Отсутствие совпадений ошибкой не является.</p><h3>Пример</h3><pre><code class="language-axiom">DIM values() AS STRING
 values = REGEXEXTRACTALL("A12 B34", "([A-Z])(\d+)", 2)
 PRINT values(1)
-PRINT values(2)</code></pre>
-                <p>Результат:</p>
-                <pre><code>12
-34</code></pre>
-            </section>
-
-            <section class="article-section" id="regexsplit">
-                <h2>REGEXSPLIT</h2>
-                <p>Функция <code>REGEXSPLIT</code> разбивает строку по совпадениям регулярного выражения и возвращает части как новый массив строк.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">parts = REGEXSPLIT(text, pattern[, modes])</code></pre>
-                <h3>Пустые части при разбиении</h3>
-                <p>Пустые части сохраняются, если совпадение стоит в начале, в конце или вплотную к другому совпадению. Для пустого исходного текста функция возвращает пустой массив <code>1 TO 0</code>.</p>
-                <p>В примере ниже шаблон <code>"[,;]\s*"</code> читается так: <code>[,;]</code> означает «запятая или точка с запятой», <code>\s</code> означает пробельный символ, а <code>*</code> разрешает ноль или больше таких пробельных символов после разделителя.</p>
-                <h3>Пример разбиения по шаблону</h3>
-                <pre><code class="language-axiom">DIM parts() AS STRING
+PRINT values(2)</code></pre><p>Программа выводит:</p><pre><code>12
+34</code></pre><p>Пример с явно пронумерованной группой: <a href="../../samples/functions/regexextractall/explicit_group_values.axm">explicit_group_values.axm</a>.</p></section>
+<section class="article-section" id="regexsplit"><h2>REGEXSPLIT</h2><p>REGEXSPLIT — встроенная функция языка Axiom, которая разбивает текст по совпадениям с регулярным выражением и возвращает полученные части как массив строк.</p><h3>Назначение и контекст</h3><p>Функция нужна, когда разделитель задаётся правилом, а не одной фиксированной строкой. Например, список можно разделить одновременно по запятым и точкам с запятой.</p><p>Функцию можно вызывать в выражениях без открытия экрана, холста или файла. Результат можно присвоить динамическому массиву строк и обработать обычным циклом.</p><h3>Синтаксис</h3><p>Вызов без дополнительных режимов:</p><pre><code class="language-axiom">REGEXSPLIT(&lt;текст&gt;, &lt;шаблон&gt;)</code></pre><p>Вызов с явно заданными режимами:</p><pre><code class="language-axiom">REGEXSPLIT(&lt;текст&gt;, &lt;шаблон&gt;, &lt;режимы&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте строку типа STRING, в которой функция должна искать совпадения.</td></tr><tr><td><code>&lt;шаблон&gt;</code></td><td>Передайте строку типа STRING с регулярным выражением, которое задаёт искомые совпадения.</td></tr><tr><td><code>&lt;режимы&gt;</code></td><td>Необязательная строка типа STRING задаёт режимы поиска. Буква <code>i</code> отключает различение регистра, <code>m</code> позволяет <code>^</code> и <code>$</code> обозначать границы отдельных строк, <code>s</code> позволяет точке совпадать с переводом строки, а <code>x</code> разрешает пробелы и комментарии в шаблоне. Буквы можно сочетать, например <code>"im"</code>; регистр букв не имеет значения. По умолчанию дополнительные режимы выключены.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция создаёт новый одномерный массив строк STRING(). Индекс первого элемента равен 1. Пустой результат остаётся выделенным массивом: его нижняя граница равна 1, верхняя — 0, а длина — 0.</p><p>Элементы содержат части исходного текста в исходном порядке. Захватывающие группы шаблона-разделителя также включаются в результат.</p><h3>Правила и пограничные случаи</h3><p>Разделитель в начале, в конце или рядом с другим разделителем создаёт пустую часть. Если разделитель не найден в непустом тексте, результат содержит один элемент — весь исходный текст. Для пустого исходного текста функция всегда возвращает пустой массив.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает, если шаблон содержит недопустимое регулярное выражение, строка режимов содержит символ помимо <code>i</code>, <code>m</code>, <code>s</code> и <code>x</code>. Та же ошибка возникает, если поиск превышает установленный предел времени в пять секунд. Отсутствие совпадений ошибкой не является.</p><h3>Пример</h3><p>Шаблон <code>"[,;]\s*"</code> задаёт запятую или точку с запятой и любое количество пробельных символов после неё.</p><pre><code class="language-axiom">DIM parts() AS STRING
 parts = REGEXSPLIT("one, two;three", "[,;]\s*")
 PRINT parts(1)
 PRINT parts(2)
-PRINT parts(3)</code></pre>
-                <p>Результат:</p>
-                <pre><code>one
+PRINT parts(3)</code></pre><p>Программа выводит:</p><pre><code>one
 two
-three</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/functions/regexmatches/all_matches.axm">REGEXMATCHES: все совпадения</a></li>
-                    <li><a href="../../samples/functions/regexextractall/group_values.axm">REGEXEXTRACTALL: значения группы</a></li>
-                    <li><a href="../../samples/functions/regexsplit/split_on_pattern.axm">REGEXSPLIT: разбиение по шаблону</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="regex-functions.html">Функции регулярных выражений</a>
-                    <a href="regex-functions-match-and-extract.html">Проверка, первое совпадение и группы</a>
-                    <a href="regex-functions-replace-and-count.html">Замена и подсчёт совпадений</a>
-                    <a href="arrays-functions.html">Функции массивов</a>
-                    <a href="string-functions.html">Строковые функции</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+three</code></pre></section>
+<section class="article-section"><h2>Запускаемые примеры</h2><ul><li><a href="../../samples/functions/regexmatches/all_matches.axm">Все совпадения REGEXMATCHES</a></li><li><a href="../../samples/functions/regexextractall/group_values.axm">Значения групп REGEXEXTRACTALL</a></li><li><a href="../../samples/functions/regexsplit/split_on_pattern.axm">Разбиение REGEXSPLIT</a></li></ul></section>
+<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="regex-functions.html">Регулярные выражения</a><a href="regex-functions-match-and-extract.html">Первое совпадение и группы</a><a href="regex-functions-replace-and-count.html">Замена и подсчёт совпадений</a><a href="arrays-functions.html">Функции массивов</a><a href="diagnostics.html">Диагностика</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

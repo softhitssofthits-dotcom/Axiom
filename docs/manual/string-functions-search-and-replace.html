@@ -1,127 +1,51 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Поиск и замена в строках</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="string-functions-search-and-replace">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">CONTAINS, INSTR, REPLACE и связанные функции</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-<main class="content">
-<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Встроенные функции</span><span>/</span><span>Строки и символы</span></nav>
-<p class="eyebrow">Раздел</p>
-<h1 class="page-title">Поиск и замена в строках</h1>
-<p class="lead">Раздел поиска и замены описывает функции <code>CONTAINS</code>, <code>STARTSWITH</code>, <code>ENDSWITH</code>, <code>INSTR</code>, <code>INSTRREV</code>, <code>SUBSTRCOUNT</code>, <code>REPLACE</code> и <code>REPLACEMANY</code> — средства проверки наличия фрагмента, поиска позиции и замены текста.</p>
-
-<section class="article-section">
-<p>Функции поиска отвечают на два разных вопроса: есть ли в строке нужный фрагмент и в какой позиции он находится. Функции замены строят новую строку, где найденные фрагменты заменены другим текстом.</p>
-</section>
-
-<section class="article-section" id="contains">
-<h2>CONTAINS, STARTSWITH, ENDSWITH</h2>
-<p>Эти функции проверяют, содержит ли строка фрагмент, начинается ли она с него и заканчивается ли им.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">result = CONTAINS(text, fragment)
-result = STARTSWITH(text, fragment)
-result = ENDSWITH(text, fragment)</code></pre>
-<h3>Аргументы</h3>
-<p><code>text</code> задаёт исходную строку, <code>fragment</code> задаёт искомый фрагмент.</p>
-<h3>Правила сравнения</h3>
-<p>Поиск выполняется с учётом регистра. Пустой фрагмент считается найденным. Результат имеет тип <code>BOOLEAN</code>.</p>
-<h3>Пример проверки наличия фрагмента</h3>
-<pre><code class="language-axiom">PRINT CONTAINS("banana", "na")
-PRINT STARTSWITH("banana", "ba")
-PRINT ENDSWITH("banana", "na")</code></pre>
-<p>Результат:</p>
-<pre><code>TRUE
-TRUE
-TRUE</code></pre>
-</section>
-
-<section class="article-section" id="replace">
-<h2>REPLACE</h2>
-<p>Функция <code>REPLACE</code> заменяет все найденные вхождения фрагмента.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">result = REPLACE(text, oldText, newText)</code></pre>
-<h3>Аргументы</h3>
-<p><code>text</code> задаёт исходную строку, <code>oldText</code> задаёт заменяемый фрагмент, <code>newText</code> задаёт текст замены.</p>
-<h3>Ограничение заменяемого фрагмента</h3>
-<p>Пустой заменяемый фрагмент даёт <code>MB3007</code>.</p>
-<h3>Пример замены всех вхождений</h3>
-<pre><code class="language-axiom">PRINT REPLACE("banana", "na", "NA")</code></pre>
-<p>Результат:</p>
-<pre><code>baNANA</code></pre>
-</section>
-
-
-<section class="article-section" id="replacemany">
-<h2>REPLACEMANY</h2>
-<p><code>REPLACEMANY</code> применяет таблицу строковых замен за один проход по исходной строке. Функция нужна для случаев, где обычная цепочка из многих <code>REPLACE</code> слишком дорога: нормализация текста, исправление кодировки, пакетная замена маркеров.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">result = REPLACEMANY(text, oldItems, newItems)</code></pre>
-<h3>Аргументы</h3>
-<p><code>oldItems</code> и <code>newItems</code> должны быть одномерными массивами строк одинаковой длины. Элемент <code>oldItems(i)</code> задаёт искомый фрагмент, а <code>newItems(i)</code> — замену для него.</p>
-<h3>Порядок применения правил</h3>
-<p>Поиск выполняется с учётом регистра и по точному порядковому сравнению символов. В каждой позиции выбирается самое длинное совпадение из таблицы; при равной длине используется более раннее правило. Пустой элемент в <code>oldItems</code> и разная длина массивов дают <code>MB3007</code>.</p>
-<h3>Пример табличной замены</h3>
-<pre><code class="language-axiom">DIM oldItems(1 TO 2) AS STRING
-DIM newItems(1 TO 2) AS STRING
-oldItems(1) = "ab"
-newItems(1) = "X"
-oldItems(2) = "abc"
-newItems(2) = "Y"
-PRINT REPLACEMANY("abc ab", oldItems, newItems)</code></pre>
-<p>Результат:</p>
-<pre><code>Y X</code></pre>
-</section>
-<section class="article-section" id="instr">
-<h2>INSTR и INSTRREV</h2>
-<p>Функции <code>INSTR</code> и <code>INSTRREV</code> возвращают позицию найденного фрагмента, считая с единицы.</p>
-<h3>Синтаксис</h3>
-<p>Поиск INSTR от начала строки:</p>
-<pre><code class="language-axiom">position = INSTR(text, fragment)</code></pre>
-<p>Поиск INSTR от указанной позиции:</p>
-<pre><code class="language-axiom">position = INSTR(start, text, fragment)</code></pre>
-<p>Поиск INSTRREV от конца строки:</p>
-<pre><code class="language-axiom">position = INSTRREV(text, fragment)</code></pre>
-<p>Поиск INSTRREV в части строки до указанной позиции включительно:</p>
-<pre><code class="language-axiom">position = INSTRREV(start, text, fragment)</code></pre>
-<h3>Аргументы</h3>
-<p><code>text</code> задаёт исходную строку, <code>fragment</code> задаёт искомый фрагмент. Необязательный <code>start</code> задаёт начальную позицию поиска.</p>
-<h3>Начальная позиция и отсутствие совпадения</h3>
-<p>Если аргумент <code>start</code> не указан, поиск начинается с естественного начала или конца строки. Если совпадение не найдено, результат равен <code>0</code>.</p>
-<p>Позиции INSTR и INSTRREV считаются с единицы в единицах UTF-16. Эмодзи вне основной плоскости занимает две позиции: в строке <code>А😀Б</code> буква Б находится на позиции 4. Поиск сравнивает точные единицы UTF-16, учитывает регистр и не нормализует Unicode. Поэтому <code>é</code> и <code>e</code> с отдельным знаком ударения различаются.</p>
-<p>Аргумент <code>start</code> должен быть целым числом не меньше 1; иначе возникает <code>MB3007</code>. Для INSTR позиция правее <code>LEN(text) + 1</code> даёт 0. Для INSTRREV слишком большая позиция ограничивается концом строки; найденный фрагмент должен целиком помещаться до этой позиции.</p>
-<p>Пустой <code>fragment</code> имеет отдельный договор: INSTR возвращает допустимую начальную позицию, включая позицию сразу после строки; INSTRREV с явным start возвращает меньшее из <code>start</code> и <code>LEN(text)</code>, увеличенное на 1. Без start вызов <code>INSTRREV("", "")</code> возвращает 0, а <code>INSTRREV(1, "", "")</code> — 1. </p>
-<pre><code class="language-axiom">PRINT INSTR("А😀Б", "Б")       ' 4
-PRINT INSTRREV(3, "А😀Б", "😀") ' 2
-PRINT INSTR(4, "abc", "")      ' 4</code></pre>
-<p><a href="../../samples/functions/instr/utf16_positions.axm">Позиции Unicode и извлечение найденного фрагмента</a></p>
-<h3>Пример поиска позиции</h3>
-<pre><code class="language-axiom">PRINT INSTR("banana", "na")
-PRINT INSTRREV("banana", "na")</code></pre>
-<p>Результат:</p>
-<pre><code>3
-5</code></pre>
-</section>
-
-<section class="article-section" id="substrcount">
-<h2>SUBSTRCOUNT</h2>
-<p>Функция <code>SUBSTRCOUNT</code> считает непересекающиеся вхождения фрагмента.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">count = SUBSTRCOUNT(text, fragment)</code></pre>
-<h3>Аргументы</h3>
-<p><code>text</code> задаёт исходную строку, <code>fragment</code> задаёт искомый фрагмент.</p>
-<p>Пустой fragment вызывает <code>MB3007</code>, даже если исходная строка пустая. Пустая исходная строка с непустым fragment даёт 0. Подсчёт использует точное сравнение UTF-16 и не учитывает перекрывающиеся вхождения: <code>SUBSTRCOUNT("aaa", "aa")</code> возвращает 1.</p>
-<h3>Пример подсчёта вхождений</h3>
-<pre><code class="language-axiom">PRINT SUBSTRCOUNT("banana", "na")</code></pre>
-<p>Результат:</p>
-<pre><code>2</code></pre>
-</section>
-
-<section class="article-section"><h2>Запускаемые примеры</h2><ul class="resource-list"><li><a href="../../samples/functions/contains/basic_usage.axm">CONTAINS</a></li><li><a href="../../samples/functions/replace/basic_usage.axm">REPLACE</a></li><li><a href="../../samples/functions/replacemany/multiple_tokens.axm">REPLACEMANY</a></li><li><a href="../../samples/functions/instr/basic_usage.axm">INSTR</a></li><li><a href="../../samples/functions/instrrev/basic_usage.axm">INSTRREV</a></li><li><a href="../../samples/functions/substrcount/basic_usage.axm">SUBSTRCOUNT</a></li></ul></section>
-<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="string-functions.html">Строковые функции</a><a href="string-functions-slices-and-length.html">Длина строки и фрагменты</a><a href="string-functions-trim-and-case.html">Обрезка, регистр и разворот строки</a><a href="string-functions-build-and-split.html">Построение строк и массивы строк</a><a href="regex-functions.html">Регулярные выражения</a><a href="data-types-strings-and-files.html">Тип STRING</a></div></section>
-
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Поиск и замена подстрок — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="string-functions-search-and-replace"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Поиск и замена подстрок</span></nav>
+<p class="eyebrow">Глава 8</p><h1 class="page-title">Поиск и замена подстрок</h1><p class="lead">В этом разделе описаны встроенные функции языка Axiom CONTAINS, STARTSWITH, ENDSWITH, INSTR, INSTRREV, SUBSTRCOUNT, REPLACE, REPLACEMANY. Они обрабатывают текст и возвращают результат без изменения исходной строки. Ниже приведён отдельный синтаксис и договор каждой функции.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="contains"><h2>CONTAINS</h2><p>CONTAINS — встроенная функция языка Axiom, которая проверяет, содержит ли строка указанный фрагмент.</p><h3>Назначение и контекст</h3><p>Функция позволяет проверить наличие слова или фрагмента внутри текста.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма вызова:</p><pre><code class="language-axiom">CONTAINS(&lt;текст&gt;, &lt;фрагмент&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;фрагмент&gt;</code></td><td>Передайте строку типа STRING, которую требуется найти в исходном тексте.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает логическое значение типа BOOLEAN: TRUE при выполнении условия и FALSE в остальных случаях.</p><h3>Правила и пограничные случаи</h3><p>Сравнение точное, с учётом регистра, без нормализации Unicode. Пустой фрагмент всегда даёт TRUE, в том числе для пустого текста. Непустой фрагмент в пустом тексте даёт FALSE.</p><h3>Диагностика</h3><p>Неверные типы и число аргументов отклоняются при проверке программы.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT CONTAINS("Abc", "b")
+PRINT CONTAINS("Abc", "B")
+PRINT CONTAINS("", "")</code></pre><p>Программа выводит:</p><pre><code>TRUE
+FALSE
+TRUE</code></pre></section>
+<section class="article-section" id="startswith"><h2>STARTSWITH</h2><p>STARTSWITH — встроенная функция языка Axiom, которая проверяет, начинается ли строка с указанного фрагмента.</p><h3>Назначение и контекст</h3><p>Функция позволяет проверить префикс текста.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма вызова:</p><pre><code class="language-axiom">STARTSWITH(&lt;текст&gt;, &lt;фрагмент&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;фрагмент&gt;</code></td><td>Передайте строку типа STRING, которую требуется найти в исходном тексте.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает логическое значение типа BOOLEAN: TRUE при выполнении условия и FALSE в остальных случаях.</p><h3>Правила и пограничные случаи</h3><p>Сравнение точное, с учётом регистра, без нормализации Unicode. Пустой фрагмент всегда даёт TRUE, в том числе для пустого текста. Непустой фрагмент в пустом тексте даёт FALSE.</p><h3>Диагностика</h3><p>Неверные типы и число аргументов отклоняются при проверке программы.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT STARTSWITH("Abc", "Ab")
+PRINT STARTSWITH("Abc", "ab")
+PRINT STARTSWITH("", "")</code></pre><p>Программа выводит:</p><pre><code>TRUE
+FALSE
+TRUE</code></pre></section>
+<section class="article-section" id="endswith"><h2>ENDSWITH</h2><p>ENDSWITH — встроенная функция языка Axiom, которая проверяет, заканчивается ли строка указанным фрагментом.</p><h3>Назначение и контекст</h3><p>Функция позволяет проверить суффикс текста.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма вызова:</p><pre><code class="language-axiom">ENDSWITH(&lt;текст&gt;, &lt;фрагмент&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;фрагмент&gt;</code></td><td>Передайте строку типа STRING, которую требуется найти в исходном тексте.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает логическое значение типа BOOLEAN: TRUE при выполнении условия и FALSE в остальных случаях.</p><h3>Правила и пограничные случаи</h3><p>Сравнение точное, с учётом регистра, без нормализации Unicode. Пустой фрагмент всегда даёт TRUE, в том числе для пустого текста. Непустой фрагмент в пустом тексте даёт FALSE.</p><h3>Диагностика</h3><p>Неверные типы и число аргументов отклоняются при проверке программы.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT ENDSWITH("Abc", "bc")
+PRINT ENDSWITH("Abc", "BC")
+PRINT ENDSWITH("", "")</code></pre><p>Программа выводит:</p><pre><code>TRUE
+FALSE
+TRUE</code></pre></section>
+<section class="article-section" id="instr"><h2>INSTR</h2><p>INSTR — встроенная функция языка Axiom, которая возвращает позицию первого вхождения фрагмента в строку.</p><h3>Назначение и контекст</h3><p>Функция нужна, когда важно не только наличие фрагмента, но и его расположение.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма 1:</p><pre><code class="language-axiom">INSTR(&lt;текст&gt;, &lt;фрагмент&gt;)</code></pre><p>Форма 2:</p><pre><code class="language-axiom">INSTR(&lt;начальная позиция&gt;, &lt;текст&gt;, &lt;фрагмент&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;фрагмент&gt;</code></td><td>Передайте строку типа STRING, которую требуется найти в исходном тексте.</td></tr><tr><td><code>&lt;начальная позиция&gt;</code></td><td>Передайте целое число типа INTEGER с начальной позицией. Позиции отсчитываются от 1.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает целое число типа INTEGER — позицию начала совпадения в кодовых единицах UTF-16, считая от 1. Если совпадения нет, результат равен 0.</p><h3>Правила и пограничные случаи</h3><p>Без начальной позиции поиск начинается с 1. Сравнение учитывает регистр. Начало больше длины текста плюс 1 даёт 0. Пустой фрагмент возвращает начальную позицию, если она не больше длины текста плюс 1; поэтому INSTR("", "") возвращает 1.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает, если явно заданное начало меньше 1.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT INSTR("abcabc", "bc")
+PRINT INSTR(4, "abcabc", "bc")
+PRINT INSTR("", "")</code></pre><p>Программа выводит:</p><pre><code>2
+5
+1</code></pre></section>
+<section class="article-section" id="instrrev"><h2>INSTRREV</h2><p>INSTRREV — встроенная функция языка Axiom, которая возвращает позицию вхождения фрагмента, найденного при поиске справа налево.</p><h3>Назначение и контекст</h3><p>Функция позволяет найти последнее вхождение или искать назад от заданной позиции.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма 1:</p><pre><code class="language-axiom">INSTRREV(&lt;текст&gt;, &lt;фрагмент&gt;)</code></pre><p>Форма 2:</p><pre><code class="language-axiom">INSTRREV(&lt;начальная позиция&gt;, &lt;текст&gt;, &lt;фрагмент&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;фрагмент&gt;</code></td><td>Передайте строку типа STRING, которую требуется найти в исходном тексте.</td></tr><tr><td><code>&lt;начальная позиция&gt;</code></td><td>Передайте положительное целое число типа INTEGER с правой границей поиска в кодовых единицах UTF-16. Без аргумента используется длина строки; значение больше длины ограничивается её длиной.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает целое число типа INTEGER — позицию начала найденного фрагмента, считая от 1. Если совпадения нет, результат равен 0.</p><h3>Правила и пограничные случаи</h3><p>Сравнение учитывает регистр. Пустой фрагмент возвращает правую границу поиска плюс 1. Особый случай: INSTRREV("", "") без начальной позиции возвращает 0, а INSTRREV(1, "", "") возвращает 1.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает, если явно заданное начало меньше 1.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT INSTRREV("abcabc", "bc")
+PRINT INSTRREV(3, "abcabc", "bc")
+PRINT INSTRREV("", "")
+PRINT INSTRREV(1, "", "")</code></pre><p>Программа выводит:</p><pre><code>5
+2
+0
+1</code></pre></section>
+<section class="article-section" id="substrcount"><h2>SUBSTRCOUNT</h2><p>SUBSTRCOUNT — встроенная функция языка Axiom, которая возвращает количество неперекрывающихся вхождений фрагмента в строку.</p><h3>Назначение и контекст</h3><p>Функция подходит для подсчёта слов, разделителей или других точных фрагментов.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма вызова:</p><pre><code class="language-axiom">SUBSTRCOUNT(&lt;текст&gt;, &lt;фрагмент&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;фрагмент&gt;</code></td><td>Передайте непустую строку типа STRING с подсчитываемым фрагментом.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает неотрицательное целое число типа INTEGER.</p><h3>Правила и пограничные случаи</h3><p>Сравнение учитывает регистр. После совпадения поиск продолжается за его концом; перекрывающиеся вхождения не считаются. Пустой текст с непустым фрагментом даёт 0.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает, если искомый фрагмент пуст.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT SUBSTRCOUNT("aaaa", "aa")
+PRINT SUBSTRCOUNT("", "a")</code></pre><p>Программа выводит:</p><pre><code>2
+0</code></pre></section>
+<section class="article-section" id="replace"><h2>REPLACE</h2><p>REPLACE — встроенная функция языка Axiom, которая возвращает строку, заменив все точные вхождения одного фрагмента другим.</p><h3>Назначение и контекст</h3><p>Функция нужна для обычной текстовой замены без регулярного выражения.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма вызова:</p><pre><code class="language-axiom">REPLACE(&lt;текст&gt;, &lt;исходный текст&gt;, &lt;новый текст&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;исходный текст&gt;</code></td><td>Передайте непустую строку типа STRING с заменяемым фрагментом.</td></tr><tr><td><code>&lt;новый текст&gt;</code></td><td>Передайте строку типа STRING с текстом замены. Пустая строка удаляет найденные фрагменты.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING после замены.</p><h3>Правила и пограничные случаи</h3><p>Сравнение учитывает регистр. Если совпадений нет или исходный текст пуст, возвращается исходный текст. Новые фрагменты не обрабатываются повторно в том же вызове.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает при пустом заменяемом фрагменте, даже если исходный текст пуст.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT REPLACE("A a A", "A", "B")
+PRINT REPLACE("banana", "na", "")</code></pre><p>Программа выводит:</p><pre><code>B a B
+ba</code></pre></section>
+<section class="article-section" id="replacemany"><h2>REPLACEMANY</h2><p>REPLACEMANY — встроенная функция языка Axiom, которая возвращает строку после одновременной замены нескольких фрагментов по двум массивам правил.</p><h3>Назначение и контекст</h3><p>Функция позволяет применить набор замен за один проход без повторной обработки уже вставленного текста.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма вызова:</p><pre><code class="language-axiom">REPLACEMANY(&lt;текст&gt;, &lt;исходные элементы&gt;, &lt;новые элементы&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;исходные элементы&gt;</code></td><td>Передайте одномерный массив строк STRING() с заменяемыми непустыми фрагментами.</td></tr><tr><td><code>&lt;новые элементы&gt;</code></td><td>Передайте одномерный массив строк STRING() с соответствующими заменами. Длина должна совпадать с длиной массива исходных фрагментов; нижние границы могут различаться.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING. Правила сопоставляются по порядку элементов массивов, а не по совпадению их индексов.</p><h3>Правила и пограничные случаи</h3><p>Сравнение учитывает регистр. В каждой позиции выигрывает самый длинный подходящий фрагмент; при равной длине выбирается первое правило. Текст замены не просматривается повторно. Пустые или невыделенные массивы трактуются как наборы без правил; при двух таких наборах результат совпадает с исходным текстом.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает при разных длинах наборов правил или пустой строке в массиве заменяемых фрагментов. Эти проверки выполняются и для пустого исходного текста.</p><h3>Пример</h3><pre><code class="language-axiom">DIM oldItems(5 TO 6) AS STRING
+DIM newItems(8 TO 9) AS STRING
+oldItems(5)="ab"
+oldItems(6)="a"
+newItems(8)="X"
+newItems(9)="Y"
+PRINT REPLACEMANY("aba", oldItems, newItems)</code></pre><p>Программа выводит:</p><pre><code>XY</code></pre></section><section class="article-section"><h2>См. также</h2><div class="link-list"><a href="string-functions.html">Строковые функции</a><a href="string-functions-slices-and-length.html">Длина строки и фрагменты</a><a href="string-functions-trim-and-case.html">Обрезка, регистр и разворот</a><a href="string-functions-build-and-split.html">Построение строк и массивы строк</a><a href="characters.html">Коды символов</a><a href="regex-functions.html">Регулярные выражения</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

@@ -1,39 +1,24 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom — Оператор REDIM</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="redim">
-<header class="topbar">
-    <div class="topbar__inner">
-        <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Справочник по реализованному языку Axiom</div>
-        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-    </div>
-</header>
-<div class="layout">
-    <aside class="sidebar">
-        <div class="sidebar__inner">
-            <nav id="manual-nav"></nav>
-        </div>
-    </aside>
-    <main class="content"><nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><a href="operator-reference.html">Операторы</a><span>/</span><span>Оператор REDIM</span></nav><p class="eyebrow">Справочная статья</p><h1 class="page-title">Оператор REDIM</h1><p class="lead"><code>REDIM</code> — оператор языка Axiom, который выделяет хранилище массива с указанными границами. Форма <code>REDIM PRESERVE</code> сохраняет элементы из области пересечения прежних и новых границ.</p>
-<section class="article-section"><h2>Контекст</h2><p>Оператор применяется к массиву, объявленному в программе, или к доступному полю массива. Тип элементов и ранг массива определены объявлением. Экранный или файловый режим не требуется.</p></section>
-<section class="article-section"><h2>Синтаксис</h2><pre><code class="language-axiom">REDIM &lt;массив&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;)</code></pre><pre><code class="language-axiom">REDIM PRESERVE &lt;массив&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;)</code></pre><p>Для многомерного массива пары границ всех измерений записываются через запятую.</p></section>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Оператор REDIM — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="redim"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор REDIM</span></nav>
+<p class="eyebrow">10 · Массивы</p><h1 class="page-title">Оператор REDIM</h1><p class="lead">REDIM — оператор Axiom для выделения массива с новыми границами. Без PRESERVE создаются значения по умолчанию; с PRESERVE сохраняются элементы в пересечении прежней и новой формы.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Контекст</h2><p>Целью служит объявленный изменяемый массив или его доступное массивное поле. Объявление заранее задаёт тип элементов и ранг; перераспределение меняет только границы и содержимое.</p></section>
+<section class="article-section"><h2>Синтаксис</h2><pre><code class="language-axiom">REDIM &lt;массив&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;)</code></pre><pre><code class="language-axiom">REDIM PRESERVE &lt;массив&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;)</code></pre><p>Для каждого измерения указывается отдельная пара границ. Пары следуют в порядке измерений и разделяются запятыми.</p></section>
 <section class="article-section"><h2>Параметры</h2><ul><li><code>&lt;массив&gt;</code> — изменяемое значение массива.</li><li>Нижняя и верхняя границы — целочисленные выражения с допустимыми индексами. Обе границы входят в диапазон.</li><li><code>PRESERVE</code> — необязательное ключевое слово сохранения элементов.</li></ul></section>
-<section class="article-section"><h2>Правила работы</h2><p>Обычный <code>REDIM</code> создаёт новое хранилище и задаёт элементам значения по умолчанию. Форма с <code>PRESERVE</code> копирует элементы с теми же индексами в области пересечения всех измерений; остальные элементы получают значения по умолчанию. Если пересечение пусто, старые значения не сохраняются.</p><p>Ранг и тип элементов не меняются. Поле фиксированного массива внутри записи <code>TYPE</code> перераспределять нельзя. Границы, пустые измерения и ограничения индексов описаны в разделе <a href="arrays-multidimensional.html">многомерных массивов</a>.</p></section>
-<section class="article-section"><h2>Диагностика</h2><ul><li><code>MB2011</code> — цель не является массивом.</li><li><code>MB2010</code> — цель объявлена неизменяемой.</li><li><code>MB2004</code> — число измерений не соответствует рангу массива.</li><li><code>MB2025</code> — цель является фиксированным полем массива в записи <code>TYPE</code>.</li></ul><p>Ошибки границ при выполнении описаны в <a href="arrays-diagnostics.html">диагностике массивов</a>.</p></section>
+<section class="article-section"><h2>Правила работы</h2><p>Обычная форма заменяет хранилище и заново задаёт начальные значения элементов. Форма <code>PRESERVE</code> переносит элементы с совпадающими индексами во всех измерениях. Новые позиции получают значения по умолчанию; при пустом пересечении ни один прежний элемент не переносится.</p><p>Тип элементов и число измерений остаются прежними. Фиксированное массивное поле <code>TYPE</code> не допускает перераспределения. Граничные случаи и пустые измерения рассматриваются отдельно. Связанные материалы: <a href="arrays-multidimensional.html">многомерных массивов</a>.</p></section>
+<section class="article-section"><h2>Диагностика</h2><ul><li><code>MB2011</code> — цель не является массивом.</li><li><code>MB2010</code> — цель объявлена неизменяемой.</li><li><code>MB2004</code> — число измерений не соответствует рангу массива.</li><li><code>MB2025</code> — цель является фиксированным полем массива в записи <code>TYPE</code>.</li></ul><p>Отказ неверных границ относится к времени выполнения; его условия приведены в диагностике массивов. Связанные материалы: <a href="arrays-diagnostics.html">диагностике массивов</a>.</p></section>
 <section class="article-section"><h2>Пример</h2><pre><code class="language-axiom">DIM values() AS INTEGER
 REDIM values(1 TO 2)
 values(1) = 10
 REDIM PRESERVE values(1 TO 3)
 PRINT values(1)
-PRINT values(3)</code></pre><p>Результат:</p><pre><code>10
-0</code></pre><p>Запускаемые примеры: <a href="../../samples/operators/redim/preserve_basic_usage.axm">сохранение элементов</a>, <a href="../../samples/operators/redim/empty_array.axm">пустой массив</a>.</p></section><section class="article-section"><h2>См. также</h2><div class="link-list"><a href="dim.html">DIM</a><a href="erase.html">ERASE</a><a href="arrays-dynamic.html">Изменение размеров массива</a></div></section><div id="page-pager" class="pager"></div></main>
-</div>
-<script src="scripts/manual.js"></script>
-</body>
-</html>
+PRINT values(3)</code></pre><p>Ожидаемый вывод:</p><pre><code>10
+0</code></pre><p>Связанные программы проверяют сохранение значений и пустую форму. Связанные материалы: <a href="../../samples/operators/redim/preserve_basic_usage.axm">сохранение элементов</a>, <a href="../../samples/operators/redim/empty_array.axm">пустой массив</a>.</p></section>
+<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="dim.html">DIM</a><a href="erase.html">ERASE</a><a href="arrays-dynamic.html">Изменение размеров массива</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

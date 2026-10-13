@@ -1,3 +1,4 @@
+using Axiom.Core;
 using Axiom.Syntax;
 
 namespace Axiom.Semantics;
@@ -169,6 +170,15 @@ public sealed partial class Binder
 
     private BoundStatement BindForStatement(ForStatementSyntax statement)
     {
+        if (statement.NextCounterIdentifier is { } nextCounter
+            && !string.Equals(nextCounter.Text, statement.Identifier.Text, StringComparison.OrdinalIgnoreCase))
+        {
+            _diagnostics.Report(
+                DiagnosticCodes.InvalidNextCounter,
+                $"Имя счётчика после NEXT '{nextCounter.Text}' должно совпадать с именем счётчика FOR '{statement.Identifier.Text}'.",
+                nextCounter.Location);
+        }
+
         var startExpression = BindExpression(statement.StartExpression);
 
         // Вариант B (сессия 1107): счётчик FOR всегда создаётся самим циклом и живёт

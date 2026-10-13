@@ -1,39 +1,35 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Оператор SLEEP</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="sleep">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Временная остановка программы</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-<main class="content">
-<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Операторы передачи управления</span><span>/</span><span>Оператор SLEEP</span></nav>
-<p class="eyebrow">Оператор</p>
-<h1 class="page-title">Оператор SLEEP</h1>
-<p class="lead"><code>SLEEP</code> — оператор языка Axiom, который временно приостанавливает выполнение программы. Оператор используют, когда программе нужно сделать короткую задержку, дать пользователю время увидеть результат или дождаться нажатия любой клавиши без ручного цикла ожидания.</p>
+<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<title>Оператор SLEEP — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="sleep"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор SLEEP</span></nav>
+<p class="eyebrow">Оператор</p><h1 class="page-title">Оператор SLEEP</h1><p class="lead"><code>SLEEP</code> — оператор языка Axiom, который приостанавливает программу на заданное время или до нажатия клавиши. Его используют для паузы в интерактивном цикле и ожидания перед закрытием результата.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+
 
 <section class="article-section">
 <h2>Два режима ожидания</h2>
-<p><code>SLEEP</code> с числовым аргументом ждёт указанное число миллисекунд. <code>SLEEP</code> без аргумента ждёт, пока в очереди клавиатуры появится любая клавиша, и забирает эту клавишу из очереди ввода.</p>
+<p>Числовой аргумент задаёт задержку в миллисекундах. Вызов без аргумента ждёт любую клавишу и удаляет её из очереди ввода.</p>
 </section>
 
         <section class="article-section">
-<h2>Где работает оператор SLEEP</h2>
-<p>Оператор <code>SLEEP</code> работает в любом контексте программы и не зависит от графического режима <code>SCREEN</code>. Задержка и ожидание клавиши доступны в текстовом, графическом и консольном режимах одинаково.</p>
+<h2>Контекст выполнения</h2>
+<p>Оба режима ожидания доступны в консоли, текстовом и графическом окне. Оператор не требует предварительного вызова <code>SCREEN</code>.</p>
 </section>
 
         <section class="article-section">
 <h2>Синтаксис</h2>
-<pre><code class="language-axiom">SLEEP [milliseconds]</code></pre>
+<pre><code class="language-axiom">SLEEP</code></pre>
+<pre><code class="language-axiom">SLEEP &lt;миллисекунды&gt;</code></pre>
 </section>
 
         <section class="article-section">
-<h2>Параметры и части синтаксиса</h2>
-<p><code>milliseconds</code> задаёт длительность паузы в миллисекундах. Выражение приводится к типу <code>LONG</code> и должно давать неотрицательное значение, которое помещается в поддерживаемый диапазон ожидания среды выполнения.</p>
-<p>Если <code>milliseconds</code> не указан, оператор переходит в режим ожидания любой клавиши.</p>
+<h2>Параметры</h2>
+<p>Выражение <code>milliseconds</code> приводится к <code>LONG</code>. Результат должен быть неотрицательным и помещаться в поддерживаемый диапазон ожидания среды выполнения.</p>
+<p>При пропуске аргумента используется ожидание клавиши, а не нулевая задержка.</p>
 </section>
 
         <section class="article-section">
@@ -46,10 +42,13 @@
 <li>Аргумент оператора <code>SLEEP</code> задаёт длительность паузы в миллисекундах.</li>
 </ul>
 </section>
+<section class="article-section"><h2>Диапазон и выполнение обработчиков</h2><p>Аргумент длительности приводится к <code>LONG</code> и должен лежать в 0..2147483647 миллисекунд включительно. <code>SLEEP</code> без аргумента и <code>SLEEP</code> с длительностью — разные формы: первая извлекает клавишу, вторая только ожидает время.</p>
+<p>Во время ожидания <code>SLEEP</code> не вызывает обработчики ON KEY и ON MOUSE; они получают управление на границах инструкций после завершения ожидания. Остановка программы может прервать ожидание. Для наблюдения за событиями используйте цикл с короткими задержками.</p></section>
+
 
         <section class="article-section">
 <h2>Диагностика</h2>
-<p>Диагностика времени выполнения <code>MB3007</code> возникает, если длительность отрицательная или слишком большая для текущей реализации ожидания.</p>
+<p>Отрицательная или слишком большая длительность сообщает диагностику времени выполнения <code>MB3007</code>.</p>
 </section>
 
         <section class="article-section">
@@ -73,4 +72,7 @@ PRINT "Готово"</code></pre>
 <div class="link-list"><a href="loops.html">Операторы передачи управления</a><a href="do-loop.html">Оператор цикла DO ... LOOP</a><a href="inkey.html">Функция INKEY</a><a href="keypress.html">Функция KEYPRESS</a><a href="keydown.html">Функция KEYDOWN</a></div>
 </section>
 
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
+
+
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

@@ -23,7 +23,7 @@ public sealed class ConsoleLineBoundaryTests
         {
             var exit = CliApp.Run(["run", path], stdout, stderr, new StringReader("Анна\n"));
             Assert.Equal(0, exit);
-            Assert.Equal("Имя: Ответ: Анна" + Environment.NewLine + "Готово" + Environment.NewLine, stdout.ToString());
+            Assert.Equal("Имя: ? Ответ: Анна" + Environment.NewLine + "Готово" + Environment.NewLine, stdout.ToString());
             Assert.Equal("", stderr.ToString());
         });
     }

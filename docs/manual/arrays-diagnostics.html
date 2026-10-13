@@ -1,117 +1,26 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Ошибки массивов</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="arrays-diagnostics">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Ошибки при объявлении и использовании массивов</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="arrays.html">Массивы</a>
-                <span>/</span>
-                <span>Ошибки</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Ошибки массивов</h1>
-            <p class="lead">Раздел ошибок массивов описывает, что проверить при ошибках границ, измерений и выделения памяти: невыделенный динамический массив, индекс за пределами границ или несоответствие формы среза выбранному измерению.</p>
-
-            <section class="article-section">
-                <h2>Условия возникновения ошибок</h2>
-                <p>Сначала проверьте, выделена ли память через <code>REDIM</code> и не был ли массив очищен через <code>ERASE</code>. Затем сравните индекс с границами <code>LBOUND</code> и <code>UBOUND</code>. Для многомерных массивов отдельно проверьте номер измерения и форму передаваемого среза.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>MB2011: имя не является массивом</h2>
-                <p><code>MB2011</code> означает, что смысловая проверка нашла обращение к массиву там, где имя на самом деле не объявлено как массив.</p>
-                <h3>Когда возникает</h3>
-                <ul>
-                    <li>оператор <code>ERASE</code> применён к обычной переменной;</li>
-                    <li>оператор <code>REDIM</code> применён к скалярной переменной, константе или значению другого типа.</li>
-                </ul>
-                <h3>Что проверить</h3>
-                <ul>
-                    <li>объявлено ли имя через <code>DIM</code> со скобками массива;</li>
-                    <li>не опечатано ли имя в самом операторе;</li>
-                    <li>не является ли цель полем записи, для которого действуют отдельные правила массивов фиксированной длины.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>MB3005: массив ещё не выделен</h2>
-                <p><code>MB3005</code> означает, что программа пытается использовать массив как уже готовый к обращению по индексам, хотя память для элементов ещё не выделена.</p>
-                <h3>Когда возникает</h3>
-                <ul>
-                    <li>объявлен динамический массив, но <code>REDIM</code> ещё не выполнялся;</li>
-                    <li>массив был очищен через <code>ERASE</code>;</li>
-                    <li>вызвана функция, которой нужны реальные границы массива, например <code>ARRAYBOUNDS</code>.</li>
-                </ul>
-                <h3>Что проверить</h3>
-                <ul>
-                    <li>выполняется ли <code>REDIM</code> до первого обращения к элементам;</li>
-                    <li>не очищается ли массив раньше нужного места;</li>
-                    <li>подходит ли здесь <code>ARRAYISALLOCATED</code> для защитной проверки.</li>
-                </ul>
-                <p><code>ARRAYRANK</code> может работать с ещё не выделенным динамическим массивом, потому что число измерений известно по объявлению. Функции, которым нужны фактические границы, требуют выделенной памяти.</p>
-                <p>Сообщение функции указывает её имя и имя аргумента, содержащего невыделенный массив. Например, у <code>ARRAYRESHAPE</code> различаются аргументы <code>source</code> и <code>template</code>, а у <code>ARRAYCONCAT</code> — <code>left</code> и <code>right</code>.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>MB3007: индекс или форма не подходят</h2>
-                <p><code>MB3007</code> означает, что индекс, номер измерения или форма переданного значения не согласованы с массивом.</p>
-                <h3>Когда возникает</h3>
-                <ul>
-                    <li>индекс меньше <code>LBOUND</code> или больше <code>UBOUND</code>;</li>
-                    <li>указано измерение, которого у массива нет;</li>
-                    <li>функция <code>ARRAYPUSH</code> или <code>ARRAYINSERT</code> должна увеличить верхнюю границу <code>2147483647</code>; отказ происходит до изменения массива;</li>
-                    <li>в <code>ARRAYPUSH</code>, <code>ARRAYINSERT</code>, <code>ARRAYPOP</code>, <code>ARRAYREMOVE</code> или похожую функцию передан срез неподходящей формы.</li>
-                </ul>
-                <h3>Что проверить</h3>
-                <ul>
-                    <li>совпадает ли индекс с включительным диапазоном границ;</li>
-                    <li>правильно ли выбран номер измерения;</li>
-                    <li>совпадает ли форма вставляемого или удаляемого среза с остальными измерениями массива.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/functions/arraybounds/multidimensional_shape.axm">Проверка формы через ARRAYBOUNDS</a></li>
-                    <li><a href="../../samples/functions/arrayinsert/multidimensional_by_column.axm">ARRAYINSERT для двумерного массива</a></li>
-                    <li><a href="../../samples/operators/redim/empty_array.axm">Пустой динамический массив и последующее выделение памяти</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="arrays-dynamic.html">Динамические массивы, REDIM, ERASE</a>
-                    <a href="arrays-indexing.html">Индексирование массивов</a>
-                    <a href="arrays-functions.html">ARRAY-функции</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Диагностика массивов — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="arrays-diagnostics"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Диагностика массивов</span></nav>
+<p class="eyebrow">10 · Массивы</p><h1 class="page-title">Диагностика массивов</h1><p class="lead">Раздел диагностики массивов объясняет ошибки типов, выделения, индексов и формы массива. Ошибки проверки программы обнаруживаются до запуска; ошибки времени выполнения можно перехватить оператором TRY.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Ошибки проверки программы</h2><p>MB2011 означает, что REDIM или ERASE получает значение, не являющееся массивом. MB2004 означает неверное число индексов либо отсутствие обязательного измерения у многомерной встроенной функции. MB2003 сообщает о несовместимом типе элемента, индекса, массивного аргумента или функции обработки. MB2025 запрещает REDIM и ERASE для фиксированного массивного поля TYPE.</p></section>
+<section class="article-section"><h2>MB3002: индексирование за границами</h2><p>Прямое обращение values(index) и диапазон TO требуют координат внутри включительных границ. Если индекс или конец диапазона выходит за границы, возникает MB3002. Для каждого измерения проверьте LBOUND и UBOUND.</p></section>
+<section class="article-section"><h2>MB3005: невыделенное хранилище или неверные границы</h2><p>DIM без границ и ERASE оставляют массив невыделенным. Операции доступа к элементам и фактическим границам такого массива вызывают MB3005. ARRAYLENGTH, ARRAYRANK, ARRAYISALLOCATED и ARRAYCLONE допускают это состояние. MB3005 также возникает для обратных границ DIM или REDIM, кроме 1 TO 0.</p></section>
+<section class="article-section"><h2>MB3007: договор встроенной операции</h2><p>MB3007 возникает при недопустимом номере измерения, отрицательном количестве ARRAYSLICE/ARRAYTAKE/ARRAYSKIP, индексе ARRAYINSERT/ARRAYREMOVE вне допустимого диапазона, пустом ARRAYPOP, несовместимых границах добавляемого среза и несовпадающем числе элементов ARRAYRESHAPE. Этот код также запрещает изменение размера представления и нижнюю границу -2147483648.</p><p>ARRAYPUSH и ARRAYINSERT отклоняют рост верхней границы 2147483647 до изменения массива. Пустые ARRAYSUM, ARRAYMIN, ARRAYMAX и ARRAYAVERAGE вызывают MB3007.</p></section>
+<section class="article-section"><h2>Другие ошибки</h2><p>MB3008 означает переполнение числового результата или преобразования индекса. MB3009 возникает при пустом значении функции обработки. Исключение, возникшее внутри пользовательской функции обработки, передаётся наружу с её кодом.</p></section>
+<section class="article-section"><h2>Пример перехвата</h2><pre><code class="language-axiom">DIM values(1 TO 2) AS INTEGER
+TRY
+    PRINT values(3)
+CATCH err
+    PRINT err.Code
+END TRY
+PRINT "continued"</code></pre><p>Ожидаемый вывод:</p><pre><code>MB3002
+continued</code></pre></section>
+<section class="article-section"><h2>См. также</h2><p><a href="arrays-dynamic.html">Выделение</a> · <a href="arrays-indexing.html">Индексы</a> · <a href="arrays-functions.html">Базовые функции</a> · <a href="arrays-and-builtins.html">Обработка</a> · <a href="try.html">TRY</a></p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

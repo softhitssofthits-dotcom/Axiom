@@ -1,78 +1,13 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Одномерные массивы наглядно</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="arrays-1d-visual">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Простое визуальное объяснение одномерного массива</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-<main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Массивы и составные данные</span><span>/</span><span>Наглядные схемы</span></nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Одномерные массивы наглядно</h1>
-            <p class="lead">Раздел одномерных массивов наглядно показывает, как представить массив глазами и как читать его индексы — визуальная схема для понимания индексации.</p>
-
-            <section class="article-section">
-                <h2>Линия ячеек и индексы</h2>
-                <p>Одномерный массив удобно представлять как одну линию ячеек. У массива есть имя, а у каждой ячейки есть свой индекс. Когда программа обращается к элементу массива, она указывает имя массива и номер той ячейки, которую нужно прочитать или изменить.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Схема хранения</h2>
-                <pre><code class="language-axiom">DIM scores(1 TO 5) AS INTEGER</code></pre>
-                <pre><code class="language-text">индекс:   1    2    3    4    5
-        [ ]  [ ]  [ ]  [ ]  [ ]</code></pre>
-                <p>Здесь <code>scores</code> — имя массива, а диапазон <code>1 TO 5</code> задаёт допустимые индексы. В каждой ячейке хранится одно значение типа <code>INTEGER</code>.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Обращение к элементу</h2>
-                <pre><code class="language-axiom">scores(3) = 99
-PRINT scores(3)</code></pre>
-                <p>Запись <code>scores(3)</code> означает: «элемент массива <code>scores</code> с индексом <code>3</code>».</p>
-                <pre><code class="language-text">индекс:   1    2    3    4    5
-        [ ]  [ ] [99] [ ]  [ ]</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Границы не обязаны начинаться с 1</h2>
-                <pre><code class="language-axiom">DIM temperatures(-2 TO 2) AS DOUBLE</code></pre>
-                <pre><code class="language-text">индекс:  -2   -1    0    1    2
-        [ ]  [ ]  [ ]  [ ]  [ ]</code></pre>
-                <p>В Axiom границы массива включаются в диапазон. Поэтому массив может начинаться не только с <code>1</code>, но и с <code>0</code>, отрицательного числа или другого значения, которое подходит задаче.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Применение одномерных массивов</h2>
-                <p>Такой массив хорошо подходит для последовательностей, где элементы идут в один ряд: список имён, цены товаров, результаты вычислений, строки файла, оценки ученика, значения датчиков и похожие данные.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="arrays-1d.html">Одномерные массивы</a>
-                    <a href="arrays-2d-visual.html">Двумерные массивы наглядно</a>
-                    <a href="arrays-indexing.html">Индексирование</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Схема одномерного массива — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="arrays-1d-visual"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Схема одномерного массива</span></nav>
+<p class="eyebrow">10 · Массивы</p><h1 class="page-title">Схема одномерного массива</h1><p class="lead">Раздел содержит ссылку на схему индексирования массива ранга 1, размещённую вместе с его правилами и примерами.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Схема и правила</h2><p><a href="arrays-1d.html#schema">Открыть схему и правила индексирования</a>.</p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

@@ -1,73 +1,58 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Операторы GET и PUT</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="get-put">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Графика</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Операторы GET и PUT</span>
-            </nav>
-            <p class="eyebrow">Операторы</p>
-            <h1 class="page-title">Операторы GET и PUT</h1>
-            <p class="lead"><code>GET</code> и <code>PUT</code> — операторы языка Axiom, которые копируют прямоугольный блок пикселей между активной графической поверхностью и двумерным числовым массивом. Оператор <code>GET</code> читает блок в массив, а оператор <code>PUT</code> возвращает содержимое массива обратно на экран или на холст.</p>
+<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<title>Операторы GET и PUT — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="get-put"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Операторы GET и PUT</span></nav>
+<p class="eyebrow">Операторы</p><h1 class="page-title">Операторы GET и PUT</h1><p class="lead"><code>GET</code> и <code>PUT</code> — операторы языка Axiom для обмена прямоугольными блоками пикселей с двумерным числовым массивом. Оператор <code>GET</code> сохраняет блок в массив, а оператор <code>PUT</code> рисует сохранённый блок.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+
 
             <section class="article-section" id="get">
                 <h2>Что такое GET и PUT</h2>
-                <p><code>GET</code> — оператор языка Axiom, который считывает прямоугольный блок пикселей из активной графической поверхности в двумерный числовой массив.</p>
-                <p><code>PUT</code> — оператор языка Axiom, который рисует такой буфер обратно на активной графической поверхности.</p>
+                <p>Оператор <code>GET</code> считывает прямоугольник активной графической поверхности в подготовленный массив.</p>
+                <p>Оператор <code>PUT</code> выводит массив на активную поверхность с выбранным действием наложения.</p>
             </section>
 
             <section class="article-section">
                 <h2>Когда использовать GET и PUT</h2>
-                <p>Операторы <code>GET</code> и <code>PUT</code> нужны для старого блочного обмена: сохранить кусок изображения, временно убрать его, вернуть позже, перенести в другое место или наложить разными побитовыми действиями.</p>
-                <p>В новых полноцветных сценах чаще удобнее использовать <code>IMAGE</code> и <code>SPRITE</code>, но для небольших индексных блоков, отладки и операций над палитровыми пикселями операторы <code>GET</code> и <code>PUT</code> остаются полезными и в <code>SCREEN</code>, и в <code>CANVAS</code>.</p>
+                <p>Буфер позволяет сохранить участок изображения, восстановить его позже, перенести в другую точку или выполнить побитовое наложение.</p>
+                <p>Для полноцветных ресурсов предназначены <a href="images.html">IMAGE</a> и <a href="sprites.html">SPRITE</a>. Массивы <code>GET</code> и <code>PUT</code> хранят индексные цвета в обоих графических режимах.</p>
             </section>
 
             <section class="article-section">
                 <h2>Где работают операторы GET и PUT</h2>
-                <p>Операторы <code>GET</code> и <code>PUT</code> работают, если программа уже вызвала оператор <code>SCREEN</code> с графическим режимом <code>1..10</code> или оператор <code>CANVAS</code>.</p>
-                <p>В графическом режиме <code>SCREEN</code> операторы <code>GET</code> и <code>PUT</code> используют тот же координатный договор, что и остальные screen-операторы: на них влияют <code>VIEW</code> и <code>WINDOW</code>.</p>
-                <p>В режиме <code>CANVAS</code> операторы <code>GET</code> и <code>PUT</code> принимают мировые координаты. Эти координаты проходят через <code>CAMERA</code>, а затем обрезаются активным <code>VIEWPORT</code>.</p>
+                <p>Перед обменом откройте графический <code>SCREEN 1..10</code> или холст <code>CANVAS</code>.</p>
+                <p>В режиме <code>SCREEN</code> координаты преобразуются текущими операторами <code>VIEW</code> и <code>WINDOW</code>.</p>
+                <p>На холсте <code>CANVAS</code> передаются мировые координаты. Камера преобразует их, а область <code>VIEWPORT</code> ограничивает доступные пиксели.</p>
             </section>
 
             <section class="article-section">
                 <h2>Синтаксис</h2>
-<pre><code class="language-axiom">GET (x1, y1)-(x2, y2), buffer
-GET STEP (x1, y1)-STEP (x2, y2), buffer
-
-PUT (x, y), buffer
-PUT STEP (x, y), buffer
-PUT (x, y), buffer, PSET
-PUT (x, y), buffer, PRESET
-PUT (x, y), buffer, AND
-PUT (x, y), buffer, OR
-PUT (x, y), buffer, XOR</code></pre>
+<pre><code class="language-axiom">GET (&lt;начальный X&gt;, &lt;начальный Y&gt;)-(&lt;конечный X&gt;, &lt;конечный Y&gt;), &lt;буфер&gt;</code></pre>
+<pre><code class="language-axiom">GET STEP (&lt;начальный X&gt;, &lt;начальный Y&gt;)-STEP (&lt;конечный X&gt;, &lt;конечный Y&gt;), &lt;буфер&gt;</code></pre>
+<pre><code class="language-axiom">PUT (&lt;координата X&gt;, &lt;координата Y&gt;), &lt;буфер&gt;</code></pre>
+<pre><code class="language-axiom">PUT STEP (&lt;координата X&gt;, &lt;координата Y&gt;), &lt;буфер&gt;</code></pre>
+<pre><code class="language-axiom">PUT (&lt;координата X&gt;, &lt;координата Y&gt;), &lt;буфер&gt;, PSET</code></pre>
+<pre><code class="language-axiom">PUT (&lt;координата X&gt;, &lt;координата Y&gt;), &lt;буфер&gt;, PRESET</code></pre>
+<pre><code class="language-axiom">PUT (&lt;координата X&gt;, &lt;координата Y&gt;), &lt;буфер&gt;, AND</code></pre>
+<pre><code class="language-axiom">PUT (&lt;координата X&gt;, &lt;координата Y&gt;), &lt;буфер&gt;, OR</code></pre>
+<pre><code class="language-axiom">PUT (&lt;координата X&gt;, &lt;координата Y&gt;), &lt;буфер&gt;, XOR</code></pre>
             </section>
 
             <section class="article-section" id="put">
-                <h2>Параметры и части синтаксиса</h2>
+                <h2>Параметры</h2>
                 <table>
                     <thead>
                         <tr><th>Часть</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>x1</code>, <code>y1</code>, <code>x2</code>, <code>y2</code></td><td>Координаты двух углов прямоугольника для <code>GET</code>. В <code>SCREEN</code> это screen-координаты с учётом <code>VIEW</code> и <code>WINDOW</code>. В <code>CANVAS</code> это мировые координаты.</td></tr>
-                        <tr><td><code>x</code>, <code>y</code></td><td>Левая верхняя точка, куда оператор <code>PUT</code> начнёт выводить буфер. В <code>CANVAS</code> это тоже мировая точка.</td></tr>
+                        <tr><td><code>&lt;начальный X&gt;</code>, <code>&lt;начальный Y&gt;</code>, <code>&lt;конечный X&gt;</code>, <code>&lt;конечный Y&gt;</code></td><td>Передайте координаты двух углов прямоугольника для <code>GET</code>. В <code>SCREEN</code> это экранные координаты с учётом <code>VIEW</code> и <code>WINDOW</code>. В <code>CANVAS</code> это мировые координаты. Каждый перечисленный аргумент имеет тип <code>LONG</code>.</td></tr>
+                        <tr><td><code>&lt;координата X&gt;</code>, <code>&lt;координата Y&gt;</code></td><td>Передайте координаты левой верхней точки, куда оператор <code>PUT</code> начнёт выводить буфер. В <code>CANVAS</code> это тоже мировая точка. Каждый перечисленный аргумент имеет тип <code>LONG</code>.</td></tr>
                         <tr><td><code>STEP</code></td><td>Слово <code>STEP</code> задаёт относительные координаты от текущей графической позиции. У <code>GET</code> вторая точка со словом <code>STEP</code> считается относительно уже вычисленной первой точки. У <code>PUT STEP</code> точка считается относительно текущей графической позиции.</td></tr>
-                        <tr><td><code>buffer</code></td><td>Двумерный числовой массив ранга <code>2</code>. Первая размерность задаёт ширину блока по оси <code>X</code>, вторая размерность задаёт высоту блока по оси <code>Y</code>.</td></tr>
+                        <tr><td><code>&lt;буфер&gt;</code></td><td>Передайте двумерный числовой массив ранга <code>2</code>. Первая размерность задаёт ширину блока по оси <code>X</code>, вторая размерность задаёт высоту блока по оси <code>Y</code>.</td></tr>
                         <tr><td><code>PSET</code>, <code>PRESET</code>, <code>AND</code>, <code>OR</code>, <code>XOR</code></td><td>Действие оператора <code>PUT</code>. Если действие не указано, по умолчанию используется <code>XOR</code>.</td></tr>
                     </tbody>
                 </table>
@@ -75,9 +60,9 @@ PUT (x, y), buffer, XOR</code></pre>
 
             <section class="article-section">
                 <h2>Что именно делает оператор</h2>
-                <p>Оператор <code>GET</code> сначала вычисляет прямоугольник чтения, затем считывает пиксели из активной поверхности и записывает их в видимую форму массива <code>buffer</code>.</p>
-                <p>Оператор <code>PUT</code> читает всю видимую форму массива <code>buffer</code> и выводит её в активную поверхность, начиная с указанной точки.</p>
-                <p>Буфер хранит не полноцветные значения, а индексные цвета <code>0..255</code>. Это один и тот же договор и для <code>SCREEN</code>, и для <code>CANVAS</code>.</p>
+                <p>Оператор <code>GET</code> вычисляет прямоугольник и заполняет видимую форму массива <code>buffer</code> считанными пикселями.</p>
+                <p>Оператор <code>PUT</code> читает всю видимую форму массива и располагает её начиная с указанной точки.</p>
+                <p>В каждом элементе буфера хранится индекс <code>0..255</code>. Полноцветные значения не сохраняются в этом формате даже при обмене с <code>CANVAS</code>.</p>
             </section>
 
             <section class="article-section">
@@ -98,13 +83,15 @@ PUT (x, y), buffer, XOR</code></pre>
 
             <section class="article-section">
                 <h2>Правила работы и ограничения</h2>
-                <p>Буфер у операторов <code>GET</code> и <code>PUT</code> должен быть уже выделенным двумерным числовым массивом. Допустимы типы элементов <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code> и <code>DECIMAL</code>.</p>
-                <p>Оператор <code>GET</code> требует, чтобы видимая ширина и высота массива точно совпадали с размерами прямоугольника чтения. Если размеры не совпадают, выполнение сообщает ошибку.</p>
-                <p>При записи оператор <code>PUT</code> приводит каждое значение буфера к индексному цвету по правилу <code>ABS(TRUNC(value)) MOD 256</code>.</p>
-                <p>Если часть прямоугольника выходит за границы активной поверхности или за пределы текущей области вывода, результат обрезается. Пиксели вне доступной области оператор <code>GET</code> читает как <code>0</code>, а оператор <code>PUT</code> туда ничего не рисует.</p>
-                <p>В режиме <code>CANVAS</code> операторы <code>GET</code> и <code>PUT</code> не вводят отдельную старую систему <code>VIEW</code> или <code>WINDOW</code>. Они подчиняются уже существующим <code>CAMERA</code> и <code>VIEWPORT</code>.</p>
-                <p>Для проверки записанного пикселя функция <code>POINT(x, y)</code> в режиме <code>CANVAS</code> принимает физические координаты холста. Например, после <code>VIEWPORT (10, 6)-(15, 11)</code> и <code>CAMERA 100, 50</code> оператор <code>PUT (100, 50), buffer, PSET</code> записывает первый элемент в физическую точку <code>(10, 6)</code>; её цвет читается через <code>POINT(10, 6)</code>. Смещение камеры при этом чтении повторно не применяется.</p>
+                <p>Массив должен быть выделен заранее и иметь два измерения. Поддерживаются элементы <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code> и <code>DECIMAL</code>.</p>
+                <p>Видимые ширина и высота массива должны точно соответствовать прямоугольнику <code>GET</code>. Несовпадение размеров вызывает ошибку выполнения.</p>
+                <p>При выводе каждый элемент нормализуется по формуле <code>ABS(TRUNC(value)) MOD 256</code>.</p>
+                <p>За пределами поверхности или области вывода <code>GET</code> записывает в буфер <code>0</code>, а <code>PUT</code> пропускает рисование. Доступная часть прямоугольника обрабатывается.</p>
+                <p>На холсте действуют камера и <code>VIEWPORT</code>; настройки <code>VIEW</code> и <code>WINDOW</code> относятся к экрану <code>SCREEN</code>.</p>
+                <p>Для проверки результата на холсте укажите физическую точку в <code>POINT(x, y)</code>. При <code>VIEWPORT (10, 6)-(15, 11)</code> и <code>CAMERA 100, 50</code> вызов <code>PUT (100, 50), buffer, PSET</code> записывает первый элемент в <code>(10, 6)</code>. Вызов <code>POINT(10, 6)</code> читает этот пиксель без повторного смещения камеры.</p>
             </section>
+<section class="article-section"><h2>Типы координат и момент показа</h2><p>Все координаты GET и PUT приводятся к <code>LONG</code>. Массив должен быть выделенным двумерным числовым массивом; оператор GET не выделяет память и не меняет его размеры. Обе границы захватываемого прямоугольника включаются. GET только читает поверхность и не показывает новый кадр. PUT изменяет активную страницу <code>SCREEN</code> или рабочий кадр <code>CANVAS</code>; для показа холста требуется <code>PRESENT</code>.</p></section>
+
 
             <section class="article-section">
                 <h2>Пример</h2>
@@ -129,7 +116,7 @@ SLEEP</code></pre>
 
             <section class="article-section">
                 <h2>Запускаемые примеры</h2>
-                <p>Эти файлы можно открыть в <code>Electron IDE</code> и запустить как короткие проверки поведения операторов <code>GET</code> и <code>PUT</code>.</p>
+                <p>Перечисленные программы можно запустить в Electron IDE для проверки чтения буфера, наложения и обрезки.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/operators/get/rectangle_capture.axm">GET: захват прямоугольной области в SCREEN</a></li>
                     <li><a href="../../samples/operators/get/canvas_block_capture.axm">GET: захват блока в CANVAS</a></li>
@@ -157,9 +144,8 @@ SLEEP</code></pre>
                 </div>
             </section>
 
-            <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+
+
+
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

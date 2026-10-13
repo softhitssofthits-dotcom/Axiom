@@ -1,65 +1,16 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Обозначения синтаксиса</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="notation">
-<header class="topbar">
-    <div class="topbar__inner">
-        <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Справочник по реализованному языку Axiom</div>
-        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-    </div>
-</header>
-<div class="layout">
-    <aside class="sidebar">
-        <div class="sidebar__inner">
-            <nav id="manual-nav"></nav>
-        </div>
-    </aside>
-    <main class="content">
-        <nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Обозначения синтаксиса</span></nav>
-        <p class="eyebrow">Справочное приложение</p><h1 class="page-title">Обозначения синтаксиса</h1>
-        <p class="lead">Раздел определяет обозначения, используемые в формальных записях справочника. Метапеременные и знаки необязательных частей описывают синтаксис; они не являются текстом программы.</p>
-        <section class="article-section" id="symbols"><h2>Условные обозначения</h2>
-            <table><thead><tr><th>Обозначение</th><th>Значение</th></tr></thead><tbody>
-                <tr><td><code>PRINT</code>, <code>AS</code>, <code>END IF</code></td><td>Ключевые слова. В справочнике записываются заглавными буквами.</td></tr>
-                <tr><td><code>&lt;имя&gt;</code>, <code>&lt;выражение&gt;</code></td><td>Метапеременные. Вместо них записывается имя, выражение или другая часть, указанная в описании параметров.</td></tr>
-                <tr><td><code>[STEP &lt;шаг&gt;]</code></td><td>Необязательная часть. Квадратные скобки не переносятся в программу.</td></tr>
-                <tr><td><code>;</code>, <code>,</code>, <code>(</code>, <code>)</code></td><td>Знаки, которые записываются буквально, если входят в выбранную форму синтаксиса.</td></tr>
-                <tr><td><code>|</code> внутри перечня вариантов</td><td>Разделитель альтернатив в справочной записи. Например, <code>[;|,]</code> обозначает необязательный выбор точки с запятой или запятой.</td></tr>
-                <tr><td><code>...</code> в описании блока</td><td>Пропущенные инструкции или повторяемые элементы. Смысл уточняется на странице конструкции.</td></tr>
-            </tbody></table>
-        </section>
-        <section class="article-section" id="forms"><h2>Формы синтаксиса</h2>
-            <p>Разные формы конструкции приводятся отдельными блоками. Описание параметров определяет тип каждого выражения, единицы измерения, допустимые значения и значение по умолчанию для необязательного аргумента.</p>
-            <pre><code class="language-axiom">FOR &lt;счётчик&gt; = &lt;начало&gt; TO &lt;конец&gt; [STEP &lt;шаг&gt;]
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Условные обозначения синтаксиса — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="notation"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Условные обозначения синтаксиса</span></nav>
+<p class="eyebrow">Справочное приложение</p><h1 class="page-title">Условные обозначения синтаксиса</h1><p class="lead">Раздел условных обозначений объясняет формальные записи справочника. Обозначения показывают части конструкции, которые нужно подставить, и не являются готовой программой.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="symbols"><h2>Обозначения</h2><table><thead><tr><th>Запись</th><th>Как читать</th></tr></thead><tbody><tr><td><code>PRINT</code>, <code>AS</code></td><td>Ключевые слова записываются буквально. Регистр не меняет смысл.</td></tr><tr><td><code>&lt;имя&gt;</code>, <code>&lt;выражение&gt;</code></td><td>Подставьте имя или выражение, описанное в параметрах. Угловые скобки в программу не переносятся.</td></tr><tr><td><code>[STEP &lt;шаг&gt;]</code></td><td>Необязательная часть. Квадратные скобки в программу не переносятся.</td></tr><tr><td><code>[;|,]</code></td><td>Необязательный выбор между двумя разделителями.</td></tr><tr><td><code>(</code>, <code>)</code>, <code>,</code>, <code>;</code></td><td>Знаки входят в программу, если указаны в выбранной форме.</td></tr><tr><td><code>...</code></td><td>Повторение или пропущенная часть; смысл уточняется рядом с записью.</td></tr></tbody></table></section><section class="article-section" id="forms"><h2>Форма и пример</h2><p>Формальная запись использует подставляемые части:</p><pre><code class="language-axiom">FOR &lt;счётчик&gt; = &lt;начало&gt; TO &lt;конец&gt; [STEP &lt;шаг&gt;]
     &lt;инструкции&gt;
-NEXT</code></pre>
-            <p>Без части <code>STEP</code> шаг цикла равен <code>1</code>. Формальная запись отличается от программы-примера:</p>
-            <pre><code class="language-axiom">FOR i = 1 TO 3
-    PRINT i
-NEXT</code></pre>
-            <p>Результат:</p><pre><code>1
-2
-3</code></pre>
-        </section>
-        <section class="article-section" id="signatures"><h2>Справочные подписи функций</h2>
-            <p>В компактных подписях используются имена аргументов, например <code>LEN(text)</code>. Имя <code>text</code> обозначает строковое выражение, а не обязательное имя переменной. Обозначение <code>T</code> в подписи функции массива означает тип элемента; <code>T()</code> — массив элементов этого типа.</p>
-            <p>Записи <code>result = ...</code> и <code>text = ...</code> показывают использование результата. Они не требуют, чтобы переменная называлась <code>result</code> или <code>text</code>. В запускаемой программе переменная объявляется отдельно.</p>
-        </section>
-        <section class="article-section" id="examples"><h2>Примеры и диагностика</h2>
-            <p>Блок «Результат» содержит ожидаемый вывод приведённой программы. Раздел «Запускаемые примеры» содержит ссылки на файлы <code>.axm</code>. Диагностика описывает условия возникновения конкретной ошибки; наличие кода ошибки не изменяет синтаксис конструкции.</p>
-        </section>
-        <section class="article-section"><h2>См. также</h2><div class="link-list">
-            <a href="getting-started.html">Структура программы</a><a href="reference.html">Указатель</a>
-            <a href="for.html">Оператор FOR</a><a href="diagnostics.html">Диагностика</a></div></section>
-        <div id="page-pager" class="pager"></div>
-    </main>
-</div>
-<script src="scripts/manual.js"></script>
-</body>
-</html>
+NEXT</code></pre><p>В программе вместо них стоят конкретные значения и инструкции:</p><pre><code class="language-axiom">FOR index = 1 TO 3
+    PRINT index
+NEXT</code></pre></section><section class="article-section" id="signatures"><h2>Подписи функций</h2><p>В формальной подписи <code>LEN(&lt;текст&gt;)</code> запись <code>&lt;текст&gt;</code> обозначает строковый аргумент. Подставьте строковый литерал, переменную или выражение; переменная не обязана называться «текст». Обозначение <code>T</code> используется для типа элемента массива, <code>U</code> — для типа результата преобразования, <code>A</code> — для типа аккумулятора. Несколько поддерживаемых форм показываются отдельными блоками. Все аргументы конкретной полной формы обязательны.</p></section><section class="article-section" id="examples"><h2>Пример и результат</h2><p>Блок результата показывает ожидаемый вывод. Ссылки на <code>.axm</code> открывают запускаемые примеры. Формальная запись с угловыми скобками предназначена для чтения синтаксиса и не запускается как исходник.</p></section><section class="article-section"><h2>См. также</h2><div class="link-list"><a href="reference.html">Указатели</a><a href="getting-started.html">Первая программа</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

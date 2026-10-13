@@ -1,95 +1,22 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Циклы</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="loops">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Повторение блоков программы</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <span>Циклы</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Циклы</h1>
-            <p class="lead">Раздел циклов описывает операторы повторения блоков программы: FOR, WHILE и DO ... LOOP. Цикл FOR изменяет счётчик в заданном диапазоне; WHILE проверяет условие перед итерацией; DO ... LOOP допускает проверку перед итерацией, после неё или повторение без условия. Оператор CONTINUE пропускает оставшуюся часть текущей итерации.</p>
-
-            <section class="article-section">
-                <h2>Какая часть программы повторяется</h2>
-                <p>Если число повторений выражается через счётчик, обычно подходит <code>FOR ... NEXT</code>. Если перед каждым проходом нужно сначала проверить условие, берут <code>WHILE ... END WHILE</code>. Если условие удобнее поставить в начале или в конце, либо нужен выход из середины тела, используют семейство <code>DO ... LOOP</code>.</p>
-                <ul>
-                    <li><code>FOR</code> повторяет тело по диапазону значений счётчика;</li>
-                    <li><code>WHILE</code> проверяет условие до входа в тело и может не выполниться ни разу;</li>
-                    <li><code>DO ... LOOP</code> поддерживает формы с <code>WHILE</code>, <code>UNTIL</code>, постусловием и <code>EXIT DO</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Выбор формы</h2>
-                <p>Счётный цикл хорош там, где программа заранее знает границы. Предусловный цикл удобен для обработки состояния, которое может быть уже завершено перед первым проходом. <code>DO ... LOOP</code> нужен, когда тело должно выполниться хотя бы один раз или когда естественная точка выхода находится внутри тела.</p>
-                <pre><code class="language-axiom">DIM i AS INTEGER = 0
-
-DO
-    PRINT i
-    i = i + 1
-
-    IF i = 3 THEN
-        EXIT DO
-    END IF
-LOOP</code></pre>
-                <p>В этом примере условие выхода связано не с заголовком цикла, а с событием внутри тела. Поэтому <code>DO ... LOOP</code> читается естественнее, чем искусственная проверка в начале.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Основные темы</h2>
-                <div class="link-list">
-                    <a href="for.html">Оператор цикла FOR</a>
-                    <a href="while.html">Оператор цикла WHILE</a>
-                    <a href="do-loop.html">Оператор цикла DO ... LOOP</a>
-                    <a href="continue.html">Оператор CONTINUE</a>
-                </div>
-            </section>
-
-            <section class="article-section">
-                <h2>Условие завершения</h2>
-                <p>Условие цикла должно быть логическим выражением. Если условие не меняется внутри тела, цикл может стать бесконечным; для таких случаев в Axiom у <code>DO ... LOOP</code> есть явный выход <code>EXIT DO</code>.</p>
-                <p>Для пропуска отдельных итераций без выхода из цикла в Axiom используется оператор <code>CONTINUE</code> в одной из трёх форм: <code>CONTINUE FOR</code>, <code>CONTINUE WHILE</code> или <code>CONTINUE DO</code>. Каждая форма работает только с соответствующим типом цикла.</p>
-                <p>Предусловный цикл записывается как <code>WHILE ... END WHILE</code>. Оператор <code>EXIT DO</code> обеспечивает прямой выход из цикла <code>DO ... LOOP</code>.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="expressions-and-branching.html">Выражения и ветвление</a>
-                    <a href="for.html">Оператор цикла FOR</a>
-                    <a href="while.html">Оператор цикла WHILE</a>
-                    <a href="do-loop.html">Оператор цикла DO ... LOOP</a>
-                    <a href="continue.html">Оператор CONTINUE</a>
-                    <a href="if.html">Оператор IF</a>
-                    <a href="sleep.html">Оператор SLEEP</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Циклы — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="loops"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Циклы</span></nav>
+<p class="eyebrow">Глава 6</p><h1 class="page-title">Циклы</h1><p class="lead">Цикл — конструкция, которая повторяет блок инструкций. Раздел объединяет счётный цикл FOR, цикл с предварительным условием WHILE и формы DO … LOOP.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Повторение по счётчику</h2><p>Когда известен диапазон повторений, используйте <code>FOR</code>. Цикл создаёт собственный счётчик, последовательно изменяет его и заканчивается на границе диапазона:</p>
+<pre><code class="language-axiom">FOR index = 1 TO 3
+    PRINT index
+NEXT</code></pre><p>Результат:</p>
+<pre><code>1
+2
+3</code></pre><p>Счётчик доступен внутри цикла. Подробные правила шага, направления и границ собраны в статье <code>FOR</code>.</p></section>
+<section class="article-section"><h2>Повторение по условию</h2><p>Оператор <code>WHILE</code> проверяет условие до выполнения тела. Формы <code>DO … LOOP</code> позволяют проверить условие в начале или конце. Проверка в конце означает, что тело выполняется хотя бы один раз.</p><p>Условие должно иметь тип <code>BOOLEAN</code>. Если значения, от которых оно зависит, не меняются, цикл может продолжаться бесконечно.</p></section>
+<section class="article-section"><h2>Выход и продолжение</h2><p>Оператор <code>EXIT</code> завершает ближайший цикл указанного вида. Оператор <code>CONTINUE</code> пропускает остаток текущего прохода и переходит к следующему. У каждой формы есть собственный допустимый контекст; общего оператора выхода из любого цикла нет.</p></section>
+<section class="article-section"><h2>Операторы циклов</h2><div class="link-list"><a href="for.html">FOR … NEXT</a><a href="while.html">WHILE … END WHILE</a><a href="do-loop.html">DO … LOOP</a><a href="exit.html">EXIT FOR и EXIT DO</a><a href="continue.html">CONTINUE</a></div></section>
+<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="branching.html">Условия</a><a href="arrays.html">Обход массивов</a><a href="keyboard-mouse-events.html">Интерактивные программы</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

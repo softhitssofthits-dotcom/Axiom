@@ -1,115 +1,26 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Индексирование массивов</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="arrays-indexing">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Полная и частичная форма обращения к массиву</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="arrays.html">Массивы</a>
-                <span>/</span>
-                <span>Индексирование</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Индексирование массивов</h1>
-            <p class="lead">Раздел индексирования массивов описывает, какую часть массива выбирает программа: если указаны все индексы, результатом становится один элемент; если часть измерений оставлена диапазоном, результатом становится видимая часть массива.</p>
-
-            <section class="article-section">
-                <h2>Индексирование</h2>
-                <p>Каждый индекс относится к своему измерению массива. В одномерном массиве один индекс выбирает элемент списка. В двумерном массиве первый индекс обычно выбирает строку, второй - столбец. В многомерном массиве порядок индексов совпадает с порядком измерений в объявлении <code>DIM</code> или <code>REDIM</code>.</p>
-                <p>Границы включительные: индекс должен быть не меньше <code>LBOUND</code> и не больше <code>UBOUND</code> для выбранного измерения.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Синтаксис</h2>
-                <pre><code class="language-axiom">&lt;переменная&gt; = &lt;массив&gt;(&lt;индекс&gt;)
-&lt;переменная&gt; = &lt;массив&gt;(&lt;индекс 1&gt;, &lt;индекс 2&gt;)
-&lt;переменная&gt; = &lt;массив&gt;(&lt;индекс 1&gt;, &lt;индекс 2&gt;, &lt;индекс 3&gt;)
-
-&lt;представление&gt; = &lt;массив&gt;(&lt;фиксированный индекс&gt;, &lt;начало&gt; TO &lt;конец&gt;)
-&lt;представление&gt; = &lt;массив&gt;(&lt;начало&gt; TO &lt;конец&gt;, &lt;начало&gt; TO &lt;конец&gt;)
-&lt;представление&gt; = &lt;массив&gt;(&lt;фиксированный индекс&gt;)</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Параметры и части синтаксиса</h2>
-                <ul>
-                    <li><code>&lt;массив&gt;</code> - имя переменной массива или выражение, которое возвращает массив.</li>
-                    <li><code>&lt;индекс&gt;</code> - целочисленное значение внутри границ соответствующего измерения.</li>
-                    <li><code>&lt;начало&gt; TO &lt;конец&gt;</code> - включительный диапазон индексов.</li>
-                    <li><code>&lt;представление&gt;</code> - результат частичного выбора. Обычно он указывает на ту же область данных, а не создаёт независимую копию.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Полная и частичная форма</h2>
-                <ul>
-                    <li>Полная форма указывает индекс для каждого измерения и возвращает конкретный элемент массива.</li>
-                    <li>Частичная форма выбирает строку, столбец, прямоугольный диапазон или другой видимый срез массива.</li>
-                    <li>Если нужна независимая копия выбранных данных, используйте <code>ARRAYCLONE</code> или создайте новый массив явно.</li>
-                    <li>Если индекс или диапазон выходит за границы, выполнение завершается диагностикой времени выполнения.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Пример полного и частичного индексирования</h2>
-                <pre><code class="language-axiom">' Ожидаемый вывод:
-' 20
-' 99
-DIM board(1 TO 2, 1 TO 3) AS INTEGER
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Индексирование массивов — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="arrays-indexing"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Индексирование массивов</span></nav>
+<p class="eyebrow">10 · Массивы</p><h1 class="page-title">Индексирование массивов</h1><p class="lead">Раздел индексирования описывает форму выражения Axiom, которая читает элемент массива или создаёт представление выбранной области. Полная запись содержит один индекс для каждого измерения.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Назначение и контекст</h2><p>Индексирование позволяет читать и изменять отдельные элементы. Фиксированный индекс убирает одно измерение результата; диапазон TO сохраняет измерение с выбранными границами. Если часть конечных измерений не указана, они входят в представление полностью. Для доступа нужен выделенный массив.</p></section>
+<section class="article-section"><h2>Синтаксис</h2><pre><code class="language-axiom">&lt;массив&gt;(&lt;индекс&gt;)</code></pre><pre><code class="language-axiom">&lt;массив&gt;(&lt;индекс 1&gt;, &lt;индекс 2&gt;)</code></pre><pre><code class="language-axiom">&lt;массив&gt;(&lt;фиксированный индекс&gt;)</code></pre><pre><code class="language-axiom">&lt;массив&gt;(&lt;фиксированный индекс&gt;, &lt;начало&gt; TO &lt;конец&gt;)</code></pre><pre><code class="language-axiom">&lt;массив&gt;(&lt;начало 1&gt; TO &lt;конец 1&gt;, &lt;начало 2&gt; TO &lt;конец 2&gt;)</code></pre></section>
+<section class="article-section"><h2>Аргументы индексирования</h2><p>Массив является переменной или выражением массивного типа. Каждый индекс и каждая граница диапазона — числовое выражение. Положение аргумента соответствует номеру измерения. Начало и конец диапазона включаются в результат. Дробные числовые значения усекаются к нулю; результат должен помещаться в INTEGER.</p></section>
+<section class="article-section"><h2>Результат и запись</h2><p>Если все измерения заданы одиночными индексами, результат имеет тип элемента. При оставшихся измерениях результат является массивным представлением. Представление сохраняет логические границы выбранных измерений; индексы не перенумеровываются.</p><p>Для присваивания отдельному элементу укажите все индексы. Для изменения области сначала сохраните представление в массивной переменной и меняйте его элементы либо вызовите ARRAYFILL. Изменение видно в исходном хранилище.</p></section>
+<section class="article-section"><h2>Диагностика</h2><p>MB2003 означает несовместимый тип элемента или индекса, MB2004 — неверное число индексов. MB3002 возникает, когда индекс или диапазон при индексировании выходит за границы. MB3005 возникает при доступе к невыделенному массиву либо при недопустимой паре границ. MB3007 сообщает о запрещённой нижней границе -2147483648; выход числового значения за диапазон INTEGER даёт MB3008.</p><p>Число аргументов чтения должно быть от 1 до ранга. Для записи отдельному элементу требуется ровно столько индексов, каков ранг массива.</p></section>
+<section class="article-section"><h2>Пример полного и частичного доступа</h2><pre><code class="language-axiom">DIM board(1 TO 2, 2 TO 4) AS INTEGER
+board(2, 3) = 20
 DIM rowPart() AS INTEGER
-
-board(1, 1) = 10
-board(1, 2) = 20
-board(2, 3) = 99
-
-PRINT board(1, 2)
-PRINT board(2, 3)
-
-rowPart = board(1)
-PRINT rowPart(2)</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/smoke/multidimensional-arrays/two_dimensional_grid.axm">Двумерная таблица и обращение по двум индексам</a></li>
-                    <li><a href="../../samples/smoke/multidimensional-arrays/partial_indexing_view.axm">Частичное индексирование как представление</a></li>
-                    <li><a href="../../samples/smoke/multidimensional-arrays/range_indexing_view.axm">Диапазонное индексирование как представление</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="arrays-slices.html">Срезы и представления</a>
-                    <a href="arrays-functions.html#lbound">LBOUND</a>
-                    <a href="arrays-functions.html#ubound">UBOUND</a>
-                    <a href="arrays-diagnostics.html">Ошибки массивов</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+rowPart = board(2)
+PRINT rowPart(3)
+rowPart(3) = 99
+PRINT board(2, 3)</code></pre><p>Ожидаемый вывод:</p><pre><code>20
+99</code></pre></section>
+<section class="article-section"><h2>См. также</h2><p><a href="arrays-slices.html">Срезы и представления</a> · <a href="arrays-2d.html">Двумерные массивы</a> · <a href="arrays-diagnostics.html">Диагностика</a></p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

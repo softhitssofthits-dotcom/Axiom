@@ -3205,6 +3205,12 @@ public sealed class AcceptanceProgramTests
 
     private static IInputProvider CreateAuditInputProvider(string relativePath)
     {
+        if (relativePath.Equals("samples/smoke/ide-acceptance/screen_mouse.axm", StringComparison.OrdinalIgnoreCase))
+        {
+            // Общий проход выполняет программу с графическим хостом и завершением по ESC.
+            // Физические события мыши проверяются отдельной ручной приёмкой.
+            return new QueueKeyboardInputProvider(keys: ["ESC"], pressedKeys: []);
+        }
         if (relativePath.Equals("samples/operators/input/cancel_wait.axm", StringComparison.OrdinalIgnoreCase))
         {
             // Общий проход проверяет запуск с корректным числовым вводом.

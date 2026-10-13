@@ -1,201 +1,260 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Тригонометрические функции</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="numeric-functions-trigonometry">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">SIN, COS, TAN, ATN, ATN2, ASIN, ACOS, гиперболические функции</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный указатель</a>
-                <span>/</span>
-                <a href="numeric-functions.html">Числовые функции</a>
-                <span>/</span>
-                <span>Тригонометрические функции</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Тригонометрические функции</h1>
-            <p class="lead">Раздел тригонометрических функций описывает средства <code>SIN</code>, <code>COS</code>, <code>TAN</code>, <code>ATN</code>, <code>ATN2</code>, <code>ASIN</code>, <code>ACOS</code> и гиперболические функции — прямые, обратные и гиперболические вычисления с углами. Все функции возвращают значение типа <code>DOUBLE</code>, а углы в Axiom задаются в радианах.</p>
-
-            <section class="article-section" id="sin">
-                <h2>SIN</h2>
-                <p>Функция <code>SIN</code> возвращает синус угла.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = SIN(value)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> задаёт угол в радианах.</p>
-            </section>
-
-            <section class="article-section" id="cos">
-                <h2>COS</h2>
-                <p>Функция <code>COS</code> возвращает косинус угла.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = COS(value)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> задаёт угол в радианах.</p>
-            </section>
-
-            <section class="article-section" id="tan">
-                <h2>TAN</h2>
-                <p>Функция <code>TAN</code> возвращает тангенс угла.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = TAN(value)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> задаёт угол в радианах.</p>
-            </section>
-
-            <section class="article-section" id="atn">
-                <h2>ATN</h2>
-                <p>Функция <code>ATN</code> возвращает арктангенс значения.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = ATN(value)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> задаёт числовое выражение, для которого нужно получить угол.</p>
-            </section>
-
-            <section class="article-section" id="atn2">
-                <h2>ATN2</h2>
-                <p>Функция <code>ATN2</code> возвращает угол по координатам точки на плоскости.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = ATN2(y, x)</code></pre>
-                <h3>Аргументы</h3><p><code>y</code> задаёт ординату точки, а <code>x</code> абсциссу. Функция учитывает квадрант и поэтому подходит для вычисления направления по двум координатам.</p>
-            </section>
-
-            <section class="article-section" id="asin">
-                <h2>ASIN</h2>
-                <p>Функция <code>ASIN</code> возвращает арксинус значения.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = ASIN(value)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> должен находиться в диапазоне от <code>-1</code> до <code>1</code> включительно.</p>
-            </section>
-
-            <section class="article-section" id="acos">
-                <h2>ACOS</h2>
-                <p>Функция <code>ACOS</code> возвращает арккосинус значения.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = ACOS(value)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> должен находиться в диапазоне от <code>-1</code> до <code>1</code> включительно.</p>
-            </section>
-
-            <section class="article-section" id="asinh">
-                <h2>ASINH</h2>
-                <p>Функция <code>ASINH</code> возвращает обратный гиперболический синус.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = ASINH(value)</code></pre>
-            </section>
-
-            <section class="article-section" id="acosh">
-                <h2>ACOSH</h2>
-                <p>Функция <code>ACOSH</code> возвращает обратный гиперболический косинус.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = ACOSH(value)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> должен быть не меньше <code>1</code>.</p>
-            </section>
-
-            <section class="article-section" id="atanh">
-                <h2>ATANH</h2>
-                <p>Функция <code>ATANH</code> возвращает обратный гиперболический тангенс.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = ATANH(value)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> должен лежать строго внутри интервала <code>(-1, 1)</code>.</p>
-            </section>
-
-            <section class="article-section" id="sinh">
-                <h2>SINH</h2>
-                <p>Функция <code>SINH</code> возвращает гиперболический синус.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = SINH(value)</code></pre>
-            </section>
-
-            <section class="article-section" id="cosh">
-                <h2>COSH</h2>
-                <p>Функция <code>COSH</code> возвращает гиперболический косинус.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = COSH(value)</code></pre>
-            </section>
-
-            <section class="article-section" id="tanh">
-                <h2>TANH</h2>
-                <p>Функция <code>TANH</code> возвращает гиперболический тангенс.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = TANH(value)</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Радианы и допустимые значения</h2>
-                <ul>
-                    <li>Все аргументы этой страницы интерпретируются как числовые значения и при необходимости приводятся к <code>DOUBLE</code>.</li>
-                    <li><code>SIN</code>, <code>COS</code> и <code>TAN</code> принимают угол в радианах. Если вы мыслите в градусах, переводите их в радианы вручную.</li>
-                    <li><code>ASIN</code>, <code>ACOS</code>, <code>ACOSH</code> и <code>ATANH</code> имеют ограничения по области допустимых значений. Нарушение этих ограничений даёт диагностику времени выполнения.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Пример тригонометрических вычислений</h2>
-                <p>В этом примере вычисляются синус, косинус и тангенс одного и того же угла, заданного в радианах:</p>
-                <pre><code class="language-axiom">DIM angle AS DOUBLE
-
-angle = 0.5
-PRINT SIN(angle)
-PRINT COS(angle)
-PRINT TAN(angle)</code></pre>
-                <p>Результат:</p>
-                <pre><code>0.479425538604203
-0.8775825618904129
-0.5463024898437905</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/functions/sin/basic_usage.axm">SIN: синус угла</a></li>
-                    <li><a href="../../samples/functions/cos/basic_usage.axm">COS: косинус угла</a></li>
-                    <li><a href="../../samples/functions/tan/basic_usage.axm">TAN: тангенс угла</a></li>
-                    <li><a href="../../samples/functions/atn/basic_usage.axm">ATN: арктангенс</a></li>
-                    <li><a href="../../samples/functions/atn2/basic_usage.axm">ATN2: угол по координатам</a></li>
-                    <li><a href="../../samples/functions/asin/basic_usage.axm">ASIN: арксинус</a></li>
-                    <li><a href="../../samples/functions/asin/out_of_range_error.axm">ASIN: значение вне диапазона</a></li>
-                    <li><a href="../../samples/functions/acos/basic_usage.axm">ACOS: арккосинус</a></li>
-                    <li><a href="../../samples/functions/acos/out_of_range_error.axm">ACOS: значение вне диапазона</a></li>
-                    <li><a href="../../samples/functions/asinh/basic_usage.axm">ASINH: обратный гиперболический синус</a></li>
-                    <li><a href="../../samples/functions/acosh/basic_usage.axm">ACOSH: обратный гиперболический косинус</a></li>
-                    <li><a href="../../samples/functions/acosh/less_than_one_error.axm">ACOSH: аргумент меньше 1</a></li>
-                    <li><a href="../../samples/functions/atanh/basic_usage.axm">ATANH: обратный гиперболический тангенс</a></li>
-                    <li><a href="../../samples/functions/atanh/out_of_range_error.axm">ATANH: значение вне диапазона</a></li>
-                    <li><a href="../../samples/functions/sinh/basic_usage.axm">SINH: гиперболический синус</a></li>
-                    <li><a href="../../samples/functions/cosh/basic_usage.axm">COSH: гиперболический косинус</a></li>
-                    <li><a href="../../samples/functions/tanh/basic_usage.axm">TANH: гиперболический тангенс</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="numeric-functions.html">Числовые функции</a>
-                    <a href="numeric-functions-roots-rounding.html">Корни, логарифмы и округление</a>
-                    <a href="numeric-functions-core.html">Базовые числовые функции</a>
-                    <a href="data-types-scalars.html">Скалярные типы и литералы</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                    <a href="examples.html">Примеры</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Тригонометрические функции — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="numeric-functions-trigonometry"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Тригонометрические функции</span></nav>
+<p class="eyebrow">Справочник языка</p><h1 class="page-title">Тригонометрические функции</h1><p class="lead">Раздел описывает встроенные тригонометрические и гиперболические функции. Синтаксис ниже относится к отдельным функциям; углы измеряются в радианах.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="sin"><h2>SIN</h2>
+<p>SIN — встроенная функция языка Axiom, которая возвращает синус угла.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет вычислить указанную математическую зависимость непосредственно в выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">SIN(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Угол задаётся числом в радианах. Допустимы INTEGER, LONG, DOUBLE и DECIMAL; для вычисления аргумент преобразуется в DOUBLE.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Значения результата лежат от −1 до 1.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3008 возникает при неконечном результате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT SIN(0)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>0</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="cos"><h2>COS</h2>
+<p>COS — встроенная функция языка Axiom, которая возвращает косинус угла.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет вычислить указанную математическую зависимость непосредственно в выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">COS(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Угол задаётся числом в радианах. Допустимы INTEGER, LONG, DOUBLE и DECIMAL; для вычисления аргумент преобразуется в DOUBLE.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Значения результата лежат от −1 до 1.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3008 возникает при неконечном результате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT COS(0)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>1</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="tan"><h2>TAN</h2>
+<p>TAN — встроенная функция языка Axiom, которая возвращает тангенс угла.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет вычислить указанную математическую зависимость непосредственно в выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">TAN(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Угол задаётся числом в радианах. Допустимы INTEGER, LONG, DOUBLE и DECIMAL; для вычисления аргумент преобразуется в DOUBLE.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Вблизи нечётных кратных π/2 результат чувствителен к точности аргумента. Конечное приближение π/2 не обязано дать диагностическую ошибку.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3008 возникает при неконечном результате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT TAN(0)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>0</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="atn"><h2>ATN</h2>
+<p>ATN — встроенная функция языка Axiom, которая возвращает арктангенс числа.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет вычислить указанную математическую зависимость непосредственно в выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">ATN(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте число, тангенсу которого соответствует искомый угол. Допустимы INTEGER, LONG, DOUBLE и DECIMAL; для вычисления аргумент преобразуется в DOUBLE.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Результат — угол в радианах в диапазоне от −π/2 до π/2.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3008 возникает при неконечном результате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT ATN(0)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>0</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="asin"><h2>ASIN</h2>
+<p>ASIN — встроенная функция языка Axiom, которая возвращает арксинус числа.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет вычислить указанную математическую зависимость непосредственно в выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">ASIN(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте значение синуса от −1 до 1 включительно. Допустимы INTEGER, LONG, DOUBLE и DECIMAL; для вычисления аргумент преобразуется в DOUBLE.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Результат — угол в радианах от −π/2 до π/2.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. Аргумент вне диапазона от −1 до 1 включительно вызывает MB3007. MB3008 возникает при неконечном результате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT ASIN(0)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>0</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="acos"><h2>ACOS</h2>
+<p>ACOS — встроенная функция языка Axiom, которая возвращает арккосинус числа.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет вычислить указанную математическую зависимость непосредственно в выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">ACOS(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте значение косинуса от −1 до 1 включительно. Допустимы INTEGER, LONG, DOUBLE и DECIMAL; для вычисления аргумент преобразуется в DOUBLE.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Результат — угол в радианах от 0 до π.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. Аргумент вне диапазона от −1 до 1 включительно вызывает MB3007. MB3008 возникает при неконечном результате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT ACOS(1)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>0</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="sinh"><h2>SINH</h2>
+<p>SINH — встроенная функция языка Axiom, которая возвращает гиперболический синус числа.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет вычислить указанную математическую зависимость непосредственно в выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">SINH(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте безразмерное числовое выражение. Допустимы INTEGER, LONG, DOUBLE и DECIMAL; для вычисления аргумент преобразуется в DOUBLE.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Большие по модулю аргументы могут переполнить результат.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3008 возникает при неконечном результате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT SINH(0)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>0</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="cosh"><h2>COSH</h2>
+<p>COSH — встроенная функция языка Axiom, которая возвращает гиперболический косинус числа.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет вычислить указанную математическую зависимость непосредственно в выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">COSH(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте безразмерное числовое выражение. Допустимы INTEGER, LONG, DOUBLE и DECIMAL; для вычисления аргумент преобразуется в DOUBLE.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Большие по модулю аргументы могут переполнить результат.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3008 возникает при неконечном результате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT COSH(0)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>1</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="tanh"><h2>TANH</h2>
+<p>TANH — встроенная функция языка Axiom, которая возвращает гиперболический тангенс числа.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет вычислить указанную математическую зависимость непосредственно в выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">TANH(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте безразмерное числовое выражение. Допустимы INTEGER, LONG, DOUBLE и DECIMAL; для вычисления аргумент преобразуется в DOUBLE.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Результат ограничен по модулю единицей.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3008 возникает при неконечном результате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT TANH(0)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>0</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="asinh"><h2>ASINH</h2>
+<p>ASINH — встроенная функция языка Axiom, которая возвращает обратный гиперболический синус числа.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет вычислить указанную математическую зависимость непосредственно в выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">ASINH(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте безразмерное числовое выражение. Допустимы INTEGER, LONG, DOUBLE и DECIMAL; для вычисления аргумент преобразуется в DOUBLE.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Допустимы числа любого знака.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3008 возникает при неконечном результате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT ASINH(0)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>0</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="acosh"><h2>ACOSH</h2>
+<p>ACOSH — встроенная функция языка Axiom, которая возвращает обратный гиперболический косинус числа.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет вычислить указанную математическую зависимость непосредственно в выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">ACOSH(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте безразмерное число не меньше 1. Допустимы INTEGER, LONG, DOUBLE и DECIMAL; для вычисления аргумент преобразуется в DOUBLE.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Значение меньше 1 не имеет допустимого вещественного результата.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. Аргумент меньше 1 вызывает MB3007. MB3008 возникает при неконечном результате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT ACOSH(1)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>0</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="atanh"><h2>ATANH</h2>
+<p>ATANH — встроенная функция языка Axiom, которая возвращает обратный гиперболический тангенс числа.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет вычислить указанную математическую зависимость непосредственно в выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">ATANH(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте безразмерное число строго между −1 и 1. Допустимы INTEGER, LONG, DOUBLE и DECIMAL; для вычисления аргумент преобразуется в DOUBLE.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Границы −1 и 1 исключены.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. Аргумент, равный −1 или 1 либо выходящий за эти границы, вызывает MB3007. MB3008 возникает при неконечном результате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT ATANH(0)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>0</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="atn2"><h2>ATN2</h2>
+<p>ATN2 — встроенная функция языка Axiom, которая возвращает угол направления точки относительно положительной оси x.</p>
+<h3>Назначение</h3>
+<p>В отличие от ATN отношения координат, функция сохраняет информацию о квадранте.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">ATN2(&lt;координата y&gt;, &lt;координата x&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте числовые координаты y и x в таком порядке. Единицы координат должны совпадать; обе координаты преобразуются в DOUBLE.</p>
+<h3>Результат</h3>
+<p>Результат DOUBLE измеряется в радианах от −π до π.</p>
+<h3>Правила и ограничения</h3>
+<p>ATN2(0, 0) возвращает 0; знак нуля DOUBLE может влиять на граничное направление.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3008 возникает при неконечном результате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT ATN2(0, 1)
+PRINT ATN2(0, 0)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>0
+0</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

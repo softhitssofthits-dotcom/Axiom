@@ -1,105 +1,94 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Оператор VIEW</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="view">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Графика</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Оператор VIEW</span>
-            </nav>
-            <p class="eyebrow">Оператор</p>
-            <h1 class="page-title">Оператор VIEW</h1>
-            <p class="lead"><code>VIEW</code> — оператор языка Axiom, который задаёт прямоугольную область графического экрана, внутри которой работает рисование. Родственная форма <code>VIEW PRINT</code> задаёт не область пикселей, а диапазон строк для экранного текста на графическом экране.</p>
+<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<title>Оператор VIEW — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="view"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор VIEW</span></nav>
+<p class="eyebrow">Оператор</p><h1 class="page-title">Оператор VIEW</h1><p class="lead"><code>VIEW</code> — оператор языка Axiom, который ограничивает рисование прямоугольной областью экрана. Форма <code>VIEW PRINT</code> независимо задаёт строки, отведённые для экранного текста.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+
 
             <section class="article-section">
                 <h2>Когда использовать VIEW</h2>
-                <p>Оператор <code>VIEW</code> нужен тогда, когда программе требуется ограничить физическую область экрана для рисования.</p>
-                <p>Оператор <code>VIEW PRINT</code> нужен тогда, когда программе требуется ограничить диапазон строк экранного текста на графическом экране.</p>
+                <p>Графическая область позволяет рисовать в части экрана, сохраняя остальное изображение. Её границы задаются физическими пикселями.</p>
+                <p>Текстовую область задают, когда вывод и прокрутка должны занимать только выбранные строки, например под графиком или рядом с ним.</p>
             </section>
 
         <section class="article-section">
-                <h2>Где работает оператор VIEW</h2>
-                <p>Оператор <code>VIEW</code> и оператор <code>VIEW PRINT</code> работают только после выбора графического режима <code>SCREEN 1..10</code>.</p>
+                <h2>Контекст выполнения</h2>
+                <p>Обе формы требуют графического режима <code>SCREEN 1..10</code>. Они не относятся к холсту <code>CANVAS</code>, у которого есть отдельный оператор <code>VIEWPORT</code>.</p>
             </section>
 
         <section class="article-section">
                 <h2>Синтаксис оператора VIEW</h2>
-<pre><code class="language-axiom">VIEW
-VIEW SCREEN (left, top)-(right, bottom)
-VIEW SCREEN (left, top)-(right, bottom), fillColor
-VIEW SCREEN (left, top)-(right, bottom), fillColor, borderColor
-VIEW (left, top)-(right, bottom)
-VIEW (left, top)-(right, bottom), fillColor
-VIEW (left, top)-(right, bottom), fillColor, borderColor</code></pre>
+<pre><code class="language-axiom">VIEW</code></pre>
+<pre><code class="language-axiom">VIEW SCREEN (&lt;левый операнд&gt;, &lt;верхняя граница&gt;)-(&lt;правый операнд&gt;, &lt;нижняя граница&gt;)</code></pre>
+<pre><code class="language-axiom">VIEW SCREEN (&lt;левый операнд&gt;, &lt;верхняя граница&gt;)-(&lt;правый операнд&gt;, &lt;нижняя граница&gt;), &lt;цвет заливки&gt;</code></pre>
+<pre><code class="language-axiom">VIEW SCREEN (&lt;левый операнд&gt;, &lt;верхняя граница&gt;)-(&lt;правый операнд&gt;, &lt;нижняя граница&gt;), &lt;цвет заливки&gt;, &lt;цвет границы&gt;</code></pre>
+<pre><code class="language-axiom">VIEW (&lt;левый операнд&gt;, &lt;верхняя граница&gt;)-(&lt;правый операнд&gt;, &lt;нижняя граница&gt;)</code></pre>
+<pre><code class="language-axiom">VIEW (&lt;левый операнд&gt;, &lt;верхняя граница&gt;)-(&lt;правый операнд&gt;, &lt;нижняя граница&gt;), &lt;цвет заливки&gt;</code></pre>
+<pre><code class="language-axiom">VIEW (&lt;левый операнд&gt;, &lt;верхняя граница&gt;)-(&lt;правый операнд&gt;, &lt;нижняя граница&gt;), &lt;цвет заливки&gt;, &lt;цвет границы&gt;</code></pre>
             </section>
 
         <section class="article-section" id="view-print">
                 <h2>Синтаксис оператора VIEW PRINT</h2>
 <pre><code class="language-axiom">VIEW PRINT
-VIEW PRINT topRow TO bottomRow</code></pre>
+VIEW PRINT &lt;верхняя строка&gt; TO &lt;нижняя строка&gt;</code></pre>
             </section>
 
         <section class="article-section">
-                <h2>Параметры и части синтаксиса</h2>
+                <h2>Параметры</h2>
                 <table>
                     <thead>
                         <tr><th>Часть</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>left</code>, <code>top</code>, <code>right</code>, <code>bottom</code></td><td>Координаты углов viewport.</td></tr>
-                        <tr><td><code>SCREEN</code></td><td>Слово <code>SCREEN</code> сохраняет абсолютные экранные координаты внутри viewport.</td></tr>
-                        <tr><td><code>fillColor</code></td><td>Необязательный цвет заливки внутренней области viewport.</td></tr>
-                        <tr><td><code>borderColor</code></td><td>Необязательный цвет рамки viewport.</td></tr>
-                        <tr><td><code>topRow</code>, <code>bottomRow</code></td><td>Верхняя и нижняя строка текстового окна <code>VIEW PRINT</code>.</td></tr>
+                        <tr><td><code>&lt;левая граница&gt;</code>, <code>&lt;верхняя граница&gt;</code>, <code>&lt;правая граница&gt;</code>, <code>&lt;нижняя граница&gt;</code></td><td>Передайте координаты углов графической области.</td></tr>
+                        <tr><td><code>SCREEN</code></td><td>Слово <code>SCREEN</code> сохраняет абсолютные экранные координаты внутри графической области.</td></tr>
+                        <tr><td><code>&lt;цвет заливки&gt;</code></td><td>Передайте необязательный цвет заливки внутренней части графической области.</td></tr>
+                        <tr><td><code>&lt;цвет границы&gt;</code></td><td>Передайте необязательный цвет рамки графической области.</td></tr>
+                        <tr><td><code>&lt;верхняя строка&gt;</code>, <code>&lt;нижняя строка&gt;</code></td><td>Передайте номера верхней и нижней строк текстового окна <code>VIEW PRINT</code>.</td></tr>
                     </tbody>
                 </table>
             </section>
 
         <section class="article-section">
                 <h2>Что делает оператор VIEW</h2>
-                <p>Форма <code>VIEW</code> без аргументов сбрасывает viewport и возвращает рисование ко всему экрану.</p>
-                <p>Форма <code>VIEW SCREEN (...)</code> ограничивает область рисования, но сохраняет координаты как абсолютные экранные координаты.</p>
-                <p>Форма <code>VIEW (...)</code> ограничивает область рисования и переводит координаты в систему viewport.</p>
-                <p>Если программа указала цвет заливки, оператор <code>VIEW</code> заполняет внутреннюю область viewport этим цветом. Если программа указала цвет рамки, оператор <code>VIEW</code> рисует рамку viewport.</p>
+                <p>Вызов <code>VIEW</code> без аргументов снимает ограничение и восстанавливает рисование по всему экрану.</p>
+                <p>Слово <code>SCREEN</code> сохраняет абсолютные экранные координаты после выбора области.</p>
+                <p>Без слова <code>SCREEN</code> координаты рисования отсчитываются в системе выбранной области.</p>
+                <p>Необязательный цвет заливки заполняет внутреннюю область; необязательный цвет рамки обводит её границу.</p>
             </section>
 
         <section class="article-section">
                 <h2>Что делает оператор VIEW PRINT</h2>
-                <p>Форма <code>VIEW PRINT</code> без аргументов сбрасывает текстовое окно и возвращает экранный текст ко всей доступной текстовой сетке графического режима.</p>
-                <p>Форма <code>VIEW PRINT topRow TO bottomRow</code> ограничивает строки, в которых прокручиваются последующие <code>PRINT</code>, <code>PRINT USING</code> и подтверждённый <code>INPUT</code> на графическом экране.</p>
+                <p>Вызов <code>VIEW PRINT</code> без аргументов возвращает тексту всю доступную сетку графического экрана.</p>
+                <p>Диапазон <code>topRow TO bottomRow</code> задаёт строки, внутри которых прокручивается вывод <code>PRINT</code>, <code>PRINT USING</code> и подтверждённый ввод <code>INPUT</code>.</p>
             </section>
 
         <section class="article-section">
                 <h2>Правила работы</h2>
-                <p>Оператор <code>VIEW</code> ограничивает физическую область вывода графических операторов. Оператор <code>WINDOW</code> поверх этого viewport может дополнительно задать логическую систему координат.</p>
-                <p>Оператор <code>VIEW PRINT</code> не управляет пикселями. Этот оператор управляет только текстовыми строками.</p>
+                <p>Оператор <code>VIEW</code> определяет физическую область вывода. Для собственной числовой шкалы внутри неё используйте <a href="window.html">WINDOW</a>.</p>
+                <p>Ограничение <code>VIEW PRINT</code> влияет на текстовые строки и не меняет область пиксельного рисования.</p>
                 <ul>
                     <li>форма <code>VIEW</code> без аргументов и форма <code>VIEW PRINT</code> без аргументов сбрасывают соответствующее ограничение и возвращают вывод ко всему экрану;</li>
-                    <li>координаты viewport задаются в пикселях; строки <code>VIEW PRINT</code> задаются в строках текстовой сетки текущего графического режима;</li>
-                    <li>недопустимые границы viewport или номера строк завершают выполнение диагностикой <code>MB3007</code>;</li>
+                    <li>координаты графической области задаются в пикселях; строки <code>VIEW PRINT</code> задаются в строках текстовой сетки текущего графического режима;</li>
+                    <li>недопустимые границы графической области или номера строк завершают выполнение диагностикой <code>MB3007</code>;</li>
                     <li>оператор <code>VIEW</code> действует только в графическом режиме: без активного <code>SCREEN 1..10</code> выполнение завершается диагностикой <code>MB3010</code>;</li>
-                    <li>заливка и рамка viewport становятся видимыми сразу после выполнения оператора <code>VIEW</code>, если указаны соответствующие цвета.</li>
+                    <li>заливка и рамка графической области становятся видимыми сразу после выполнения оператора <code>VIEW</code>, если указаны соответствующие цвета.</li>
                 </ul>
             </section>
+<section class="article-section"><h2>Границы областей и типы аргументов</h2><p>Координаты графической области приводятся к <code>LONG</code> и задаются в физических пикселях <code>SCREEN</code>. Правая и нижняя границы включаются. Левая граница не должна превышать правую, верхняя — нижнюю; область должна иметь непустое пересечение с экраном. Недопустимая область сообщает <code>MB3007</code>. Цвета заливки и рамки приводятся к <code>INTEGER</code> и обозначают нормализованные индексы палитры.</p>
+<p>Номера строк VIEW PRINT приводятся к <code>INTEGER</code>. Они начинаются с 1 и должны задавать упорядоченный диапазон внутри текущей текстовой сетки; неверный диапазон сообщает <code>MB3007</code>. VIEW PRINT не меняет графические координаты. Результат настройки и рисования относится к активной странице <code>SCREEN</code>.</p></section>
+
 
         <section class="article-section">
                 <h2>Диагностика</h2>
                 <ul>
                     <li><code>MB3010</code>: оператор <code>VIEW</code> или оператор <code>VIEW PRINT</code> вызваны без активного графического режима <code>SCREEN 1..10</code>.</li>
-                    <li><code>MB3007</code>: координаты viewport или номера строк имеют недопустимое значение.</li>
+                    <li><code>MB3007</code>: координаты графической области или номера строк имеют недопустимое значение.</li>
                 </ul>
             </section>
 
@@ -113,12 +102,12 @@ VIEW PRINT 2 TO 4
 LOCATE 2, 2
 PRINT "Текст внутри окна"
 SLEEP</code></pre>
-                <p>В этом примере оператор <code>VIEW</code> ограничивает физическую область рисования и одновременно задаёт заливку и рамку viewport. Затем оператор <code>VIEW PRINT</code> ограничивает строки экранного текста внутри графического режима.</p>
+                <p>Первый вызов выбирает область рисования, заливает её и рисует рамку. Второй вызов отводит экранному тексту отдельный диапазон строк.</p>
             </section>
 
         <section class="article-section">
                 <h2>Запускаемые примеры</h2>
-                <p>Эти файлы можно открыть в <code>Electron IDE</code> и запустить как короткие проверки поведения операторов <code>VIEW</code> и <code>VIEW PRINT</code>.</p>
+                <p>Откройте перечисленные программы в Electron IDE, чтобы проверить границы графической области и прокрутку текстовых строк.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/operators/view/screen_and_relative.axm">VIEW: экранные и относительные координаты</a></li>
                     <li><a href="../../samples/operators/view/invalid_bounds_error.axm">VIEW: ошибка недопустимых границ</a></li>
@@ -137,9 +126,8 @@ SLEEP</code></pre>
                 </div>
             </section>
 
-            <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+
+
+
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

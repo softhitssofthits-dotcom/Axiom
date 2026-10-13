@@ -1,5 +1,11 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+test('Диагностика NEXT сохраняет оба имени при переводе', () => {
+  const {DiagnosticLanguage}=require('../src/renderer/diagnostic-language');
+  const diagnostic={code:'MB2048',message:"Имя счётчика после NEXT 'wrong' должно совпадать с именем счётчика FOR 'i'."};
+  assert.equal(DiagnosticLanguage.text(diagnostic,'ru'), 'MB2048: '+diagnostic.message);
+  assert.equal(DiagnosticLanguage.text(diagnostic,'en'), "MB2048: NEXT counter 'wrong' must match FOR counter 'i'.");
+});
 const fs = require('node:fs');
 const path = require('node:path');
 const { DiagnosticLanguage } = require('../src/renderer/diagnostic-language');

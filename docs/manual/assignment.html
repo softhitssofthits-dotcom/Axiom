@@ -1,30 +1,21 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom — Присваивание</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="assignment">
-<header class="topbar">
-    <div class="topbar__inner">
-        <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Справочник по реализованному языку Axiom</div>
-        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-    </div>
-</header>
-<div class="layout">
-    <aside class="sidebar">
-        <div class="sidebar__inner">
-            <nav id="manual-nav"></nav>
-        </div>
-    </aside>
-    <main class="content"><nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><a href="operator-reference.html">Операторы</a><span>/</span><span>Присваивание</span></nav><p class="eyebrow">Справочная статья</p><h1 class="page-title">Присваивание</h1><p class="lead">Присваивание — инструкция языка Axiom, которая записывает вычисленное значение в переменную, элемент массива или поле записи.</p>
-<section class="article-section"><h2>Синтаксис</h2><pre><code class="language-axiom">&lt;цель&gt; = &lt;выражение&gt;</code></pre></section><section class="article-section"><h2>Части синтаксиса</h2><p><code>&lt;цель&gt;</code> — объявленная изменяемая переменная, доступный элемент массива или поле записи. <code>&lt;выражение&gt;</code> — выражение совместимого типа.</p></section><section class="article-section"><h2>Правила работы</h2><p>Правая часть вычисляется, затем результат записывается в цель. Допустимые неявные преобразования определены <a href="data-types-conversions.html">правилами преобразования типов</a>. Константе присвоить новое значение нельзя.</p><p>Знак <code>=</code> внутри выражения означает сравнение. Запись <code>FieldName := expression</code> применяется к именованным полям литерала записи <code>TYPE</code>; она не заменяет обычное присваивание.</p><p>Правила копирования записей и связи массивных представлений с исходным хранилищем определены на страницах <a href="type.html">TYPE</a> и <a href="arrays-slices.html">срезов массива</a>.</p></section><section class="article-section"><h2>Диагностика</h2><ul><li><code>MB2001</code> — имя цели или имя в выражении не объявлено.</li><li><code>MB2003</code> — тип значения несовместим с типом цели.</li><li><code>MB2010</code> — попытка присвоить значение константе.</li><li><code>MB3005</code> — хранилище индексируемого массива не выделено.</li><li><code>MB3007</code> — индекс элемента выходит за границы.</li></ul></section><section class="article-section"><h2>Пример</h2><pre><code class="language-axiom">DIM total AS INTEGER = 10
-total = total + 5
-PRINT total</code></pre><p>Результат:</p><pre><code>15</code></pre></section><section class="article-section"><h2>См. также</h2><div class="link-list"><a href="dim.html">DIM</a><a href="const.html">CONST</a><a href="arithmetic-and-logic.html">Выражения</a></div></section><div id="page-pager" class="pager"></div></main>
-</div>
-<script src="scripts/manual.js"></script>
-</body>
-</html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Присваивание — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="assignment"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Присваивание</span></nav>
+<p class="eyebrow">Справочная статья</p><h1 class="page-title">Присваивание</h1><p class="lead">Присваивание — инструкция языка Axiom, которая записывает значение выражения в объявленную переменную, элемент массива или поле записи.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Назначение и контекст</h2><p>Присваивание изменяет сохранённое значение, например после вычисления или ввода. Инструкция работает на верхнем уровне и внутри подпрограмм и блоков. Цель должна быть доступна в текущей области видимости и допускать изменение.</p></section>
+<section class="article-section" id="syntax"><h2>Синтаксис</h2><pre><code class="language-axiom">&lt;цель&gt; = &lt;выражение&gt;</code></pre></section>
+<section class="article-section"><h2>Цель и выражение</h2><p>Цель слева должна быть изменяемым местом хранения. Выражение справа задаёт вычисляемое новое значение и должно иметь совместимый тип. Сначала вычисляется правая часть, затем выполняется запись:</p>
+<pre><code class="language-axiom">DIM total AS INTEGER = 4
+total = total + 3
+PRINT total</code></pre><p>Результат:</p>
+<pre><code>7</code></pre></section>
+<section class="article-section"><h2>Правила работы</h2><p>Присваивание не объявляет имя и не позволяет изменить константу. Допустимые автоматические преобразования определены правилами типов.</p><p>Внутри выражения знак <code>=</code> проверяет равенство. Запись <code>&lt;поле&gt; := &lt;значение&gt;</code> относится к именованным полям литерала записи и не является общей формой присваивания.</p><p>Файловому ресурсу FILE нельзя присвоить другой файловый ресурс общей инструкцией присваивания. Записи и массивные представления имеют собственные правила копирования и связи с исходными данными. Они объяснены в соответствующих главах.</p></section>
+<section class="article-section"><h2>Диагностика</h2><ul><li><code>MB2001</code> — имя цели или имя в выражении не объявлено.</li><li><code>MB2003</code> — тип значения несовместим с типом цели.</li><li><code>MB2010</code> — попытка присвоить значение константе.</li><li><code>MB3005</code> — хранилище индексируемого массива не выделено.</li><li><code>MB3002</code> — индекс элемента выходит за границы.</li></ul></section>
+<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="dim.html">Объявление DIM</a><a href="const.html">Константы</a><a href="data-types-conversions.html">Преобразования</a><a href="type.html">Записи</a><a href="arrays-slices.html">Представления массива</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

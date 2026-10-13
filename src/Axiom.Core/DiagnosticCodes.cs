@@ -60,6 +60,7 @@ public static class DiagnosticCodes
     public const string NameClassCollision = "MB2045";
     public const string InvalidGraphicsContext = "MB2046";
     public const string UnusedVariable = "MB2047";
+    public const string InvalidNextCounter = "MB2048";
 
     // Время выполнения (MB3xxx)
     public const string DivisionByZero = "MB3001";

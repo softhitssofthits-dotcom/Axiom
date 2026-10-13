@@ -1,137 +1,59 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Построение строк и массивы строк</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="string-functions-build-and-split">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">REPEAT, STRING, PADLEFT, SPLIT, JOIN и связанные функции</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-<main class="content">
-<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Встроенные функции</span><span>/</span><span>Строки и символы</span></nav>
-<p class="eyebrow">Раздел</p>
-<h1 class="page-title">Построение строк и массивы строк</h1>
-<p class="lead">Раздел построения строк и массивов строк описывает функции <code>REPEAT</code>, <code>SPACE</code>, <code>STRING</code>, <code>PADLEFT</code>, <code>PADRIGHT</code>, <code>CENTER</code>, <code>INSERT</code>, <code>REMOVE</code>, <code>SPLIT</code> и <code>JOIN</code> — средства создания нового текста, дополнения до заданной ширины и перехода между строкой и массивом строк.</p>
-
-<section class="article-section">
-<p>Эти функции не ищут текст внутри строки, а создают новый текст: повторяют фрагмент, дополняют строку до заданной ширины, вставляют или удаляют часть строки, преобразуют коды символов и связывают строку с массивом строк.</p>
-</section>
-
-<section class="article-section" id="repeat">
-<h2>REPEAT, SPACE, STRING</h2>
-<p>Эти функции строят новую строку из повторов, пробелов или символа-заполнителя.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">result = REPEAT(text, count)
-result = SPACE(count)
-result = STRING(count, fillText)</code></pre>
-<h3>Аргументы</h3>
-<p><code>text</code> задаёт повторяемый фрагмент, <code>count</code> задаёт количество повторов или символов, <code>fillText</code> задаёт заполнитель для <code>STRING</code>.</p>
-<h3>Количество повторов</h3>
-<p><code>REPEAT</code> и <code>SPACE</code> допускают ноль, но не допускают отрицательное количество. <code>STRING</code> использует только первый символ заполнителя.</p>
-<p>Функция STRING повторяет первую единицу UTF-16 заполнителя. Если fillText начинается с эмодзи вне основной плоскости, повторяется только первая половина суррогатной пары. Для повтора всего фрагмента используйте REPEAT. При count = 0 функция STRING возвращает пустую строку, в том числе с пустым fillText; при положительном count пустой fillText вызывает MB3007.</p>
-<h3>Пример повтора и пробелов</h3>
-<pre><code class="language-axiom">PRINT REPEAT("ha", 3)
-PRINT "[" + SPACE(4) + "]"</code></pre>
-<p>Результат:</p>
-<pre><code>hahaha
-[    ]</code></pre>
-</section>
-
-<section class="article-section" id="padding">
-<h2>PADLEFT, PADRIGHT, CENTER</h2>
-<p>Эти функции дополняют строку до нужной ширины слева, справа или с двух сторон.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">result = PADLEFT(text, width[, fillText])
-result = PADRIGHT(text, width[, fillText])
-result = CENTER(text, width[, fillText])</code></pre>
-<h3>Аргументы</h3>
-<p><code>text</code> задаёт исходную строку, <code>width</code> задаёт итоговую ширину в символах, необязательный <code>fillText</code> задаёт заполнитель.</p>
-<h3>Ширина и заполнитель</h3>
-<p>Если строка уже не короче заданной ширины, результат остаётся равным исходной строке. Если <code>fillText</code> не указан, используется пробел.</p>
-<p>Ширина измеряется в единицах UTF-16 и должна быть неотрицательным целым числом. Заполнитель использует первую единицу UTF-16. Пустой явный fillText вызывает MB3007 даже тогда, когда дополнение не требуется. CENTER при нечётном числе добавляемых единиц оставляет дополнительную единицу справа.</p>
-<h3>Пример дополнения до ширины</h3>
-<pre><code class="language-axiom">PRINT PADLEFT("7", 3, "0")</code></pre>
-<p>Результат:</p>
-<pre><code>007</code></pre>
-</section>
-
-<section class="article-section" id="insertremove">
-<h2>INSERT и REMOVE</h2>
-<p>Функция <code>INSERT</code> вставляет фрагмент в строку, а <code>REMOVE</code> удаляет из неё часть символов.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">result = INSERT(text, start, fragment)
-result = REMOVE(text, start, count)</code></pre>
-<h3>Аргументы</h3>
-<p><code>text</code> задаёт исходную строку, <code>start</code> задаёт начальную позицию с единицы, <code>fragment</code> задаёт вставляемый текст, <code>count</code> задаёт число удаляемых символов.</p>
-<h3>Позиции в строке</h3>
-<p>Позиции считаются с единицы в единицах UTF-16. Вставка или удаление внутри суррогатной пары может разделить её. Позиция меньше 1 вызывает MB3007. INSERT с позицией правее конца строки добавляет fragment в конец. REMOVE с позицией правее конца строки сохраняет исходную строку; слишком большое count удаляет доступный остаток. count = 0 допустимо, отрицательное count вызывает MB3007.</p>
-<h3>Пример вставки и удаления</h3>
-<pre><code class="language-axiom">PRINT INSERT("abcd", 3, "-")
-PRINT REMOVE("abcdef", 2, 3)</code></pre>
-<p>Результат:</p>
-<pre><code>ab-cd
-aef</code></pre>
-</section>
-
-<section class="article-section" id="codes">
-<h2>ASC, ASCW, CHR и CHRW</h2>
-<p><code>ASC</code> и <code>CHR</code> используют таблицу кодов CP866: коды <code>0..255</code> относятся к таблице ASCII/IBM CP866. Для задач, где нужен именно Unicode-код символа, используйте <code>ASCW</code> и <code>CHRW</code>: эта пара не делает CP866-подмену в младшем диапазоне. Полная таблица находится на странице <a href="characters.html">Символы CHR, ASC, CHRW и ASCW</a>.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">code = ASC(text)
-unicodeCode = ASCW(text)
-charText = CHR(code)
-unicodeCharText = CHRW(unicodeCode)</code></pre>
-<h3>Пример кодов и символов</h3>
-<pre><code class="language-axiom">PRINT CHR(159)
-PRINT CHR(219)
-PRINT ASC("Я")
-PRINT ASC("█")
-PRINT ASCW("Я")
-PRINT CHRW(1071)
-PRINT ASCW(CHRW(128512))</code></pre>
-<p>Результат:</p>
-<pre><code>Я
-█
-159
-219
-1071
-Я
-128512</code></pre>
-</section>
-
-<section class="article-section" id="split">
-<h2>SPLIT и JOIN</h2>
-<p>Функция <code>SPLIT</code> разбивает строку на новый массив строк, а <code>JOIN</code> собирает строкочный массив обратно в одну строку.</p>
-<h3>Синтаксис</h3>
-<p>Разделение по запятой:</p>
-<pre><code class="language-axiom">parts = SPLIT(text)</code></pre>
-<p>Разделение по указанной строке:</p>
-<pre><code class="language-axiom">parts = SPLIT(text, separator)</code></pre>
-<p>Соединение через запятую:</p>
-<pre><code class="language-axiom">text = JOIN(parts)</code></pre>
-<p>Соединение через указанную строку:</p>
-<pre><code class="language-axiom">text = JOIN(parts, separator)</code></pre>
-<h3>Аргументы</h3>
-<p><code>text</code> задаёт исходную строку, <code>parts</code> задаёт массив строк, необязательный <code>separator</code> задаёт разделитель.</p>
-<h3>Пустая строка и пустой массив</h3>
-<p>Пустая исходная строка в <code>SPLIT</code> даёт пустой выделенный массив <code>1 TO 0</code>. Для невыделенного или пустого массива <code>JOIN</code> возвращает пустую строку.</p>
-<p>SPLIT сравнивает разделитель точно в UTF-16, с учётом регистра. Разделитель может состоять из нескольких единиц, включая целый эмодзи; пустой separator вызывает MB3007. Последовательные разделители и разделители на краях создают пустые элементы. JOIN принимает одномерный массив STRING, соединяет элементы по возрастанию индекса при любой нижней границе и допускает пустой separator. Массив другого ранга отклоняется при проверке типов.</p>
-<pre><code class="language-axiom">DIM parts() AS STRING
-parts = SPLIT("😀А😀😀Б😀", "😀")
-PRINT ARRAYLENGTH(parts) ' 5
-PRINT JOIN(parts, "|")  ' |А||Б|</code></pre>
-<p><a href="../../samples/functions/split/unicode_empty_parts.axm">Разделитель Unicode и пустые части</a></p>
-<h3>Пример разбиения и сборки</h3>
-<pre><code class="language-axiom">DIM parts() AS STRING
-parts = SPLIT("red,green,blue", ",")
-PRINT JOIN(parts, "/")</code></pre>
-<p>Результат:</p>
-<pre><code>red/green/blue</code></pre>
-</section>
-
-<section class="article-section"><h2>Запускаемые примеры</h2><ul class="resource-list"><li><a href="../../samples/functions/repeat/basic_usage.axm">REPEAT</a></li><li><a href="../../samples/functions/string/basic_usage.axm">STRING</a></li><li><a href="../../samples/functions/padleft/basic_usage.axm">PADLEFT</a></li><li><a href="../../samples/functions/insert/basic_usage.axm">INSERT</a></li><li><a href="../../samples/functions/remove/basic_usage.axm">REMOVE</a></li><li><a href="../../samples/functions/asc/basic_usage.axm">ASC</a></li><li><a href="../../samples/functions/ascw/unicode_codepoint.axm">ASCW</a></li><li><a href="../../samples/functions/chr/basic_usage.axm">CHR</a></li><li><a href="../../samples/functions/chrw/unicode_character.axm">CHRW</a></li><li><a href="../../samples/functions/split/basic_usage.axm">SPLIT</a></li><li><a href="../../samples/functions/join/basic_usage.axm">JOIN</a></li></ul></section>
-<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="string-functions.html">Строковые функции</a><a href="string-functions-slices-and-length.html">Длина строки и фрагменты</a><a href="string-functions-search-and-replace.html">Поиск и замена в строках</a><a href="characters.html">Символы CHR, ASC, CHRW и ASCW</a><a href="arrays.html">Массивы</a><a href="arrays-functions.html">Функции массивов</a><a href="data-types-strings-and-files.html">Тип STRING</a></div></section>
-
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Построение строк и массивы строк — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="string-functions-build-and-split"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Построение строк и массивы строк</span></nav>
+<p class="eyebrow">Глава 8</p><h1 class="page-title">Построение строк и массивы строк</h1><p class="lead">В этом разделе описаны встроенные функции языка Axiom REPEAT, SPACE, STRING, PADLEFT, PADRIGHT, CENTER, INSERT, REMOVE, SPLIT, JOIN. Они помогают построить строку или преобразовать текст в массив строк. Ниже приведён отдельный синтаксис и договор каждой функции.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="repeat"><h2>REPEAT</h2><p>REPEAT — встроенная функция языка Axiom, которая возвращает строку, повторив исходный фрагмент указанное число раз.</p><h3>Назначение и контекст</h3><p>Функция помогает построить узор, отступ или повторяющийся текст.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма вызова:</p><pre><code class="language-axiom">REPEAT(&lt;текст&gt;, &lt;количество&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;количество&gt;</code></td><td>Передайте неотрицательное целое число типа INTEGER с количеством повторений.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING.</p><h3>Правила и пограничные случаи</h3><p>При нуле повторений или пустом фрагменте результат пуст. Повторяется весь фрагмент, а не только его первый символ.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает при отрицательном количестве повторений.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT REPEAT("ab", 3)
+PRINT "["+REPEAT("ab", 0)+"]"</code></pre><p>Программа выводит:</p><pre><code>ababab
+[]</code></pre></section>
+<section class="article-section" id="space"><h2>SPACE</h2><p>SPACE — встроенная функция языка Axiom, которая возвращает строку из указанного количества пробелов.</p><h3>Назначение и контекст</h3><p>Функция позволяет добавить отступ или разделить части вывода.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма вызова:</p><pre><code class="language-axiom">SPACE(&lt;количество&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;количество&gt;</code></td><td>Передайте неотрицательное целое число типа INTEGER с количеством обычных пробелов U+0020.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING.</p><h3>Правила и пограничные случаи</h3><p>При количестве 0 результат пуст. Один обычный пробел занимает одну кодовую единицу UTF-16.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает при отрицательном количестве.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT "["+SPACE(3)+"]"
+PRINT LEN(SPACE(0))</code></pre><p>Программа выводит:</p><pre><code>[   ]
+0</code></pre></section>
+<section class="article-section" id="string"><h2>STRING</h2><p>STRING — встроенная функция языка Axiom, которая возвращает строку, повторив первую кодовую единицу заполнителя указанное число раз.</p><h3>Назначение и контекст</h3><p>Функция удобна для линии из одного символа, например трёх дефисов.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма вызова:</p><pre><code class="language-axiom">STRING(&lt;количество&gt;, &lt;заполнение&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;количество&gt;</code></td><td>Передайте неотрицательное целое число типа INTEGER с количеством повторений.</td></tr><tr><td><code>&lt;заполнение&gt;</code></td><td>Передайте строку типа STRING с заполнителем. При положительном количестве она должна быть непустой. Используется только её первая кодовая единица UTF-16.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING длиной в указанное количество кодовых единиц UTF-16.</p><h3>Правила и пограничные случаи</h3><p>При количестве 0 результат пуст и заполнитель не проверяется на пустоту. Многосимвольный заполнитель не повторяется целиком. Эмодзи вне основной плоскости Unicode начинается с половины суррогатной пары, поэтому для его повторения используйте REPEAT.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает при отрицательном количестве или пустом заполнителе при положительном количестве.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT STRING(3, "-=")
+PRINT "["+STRING(0, "")+"]"</code></pre><p>Программа выводит:</p><pre><code>---
+[]</code></pre></section>
+<span id="padding"></span><section class="article-section" id="padleft"><h2>PADLEFT</h2><p>PADLEFT — встроенная функция языка Axiom, которая возвращает строку, дополнив её слева до заданной ширины.</p><h3>Назначение и контекст</h3><p>Функция позволяет выровнять текст в поле заданной длины.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма 1:</p><pre><code class="language-axiom">PADLEFT(&lt;текст&gt;, &lt;ширина&gt;)</code></pre><p>Форма 2:</p><pre><code class="language-axiom">PADLEFT(&lt;текст&gt;, &lt;ширина&gt;, &lt;заполнение&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;ширина&gt;</code></td><td>Передайте неотрицательное целое число типа INTEGER с минимальной длиной результата в кодовых единицах UTF-16.</td></tr><tr><td><code>&lt;заполнение&gt;</code></td><td>Передайте непустую строку типа STRING с заполнителем. Используется первая кодовая единица UTF-16; без аргумента используется обычный пробел.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING.</p><h3>Правила и пограничные случаи</h3><p>Если исходный текст уже не короче заданной ширины, он возвращается без обрезки. Пустой текст заполняется до заданной ширины. Заполнитель проверяется даже тогда, когда дополнение не требуется. Эмодзи из двух кодовых единиц не подходит в качестве одного заполнителя.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает при отрицательной ширине или пустом явно переданном заполнителе.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT "["+PADLEFT("A", 4)+"]"
+PRINT PADLEFT("A", 4, "-")</code></pre><p>Программа выводит:</p><pre><code>[   A]
+---A</code></pre></section>
+<section class="article-section" id="padright"><h2>PADRIGHT</h2><p>PADRIGHT — встроенная функция языка Axiom, которая возвращает строку, дополнив её справа до заданной ширины.</p><h3>Назначение и контекст</h3><p>Функция позволяет выровнять текст в поле заданной длины.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма 1:</p><pre><code class="language-axiom">PADRIGHT(&lt;текст&gt;, &lt;ширина&gt;)</code></pre><p>Форма 2:</p><pre><code class="language-axiom">PADRIGHT(&lt;текст&gt;, &lt;ширина&gt;, &lt;заполнение&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;ширина&gt;</code></td><td>Передайте неотрицательное целое число типа INTEGER с минимальной длиной результата в кодовых единицах UTF-16.</td></tr><tr><td><code>&lt;заполнение&gt;</code></td><td>Передайте непустую строку типа STRING с заполнителем. Используется первая кодовая единица UTF-16; без аргумента используется обычный пробел.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING.</p><h3>Правила и пограничные случаи</h3><p>Если исходный текст уже не короче заданной ширины, он возвращается без обрезки. Пустой текст заполняется до заданной ширины. Заполнитель проверяется даже тогда, когда дополнение не требуется. Эмодзи из двух кодовых единиц не подходит в качестве одного заполнителя.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает при отрицательной ширине или пустом явно переданном заполнителе.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT "["+PADRIGHT("A", 4)+"]"
+PRINT PADRIGHT("A", 4, "-")</code></pre><p>Программа выводит:</p><pre><code>[A   ]
+A---</code></pre></section>
+<section class="article-section" id="center"><h2>CENTER</h2><p>CENTER — встроенная функция языка Axiom, которая возвращает строку, дополнив её с обеих сторон до заданной ширины.</p><h3>Назначение и контекст</h3><p>Функция позволяет выровнять текст в поле заданной длины.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма 1:</p><pre><code class="language-axiom">CENTER(&lt;текст&gt;, &lt;ширина&gt;)</code></pre><p>Форма 2:</p><pre><code class="language-axiom">CENTER(&lt;текст&gt;, &lt;ширина&gt;, &lt;заполнение&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;ширина&gt;</code></td><td>Передайте неотрицательное целое число типа INTEGER с минимальной длиной результата в кодовых единицах UTF-16.</td></tr><tr><td><code>&lt;заполнение&gt;</code></td><td>Передайте непустую строку типа STRING с заполнителем. Используется первая кодовая единица UTF-16; без аргумента используется обычный пробел.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING.</p><h3>Правила и пограничные случаи</h3><p>Если исходный текст уже не короче заданной ширины, он возвращается без обрезки. Пустой текст заполняется до заданной ширины. Если количество добавляемых единиц нечётно, справа добавляется на одну больше, чем слева. Заполнитель проверяется даже тогда, когда дополнение не требуется. Эмодзи из двух кодовых единиц не подходит в качестве одного заполнителя.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает при отрицательной ширине или пустом явно переданном заполнителе.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT "["+CENTER("A", 4)+"]"
+PRINT CENTER("A", 4, "-")</code></pre><p>Программа выводит:</p><pre><code>[ A  ]
+-A--</code></pre></section>
+<span id="insertremove"></span><section class="article-section" id="insert"><h2>INSERT</h2><p>INSERT — встроенная функция языка Axiom, которая возвращает строку, вставив фрагмент перед указанной позицией.</p><h3>Назначение и контекст</h3><p>Функция позволяет добавить текст в начало, середину или конец строки.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма вызова:</p><pre><code class="language-axiom">INSERT(&lt;текст&gt;, &lt;начальная позиция&gt;, &lt;фрагмент&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;начальная позиция&gt;</code></td><td>Передайте целое число типа INTEGER с начальной позицией. Позиции отсчитываются от 1.</td></tr><tr><td><code>&lt;фрагмент&gt;</code></td><td>Передайте строку типа STRING, которую требуется вставить.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING.</p><h3>Правила и пограничные случаи</h3><p>Позиции считаются в кодовых единицах UTF-16. Начало больше длины текста добавляет фрагмент в конец. Пустой фрагмент оставляет текст без изменения; вставка в пустой текст возвращает фрагмент.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает при начале меньше 1.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT INSERT("abcd", 3, "X")
+PRINT INSERT("abc", 99, "!")
+PRINT INSERT("", 1, "X")</code></pre><p>Программа выводит:</p><pre><code>abXcd
+abc!
+X</code></pre></section>
+<section class="article-section" id="remove"><h2>REMOVE</h2><p>REMOVE — встроенная функция языка Axiom, которая возвращает строку, удалив заданное количество единиц текста с указанной позиции.</p><h3>Назначение и контекст</h3><p>Функция нужна для удаления части строки по её расположению.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма вызова:</p><pre><code class="language-axiom">REMOVE(&lt;текст&gt;, &lt;начальная позиция&gt;, &lt;количество&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;начальная позиция&gt;</code></td><td>Передайте целое число типа INTEGER с начальной позицией. Позиции отсчитываются от 1.</td></tr><tr><td><code>&lt;количество&gt;</code></td><td>Передайте неотрицательное целое число типа INTEGER с количеством удаляемых кодовых единиц UTF-16.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING.</p><h3>Правила и пограничные случаи</h3><p>Если начало больше длины строки или количество равно 0, текст не изменяется. Если запрошено больше единиц, чем осталось до конца, удаляется весь остаток. Пустой текст остаётся пустым. Граница может разделить суррогатную пару.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает при начале меньше 1 или отрицательном количестве.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT REMOVE("abcd", 2, 2)
+PRINT REMOVE("abcd", 3, 99)
+PRINT REMOVE("abc", 99, 1)</code></pre><p>Программа выводит:</p><pre><code>ad
+ab
+abc</code></pre></section>
+<section class="article-section" id="split"><h2>SPLIT</h2><p>SPLIT — встроенная функция языка Axiom, которая разбивает строку по разделителю и возвращает массив полученных частей.</p><h3>Назначение и контекст</h3><p>Функция позволяет обработать список значений как отдельные строки.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма 1:</p><pre><code class="language-axiom">SPLIT(&lt;текст&gt;)</code></pre><p>Форма 2:</p><pre><code class="language-axiom">SPLIT(&lt;текст&gt;, &lt;разделитель&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;разделитель&gt;</code></td><td>Передайте непустую строку типа STRING с точным разделителем. Без этого аргумента используется запятая.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает новый выделенный одномерный массив строк STRING(). Первый индекс равен 1; пустой результат имеет границы 1 TO 0.</p><h3>Правила и пограничные случаи</h3><p>Сравнение разделителя учитывает регистр. Пустой текст даёт пустой массив. Разделитель в начале, в конце или рядом с другим разделителем создаёт пустой элемент. Если разделитель не найден в непустом тексте, массив содержит одну строку — весь текст.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает при пустом разделителе, даже если исходный текст пуст.</p><h3>Пример</h3><pre><code class="language-axiom">DIM parts() AS STRING
+parts=SPLIT("one,two")
+PRINT parts(1)
+PRINT parts(2)
+parts=SPLIT("a::b", "::")
+PRINT JOIN(parts, "|")
+parts=SPLIT("")
+PRINT ARRAYLENGTH(parts)</code></pre><p>Программа выводит:</p><pre><code>one
+two
+a|b
+0</code></pre></section>
+<section class="article-section" id="join"><h2>JOIN</h2><p>JOIN — встроенная функция языка Axiom, которая соединяет элементы массива строк и возвращает одну строку.</p><h3>Назначение и контекст</h3><p>Функция собирает список строк обратно в текст, вставляя разделитель между соседними элементами.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма 1:</p><pre><code class="language-axiom">JOIN(&lt;элементы&gt;)</code></pre><p>Форма 2:</p><pre><code class="language-axiom">JOIN(&lt;элементы&gt;, &lt;разделитель&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;элементы&gt;</code></td><td>Передайте одномерный массив строк STRING(), элементы которого нужно соединить.</td></tr><tr><td><code>&lt;разделитель&gt;</code></td><td>Передайте строку типа STRING, вставляемую между соседними элементами. Она может быть пустой; без аргумента используется запятая.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING.</p><h3>Правила и пограничные случаи</h3><p>Элементы обходятся от нижней до верхней границы массива. Пустой или невыделенный массив даёт пустую строку; единственный элемент возвращается без разделителей. Нижняя граница не обязана равняться 1.</p><h3>Диагностика</h3><p>Неверный тип аргумента, в том числе массив другого типа или ранга, отклоняется при проверке программы. Невыделенный одномерный массив строк допустим.</p><h3>Пример</h3><pre><code class="language-axiom">DIM items(5 TO 6) AS STRING
+items(5)="one"
+items(6)="two"
+PRINT JOIN(items)
+PRINT JOIN(items, "|")
+DIM empty() AS STRING
+PRINT "["+JOIN(empty)+"]"</code></pre><p>Программа выводит:</p><pre><code>one,two
+one|two
+[]</code></pre></section><section class="article-section" id="codes"><h2>Коды символов</h2><p>Функции ASC, ASCW, CHR и CHRW преобразуют символы и их числовые коды. Их полный договор и примеры находятся в статье <a href="characters.html">«Коды символов»</a>.</p></section><section class="article-section"><h2>См. также</h2><div class="link-list"><a href="string-functions.html">Строковые функции</a><a href="string-functions-slices-and-length.html">Длина строки и фрагменты</a><a href="string-functions-trim-and-case.html">Обрезка, регистр и разворот</a><a href="string-functions-search-and-replace.html">Поиск и замена подстрок</a><a href="characters.html">Коды символов</a><a href="regex-functions.html">Регулярные выражения</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

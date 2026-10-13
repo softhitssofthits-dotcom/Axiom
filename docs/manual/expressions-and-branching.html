@@ -1,88 +1,14 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Выражения и ветвление</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="expressions-and-branching">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Вычисления, сравнения и выбор ветви</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <span>Выражения и ветвление</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Выражения, сравнения и ветвление</h1>
-            <p class="lead">Раздел выражений и ветвления описывает, как значения выражений управляют условными операторами в Axiom. Выражение вычисляет число, строку, логическое значение или результат сравнения; условный оператор смотрит на это значение и выбирает, какой фрагмент программы выполнять дальше.</p>
-
-            <section class="article-section">
-                <h2>Что вычисляет выражение</h2>
-                <p>Выражение можно использовать справа от присваивания, в аргументе вызова, в выводе через <code>PRINT</code> и в условии управляющей конструкции. Для ветвления важен итоговый логический результат: если условие истинно, выполняется выбранная ветвь; если ложно, управление переходит к другой ветви или к инструкции после условного блока.</p>
-                <ul>
-                    <li>арифметические и строковые выражения вычисляют данные для дальнейших действий;</li>
-                    <li>операции сравнения дают логический результат, который обычно становится условием;</li>
-                    <li><code>IF ... THEN ... ELSE</code> выбирает одну из ветвей по условию;</li>
-                    <li><code>SELECT CASE</code> удобен, когда один результат нужно сопоставить с несколькими вариантами.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Как условие выбирает ветвь</h2>
-                <p>В простом линейном фрагменте инструкции выполняются одна за другой. Как только появляется условие, порядок выполнения начинает зависеть от данных: программа сначала вычисляет выражение, затем передаёт управление в нужную ветвь. Такой подход позволяет описывать выбор без переходов на метки и без ручного разрыва текста программы.</p>
-                <pre><code class="language-axiom">DIM score AS INTEGER = 74
-
-IF score &gt;= 60 THEN
-    PRINT "зачёт"
-ELSE
-    PRINT "повторить"
-END IF</code></pre>
-                <p>Здесь выражение <code>score &gt;= 60</code> превращает число в логический ответ. Именно этот ответ определяет, какая строка будет напечатана.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Основные темы</h2>
-                <div class="link-list">
-                    <a href="arithmetic-and-logic.html">Выражения и операции</a>
-                    <a href="if.html">Оператор IF</a>
-                    <a href="select-case.html">Оператор SELECT CASE</a>
-                    <a href="loops.html">Циклы</a>
-                </div>
-            </section>
-
-            <section class="article-section">
-                <h2>Выбор между IF и SELECT CASE</h2>
-                <p>Для условий в Axiom используется тип <code>BOOLEAN</code>. Если нужно выбрать между двумя путями, обычно достаточно <code>IF</code>. Если вариантов много и они относятся к одному проверяемому значению, текст чаще получается яснее через <code>SELECT CASE</code>.</p>
-                <p>Передача управления выполняется условными операторами <code>IF</code>, <code>SELECT CASE</code>, циклами и вызовами процедур.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="arithmetic-and-logic.html">Выражения и операции</a>
-                    <a href="if.html">Оператор IF</a>
-                    <a href="select-case.html">Оператор SELECT CASE</a>
-                    <a href="loops.html">Циклы</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Выражения — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="expressions-and-branching"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Выражения</span></nav>
+<p class="eyebrow">Глава 3</p><h1 class="page-title">Выражения</h1><p class="lead">Выражение — запись, которая вычисляет значение. Выражения используются в присваивании, выводе, аргументах функций и условиях управляющих конструкций.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>От значения к вычислению</h2><p>Литерал задаёт значение непосредственно, имя читает объявленное значение, а операция объединяет или преобразует операнды. Скобки задают порядок вычисления:</p><pre><code class="language-axiom">DIM count AS INTEGER = 3
+DIM total AS INTEGER = (count + 2) * 4
+PRINT total</code></pre><p>Результат:</p><pre><code>20</code></pre></section><section class="article-section"><h2>Основные формы</h2><p>В выражении можно использовать вызов функции, элемент массива и поле пользовательской записи. Внешне запись <code>name(...)</code> может обозначать разные действия; её смысл определяется объявлением имени.</p><div class="link-list"><a href="arithmetic-and-logic.html">Операции и приоритет</a><a href="calls.html">Вызовы функций</a><a href="arrays-indexing.html">Элементы массива</a><a href="type.html">Поля и создание записи</a><a href="string-literals.html">Строковые литералы и интерполяция</a></div></section><section class="article-section"><h2>Тип результата</h2><p>Арифметическое выражение вычисляет число, сравнение — логическое значение, а соединение строк — текст. Результат должен подходить месту использования. Условие <code>IF</code> принимает <code>BOOLEAN</code>, поэтому вместо самого числа нужно использовать сравнение, например <code>count &gt; 0</code>.</p><p>Отдельная инструкция с выражением должна содержать вызов. Одиночное имя или литерал на отдельной строке не выполняет полезного действия и отклоняется диагностикой <code>MB2040</code>.</p></section><section class="article-section"><h2>См. также</h2><div class="link-list"><a href="arithmetic-and-logic.html">Выражения и операции</a><a href="data-types-conversions.html">Преобразования типов</a><a href="branching.html">Условия и выбор действий</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

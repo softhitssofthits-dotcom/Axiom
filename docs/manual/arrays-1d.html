@@ -1,117 +1,29 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Одномерные массивы</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="arrays-1d">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Последовательности значений одного типа</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный и тематический указатель</a>
-                <span>/</span>
-                <a href="arrays.html">Массивы</a>
-                <span>/</span>
-                <span>Одномерные массивы</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Одномерные массивы</h1>
-            <p class="lead">Раздел одномерных массивов описывает объявление, доступ к элементам и обход по индексам — простой список значений одного типа с доступом по номеру.</p>
-
-            <section class="article-section">
-                <h2>Хранение элементов</h2>
-                <p>Одномерный массив хранит последовательность значений одного типа под общим именем. Каждый элемент массива выбирается по одному индексу, а диапазон допустимых индексов задаётся при объявлении или при последующем изменении размера через <code>REDIM</code>.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Синтаксис</h2>
-                <pre><code class="language-axiom">DIM &lt;имя массива&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;) AS &lt;тип элемента&gt;</code></pre>
-                <pre><code class="language-axiom">DIM &lt;имя массива&gt;() AS &lt;тип элемента&gt;</code></pre>
-                <pre><code class="language-axiom">&lt;имя массива&gt;(&lt;индекс&gt;) = &lt;выражение&gt;
-&lt;переменная&gt; = &lt;имя массива&gt;(&lt;индекс&gt;)</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Параметры и части синтаксиса</h2>
-                <ul>
-                    <li><code>&lt;имя массива&gt;</code> — имя массива.</li>
-                    <li><code>&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;</code> — включительный диапазон допустимых индексов.</li>
-                    <li><code>&lt;тип элемента&gt;</code> — тип всех элементов массива.</li>
-                    <li><code>&lt;индекс&gt;</code> — индекс элемента, к которому обращается программа.</li>
-                    <li><code>&lt;выражение&gt;</code> — значение, которое записывается в элемент массива.</li>
-                    <li><code>&lt;переменная&gt;</code> — переменная того же типа, что и элемент массива, или совместимого типа.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Границы и доступ к элементам</h2>
-                <ul>
-                    <li>Все элементы одномерного массива имеют один и тот же тип.</li>
-                    <li>Границы массива включаются в диапазон. Если массив объявлен как <code>DIM scores(1 TO 5) AS INTEGER</code>, допустимы индексы от <code>1</code> до <code>5</code> включительно.</li>
-                    <li>Массив можно объявить без выделения памяти, например <code>DIM values() AS INTEGER</code>. В таком виде имя массива уже существует, но доступ к элементам станет возможен только после <code>REDIM</code>.</li>
-                    <li>Обращение к элементу за пределами доступного диапазона приводит к диагностике времени выполнения.</li>
-                    <li>Для обхода элементов удобно использовать цикл от <code>LBOUND(array)</code> до <code>UBOUND(array)</code>, чтобы код не зависел от конкретных числовых границ.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Пример заполнения и обхода списка</h2>
-                <pre><code class="language-axiom">' Программа заполняет массив и печатает все его элементы
-' Ожидаемый вывод:
-' 10
-' 20
-' 30
-DIM scores(1 TO 3) AS INTEGER
-DIM index AS INTEGER
-
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Одномерные массивы — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="arrays-1d"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Одномерные массивы</span></nav>
+<p class="eyebrow">10 · Массивы</p><h1 class="page-title">Одномерные массивы</h1><p class="lead">Одномерный массив — тип данных Axiom ранга 1, элементы которого выбираются одним индексом. Он подходит для оценок, измерений, имён и других последовательностей.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Назначение и контекст</h2><p>У одномерного массива один диапазон индексов. Он может начинаться с отрицательного значения или нуля; начальный индекс 1 используется только там, где он указан в объявлении или выбран функцией, создающей результат.</p><p>Работа с массивом разрешена на верхнем уровне, в процедуре и в функции; SCREEN не требуется.</p></section>
+<section class="article-section"><h2>Синтаксис</h2><pre><code class="language-axiom">DIM &lt;имя массива&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;) AS &lt;тип элемента&gt;</code></pre><pre><code class="language-axiom">DIM &lt;имя массива&gt;() AS &lt;тип элемента&gt;</code></pre><pre><code class="language-axiom">&lt;имя массива&gt;(&lt;индекс&gt;) = &lt;значение&gt;</code></pre></section>
+<section class="article-section"><h2>Части записи</h2><p>Имя массива обозначает массивную переменную. Тип элемента определяет допустимые значения всех элементов. Индекс является числовым выражением, выбирающим один элемент. Значение присваивания должно быть совместимо с типом элемента.</p><p>Границы задаются числовыми выражениями. INTEGER используется непосредственно; LONG должен помещаться в INTEGER; дробная часть DOUBLE и DECIMAL отбрасывается к нулю. Нижняя граница -2147483648 запрещена, потому что поисковые функции используют нижнюю границу минус 1 как признак отсутствия. Верхняя граница включается в массив. Обратный диапазон допустим только как каноническая пустая форма 1 TO 0 при DIM или REDIM.</p></section>
+<section class="article-section"><h2>Действие и ограничения</h2><p>DIM с границами создаёт элементы со значениями по умолчанию. DIM с пустыми измерениями сохраняет тип и ранг без выделения элементов. Полное индексирование возвращает один элемент; частичное индексирование создаёт представление оставшихся измерений.</p></section>
+<section class="article-section"><h2>Диагностика</h2><p>MB2003 означает несовместимый тип элемента или индекса, MB2004 — неверное число индексов. MB3002 возникает, когда индекс или диапазон при индексировании выходит за границы. MB3005 возникает при доступе к невыделенному массиву либо при недопустимой паре границ. MB3007 сообщает о запрещённой нижней границе -2147483648; выход числового значения за диапазон INTEGER даёт MB3008.</p></section>
+<section class="article-section"><h2>Пример</h2><pre><code class="language-axiom">DIM scores(1 TO 3) AS INTEGER
 scores(1) = 10
 scores(2) = 20
 scores(3) = 30
-
-FOR index = LBOUND(scores) TO UBOUND(scores)
-    PRINT scores(index)
-NEXT</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/operators/dim/array_declaration.axm">DIM: объявление массива</a></li>
-                    <li><a href="../../samples/expressions/arrays/index_access.axm">Доступ к элементу массива</a></li>
-                    <li><a href="../../samples/functions/lbound/basic_usage.axm">LBOUND: нижняя граница массива</a></li>
-                    <li><a href="../../samples/functions/ubound/basic_usage.axm">UBOUND: верхняя граница массива</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="arrays.html">Массивы</a>
-                    <a href="arrays-dynamic.html">Динамические массивы</a>
-                    <a href="arrays-indexing.html">Индексирование</a>
-                    <a href="arrays-functions.html">ARRAY-функции</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+FOR i = LBOUND(scores) TO UBOUND(scores)
+    PRINT scores(i)
+NEXT</code></pre><p>Ожидаемый вывод:</p><pre><code>10
+20
+30</code></pre></section>
+<section class="article-section" id="schema"><h2>Схема индексов</h2><p>Подписанные координаты выбирают элемент внутри включительных границ. Пустая клетка хранит значение по умолчанию до первого присваивания.</p><pre><code>индекс:  1   2   3
+        [10][20][30]</code></pre></section>
+<section class="article-section"><h2>См. также</h2><p><a href="arrays.html">Массивы</a> · <a href="arrays-indexing.html">Индексирование</a> · <a href="arrays-dynamic.html">Изменение размера</a></p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

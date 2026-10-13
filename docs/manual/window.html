@@ -1,55 +1,41 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Оператор WINDOW</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="window">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Графика</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Оператор WINDOW</span>
-            </nav>
-            <p class="eyebrow">Оператор</p>
-            <h1 class="page-title">Оператор WINDOW</h1>
-            <p class="lead"><code>WINDOW</code> — оператор языка Axiom, который задаёт логическую систему координат внутри текущего viewport. После оператора <code>WINDOW</code> программа может рисовать не по физическим пикселям экрана, а по собственной числовой шкале.</p>
+<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<title>Оператор WINDOW — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="window"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор WINDOW</span></nav>
+<p class="eyebrow">Оператор</p><h1 class="page-title">Оператор WINDOW</h1><p class="lead"><code>WINDOW</code> — оператор языка Axiom, который связывает текущую область рисования с логической системой координат. Программа может задать собственную шкалу вместо прямого обращения к пикселям.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+
 
             <section class="article-section">
                 <h2>Когда использовать WINDOW</h2>
-                <p>Оператор <code>WINDOW</code> нужен тогда, когда программе требуется рисовать графики, оси, фигуры или схемы не в пиксельных координатах, а в собственной логической системе координат.</p>
+                <p>Логические координаты удобны для графика функции, осей или схемы: размеры изображения задаются предметной шкалой, а оператор <code>WINDOW</code> переводит их в экранную область.</p>
             </section>
 
         <section class="article-section">
-                <h2>Где работает оператор WINDOW</h2>
-                <p>Оператор <code>WINDOW</code> работает только после выбора графического режима <code>SCREEN 1..10</code>.</p>
-                <p>Оператор <code>WINDOW</code> не открывает графический режим сам по себе. Перед оператором <code>WINDOW</code> программа должна вызвать оператор <code>SCREEN</code>.</p>
+                <h2>Контекст выполнения</h2>
+                <p>Оператор требует графического режима <code>SCREEN 1..10</code>.</p>
+                <p>Перед настройкой логической шкалы откройте экран оператором <a href="screen.html">SCREEN</a>. Сам оператор <code>WINDOW</code> окно не создаёт.</p>
             </section>
 
         <section class="article-section">
                 <h2>Синтаксис</h2>
-<pre><code class="language-axiom">WINDOW
-WINDOW SCREEN (left, top)-(right, bottom)
-WINDOW (left, top)-(right, bottom)</code></pre>
+<pre><code class="language-axiom">WINDOW</code></pre>
+<pre><code class="language-axiom">WINDOW SCREEN (&lt;левый операнд&gt;, &lt;верхняя граница&gt;)-(&lt;правый операнд&gt;, &lt;нижняя граница&gt;)</code></pre>
+<pre><code class="language-axiom">WINDOW (&lt;левый операнд&gt;, &lt;верхняя граница&gt;)-(&lt;правый операнд&gt;, &lt;нижняя граница&gt;)</code></pre>
             </section>
 
         <section class="article-section">
-                <h2>Параметры и части синтаксиса</h2>
+                <h2>Параметры</h2>
                 <table>
                     <thead>
                         <tr><th>Часть</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>left</code>, <code>top</code>, <code>right</code>, <code>bottom</code></td><td>Две противоположные вершины логического прямоугольника.</td></tr>
+                        <tr><td><code>&lt;левая граница&gt;</code>, <code>&lt;верхняя граница&gt;</code>, <code>&lt;правая граница&gt;</code>, <code>&lt;нижняя граница&gt;</code></td><td>Передайте две противоположные вершины логического прямоугольника.</td></tr>
                         <tr><td><code>SCREEN</code></td><td>Слово <code>SCREEN</code> сохраняет экранное направление оси <code>Y</code>, то есть увеличение <code>Y</code> вниз.</td></tr>
                     </tbody>
                 </table>
@@ -57,17 +43,19 @@ WINDOW (left, top)-(right, bottom)</code></pre>
 
         <section class="article-section">
                 <h2>Что делает оператор WINDOW</h2>
-                <p>Форма <code>WINDOW</code> без аргументов сбрасывает логическое окно и возвращает координаты к текущей системе viewport.</p>
-                <p>Форма <code>WINDOW SCREEN (...)</code> включает логическую систему координат с экранным направлением оси <code>Y</code>.</p>
-                <p>Форма <code>WINDOW (...)</code> включает логическую систему координат с математическим направлением оси <code>Y</code>, то есть увеличение <code>Y</code> вверх.</p>
+                <p>Вызов без аргументов отменяет логическую шкалу и возвращает координаты текущей области <code>VIEW</code>.</p>
+                <p>Форма со словом <code>SCREEN</code> сохраняет экранное направление оси <code>Y</code>.</p>
+                <p>В форме без слова <code>SCREEN</code> увеличение <code>Y</code> направлено вверх, как в математической системе координат.</p>
             </section>
 
         <section class="article-section">
                 <h2>Правила работы</h2>
-                <p>Оператор <code>VIEW</code> выбирает физическую область экрана, а оператор <code>WINDOW</code> задаёт логическую шкалу внутри этой области. Обычно программа сначала настраивает оператор <code>VIEW</code>, а затем при необходимости включает оператор <code>WINDOW</code>.</p>
-                <p>После оператора <code>WINDOW</code> логические координаты используют операторы <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code> и форма <code>POINT(x, y)</code>.</p>
-                <p>Для явного перевода между логическими координатами <code>WINDOW</code> и физическими координатами viewport программа использует функцию <code>PMAP</code>.</p>
+                <p>Сначала оператором <a href="view.html">VIEW</a> выбирают физическую область экрана. Затем оператором <code>WINDOW</code> задают шкалу, которая отображается в эту область.</p>
+                <p>Настроенную шкалу используют <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code> и форма <code>POINT(x, y)</code>.</p>
+                <p>Чтобы получить отдельную физическую или логическую координату явно, вызовите <a href="pmap.html">PMAP</a> с нужным селектором.</p>
             </section>
+<section class="article-section"><h2>Типы аргументов и вырожденная шкала</h2><p>Все четыре координаты <code>WINDOW</code> приводятся к <code>DOUBLE</code>. Они должны быть конечными и задавать ненулевые диапазоны обеих осей. Нулевая ширина или высота логической шкалы сообщает <code>MB3007</code>. Единицу логической шкалы выбирает программа; она не обязана совпадать с пикселем. <code>WINDOW</code> изменяет преобразование последующего рисования, сохраняя уже нарисованные пиксели.</p></section>
+
 
         <section class="article-section">
                 <h2>Диагностика</h2>
@@ -86,12 +74,12 @@ WINDOW SCREEN (100, 200)-(110, 210)
 PSET (100, 200), 12
 PRINT PMAP(100, 0); ","; PMAP(200, 1)
 SLEEP</code></pre>
-                <p>В этом примере оператор <code>WINDOW</code> связывает логические координаты <code>100..110</code> и <code>200..210</code> с физическим viewport. После этого оператор <code>PSET</code> рисует не по сырым пикселям, а по логической шкале.</p>
+                <p>Диапазоны <code>100..110</code> и <code>200..210</code> отображаются в выбранную физическую область. Поэтому аргументы оператора <code>PSET</code> обозначают точку логической шкалы.</p>
             </section>
 
         <section class="article-section">
                 <h2>Запускаемые примеры</h2>
-                <p>Эти файлы можно открыть в <code>Electron IDE</code> и запустить как короткие проверки поведения оператора <code>WINDOW</code>.</p>
+                <p>Перечисленные программы проверяют направление оси и преобразование координат. Их можно открыть и запустить в Electron IDE.</p>
                 <ul class="resource-list">
                     <li><a href="../../samples/operators/window/cartesian_and_screen.axm">WINDOW: декартова и экранная системы координат</a></li>
                     <li><a href="../../samples/operators/window/zero_size_error.axm">WINDOW: ошибка нулевого размера окна</a></li>
@@ -108,9 +96,8 @@ SLEEP</code></pre>
                 </div>
             </section>
 
-            <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+
+
+
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

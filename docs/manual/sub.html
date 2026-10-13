@@ -1,160 +1,28 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Процедура SUB</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="sub">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Именованная процедура без значения результата</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="procedures-and-functions.html">Процедуры и функции</a>
-                <span>/</span>
-                <span>Процедура SUB</span>
-            </nav>
-            <p class="eyebrow">Процедура</p>
-            <h1 class="page-title">Процедура SUB</h1>
-            <p class="lead">Процедура <code>SUB</code> нужна для именованного действия: вывести сообщение, изменить переданную переменную, выполнить несколько связанных инструкций или выделить повторяющийся фрагмент программы. В отличие от функции, <code>SUB</code> не возвращает значение и не используется внутри выражения.</p>
-
-            <section class="article-section">
-                <h2>Когда нужна процедура без результата</h2>
-                <p><code>SUB ... END SUB</code> объявляет процедуру. Вызов процедуры записывается отдельной инструкцией по её имени. Если процедуре нужно завершиться раньше конца блока, внутри неё можно использовать <code>RETURN</code> без значения.</p>
-            </section>
-
-        <section class="article-section">
-                <h2>Синтаксис</h2>
-                <pre><code class="language-axiom">SUB &lt;имя&gt;([&lt;список параметров&gt;])
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Оператор SUB — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="sub"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор SUB</span></nav>
+<p class="eyebrow">11 · Процедуры и функции</p><h1 class="page-title">Оператор SUB</h1><p class="lead">SUB — оператор языка Axiom, который объявляет процедуру: именованный блок инструкций без возвращаемого значения. Процедура группирует действие и может принимать параметры.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Назначение</h2><p>Процедура подходит для вывода, изменения данных и других повторяемых действий. Вызов выполняет тело от первой инструкции до END SUB или досрочного RETURN и затем возвращает управление вызывающему коду.</p></section>
+<section class="article-section"><h2>Контекст объявления</h2><p>Объявление доступно на верхнем уровне программы и внутри другой процедуры или функции. Объявления обрабатываются до вызовов, поэтому верхнеуровневый вызов может находиться раньше текста объявления. Локальная подпрограмма видна в своём внешнем теле и может захватывать доступные параметры и локальные переменные; внешняя локальная переменная должна быть объявлена раньше текста вложенного объявления. Графический режим не требуется.</p></section>
+<section class="article-section"><h2>Синтаксис объявления</h2><pre><code class="language-axiom">SUB &lt;имя&gt;([&lt;список параметров&gt;])
     &lt;инструкции&gt;
-END SUB</code></pre>
-                <pre><code class="language-axiom">&lt;имя&gt;([&lt;список аргументов&gt;])</code></pre>
-                <pre><code class="language-axiom">[BYVAL | BYREF] &lt;имя параметра&gt; AS &lt;тип параметра&gt;</code></pre>
-                <pre><code class="language-axiom">RETURN</code></pre>
-            </section>
-
-        <section class="article-section">
-                <h2>Параметры и части синтаксиса</h2>
-                <p><code>&lt;имя&gt;</code> - имя объявляемой процедуры или имя процедуры при вызове.</p>
-                <p><code>&lt;список параметров&gt;</code> - объявления параметров через запятую. У каждого параметра указывается тип через <code>AS</code>; модификатор <code>BYVAL</code> можно не писать, потому что он действует по умолчанию.</p>
-                <p><code>BYVAL</code> и <code>BYREF</code> - модификаторы параметра. Они не выполняются как отдельная инструкция и не вызываются по имени; они только задают способ передачи аргумента в процедуру.</p>
-                <p><code>&lt;список аргументов&gt;</code> - значения, передаваемые процедуре при вызове в том же порядке, в котором объявлены параметры.</p>
-                <p><code>&lt;инструкции&gt;</code> - тело процедуры.</p>
-            </section>
-
-        <section class="article-section">
-                <h2>Где работает процедура SUB</h2>
-                <p>Объявление <code>SUB</code> допустимо в любом контексте программы: на верхнем уровне, внутри другой процедуры или функции. Процедура не зависит от графического режима <code>SCREEN</code> и может работать в текстовом, графическом и консольном режимах одинаково.</p>
-            </section>
-
-        <section class="article-section">
-                <h2>Вызов, параметры и локальные имена</h2>
-                <ul>
-                    <li><code>SUB</code> вызывается как инструкция и не может быть частью арифметического, строкового или логического выражения.</li>
-                    <li><code>BYVAL</code> передаёт в процедуру отдельное значение. Для записи <code>TYPE</code> это отдельная копия записи: изменения внутри <code>SUB</code> не меняют исходную переменную.</li>
-                    <li><code>BYREF</code> передаёт в процедуру саму переменную. Если процедура присвоит параметру новое значение или изменит поле записи, результат будет виден после возврата из <code>SUB</code>.</li>
-                    <li>Если модификатор не указан, параметр считается <code>BYVAL</code>.</li>
-                    <li>Внутри <code>SUB</code> допустим <code>RETURN</code> без значения.</li>
-                    <li>Внутри процедуры можно объявлять локальные <code>SUB</code> и <code>FUNCTION</code>.</li>
-                </ul>
-                <p>Процедура вызывается непосредственно по имени, например <code>Foo()</code>. Запись <code>CALL Foo</code> недопустима и приводит к диагностике <code>MB2001</code> с указанием использовать прямой вызов.</p>
-            </section>
-
-        <section class="article-section">
-                <h2>BYVAL: процедура получает копию</h2>
-                <p><code>BYVAL</code> полезен, когда процедура должна работать с переданными данными, но не должна менять переменную вызывающего кода. Для обычных чисел это выглядит как работа с локальным значением, а для <code>TYPE</code> особенно заметно: процедура получает копию всей записи.</p>
-                <pre><code class="language-axiom">' Ожидаемый вывод: 10
-SUB AddOne(BYVAL value AS INTEGER)
+END SUB</code></pre></section>
+<section class="article-section"><h2>Формы параметра и вызова</h2><pre><code class="language-axiom">&lt;имя параметра&gt; AS &lt;тип параметра&gt;</code></pre><pre><code class="language-axiom">BYVAL &lt;имя параметра&gt; AS &lt;тип параметра&gt;</code></pre><pre><code class="language-axiom">BYREF &lt;имя параметра&gt; AS &lt;тип параметра&gt;</code></pre><pre><code class="language-axiom">&lt;имя&gt;([&lt;список аргументов&gt;])</code></pre></section>
+<section class="article-section"><h2>Части объявления</h2><p>Имя обозначает подпрограмму. Список параметров содержит объявления через запятую. Каждый параметр задаёт имя и тип после AS; пустой список допустим. Список аргументов содержит выражения в том же порядке. Тип аргумента должен совпадать с типом параметра либо допускать предусмотренное языком преобразование.</p><p>BYVAL применяется по умолчанию и передаёт значение. Присваивание скалярному параметру не меняет переменную вызывающего кода. TYPE копируется с вложенными записями и фиксированными массивными полями; динамические массивные поля обычной длины сохраняют общий массив, как описано в <a href="type.html#copying">правилах копирования TYPE</a>. Обычный массив при BYVAL сохраняет общее хранилище: изменение элемента видно снаружи, хотя присваивание самому параметру другого массива не заменяет переменную вызывающего кода.</p><p>BYREF связывает параметр с простым именем переменной. Тип должен точно совпадать; преобразование аргумента не допускается. Поле записи, элемент массива и вычисляемое выражение не являются допустимым аргументом BYREF. Проверка имени CONST в текущей реализации не запрещает запись через BYREF: такая запись может изменить константу. Для изменяемого аргумента используйте обычную переменную DIM.</p><p>Инструкции составляют тело процедуры; само объявление не выполняет тело. Тип параметра может быть обычным, массивным или функциональным; строковая форма STRING * N в параметрах не поддерживается.</p></section>
+<section class="article-section"><h2>Действие и ограничения</h2><p>SUB вызывается отдельной инструкцией. Процедура не может быть значением выражения или значением функционального типа. RETURN внутри SUB записывается без выражения. Прямая форма вызова требует скобок даже при отсутствии аргументов.</p></section>
+<section class="article-section"><h2>Диагностика</h2><p>MB2004 означает неверное число аргументов; MB2003 — несовместимый тип; MB2005 — неизвестное вызываемое имя. MB2028 возникает для недопустимого аргумента BYREF. Повторное имя в одной области даёт MB2002; запрещённое перекрытие внешнего имени — MB2016. Избыточная рекурсия даёт MB3011 во время выполнения.</p><p>MB2006 означает RETURN со значением внутри SUB. MB2019 запрещает использование процедуры как значения. Запись CALL Foo не поддерживается; применяйте Foo().</p></section>
+<section class="article-section"><h2>Пример изменения переменной</h2><pre><code class="language-axiom">SUB AddOne(BYREF value AS INTEGER)
     value = value + 1
 END SUB
-
-DIM count AS INTEGER
-count = 10
-
+DIM count AS INTEGER = 10
 AddOne(count)
-PRINT count</code></pre>
-            </section>
-
-        <section class="article-section">
-                <h2>BYREF: процедура меняет исходную переменную</h2>
-                <p><code>BYREF</code> нужен, когда процедура должна вернуть результат через параметр или изменить переданную запись. В месте вызова сейчас допускается простая переменная: имя переменной без обращения к полю, без индекса массива и без выражения.</p>
-                <pre><code class="language-axiom">' Ожидаемый вывод: 11
-SUB AddOne(BYREF value AS INTEGER)
-    value = value + 1
-END SUB
-
-DIM count AS INTEGER
-count = 10
-
-AddOne(count)
-PRINT count</code></pre>
-                <p>Для <code>BYREF</code> допустим вызов <code>AddOne(count)</code>. Недопустимы формы вроде <code>AddOne(count + 1)</code>, <code>AddOne(user.Age)</code> и <code>AddOne(items(1))</code>, потому что это уже не простая переменная в текущем публичном договоре Axiom.</p>
-            </section>
-
-        <section class="article-section">
-                <h2>Диагностика</h2>
-                <p>Ошибка возникает, если <code>SUB</code> используется как выражение, если процедура вызывается с неверным числом или типами аргументов, если аргумент для <code>BYREF</code> не является простой переменной или если внутри <code>SUB</code> записан <code>RETURN</code> со значением.</p>
-                <ul>
-                    <li><code>MB2004</code> — процедура вызвана с неверным числом аргументов.</li>
-                    <li><code>MB2006</code> — внутри <code>SUB</code> записан <code>RETURN</code> со значением.</li>
-                    <li><code>MB2019</code> — процедура <code>SUB</code> используется как значение в выражении.</li>
-                    <li><code>MB2028</code> — аргумент, передаваемый параметру <code>BYREF</code>, не является простой переменной подходящего типа.</li>
-                </ul>
-            </section>
-
-        <section class="article-section">
-                <h2>Пример вызова SUB</h2>
-                <pre><code class="language-axiom">' Ожидаемый вывод: ==Axiom==
-SUB ShowBanner(text AS STRING)
-    PRINT "=="; text; "=="
-END SUB
-
-ShowBanner("Axiom")</code></pre>
-            </section>
-
-        <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/operators/sub/basic_call.axm">SUB: базовый вызов</a></li>
-                    <li><a href="../../samples/operators/sub/local_nested_call.axm">SUB: локальная вложенная процедура</a></li>
-                    <li><a href="../../samples/operators/sub/capture_outer_local.axm">SUB: захват внешней локальной переменной</a></li>
-                    <li><a href="../../samples/operators/sub/byref_scalar_argument.axm">SUB: простая переменная по BYREF</a></li>
-                    <li><a href="../../samples/operators/sub/byref_record_argument.axm">SUB: передача записи по BYREF</a></li>
-                    <li><a href="../../samples/operators/sub/byval_record_copy.axm">SUB: копия записи при BYVAL</a></li>
-                    <li><a href="../../samples/control-flow/return/sub_early_exit.axm">RETURN: досрочный выход из SUB</a></li>
-                </ul>
-            </section>
-
-        <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="procedures-and-functions.html">Процедуры и функции</a>
-                    <a href="function.html">Функция FUNCTION</a>
-                    <a href="return.html">Оператор RETURN</a>
-                    <a href="variables-and-constants.html">Переменные и константы</a>
-                    <a href="data-types.html">Типы данных</a>
-                    <a href="type.html">Тип TYPE</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+PRINT count</code></pre><p>Ожидаемый вывод:</p><pre><code>11</code></pre></section>
+<section class="article-section"><h2>См. также</h2><p><a href="procedures-and-functions.html">Процедуры и функции</a> · <a href="function.html">FUNCTION</a> · <a href="calls.html">Вызовы</a> · <a href="return.html">RETURN</a></p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

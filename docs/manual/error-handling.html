@@ -1,94 +1,26 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Обработка пользовательских ошибок</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="error-handling">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Обработка ошибок</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-<main class="content">
-<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Обработка ошибок и диагностика</span><span>/</span><span>Обработка ошибок</span></nav>
-<p class="eyebrow">Раздел</p>
-<h1 class="page-title">Обработка пользовательских ошибок</h1>
-<p class="lead">Раздел обработки ошибок описывает средства Axiom для создания и перехвата ошибок времени выполнения: блок <code>TRY ... CATCH ... FINALLY ... END TRY</code>, оператор <code>ERROR</code> и встроенный тип <code>ERROR</code>.</p>
-
-<section class="article-section">
-<h2>Порядок обработки ошибок</h2>
-<p>Оператор <code>ERROR</code> создаёт пользовательскую ошибку времени выполнения или повторно поднимает уже пойманное значение ошибки. Если выполнение находится внутри подходящего блока <code>TRY</code>, управление переходит к <code>CATCH</code>. Если обработчика нет, программа завершается диагностикой времени выполнения с указанным кодом и сообщением.</p>
-<p>Здесь важно различать два похожих имени. <code>ERROR</code> как оператор создаёт или повторно поднимает ошибку. <code>ERROR</code> как встроенный тип — это значение, которое получает переменная в строке <code>CATCH err</code>.</p>
-<p>Ошибки перехватываются блоком <code>TRY ... CATCH ... FINALLY</code>. Оператор <code>ERROR</code> создаёт или повторно передаёт ошибку.</p>
-</section>
-
-<section class="article-section">
-<h2>Основные формы</h2>
-<pre><code class="language-axiom">ERROR код
-ERROR код, сообщение
-ERROR ошибка</code></pre>
-<p><code>код</code> и <code>сообщение</code> являются выражениями типа <code>STRING</code>. Код может быть проектным кодом вроде <code>"APP001"</code>. Если сообщение не указано, Axiom формирует сообщение по умолчанию. <code>ошибка</code> должна иметь тип <code>ERROR</code> и обычно берётся из <code>CATCH err</code>.</p>
-</section>
-
-<section class="article-section">
-<h2>Перехват</h2>
-<pre><code class="language-axiom">TRY
-    ERROR "APP001", "Manual failure"
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Обработка ошибок — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="error-handling"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Обработка ошибок</span></nav>
+<p class="eyebrow">13 · Обработка ошибок</p><h1 class="page-title">Обработка ошибок</h1><p class="lead">Раздел обработки ошибок описывает оператор TRY с блоками CATCH и FINALLY, оператор ERROR и встроенное значение ERROR. Эти средства позволяют реагировать на ошибки во время выполнения программы.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Перехват и завершение</h2><p>TRY выделяет защищённый участок. CATCH получает ошибку и выполняет обработку; FINALLY завершает работу с ресурсом при обычном выходе и при передаче ошибки дальше. Операторы предназначены для ошибок уже запущенной программы, а не для ошибок проверки исходного текста.</p></section>
+<section class="article-section"><h2>Сведения об ошибке</h2><p>Переменная CATCH имеет встроенный тип ERROR и доступна только для чтения. Её поля описывают код, текст и место отказа.</p><table class="data-table"><thead><tr><th>Поле</th><th>Тип</th><th>Назначение</th></tr></thead><tbody><tr><td>Code</td><td>STRING</td><td>Код системной или пользовательской ошибки.</td></tr><tr><td>Message</td><td>STRING</td><td>Текст сообщения.</td></tr><tr><td>Line</td><td>INTEGER</td><td>Номер строки исходника начиная с 1; 0, если место неизвестно.</td></tr><tr><td>Column</td><td>INTEGER</td><td>Номер столбца исходника начиная с 1; 0, если место неизвестно.</td></tr></tbody></table></section>
+<section class="article-section"><h2>Пользовательские ошибки</h2><p>ERROR с кодом и необязательным сообщением создаёт новый отказ. ERROR со значением ошибки повторно передаёт его наружу, сохраняя исходное место. После успешной обработки CATCH программа продолжается за END TRY; инструкция, вызвавшая ошибку, не повторяется.</p></section>
+<section class="article-section"><h2>Пример обработки</h2><pre><code class="language-axiom">TRY
+    PRINT 10 \ 0
 CATCH err
     PRINT err.Code
-    PRINT err.Message
+FINALLY
+    PRINT "finally"
 END TRY
-
-PRINT "after"</code></pre>
-<p>После выполнения <code>ERROR</code> строки внутри <code>TRY</code> ниже этого оператора не выполняются. В <code>CATCH</code> переменная <code>err</code> доступна только для чтения и содержит сведения о перехваченной ошибке.</p>
-</section>
-
-<section class="article-section">
-<h2>Передача ошибки дальше</h2>
-<pre><code class="language-axiom">TRY
-    TRY
-        ERROR "APP003", "Original failure"
-    CATCH err
-        PRINT "local cleanup"
-        ERROR err
-    END TRY
-CATCH outerErr
-    PRINT outerErr.Code
-    PRINT outerErr.Message
-    PRINT outerErr.Line
-END TRY</code></pre>
-<p><code>ERROR err</code> повторно поднимает уже пойманное значение <code>ERROR</code>. Внешний обработчик видит исходные <code>Code</code>, <code>Message</code>, <code>Line</code> и <code>Column</code>, поэтому такая форма подходит для локальной очистки, журналирования или преобразования управления без скрытия места первоначальной ошибки.</p>
-</section>
-
-<section class="article-section">
-<h2>Значение ERROR</h2>
-<p>В этом разделе <code>ERROR</code> означает встроенный тип значения ошибки, а не строку оператора <code>ERROR код</code>.</p>
-<table class="data-table"><thead><tr><th>Поле</th><th>Тип</th><th>Смысл</th></tr></thead><tbody>
-<tr><td><code>Code</code></td><td><code>STRING</code></td><td>Полный код ошибки. Для системных ошибок времени выполнения это код вроде <code>MB3001</code>, для пользовательских ошибок - строка, переданная в <code>ERROR</code>.</td></tr>
-<tr><td><code>Message</code></td><td><code>STRING</code></td><td>Текст сообщения об ошибке.</td></tr>
-<tr><td><code>Line</code></td><td><code>INTEGER</code></td><td>Строка исходного текста, где возникла ошибка, или <code>0</code>, если место неизвестно.</td></tr>
-<tr><td><code>Column</code></td><td><code>INTEGER</code></td><td>Колонка исходного текста, где возникла ошибка, или <code>0</code>, если место неизвестно.</td></tr>
-</tbody></table>
-</section>
-
-<section class="article-section">
-<h2>Ограничения</h2>
-<ul>
-<li><code>CATCH</code> пока не фильтрует ошибки по коду или типу.</li>
-<li>В одном блоке <code>TRY</code> поддерживается не более одного <code>CATCH</code>.</li>
-<li><code>RESUME</code>, <code>ON ERROR GOTO</code> и продолжение с точки ошибки не поддерживаются.</li>
-<li><code>TRY/CATCH/FINALLY</code>, <code>ERROR код</code>, <code>ERROR код, сообщение</code> и <code>ERROR err</code> выполняются <code>BytecodeVm</code> после компиляции.</li>
-</ul>
-</section>
-
-<section class="article-section">
-<h2>Запускаемые примеры</h2>
-<ul class="resource-list"><li><a href="../../samples/operators/error/user_code_catch.axm">ERROR: пользовательский код и перехват через CATCH</a></li><li><a href="../../samples/operators/error/rethrow_caught_error.axm">ERROR: повторный проброс пойманной ошибки</a></li><li><a href="../../samples/operators/try/handled_runtime_error.axm">TRY: перехват системной ошибки времени выполнения и FINALLY</a></li></ul>
-</section>
-
-<section class="article-section">
-<h2>См. также</h2>
-<div class="link-list"><a href="try.html">Оператор TRY</a><a href="error.html">Оператор ERROR</a><a href="diagnostics.html">Диагностика</a><a href="arrays-diagnostics.html">Ошибки массивов</a><a href="data-type-limits.html">Диапазоны и ограничения типов</a><a href="examples.html">Примеры программ</a></div>
-</section>
-
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
+PRINT "after"</code></pre><p>Ожидаемый вывод:</p><pre><code>MB3001
+finally
+after</code></pre></section>
+<section class="article-section"><h2>Справочные статьи</h2><p><a href="try.html">TRY, CATCH, FINALLY</a> · <a href="error.html">ERROR</a> · <a href="return.html">Возврат через FINALLY</a> · <a href="file-system-functions.html">Файловые отказы</a> · <a href="arrays-diagnostics.html">Диагностика массивов</a></p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

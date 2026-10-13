@@ -1,42 +1,28 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Функция PMAP</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="pmap">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Графика</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Функция PMAP</span>
-            </nav>
-            <p class="eyebrow">Встроенная функция</p>
-            <h1 class="page-title">Функция PMAP</h1>
-            <p class="lead"><code>PMAP</code> — встроенная функция языка Axiom, которая переводит одну координату между логической системой координат оператора <code>WINDOW</code> и физической системой координат текущего viewport.</p>
+<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<title>Функция PMAP — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="pmap"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Функция PMAP</span></nav>
+<p class="eyebrow">Встроенная функция</p><h1 class="page-title">Функция PMAP</h1><p class="lead"><code>PMAP</code> — встроенная функция языка Axiom, которая преобразует одну координату между логической шкалой <code>WINDOW</code> и физической системой текущей области <code>VIEW</code>.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+
 
             <section class="article-section">
-                <h2>Для чего нужна функция PMAP</h2>
-                <p>Функция <code>PMAP</code> нужна тогда, когда программе одновременно требуется логическая шкала <code>WINDOW</code> и реальные пиксельные координаты viewport.</p>
+                <h2>Применение</h2>
+                <p>Используйте функцию для вычислений, которым нужны обе системы координат: например, чтобы сопоставить точку графика с её положением в пикселях.</p>
             </section>
 
         <section class="article-section">
-                <h2>Где работает функция PMAP</h2>
-                <p>Функция <code>PMAP</code> работает только после выбора графического режима <code>SCREEN 1..10</code>.</p>
+                <h2>Контекст выполнения</h2>
+                <p>Для вызова требуется графический режим <code>SCREEN 1..10</code>.</p>
             </section>
 
         <section class="article-section">
                 <h2>Синтаксис</h2>
-<pre><code class="language-axiom">PMAP(coordinate, selector)</code></pre>
+<pre><code class="language-axiom">PMAP(&lt;координата&gt;, &lt;селектор&gt;)</code></pre>
             </section>
 
         <section class="article-section">
@@ -46,15 +32,15 @@
                         <tr><th>Аргумент</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>coordinate</code></td><td>Числовая координата, которую функция <code>PMAP</code> должна преобразовать.</td></tr>
-                        <tr><td><code>selector</code></td><td>Число, которое задаёт направление преобразования.</td></tr>
+                        <tr><td><code>&lt;координата&gt;</code></td><td>Передайте числовую координату, которую функция <code>PMAP</code> должна преобразовать. Передаваемое значение имеет тип <code>DOUBLE</code>.</td></tr>
+                        <tr><td><code>&lt;селектор&gt;</code></td><td>Передайте число, которое задаёт направление преобразования. Передаваемое значение имеет тип <code>INTEGER</code>.</td></tr>
                     </tbody>
                 </table>
             </section>
 
         <section class="article-section">
                 <h2>Что возвращает функция PMAP</h2>
-                <p>Функция <code>PMAP</code> возвращает одну преобразованную координату. Для оси <code>X</code> и для оси <code>Y</code> используются разные селекторы.</p>
+                <p>Результат содержит одну координату. Селектор определяет ось и направление преобразования; для точки из двух координат нужны два вызова.</p>
             </section>
 
         <section class="article-section">
@@ -64,19 +50,22 @@
                         <tr><th>Селектор</th><th>Преобразование</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>0</code></td><td>Преобразование логической координаты <code>X</code> в физическую координату viewport.</td></tr>
-                        <tr><td><code>1</code></td><td>Преобразование логической координаты <code>Y</code> в физическую координату viewport.</td></tr>
-                        <tr><td><code>2</code></td><td>Преобразование физической координаты <code>X</code> viewport в логическую координату.</td></tr>
-                        <tr><td><code>3</code></td><td>Преобразование физической координаты <code>Y</code> viewport в логическую координату.</td></tr>
+                        <tr><td><code>0</code></td><td>Преобразование логической координаты <code>X</code> в физическую координату графической области.</td></tr>
+                        <tr><td><code>1</code></td><td>Преобразование логической координаты <code>Y</code> в физическую координату графической области.</td></tr>
+                        <tr><td><code>2</code></td><td>Преобразование физической координаты <code>X</code> графической области в логическую координату.</td></tr>
+                        <tr><td><code>3</code></td><td>Преобразование физической координаты <code>Y</code> графической области в логическую координату.</td></tr>
                     </tbody>
                 </table>
             </section>
 
         <section class="article-section">
                 <h2>Правила работы</h2>
-                <p>Если программа не включила оператор <code>WINDOW</code>, функция <code>PMAP</code> работает относительно текущего договора viewport.</p>
-                <p>Если программа изменила оператор <code>VIEW</code> или оператор <code>WINDOW</code>, результат функции <code>PMAP</code> тоже меняется, потому что меняется связь между логическими и физическими координатами.</p>
+                <p>Если логическая шкала <code>WINDOW</code> не настроена, функция возвращает исходную координату.</p>
+                <p>После изменения <code>VIEW</code> или <code>WINDOW</code> та же исходная координата может получить другой результат: функция всегда использует текущие настройки.</p>
             </section>
+<section class="article-section"><h2>Типы аргументов и отсутствие шкалы</h2><p>Первый аргумент приводится к <code>DOUBLE</code>, второй — к <code>INTEGER</code>. Функция возвращает <code>DOUBLE</code> и сохраняет дробную часть преобразованной координаты. Селектор должен лежать в 0..3, координата должна быть конечной; нарушение сообщает <code>MB3007</code>. Без активного <code>WINDOW</code> функция возвращает переданную координату.</p>
+<p>Физическая координата результата относится к системе VIEW: при относительной области это координата внутри неё, при VIEW <code>SCREEN</code> — абсолютная координата экрана. Поэтому при относительной области начало области нужно прибавить отдельно, если требуется абсолютный пиксель. При активном <code>WINDOW</code> слишком узкая область, не позволяющая выполнить преобразование, сообщает <code>MB3007</code>.</p></section>
+
 
         <section class="article-section">
                 <h2>Диагностика</h2>
@@ -97,7 +86,7 @@ PRINT PMAP(200, 1)
 PRINT PMAP(10, 2)
 PRINT PMAP(10, 3)
 SLEEP</code></pre>
-                <p>В этом примере функция <code>PMAP</code> сначала переводит логические координаты <code>WINDOW</code> в физические координаты viewport, а затем переводит координаты viewport обратно в логическую шкалу.</p>
+                <p>Первые вызовы вычисляют физическое положение логической точки; последующие вызовы выполняют обратное преобразование.</p>
             </section>
 
         <section class="article-section">
@@ -109,9 +98,8 @@ SLEEP</code></pre>
                 </div>
             </section>
 
-            <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+
+
+
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

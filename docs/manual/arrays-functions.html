@@ -1,302 +1,137 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - ARRAY-функции</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="arrays-functions">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Границы, форма, срезы и изменение массивов</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="arrays.html">Массивы</a>
-                <span>/</span>
-                <span>ARRAY-функции</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">ARRAY-функции</h1>
-                <p class="lead">Раздел ARRAY-функций описывает функции для сведений о массиве и операций над его содержимым: границы, число измерений, количество элементов, выделение памяти, срезы и изменение динамического массива.</p>
-                <p>В подписях встроенных функций IDE обозначение <code>T</code> означает тип элемента массива, а <code>T()</code> — массив этого типа. Это обозначения справочной подписи, а не новые типы языка. Формы <code>LBOUND(array, dimension)</code> и <code>UBOUND(array, dimension)</code> также доступны в подсказках редактора; номер измерения отсчитывается от единицы.</p>
-
-            <section class="article-section">
-                <h2>Назначение функций</h2>
-                <ul>
-                    <li><code>LBOUND</code> и <code>UBOUND</code> возвращают нижнюю и верхнюю границу измерения.</li>
-                    <li><code>ARRAYRANK</code>, <code>ARRAYLENGTH</code> и <code>ARRAYBOUNDS</code> описывают форму массива.</li>
-                    <li><code>ARRAYISALLOCATED</code> проверяет, можно ли обращаться к элементам динамического массива.</li>
-                    <li><code>ARRAYSLICE</code> выбирает непрерывную часть массива.</li>
-                    <li><code>ARRAYPUSH</code>, <code>ARRAYPOP</code>, <code>ARRAYINSERT</code> и <code>ARRAYREMOVE</code> меняют размер динамического массива.</li>
-                </ul>
-                <p>В синтаксисе этой страницы имена в угловых скобках, например <code>&lt;массив&gt;</code>, <code>&lt;измерение&gt;</code> и <code>&lt;значение&gt;</code>, являются метапеременными. Это не слова языка: вместо них в программе пишут имя массива, выражение с номером измерения или значение нужного типа.</p>
-            </section>
-
-            <section class="article-section" id="lbound">
-                <h2>LBOUND</h2>
-                <p><code>LBOUND</code> возвращает нижнюю границу выбранного измерения массива.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">LBOUND(&lt;массив&gt;)
-LBOUND(&lt;массив&gt;, &lt;измерение&gt;)</code></pre>
-                <h3>Аргументы</h3>
-                <ul>
-                    <li><code>&lt;массив&gt;</code> - массив, для которого определяется граница.</li>
-                    <li><code>&lt;измерение&gt;</code> - номер измерения. Если аргумент не указан, используется первое измерение. Для двумерного массива <code>ROW</code> означает измерение <code>1</code>, а <code>COLUMN</code> - измерение <code>2</code>.</li>
-                </ul>
-                <h3>Пример нижней границы</h3>
-                <pre><code class="language-axiom">DIM scores(1 TO 5) AS INTEGER
-PRINT LBOUND(scores)</code></pre>
-            </section>
-
-            <section class="article-section" id="ubound">
-                <h2>UBOUND</h2>
-                <p><code>UBOUND</code> возвращает верхнюю границу выбранного измерения массива.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">UBOUND(&lt;массив&gt;)
-UBOUND(&lt;массив&gt;, &lt;измерение&gt;)</code></pre>
-                <h3>Аргументы</h3>
-                <ul>
-                    <li><code>&lt;массив&gt;</code> - массив, для которого определяется граница.</li>
-                    <li><code>&lt;измерение&gt;</code> - номер измерения. Для двумерных массивов можно использовать предопределённые целочисленные константы <code>ROW</code> и <code>COLUMN</code>; это готовые имена для строк и столбцов, а не функции.</li>
-                </ul>
-                <h3>Пример верхней границы</h3>
-                <pre><code class="language-axiom">DIM board(1 TO 3, 1 TO 4) AS INTEGER
-PRINT UBOUND(board, COLUMN)</code></pre>
-            </section>
-
-            <section class="article-section" id="arraylength">
-                <h2>ARRAYLENGTH</h2>
-                <p><code>ARRAYLENGTH</code> возвращает общее число элементов, видимых через массив или представление.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">ARRAYLENGTH(&lt;массив&gt;)</code></pre>
-                <h3>Что считает ARRAYLENGTH</h3>
-                <p>Для одномерного массива это длина диапазона индексов. Для многомерного массива результатом является произведение длин всех измерений.</p>
-                <h3>Пример длины массива</h3>
-                <pre><code class="language-axiom">DIM board(1 TO 2, 1 TO 3) AS INTEGER
-PRINT ARRAYLENGTH(board)</code></pre>
-            </section>
-
-            <section class="article-section" id="arrayisallocated">
-                <h2>ARRAYISALLOCATED</h2>
-                <p><code>ARRAYISALLOCATED</code> показывает, выделена ли память для элементов массива.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">ARRAYISALLOCATED(&lt;массив&gt;)</code></pre>
-                <h3>Проверка перед доступом к элементам</h3>
-                <p>Функция полезна перед обращением к динамическому массиву. Она не сообщает границы и не заменяет <code>LBOUND</code> или <code>UBOUND</code>.</p>
-                <h3>Пример проверки выделения</h3>
-                <pre><code class="language-axiom">DIM values() AS INTEGER
-PRINT ARRAYISALLOCATED(values)
-REDIM values(1 TO 3)
-PRINT ARRAYISALLOCATED(values)</code></pre>
-            </section>
-
-            <section class="article-section" id="arrayrank">
-                <h2>ARRAYRANK</h2>
-                <p><code>ARRAYRANK</code> возвращает число измерений массива.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">ARRAYRANK(&lt;массив&gt;)</code></pre>
-                <h3>Ранг как число измерений</h3>
-                <p><code>ARRAYRANK</code> может работать и с ещё не выделенным динамическим массивом, потому что число измерений известно по объявлению.</p>
-                <h3>Пример ранга массива</h3>
-                <pre><code class="language-axiom">DIM cube(,,) AS INTEGER
-PRINT ARRAYRANK(cube)</code></pre>
-            </section>
-
-            <section class="article-section" id="arraybounds">
-                <h2>ARRAYBOUNDS</h2>
-                <p><code>ARRAYBOUNDS</code> возвращает таблицу границ массива по всем измерениям.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">ARRAYBOUNDS(&lt;массив&gt;)</code></pre>
-                <h3>Таблица границ измерений</h3>
-                <p>Результатом является новый массив <code>INTEGER(1 TO &lt;ранг&gt;, 1 TO 2)</code>. В каждой строке хранится пара границ одного измерения: в первом столбце нижняя граница, во втором - верхняя.</p>
-                <h3>Пример чтения всех границ</h3>
-                <pre><code class="language-axiom">DIM board(1 TO 2, 10 TO 11) AS INTEGER
-DIM bounds(,) AS INTEGER
-
-bounds = ARRAYBOUNDS(board)
-PRINT bounds(1, 1)
-PRINT bounds(1, 2)
-PRINT bounds(2, 1)
-PRINT bounds(2, 2)</code></pre>
-            </section>
-
-            <section class="article-section" id="arrayslice">
-                <h2>ARRAYSLICE</h2>
-                <p>ARRAYSLICE — встроенная функция языка Axiom, которая возвращает непрерывную часть массива по начальному индексу и количеству элементов или срезов. Функция работает в BytecodeVm без экранного или файлового режима.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">ARRAYSLICE(&lt;массив&gt;, &lt;начальный индекс&gt;, &lt;количество&gt;)</code></pre>
-<pre><code class="language-axiom">ARRAYSLICE(&lt;массив&gt;, &lt;начальный индекс&gt;, &lt;количество&gt;, &lt;измерение&gt;)</code></pre>
-                <h3>Аргументы</h3>
-                <ul>
-                    <li><code>&lt;начальный индекс&gt;</code> - первый индекс выбранного участка.</li>
-                    <li><code>&lt;количество&gt;</code> - сколько элементов или срезов нужно взять.</li>
-                    <li><code>&lt;измерение&gt;</code> - измерение, вдоль которого строится срез.</li>
-                </ul>
-                <h3>Правила и диагностика</h3>
-                <p>Исходный массив должен быть выделен. Начальный индекс, количество и номер измерения должны иметь тип INTEGER. Номер измерения отсчитывается от единицы и не должен превышать ARRAYRANK(array). Если номер явно указан для одномерного массива, допустимо только 1. Для многомерного массива номер требуется явно; отсутствие отклоняется при связывании.</p>
-                <p>Одномерный результат имеет компактные границы 1 TO count; многомерный результат сохраняет индексы выбранного участка и границы остальных измерений. Исходный массив не изменяется. Отрицательное количество, недопустимое измерение или непустой участок вне границ дают MB3007. Ошибку можно перехватить оператором TRY/CATCH.</p>
-                <pre><code class="language-axiom">DIM values(5 TO 7) AS INTEGER
-DIM part() AS INTEGER
-values(6) = 20
-part = ARRAYSLICE(values, 6, 1, 1)
-PRINT part(1)  ' 20; результат начинается с индекса 1</code></pre>
-                <p>Пустой многомерный результат сохраняет ранг и границы остальных измерений. Обычно пустое выбранное измерение задаётся парой соседних индексов: нижняя граница на единицу больше верхней. Если ARRAYSLICE с count=0 получает start=INTEGER.MinValue или ARRAYSKIP пропускает всё измерение с верхней границей INTEGER.MaxValue, такую пару нельзя задать допустимыми индексами; выбранное измерение получает границы 1 TO 0. Результат остаётся выделенным массивом длины 0. Нижняя граница исходного массива INTEGER.MinValue по-прежнему запрещена: это значение зарезервировано для поиска.</p>
-                <pre><code class="language-axiom">DIM values(2147483647 TO 2147483647, 7 TO 7) AS INTEGER
-DIM part(,) AS INTEGER
-part = ARRAYSKIP(values, 1, 1)
-PRINT ARRAYLENGTH(part)  ' 0
-PRINT LBOUND(part, 1)    ' 1
-PRINT UBOUND(part, 1)    ' 0
-PRINT LBOUND(part, 2)    ' 7</code></pre>
-                <p>Запускаемый пример: <a href="../../samples/functions/arrayskip/empty_at_max_index.axm">Пустое измерение у крайнего индекса</a>.</p>
-                <h3>Пример выборки диапазона</h3>
-                <pre><code class="language-axiom">DIM values(1 TO 5) AS INTEGER
-DIM part() AS INTEGER
-
-part = ARRAYSLICE(values, 2, 3)</code></pre>
-            </section>
-
-            <section class="article-section" id="arraypush">
-                <h2>ARRAYPUSH</h2>
-                <p>ARRAYPUSH — встроенная функция языка Axiom, которая добавляет элемент в конец одномерного динамического массива или целый срез в конец выбранного измерения многомерного массива. Функция нужна для последовательного накопления значений и работает в BytecodeVm; экранный и файловый режимы не требуются.</p>
-                <h3>Синтаксис</h3>
-                <p>Одномерная форма:</p>
-                <pre><code class="language-axiom">ARRAYPUSH(&lt;массив&gt;, &lt;значение&gt;)</code></pre>
-                <p>Форма с явным выбором измерения:</p>
-                <pre><code class="language-axiom">ARRAYPUSH(&lt;массив&gt;, &lt;значение&gt;, &lt;измерение&gt;)</code></pre>
-                <p>У многомерного массива измерение нужно указать явно. У одномерного массива допустим номер <code>1</code>.</p>
-                <h3>Как меняются границы после добавления</h3>
-                <p>Для массива ранга <code>2</code> и выше <code>&lt;значение&gt;</code> должно иметь форму, согласованную со всеми остальными измерениями.</p>
-                <p>Верхняя граница выбранного измерения увеличивается на один, нижняя сохраняется. Функция изменяет массив и не возвращает отдельного значения. Аргумент <code>&lt;массив&gt;</code> должен быть выделенным динамическим массивом; представление нельзя расширять. Аргумент <code>&lt;значение&gt;</code> должен соответствовать типу элемента, а для многомерной формы — типу и форме добавляемого среза. Номер измерения должен иметь тип INTEGER.</p>
-                <p>Номер измерения должен лежать в диапазоне от <code>1</code> до <code>ARRAYRANK(array)</code>. Недопустимый номер или отсутствие номера у многомерного массива вызывает <code>MB3007</code> до изменения массива. <a href="arrays-and-builtins.html#transform-axis-contract">Общие правила выбора измерения</a>.</p>
-                <h3>Диагностика при расширении</h3>
-                <p>Невыделенный массив вызывает <code>MB3005</code> с именами функции и аргумента. Если верхняя граница равна <code>2147483647</code>, добавление вызывает <code>MB3007</code> до изменения массива; прежние границы и элементы сохраняются. <a href="../../samples/functions/arraypush/upper_bound_overflow.axm">Запускаемая проверка отказа</a>.</p>
-                <h3>Пример добавления элемента</h3>
-                <pre><code class="language-axiom">DIM values() AS INTEGER
-
-REDIM values(1 TO 2)
-values(1) = 10
-values(2) = 20
-ARRAYPUSH(values, 30)</code></pre>
-            </section>
-
-            <section class="article-section" id="arraypop">
-                <h2>ARRAYPOP</h2>
-                <p><code>ARRAYPOP</code> снимает последний элемент или последний срез и возвращает его как результат.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">ARRAYPOP(&lt;массив&gt;)
-ARRAYPOP(&lt;массив&gt;, &lt;измерение&gt;)</code></pre>
-                <h3>Что возвращается при снятии элемента</h3>
-                <p>После вызова исходный массив уменьшается. Для многомерного массива результатом становится отдельный массив, представляющий снятый срез.</p>
-                <h3>Пример снятия последнего элемента</h3>
-                <pre><code class="language-axiom">DIM values() AS INTEGER
-DIM lastValue AS INTEGER
-
-REDIM values(1 TO 3)
-values(3) = 30
-lastValue = ARRAYPOP(values)</code></pre>
-                            <h3>Проверка номера измерения</h3>
-                <p>Если номер измерения указан явно, он должен иметь тип INTEGER и лежать в диапазоне от 1 до ARRAYRANK(array). У одномерного массива допустим только номер 1. Недопустимый номер даёт MB3007 до изменения массива; ошибку можно перехватить оператором TRY/CATCH. <a href="arrays-and-builtins.html#transform-axis-contract">Общие правила и пример проверки</a>.</p>
-            </section>
-
-            <section class="article-section" id="arrayinsert">
-                <h2>ARRAYINSERT</h2>
-                <p>ARRAYINSERT — встроенная функция языка Axiom, которая вставляет элемент или срез по указанной позиции. Функция нужна для добавления значения перед уже существующими элементами и работает в BytecodeVm без специального режима.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">ARRAYINSERT(&lt;массив&gt;, &lt;индекс&gt;, &lt;значение&gt;)
-ARRAYINSERT(&lt;массив&gt;, &lt;индекс&gt;, &lt;значение&gt;, &lt;измерение&gt;)</code></pre>
-                <h3>Как сдвигаются элементы после вставки</h3>
-                <p>Все элементы после точки вставки сдвигаются. Для многомерного массива форма вставляемого значения должна соответствовать выбранному измерению.</p>
-                <p>Если выбранное измерение пусто, индекс вставки должен быть равен 1. После вставки выбранное измерение получает границы 1 TO 1, даже если пустая форма до вызова имела другие границы, например -4 TO -5. Границы остальных измерений сохраняются. Для одномерного пустого массива действует то же правило. Исходный массив должен быть выделен; изменение размера представления массива запрещено.</p>
-                <h3>Пример вставки в пустую таблицу</h3>
-                <pre><code class="language-axiom">DIM seed(-4 TO -4, 7 TO 8) AS INTEGER
-DIM table(,) AS INTEGER
-DIM values(7 TO 8) AS INTEGER
-values(7) = 42
-values(8) = 43
-table = ARRAYTAKE(seed, 0, 1)
-ARRAYINSERT(table, 1, values, 1)
-PRINT LBOUND(table, 1)
-PRINT UBOUND(table, 1)
-PRINT table(1, 7)</code></pre>
-                <p>Программа выводит 1, 1 и 42. Запускаемый пример: <a href="../../samples/functions/arrayinsert/empty_dimension.axm">empty_dimension.axm</a>.</p>
-                <h3>Пример вставки по индексу</h3>
-                <pre><code class="language-axiom">DIM values() AS INTEGER
-
-REDIM values(1 TO 3)
-values(1) = 10
-values(2) = 30
-values(3) = 40
-ARRAYINSERT(values, 2, 20)</code></pre>
-                            <h3>Проверка номера измерения</h3>
-                <p>Если номер измерения указан явно, он должен иметь тип INTEGER и лежать в диапазоне от 1 до ARRAYRANK(array). У одномерного массива допустим только номер 1. Недопустимый номер даёт MB3007 до изменения массива; ошибку можно перехватить оператором TRY/CATCH. <a href="arrays-and-builtins.html#transform-axis-contract">Общие правила и пример проверки</a>.</p>
-            </section>
-
-            <section class="article-section" id="arrayremove">
-                <h2>ARRAYREMOVE</h2>
-                <p><code>ARRAYREMOVE</code> удаляет элемент или срез по указанной позиции и возвращает удалённое значение.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">ARRAYREMOVE(&lt;массив&gt;, &lt;индекс&gt;)
-ARRAYREMOVE(&lt;массив&gt;, &lt;индекс&gt;, &lt;измерение&gt;)</code></pre>
-                <h3>Как сдвигаются элементы после удаления</h3>
-                <p>После удаления хвост массива сдвигается, а размер массива уменьшается. Для многомерного массива возвращается удалённый срез.</p>
-                <h3>Пример удаления по индексу</h3>
-                <pre><code class="language-axiom">DIM values() AS INTEGER
-DIM removedValue AS INTEGER
-
-REDIM values(1 TO 3)
-values(1) = 10
-values(2) = 20
-values(3) = 30
-removedValue = ARRAYREMOVE(values, 2)</code></pre>
-                            <h3>Проверка номера измерения</h3>
-                <p>Если номер измерения указан явно, он должен иметь тип INTEGER и лежать в диапазоне от 1 до ARRAYRANK(array). У одномерного массива допустим только номер 1. Недопустимый номер даёт MB3007 до изменения массива; ошибку можно перехватить оператором TRY/CATCH. <a href="arrays-and-builtins.html#transform-axis-contract">Общие правила и пример проверки</a>.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/functions/lbound/basic_usage.axm">LBOUND</a></li>
-                    <li><a href="../../samples/functions/ubound/basic_usage.axm">UBOUND</a></li>
-                    <li><a href="../../samples/functions/arrayrank/basic_usage.axm">ARRAYRANK</a></li>
-                    <li><a href="../../samples/functions/arraybounds/multidimensional_shape.axm">ARRAYBOUNDS</a></li>
-                    <li><a href="../../samples/functions/arrayslice/basic_usage.axm">ARRAYSLICE</a></li>
-                    <li><a href="../../samples/functions/arraypush/basic_usage.axm">ARRAYPUSH</a></li>
-                    <li><a href="../../samples/functions/arraypop/basic_usage.axm">ARRAYPOP</a></li>
-                    <li><a href="../../samples/functions/arrayinsert/basic_usage.axm">ARRAYINSERT</a></li>
-                    <li><a href="../../samples/functions/arrayremove/basic_usage.axm">ARRAYREMOVE</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="arrays.html">Массивы</a>
-                    <a href="arrays-and-builtins.html">Функции массивов</a>
-                    <a href="arrays-dynamic.html">Динамические массивы, REDIM, ERASE</a>
-                    <a href="arrays-indexing.html">Индексирование массивов</a>
-                    <a href="arrays-slices.html">Срезы и представления</a>
-                    <a href="arrays-diagnostics.html">Ошибки массивов</a>
-                    <a href="data-types-records-and-arrays.html">TYPE и массивы</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Форма и изменение размера массива — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="arrays-functions"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Форма и изменение размера массива</span></nav>
+<p class="eyebrow">10 · Массивы</p><h1 class="page-title">Форма и изменение размера массива</h1><p class="lead">Раздел объединяет встроенные функции, которые получают форму массива и изменяют число его элементов.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Назначение и условия работы</h2><p>Здесь описаны отдельные встроенные функции <code>LBOUND</code>, <code>UBOUND</code>, <code>ARRAYLENGTH</code>, <code>ARRAYISALLOCATED</code>, <code>ARRAYRANK</code>, <code>ARRAYBOUNDS</code>, <code>ARRAYPUSH</code>, <code>ARRAYPOP</code>, <code>ARRAYINSERT</code>, <code>ARRAYREMOVE</code>. Формы ниже относятся к указанным функциям, а не к одной общей конструкции.</p><p>Операции доступны без графического режима. Обычно требуется выделенный массив, включая выделенный пустой массив. ARRAYLENGTH, ARRAYISALLOCATED, ARRAYRANK и ARRAYCLONE допускают невыделенное состояние. Изменение размера запрещено для представления; изменение содержимого через представление видно в исходном массиве.</p></section>
+<section class="article-section" id="lbound"><h2>LBOUND</h2><p><code>LBOUND</code> — встроенная функция языка Axiom, которая возвращает нижнюю границу выбранного измерения массива.</p><h3>Синтаксис</h3><pre><code class="language-axiom">LBOUND(&lt;массив&gt;)</code></pre><pre><code class="language-axiom">LBOUND(&lt;массив&gt;, &lt;измерение&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;массив&gt;</code>: Массив ранга 1 или выше задаёт видимую область обработки. Все элементы имеют тип, установленный при объявлении массива.</p><p><code>&lt;измерение&gt;</code>: Целое число INTEGER выбирает измерение от 1 до ранга включительно. ROW равно 1, COLUMN равно 2. Без этого аргумента выбирается первое измерение, в том числе у многомерного массива.</p><h3>Действие, результат и ограничения</h3><p>Результат INTEGER. Без номера измерения выбирается первое измерение. Допустимы номера от 1 до ARRAYRANK(массив). Граница может быть отрицательной или нулевой.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3005 возникает, если массив не выделен. MB3007 возникает для номера измерения вне 1..ARRAYRANK.</p><h3>Пример</h3><pre><code class="language-axiom">DIM a(-1 TO 1) AS INTEGER
+a(-1) = 3
+a(0) = 1
+a(1) = 3
+PRINT LBOUND(a)</code></pre><p>Ожидаемый вывод:</p><pre><code>-1</code></pre><h3>Пример многомерной формы</h3><pre><code class="language-axiom">DIM board(-1 TO 0, 3 TO 4) AS INTEGER
+board(-1, 3) = 4
+board(-1, 4) = 1
+board(0, 3) = 2
+board(0, 4) = 3
+PRINT LBOUND(board, COLUMN)</code></pre><p>Ожидаемый вывод:</p><pre><code>3</code></pre></section>
+<section class="article-section" id="ubound"><h2>UBOUND</h2><p><code>UBOUND</code> — встроенная функция языка Axiom, которая возвращает верхнюю границу выбранного измерения массива.</p><h3>Синтаксис</h3><pre><code class="language-axiom">UBOUND(&lt;массив&gt;)</code></pre><pre><code class="language-axiom">UBOUND(&lt;массив&gt;, &lt;измерение&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;массив&gt;</code>: Массив ранга 1 или выше задаёт видимую область обработки. Все элементы имеют тип, установленный при объявлении массива.</p><p><code>&lt;измерение&gt;</code>: Целое число INTEGER выбирает измерение от 1 до ранга включительно. ROW равно 1, COLUMN равно 2. Без этого аргумента выбирается первое измерение, в том числе у многомерного массива.</p><h3>Действие, результат и ограничения</h3><p>Результат INTEGER. Без номера измерения выбирается первое измерение. Допустимы номера от 1 до ARRAYRANK(массив). Для канонического пустого диапазона 1 TO 0 верхняя граница равна 0.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3005 возникает, если массив не выделен. MB3007 возникает для номера измерения вне 1..ARRAYRANK.</p><h3>Пример</h3><pre><code class="language-axiom">DIM a(-1 TO 1) AS INTEGER
+a(-1) = 3
+a(0) = 1
+a(1) = 3
+PRINT UBOUND(a)</code></pre><p>Ожидаемый вывод:</p><pre><code>1</code></pre><h3>Пример многомерной формы</h3><pre><code class="language-axiom">DIM board(-1 TO 0, 3 TO 4) AS INTEGER
+board(-1, 3) = 4
+board(-1, 4) = 1
+board(0, 3) = 2
+board(0, 4) = 3
+PRINT UBOUND(board, COLUMN)</code></pre><p>Ожидаемый вывод:</p><pre><code>4</code></pre></section>
+<section class="article-section" id="arraylength"><h2>ARRAYLENGTH</h2><p><code>ARRAYLENGTH</code> — встроенная функция языка Axiom, которая возвращает число видимых элементов массива.</p><h3>Синтаксис</h3><pre><code class="language-axiom">ARRAYLENGTH(&lt;массив&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;массив&gt;</code>: Массив ранга 1 или выше задаёт видимую область обработки. Все элементы имеют тип, установленный при объявлении массива.</p><h3>Действие, результат и ограничения</h3><p>Результат INTEGER равен произведению видимых длин всех измерений. Невыделенный и выделенный пустой массивы дают 0; для различения состояний нужна ARRAYISALLOCATED.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. Невыделенное состояние допустимо. Аргумент должен быть массивом; несовместимое скалярное значение отклоняется при проверке программы.</p><h3>Пример</h3><pre><code class="language-axiom">DIM a(-1 TO 1) AS INTEGER
+a(-1) = 3
+a(0) = 1
+a(1) = 3
+PRINT ARRAYLENGTH(a)</code></pre><p>Ожидаемый вывод:</p><pre><code>3</code></pre></section>
+<section class="article-section" id="arrayisallocated"><h2>ARRAYISALLOCATED</h2><p><code>ARRAYISALLOCATED</code> — встроенная функция языка Axiom, которая проверяет, выделено ли хранилище элементов массива.</p><h3>Синтаксис</h3><pre><code class="language-axiom">ARRAYISALLOCATED(&lt;массив&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;массив&gt;</code>: Массив ранга 1 или выше задаёт видимую область обработки. Все элементы имеют тип, установленный при объявлении массива.</p><h3>Действие, результат и ограничения</h3><p>Результат BOOLEAN. Выделенный пустой массив даёт TRUE, невыделенный массив после DIM без границ или ERASE — FALSE.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. Невыделенное состояние допустимо. Аргумент должен быть массивом; несовместимое скалярное значение отклоняется при проверке программы.</p><h3>Пример</h3><pre><code class="language-axiom">DIM a(-1 TO 1) AS INTEGER
+a(-1) = 3
+a(0) = 1
+a(1) = 3
+PRINT ARRAYISALLOCATED(a)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE</code></pre></section>
+<section class="article-section" id="arrayrank"><h2>ARRAYRANK</h2><p><code>ARRAYRANK</code> — встроенная функция языка Axiom, которая возвращает число измерений массива.</p><h3>Синтаксис</h3><pre><code class="language-axiom">ARRAYRANK(&lt;массив&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;массив&gt;</code>: Массив ранга 1 или выше задаёт видимую область обработки. Все элементы имеют тип, установленный при объявлении массива.</p><h3>Действие, результат и ограничения</h3><p>Результат INTEGER известен из объявления и доступен до выделения элементов и после ERASE.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. Невыделенное состояние допустимо. Аргумент должен быть массивом; несовместимое скалярное значение отклоняется при проверке программы.</p><h3>Пример</h3><pre><code class="language-axiom">DIM a(-1 TO 1) AS INTEGER
+a(-1) = 3
+a(0) = 1
+a(1) = 3
+PRINT ARRAYRANK(a)</code></pre><p>Ожидаемый вывод:</p><pre><code>1</code></pre></section>
+<section class="article-section" id="arraybounds"><h2>ARRAYBOUNDS</h2><p><code>ARRAYBOUNDS</code> — встроенная функция языка Axiom, которая возвращает таблицу нижних и верхних границ всех измерений.</p><h3>Синтаксис</h3><pre><code class="language-axiom">ARRAYBOUNDS(&lt;массив&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;массив&gt;</code>: Массив ранга 1 или выше задаёт видимую область обработки. Все элементы имеют тип, установленный при объявлении массива.</p><h3>Действие, результат и ограничения</h3><p>Результат INTEGER ранга 2 с границами (1 TO ранг, 1 TO 2). Столбец 1 содержит нижнюю границу, столбец 2 — верхнюю. Границы относятся к видимой форме, включая представления.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3005 возникает, если массив не выделен.</p><h3>Пример</h3><pre><code class="language-axiom">DIM a(-1 TO 1) AS INTEGER
+a(-1) = 3
+a(0) = 1
+a(1) = 3
+DIM b(,) AS INTEGER
+b = ARRAYBOUNDS(a)
+PRINT b(1, 1)
+PRINT b(1, 2)</code></pre><p>Ожидаемый вывод:</p><pre><code>-1
+1</code></pre></section>
+<section class="article-section" id="arraypush"><h2>ARRAYPUSH</h2><p><code>ARRAYPUSH</code> — встроенная функция языка Axiom, которая добавляет элемент или срез в конец выбранного измерения массива.</p><h3>Синтаксис</h3><pre><code class="language-axiom">ARRAYPUSH(&lt;массив&gt;, &lt;значение&gt;)</code></pre><pre><code class="language-axiom">ARRAYPUSH(&lt;массив&gt;, &lt;значение&gt;, &lt;измерение&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;массив&gt;</code>: Массив ранга 1 или выше задаёт видимую область обработки. Все элементы имеют тип, установленный при объявлении массива.</p><p><code>&lt;значение&gt;</code>: Для ранга 1 добавляемое значение должно быть совместимо с типом элемента. Для ранга 2 и выше передаётся выделенный массив того же типа элементов, ранга на 1 меньше; его границы должны совпадать со всеми невыбранными измерениями источника.</p><p><code>&lt;измерение&gt;</code>: Целое число INTEGER выбирает измерение от 1 до ранга включительно. ROW равно 1, COLUMN равно 2. Для преобразований массива ранга 2 и выше этот аргумент обязателен.</p><h3>Действие, результат и ограничения</h3><p>Функция изменяет размер исходного массива и не возвращает значения. Ранг 1 принимает значение элемента, ранг 2 и выше — выделенный массив на один ранг меньше с точно совпадающими границами невыбранных измерений. Верхняя граница увеличивается на 1, нижняя сохраняется. Представление не может менять размер. Для добавления в пустой одномерный массив сначала выделите 1 TO 0.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3005 возникает, если массив не выделен. MB2004 означает отсутствие обязательного номера измерения у массива ранга 2 и выше. MB3007 возникает для номера измерения вне ранга или попытки изменения размера представления. MB3007 также возникает при несовпадающих границах добавляемого среза или невозможности увеличения верхней границы. Невыделенный срез вызывает MB3005.</p><h3>Пример</h3><pre><code class="language-axiom">DIM a(-1 TO 1) AS INTEGER
+a(-1) = 3
+a(0) = 1
+a(1) = 3
+ARRAYPUSH(a, 7)
+PRINT UBOUND(a)
+PRINT a(2)</code></pre><p>Ожидаемый вывод:</p><pre><code>2
+7</code></pre><h3>Пример многомерной формы</h3><pre><code class="language-axiom">DIM board(-1 TO 0, 3 TO 4) AS INTEGER
+board(-1, 3) = 4
+board(-1, 4) = 1
+board(0, 3) = 2
+board(0, 4) = 3
+DIM rowValue() AS INTEGER
+rowValue = board(-1)
+ARRAYPUSH(board, rowValue, ROW)
+PRINT UBOUND(board, ROW)
+PRINT board(1, 3)</code></pre><p>Ожидаемый вывод:</p><pre><code>1
+4</code></pre></section>
+<section class="article-section" id="arraypop"><h2>ARRAYPOP</h2><p><code>ARRAYPOP</code> — встроенная функция языка Axiom, которая снимает последний элемент или срез выбранного измерения массива.</p><h3>Синтаксис</h3><pre><code class="language-axiom">ARRAYPOP(&lt;массив&gt;)</code></pre><pre><code class="language-axiom">ARRAYPOP(&lt;массив&gt;, &lt;измерение&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;массив&gt;</code>: Массив ранга 1 или выше задаёт видимую область обработки. Все элементы имеют тип, установленный при объявлении массива.</p><p><code>&lt;измерение&gt;</code>: Целое число INTEGER выбирает измерение от 1 до ранга включительно. ROW равно 1, COLUMN равно 2. Для преобразований массива ранга 2 и выше этот аргумент обязателен.</p><h3>Действие, результат и ограничения</h3><p>Возвращается снятый элемент для ранга 1 или самостоятельный массив ранга на 1 меньше для многомерного массива. Удаляется верхний индекс выбранного измерения. Пустое выбранное измерение недопустимо. При удалении последнего среза его диапазон становится 1 TO 0. Представление не может менять размер.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3005 возникает, если массив не выделен. MB2004 означает отсутствие обязательного номера измерения у массива ранга 2 и выше. MB3007 возникает для номера измерения вне ранга или попытки изменения размера представления. Пустое выбранное измерение вызывает MB3007.</p><h3>Пример</h3><pre><code class="language-axiom">DIM a(-1 TO 1) AS INTEGER
+a(-1) = 3
+a(0) = 1
+a(1) = 3
+PRINT ARRAYPOP(a)
+PRINT UBOUND(a)</code></pre><p>Ожидаемый вывод:</p><pre><code>3
+0</code></pre><h3>Пример многомерной формы</h3><pre><code class="language-axiom">DIM board(-1 TO 0, 3 TO 4) AS INTEGER
+board(-1, 3) = 4
+board(-1, 4) = 1
+board(0, 3) = 2
+board(0, 4) = 3
+DIM rowValue() AS INTEGER
+rowValue = ARRAYPOP(board, ROW)
+PRINT LBOUND(rowValue)
+PRINT rowValue(3)
+PRINT UBOUND(board, ROW)</code></pre><p>Ожидаемый вывод:</p><pre><code>3
+2
+-1</code></pre></section>
+<section class="article-section" id="arrayinsert"><h2>ARRAYINSERT</h2><p><code>ARRAYINSERT</code> — встроенная функция языка Axiom, которая вставляет элемент или срез перед заданным индексом массива.</p><h3>Синтаксис</h3><pre><code class="language-axiom">ARRAYINSERT(&lt;массив&gt;, &lt;индекс&gt;, &lt;значение&gt;)</code></pre><pre><code class="language-axiom">ARRAYINSERT(&lt;массив&gt;, &lt;индекс&gt;, &lt;значение&gt;, &lt;измерение&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;массив&gt;</code>: Массив ранга 1 или выше задаёт видимую область обработки. Все элементы имеют тип, установленный при объявлении массива.</p><p><code>&lt;индекс&gt;</code>: Целое число INTEGER задаёт логическую позицию вставки либо удаления.</p><p><code>&lt;значение&gt;</code>: Для ранга 1 добавляемое значение должно быть совместимо с типом элемента. Для ранга 2 и выше передаётся выделенный массив того же типа элементов, ранга на 1 меньше; его границы должны совпадать со всеми невыбранными измерениями источника.</p><p><code>&lt;измерение&gt;</code>: Целое число INTEGER выбирает измерение от 1 до ранга включительно. ROW равно 1, COLUMN равно 2. Для преобразований массива ранга 2 и выше этот аргумент обязателен.</p><h3>Действие, результат и ограничения</h3><p>Индекс допустим от нижней границы до верхней плюс 1. В пустом выбранном измерении допускается только индекс 1. Элементы от места вставки сдвигаются к большим индексам; верхняя граница растёт на 1. Для ранга 1 передаётся элемент; для большего ранга — выделенный массив ранга на 1 меньше с границами невыбранных измерений. Функция не возвращает значения; представление не может менять размер.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3005 возникает, если массив не выделен. MB2004 означает отсутствие обязательного номера измерения у массива ранга 2 и выше. MB3007 возникает для номера измерения вне ранга или попытки изменения размера представления. MB3007 также возникает при несовпадающих границах добавляемого среза или невозможности увеличения верхней границы. Невыделенный срез вызывает MB3005. Индекс вне разрешённого диапазона вставки вызывает MB3007.</p><h3>Пример</h3><pre><code class="language-axiom">DIM a(-1 TO 1) AS INTEGER
+a(-1) = 3
+a(0) = 1
+a(1) = 3
+ARRAYINSERT(a, 0, 9)
+PRINT a(0)
+PRINT a(1)
+PRINT UBOUND(a)</code></pre><p>Ожидаемый вывод:</p><pre><code>9
+1
+2</code></pre><h3>Пример многомерной формы</h3><pre><code class="language-axiom">DIM board(-1 TO 0, 3 TO 4) AS INTEGER
+board(-1, 3) = 4
+board(-1, 4) = 1
+board(0, 3) = 2
+board(0, 4) = 3
+DIM rowValue() AS INTEGER
+rowValue = board(-1)
+ARRAYINSERT(board, 0, rowValue, ROW)
+PRINT board(0, 3)
+PRINT board(1, 3)
+PRINT UBOUND(board, ROW)</code></pre><p>Ожидаемый вывод:</p><pre><code>4
+2
+1</code></pre></section>
+<section class="article-section" id="arrayremove"><h2>ARRAYREMOVE</h2><p><code>ARRAYREMOVE</code> — встроенная функция языка Axiom, которая удаляет и возвращает элемент или срез с заданным индексом массива.</p><h3>Синтаксис</h3><pre><code class="language-axiom">ARRAYREMOVE(&lt;массив&gt;, &lt;индекс&gt;)</code></pre><pre><code class="language-axiom">ARRAYREMOVE(&lt;массив&gt;, &lt;индекс&gt;, &lt;измерение&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;массив&gt;</code>: Массив ранга 1 или выше задаёт видимую область обработки. Все элементы имеют тип, установленный при объявлении массива.</p><p><code>&lt;индекс&gt;</code>: Целое число INTEGER задаёт логическую позицию вставки либо удаления.</p><p><code>&lt;измерение&gt;</code>: Целое число INTEGER выбирает измерение от 1 до ранга включительно. ROW равно 1, COLUMN равно 2. Для преобразований массива ранга 2 и выше этот аргумент обязателен.</p><h3>Действие, результат и ограничения</h3><p>Индекс должен обозначать существующий элемент выбранного измерения. Возвращается удалённый элемент для ранга 1 или самостоятельный срез ранга на 1 меньше для большего ранга. Последующие элементы сдвигаются к меньшим индексам. При удалении последнего среза его диапазон становится 1 TO 0. Представление не может менять размер.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3005 возникает, если массив не выделен. MB2004 означает отсутствие обязательного номера измерения у массива ранга 2 и выше. MB3007 возникает для номера измерения вне ранга или попытки изменения размера представления. Пустое выбранное измерение и индекс вне его границ вызывают MB3007.</p><h3>Пример</h3><pre><code class="language-axiom">DIM a(-1 TO 1) AS INTEGER
+a(-1) = 3
+a(0) = 1
+a(1) = 3
+PRINT ARRAYREMOVE(a, 0)
+PRINT a(0)
+PRINT UBOUND(a)</code></pre><p>Ожидаемый вывод:</p><pre><code>1
+3
+0</code></pre><h3>Пример многомерной формы</h3><pre><code class="language-axiom">DIM board(-1 TO 0, 3 TO 4) AS INTEGER
+board(-1, 3) = 4
+board(-1, 4) = 1
+board(0, 3) = 2
+board(0, 4) = 3
+DIM rowValue() AS INTEGER
+rowValue = ARRAYREMOVE(board, -1, ROW)
+PRINT rowValue(3)
+PRINT board(-1, 3)
+PRINT UBOUND(board, ROW)</code></pre><p>Ожидаемый вывод:</p><pre><code>4
+2
+-1</code></pre></section>
+<section class="article-section" id="arrayslice"><h2>ARRAYSLICE</h2><p>Встроенная функция ARRAYSLICE копирует выбранный диапазон. Все формы и точные границы результата описаны в <a href="arrays-and-builtins.html#arrayslice">отдельном блоке ARRAYSLICE</a>.</p></section>
+<section class="article-section"><h2>См. также</h2><p><a href="arrays.html">Массивы</a> · <a href="arrays-slices.html">Представления</a> · <a href="arrays-diagnostics.html">Диагностика массивов</a> · <a href="function.html">FUNCTION</a></p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

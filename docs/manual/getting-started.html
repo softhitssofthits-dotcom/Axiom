@@ -1,154 +1,28 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Структура программы</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="getting-started">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Файл программы, инструкции и комментарии</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <span>Структура программы</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Структура программы</h1>
-            <p class="lead">Программа Axiom состоит из инструкций, объявлений, процедур и функций. Исходный текст хранится в файле <code>.axm</code>. Инструкции верхнего уровня выполняются последовательно; операторы управления изменяют порядок выполнения.</p>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Знакомство с Axiom — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="getting-started"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Знакомство с Axiom</span></nav>
+<p class="eyebrow">Глава 1</p><h1 class="page-title">Знакомство с Axiom</h1><p class="lead">Axiom — язык программирования, в котором программы записываются последовательностью понятных инструкций: объявить данные, выполнить вычисление, проверить условие, повторить действия и показать результат.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><span class="legacy-anchor" id="summary"></span><h2>Что можно написать</h2><p>Программы Axiom работают с числами, текстом, датами, массивами и файлами. Для взаимодействия с пользователем доступны консольный ввод, графические окна, клавиатура и мышь. Повторяющийся код можно вынести в процедуры и функции, а связанные данные объединить в пользовательский тип.</p><p>Язык использует явные окончания блоков: <code>END IF</code>, <code>NEXT</code>, <code>END SUB</code>. Тип данных помогает проверять, какие действия допустимы со значением. Исходные программы хранятся в файлах <code>.axm</code>.</p></section>
+<section class="article-section"><h2>Особенности языка</h2><p>Axiom сочетает построчную запись инструкций, явные окончания блоков и проверку типов до запуска. Имена не зависят от регистра букв. Операторы и встроенные функции входят в язык, поэтому для обычного ввода, файловых операций и рисования используются непосредственные конструкции программы.</p><p>Работа начинается с отдельного файла: его можно открыть в редакторе, проверить и выполнить. IDE показывает ошибки рядом с исходным текстом и предоставляет консоль, графические окна и средства пошагового выполнения.</p></section>
+<section class="article-section" id="first-program"><h2>Первая программа</h2><p>Объявите переменную, вычислите результат и выведите его:</p>
+<pre><code class="language-axiom">DIM count AS INTEGER = 3
+PRINT "Количество: "; count
+PRINT count * 2</code></pre><p>Результат:</p>
+<pre><code>Количество: 3
+6</code></pre><p>Оператор <code>DIM</code> создаёт переменную <code>count</code> типа <code>INTEGER</code>. Оператор <code>PRINT</code> выводит текст и значения. Знак <code>*</code> выполняет умножение. В следующих главах эти действия будут разобраны отдельно.</p></section>
+<section class="article-section" id="run"><h2>Проверка и запуск</h2><p>Создайте документ в IDE, введите программу и сохраните её с расширением <code>.axm</code>. Выполните команду проверки: если обнаружена ошибка, IDE покажет сообщение и соответствующее место исходного текста. После успешной проверки запустите программу. Результат примера появится в консоли.</p><p>Проверка сама по себе не исполняет программу. Команда остановки завершает текущий запуск, в том числе ожидание пользовательского ввода. Готовые программы из каталога примеров можно открыть и запустить тем же способом.</p></section>
+<section class="article-section" id="comments"><span class="legacy-anchor" id="program-file"></span><h2>Строки, комментарии и блоки</h2><p>Инструкции разделяются строками. Пустые строки помогают отделять части программы. Отступы удобны для чтения, а границы блоков задаются ключевыми словами. Двоеточие не служит разделителем нескольких инструкций на одной строке.</p>
+<pre><code class="language-axiom">DIM total AS INTEGER = 5
 
-            <section class="article-section"><h2>Основные элементы</h2><p>Переменные объявляются оператором <code>DIM</code>, константы — оператором <code>CONST</code>. Тип указывается через <code>AS</code> или выводится из инициализатора в поддерживаемых формах объявления. Оператор <code>PRINT</code> записывает значения в поток вывода. Процедуры и функции объявляются операторами <code>SUB</code> и <code>FUNCTION</code>.</p></section>
-
-            <section class="article-section">
-                <h2>Содержание</h2>
-                <ol class="contents-list">
-                    <li><a href="#syntax-notation">Как читать записи синтаксиса</a></li>
-                    <li><a href="#program-file">Как устроен файл программы</a></li>
-                    <li><a href="#first-program">Пример программы</a></li>
-                    <li><a href="#comments">Комментарии</a></li>
-                    <li><a href="#run">Как запускать примеры</a></li>
-                    <li><a href="#summary">Основные правила</a></li>
-                </ol>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <p>Файлы примеров демонстрируют объявления, ввод и вывод.</p>
-                <ul class="resource-list">
-                    <li><a href="../../samples/operators/print/basic_expression.axm">PRINT: базовое выражение</a></li>
-                    <li><a href="../../samples/operators/print/empty_print.axm">PRINT: пустой оператор</a></li>
-                    <li><a href="../../samples/operators/input/single_variable.axm">INPUT: одна переменная</a></li>
-                    <li><a href="../../samples/operators/dim/basic_declaration.axm">DIM: базовое объявление</a></li>
-                    <li><a href="../../samples/smoke/v0_1_baseline.axm">Сводный пример для первой проверки</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="syntax-notation">
-                <h2>Как читать записи синтаксиса</h2>
-                <p>На страницах справочника формы записи конструкций показаны в едином формате. Обозначения имеют следующий смысл:</p>
-                <ul>
-                    <li>текст в <code>&lt;угловых скобках&gt;</code> — метапеременная; её имя обозначает роль подставляемой части, например <code>&lt;счётчик&gt;</code> или <code>&lt;список вывода&gt;</code>;</li>
-                    <li>части в <code>[квадратных скобках]</code> необязательны: конструкция работает и без них;</li>
-                    <li>ключевые слова языка пишутся как есть: <code>IF</code>, <code>THEN</code>, <code>END IF</code>;</li>
-                    <li>если у конструкции несколько форм записи, каждая форма показывается отдельным блоком, а не смешивается в одну строку.</li>
-                </ul>
-                <p>Например, запись <code>FOR &lt;счётчик&gt; = &lt;начало&gt; TO &lt;конец&gt; [STEP &lt;шаг&gt;]</code> читается так: после <code>FOR</code> пишется имя счётчика, затем начальное значение, ключевое слово <code>TO</code> и конечная граница, а часть <code>STEP &lt;шаг&gt;</code> в квадратных скобках необязательна — без неё цикл использует шаг <code>1</code>.</p>
-            </section>
-
-            <section class="article-section" id="program-file">
-                <h2>Как устроен файл программы</h2>
-                <p>Исходные тексты обычно хранятся в файлах с расширением <code>.axm</code>. Компилятор обрабатывает такой файл как последовательность инструкций, объявлений и блоков, поэтому код удобнее всего писать так, чтобы его можно было читать сверху вниз без догадок о скрытом порядке выполнения.</p>
-                <div class="checklist">
-                    <strong>Что полезно помнить с самого начала:</strong>
-                    <ul>
-                        <li>одна строка обычно содержит одну инструкцию;</li>
-                        <li>пустые строки допустимы и помогают отделять смысловые блоки;</li>
-                        <li>вложенные конструкции должны быть явно закрыты: <code>END IF</code>, <code>END SELECT</code>, <code>END WHILE</code>, <code>LOOP</code>, <code>NEXT</code>.</li>
-                    </ul>
-                </div>
-            </section>
-
-            <section class="article-section" id="first-program">
-                <h2>Пример программы</h2>
-                <p>Самая простая проверка среды — вывести строку в панель <code>Output</code>. Такой пример полезен не только как тест запуска, но и как первый ориентир по синтаксису: программа может состоять даже из одной рабочей инструкции.</p>
-                <pre><code class="language-axiom">PRINT "Привет, Axiom!"</code></pre>
-                <p>Оператор <code>PRINT</code> вычисляет выражение после своего имени и отправляет результат в поток вывода. Если в качестве аргумента дана строка в кавычках, на экран попадает именно этот текст.</p>
-                <pre><code class="language-axiom">PRINT "Заголовок"
-PRINT 42
-PRINT 1 + 2 * 3
-PRINT</code></pre>
-                <p>Этот пример показывает, что <code>PRINT</code> выводит строки, числа, результаты выражений и пустую строку.</p>
-            </section>
-
-            <section class="article-section" id="comments">
-                <h2>Комментарии</h2>
-                <p>Комментарий можно записать двумя способами: через апостроф <code>'</code> и через ключевое слово <code>REM</code>. Оба варианта оставляют пояснение для читателя и не влияют на выполнение программы, поэтому комментарии удобно использовать как краткие ориентиры рядом с неочевидными местами.</p>
-                <pre><code class="language-axiom">' Современная краткая запись комментария
-REM Комментарий после ключевого слова
-
-PRINT "Комментарий в вывод не попадает"</code></pre>
-                <p>Комментарий уместен там, где нужно кратко пояснить назначение блока. Он должен дополнять код, а не пересказывать его построчно.</p>
-            </section>
-
-            <section class="article-section" id="run">
-                <h2>Как запускать примеры</h2>
-                <p>В Axiom действует один путь запуска: компилятор проверяет исходный текст и создаёт байт-код, затем виртуальная машина <code>BytecodeVm</code> выполняет его. Выбирать исполнитель не требуется. Ошибка компиляции препятствует запуску; ошибки во время выполнения показываются с кодом и местом в исходнике.</p>
-                <p>Для проверки откройте <a href="../../samples/smoke/bytecode-only/compiler_execution.axm"><code>compiler_execution.axm</code></a>. Пример показывает вычисление суммы, пустую строку, два вызова процедуры в цикле и обработку ошибки функции <code>POW</code> с выполнением <code>FINALLY</code>. Это компиляция в байт-код; создание самостоятельного <code>.exe</code> в этот сценарий не входит.</p>
-                <p>Для первых ручных проверок лучше брать очень маленькие программы. Так проще понять, где именно возникла ошибка: в синтаксисе, в типах данных или уже в самой логике.</p>
-                <ol>
-                    <li>Откройте <code>Electron IDE</code>.</li>
-                    <li>Создайте новый документ или откройте существующий файл <code>.axm</code>.</li>
-                    <li>Вставьте пример программы.</li>
-                    <li>Запустите его через кнопку <code>Run</code>.</li>
-                    <li>Посмотрите результат в панели <code>Output</code>.</li>
-                </ol>
-                <div class="note">
-                    <h3>Если программа не запускается</h3>
-                    <p>Чаще всего причина связана с синтаксисом или с неверным типом данных. В этом случае нужно посмотреть, на какой строке и в каком месте возникла ошибка компиляции или выполнения.</p>
-                </div>
-            </section>
-
-            <section class="article-section" id="summary">
-                <h2>Основные правила</h2>
-                <div class="summary-box">
-                    <h3>Правила выполнения</h3>
-                    <ul>
-                        <li>программа Axiom читается сверху вниз;</li>
-                        <li><code>PRINT</code> является самым простым способом увидеть результат;</li>
-                        <li><code>DIM</code> обычно становится первой точкой входа в работу с переменными и типами;</li>
-                        <li>комментарии задаются через <code>'</code> или <code>REM</code>;</li>
-                        <li>первые примеры должны быть короткими и легко проверяемыми.</li>
-                    </ul>
-                </div>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="reference.html">Алфавитный и тематический указатель</a>
-                    <a href="data-and-input.html">Данные, ввод и вывод</a>
-                    <a href="print.html">Оператор PRINT</a>
-                    <a href="input.html">Оператор INPUT</a>
-                    <a href="examples.html">Примеры программ</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+' Комментарий не выполняется.
+REM Другой способ записать комментарий.
+PRINT total  ' Комментарий после инструкции.</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>5</code></pre><p>Ключевые слова и имена не зависят от регистра букв. Имена записываются латинскими буквами; русский текст допускается в строках и комментариях. Подробные правила имён собраны в главе о переменных.</p></section>
+<section class="article-section"><span class="legacy-anchor" id="syntax-notation"></span><h2>См. также</h2><div class="link-list"><a href="variables-and-constants.html">Переменные и константы</a><a href="examples.html">Каталог примеров</a><a href="notation.html">Условные обозначения синтаксиса</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

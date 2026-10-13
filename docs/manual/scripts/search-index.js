@@ -1,4118 +1,2041 @@
 window.AxiomSearchIndex = [
   {
-    "title": "Обозначения синтаксиса",
-    "href": "notation.html",
-    "kind": "Приложение",
-    "category": "Общие сведения",
-    "description": "Метапеременные, необязательные части, формы записи и справочные подписи функций.",
-    "keywords": [
-      "notation",
-      "синтаксис",
-      "обозначения",
-      "метапеременные",
-      "скобки"
-    ]
-  },
-  {
-    "title": "Главная",
-    "href": "index.html",
-    "kind": "Раздел",
-    "category": "Общие сведения",
-    "description": "Синтаксис, типы, операторы и встроенные функции языка Axiom.",
-    "keywords": [
-      "home",
-      "manual",
-      "главная",
-      "справочник",
-      "руководство"
-    ]
-  },
-  {
-    "title": "Алфавитный и тематический указатель",
-    "href": "reference.html",
-    "kind": "Указатель",
-    "category": "Общие сведения",
-    "description": "Быстрый вход в разделы, операторы, функции и справочные приложения.",
-    "keywords": [
-      "reference",
-      "index",
-      "указатель",
-      "оглавление",
-      "разделы"
-    ]
-  },
-  {
-    "title": "Структура программы",
+    "title": "Знакомство с Axiom",
     "href": "getting-started.html",
-    "kind": "Раздел",
-    "category": "Общие сведения",
-    "description": "Файл .axm, инструкции, объявления, комментарии и порядок запуска программы.",
+    "kind": "Тема",
+    "category": "Знакомство с Axiom",
+    "description": "Axiom — язык программирования, в котором программы записываются последовательностью понятных инструкций: объявить данные, выполнить вычисление, проверить условие, повторить действия и показать результат.",
     "keywords": [
-      "start",
-      "getting started",
-      "run",
-      "ide",
-      "быстрый старт",
-      "начало",
-      "первый запуск"
-    ]
-  },
-  {
-    "title": "Диагностика",
-    "href": "diagnostics.html",
-    "kind": "Раздел",
-    "category": "Обработка ошибок и диагностика",
-    "description": "Коды ошибок, уровни диагностики и чтение сообщений синтаксического, семантического и runtime-уровня.",
-    "keywords": [
-      "diagnostics",
-      "error",
-      "mb",
-      "runtime",
-      "syntax",
-      "semantic",
-      "диагностика",
-      "ошибка",
-      "код ошибки"
-    ]
-  },
-  {
-    "title": "Примеры программ",
-    "href": "examples.html",
-    "kind": "Раздел",
-    "category": "Примеры и справочные приложения",
-    "description": "Запускаемые примеры из samples для ручной проверки поведения языка в Electron IDE.",
-    "keywords": [
-      "samples",
-      "examples",
-      "axiom ide",
-      "пример",
-      "примеры",
-      "ручная проверка"
-    ]
-  },
-  {
-    "title": "Краткая справка",
-    "href": "cheat-sheet.html",
-    "kind": "Приложение",
-    "category": "Примеры и справочные приложения",
-    "description": "Короткая краткая справка по основным операторам, выражениям, типам и встроенным функциям.",
-    "keywords": [
-      "cheat sheet",
-      "quick reference",
-      "краткая справка",
-      "краткая справка"
-    ]
-  },
-  {
-    "title": "Одномерный массив: схема",
-    "href": "arrays-1d-visual.html",
-    "kind": "Раздел",
-    "category": "Массивы",
-    "description": "Наглядная схема одномерного массива, индексов и значений.",
-    "keywords": [
-      "array",
-      "1d",
-      "visual",
-      "scheme",
-      "одномерный",
-      "массив",
-      "схема"
-    ]
-  },
-  {
-    "title": "Двумерный массив: схема",
-    "href": "arrays-2d-visual.html",
-    "kind": "Раздел",
-    "category": "Массивы",
-    "description": "Наглядная схема двумерного массива как таблицы строк и столбцов.",
-    "keywords": [
-      "array",
-      "2d",
-      "visual",
-      "table",
-      "двумерный",
-      "массив",
-      "схема",
-      "таблица"
-    ]
-  },
-  {
-    "title": "Графика",
-    "href": "graphics.html",
-    "kind": "Раздел",
-    "category": "Графика",
-    "description": "Обзор совместимого SCREEN-слоя и современного CANVAS-слоя: экран, координаты, палитра, изображения, спрайты, кадры, примитивы, камера и ввод.",
-    "keywords": [
-      "screen",
-      "canvas",
-      "beginframe",
-      "present",
-      "rgb",
-      "drawrect",
-      "fillrect",
-      "drawline",
-      "drawcircle",
-      "fillcircle",
-      "drawtext",
-      "camera",
-      "resetcamera",
-      "view",
-      "window",
-      "pmap",
-      "viewport",
-      "graphics",
-      "pset",
-      "preset",
-      "line",
-      "circle",
-      "point",
-      "pcopy",
-      "cls",
-      "color",
-      "locate",
-      "drawimage",
-      "drawsprite",
-      "drawtilemap",
-      "drawtilelayer",
-      "setmaptile",
-      "maptile",
-      "screenwidth",
-      "screenheight",
-      "screenmode",
-      "screenisactive",
-      "scroll",
-      "scrollbar",
-      "графика",
-      "экран",
-      "кадр",
-      "камера",
-      "hud",
-      "текст",
-      "область",
-      "окно",
-      "координаты",
-      "пиксель",
-      "палитра",
-      "страница",
-      "мышь",
-      "прокрутка",
-      "полоса прокрутки",
-      "преобразование",
-      "maze_chase"
-    ]
-  },
-  {
-    "title": "Оператор VIEWPORT",
-    "href": "operator-reference.html#op-viewport-viewport",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Синтаксис, параметры и правила конструкции VIEWPORT.",
-    "keywords": [
-      "viewport",
-      "canvas",
-      "camera",
-      "resetcamera",
-      "hud",
-      "clip",
-      "clipping",
-      "world",
-      "screen area",
-      "modern graphics",
-      "область",
-      "обрезка",
-      "холст",
-      "мир",
-      "экранная область"
-    ]
-  },
-  {
-    "title": "Оператор SLEEP",
-    "href": "operator-reference.html#op-sleep-sleep",
-    "kind": "Оператор",
-    "category": "Операторы передачи управления",
-    "description": "Синтаксис, параметры и правила конструкции SLEEP.",
-    "keywords": [
-      "sleep",
-      "pause",
-      "wait",
-      "delay",
-      "milliseconds",
-      "keyboard",
-      "key",
-      "пауза",
-      "ожидание",
-      "задержка",
-      "миллисекунды",
-      "клавиша"
-    ]
-  },
-  {
-    "title": "Оператор SCREEN",
-    "href": "operator-reference.html#op-screen-screen",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Синтаксис, параметры и правила конструкции SCREEN.",
-    "keywords": [
-      "screen",
-      "mode",
-      "resolution",
-      "active page",
-      "visual page",
-      "pcopy",
-      "scroll",
-      "scrollbar",
-      "разрешение",
-      "режим",
-      "экран",
-      "страница",
-      "текстовое окно",
-      "screen 0",
-      "прокрутка",
-      "полоса прокрутки"
-    ]
-  },
-  {
-    "title": "Оператор VIEW",
-    "href": "operator-reference.html#op-view-view",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Синтаксис, параметры и правила конструкции VIEW.",
-    "keywords": [
-      "view",
-      "viewport",
-      "screen",
-      "relative",
-      "absolute",
-      "border",
-      "fill",
-      "область",
-      "окно",
-      "координаты",
-      "рамка",
-      "заливка"
-    ]
-  },
-  {
-    "title": "Оператор VIEW PRINT",
-    "href": "operator-reference.html#op-viewprint-view-print",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Синтаксис, параметры и правила конструкции VIEW PRINT.",
-    "keywords": [
-      "view print",
-      "viewprint",
-      "print window",
-      "text viewport",
-      "screen",
-      "print",
-      "locate",
-      "scroll",
-      "строки",
-      "текстовое окно",
-      "прокрутка",
-      "диапазон"
-    ]
-  },
-  {
-    "title": "Оператор WINDOW",
-    "href": "operator-reference.html#op-window-window",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Синтаксис, параметры и правила конструкции WINDOW.",
-    "keywords": [
-      "window",
-      "view",
-      "viewport",
-      "screen",
-      "cartesian",
-      "coordinates",
-      "logical",
-      "draw",
-      "point",
-      "координаты",
-      "логическое окно",
-      "декартовы",
-      "экранные",
-      "графика"
-    ]
-  },
-  {
-    "title": "Функция PMAP",
-    "href": "pmap.html",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "Преобразование координаты между физической системой viewport и логической системой WINDOW.",
-    "keywords": [
-      "pmap",
-      "window",
-      "view",
-      "viewport",
-      "screen",
-      "coordinates",
-      "mapping",
-      "logical",
-      "physical",
-      "fraction",
-      "координаты",
-      "преобразование",
-      "логические",
-      "физические",
-      "окно"
-    ]
-  },
-  {
-    "title": "Оператор PALETTE",
-    "href": "operator-reference.html#op-palette-palette",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Синтаксис, параметры и правила конструкции PALETTE.",
-    "keywords": [
-      "palette",
-      "using",
-      "color",
-      "screen",
-      "point",
-      "index",
-      "array",
-      "reset",
-      "палитра",
-      "цвет",
-      "индекс",
-      "массив",
-      "сброс",
-      "графика"
-    ]
-  },
-  {
-    "title": "Оператор PCOPY",
-    "href": "operator-reference.html#op-pcopy-pcopy",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Синтаксис, параметры и правила конструкции PCOPY.",
-    "keywords": [
-      "pcopy",
-      "screen",
-      "page",
-      "active page",
-      "visual page",
-      "framebuffer",
-      "copy",
-      "palette",
-      "sprite",
-      "drawsprite",
-      "страница",
-      "экран",
-      "копирование",
-      "кадровый буфер",
-      "палитра",
-      "спрайт",
-      "графика"
-    ]
-  },
-  {
-    "title": "Изображения IMAGE",
-    "href": "images.html",
-    "kind": "Раздел",
-    "category": "Графика",
-    "description": "Тип IMAGE, загрузка файла через LOADIMAGE, размеры IMAGEWIDTH и IMAGEHEIGHT, вывод через DRAWIMAGE.",
-    "keywords": [
-      "image",
-      "loadimage",
-      "drawimage",
-      "imagewidth",
-      "imageheight",
-      "png",
-      "jpeg",
-      "bmp",
-      "ico",
-      "alpha",
-      "изображение",
-      "картинка",
-      "загрузка",
-      "масштабирование",
-      "альфа"
-    ]
-  },
-  {
-    "title": "Тип IMAGE",
-    "href": "images.html#type",
-    "kind": "Тип",
-    "category": "Графика",
-    "description": "Ссылочное значение загруженного изображения с шириной, высотой и пикселями.",
-    "keywords": [
-      "image",
-      "type",
-      "reference",
-      "тип",
-      "изображение",
-      "ссылка"
-    ]
-  },
-  {
-    "title": "LOADIMAGE",
-    "href": "function-reference.html#fn-loadimage",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "Загрузка файла изображения в значение IMAGE.",
-    "keywords": [
-      "loadimage",
-      "image",
-      "path",
-      "png",
-      "jpeg",
-      "bmp",
-      "ico",
-      "загрузка",
-      "путь",
-      "файл",
-      "изображение"
-    ]
-  },
-  {
-    "title": "IMAGEWIDTH и IMAGEHEIGHT",
-    "functions": [
-      "IMAGEWIDTH",
-      "IMAGEHEIGHT"
+      "Первая программа и запуск",
+      "Знакомство с Axiom"
     ],
-    "href": "images.html#size",
-    "kind": "Функции",
-    "category": "Графика",
-    "description": "Получение ширины и высоты значения IMAGE в пикселях.",
-    "keywords": [
-      "imagewidth",
-      "imageheight",
-      "width",
-      "height",
-      "image",
-      "ширина",
-      "высота",
-      "изображение"
+    "aliases": [
+      "Знакомство с Axiom"
     ]
   },
   {
-    "title": "DRAWIMAGE",
-    "href": "images.html#drawimage",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Вывод IMAGE на графический SCREEN в натуральном размере или с масштабированием.",
+    "title": "Переменные, константы и значения",
+    "href": "variables-and-constants.html",
+    "kind": "Тема",
+    "category": "Переменные, константы и значения",
+    "description": "Раздел переменных и констант объясняет, как дать значению имя, хранить его и изменять во время выполнения программы.",
     "keywords": [
-      "drawimage",
-      "image",
-      "screen",
-      "view",
-      "window",
-      "alpha",
-      "scale",
-      "рисование",
-      "вывод",
-      "изображение",
-      "масштаб"
-    ]
-  },
-  {
-    "title": "Спрайты SPRITE",
-    "href": "sprites.html",
-    "kind": "Раздел",
-    "category": "Графика",
-    "description": "Тип SPRITE, загрузка спрайтового листа через LOADSPRITE, размеры кадра и вывод через DRAWSPRITE.",
-    "keywords": [
-      "sprite",
-      "loadsprite",
-      "drawsprite",
-      "spritewidth",
-      "spriteheight",
-      "spritecount",
-      "animation",
-      "frame",
-      "спрайт",
-      "кадр",
-      "лист",
-      "анимация"
-    ]
-  },
-  {
-    "title": "Тип SPRITE",
-    "href": "sprites.html#type",
-    "kind": "Тип",
-    "category": "Графика",
-    "description": "Ссылочное значение спрайтового листа с размером кадра и числом кадров.",
-    "keywords": [
-      "sprite",
-      "type",
-      "reference",
-      "frame",
-      "тип",
-      "спрайт",
-      "ссылка",
-      "кадр"
-    ]
-  },
-  {
-    "title": "LOADSPRITE",
-    "href": "function-reference.html#fn-loadsprite",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "Загрузка файла изображения в значение SPRITE с заданным размером кадра.",
-    "keywords": [
-      "loadsprite",
-      "sprite",
-      "path",
-      "framewidth",
-      "frameheight",
-      "png",
-      "jpeg",
-      "bmp",
-      "загрузка",
-      "путь",
-      "кадр",
-      "спрайт"
-    ]
-  },
-  {
-    "title": "SPRITEWIDTH, SPRITEHEIGHT и SPRITECOUNT",
-    "functions": [
-      "SPRITEWIDTH",
-      "SPRITEHEIGHT",
-      "SPRITECOUNT"
+      "Переменные и значения",
+      "Переменные, константы и значения"
     ],
-    "href": "sprites.html#parts",
-    "kind": "Функции",
-    "category": "Графика",
-    "description": "Получение ширины кадра, высоты кадра и числа полных кадров спрайтового листа.",
-    "keywords": [
-      "spritewidth",
-      "spriteheight",
-      "spritecount",
-      "width",
-      "height",
-      "count",
-      "frame",
-      "ширина",
-      "высота",
-      "число",
-      "кадр"
+    "aliases": [
+      "Переменные, константы и значения"
     ]
   },
   {
-    "title": "DRAWSPRITE",
-    "href": "sprites.html#drawsprite",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Вывод кадра SPRITE на графический SCREEN в натуральном размере, с масштабированием или перед переносом страницы через PCOPY.",
+    "title": "Оператор DIM",
+    "href": "dim.html",
+    "kind": "Тема",
+    "category": "Переменные, константы и значения",
+    "description": "DIM — оператор языка Axiom, который объявляет переменные и определяет их тип. Он также объявляет массивы и места хранения строк фиксированной длины.",
     "keywords": [
-      "drawsprite",
-      "sprite",
-      "screen",
-      "view",
-      "window",
-      "alpha",
-      "scale",
-      "frame",
-      "pcopy",
-      "page",
-      "рисование",
-      "вывод",
-      "спрайт",
-      "кадр",
-      "масштаб",
-      "страница"
-    ]
-  },
-  {
-    "title": "Тайлсеты TILESET",
-    "href": "tilesets.html",
-    "kind": "Раздел",
-    "category": "Графика",
-    "description": "Тип TILESET, загрузка атласа через LOADTILESET, размеры тайла и вывод тайла через DRAWTILE.",
-    "keywords": [
-      "tileset",
-      "tile",
-      "loadtileset",
-      "drawtile",
-      "tilecount",
-      "tilewidth",
-      "tileheight",
-      "atlas",
-      "тайлсет",
-      "тайл",
-      "атлас",
-      "клетка",
-      "карта"
-    ]
-  },
-  {
-    "title": "Тип TILESET",
-    "href": "tilesets.html#type",
-    "kind": "Тип",
-    "category": "Графика",
-    "description": "Ссылочное значение тайлового атласа с одинаковыми тайлами одного размера.",
-    "keywords": [
-      "tileset",
-      "tile",
-      "type",
-      "atlas",
-      "тип",
-      "тайлсет",
-      "тайл",
-      "атлас"
-    ]
-  },
-  {
-    "title": "LOADTILESET",
-    "href": "function-reference.html#fn-loadtileset",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "Загрузка изображения-атласа в значение TILESET с заданными размерами тайла, отступом и интервалом.",
-    "keywords": [
-      "loadtileset",
-      "tileset",
-      "tile",
-      "path",
-      "margin",
-      "spacing",
-      "atlas",
-      "загрузка",
-      "тайлсет",
-      "отступ",
-      "интервал"
-    ]
-  },
-  {
-    "title": "TILECOUNT, TILEWIDTH и TILEHEIGHT",
-    "functions": [
-      "TILECOUNT",
-      "TILEWIDTH",
-      "TILEHEIGHT"
+      "Объявление DIM",
+      "Переменные, константы и значения",
+      "DIM",
+      "Dim",
+      "Оператор DIM",
+      "DIM — оператор языка Axiom, который объявляет переменные и определяет их тип. Он также объявляет массивы и места хранения строк фиксированной длины.",
+      "Синтаксис, параметры, действие и примеры DIM."
     ],
-    "href": "tilesets.html#parts",
-    "kind": "Функции",
-    "category": "Графика",
-    "description": "Получение числа тайлов и размеров одного тайла в пикселях.",
-    "keywords": [
-      "tilecount",
-      "tilewidth",
-      "tileheight",
-      "tileset",
-      "tile",
-      "count",
-      "width",
-      "height",
-      "число тайлов",
-      "ширина тайла",
-      "высота тайла"
+    "aliases": [
+      "Оператор DIM",
+      "DIM"
     ]
   },
   {
-    "title": "DRAWTILE",
-    "href": "tilesets.html#drawtile",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Вывод одного тайла TILESET на CANVAS по 1-based номеру тайла.",
+    "title": "Присваивание",
+    "href": "assignment.html",
+    "kind": "Тема",
+    "category": "Переменные, константы и значения",
+    "description": "Присваивание — инструкция языка Axiom, которая записывает значение выражения в объявленную переменную, элемент массива или поле записи.",
     "keywords": [
-      "drawtile",
-      "tileset",
-      "tile",
-      "canvas",
-      "camera",
-      "viewport",
-      "рисование тайла",
-      "тайлсет",
-      "тайл",
-      "холст"
-    ]
-  },
-  {
-    "title": "Тайловые карты TILEMAP",
-    "href": "tilemaps.html",
-    "kind": "Раздел",
-    "category": "Графика",
-    "description": "Тип TILEMAP, загрузка карты Tiled, функции размеров, чтение и изменение клеток, вывод карты через DRAWTILEMAP и DRAWTILELAYER.",
-    "keywords": [
-      "tilemap",
-      "loadtilemap",
-      "drawtilemap",
-      "drawtilelayer",
-      "mapwidth",
-      "mapheight",
-      "mappixelwidth",
-      "mappixelheight",
-      "maptilewidth",
-      "maptileheight",
-      "maplayercount",
-      "maptile",
-      "maptileset",
-      "maptileflags",
-      "setmaptile",
-      "tiled",
-      "карта",
-      "тайловая карта",
-      "слой",
-      "клетка",
-      "тайл"
-    ]
-  },
-  {
-    "title": "Тип TILEMAP",
-    "href": "tilemaps.html#type",
-    "kind": "Тип",
-    "category": "Графика",
-    "description": "Загруженная ортогональная карта Tiled с тайловыми и объектными слоями.",
-    "keywords": [
-      "tilemap",
-      "type",
-      "tiled",
-      "map",
-      "тип",
-      "карта",
-      "тайловая карта"
-    ]
-  },
-  {
-    "title": "LOADTILEMAP",
-    "href": "function-reference.html#fn-loadtilemap",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "Загрузка карты Tiled JSON в значение TILEMAP.",
-    "keywords": [
-      "loadtilemap",
-      "tilemap",
-      "tmj",
-      "json",
-      "tiled",
-      "path",
-      "загрузка",
-      "карта"
-    ]
-  },
-  {
-    "title": "MAPWIDTH, MAPHEIGHT и размеры TILEMAP",
-    "functions": [
-      "MAPWIDTH",
-      "MAPHEIGHT",
-      "MAPPIXELWIDTH",
-      "MAPPIXELHEIGHT",
-      "MAPTILEWIDTH",
-      "MAPTILEHEIGHT",
-      "MAPLAYERCOUNT"
+      "Присваивание",
+      "Переменные, константы и значения",
+      "Assignment",
+      "Присваивание — инструкция языка Axiom, которая записывает значение выражения в объявленную переменную, элемент массива или поле записи.",
+      "Синтаксис, параметры, действие и примеры Присваивание."
     ],
-    "href": "tilemaps.html#map-size",
-    "kind": "Функции",
-    "category": "Графика",
-    "description": "Получение размеров карты в клетках и пикселях, размера клетки и числа слоёв.",
-    "keywords": [
-      "mapwidth",
-      "mapheight",
-      "mappixelwidth",
-      "mappixelheight",
-      "maptilewidth",
-      "maptileheight",
-      "maplayercount",
-      "tilemap",
-      "размер карты",
-      "число слоёв"
+    "aliases": [
+      "Присваивание"
     ]
   },
   {
-    "title": "MAPTILE, MAPTILESET и MAPTILEFLAGS",
-    "functions": [
-      "MAPTILE",
-      "MAPTILESET",
-      "MAPTILEFLAGS"
+    "title": "Оператор CONST",
+    "href": "const.html",
+    "kind": "Тема",
+    "category": "Переменные, константы и значения",
+    "description": "CONST — оператор языка Axiom, который объявляет именованное значение с запретом прямого присваивания. Константа используется в выражениях вместо повторяющегося литерала.",
+    "keywords": [
+      "Константы CONST",
+      "Переменные, константы и значения",
+      "CONST",
+      "Const",
+      "Оператор CONST",
+      "CONST — оператор языка Axiom, который объявляет именованное значение с запретом прямого присваивания. Константа используется в выражениях вместо повторяющегося литерала.",
+      "Синтаксис, параметры, действие и примеры CONST."
     ],
-    "href": "tilemaps.html#map-cell",
-    "kind": "Функции",
-    "category": "Графика",
-    "description": "Чтение тайла, номера тайлсета и флагов отражения одной клетки TILEMAP.",
-    "keywords": [
-      "maptile",
-      "maptileset",
-      "maptileflags",
-      "tilemap",
-      "tile",
-      "tileset",
-      "flags",
-      "flip",
-      "horizontal",
-      "vertical",
-      "diagonal",
-      "клетка",
-      "тайл",
-      "тайлсет",
-      "флаги",
-      "отражение"
-    ]
-  },
-  {
-    "title": "MAPTILESETCOUNT",
-    "functions": [
-      "MAPTILESETCOUNT"
-    ],
-    "href": "function-reference.html#fn-maptilesetcount",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPTILESETCOUNT возвращает число тайлсетов карты.",
-    "keywords": [
-      "maptilesetcount",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPPROPERTY",
-    "functions": [
-      "MAPPROPERTY"
-    ],
-    "href": "function-reference.html#fn-mapproperty",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPPROPERTY возвращает пользовательское свойство карты.",
-    "keywords": [
-      "mapproperty",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPLAYERPROPERTY",
-    "functions": [
-      "MAPLAYERPROPERTY"
-    ],
-    "href": "function-reference.html#fn-maplayerproperty",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPLAYERPROPERTY возвращает пользовательское свойство слоя.",
-    "keywords": [
-      "maplayerproperty",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPTILEPROPERTY",
-    "functions": [
-      "MAPTILEPROPERTY"
-    ],
-    "href": "function-reference.html#fn-maptileproperty",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPTILEPROPERTY возвращает свойство фактического тайла в клетке.",
-    "keywords": [
-      "maptileproperty",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPOBJECTPROPERTY",
-    "functions": [
-      "MAPOBJECTPROPERTY"
-    ],
-    "href": "function-reference.html#fn-mapobjectproperty",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPOBJECTPROPERTY возвращает пользовательское свойство объекта.",
-    "keywords": [
-      "mapobjectproperty",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPLAYERNAME",
-    "functions": [
-      "MAPLAYERNAME"
-    ],
-    "href": "function-reference.html#fn-maplayername",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPLAYERNAME возвращает имя слоя.",
-    "keywords": [
-      "maplayername",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPLAYERTYPE",
-    "functions": [
-      "MAPLAYERTYPE"
-    ],
-    "href": "function-reference.html#fn-maplayertype",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPLAYERTYPE возвращает вид слоя: TILE или OBJECT.",
-    "keywords": [
-      "maplayertype",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPLAYERVISIBLE",
-    "functions": [
-      "MAPLAYERVISIBLE"
-    ],
-    "href": "function-reference.html#fn-maplayervisible",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPLAYERVISIBLE возвращает флаг видимости слоя.",
-    "keywords": [
-      "maplayervisible",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPOBJECTCOUNT",
-    "functions": [
-      "MAPOBJECTCOUNT"
-    ],
-    "href": "function-reference.html#fn-mapobjectcount",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPOBJECTCOUNT возвращает число объектов слоя.",
-    "keywords": [
-      "mapobjectcount",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPOBJECTNAME",
-    "functions": [
-      "MAPOBJECTNAME"
-    ],
-    "href": "function-reference.html#fn-mapobjectname",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPOBJECTNAME возвращает имя объекта.",
-    "keywords": [
-      "mapobjectname",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPOBJECTCLASS",
-    "functions": [
-      "MAPOBJECTCLASS"
-    ],
-    "href": "function-reference.html#fn-mapobjectclass",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPOBJECTCLASS возвращает класс объекта из class или type.",
-    "keywords": [
-      "mapobjectclass",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPOBJECTKIND",
-    "functions": [
-      "MAPOBJECTKIND"
-    ],
-    "href": "function-reference.html#fn-mapobjectkind",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPOBJECTKIND возвращает вид объекта: POINT или RECT.",
-    "keywords": [
-      "mapobjectkind",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPOBJECTVISIBLE",
-    "functions": [
-      "MAPOBJECTVISIBLE"
-    ],
-    "href": "function-reference.html#fn-mapobjectvisible",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPOBJECTVISIBLE возвращает флаг видимости объекта.",
-    "keywords": [
-      "mapobjectvisible",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPOBJECTX",
-    "functions": [
-      "MAPOBJECTX"
-    ],
-    "href": "function-reference.html#fn-mapobjectx",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPOBJECTX возвращает координату X объекта.",
-    "keywords": [
-      "mapobjectx",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPOBJECTY",
-    "functions": [
-      "MAPOBJECTY"
-    ],
-    "href": "function-reference.html#fn-mapobjecty",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPOBJECTY возвращает координату Y объекта.",
-    "keywords": [
-      "mapobjecty",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPOBJECTWIDTH",
-    "functions": [
-      "MAPOBJECTWIDTH"
-    ],
-    "href": "function-reference.html#fn-mapobjectwidth",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPOBJECTWIDTH возвращает ширину объекта.",
-    "keywords": [
-      "mapobjectwidth",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPOBJECTHEIGHT",
-    "functions": [
-      "MAPOBJECTHEIGHT"
-    ],
-    "href": "function-reference.html#fn-mapobjectheight",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPOBJECTHEIGHT возвращает высоту объекта.",
-    "keywords": [
-      "mapobjectheight",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPCOLUMN",
-    "functions": [
-      "MAPCOLUMN"
-    ],
-    "href": "function-reference.html#fn-mapcolumn",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPCOLUMN переводит мировую координату X в номер столбца карты.",
-    "keywords": [
-      "mapcolumn",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPROW",
-    "functions": [
-      "MAPROW"
-    ],
-    "href": "function-reference.html#fn-maprow",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPROW переводит мировую координату Y в номер строки карты.",
-    "keywords": [
-      "maprow",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPWORLDX",
-    "functions": [
-      "MAPWORLDX"
-    ],
-    "href": "function-reference.html#fn-mapworldx",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPWORLDX возвращает мировую координату левой границы столбца.",
-    "keywords": [
-      "mapworldx",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "MAPWORLDY",
-    "functions": [
-      "MAPWORLDY"
-    ],
-    "href": "function-reference.html#fn-mapworldy",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "MAPWORLDY возвращает мировую координату верхней границы строки.",
-    "keywords": [
-      "mapworldy",
-      "tilemap",
-      "карта",
-      "свойства",
-      "объекты"
-    ]
-  },
-  {
-    "title": "SETMAPTILE",
-    "href": "tilemaps.html#setmaptile",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Запись или очистка одной существующей клетки тайлового слоя TILEMAP.",
-    "keywords": [
-      "setmaptile",
-      "tilemap",
-      "tile",
-      "tileset",
-      "flags",
-      "clear",
-      "cell",
-      "карта",
-      "клетка",
-      "тайл",
-      "очистка",
-      "тайловый слой"
-    ]
-  },
-  {
-    "title": "DRAWTILEMAP",
-    "href": "tilemaps.html#drawtilemap",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Вывод видимых тайловых слоёв TILEMAP на CANVAS.",
-    "keywords": [
-      "drawtilemap",
-      "tilemap",
-      "canvas",
-      "camera",
-      "viewport",
-      "layer",
-      "рисование карты",
-      "тайловая карта",
-      "слой"
-    ]
-  },
-  {
-    "title": "DRAWTILELAYER",
-    "href": "tilemaps.html#drawtilelayer",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Вывод одного тайлового слоя TILEMAP по 1-based номеру слоя.",
-    "keywords": [
-      "drawtilelayer",
-      "tilemap",
-      "layer",
-      "canvas",
-      "camera",
-      "viewport",
-      "рисование слоя",
-      "тайловый слой"
-    ]
-  },
-  {
-    "title": "Современная графика CANVAS",
-    "href": "modern-graphics.html",
-    "kind": "Раздел",
-    "category": "Графика",
-    "description": "CANVAS, BEGINFRAME, PRESENT, RGB, VIEWPORT, CAMERA, современные примитивы, HUD-текст, тайлы и индексные helper-операции GET/PUT.",
-    "keywords": [
-      "canvas",
-      "beginframe",
-      "present",
-      "rgb",
-      "cls",
-      "drawrect",
-      "fillrect",
-      "drawline",
-      "drawcircle",
-      "fillcircle",
-      "drawtext",
-      "camera",
-      "resetcamera",
-      "viewport",
-      "drawimage",
-      "drawsprite",
-      "drawtile",
-      "drawtilemap",
-      "drawtilelayer",
-      "maptile",
-      "setmaptile",
-      "tileset",
-      "tilemap",
-      "tilecount",
-      "tilewidth",
-      "tileheight",
-      "get",
-      "put",
-      "pset",
-      "preset",
-      "paint",
-      "world",
-      "modern graphics",
-      "frame",
-      "camera world",
-      "hud",
-      "maze_chase",
-      "кадр",
-      "современная графика",
-      "камера",
-      "мир",
-      "текст",
-      "тайл",
-      "тайлсет",
-      "тайловая карта",
-      "окружность",
-      "линия",
-      "цвет"
-    ]
-  },
-  {
-    "title": "CANVAS",
-    "href": "modern-graphics.html",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Создание современной полноцветной поверхности с указанной шириной и высотой.",
-    "keywords": [
-      "canvas",
-      "screen",
-      "modern",
-      "graphics",
-      "surface",
-      "frame",
-      "графика",
-      "поверхность",
-      "кадр"
-    ]
-  },
-  {
-    "title": "BEGINFRAME и PRESENT",
-    "href": "modern-graphics.html",
-    "kind": "Операторы",
-    "category": "Графика",
-    "description": "Начало нового рабочего кадра и публикация готового кадра в окне CANVAS.",
-    "keywords": [
-      "beginframe",
-      "present",
-      "frame",
-      "publish",
-      "canvas",
-      "кадр",
-      "показ",
-      "публикация"
-    ]
-  },
-  {
-    "title": "RGB",
-    "href": "function-reference.html#fn-rgb",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "Сборка полноцветного значения 0xRRGGBB из компонентов red, green и blue.",
-    "keywords": [
-      "rgb",
-      "red",
-      "green",
-      "blue",
-      "color",
-      "rrggbb",
-      "цвет",
-      "красный",
-      "зелёный",
-      "синий"
-    ]
-  },
-  {
-    "title": "DRAWRECT и FILLRECT",
-    "href": "modern-graphics.html",
-    "kind": "Операторы",
-    "category": "Графика",
-    "description": "Рамка прямоугольника и заполненный прямоугольник в рабочем кадре CANVAS.",
-    "keywords": [
-      "drawrect",
-      "fillrect",
-      "rectangle",
-      "canvas",
-      "rgb",
-      "рамка",
-      "прямоугольник",
-      "заливка"
-    ]
-  },
-  {
-    "title": "DRAWLINE",
-    "href": "modern-graphics.html",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Современная линия в рабочем кадре CANVAS.",
-    "keywords": [
-      "drawline",
-      "line",
-      "canvas",
-      "graphics",
-      "линия",
-      "отрезок",
-      "графика"
-    ]
-  },
-  {
-    "title": "DRAWCIRCLE и FILLCIRCLE",
-    "href": "modern-graphics.html",
-    "kind": "Операторы",
-    "category": "Графика",
-    "description": "Контурная и заполненная окружность в рабочем кадре CANVAS.",
-    "keywords": [
-      "drawcircle",
-      "fillcircle",
-      "circle",
-      "radius",
-      "canvas",
-      "окружность",
-      "радиус",
-      "круг"
-    ]
-  },
-  {
-    "title": "DRAWTEXT",
-    "href": "modern-graphics.html",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Пиксельный HUD-текст в рабочем кадре CANVAS.",
-    "keywords": [
-      "drawtext",
-      "text",
-      "hud",
-      "canvas",
-      "score",
-      "текст",
-      "hud",
-      "счёт",
-      "подпись"
-    ]
-  },
-  {
-    "title": "TEXTWIDTH и TEXTHEIGHT",
-    "functions": [
-      "TEXTWIDTH",
-      "TEXTHEIGHT"
-    ],
-    "href": "modern-graphics.html",
-    "kind": "Функции",
-    "category": "Графика",
-    "description": "Измерение ширины и высоты HUD-текста в пикселях по тому же договору, который использует DRAWTEXT.",
-    "keywords": [
-      "textwidth",
-      "textheight",
-      "text metrics",
-      "measure text",
-      "hud",
-      "canvas",
-      "drawtext",
-      "ширина текста",
-      "высота текста",
-      "измерение текста",
-      "подпись"
-    ]
-  },
-  {
-    "title": "CAMERA и RESETCAMERA",
-    "href": "modern-graphics.html",
-    "kind": "Операторы",
-    "category": "Графика",
-    "description": "Смещение видимой области мира и возврат к экранным координатам в CANVAS.",
-    "keywords": [
-      "camera",
-      "resetcamera",
-      "world",
-      "screen coordinates",
-      "canvas",
-      "камера",
-      "мир",
-      "координаты",
-      "hud"
-    ]
-  },
-  {
-    "title": "Текст на экране",
-    "href": "graphics-text.html",
-    "kind": "Раздел",
-    "category": "Графика",
-    "description": "Операторы CLS, COLOR, LOCATE и VIEW PRINT, палитра, прозрачный фон, курсор, прокрутка SCREEN 0 и полоса прокрутки.",
-    "keywords": [
-      "cls",
-      "color",
-      "locate",
-      "view print",
-      "foreground",
-      "background",
-      "transparent",
-      "palette",
-      "scroll",
-      "scrollbar",
-      "палитра",
-      "прозрачный",
-      "фон",
-      "строка",
-      "столбец",
-      "прокрутка",
-      "полоса прокрутки"
-    ]
-  },
-  {
-    "title": "Оператор CLS",
-    "href": "operator-reference.html#op-cls-cls",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Синтаксис, параметры и правила конструкции CLS.",
-    "keywords": [
-      "cls",
-      "clear",
-      "screen",
-      "очистка",
-      "прокрутка"
-    ]
-  },
-  {
-    "title": "Оператор COLOR",
-    "href": "operator-reference.html#op-color-color",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Синтаксис, параметры и правила конструкции COLOR.",
-    "keywords": [
-      "color",
-      "foreground",
-      "background",
-      "transparent",
-      "palette",
-      "цвет",
-      "фон",
-      "прозрачный"
-    ]
-  },
-  {
-    "title": "Оператор LOCATE",
-    "href": "operator-reference.html#op-locate-locate",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Синтаксис, параметры и правила конструкции LOCATE.",
-    "keywords": [
-      "locate",
-      "row",
-      "column",
-      "scroll",
-      "строка",
-      "столбец",
-      "курсор",
-      "прокрутка"
-    ]
-  },
-  {
-    "title": "Операторы рисования",
-    "href": "graphics-primitives.html",
-    "kind": "Раздел",
-    "category": "Графика",
-    "description": "PSET, PRESET, LINE, CIRCLE, PAINT, DRAW и POINT на графическом экране SCREEN, а также формы POINT(x, y), PSET, PRESET и PAINT для CANVAS.",
-    "keywords": [
-      "pset",
-      "preset",
-      "line",
-      "circle",
-      "paint",
-      "draw",
-      "point",
-      "view",
-      "window",
-      "viewport",
-      "canvas",
-      "pixel",
-      "coordinates",
-      "world",
-      "camera",
-      "пиксель",
-      "заливка",
-      "строка команд",
-      "координаты",
-      "холст",
-      "мир",
-      "камера"
-    ]
-  },
-  {
-    "title": "Оператор PSET",
-    "href": "operator-reference.html#op-pset-pset",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Синтаксис, параметры и правила конструкции PSET.",
-    "keywords": [
-      "pset",
-      "pixel",
-      "set",
-      "step",
-      "canvas",
-      "viewport",
-      "camera",
-      "world",
-      "пиксель",
-      "холст",
-      "мир"
-    ]
-  },
-  {
-    "title": "Оператор PRESET",
-    "href": "operator-reference.html#op-pset-preset",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Синтаксис, параметры и правила конструкции PRESET.",
-    "keywords": [
-      "preset",
-      "pixel",
-      "clear",
-      "erase",
-      "step",
-      "canvas",
-      "viewport",
-      "camera",
-      "world",
-      "пиксель",
-      "холст",
-      "мир"
-    ]
-  },
-  {
-    "title": "Оператор LINE",
-    "href": "operator-reference.html#op-line-line",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Синтаксис, параметры и правила конструкции LINE.",
-    "keywords": [
-      "line",
-      "box",
-      "filled",
-      "b",
-      "bf",
-      "step",
-      "линия",
-      "рамка",
-      "прямоугольник"
-    ]
-  },
-  {
-    "title": "Оператор CIRCLE",
-    "href": "operator-reference.html#op-circle-circle",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Синтаксис, параметры и правила конструкции CIRCLE.",
-    "keywords": [
-      "circle",
-      "radius",
-      "step",
-      "arc",
-      "aspect",
-      "окружность",
-      "радиус",
-      "дуга",
-      "эллипс"
-    ]
-  },
-  {
-    "title": "Оператор PAINT",
-    "href": "operator-reference.html#op-paint-paint",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Синтаксис, параметры и правила конструкции PAINT.",
-    "keywords": [
-      "paint",
-      "fill",
-      "border",
-      "region",
-      "step",
-      "pattern",
-      "background",
-      "canvas",
-      "viewport",
-      "camera",
-      "world",
-      "заливка",
-      "граница",
-      "образец",
-      "фон",
-      "область",
-      "холст",
-      "мир",
-      "камера"
-    ]
-  },
-  {
-    "title": "Оператор DRAW",
-    "href": "operator-reference.html#op-draw-draw",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Синтаксис, параметры и правила конструкции DRAW.",
-    "keywords": [
-      "draw",
-      "graphics string",
-      "command string",
-      "macro",
-      "angle",
-      "scale",
-      "paint",
-      "строка команд",
-      "рисование",
-      "поворот",
-      "масштаб",
-      "заливка"
-    ]
-  },
-  {
-    "title": "Функция POINT",
-    "href": "graphics-primitives.html#point",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "Получение номера цвета в указанной точке SCREEN или CANVAS, а также координат текущей графической позиции через POINT(selector).",
-    "keywords": [
-      "point",
-      "pixel",
-      "color",
-      "position",
-      "current",
-      "view",
-      "window",
-      "viewport",
-      "canvas",
-      "logical",
-      "physical",
-      "пиксель",
-      "цвет",
-      "позиция",
-      "координаты",
-      "холст"
-    ]
-  },
-  {
-    "title": "GET и PUT",
-    "href": "get-put.html",
-    "kind": "Раздел",
-    "category": "Графика",
-    "description": "Поблочный обмен между SCREEN или CANVAS и двумерным числовым буфером, включая world-координаты под CAMERA и VIEWPORT.",
-    "keywords": [
-      "get",
-      "put",
-      "buffer",
-      "array",
-      "block",
-      "capture",
-      "restore",
-      "xor",
-      "preset",
-      "pset",
-      "and",
-      "or",
-      "screen",
-      "canvas",
-      "viewport",
-      "camera",
-      "world",
-      "view",
-      "window",
-      "графика",
-      "кадровый буфер",
-      "холст",
-      "массив",
-      "блок",
-      "прямоугольник",
-      "снимок",
-      "восстановление",
-      "мир"
-    ]
-  },
-  {
-    "title": "Оператор GET",
-    "href": "operator-reference.html#op-get-get",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Синтаксис, параметры и правила конструкции GET.",
-    "keywords": [
-      "get",
-      "buffer",
-      "array",
-      "capture",
-      "rectangle",
-      "screen",
-      "canvas",
-      "viewport",
-      "camera",
-      "world",
-      "view",
-      "window",
-      "кадровый буфер",
-      "холст",
-      "массив",
-      "блок",
-      "прямоугольник",
-      "мир"
-    ]
-  },
-  {
-    "title": "Оператор PUT",
-    "href": "operator-reference.html#op-put-put",
-    "kind": "Оператор",
-    "category": "Графика",
-    "description": "Синтаксис, параметры и правила конструкции PUT.",
-    "keywords": [
-      "put",
-      "buffer",
-      "array",
-      "restore",
-      "xor",
-      "preset",
-      "pset",
-      "and",
-      "or",
-      "screen",
-      "canvas",
-      "viewport",
-      "camera",
-      "world",
-      "view",
-      "window",
-      "буфер",
-      "холст",
-      "массив",
-      "наложение",
-      "восстановление",
-      "мир"
-    ]
-  },
-  {
-    "title": "Функции состояния SCREEN",
-    "href": "screen-functions.html",
-    "kind": "Раздел",
-    "category": "Графика",
-    "description": "SCREENISACTIVE, SCREENMODE, SCREENWIDTH и SCREENHEIGHT.",
-    "keywords": [
-      "screenisactive",
-      "screenmode",
-      "screenwidth",
-      "screenheight",
-      "active",
-      "width",
-      "height"
-    ]
-  },
-  {
-    "title": "SCREENISACTIVE",
-    "href": "function-reference.html#fn-screenisactive",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "Признак активного графического режима.",
-    "keywords": [
-      "screenisactive",
-      "active",
-      "screen"
-    ]
-  },
-  {
-    "title": "SCREENMODE",
-    "href": "function-reference.html#fn-screenmode",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "Номер текущего режима SCREEN или 0.",
-    "keywords": [
-      "screenmode",
-      "mode",
-      "screen"
-    ]
-  },
-  {
-    "title": "SCREENWIDTH",
-    "href": "function-reference.html#fn-screenwidth",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "Ширина активной поверхности SCREEN.",
-    "keywords": [
-      "screenwidth",
-      "width",
-      "screen"
-    ]
-  },
-  {
-    "title": "SCREENHEIGHT",
-    "href": "function-reference.html#fn-screenheight",
-    "kind": "Функция",
-    "category": "Графика",
-    "description": "Высота активной поверхности SCREEN.",
-    "keywords": [
-      "screenheight",
-      "height",
-      "screen"
-    ]
-  },
-  {
-    "title": "Клавиатура, мышь и события",
-    "href": "keyboard-mouse-events.html",
-    "kind": "Раздел",
-    "category": "Клавиатура, мышь и события",
-    "description": "Обзор встроенных функций и операторов ввода: опрос клавиатуры, оператор ON KEY, функции мыши и оператор ON MOUSE для SCREEN и CANVAS.",
-    "keywords": [
-      "keyboard",
-      "mouse",
-      "events",
-      "inkey",
-      "keydown",
-      "keypress",
-      "on key",
-      "mousex",
-      "mousey",
-      "mousebutton",
-      "mousepress",
-      "on mouse",
-      "canvas",
-      "viewport",
-      "camera",
-      "world",
-      "клавиатура",
-      "мышь",
-      "события",
-      "ввод",
-      "обработчик",
-      "мир",
-      "камера"
-    ]
-  },
-  {
-    "title": "INKEY",
-    "href": "function-reference.html#fn-inkey",
-    "kind": "Функция",
-    "category": "Клавиатура",
-    "description": "Неблокирующее чтение одной клавиши из очереди клавиатуры.",
-    "keywords": [
-      "inkey",
-      "keyboard",
-      "key",
-      "клавиатура",
-      "left",
-      "right",
-      "f1",
-      "esc",
-      "canonical key"
-    ]
-  },
-  {
-    "title": "KEYDOWN",
-    "href": "function-reference.html#fn-keydown",
-    "kind": "Функция",
-    "category": "Клавиатура",
-    "description": "Проверка текущего удержания клавиши, модификатора или строкового аккорда клавиш через +.",
-    "keywords": [
-      "keydown",
-      "keyboard",
-      "key",
-      "held",
-      "modifier",
-      "ctrl",
-      "control",
-      "shift",
-      "alt",
-      "left",
-      "pageup",
-      "pgup",
-      "escape",
-      "chord",
-      "plus",
-      "клавиатура",
-      "удержание",
-      "алиас",
-      "аккорд",
-      "сочетание"
-    ]
-  },
-  {
-    "title": "KEYPRESS",
-    "href": "function-reference.html#fn-keypress",
-    "kind": "Функция",
-    "category": "Клавиатура",
-    "description": "Одноразовая проверка нажатия клавиши или строкового аккорда, где последняя клавиша является событием.",
-    "keywords": [
-      "keypress",
-      "keyboard",
-      "key",
-      "press",
-      "pressed",
-      "event",
-      "single",
-      "left",
-      "escape",
-      "ctrl",
-      "shift",
-      "alt",
-      "modifier",
-      "chord",
-      "plus",
-      "клавиатура",
-      "нажатие",
-      "модификатор",
-      "аккорд",
-      "сочетание"
-    ]
-  },
-  {
-    "title": "MOUSEX",
-    "href": "function-reference.html#fn-mousex",
-    "kind": "Функция",
-    "category": "Мышь",
-    "description": "Горизонтальная координата указателя: клиентская в SCREEN и мировая в CANVAS через VIEWPORT и CAMERA.",
-    "keywords": [
-      "mousex",
-      "mouse",
-      "pointer",
-      "cursor",
-      "x",
-      "horizontal",
-      "screen",
-      "canvas",
-      "viewport",
-      "camera",
-      "world",
-      "view",
-      "window",
-      "мышь",
-      "указатель",
-      "координата",
-      "экран",
-      "клиентская область",
-      "мир",
-      "камера",
-      "холст"
-    ]
-  },
-  {
-    "title": "MOUSEY",
-    "href": "function-reference.html#fn-mousey",
-    "kind": "Функция",
-    "category": "Мышь",
-    "description": "Вертикальная координата указателя: клиентская в SCREEN и мировая в CANVAS через VIEWPORT и CAMERA.",
-    "keywords": [
-      "mousey",
-      "mouse",
-      "pointer",
-      "cursor",
-      "y",
-      "vertical",
-      "screen",
-      "canvas",
-      "viewport",
-      "camera",
-      "world",
-      "view",
-      "window",
-      "мышь",
-      "указатель",
-      "координата",
-      "экран",
-      "клиентская область",
-      "мир",
-      "камера",
-      "холст"
-    ]
-  },
-  {
-    "title": "MOUSEBUTTON",
-    "href": "function-reference.html#fn-mousebutton",
-    "kind": "Функция",
-    "category": "Мышь",
-    "description": "Проверка текущего удержания левой, правой или средней кнопки мыши в SCREEN или CANVAS.",
-    "keywords": [
-      "mousebutton",
-      "mouse",
-      "button",
-      "left",
-      "right",
-      "middle",
-      "held",
-      "screen",
-      "canvas",
-      "мышь",
-      "кнопка",
-      "левая",
-      "правая",
-      "средняя",
-      "холст"
-    ]
-  },
-  {
-    "title": "MOUSEPRESS",
-    "href": "function-reference.html#fn-mousepress",
-    "kind": "Функция",
-    "category": "Мышь",
-    "description": "Одноразовая проверка нажатия кнопки мыши с удалением подходящего события из очереди в SCREEN или CANVAS.",
-    "keywords": [
-      "mousepress",
-      "mouse",
-      "button",
-      "press",
-      "pressed",
-      "event",
-      "left",
-      "right",
-      "middle",
-      "single",
-      "queue",
-      "screen",
-      "canvas",
-      "мышь",
-      "кнопка",
-      "нажатие",
-      "очередь",
-      "событие",
-      "холст"
-    ]
-  },
-  {
-    "title": "Оператор ON MOUSE",
-    "href": "operator-reference.html#op-onmouse-on-mouse",
-    "kind": "Оператор",
-    "category": "Мышь",
-    "description": "Синтаксис, параметры и правила конструкции ON MOUSE.",
-    "keywords": [
-      "on mouse",
-      "mouse",
-      "handler",
-      "button",
-      "press",
-      "release",
-      "up",
-      "move",
-      "wheel",
-      "mousewheel",
-      "scroll",
-      "delta",
-      "event",
-      "left",
-      "right",
-      "middle",
-      "on",
-      "off",
-      "stop",
-      "pause",
-      "resume",
-      "x",
-      "y",
-      "screen",
-      "canvas",
-      "viewport",
-      "camera",
-      "world",
-      "view",
-      "window",
-      "мышь",
-      "обработчик",
-      "кнопка",
-      "нажатие",
-      "отпускание",
-      "перемещение",
-      "колесо",
-      "прокрутка",
-      "пауза",
-      "возобновление",
-      "координаты",
-      "экран",
-      "клиентская область",
-      "мир",
-      "камера",
-      "холст"
-    ]
-  },
-  {
-    "title": "Оператор ON KEY",
-    "href": "operator-reference.html#op-onkey-on-key",
-    "kind": "Оператор",
-    "category": "Клавиатура",
-    "description": "Синтаксис, параметры и правила конструкции ON KEY.",
-    "keywords": [
-      "on key",
-      "keyboard",
-      "key",
-      "handler",
-      "left",
-      "right",
-      "escape",
-      "on",
-      "off",
-      "stop",
-      "pause",
-      "resume",
-      "any",
-      "any key",
-      "key name",
-      "string",
-      "ctrl",
-      "alt",
-      "shift",
-      "chord",
-      "plus",
-      "клавиатура",
-      "обработчик",
-      "пауза",
-      "возобновление",
-      "алиас",
-      "любая клавиша",
-      "имя клавиши",
-      "аккорд",
-      "сочетание"
-    ]
-  },
-  {
-    "title": "Данные, ввод и вывод",
-    "href": "data-and-input.html",
-    "kind": "Раздел",
-    "category": "Ввод и вывод",
-    "description": "Маршрут значения от типа данных и объявления к INPUT и PRINT.",
-    "keywords": [
-      "data",
-      "input",
-      "print",
-      "dim",
-      "const",
-      "данные",
-      "ввод",
-      "вывод",
-      "переменная"
+    "aliases": [
+      "Оператор CONST",
+      "CONST"
     ]
   },
   {
     "title": "Типы данных",
     "href": "data-types.html",
-    "kind": "Раздел",
-    "category": "Основы",
-    "description": "Числовые, строковые, логические, файловые, пользовательские, массивные и функциональные типы Axiom.",
+    "kind": "Тема",
+    "category": "Переменные, константы и значения",
+    "description": "Тип данных определяет допустимые значения, операции и правила преобразования. Раздел содержит краткую карту типов Axiom; подробные договоры находятся в соответствующих тематических главах.",
     "keywords": [
-      "integer",
-      "long",
-      "double",
-      "decimal",
-      "string",
-      "boolean",
-      "file",
-      "type",
-      "array",
-      "function type",
-      "тип данных"
+      "Карта типов данных",
+      "Переменные, константы и значения"
+    ],
+    "aliases": [
+      "Типы данных"
     ]
   },
   {
-    "title": "Скалярные типы и литералы",
-    "href": "data-types-scalars.html",
-    "kind": "Раздел",
-    "category": "Основы",
-    "description": "Числовые и логические типы Axiom, диапазоны INTEGER/LONG/DOUBLE/DECIMAL, литералы, вывод типа и ограничения преобразований.",
+    "title": "Имена и области видимости",
+    "href": "variables-scope.html",
+    "kind": "Тема",
+    "category": "Переменные, константы и значения",
+    "description": "Раздел имён и областей видимости определяет допустимую запись имени и места программы, где доступно объявленное значение.",
     "keywords": [
-      "literal",
-      "integer",
-      "long",
-      "double",
-      "decimal",
-      "boolean",
-      "range",
-      "min",
-      "max",
-      "true",
-      "false",
-      "число",
-      "диапазон",
-      "минимум",
-      "максимум",
-      "логический",
-      "литерал"
+      "Имена и области видимости",
+      "Переменные, константы и значения"
+    ],
+    "aliases": [
+      "Имена и области видимости"
+    ]
+  },
+  {
+    "title": "Выражения",
+    "href": "expressions-and-branching.html",
+    "kind": "Тема",
+    "category": "Выражения и операции",
+    "description": "Выражение — запись, которая вычисляет значение. Выражения используются в присваивании, выводе, аргументах функций и условиях управляющих конструкций.",
+    "keywords": [
+      "Как вычисляется выражение",
+      "Выражения и операции"
+    ],
+    "aliases": [
+      "Выражения"
+    ]
+  },
+  {
+    "title": "Операции и порядок вычисления",
+    "href": "arithmetic-and-logic.html",
+    "kind": "Тема",
+    "category": "Выражения и операции",
+    "description": "Раздел операций описывает, как выражения Axiom вычисляют числа, сравнивают значения, объединяют логические условия и строят строки. Допустимый тип операндов зависит от операции.",
+    "keywords": [
+      "Операции и приоритет",
+      "Выражения и операции",
+      "+",
+      "PlusToken",
+      "Операции и порядок вычисления",
+      "Операция +",
+      "Раздел операций описывает, как выражения Axiom вычисляют числа, сравнивают значения, объединяют логические условия и строят строки. Допустимый тип операндов зависит от операции.",
+      "Сложение чисел или объединение двух строк.",
+      "-",
+      "MinusToken",
+      "Операция -",
+      "Вычитание чисел; унарная форма меняет знак числа.",
+      "*",
+      "StarToken",
+      "Операция *",
+      "Умножение чисел.",
+      "/",
+      "SlashToken",
+      "Операция /",
+      "Деление с результатом DOUBLE или DECIMAL по правилам типов.",
+      "\\",
+      "BackslashToken",
+      "Операция \\",
+      "Целочисленное деление INTEGER или LONG.",
+      "MOD",
+      "ModKeyword",
+      "Операция MOD",
+      "Остаток целочисленного деления.",
+      "^",
+      "CaretToken",
+      "Операция ^",
+      "Возведение в степень; результат DOUBLE, связывание справа налево.",
+      "&",
+      "AmpersandToken",
+      "Операция &",
+      "Объединение текстовых представлений скалярных значений.",
+      "=",
+      "EqualsToken",
+      "Операция =",
+      "Сравнение на равенство.",
+      "<>",
+      "NotEqualsToken",
+      "Операция <>",
+      "Сравнение на неравенство.",
+      "<",
+      "LessToken",
+      "Операция <",
+      "Строго меньше.",
+      "<=",
+      "LessOrEqualsToken",
+      "Операция <=",
+      "Меньше или равно.",
+      ">",
+      "GreaterToken",
+      "Операция >",
+      "Строго больше.",
+      ">=",
+      "GreaterOrEqualsToken",
+      "Операция >=",
+      "Больше или равно.",
+      "<<",
+      "LessLessToken",
+      "Операция <<",
+      "Сдвиг целого числа влево.",
+      ">>",
+      "GreaterGreaterToken",
+      "Операция >>",
+      "Сдвиг целого числа вправо.",
+      "NOT",
+      "NotKeyword",
+      "Операция NOT",
+      "Логическое или побитовое отрицание.",
+      "AND",
+      "AndKeyword",
+      "Операция AND",
+      "Логическая конъюнкция или побитовое И.",
+      "ANDALSO",
+      "AndAlsoKeyword",
+      "Операция ANDALSO",
+      "Логическое И с коротким замыканием.",
+      "XOR",
+      "XorKeyword",
+      "Операция XOR",
+      "Логическое или побитовое исключающее ИЛИ.",
+      "OR",
+      "OrKeyword",
+      "Операция OR",
+      "Логическое или побитовое ИЛИ.",
+      "ORELSE",
+      "OrElseKeyword",
+      "Операция ORELSE",
+      "Логическое ИЛИ с коротким замыканием.",
+      "EQV",
+      "EqvKeyword",
+      "Операция EQV",
+      "Логическая или побитовая эквивалентность.",
+      "IMP",
+      "ImpKeyword",
+      "Операция IMP",
+      "Логическая или побитовая импликация."
+    ],
+    "aliases": [
+      "Операции и порядок вычисления",
+      "Операция +",
+      "Операция -",
+      "Операция *",
+      "Операция /",
+      "Операция \\",
+      "Операция MOD",
+      "Операция ^",
+      "Операция &",
+      "Операция =",
+      "Операция <>",
+      "Операция <",
+      "Операция <=",
+      "Операция >",
+      "Операция >=",
+      "Операция <<",
+      "Операция >>",
+      "Операция NOT",
+      "Операция AND",
+      "Операция ANDALSO",
+      "Операция XOR",
+      "Операция OR",
+      "Операция ORELSE",
+      "Операция EQV",
+      "Операция IMP"
+    ]
+  },
+  {
+    "title": "Преобразования типов",
+    "href": "data-types-conversions.html",
+    "kind": "Тема",
+    "category": "Выражения и операции",
+    "description": "Раздел преобразований описывает допустимые переходы между типами Axiom. Автоматическое преобразование выполняется только в поддержанном контексте; оно не разрешает произвольное смешение данных.",
+    "keywords": [
+      "Преобразования типов",
+      "Выражения и операции"
+    ],
+    "aliases": [
+      "Преобразования типов"
+    ]
+  },
+  {
+    "title": "Консольный ввод и вывод",
+    "href": "data-and-input.html",
+    "kind": "Тема",
+    "category": "Консольный ввод и вывод",
+    "description": "Раздел консольного ввода и вывода описывает обмен данными с пользователем. PRINT показывает значения программы, а INPUT получает ответ и записывает его в переменную.",
+    "keywords": [
+      "Обмен данными с пользователем",
+      "Консольный ввод и вывод"
+    ],
+    "aliases": [
+      "Консольный ввод и вывод"
+    ]
+  },
+  {
+    "title": "Оператор PRINT",
+    "href": "print.html",
+    "kind": "Тема",
+    "category": "Консольный ввод и вывод",
+    "description": "PRINT — оператор языка Axiom, который выводит текст и значения выражений. Форма PRINT USING применяет форматную строку к выводимым значениям.",
+    "keywords": [
+      "PRINT и PRINT USING",
+      "Консольный ввод и вывод",
+      "PRINT",
+      "Print",
+      "Оператор PRINT",
+      "PRINT — оператор языка Axiom, который выводит текст и значения выражений. Форма PRINT USING применяет форматную строку к выводимым значениям.",
+      "Синтаксис, параметры, действие и примеры PRINT.",
+      "PRINT USING",
+      "PrintUsing",
+      "Синтаксис, параметры, действие и примеры PRINT USING."
+    ],
+    "aliases": [
+      "Оператор PRINT",
+      "PRINT",
+      "PRINT USING"
+    ]
+  },
+  {
+    "title": "Оператор INPUT",
+    "href": "input.html",
+    "kind": "Тема",
+    "category": "Консольный ввод и вывод",
+    "description": "INPUT — оператор языка Axiom, который ожидает подтверждённую строку пользовательского ввода и записывает полученные значения в объявленные переменные.",
+    "keywords": [
+      "INPUT",
+      "Консольный ввод и вывод",
+      "Input",
+      "Оператор INPUT",
+      "INPUT — оператор языка Axiom, который ожидает подтверждённую строку пользовательского ввода и записывает полученные значения в объявленные переменные.",
+      "Синтаксис, параметры, действие и примеры INPUT."
+    ],
+    "aliases": [
+      "Оператор INPUT",
+      "INPUT"
+    ]
+  },
+  {
+    "title": "Условия и выбор действий",
+    "href": "branching.html",
+    "kind": "Тема",
+    "category": "Условия и выбор действий",
+    "description": "Раздел условных конструкций объясняет, как программа выбирает действие по данным. Оператор IF проверяет логическое условие, а SELECT CASE сопоставляет одно значение с несколькими вариантами.",
+    "keywords": [
+      "Выбор по условию или значению",
+      "Условия и выбор действий"
+    ],
+    "aliases": [
+      "Условия и выбор действий"
+    ]
+  },
+  {
+    "title": "Оператор IF",
+    "href": "if.html",
+    "kind": "Тема",
+    "category": "Условия и выбор действий",
+    "description": "IF — оператор языка Axiom, который выбирает блок инструкций по логическому условию. Ветви ELSEIF задают дополнительные проверки, а ELSE — действие при отсутствии истинного условия.",
+    "keywords": [
+      "IF, ELSEIF и ELSE",
+      "Условия и выбор действий",
+      "IF",
+      "If",
+      "Оператор IF",
+      "IF — оператор языка Axiom, который выбирает блок инструкций по логическому условию. Ветви ELSEIF задают дополнительные проверки, а ELSE — действие при отсутствии истинного условия.",
+      "Синтаксис, параметры, действие и примеры IF."
+    ],
+    "aliases": [
+      "Оператор IF",
+      "IF"
+    ]
+  },
+  {
+    "title": "Оператор SELECT CASE",
+    "href": "select-case.html",
+    "kind": "Тема",
+    "category": "Условия и выбор действий",
+    "description": "SELECT CASE — оператор языка Axiom, который выбирает блок по значению одного выражения. Ветви CASE могут содержать отдельные значения, диапазоны и сравнения.",
+    "keywords": [
+      "SELECT CASE",
+      "Условия и выбор действий",
+      "SelectCase",
+      "Оператор SELECT CASE",
+      "SELECT CASE — оператор языка Axiom, который выбирает блок по значению одного выражения. Ветви CASE могут содержать отдельные значения, диапазоны и сравнения.",
+      "Синтаксис, параметры, действие и примеры SELECT CASE."
+    ],
+    "aliases": [
+      "Оператор SELECT CASE",
+      "SELECT CASE"
+    ]
+  },
+  {
+    "title": "Циклы",
+    "href": "loops.html",
+    "kind": "Тема",
+    "category": "Циклы",
+    "description": "Цикл — конструкция, которая повторяет блок инструкций. Раздел объединяет счётный цикл FOR, цикл с предварительным условием WHILE и формы DO … LOOP.",
+    "keywords": [
+      "Повторение действий",
+      "Циклы"
+    ],
+    "aliases": [
+      "Циклы"
+    ]
+  },
+  {
+    "title": "Оператор FOR … NEXT",
+    "href": "for.html",
+    "kind": "Тема",
+    "category": "Циклы",
+    "description": "FOR — оператор языка Axiom, который повторяет блок для последовательных значений счётчика. Оператор NEXT завершает очередной проход и изменяет счётчик на заданный шаг.",
+    "keywords": [
+      "FOR … NEXT",
+      "Циклы",
+      "FOR",
+      "For",
+      "Оператор FOR … NEXT",
+      "FOR — оператор языка Axiom, который повторяет блок для последовательных значений счётчика. Оператор NEXT завершает очередной проход и изменяет счётчик на заданный шаг.",
+      "Синтаксис, параметры, действие и примеры FOR."
+    ],
+    "aliases": [
+      "Оператор FOR … NEXT",
+      "FOR"
+    ]
+  },
+  {
+    "title": "Оператор WHILE",
+    "href": "while.html",
+    "kind": "Тема",
+    "category": "Циклы",
+    "description": "WHILE — оператор языка Axiom, который повторяет блок, пока условие истинно. Условие проверяется перед каждым проходом, включая первый.",
+    "keywords": [
+      "WHILE … END WHILE",
+      "Циклы",
+      "WHILE",
+      "While",
+      "Оператор WHILE",
+      "WHILE — оператор языка Axiom, который повторяет блок, пока условие истинно. Условие проверяется перед каждым проходом, включая первый.",
+      "Синтаксис, параметры, действие и примеры WHILE."
+    ],
+    "aliases": [
+      "Оператор WHILE",
+      "WHILE"
+    ]
+  },
+  {
+    "title": "Оператор DO … LOOP",
+    "href": "do-loop.html",
+    "kind": "Тема",
+    "category": "Циклы",
+    "description": "DO … LOOP — оператор языка Axiom, который повторяет блок с условием в начале, условием в конце или без условия. Формы WHILE продолжают повторение при истинном условии, а UNTIL завершают его при истинном условии.",
+    "keywords": [
+      "DO … LOOP",
+      "Циклы",
+      "DO ... LOOP",
+      "DoLoop",
+      "Оператор DO … LOOP",
+      "DO … LOOP — оператор языка Axiom, который повторяет блок с условием в начале, условием в конце или без условия. Формы WHILE продолжают повторение при истинном условии, а UNTIL завершают его при истинном условии.",
+      "Синтаксис, параметры, действие и примеры DO ... LOOP."
+    ],
+    "aliases": [
+      "Оператор DO … LOOP",
+      "DO ... LOOP"
+    ]
+  },
+  {
+    "title": "Оператор EXIT",
+    "href": "exit.html",
+    "kind": "Тема",
+    "category": "Циклы",
+    "description": "EXIT — оператор языка Axiom, который завершает ближайший охватывающий цикл указанного вида. На странице описаны две отдельные формы: EXIT FOR и EXIT DO.",
+    "keywords": [
+      "EXIT FOR и EXIT DO",
+      "Циклы"
+    ],
+    "aliases": [
+      "Оператор EXIT"
+    ]
+  },
+  {
+    "title": "Оператор CONTINUE",
+    "href": "continue.html",
+    "kind": "Тема",
+    "category": "Циклы",
+    "description": "CONTINUE — оператор языка Axiom, который пропускает остаток текущего прохода цикла. На странице описаны отдельные формы для FOR, WHILE и DO.",
+    "keywords": [
+      "CONTINUE",
+      "Циклы",
+      "CONTINUE FOR",
+      "ContinueFor",
+      "Оператор CONTINUE",
+      "CONTINUE — оператор языка Axiom, который пропускает остаток текущего прохода цикла. На странице описаны отдельные формы для FOR, WHILE и DO.",
+      "Синтаксис, параметры, действие и примеры CONTINUE FOR.",
+      "CONTINUE WHILE",
+      "ContinueWhile",
+      "Синтаксис, параметры, действие и примеры CONTINUE WHILE.",
+      "CONTINUE DO",
+      "ContinueDo",
+      "Синтаксис, параметры, действие и примеры CONTINUE DO."
+    ],
+    "aliases": [
+      "Оператор CONTINUE",
+      "CONTINUE FOR",
+      "CONTINUE WHILE",
+      "CONTINUE DO"
+    ]
+  },
+  {
+    "title": "Числа и математика",
+    "href": "numeric-functions.html",
+    "kind": "Тема",
+    "category": "Числа и математические функции",
+    "description": "Раздел «Числа и математика» описывает числовые типы, математические встроенные функции, округление, преобразование и псевдослучайные числа.",
+    "keywords": [
+      "Числовые данные и вычисления",
+      "Числа и математические функции"
+    ],
+    "aliases": [
+      "Числа и математика"
+    ]
+  },
+  {
+    "title": "Округление и преобразование чисел",
+    "href": "numeric-functions-conversion-and-legacy.html",
+    "kind": "Тема",
+    "category": "Числа и математические функции",
+    "description": "Раздел описывает встроенные функции INT, CINT, CLNG, CDBL, CDEC, STR и VAL. Они различаются типом результата и правилом обработки исходного значения.",
+    "keywords": [
+      "Преобразование чисел и текста",
+      "Числа и математические функции"
+    ],
+    "aliases": [
+      "Округление и преобразование чисел"
+    ]
+  },
+  {
+    "title": "ISNUMERIC",
+    "href": "isnumeric.html",
+    "kind": "Тема",
+    "category": "Числа и математические функции",
+    "description": "ISNUMERIC — встроенная функция языка Axiom, которая возвращает признак полной записи конечного числа DOUBLE в строке.",
+    "keywords": [
+      "Проверка ISNUMERIC",
+      "Числа и математические функции"
+    ],
+    "aliases": [
+      "ISNUMERIC"
+    ]
+  },
+  {
+    "title": "Модуль, знак, границы и случайные числа",
+    "href": "numeric-functions-core.html",
+    "kind": "Тема",
+    "category": "Числа и математические функции",
+    "description": "Раздел описывает встроенные функции ABS, SGN, MIN, MAX, CLAMP, SETSIGN и RND. Синтаксис каждого вызова приведён отдельно.",
+    "keywords": [
+      "Основные математические функции",
+      "Числа и математические функции"
+    ],
+    "aliases": [
+      "Модуль, знак, границы и случайные числа"
+    ]
+  },
+  {
+    "title": "Корни, степени, логарифмы и округление",
+    "href": "numeric-functions-roots-rounding.html",
+    "kind": "Тема",
+    "category": "Числа и математические функции",
+    "description": "Раздел описывает встроенные функции SQR, CBRT, EXP, LOG, LOG10, LOG2, POW, FLOOR, CEIL, ROUND и FIX. Ниже каждый вызов имеет собственный договор.",
+    "keywords": [
+      "Корни и округление",
+      "Числа и математические функции"
+    ],
+    "aliases": [
+      "Корни, степени, логарифмы и округление"
+    ]
+  },
+  {
+    "title": "Тригонометрические функции",
+    "href": "numeric-functions-trigonometry.html",
+    "kind": "Тема",
+    "category": "Числа и математические функции",
+    "description": "Раздел описывает встроенные тригонометрические и гиперболические функции. Синтаксис ниже относится к отдельным функциям; углы измеряются в радианах.",
+    "keywords": [
+      "Тригонометрия",
+      "Числа и математические функции"
+    ],
+    "aliases": [
+      "Тригонометрические функции"
+    ]
+  },
+  {
+    "title": "RANDOMIZE",
+    "href": "randomize.html",
+    "kind": "Тема",
+    "category": "Числа и математические функции",
+    "description": "RANDOMIZE — оператор языка Axiom, который повторно инициализирует генератор псевдослучайных чисел.",
+    "keywords": [
+      "Случайные числа и RANDOMIZE",
+      "Числа и математические функции",
+      "RANDOMIZE",
+      "Randomize",
+      "RANDOMIZE — оператор языка Axiom, который повторно инициализирует генератор псевдослучайных чисел.",
+      "Синтаксис, параметры, действие и примеры RANDOMIZE."
+    ],
+    "aliases": [
+      "RANDOMIZE"
+    ]
+  },
+  {
+    "title": "Строки и символы",
+    "href": "string-functions.html",
+    "kind": "Тема",
+    "category": "Строки и символы",
+    "description": "Раздел строк и символов описывает текстовые значения типа STRING и функции для их обработки: измерение длины, выделение фрагментов, поиск, замену, преобразование регистра и построение текста. Подробные правила литералов и каждой группы функций находятся на отдельных страницах главы.",
+    "keywords": [
+      "Текстовые данные",
+      "Строки и символы"
+    ],
+    "aliases": [
+      "Строки и символы"
+    ]
+  },
+  {
+    "title": "Тип STRING и фиксированные строки",
+    "href": "data-types-strings-and-files.html",
+    "kind": "Тема",
+    "category": "Строки и символы",
+    "description": "STRING — тип данных Axiom для текста. Обычная строка имеет переменную длину; форма STRING * N задаёт фиксированную ширину места хранения.",
+    "keywords": [
+      "STRING и фиксированная ширина",
+      "Строки и символы"
+    ],
+    "aliases": [
+      "Тип STRING и фиксированные строки"
+    ]
+  },
+  {
+    "title": "Строковые литералы и интерполяция",
+    "href": "string-literals.html",
+    "kind": "Тема",
+    "category": "Строки и символы",
+    "description": "Строковый литерал — выражение типа STRING, которое задаёт текст непосредственно в исходной программе. Интерполированная строка дополняет текст вычисленными значениями.",
+    "keywords": [
+      "Литералы и интерполяция",
+      "Строки и символы"
+    ],
+    "aliases": [
+      "Строковые литералы и интерполяция"
+    ]
+  },
+  {
+    "title": "Длина строки и фрагменты",
+    "href": "string-functions-slices-and-length.html",
+    "kind": "Тема",
+    "category": "Строки и символы",
+    "description": "В этом разделе описаны встроенные функции языка Axiom LEN, LEFT, RIGHT, MID. Они обрабатывают текст и возвращают результат без изменения исходной строки. Ниже приведён отдельный синтаксис и договор каждой функции.",
+    "keywords": [
+      "Длина и фрагменты",
+      "Строки и символы"
+    ],
+    "aliases": [
+      "Длина строки и фрагменты"
+    ]
+  },
+  {
+    "title": "Обрезка, регистр и разворот",
+    "href": "string-functions-trim-and-case.html",
+    "kind": "Тема",
+    "category": "Строки и символы",
+    "description": "В этом разделе описаны встроенные функции языка Axiom TRIM, LTRIM, RTRIM, LCASE, UCASE, REVERSE. Они обрабатывают текст и возвращают результат без изменения исходной строки. Ниже приведён отдельный синтаксис и договор каждой функции.",
+    "keywords": [
+      "Пробелы, регистр и разворот",
+      "Строки и символы"
+    ],
+    "aliases": [
+      "Обрезка, регистр и разворот"
+    ]
+  },
+  {
+    "title": "Поиск и замена подстрок",
+    "href": "string-functions-search-and-replace.html",
+    "kind": "Тема",
+    "category": "Строки и символы",
+    "description": "В этом разделе описаны встроенные функции языка Axiom CONTAINS, STARTSWITH, ENDSWITH, INSTR, INSTRREV, SUBSTRCOUNT, REPLACE, REPLACEMANY. Они обрабатывают текст и возвращают результат без изменения исходной строки. Ниже приведён отдельный синтаксис и договор каждой функции.",
+    "keywords": [
+      "Поиск и замена",
+      "Строки и символы"
+    ],
+    "aliases": [
+      "Поиск и замена подстрок"
+    ]
+  },
+  {
+    "title": "Построение строк и массивы строк",
+    "href": "string-functions-build-and-split.html",
+    "kind": "Тема",
+    "category": "Строки и символы",
+    "description": "В этом разделе описаны встроенные функции языка Axiom REPEAT, SPACE, STRING, PADLEFT, PADRIGHT, CENTER, INSERT, REMOVE, SPLIT, JOIN. Они помогают построить строку или преобразовать текст в массив строк. Ниже приведён отдельный синтаксис и договор каждой функции.",
+    "keywords": [
+      "Построение и разбиение",
+      "Строки и символы"
+    ],
+    "aliases": [
+      "Построение строк и массивы строк"
+    ]
+  },
+  {
+    "title": "Символы и их коды",
+    "href": "characters.html",
+    "kind": "Тема",
+    "category": "Строки и символы",
+    "description": "Раздел «Символы и их коды» объясняет связь функций ASC, ASCW, CHR и CHRW с Unicode и встроенной таблицей CP866.",
+    "keywords": [
+      "Коды символов",
+      "Строки и символы"
+    ],
+    "aliases": [
+      "Символы и их коды"
+    ]
+  },
+  {
+    "title": "Дата и время",
+    "href": "date-time-functions.html",
+    "kind": "Тема",
+    "category": "Дата и время",
+    "description": "Раздел «Дата и время» описывает типы DATE, TIME и DATETIME, чтение часов, календарные компоненты, арифметику, разбор строк и часовые пояса.",
+    "keywords": [
+      "DATE, TIME и DATETIME",
+      "Дата и время"
+    ],
+    "aliases": [
+      "Дата и время"
+    ]
+  },
+  {
+    "title": "Текущие дата и время",
+    "href": "date-time-functions-current.html",
+    "kind": "Тема",
+    "category": "Дата и время",
+    "description": "Раздел описывает встроенные функции DATE, TIME, NOW, UTCDATE, UTCTIME, UTCNOW и TIMER. Они читают часы среды запуска; синтаксис разных функций показан отдельно.",
+    "keywords": [
+      "Текущие значения",
+      "Дата и время"
+    ],
+    "aliases": [
+      "Текущие дата и время"
+    ]
+  },
+  {
+    "title": "Сборка даты и календарные части",
+    "href": "date-time-functions-parts-and-serial.html",
+    "kind": "Тема",
+    "category": "Дата и время",
+    "description": "Раздел описывает встроенные функции создания даты и времени, извлечения компонентов и определения календарных границ. Ниже синтаксис относится к разным функциям.",
+    "keywords": [
+      "Создание и календарные части",
+      "Дата и время"
+    ],
+    "aliases": [
+      "Сборка даты и календарные части"
+    ]
+  },
+  {
+    "title": "Календарная арифметика и разбор",
+    "href": "date-time-functions-arithmetic-and-validation.html",
+    "kind": "Тема",
+    "category": "Дата и время",
+    "description": "Раздел описывает встроенные функции DATEADD, DATEDIFF, DATEPART, DATEVALUE, TIMEVALUE и ISDATE. Арифметика работает с типизированными значениями; разбор и проверка работают со строками.",
+    "keywords": [
+      "Арифметика, разбор и проверка",
+      "Дата и время"
+    ],
+    "aliases": [
+      "Календарная арифметика и разбор"
+    ]
+  },
+  {
+    "title": "UTC и часовые пояса",
+    "href": "date-time-functions-time-zones.html",
+    "kind": "Тема",
+    "category": "Дата и время",
+    "description": "Раздел описывает встроенные функции UTCOFFSET, TOUTC и FROMUTC. Они связывают дату и время без собственного пояса с правилами выбранного часового пояса.",
+    "keywords": [
+      "UTC и часовые пояса",
+      "Дата и время"
+    ],
+    "aliases": [
+      "UTC и часовые пояса"
+    ]
+  },
+  {
+    "title": "Массивы",
+    "href": "arrays.html",
+    "kind": "Тема",
+    "category": "Массивы",
+    "description": "Массив — тип данных языка Axiom, который хранит элементы одного типа и позволяет обращаться к ним по индексам. Раздел объясняет объявления, границы, размерность, изменение размера и встроенную обработку массивов.",
+    "keywords": [
+      "Элементы, ранг и границы",
+      "Массивы"
+    ],
+    "aliases": [
+      "Массивы"
+    ]
+  },
+  {
+    "title": "Одномерные массивы",
+    "href": "arrays-1d.html",
+    "kind": "Тема",
+    "category": "Массивы",
+    "description": "Одномерный массив — тип данных Axiom ранга 1, элементы которого выбираются одним индексом. Он подходит для оценок, измерений, имён и других последовательностей.",
+    "keywords": [
+      "Одномерные массивы",
+      "Массивы"
+    ],
+    "aliases": [
+      "Одномерные массивы"
+    ]
+  },
+  {
+    "title": "Двумерные массивы",
+    "href": "arrays-2d.html",
+    "kind": "Тема",
+    "category": "Массивы",
+    "description": "Двумерный массив — тип данных Axiom ранга 2, элементы которого выбираются парой индексов. Два измерения удобно понимать как строки и столбцы таблицы.",
+    "keywords": [
+      "Двумерные массивы",
+      "Массивы"
+    ],
+    "aliases": [
+      "Двумерные массивы"
+    ]
+  },
+  {
+    "title": "Многомерные массивы",
+    "href": "arrays-multidimensional.html",
+    "kind": "Тема",
+    "category": "Массивы",
+    "description": "Многомерный массив — тип данных Axiom с несколькими измерениями; эта статья рассматривает ранг выше 2. Каждый элемент выбирается набором индексов в порядке измерений объявления.",
+    "keywords": [
+      "Многомерные массивы",
+      "Массивы"
+    ],
+    "aliases": [
+      "Многомерные массивы"
+    ]
+  },
+  {
+    "title": "Индексирование массивов",
+    "href": "arrays-indexing.html",
+    "kind": "Тема",
+    "category": "Массивы",
+    "description": "Раздел индексирования описывает форму выражения Axiom, которая читает элемент массива или создаёт представление выбранной области. Полная запись содержит один индекс для каждого измерения.",
+    "keywords": [
+      "Индексирование",
+      "Массивы"
+    ],
+    "aliases": [
+      "Индексирование массивов"
+    ]
+  },
+  {
+    "title": "Динамические массивы",
+    "href": "arrays-dynamic.html",
+    "kind": "Тема",
+    "category": "Массивы",
+    "description": "Динамический массив — тип данных Axiom, границы которого можно установить и изменить во время выполнения. Раздел описывает отдельные операторы DIM, REDIM, REDIM PRESERVE и ERASE; их формы не являются одной инструкцией.",
+    "keywords": [
+      "Динамические массивы",
+      "Массивы"
+    ],
+    "aliases": [
+      "Динамические массивы"
+    ]
+  },
+  {
+    "title": "Оператор REDIM",
+    "href": "redim.html",
+    "kind": "Тема",
+    "category": "Массивы",
+    "description": "REDIM — оператор Axiom для выделения массива с новыми границами. Без PRESERVE создаются значения по умолчанию; с PRESERVE сохраняются элементы в пересечении прежней и новой формы.",
+    "keywords": [
+      "REDIM и REDIM PRESERVE",
+      "Массивы",
+      "REDIM",
+      "Redim",
+      "Оператор REDIM",
+      "REDIM — оператор Axiom для выделения массива с новыми границами. Без PRESERVE создаются значения по умолчанию; с PRESERVE сохраняются элементы в пересечении прежней и новой формы.",
+      "Синтаксис, параметры, действие и примеры REDIM.",
+      "REDIM PRESERVE",
+      "Синтаксис, параметры, действие и примеры REDIM PRESERVE."
+    ],
+    "aliases": [
+      "Оператор REDIM",
+      "REDIM",
+      "REDIM PRESERVE"
+    ]
+  },
+  {
+    "title": "Оператор ERASE",
+    "href": "erase.html",
+    "kind": "Тема",
+    "category": "Массивы",
+    "description": "ERASE — оператор Axiom, который освобождает элементы массива. После выполнения массив сохраняет объявленный тип и ранг, но становится невыделенным.",
+    "keywords": [
+      "ERASE",
+      "Массивы",
+      "Erase",
+      "Оператор ERASE",
+      "ERASE — оператор Axiom, который освобождает элементы массива. После выполнения массив сохраняет объявленный тип и ранг, но становится невыделенным.",
+      "Синтаксис, параметры, действие и примеры ERASE."
+    ],
+    "aliases": [
+      "Оператор ERASE",
+      "ERASE"
+    ]
+  },
+  {
+    "title": "Срезы и представления",
+    "href": "arrays-slices.html",
+    "kind": "Тема",
+    "category": "Массивы",
+    "description": "Раздел срезов и представлений описывает выбор области элементов массива Axiom. Частичное индексирование и диапазон TO создают представления общей памяти; функции копирования создают независимые массивы.",
+    "keywords": [
+      "Срезы и представления",
+      "Массивы"
+    ],
+    "aliases": [
+      "Срезы и представления"
+    ]
+  },
+  {
+    "title": "Форма и изменение размера массива",
+    "href": "arrays-functions.html",
+    "kind": "Тема",
+    "category": "Массивы",
+    "description": "Раздел объединяет встроенные функции, которые получают форму массива и изменяют число его элементов.",
+    "keywords": [
+      "Границы и изменение элементов",
+      "Массивы"
+    ],
+    "aliases": [
+      "Форма и изменение размера массива"
+    ]
+  },
+  {
+    "title": "Преобразование и обработка массивов",
+    "href": "arrays-and-builtins.html",
+    "kind": "Тема",
+    "category": "Массивы",
+    "description": "Раздел объединяет встроенные функции, которые копируют, преобразуют, ищут и обрабатывают элементы массивов. Каждая функция имеет собственные формы вызова и результат.",
+    "keywords": [
+      "Преобразования, поиск и вычисления",
+      "Массивы"
+    ],
+    "aliases": [
+      "Преобразование и обработка массивов"
+    ]
+  },
+  {
+    "title": "Диагностика массивов",
+    "href": "arrays-diagnostics.html",
+    "kind": "Тема",
+    "category": "Массивы",
+    "description": "Раздел диагностики массивов объясняет ошибки типов, выделения, индексов и формы массива. Ошибки проверки программы обнаруживаются до запуска; ошибки времени выполнения можно перехватить оператором TRY.",
+    "keywords": [
+      "Ошибки массивов",
+      "Массивы"
+    ],
+    "aliases": [
+      "Диагностика массивов"
+    ]
+  },
+  {
+    "title": "Процедуры и функции",
+    "href": "procedures-and-functions.html",
+    "kind": "Тема",
+    "category": "Процедуры и функции",
+    "description": "Раздел процедур и функций описывает объявления SUB и FUNCTION, передачу параметров, вызовы и оператор RETURN. SUB объединяет действие без результата, FUNCTION вычисляет значение, а RETURN завершает текущий вызов.",
+    "keywords": [
+      "Подпрограммы и параметры",
+      "Процедуры и функции"
+    ],
+    "aliases": [
+      "Процедуры и функции"
+    ]
+  },
+  {
+    "title": "Оператор SUB",
+    "href": "sub.html",
+    "kind": "Тема",
+    "category": "Процедуры и функции",
+    "description": "SUB — оператор языка Axiom, который объявляет процедуру: именованный блок инструкций без возвращаемого значения. Процедура группирует действие и может принимать параметры.",
+    "keywords": [
+      "Процедура SUB",
+      "Процедуры и функции",
+      "SUB",
+      "SubDeclaration",
+      "Оператор SUB",
+      "SUB — оператор языка Axiom, который объявляет процедуру: именованный блок инструкций без возвращаемого значения. Процедура группирует действие и может принимать параметры.",
+      "Синтаксис, параметры, действие и примеры SUB."
+    ],
+    "aliases": [
+      "Оператор SUB",
+      "SUB"
+    ]
+  },
+  {
+    "title": "Оператор FUNCTION",
+    "href": "function.html",
+    "kind": "Тема",
+    "category": "Процедуры и функции",
+    "description": "FUNCTION — оператор языка Axiom, который объявляет функцию с параметрами и типом возвращаемого значения. Функция вычисляет значение для присваивания, вывода, условия или другого выражения.",
+    "keywords": [
+      "Функция FUNCTION",
+      "Процедуры и функции",
+      "FUNCTION",
+      "FunctionDeclaration",
+      "Оператор FUNCTION",
+      "FUNCTION — оператор языка Axiom, который объявляет функцию с параметрами и типом возвращаемого значения. Функция вычисляет значение для присваивания, вывода, условия или другого выражения.",
+      "Синтаксис, параметры, действие и примеры FUNCTION."
+    ],
+    "aliases": [
+      "Оператор FUNCTION",
+      "FUNCTION"
+    ]
+  },
+  {
+    "title": "Вызовы",
+    "href": "calls.html",
+    "kind": "Тема",
+    "category": "Процедуры и функции",
+    "description": "Раздел вызовов описывает форму языка Axiom, которая выполняет процедуру, функцию или метод с указанными аргументами. Объявление определяет число и типы параметров, способ передачи и наличие результата.",
+    "keywords": [
+      "Вызовы и функциональные значения",
+      "Процедуры и функции",
+      "Вызов как инструкция",
+      "Expression",
+      "Вызовы",
+      "Раздел вызовов описывает форму языка Axiom, которая выполняет процедуру, функцию или метод с указанными аргументами. Объявление определяет число и типы параметров, способ передачи и наличие результата.",
+      "Синтаксис, параметры, действие и примеры Вызов как инструкция."
+    ],
+    "aliases": [
+      "Вызовы",
+      "Вызов как инструкция"
+    ]
+  },
+  {
+    "title": "Оператор RETURN",
+    "href": "return.html",
+    "kind": "Тема",
+    "category": "Процедуры и функции",
+    "description": "RETURN — оператор языка Axiom, который завершает текущий вызов процедуры или функции. В процедуре он возвращает управление, а в функции дополнительно возвращает вычисленное значение.",
+    "keywords": [
+      "Возврат RETURN",
+      "Процедуры и функции",
+      "RETURN",
+      "Return",
+      "Оператор RETURN",
+      "RETURN — оператор языка Axiom, который завершает текущий вызов процедуры или функции. В процедуре он возвращает управление, а в функции дополнительно возвращает вычисленное значение.",
+      "Синтаксис, параметры, действие и примеры RETURN."
+    ],
+    "aliases": [
+      "Оператор RETURN",
+      "RETURN"
+    ]
+  },
+  {
+    "title": "Оператор TYPE",
+    "href": "type.html",
+    "kind": "Тема",
+    "category": "Пользовательские типы",
+    "description": "TYPE — оператор языка Axiom, который объявляет пользовательский тип записи с именованными полями. Тип может содержать методы, перегруженные конструкторы и проверку IsValid после конструктора.",
+    "keywords": [
+      "TYPE: поля, методы и создание записи",
+      "Пользовательские типы",
+      "TYPE",
+      "TypeDeclaration",
+      "Оператор TYPE",
+      "TYPE — оператор языка Axiom, который объявляет пользовательский тип записи с именованными полями. Тип может содержать методы, перегруженные конструкторы и проверку IsValid после конструктора.",
+      "Синтаксис, параметры, действие и примеры TYPE."
+    ],
+    "aliases": [
+      "Оператор TYPE",
+      "TYPE"
+    ]
+  },
+  {
+    "title": "Обработка ошибок",
+    "href": "error-handling.html",
+    "kind": "Тема",
+    "category": "Обработка ошибок",
+    "description": "Раздел обработки ошибок описывает оператор TRY с блоками CATCH и FINALLY, оператор ERROR и встроенное значение ERROR. Эти средства позволяют реагировать на ошибки во время выполнения программы.",
+    "keywords": [
+      "Ошибки во время выполнения",
+      "Обработка ошибок"
+    ],
+    "aliases": [
+      "Обработка ошибок"
+    ]
+  },
+  {
+    "title": "Оператор TRY",
+    "href": "try.html",
+    "kind": "Тема",
+    "category": "Обработка ошибок",
+    "description": "TRY — оператор языка Axiom, который защищает участок программы для обработки ошибок времени выполнения. Блок CATCH получает возникшую ошибку, а блок FINALLY выполняет завершающие инструкции.",
+    "keywords": [
+      "TRY, CATCH и FINALLY",
+      "Обработка ошибок",
+      "TRY",
+      "Try",
+      "Оператор TRY",
+      "TRY — оператор языка Axiom, который защищает участок программы для обработки ошибок времени выполнения. Блок CATCH получает возникшую ошибку, а блок FINALLY выполняет завершающие инструкции.",
+      "Синтаксис, параметры, действие и примеры TRY."
+    ],
+    "aliases": [
+      "Оператор TRY",
+      "TRY"
+    ]
+  },
+  {
+    "title": "Оператор ERROR",
+    "href": "error.html",
+    "kind": "Тема",
+    "category": "Обработка ошибок",
+    "description": "ERROR — оператор языка Axiom, который создаёт пользовательскую ошибку времени выполнения или повторно передаёт полученное значение ERROR. Он прерывает текущую последовательность инструкций и запускает поиск обработчика.",
+    "keywords": [
+      "Оператор ERROR",
+      "Обработка ошибок",
+      "ERROR",
+      "Error",
+      "ERROR — оператор языка Axiom, который создаёт пользовательскую ошибку времени выполнения или повторно передаёт полученное значение ERROR. Он прерывает текущую последовательность инструкций и запускает поиск обработчика.",
+      "Синтаксис, параметры, действие и примеры ERROR."
+    ],
+    "aliases": [
+      "Оператор ERROR",
+      "ERROR"
+    ]
+  },
+  {
+    "title": "Файловая система",
+    "href": "file-system-functions.html",
+    "kind": "Тема",
+    "category": "Файлы и файловая система",
+    "description": "Раздел файловой системы описывает оператор OPEN, оператор CLOSE и встроенные функции чтения, записи, путей и управления каталогами. Программа работает с путём STRING либо с открытым ресурсом FILE.",
+    "keywords": [
+      "Пути, FILE и файловые операции",
+      "Файлы и файловая система"
+    ],
+    "aliases": [
+      "Файловая система"
+    ]
+  },
+  {
+    "title": "Оператор OPEN",
+    "href": "open.html",
+    "kind": "Тема",
+    "category": "Файлы и файловая система",
+    "description": "OPEN — оператор языка Axiom, который открывает текстовый файл и связывает его с заранее объявленной переменной FILE. Режим определяет чтение, замену содержимого или дописывание.",
+    "keywords": [
+      "Открытие OPEN",
+      "Файлы и файловая система",
+      "OPEN",
+      "Open",
+      "Оператор OPEN",
+      "OPEN — оператор языка Axiom, который открывает текстовый файл и связывает его с заранее объявленной переменной FILE. Режим определяет чтение, замену содержимого или дописывание.",
+      "Синтаксис, параметры, действие и примеры OPEN."
+    ],
+    "aliases": [
+      "Оператор OPEN",
+      "OPEN"
+    ]
+  },
+  {
+    "title": "Оператор CLOSE",
+    "href": "close.html",
+    "kind": "Тема",
+    "category": "Файлы и файловая система",
+    "description": "CLOSE — оператор языка Axiom, который закрывает открытый текстовый файл, завершает накопленную запись и освобождает ресурс FILE. Закрытую переменную можно снова использовать в OPEN.",
+    "keywords": [
+      "Закрытие CLOSE",
+      "Файлы и файловая система",
+      "CLOSE",
+      "Close",
+      "Оператор CLOSE",
+      "CLOSE — оператор языка Axiom, который закрывает открытый текстовый файл, завершает накопленную запись и освобождает ресурс FILE. Закрытую переменную можно снова использовать в OPEN.",
+      "Синтаксис, параметры, действие и примеры CLOSE."
+    ],
+    "aliases": [
+      "Оператор CLOSE",
+      "CLOSE"
+    ]
+  },
+  {
+    "title": "Работа с открытым файлом",
+    "href": "file-system-functions-open-files.html",
+    "kind": "Тема",
+    "category": "Файлы и файловая система",
+    "description": "Раздел содержит встроенные функции ISOPEN, FILEPATH, FILEMODE, FILEPOS, FILELENGTH, LINENUMBER, EOF, READTOEND, READTEXT, READLINE, READLINES, SKIPLINE, WRITE, WRITELINE, NEWLINE, FLUSH, SEEKFILE, REWIND, которые работают с путями и файловыми ресурсами. Подробнее назначение, аргументы и результат каждой функции объяснены ниже.",
+    "keywords": [
+      "Чтение, запись и позиция",
+      "Файлы и файловая система"
+    ],
+    "aliases": [
+      "Работа с открытым файлом"
+    ]
+  },
+  {
+    "title": "Чтение и запись целого файла",
+    "href": "file-system-functions-text.html",
+    "kind": "Тема",
+    "category": "Файлы и файловая система",
+    "description": "Раздел содержит встроенные функции FILEEXISTS, DIREXISTS, PATHEXISTS, READFILE, READALLLINES, WRITEFILE, APPENDFILE, которые читают и записывают текст, а также проверяют наличие объектов.",
+    "keywords": [
+      "Текстовый файл целиком",
+      "Файлы и файловая система"
+    ],
+    "aliases": [
+      "Чтение и запись целого файла"
+    ]
+  },
+  {
+    "title": "Пути и сведения о файлах",
+    "href": "file-system-functions-paths.html",
+    "kind": "Тема",
+    "category": "Файлы и файловая система",
+    "description": "Раздел содержит встроенные функции FILESIZE, FILEDATE, FILECREATEDATE, FILEACCESSEDDATE, DIRDATE, GETFILES, GETDIRS, COMBINEPATH, FILENAME, DIRNAME, EXTNAME, FULLPATH, PATHROOT, ISABSOLUTEPATH, которые работают с путями и файловыми ресурсами. Подробнее назначение, аргументы и результат каждой функции объяснены ниже.",
+    "keywords": [
+      "Пути и сведения",
+      "Файлы и файловая система"
+    ],
+    "aliases": [
+      "Пути и сведения о файлах"
+    ]
+  },
+  {
+    "title": "Операции с файлами и каталогами",
+    "href": "file-system-functions-management.html",
+    "kind": "Тема",
+    "category": "Файлы и файловая система",
+    "description": "Раздел содержит встроенные функции MAKEDIR, DELETEFILE, COPYFILE, MOVEFILE, RENAMEFILE, DELETEDIR, DELETEDIRRECURSIVE, COPYDIR, MOVEDIR, RENAMEDIR, CURRENTDIR, CHANGEDIR, DIRSIZE, FREESPACE, TOTALFREESPACE, TOTALSPACE, ISREADONLY, ISHIDDEN, DRIVENAME, DRIVEFORMAT, DRIVETYPE, MAKETEMPFILE, MAKETEMPDIR, которые работают с путями и файловыми ресурсами. Подробнее назначение, аргументы и результат каждой функции объяснены ниже.",
+    "keywords": [
+      "Файлы, каталоги и диски",
+      "Файлы и файловая система"
+    ],
+    "aliases": [
+      "Операции с файлами и каталогами"
+    ]
+  },
+  {
+    "title": "Регулярные выражения",
+    "href": "regex-functions.html",
+    "kind": "Тема",
+    "category": "Регулярные выражения",
+    "description": "Регулярное выражение — строковый шаблон для поиска текста по форме, а не по буквальному фрагменту. Встроенные функции REGEXISMATCH, REGEXMATCH, REGEXEXTRACT, REGEXMATCHES, REGEXEXTRACTALL, REGEXSPLIT, REGEXREPLACE и REGEXCOUNT проверяют, извлекают, разделяют, заменяют и считают совпадения.",
+    "keywords": [
+      "Шаблоны и параметры поиска",
+      "Регулярные выражения"
+    ],
+    "aliases": [
+      "Регулярные выражения"
+    ]
+  },
+  {
+    "title": "Проверка, первое совпадение и группы",
+    "href": "regex-functions-match-and-extract.html",
+    "kind": "Тема",
+    "category": "Регулярные выражения",
+    "description": "В этом разделе описаны три встроенные функции языка Axiom: REGEXISMATCH проверяет наличие совпадения, REGEXMATCH возвращает первое полное совпадение, а REGEXEXTRACT извлекает из него выбранную группу. Ниже приведены отдельные формы вызова каждой функции.",
+    "keywords": [
+      "Проверка и извлечение",
+      "Регулярные выражения"
+    ],
+    "aliases": [
+      "Проверка, первое совпадение и группы"
+    ]
+  },
+  {
+    "title": "Все совпадения и разбиение",
+    "href": "regex-functions-arrays-and-split.html",
+    "kind": "Тема",
+    "category": "Регулярные выражения",
+    "description": "В этом разделе описаны три встроенные функции языка Axiom: REGEXMATCHES извлекает все полные совпадения, REGEXEXTRACTALL извлекает значения выбранной группы, а REGEXSPLIT разбивает текст по шаблону. Каждая функция имеет свой синтаксис и возвращает одномерный массив строк STRING().",
+    "keywords": [
+      "Все совпадения и разбиение",
+      "Регулярные выражения"
+    ],
+    "aliases": [
+      "Все совпадения и разбиение"
+    ]
+  },
+  {
+    "title": "Замена и подсчёт совпадений",
+    "href": "regex-functions-replace-and-count.html",
+    "kind": "Тема",
+    "category": "Регулярные выражения",
+    "description": "В этом разделе описаны две встроенные функции языка Axiom: REGEXREPLACE заменяет совпадения с регулярным выражением, а REGEXCOUNT возвращает их количество. Формы синтаксиса ниже относятся к отдельным функциям.",
+    "keywords": [
+      "Замена и подсчёт",
+      "Регулярные выражения"
+    ],
+    "aliases": [
+      "Замена и подсчёт совпадений"
+    ]
+  },
+  {
+    "title": "Экран и графика",
+    "href": "graphics.html",
+    "kind": "Тема",
+    "category": "Экран и графика",
+    "description": "Раздел «Экран и графика» описывает поверхности SCREEN и CANVAS , рисование и графические ресурсы. Сначала выберите поверхность, затем переходите к её операторам и нужному типу ресурса.",
+    "keywords": [
+      "Поверхности, координаты и цвет",
+      "Экран и графика"
+    ],
+    "aliases": [
+      "Экран и графика"
+    ]
+  },
+  {
+    "title": "Оператор SCREEN",
+    "href": "screen.html",
+    "kind": "Тема",
+    "category": "Экран и графика",
+    "description": "SCREEN — оператор языка Axiom, который открывает отдельное окно программы и выбирает его режим: текстовую сетку SCREEN 0 или палитровую графику SCREEN 1..10 .",
+    "keywords": [
+      "Экран SCREEN",
+      "Экран и графика",
+      "SCREEN",
+      "Screen",
+      "Оператор SCREEN",
+      "SCREEN — оператор языка Axiom, который открывает отдельное окно программы и выбирает его режим: текстовую сетку SCREEN 0 или палитровую графику SCREEN 1..10 .",
+      "Синтаксис, параметры, действие и примеры SCREEN."
+    ],
+    "aliases": [
+      "Оператор SCREEN",
+      "SCREEN"
+    ]
+  },
+  {
+    "title": "Текст на экране",
+    "href": "graphics-text.html",
+    "kind": "Тема",
+    "category": "Экран и графика",
+    "description": "Раздел экранного текста описывает операторы CLS , COLOR и LOCATE . Они очищают вывод, задают цвета символов и выбирают ячейку для следующего текста в окне SCREEN .",
+    "keywords": [
+      "Текст, CLS, COLOR и LOCATE",
+      "Экран и графика"
+    ],
+    "aliases": [
+      "Текст на экране"
+    ]
+  },
+  {
+    "title": "Оператор PALETTE",
+    "href": "palette.html",
+    "kind": "Тема",
+    "category": "Экран и графика",
+    "description": "PALETTE — оператор языка Axiom, который задаёт видимый цвет для индекса палитры графического экрана SCREEN . Пиксели сохраняют индексы, а палитра определяет их отображение.",
+    "keywords": [
+      "Палитра PALETTE",
+      "Экран и графика",
+      "PALETTE",
+      "Palette",
+      "Оператор PALETTE",
+      "PALETTE — оператор языка Axiom, который задаёт видимый цвет для индекса палитры графического экрана SCREEN . Пиксели сохраняют индексы, а палитра определяет их отображение.",
+      "Синтаксис, параметры, действие и примеры PALETTE."
+    ],
+    "aliases": [
+      "Оператор PALETTE",
+      "PALETTE"
+    ]
+  },
+  {
+    "title": "Оператор PCOPY",
+    "href": "pcopy.html",
+    "kind": "Тема",
+    "category": "Экран и графика",
+    "description": "PCOPY — оператор языка Axiom, который переносит содержимое одной графической страницы SCREEN в другую. Его можно использовать для показа кадра, подготовленного на скрытой странице.",
+    "keywords": [
+      "Графические страницы PCOPY",
+      "Экран и графика",
+      "PCOPY",
+      "PCopy",
+      "Оператор PCOPY",
+      "PCOPY — оператор языка Axiom, который переносит содержимое одной графической страницы SCREEN в другую. Его можно использовать для показа кадра, подготовленного на скрытой странице.",
+      "Синтаксис, параметры, действие и примеры PCOPY."
+    ],
+    "aliases": [
+      "Оператор PCOPY",
+      "PCOPY"
+    ]
+  },
+  {
+    "title": "Операторы рисования",
+    "href": "graphics-primitives.html",
+    "kind": "Тема",
+    "category": "Экран и графика",
+    "description": "Раздел примитивов описывает операторы PSET , PRESET , LINE , CIRCLE , PAINT , DRAW и встроенную функцию POINT . Они рисуют точки и фигуры, заполняют области и читают состояние пикселей. Поддержка SCREEN и CANVAS указана для каждой сущности отдельно.",
+    "keywords": [
+      "Рисование в SCREEN",
+      "Экран и графика"
+    ],
+    "aliases": [
+      "Операторы рисования"
+    ]
+  },
+  {
+    "title": "Оператор VIEW",
+    "href": "view.html",
+    "kind": "Тема",
+    "category": "Экран и графика",
+    "description": "VIEW — оператор языка Axiom, который ограничивает рисование прямоугольной областью экрана. Форма VIEW PRINT независимо задаёт строки, отведённые для экранного текста.",
+    "keywords": [
+      "Области VIEW и VIEW PRINT",
+      "Экран и графика",
+      "VIEW",
+      "View",
+      "Оператор VIEW",
+      "VIEW — оператор языка Axiom, который ограничивает рисование прямоугольной областью экрана. Форма VIEW PRINT независимо задаёт строки, отведённые для экранного текста.",
+      "Синтаксис, параметры, действие и примеры VIEW."
+    ],
+    "aliases": [
+      "Оператор VIEW",
+      "VIEW"
+    ]
+  },
+  {
+    "title": "Оператор WINDOW",
+    "href": "window.html",
+    "kind": "Тема",
+    "category": "Экран и графика",
+    "description": "WINDOW — оператор языка Axiom, который связывает текущую область рисования с логической системой координат. Программа может задать собственную шкалу вместо прямого обращения к пикселям.",
+    "keywords": [
+      "Координаты WINDOW",
+      "Экран и графика",
+      "WINDOW",
+      "Window",
+      "Оператор WINDOW",
+      "WINDOW — оператор языка Axiom, который связывает текущую область рисования с логической системой координат. Программа может задать собственную шкалу вместо прямого обращения к пикселям.",
+      "Синтаксис, параметры, действие и примеры WINDOW."
+    ],
+    "aliases": [
+      "Оператор WINDOW",
+      "WINDOW"
+    ]
+  },
+  {
+    "title": "Функция PMAP",
+    "href": "pmap.html",
+    "kind": "Тема",
+    "category": "Экран и графика",
+    "description": "PMAP — встроенная функция языка Axiom, которая преобразует одну координату между логической шкалой WINDOW и физической системой текущей области VIEW .",
+    "keywords": [
+      "Преобразование PMAP",
+      "Экран и графика"
+    ],
+    "aliases": [
+      "Функция PMAP"
+    ]
+  },
+  {
+    "title": "Операторы GET и PUT",
+    "href": "get-put.html",
+    "kind": "Тема",
+    "category": "Экран и графика",
+    "description": "GET и PUT — операторы языка Axiom для обмена прямоугольными блоками пикселей с двумерным числовым массивом. Оператор GET сохраняет блок в массив, а оператор PUT рисует сохранённый блок.",
+    "keywords": [
+      "Области изображения GET и PUT",
+      "Экран и графика",
+      "GET",
+      "Get",
+      "Операторы GET и PUT",
+      "GET и PUT — операторы языка Axiom для обмена прямоугольными блоками пикселей с двумерным числовым массивом. Оператор GET сохраняет блок в массив, а оператор PUT рисует сохранённый блок.",
+      "Синтаксис, параметры, действие и примеры GET.",
+      "PUT",
+      "Put",
+      "Синтаксис, параметры, действие и примеры PUT."
+    ],
+    "aliases": [
+      "Операторы GET и PUT",
+      "GET",
+      "PUT"
+    ]
+  },
+  {
+    "title": "Функции состояния SCREEN",
+    "href": "screen-functions.html",
+    "kind": "Тема",
+    "category": "Экран и графика",
+    "description": "Раздел экранных функций описывает SCREENISACTIVE , SCREENMODE , SCREENWIDTH и SCREENHEIGHT . Они позволяют узнать режим и размеры окна SCREEN ; координаты рисования отдельно возвращает форма POINT(selector) .",
+    "keywords": [
+      "Состояние SCREEN",
+      "Экран и графика"
+    ],
+    "aliases": [
+      "Функции состояния SCREEN"
+    ]
+  },
+  {
+    "title": "Современная графика CANVAS",
+    "href": "modern-graphics.html",
+    "kind": "Тема",
+    "category": "Экран и графика",
+    "description": "CANVAS — оператор языка Axiom, который открывает полноцветный холст. Эта страница описывает создание холста, подготовку и показ кадра, примитивы, текст, цвета и преобразование координат камерой. Каждая запись синтаксиса относится к отдельному оператору или функции.",
+    "keywords": [
+      "Холст CANVAS и кадры",
+      "Экран и графика",
+      "CANVAS",
+      "Canvas",
+      "Современная графика CANVAS",
+      "CANVAS — оператор языка Axiom, который открывает полноцветный холст. Эта страница описывает создание холста, подготовку и показ кадра, примитивы, текст, цвета и преобразование координат камерой. Каждая запись синтаксиса относится к отдельному оператору или функции.",
+      "Синтаксис, параметры, действие и примеры CANVAS.",
+      "BEGINFRAME",
+      "BeginFrame",
+      "Синтаксис, параметры, действие и примеры BEGINFRAME.",
+      "PRESENT",
+      "Present",
+      "Синтаксис, параметры, действие и примеры PRESENT.",
+      "CAMERA",
+      "Camera",
+      "Синтаксис, параметры, действие и примеры CAMERA.",
+      "VIEWPORT",
+      "Viewport",
+      "Синтаксис, параметры, действие и примеры VIEWPORT.",
+      "RESETCAMERA",
+      "ResetCamera",
+      "Синтаксис, параметры, действие и примеры RESETCAMERA.",
+      "DRAWLINE",
+      "DrawLine",
+      "Синтаксис, параметры, действие и примеры DRAWLINE.",
+      "DRAWCIRCLE",
+      "DrawCircle",
+      "Синтаксис, параметры, действие и примеры DRAWCIRCLE.",
+      "FILLCIRCLE",
+      "FillCircle",
+      "Синтаксис, параметры, действие и примеры FILLCIRCLE.",
+      "DRAWRECT",
+      "DrawRect",
+      "Синтаксис, параметры, действие и примеры DRAWRECT.",
+      "FILLRECT",
+      "FillRect",
+      "Синтаксис, параметры, действие и примеры FILLRECT.",
+      "DRAWTEXT",
+      "DrawText",
+      "Синтаксис, параметры, действие и примеры DRAWTEXT."
+    ],
+    "aliases": [
+      "Современная графика CANVAS",
+      "CANVAS",
+      "BEGINFRAME",
+      "PRESENT",
+      "CAMERA",
+      "VIEWPORT",
+      "RESETCAMERA",
+      "DRAWLINE",
+      "DRAWCIRCLE",
+      "FILLCIRCLE",
+      "DRAWRECT",
+      "FILLRECT",
+      "DRAWTEXT"
+    ]
+  },
+  {
+    "title": "Изображения IMAGE",
+    "href": "images.html",
+    "kind": "Тема",
+    "category": "Экран и графика",
+    "description": "Раздел изображений описывает тип данных IMAGE , функции LOADIMAGE , IMAGEWIDTH , IMAGEHEIGHT и оператор DRAWIMAGE . Изображение загружается в память, после чего его можно измерять и выводить на экран или холст.",
+    "keywords": [
+      "Изображения IMAGE",
+      "Экран и графика"
+    ],
+    "aliases": [
+      "Изображения IMAGE"
+    ]
+  },
+  {
+    "title": "Спрайты SPRITE",
+    "href": "sprites.html",
+    "kind": "Тема",
+    "category": "Экран и графика",
+    "description": "Раздел спрайтов описывает тип данных SPRITE , функции LOADSPRITE , SPRITEWIDTH , SPRITEHEIGHT , SPRITECOUNT и оператор DRAWSPRITE . Спрайтовый лист содержит кадры одинакового размера; программа выбирает кадр по номеру.",
+    "keywords": [
+      "Спрайты SPRITE",
+      "Экран и графика"
+    ],
+    "aliases": [
+      "Спрайты SPRITE"
+    ]
+  },
+  {
+    "title": "Тайлсеты TILESET",
+    "href": "tilesets.html",
+    "kind": "Тема",
+    "category": "Экран и графика",
+    "description": "TILESET — тип данных языка Axiom для атласа одинаковых тайлов. Раздел также описывает функции LOADTILESET , TILECOUNT , TILEWIDTH , TILEHEIGHT и оператор DRAWTILE , с помощью которых атлас загружают, измеряют и рисуют.",
+    "keywords": [
+      "Наборы тайлов TILESET",
+      "Экран и графика",
+      "DRAWTILE",
+      "DrawTile",
+      "Тайлсеты TILESET",
+      "TILESET — тип данных языка Axiom для атласа одинаковых тайлов. Раздел также описывает функции LOADTILESET , TILECOUNT , TILEWIDTH , TILEHEIGHT и оператор DRAWTILE , с помощью которых атлас загружают, измеряют и рисуют.",
+      "Синтаксис, параметры, действие и примеры DRAWTILE."
+    ],
+    "aliases": [
+      "Тайлсеты TILESET",
+      "DRAWTILE"
+    ]
+  },
+  {
+    "title": "Тайловые карты TILEMAP",
+    "href": "tilemaps.html",
+    "kind": "Тема",
+    "category": "Экран и графика",
+    "description": "TILEMAP — тип данных языка Axiom для конечной ортогональной карты Tiled. Этот раздел описывает загрузку карты, чтение её размеров, слоёв, клеток, объектов и свойств, а также рисование и изменение клеток. Точные формы каждой функции и оператора приведены в соответствующих подразделах.",
+    "keywords": [
+      "Тайловые карты TILEMAP",
+      "Экран и графика",
+      "DRAWTILEMAP",
+      "DrawTilemap",
+      "TILEMAP — тип данных языка Axiom для конечной ортогональной карты Tiled. Этот раздел описывает загрузку карты, чтение её размеров, слоёв, клеток, объектов и свойств, а также рисование и изменение клеток. Точные формы каждой функции и оператора приведены в соответствующих подразделах.",
+      "Синтаксис, параметры, действие и примеры DRAWTILEMAP.",
+      "DRAWTILELAYER",
+      "DrawTileLayer",
+      "Синтаксис, параметры, действие и примеры DRAWTILELAYER.",
+      "SETMAPTILE",
+      "SetMapTile",
+      "Синтаксис, параметры, действие и примеры SETMAPTILE."
+    ],
+    "aliases": [
+      "Тайловые карты TILEMAP",
+      "DRAWTILEMAP",
+      "DRAWTILELAYER",
+      "SETMAPTILE"
+    ]
+  },
+  {
+    "title": "Клавиатура, мышь и события",
+    "href": "keyboard-mouse-events.html",
+    "kind": "Тема",
+    "category": "Клавиатура, мышь и события",
+    "description": "Раздел клавиатуры, мыши и событий описывает опрос текущего состояния, чтение очередей нажатий и вызов процедур-обработчиков. Здесь собраны функции INKEY , KEYDOWN , KEYPRESS , функции мыши и операторы ON KEY , ON MOUSE .",
+    "keywords": [
+      "Опрос и обработка событий",
+      "Клавиатура, мышь и события"
+    ],
+    "aliases": [
+      "Клавиатура, мышь и события"
+    ]
+  },
+  {
+    "title": "Функция INKEY",
+    "href": "inkey.html",
+    "kind": "Тема",
+    "category": "Клавиатура, мышь и события",
+    "description": "INKEY — встроенная функция языка Axiom, которая извлекает следующую клавишу из очереди ввода без ожидания. Если очередь пуста, результатом будет пустая строка.",
+    "keywords": [
+      "Чтение INKEY",
+      "Клавиатура, мышь и события"
+    ],
+    "aliases": [
+      "Функция INKEY"
+    ]
+  },
+  {
+    "title": "Функция KEYDOWN",
+    "href": "keydown.html",
+    "kind": "Тема",
+    "category": "Клавиатура, мышь и события",
+    "description": "KEYDOWN — встроенная функция языка Axiom, которая проверяет текущее удержание клавиши или сочетания клавиш. Повторные вызовы не изменяют очередь ввода.",
+    "keywords": [
+      "Состояние KEYDOWN",
+      "Клавиатура, мышь и события"
+    ],
+    "aliases": [
+      "Функция KEYDOWN"
+    ]
+  },
+  {
+    "title": "Функция KEYPRESS",
+    "href": "keypress.html",
+    "kind": "Тема",
+    "category": "Клавиатура, мышь и события",
+    "description": "KEYPRESS — встроенная функция языка Axiom, которая ищет непрочитанное нажатие указанной клавиши. При успехе она возвращает TRUE и удаляет найденное событие из очереди.",
+    "keywords": [
+      "Нажатие KEYPRESS",
+      "Клавиатура, мышь и события"
+    ],
+    "aliases": [
+      "Функция KEYPRESS"
+    ]
+  },
+  {
+    "title": "Оператор ON KEY",
+    "href": "on-key.html",
+    "kind": "Тема",
+    "category": "Клавиатура, мышь и события",
+    "description": "ON KEY — оператор языка Axiom, который назначает процедуру SUB обработчиком нажатия клавиши. Процедура вызывается между инструкциями программы, когда в очереди есть подходящее событие. Параметр обработчика передаётся по значению; BYREF не допускается.",
+    "keywords": [
+      "Обработчик ON KEY",
+      "Клавиатура, мышь и события",
+      "ON KEY",
+      "OnKey",
+      "Оператор ON KEY",
+      "ON KEY — оператор языка Axiom, который назначает процедуру SUB обработчиком нажатия клавиши. Процедура вызывается между инструкциями программы, когда в очереди есть подходящее событие. Параметр обработчика передаётся по значению; BYREF не допускается.",
+      "Синтаксис, параметры, действие и примеры ON KEY."
+    ],
+    "aliases": [
+      "Оператор ON KEY",
+      "ON KEY"
+    ]
+  },
+  {
+    "title": "Функция MOUSEX",
+    "href": "mousex.html",
+    "kind": "Тема",
+    "category": "Клавиатура, мышь и события",
+    "description": "MOUSEX — встроенная функция языка Axiom, которая возвращает текущую горизонтальную координату указателя мыши. Программа выбирает момент чтения, вызывая функцию в своём цикле.",
+    "keywords": [
+      "Координата MOUSEX",
+      "Клавиатура, мышь и события"
+    ],
+    "aliases": [
+      "Функция MOUSEX"
+    ]
+  },
+  {
+    "title": "Функция MOUSEY",
+    "href": "mousey.html",
+    "kind": "Тема",
+    "category": "Клавиатура, мышь и события",
+    "description": "MOUSEY — встроенная функция языка Axiom, которая возвращает текущую вертикальную координату указателя мыши. Программа выбирает момент чтения, вызывая функцию в своём цикле.",
+    "keywords": [
+      "Координата MOUSEY",
+      "Клавиатура, мышь и события"
+    ],
+    "aliases": [
+      "Функция MOUSEY"
+    ]
+  },
+  {
+    "title": "Функция MOUSEBUTTON",
+    "href": "mousebutton.html",
+    "kind": "Тема",
+    "category": "Клавиатура, мышь и события",
+    "description": "MOUSEBUTTON — встроенная функция языка Axiom, которая проверяет текущее удержание кнопки мыши. Она читает состояние и сохраняет очередь событий.",
+    "keywords": [
+      "Состояние MOUSEBUTTON",
+      "Клавиатура, мышь и события"
+    ],
+    "aliases": [
+      "Функция MOUSEBUTTON"
+    ]
+  },
+  {
+    "title": "Функция MOUSEPRESS",
+    "href": "mousepress.html",
+    "kind": "Тема",
+    "category": "Клавиатура, мышь и события",
+    "description": "MOUSEPRESS — встроенная функция языка Axiom, которая извлекает непрочитанное нажатие указанной кнопки мыши. При найденном событии результат равен TRUE .",
+    "keywords": [
+      "Нажатие MOUSEPRESS",
+      "Клавиатура, мышь и события"
+    ],
+    "aliases": [
+      "Функция MOUSEPRESS"
+    ]
+  },
+  {
+    "title": "Оператор ON MOUSE",
+    "href": "on-mouse.html",
+    "kind": "Тема",
+    "category": "Клавиатура, мышь и события",
+    "description": "ON MOUSE — оператор языка Axiom, который назначает процедуру SUB обработчиком событий мыши: нажатия, отпускания, перемещения или прокрутки колеса.",
+    "keywords": [
+      "Обработчик ON MOUSE",
+      "Клавиатура, мышь и события",
+      "ON MOUSE",
+      "OnMouse",
+      "Оператор ON MOUSE",
+      "ON MOUSE — оператор языка Axiom, который назначает процедуру SUB обработчиком событий мыши: нажатия, отпускания, перемещения или прокрутки колеса.",
+      "Синтаксис, параметры, действие и примеры ON MOUSE."
+    ],
+    "aliases": [
+      "Оператор ON MOUSE",
+      "ON MOUSE"
+    ]
+  },
+  {
+    "title": "Оператор SLEEP",
+    "href": "sleep.html",
+    "kind": "Тема",
+    "category": "Клавиатура, мышь и события",
+    "description": "SLEEP — оператор языка Axiom, который приостанавливает программу на заданное время или до нажатия клавиши. Его используют для паузы в интерактивном цикле и ожидания перед закрытием результата.",
+    "keywords": [
+      "Пауза SLEEP",
+      "Клавиатура, мышь и события",
+      "SLEEP",
+      "Sleep",
+      "Оператор SLEEP",
+      "SLEEP — оператор языка Axiom, который приостанавливает программу на заданное время или до нажатия клавиши. Его используют для паузы в интерактивном цикле и ожидания перед закрытием результата.",
+      "Синтаксис, параметры, действие и примеры SLEEP."
+    ],
+    "aliases": [
+      "Оператор SLEEP",
+      "SLEEP"
+    ]
+  },
+  {
+    "title": "Алфавитный указатель",
+    "href": "reference.html",
+    "kind": "Приложение",
+    "category": "Указатели и приложения",
+    "description": "Раздел содержит имена встроенных функций и операторов Axiom. Выберите имя для перехода к формам вызова или основной справочной статье.",
+    "keywords": [
+      "Алфавитный указатель",
+      "Указатели и приложения"
+    ],
+    "aliases": [
+      "Алфавитный указатель"
+    ]
+  },
+  {
+    "title": "Встроенные функции",
+    "href": "function-reference.html",
+    "kind": "Приложение",
+    "category": "Указатели и приложения",
+    "description": "Раздел перечисляет встроенные функции и точные зарегистрированные формы вызова. Полное объяснение поведения каждой функции находится в её тематической статье.",
+    "keywords": [
+      "Все встроенные функции",
+      "Указатели и приложения"
+    ],
+    "aliases": [
+      "Встроенные функции"
+    ]
+  },
+  {
+    "title": "Операторы и инструкции",
+    "href": "operator-reference.html",
+    "kind": "Приложение",
+    "category": "Указатели и приложения",
+    "description": "Раздел перечисляет объявления, инструкции и управляющие конструкции Axiom. Каждая запись ведёт к основному описанию соответствующей формы.",
+    "keywords": [
+      "Все операторы и объявления",
+      "Указатели и приложения"
+    ],
+    "aliases": [
+      "Операторы и инструкции"
+    ]
+  },
+  {
+    "title": "Ключевые слова, типы и операции",
+    "href": "keyword-reference.html",
+    "kind": "Приложение",
+    "category": "Указатели и приложения",
+    "description": "Раздел перечисляет все ключевые слова и имена встроенных типов Axiom, а также операции в выражениях. Каждый элемент связан с подробным описанием соответствующей конструкции.",
+    "keywords": [
+      "Ключевые слова и типы",
+      "Указатели и приложения"
+    ],
+    "aliases": [
+      "Ключевые слова, типы и операции"
+    ]
+  },
+  {
+    "title": "Диагностика",
+    "href": "diagnostics.html",
+    "kind": "Приложение",
+    "category": "Указатели и приложения",
+    "description": "Раздел диагностики объясняет сообщения о проблемах в исходной программе и во время выполнения. Каждое сообщение содержит код, описание и доступные сведения о месте ошибки.",
+    "keywords": [
+      "Каталог диагностик",
+      "Указатели и приложения"
+    ],
+    "aliases": [
+      "Диагностика"
+    ]
+  },
+  {
+    "title": "Условные обозначения синтаксиса",
+    "href": "notation.html",
+    "kind": "Приложение",
+    "category": "Указатели и приложения",
+    "description": "Раздел условных обозначений объясняет формальные записи справочника. Обозначения показывают части конструкции, которые нужно подставить, и не являются готовой программой.",
+    "keywords": [
+      "Условные обозначения",
+      "Указатели и приложения"
+    ],
+    "aliases": [
+      "Условные обозначения синтаксиса"
+    ]
+  },
+  {
+    "title": "Основные термины",
+    "href": "variables-glossary.html",
+    "kind": "Приложение",
+    "category": "Указатели и приложения",
+    "description": "Раздел терминов содержит короткие определения для чтения справочника. Полные правила находятся в тематических статьях.",
+    "keywords": [
+      "Основные термины",
+      "Указатели и приложения"
+    ],
+    "aliases": [
+      "Основные термины"
     ]
   },
   {
     "title": "Диапазоны и ограничения типов",
     "href": "data-type-limits.html",
     "kind": "Приложение",
-    "category": "Примеры и справочные приложения",
-    "description": "Короткая таблица диапазонов INTEGER, LONG, DOUBLE, DECIMAL и связанных ограничений литералов, массивов и преобразований.",
+    "category": "Указатели и приложения",
+    "description": "Раздел диапазонов содержит точные числовые пределы и правила выбора типа литерала. Специальные данные и массивы имеют дополнительные ограничения в своих тематических главах.",
     "keywords": [
-      "integer",
-      "long",
-      "double",
-      "decimal",
-      "boolean",
-      "range",
-      "limit",
-      "overflow",
-      "min",
-      "max",
-      "диапазон",
-      "ограничение",
-      "переполнение",
-      "минимум",
-      "максимум",
-      "тип"
+      "Диапазоны типов",
+      "Указатели и приложения"
+    ],
+    "aliases": [
+      "Диапазоны и ограничения типов"
     ]
   },
   {
-    "title": "STRING, FILE и фиксированная длина",
-    "href": "data-types-strings-and-files.html",
-    "kind": "Раздел",
-    "category": "Основы",
-    "description": "Обычные строки, фиксированная длина STRING * N и файловое значение FILE.",
+    "title": "Краткая справка",
+    "href": "cheat-sheet.html",
+    "kind": "Приложение",
+    "category": "Указатели и приложения",
+    "description": "Раздел краткой справки помогает выбрать нужную конструкцию Axiom и перейти к её полному описанию.",
     "keywords": [
-      "string",
-      "file",
-      "fixed string",
-      "open",
-      "close",
-      "строка",
-      "фиксированная строка",
-      "файл"
+      "Краткая справка",
+      "Указатели и приложения"
+    ],
+    "aliases": [
+      "Краткая справка"
     ]
   },
   {
-    "title": "Записи TYPE и массивы",
-    "href": "data-types-records-and-arrays.html",
-    "kind": "Раздел",
-    "category": "Основы",
-    "description": "Простое различие между записью TYPE, массивом, массивом записей, массивным полем и записью внутри записи.",
+    "title": "Запускаемые примеры",
+    "href": "examples.html",
+    "kind": "Приложение",
+    "category": "Указатели и приложения",
+    "description": "Раздел примеров содержит программы для ручной проверки языка. Каждый файл можно открыть в IDE и выполнить; нужные пояснения находятся в его тематической статье.",
     "keywords": [
-      "type",
-      "record",
-      "array",
-      "dim",
-      "field",
-      "dot",
-      "array of records",
-      "array field",
-      "nested record",
-      "запись",
-      "массив",
-      "карточка",
-      "поле"
+      "Запускаемые примеры",
+      "Указатели и приложения"
+    ],
+    "aliases": [
+      "Запускаемые примеры"
     ]
   },
   {
-    "title": "Оператор TYPE",
-    "href": "operator-reference.html#op-typedeclaration-type",
-    "kind": "Оператор",
-    "category": "Операторы описания и объявления",
-    "description": "Синтаксис, параметры и правила конструкции TYPE.",
+    "title": "Поиск по справочнику",
+    "href": "search.html",
+    "kind": "Приложение",
+    "category": "Указатели и приложения",
+    "description": "Введите запрос в поле в шапке. Можно искать по имени оператора или функции, названию темы и словам из описания.",
     "keywords": [
-      "type",
-      "record",
-      "field",
-      "dot",
-      "named literal",
-      "positional constructor",
-      "sub new",
-      "constructor",
-      "overload",
-      "method overload",
-      "signature",
-      "parameterless constructor",
-      "ambiguous constructor",
-      "ambiguous method",
-      "isvalid",
-      "invariant",
-      "constructor invariant",
-      "type literal",
-      "array field",
-      "method",
-      "self",
-      "byref",
-      "field receiver",
-      "array element receiver",
-      "temporary receiver",
-      "запись",
-      "поле",
-      "точка",
-      "конструктор"
+      "Поиск",
+      "Указатели и приложения"
+    ],
+    "aliases": [
+      "Поиск по справочнику"
     ]
   },
   {
-    "title": "Вывод типа и преобразования",
-    "href": "data-types-conversions.html",
-    "kind": "Раздел",
-    "category": "Основы",
-    "description": "Вывод типа в DIM, расширяющие числовые переходы, VAL, STR и правило деления.",
+    "title": "Справочник Axiom",
+    "href": "index.html",
+    "kind": "Оглавление",
+    "category": "Справочник",
+    "description": "Семнадцать глав от первой программы до событий.",
     "keywords": [
-      "conversion",
-      "convert",
-      "val",
-      "str",
-      "inference",
-      "decimal",
-      "double",
-      "integer",
-      "long",
-      "преобразование",
-      "вывод типа"
-    ]
-  },
-  {
-    "title": "Переменные и константы",
-    "href": "variables-and-constants.html",
-    "kind": "Раздел",
-    "category": "Основы",
-    "description": "Объявления DIM и CONST, имена, инициализация, массивные переменные и предопределённые константы.",
-    "keywords": [
-      "variable",
-      "variables",
-      "constant",
-      "const",
-      "dim",
-      "declaration",
-      "initializer",
-      "pi",
-      "row",
-      "column",
-      "переменная",
-      "константа",
-      "объявление"
-    ]
-  },
-  {
-    "title": "Оператор DIM",
-    "href": "operator-reference.html#op-dim-dim",
-    "kind": "Оператор",
-    "category": "Операторы описания и объявления",
-    "description": "Синтаксис, параметры и правила конструкции DIM.",
-    "keywords": [
-      "dim",
-      "variable",
-      "declaration",
-      "array",
-      "dynamic array",
-      "fixed string",
-      "string *",
-      "as",
-      "initializer",
-      "объявление",
-      "переменная",
-      "массив"
-    ]
-  },
-  {
-    "title": "Оператор CONST",
-    "href": "operator-reference.html#op-const-const",
-    "kind": "Оператор",
-    "category": "Операторы описания и объявления",
-    "description": "Синтаксис, параметры и правила конструкции CONST.",
-    "keywords": [
-      "const",
-      "constant",
-      "pi",
-      "row",
-      "column",
-      "as",
-      "initializer",
-      "константа",
-      "объявление",
-      "неизменяемое",
-      "измерение"
-    ]
-  },
-  {
-    "title": "Выражения и ветвление",
-    "href": "expressions-and-branching.html",
-    "kind": "Раздел",
-    "category": "Выражения и операции",
-    "description": "Как выражения, сравнения и логические условия дают значения для выбора ветви.",
-    "keywords": [
-      "expression",
-      "branch",
-      "if",
-      "select case",
-      "condition",
-      "boolean",
-      "выражение",
-      "ветвление",
-      "условие",
-      "сравнение"
-    ]
-  },
-  {
-    "title": "Выражения и операции",
-    "href": "arithmetic-and-logic.html",
-    "kind": "Раздел",
-    "category": "Выражения и операции",
-    "description": "Арифметика, сравнения, логические и побитовые операции, сдвиги, шестнадцатеричные литералы и строковая конкатенация.",
-    "keywords": [
-      "arithmetic",
-      "logic",
-      "comparison",
-      "bitwise",
-      "shift",
-      "hex",
-      "operator",
-      "арифметика",
-      "логика",
-      "сравнение",
-      "операция"
-    ]
-  },
-  {
-    "title": "Оператор &",
-    "href": "arithmetic-and-logic.html#string-concatenation",
-    "kind": "Оператор",
-    "category": "Выражения и операции",
-    "description": "Строковая конкатенация смешанных скалярных значений.",
-    "keywords": [
-      "ampersand",
-      "concat",
-      "concatenation",
-      "string",
-      "строка",
-      "конкатенация"
-    ]
-  },
-  {
-    "title": "Массивы",
-    "href": "arrays.html",
-    "kind": "Раздел",
-    "category": "Массивы",
-    "description": "Одномерные, двумерные и многомерные массивы, срезы и ARRAY-функции.",
-    "keywords": [
-      "array",
-      "dim",
-      "redim",
-      "erase"
-    ]
-  },
-  {
-    "title": "Одномерные массивы",
-    "href": "arrays-1d.html",
-    "kind": "Раздел",
-    "category": "Массивы",
-    "description": "Список значений одного типа, границы и доступ по одному индексу.",
-    "keywords": [
-      "1d",
-      "индекс",
-      "граница",
-      "for"
-    ]
-  },
-  {
-    "title": "Двумерные массивы",
-    "href": "arrays-2d.html",
-    "kind": "Раздел",
-    "category": "Массивы",
-    "description": "Таблица значений со строками, столбцами и доступом по двум индексам.",
-    "keywords": [
-      "2d",
-      "row",
-      "column",
-      "строка",
-      "столбец"
-    ]
-  },
-  {
-    "title": "Многомерные массивы",
-    "href": "arrays-multidimensional.html",
-    "kind": "Раздел",
-    "category": "Массивы",
-    "description": "Ранг массива, границы измерений и полное индексирование.",
-    "keywords": [
-      "rank",
-      "arrayrank",
-      "arraybounds",
-      "dimension",
-      "cube",
-      "ранг"
-    ]
-  },
-  {
-    "title": "Динамические массивы",
-    "href": "arrays-dynamic.html",
-    "kind": "Раздел",
-    "category": "Массивы",
-    "description": "Выделение границ через REDIM, сохранение данных и очистка ERASE.",
-    "keywords": [
-      "redim",
-      "preserve",
-      "erase",
-      "allocated"
-    ]
-  },
-  {
-    "title": "Индексирование массивов",
-    "href": "arrays-indexing.html",
-    "kind": "Раздел",
-    "category": "Массивы",
-    "description": "Выбор элемента, строки, столбца или диапазона по индексам и границам.",
-    "keywords": [
-      "index",
-      "partial",
-      "slice",
-      "индекс",
-      "граница"
-    ]
-  },
-  {
-    "title": "Срезы и представления",
-    "href": "arrays-slices.html",
-    "kind": "Раздел",
-    "category": "Массивы",
-    "description": "Выбор части массива через диапазон TO или ARRAYSLICE без ручного копирования.",
-    "keywords": [
-      "view",
-      "slice",
-      "arrayclone",
-      "срез",
-      "представление"
-    ]
-  },
-  {
-    "title": "ARRAY-функции",
-    "href": "arrays-functions.html",
-    "kind": "Раздел",
-    "category": "Массивы",
-    "description": "Границы, ранг, длина, выделение памяти, срезы и изменение динамического массива.",
-    "keywords": [
-      "arraylength",
-      "arrayrank",
-      "arraybounds",
-      "arraypush",
-      "arraypop",
-      "arrayinsert",
-      "arrayremove"
-    ]
-  },
-  {
-    "title": "Функции массивов",
-    "href": "arrays-and-builtins.html",
-    "kind": "Раздел",
-    "category": "Массивы",
-    "description": "Копии, заполнение, срезы, объединение, поиск, сортировка и пользовательская обработка элементов массива.",
-    "keywords": [
-      "arrayclone",
-      "arrayfill",
-      "arrayslice",
-      "arrayconcat",
-      "arraymap",
-      "arraysort",
-      "arraybinarysearch"
-    ]
-  },
-  {
-    "title": "Ошибки массивов",
-    "href": "arrays-diagnostics.html",
-    "kind": "Раздел",
-    "category": "Массивы",
-    "description": "Причины MB3005 и MB3007: невыделенный массив, неверный индекс, измерение или форма среза.",
-    "keywords": [
-      "mb3005",
-      "mb3007",
-      "диагностика",
-      "redim",
-      "erase"
-    ]
-  },
-  {
-    "title": "Оператор PRINT",
-    "href": "operator-reference.html#op-print-print",
-    "kind": "Оператор",
-    "category": "Ввод и вывод",
-    "description": "Синтаксис, параметры и правила конструкции PRINT.",
-    "keywords": [
-      "print",
-      "print using",
-      "console"
-    ]
-  },
-  {
-    "title": "Оператор INPUT",
-    "href": "operator-reference.html#op-input-input",
-    "kind": "Оператор",
-    "category": "Ввод и вывод",
-    "description": "Синтаксис, параметры и правила конструкции INPUT.",
-    "keywords": [
-      "input",
-      "prompt",
-      "parse",
-      "ввод",
-      "приглашение",
-      "screen 0",
-      "comma",
-      "semicolon"
-    ]
-  },
-  {
-    "title": "Оператор IF",
-    "href": "operator-reference.html#op-if-if",
-    "kind": "Оператор",
-    "category": "Операторы передачи управления",
-    "description": "Синтаксис, параметры и правила конструкции IF.",
-    "keywords": [
-      "if",
-      "elseif",
-      "else",
-      "condition",
-      "boolean"
-    ]
-  },
-  {
-    "title": "Оператор SELECT CASE",
-    "href": "operator-reference.html#op-selectcase-select-case",
-    "kind": "Оператор",
-    "category": "Операторы передачи управления",
-    "description": "Синтаксис, параметры и правила конструкции SELECT CASE.",
-    "keywords": [
-      "select case",
-      "case",
-      "is",
-      "range",
-      "to"
-    ]
-  },
-  {
-    "title": "Обработка пользовательских ошибок",
-    "href": "error-handling.html",
-    "kind": "Раздел",
-    "category": "Обработка ошибок и диагностика",
-    "description": "Создание пользовательских runtime-ошибок через ERROR, повторный проброс ERROR err и перехват через TRY/CATCH.",
-    "keywords": [
-      "error handling",
-      "try",
-      "catch",
-      "finally",
-      "error",
-      "runtime error",
-      "mb3001",
-      "on error",
-      "app001",
-      "rethrow"
-    ]
-  },
-  {
-    "title": "Оператор ERROR",
-    "href": "operator-reference.html#op-error-error",
-    "kind": "Оператор",
-    "category": "Обработка ошибок и диагностика",
-    "description": "Синтаксис, параметры и правила конструкции ERROR.",
-    "keywords": [
-      "error",
-      "raise",
-      "throw",
-      "runtime error",
-      "catch",
-      "code",
-      "message",
-      "rethrow"
-    ]
-  },
-  {
-    "title": "Оператор TRY",
-    "href": "operator-reference.html#op-try-try",
-    "kind": "Оператор",
-    "category": "Обработка ошибок и диагностика",
-    "description": "Синтаксис, параметры и правила конструкции TRY.",
-    "keywords": [
-      "try",
-      "catch",
-      "finally",
-      "error",
-      "runtime error",
-      "on error"
-    ]
-  },
-  {
-    "title": "Циклы",
-    "href": "loops.html",
-    "kind": "Раздел",
-    "category": "Операторы передачи управления",
-    "description": "Повторение блоков программы через FOR, WHILE и DO ... LOOP.",
-    "keywords": [
-      "loop",
-      "cycle",
-      "for",
-      "while",
-      "do",
-      "repeat",
-      "exit do",
-      "цикл",
-      "повторение",
-      "условие"
-    ]
-  },
-  {
-    "title": "Оператор цикла FOR",
-    "href": "for.html",
-    "kind": "Оператор",
-    "category": "Операторы передачи управления",
-    "description": "Счётный цикл с диапазоном и шагом.",
-    "keywords": [
-      "for",
-      "next",
-      "step",
-      "exit for"
-    ]
-  },
-  {
-    "title": "Оператор цикла WHILE ... END WHILE",
-    "href": "while.html",
-    "kind": "Оператор",
-    "category": "Операторы передачи управления",
-    "description": "Предусловный цикл, который повторяет тело, пока логическое условие истинно.",
-    "keywords": [
-      "while",
-      "end while",
-      "condition",
-      "boolean",
-      "предусловие",
-      "цикл"
-    ]
-  },
-  {
-    "title": "Оператор цикла DO ... LOOP",
-    "href": "do-loop.html",
-    "kind": "Оператор",
-    "category": "Операторы передачи управления",
-    "description": "Гибкий цикл с WHILE, UNTIL, постусловием и выходом EXIT DO.",
-    "keywords": [
-      "do loop",
-      "do while",
-      "do until",
-      "loop until",
-      "loop while",
-      "exit do",
-      "цикл"
-    ]
-  },
-  {
-    "title": "Оператор CONTINUE",
-    "href": "continue.html",
-    "kind": "Оператор",
-    "category": "Операторы передачи управления",
-    "description": "Пропуск оставшейся части текущей итерации цикла FOR, WHILE или DO и переход к следующей итерации.",
-    "keywords": [
-      "continue",
-      "continue for",
-      "continue while",
-      "continue do",
-      "skip iteration",
-      "пропуск итерации",
-      "следующий проход"
-    ]
-  },
-  {
-    "title": "Процедуры и функции",
-    "href": "procedures-and-functions.html",
-    "kind": "Раздел",
-    "category": "Процедуры и функции",
-    "description": "SUB для действий, FUNCTION для вычислений, RETURN, BYVAL, BYREF и функциональные значения.",
-    "keywords": [
-      "procedure",
-      "function",
-      "sub",
-      "return",
-      "byref",
-      "byval",
-      "closure",
-      "процедура",
-      "функция",
-      "параметр"
-    ]
-  },
-  {
-    "title": "Процедура SUB",
-    "href": "sub.html",
-    "kind": "Оператор",
-    "category": "Процедуры и функции",
-    "description": "Именованная процедура без возвращаемого значения, параметры BYVAL/BYREF и досрочный RETURN.",
-    "keywords": [
-      "sub",
-      "procedure",
-      "parameters",
-      "byref",
-      "byval",
-      "return",
-      "local sub",
-      "local function",
-      "процедура"
-    ]
-  },
-  {
-    "title": "Функция FUNCTION",
-    "href": "function.html",
-    "kind": "Оператор",
-    "category": "Процедуры и функции",
-    "description": "Именованная функция с типом результата, RETURN и поддержкой функциональных значений.",
-    "keywords": [
-      "function",
-      "return",
-      "parameters",
-      "byref",
-      "byval",
-      "result type",
-      "closure",
-      "local function",
-      "функция"
-    ]
-  },
-  {
-    "title": "Оператор RETURN",
-    "href": "operator-reference.html#op-return-return",
-    "kind": "Оператор",
-    "category": "Процедуры и функции",
-    "description": "Синтаксис, параметры и правила конструкции RETURN.",
-    "keywords": [
-      "return",
-      "function",
-      "sub",
-      "возврат",
-      "выход"
-    ]
-  },
-  {
-    "title": "Числовые функции",
-    "href": "numeric-functions.html",
-    "kind": "Раздел",
-    "category": "Встроенные функции",
-    "description": "Математические функции, преобразования и округление.",
-    "keywords": [
-      "math",
-      "numeric",
-      "int",
-      "rnd",
-      "sin",
-      "log",
-      "round"
-    ]
-  },
-  {
-    "title": "Округление и преобразование чисел",
-    "href": "numeric-functions-conversion-and-legacy.html",
-    "kind": "Раздел",
-    "category": "Встроенные функции",
-    "description": "INT, STR и VAL.",
-    "keywords": [
-      "int",
-      "str",
-      "val",
-      "conversion"
-    ]
-  },
-  {
-    "title": "Базовая математика",
-    "href": "numeric-functions-core.html",
-    "kind": "Раздел",
-    "category": "Встроенные функции",
-    "description": "ABS, RND, SGN, MIN, MAX, CLAMP и SETSIGN.",
-    "keywords": [
-      "abs",
-      "rnd",
-      "sgn",
-      "min",
-      "max",
-      "clamp",
-      "setsign"
-    ]
-  },
-  {
-    "title": "Тригонометрия и гиперболические функции",
-    "href": "numeric-functions-trigonometry.html",
-    "kind": "Раздел",
-    "category": "Встроенные функции",
-    "description": "SIN, COS, TAN и родственные функции.",
-    "keywords": [
-      "sin",
-      "cos",
-      "tan",
-      "atn",
-      "asin",
-      "acos",
-      "sinh",
-      "cosh",
-      "tanh"
-    ]
-  },
-  {
-    "title": "Корни, логарифмы и округление",
-    "href": "numeric-functions-roots-rounding.html",
-    "kind": "Раздел",
-    "category": "Встроенные функции",
-    "description": "SQR, POW, LOG, FLOOR, CEIL, ROUND и FIX.",
-    "keywords": [
-      "sqr",
-      "cbrt",
-      "exp",
-      "log",
-      "log10",
-      "log2",
-      "pow",
-      "floor",
-      "ceil",
-      "round",
-      "fix"
-    ]
-  },
-  {
-    "title": "Дата и время",
-    "href": "date-time-functions.html",
-    "kind": "Раздел",
-    "category": "Встроенные функции",
-    "description": "Текущие дата и время, календарные части, арифметика и часовые пояса.",
-    "keywords": [
-      "date",
-      "time",
-      "now",
-      "utc",
-      "timezone",
-      "dateserial",
-      "dateadd"
-    ]
-  },
-  {
-    "title": "Текущие дата и время",
-    "href": "date-time-functions-current.html",
-    "kind": "Раздел",
-    "category": "Дата и время",
-    "description": "DATE, TIME, NOW, UTCNOW и TIMER.",
-    "keywords": [
-      "date",
-      "time",
-      "now",
-      "utcdate",
-      "utctime",
-      "utcnow",
-      "timer"
-    ]
-  },
-  {
-    "title": "Сборка даты и календарные части",
-    "href": "date-time-functions-parts-and-serial.html",
-    "kind": "Раздел",
-    "category": "Дата и время",
-    "description": "DATESERIAL, TIMESERIAL, YEAR, MONTH, WEEKDAY и связанные функции.",
-    "keywords": [
-      "dateserial",
-      "timeserial",
-      "year",
-      "month",
-      "day",
-      "hour",
-      "minute",
-      "second",
-      "weekday",
-      "monthname"
-    ]
-  },
-  {
-    "title": "Арифметика, разбор и проверка дат",
-    "href": "date-time-functions-arithmetic-and-validation.html",
-    "kind": "Раздел",
-    "category": "Дата и время",
-    "description": "DATEADD, DATEDIFF, DATEPART, DATEVALUE, TIMEVALUE и ISDATE.",
-    "keywords": [
-      "dateadd",
-      "datediff",
-      "datepart",
-      "datevalue",
-      "timevalue",
-      "isdate"
-    ]
-  },
-  {
-    "title": "UTC и часовые пояса",
-    "href": "date-time-functions-time-zones.html",
-    "kind": "Раздел",
-    "category": "Дата и время",
-    "description": "UTCOFFSET, TOUTC и FROMUTC.",
-    "keywords": [
-      "utcoffset",
-      "toutc",
-      "fromutc",
-      "utc",
-      "timezone",
-      "local"
-    ]
-  },
-  {
-    "title": "DATE",
-    "href": "function-reference.html#fn-date",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Текущая дата в каноническом формате.",
-    "keywords": [
-      "today",
-      "current date",
-      "utc"
-    ]
-  },
-  {
-    "title": "TIME",
-    "href": "function-reference.html#fn-time",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Текущее время в каноническом формате.",
-    "keywords": [
-      "current time",
-      "clock",
-      "utc"
-    ]
-  },
-  {
-    "title": "NOW",
-    "href": "function-reference.html#fn-now",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Текущие дата и время.",
-    "keywords": [
-      "datetime",
-      "current",
-      "utc"
-    ]
-  },
-  {
-    "title": "UTCDATE",
-    "href": "function-reference.html#fn-utcdate",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Текущая дата в UTC.",
-    "keywords": [
-      "utc",
-      "date"
-    ]
-  },
-  {
-    "title": "UTCTIME",
-    "href": "function-reference.html#fn-utctime",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Текущее время в UTC.",
-    "keywords": [
-      "utc",
-      "time"
-    ]
-  },
-  {
-    "title": "UTCNOW",
-    "href": "function-reference.html#fn-utcnow",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Текущие дата и время в UTC.",
-    "keywords": [
-      "utc",
-      "now",
-      "datetime"
-    ]
-  },
-  {
-    "title": "TIMER",
-    "href": "function-reference.html#fn-timer",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Секунды с локальной полуночи.",
-    "keywords": [
-      "timer",
-      "seconds",
-      "midnight"
-    ]
-  },
-  {
-    "title": "DATESERIAL",
-    "href": "function-reference.html#fn-dateserial",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Построение канонической даты из частей.",
-    "keywords": [
-      "year",
-      "month",
-      "day",
-      "date"
-    ]
-  },
-  {
-    "title": "TIMESERIAL",
-    "href": "function-reference.html#fn-timeserial",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Построение канонического времени из частей.",
-    "keywords": [
-      "hour",
-      "minute",
-      "second",
-      "time"
-    ]
-  },
-  {
-    "title": "YEAR",
-    "href": "function-reference.html#fn-year",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Извлечение года из даты или даты-времени.",
-    "keywords": [
-      "date part",
-      "year"
-    ]
-  },
-  {
-    "title": "MONTH",
-    "href": "function-reference.html#fn-month",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Извлечение номера месяца.",
-    "keywords": [
-      "month",
-      "date part"
-    ]
-  },
-  {
-    "title": "DAY",
-    "href": "function-reference.html#fn-day",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Извлечение дня месяца.",
-    "keywords": [
-      "day",
-      "date part"
-    ]
-  },
-  {
-    "title": "HOUR",
-    "href": "function-reference.html#fn-hour",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Извлечение часа.",
-    "keywords": [
-      "hour",
-      "time part"
-    ]
-  },
-  {
-    "title": "MINUTE",
-    "href": "function-reference.html#fn-minute",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Извлечение минуты.",
-    "keywords": [
-      "minute",
-      "time part"
-    ]
-  },
-  {
-    "title": "SECOND",
-    "href": "function-reference.html#fn-second",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Извлечение секунды.",
-    "keywords": [
-      "second",
-      "time part"
-    ]
-  },
-  {
-    "title": "WEEKDAY",
-    "href": "function-reference.html#fn-weekday",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Номер дня недели по схеме Monday..Sunday.",
-    "keywords": [
-      "weekday",
-      "day of week"
-    ]
-  },
-  {
-    "title": "WEEKDAYNAME",
-    "href": "function-reference.html#fn-weekdayname",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Имя дня недели.",
-    "keywords": [
-      "weekdayname",
-      "day of week",
-      "name"
-    ]
-  },
-  {
-    "title": "MONTHNAME",
-    "href": "function-reference.html#fn-monthname",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Имя месяца.",
-    "keywords": [
-      "monthname",
-      "month",
-      "name"
-    ]
-  },
-  {
-    "title": "ISLEAPYEAR",
-    "href": "function-reference.html#fn-isleapyear",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Проверка високосного года.",
-    "keywords": [
-      "leap year"
-    ]
-  },
-  {
-    "title": "DAYSINMONTH",
-    "href": "function-reference.html#fn-daysinmonth",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Число дней в месяце.",
-    "keywords": [
-      "days in month",
-      "calendar"
-    ]
-  },
-  {
-    "title": "STARTOFMONTH",
-    "href": "function-reference.html#fn-startofmonth",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Начало месяца.",
-    "keywords": [
-      "start of month"
-    ]
-  },
-  {
-    "title": "ENDOFMONTH",
-    "href": "function-reference.html#fn-endofmonth",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Конец месяца.",
-    "keywords": [
-      "end of month"
-    ]
-  },
-  {
-    "title": "STARTOFYEAR",
-    "href": "function-reference.html#fn-startofyear",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Начало года.",
-    "keywords": [
-      "start of year"
-    ]
-  },
-  {
-    "title": "ENDOFYEAR",
-    "href": "function-reference.html#fn-endofyear",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Конец года.",
-    "keywords": [
-      "end of year"
-    ]
-  },
-  {
-    "title": "DATEADD",
-    "href": "function-reference.html#fn-dateadd",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Добавление интервала к дате или времени.",
-    "keywords": [
-      "add",
-      "interval",
-      "date"
-    ]
-  },
-  {
-    "title": "DATEDIFF",
-    "href": "function-reference.html#fn-datediff",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Разница между двумя значениями даты и времени.",
-    "keywords": [
-      "difference",
-      "interval"
-    ]
-  },
-  {
-    "title": "DATEPART",
-    "href": "function-reference.html#fn-datepart",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Извлечение части по токену.",
-    "keywords": [
-      "part",
-      "token"
-    ]
-  },
-  {
-    "title": "DATEVALUE",
-    "href": "function-reference.html#fn-datevalue",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Дата из даты-времени.",
-    "keywords": [
-      "datevalue",
-      "date"
-    ]
-  },
-  {
-    "title": "TIMEVALUE",
-    "href": "function-reference.html#fn-timevalue",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Время из даты-времени.",
-    "keywords": [
-      "timevalue",
-      "time"
-    ]
-  },
-  {
-    "title": "ISDATE",
-    "href": "function-reference.html#fn-isdate",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Проверка канонической строки даты или времени.",
-    "keywords": [
-      "isdate",
-      "parse",
-      "validation"
-    ]
-  },
-  {
-    "title": "UTCOFFSET",
-    "href": "function-reference.html#fn-utcoffset",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Смещение часового пояса относительно UTC.",
-    "keywords": [
-      "offset",
-      "utc",
-      "timezone"
-    ]
-  },
-  {
-    "title": "TOUTC",
-    "href": "function-reference.html#fn-toutc",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Перевод в UTC.",
-    "keywords": [
-      "to utc",
-      "timezone",
-      "convert"
-    ]
-  },
-  {
-    "title": "FROMUTC",
-    "href": "function-reference.html#fn-fromutc",
-    "kind": "Функция",
-    "category": "Дата и время",
-    "description": "Перевод из UTC.",
-    "keywords": [
-      "from utc",
-      "timezone",
-      "convert"
-    ]
-  },
-  {
-    "title": "INT",
-    "href": "function-reference.html#fn-int",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Округление вниз до INTEGER.",
-    "keywords": [
-      "truncate",
-      "floor"
-    ]
-  },
-  {
-    "title": "STR",
-    "href": "function-reference.html#fn-str",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Явное преобразование числа в строку.",
-    "keywords": [
-      "string",
-      "conversion"
-    ]
-  },
-  {
-    "title": "VAL",
-    "href": "function-reference.html#fn-val",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Чтение числа из строки.",
-    "keywords": [
-      "parse",
-      "string",
-      "conversion"
+      "главная",
+      "оглавление"
+    ],
+    "aliases": [
+      "Справочник Axiom"
     ]
   },
   {
     "title": "ABS",
     "href": "function-reference.html#fn-abs",
     "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Модуль числа.",
+    "category": "Числа и математические функции",
+    "description": "Возвращает модуль числа.",
     "keywords": [
-      "absolute"
-    ]
-  },
-  {
-    "title": "RND",
-    "href": "function-reference.html#fn-rnd",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Псевдослучайное число DOUBLE.",
-    "keywords": [
-      "random"
-    ]
-  },
-  {
-    "title": "SGN",
-    "href": "function-reference.html#fn-sgn",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Знак числа как -1, 0 или 1.",
-    "keywords": [
-      "sign"
-    ]
-  },
-  {
-    "title": "MIN",
-    "href": "function-reference.html#fn-min",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Меньшее из двух чисел.",
-    "keywords": [
-      "smaller"
-    ]
-  },
-  {
-    "title": "MAX",
-    "href": "function-reference.html#fn-max",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Большее из двух чисел.",
-    "keywords": [
-      "larger"
-    ]
-  },
-  {
-    "title": "CLAMP",
-    "href": "function-reference.html#fn-clamp",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Ограничение значения диапазоном.",
-    "keywords": [
-      "range"
-    ]
-  },
-  {
-    "title": "SETSIGN",
-    "href": "function-reference.html#fn-setsign",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Перенос знака второго аргумента на первый.",
-    "keywords": [
-      "sign"
-    ]
-  },
-  {
-    "title": "SIN",
-    "href": "function-reference.html#fn-sin",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Синус угла в радианах.",
-    "keywords": [
-      "trigonometry"
-    ]
-  },
-  {
-    "title": "COS",
-    "href": "function-reference.html#fn-cos",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Косинус угла в радианах.",
-    "keywords": [
-      "trigonometry"
-    ]
-  },
-  {
-    "title": "TAN",
-    "href": "function-reference.html#fn-tan",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Тангенс угла в радианах.",
-    "keywords": [
-      "trigonometry"
-    ]
-  },
-  {
-    "title": "ATN",
-    "href": "function-reference.html#fn-atn",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Арктангенс значения.",
-    "keywords": [
-      "inverse"
-    ]
-  },
-  {
-    "title": "ATN2",
-    "href": "function-reference.html#fn-atn2",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Угол по координатам с учётом квадранта.",
-    "keywords": [
-      "inverse",
-      "angle"
-    ]
-  },
-  {
-    "title": "ASIN",
-    "href": "function-reference.html#fn-asin",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Арксинус.",
-    "keywords": [
-      "inverse"
+      "ABS",
+      "numeric-functions-core",
+      "value"
+    ],
+    "aliases": [
+      "ABS"
     ]
   },
   {
     "title": "ACOS",
     "href": "function-reference.html#fn-acos",
     "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Арккосинус.",
+    "category": "Числа и математические функции",
+    "description": "Возвращает арккосинус числа.",
     "keywords": [
-      "inverse"
-    ]
-  },
-  {
-    "title": "ASINH",
-    "href": "function-reference.html#fn-asinh",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Обратный гиперболический синус.",
-    "keywords": [
-      "hyperbolic"
+      "ACOS",
+      "numeric-functions-trigonometry",
+      "value"
+    ],
+    "aliases": [
+      "ACOS"
     ]
   },
   {
     "title": "ACOSH",
     "href": "function-reference.html#fn-acosh",
     "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Обратный гиперболический косинус.",
+    "category": "Числа и математические функции",
+    "description": "Возвращает обратный гиперболический косинус числа.",
     "keywords": [
-      "hyperbolic"
+      "ACOSH",
+      "numeric-functions-trigonometry",
+      "value"
+    ],
+    "aliases": [
+      "ACOSH"
     ]
   },
   {
-    "title": "ATANH",
-    "href": "function-reference.html#fn-atanh",
+    "title": "APPENDFILE",
+    "href": "function-reference.html#fn-appendfile",
     "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Обратный гиперболический тангенс.",
+    "category": "Файлы и файловая система",
+    "description": "Дописывает текст в конец файла.",
     "keywords": [
-      "hyperbolic"
-    ]
-  },
-  {
-    "title": "SINH",
-    "href": "function-reference.html#fn-sinh",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Гиперболический синус.",
-    "keywords": [
-      "hyperbolic"
-    ]
-  },
-  {
-    "title": "COSH",
-    "href": "function-reference.html#fn-cosh",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Гиперболический косинус.",
-    "keywords": [
-      "hyperbolic"
-    ]
-  },
-  {
-    "title": "TANH",
-    "href": "function-reference.html#fn-tanh",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Гиперболический тангенс.",
-    "keywords": [
-      "hyperbolic"
-    ]
-  },
-  {
-    "title": "SQR",
-    "href": "function-reference.html#fn-sqr",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Квадратный корень.",
-    "keywords": [
-      "root"
-    ]
-  },
-  {
-    "title": "CBRT",
-    "href": "function-reference.html#fn-cbrt",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Кубический корень.",
-    "keywords": [
-      "root"
-    ]
-  },
-  {
-    "title": "EXP",
-    "href": "function-reference.html#fn-exp",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Экспонента e^x.",
-    "keywords": [
-      "power"
-    ]
-  },
-  {
-    "title": "LOG",
-    "href": "function-reference.html#fn-log",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Натуральный логарифм.",
-    "keywords": [
-      "ln"
-    ]
-  },
-  {
-    "title": "LOG10",
-    "href": "function-reference.html#fn-log10",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Десятичный логарифм.",
-    "keywords": [
-      "logarithm"
-    ]
-  },
-  {
-    "title": "LOG2",
-    "href": "function-reference.html#fn-log2",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Двоичный логарифм.",
-    "keywords": [
-      "logarithm"
-    ]
-  },
-  {
-    "title": "POW",
-    "href": "function-reference.html#fn-pow",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Возведение в степень.",
-    "keywords": [
-      "power"
-    ]
-  },
-  {
-    "title": "FLOOR",
-    "href": "function-reference.html#fn-floor",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Округление вниз с сохранением семейства.",
-    "keywords": [
-      "rounding"
-    ]
-  },
-  {
-    "title": "CEIL",
-    "href": "function-reference.html#fn-ceil",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Округление вверх с сохранением семейства.",
-    "keywords": [
-      "rounding"
-    ]
-  },
-  {
-    "title": "ROUND",
-    "href": "function-reference.html#fn-round",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Округление к ближайшему целому.",
-    "keywords": [
-      "rounding"
-    ]
-  },
-  {
-    "title": "FIX",
-    "href": "function-reference.html#fn-fix",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Отсечение дробной части к нулю.",
-    "keywords": [
-      "truncate",
-      "rounding"
-    ]
-  },
-  {
-    "title": "LBOUND",
-    "href": "function-reference.html#fn-lbound",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Нижняя граница массива.",
-    "keywords": [
-      "dimension"
-    ]
-  },
-  {
-    "title": "UBOUND",
-    "href": "function-reference.html#fn-ubound",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Верхняя граница массива.",
-    "keywords": [
-      "dimension"
-    ]
-  },
-  {
-    "title": "ARRAYLENGTH",
-    "href": "function-reference.html#fn-arraylength",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Количество видимых элементов массива.",
-    "keywords": [
-      "length",
-      "size"
-    ]
-  },
-  {
-    "title": "ARRAYISALLOCATED",
-    "href": "function-reference.html#fn-arrayisallocated",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Признак выделенного массива.",
-    "keywords": [
-      "allocated"
-    ]
-  },
-  {
-    "title": "ARRAYRANK",
-    "href": "function-reference.html#fn-arrayrank",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Число измерений массива.",
-    "keywords": [
-      "rank",
-      "dimension"
-    ]
-  },
-  {
-    "title": "ARRAYBOUNDS",
-    "href": "function-reference.html#fn-arraybounds",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Полная видимая форма массива как пары границ по каждому измерению.",
-    "keywords": [
-      "bounds",
-      "shape",
-      "lbound",
-      "ubound"
-    ]
-  },
-  {
-    "title": "ARRAYPUSH",
-    "href": "function-reference.html#fn-arraypush",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Добавление значения или среза в массив.",
-    "keywords": [
-      "dimension",
-      "mutating"
-    ]
-  },
-  {
-    "title": "ARRAYPOP",
-    "href": "function-reference.html#fn-arraypop",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Снятие последнего значения или среза.",
-    "keywords": [
-      "dimension",
-      "mutating"
-    ]
-  },
-  {
-    "title": "ARRAYINSERT",
-    "href": "function-reference.html#fn-arrayinsert",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Вставка по индексу.",
-    "keywords": [
-      "dimension",
-      "mutating"
-    ]
-  },
-  {
-    "title": "ARRAYREMOVE",
-    "href": "function-reference.html#fn-arrayremove",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Удаление по индексу.",
-    "keywords": [
-      "dimension",
-      "mutating"
-    ]
-  },
-  {
-    "title": "ARRAYSLICE",
-    "href": "function-reference.html#fn-arrayslice",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Компактный срез массива по индексу и длине.",
-    "keywords": [
-      "slice",
-      "view",
-      "dimension"
-    ]
-  },
-  {
-    "title": "ARRAYCLONE",
-    "href": "function-reference.html#fn-arrayclone",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Независимая копия массива или представления.",
-    "keywords": [
-      "copy",
-      "clone",
-      "array"
-    ]
-  },
-  {
-    "title": "ARRAYCONCAT",
-    "href": "function-reference.html#fn-arrayconcat",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Объединение совместимых массивов в новый результат.",
-    "keywords": [
-      "concat",
-      "append",
-      "array"
-    ]
-  },
-  {
-    "title": "ARRAYFLATTEN",
-    "href": "function-reference.html#fn-arrayflatten",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Преобразование многомерного массива в одномерный список.",
-    "keywords": [
-      "flatten",
-      "rank",
-      "array"
-    ]
-  },
-  {
-    "title": "ARRAYRESHAPE",
-    "href": "function-reference.html#fn-arrayreshape",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Сборка массива новой формы по массиву-образцу.",
-    "keywords": [
-      "reshape",
-      "shape",
-      "array"
-    ]
-  },
-  {
-    "title": "ARRAYFILL",
-    "href": "function-reference.html#fn-arrayfill",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Заполнение видимых элементов массива значением.",
-    "keywords": [
-      "fill",
-      "mutating",
-      "array"
-    ]
-  },
-  {
-    "title": "ARRAYEVERY",
-    "href": "function-reference.html#fn-arrayevery",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Проверка, что пользовательская функция возвращает TRUE для всех элементов.",
-    "keywords": [
-      "callback",
-      "predicate",
-      "all"
-    ]
-  },
-  {
-    "title": "ARRAYSOME",
-    "href": "function-reference.html#fn-arraysome",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Проверка, что пользовательская функция возвращает TRUE хотя бы для одного элемента.",
-    "keywords": [
-      "callback",
-      "predicate",
-      "any"
-    ]
-  },
-  {
-    "title": "ARRAYFILTER",
-    "href": "function-reference.html#fn-arrayfilter",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Отбор элементов по пользовательской проверяющей функции.",
-    "keywords": [
-      "callback",
-      "filter",
-      "predicate"
-    ]
-  },
-  {
-    "title": "ARRAYMAP",
-    "href": "function-reference.html#fn-arraymap",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Преобразование элементов пользовательской функцией.",
-    "keywords": [
-      "callback",
-      "map",
-      "transform"
-    ]
-  },
-  {
-    "title": "ARRAYREDUCE",
-    "href": "function-reference.html#fn-arrayreduce",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Свёртка массива в одно значение через пользовательскую функцию.",
-    "keywords": [
-      "callback",
-      "reduce",
-      "accumulator"
-    ]
-  },
-  {
-    "title": "ARRAYREVERSE",
-    "href": "function-reference.html#fn-arrayreverse",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Разворот массива на месте.",
-    "keywords": [
-      "reverse",
-      "mutating",
-      "dimension"
-    ]
-  },
-  {
-    "title": "ARRAYSORT",
-    "href": "function-reference.html#fn-arraysort",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Сортировка массива на месте.",
-    "keywords": [
-      "sort",
-      "mutating",
-      "array"
-    ]
-  },
-  {
-    "title": "ARRAYTOSORTED",
-    "href": "function-reference.html#fn-arraytosorted",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Отсортированная копия массива.",
-    "keywords": [
-      "sort",
-      "copy",
-      "array"
-    ]
-  },
-  {
-    "title": "ARRAYTOREVERSED",
-    "href": "function-reference.html#fn-arraytoreversed",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Развёрнутая копия массива.",
-    "keywords": [
-      "reverse",
-      "copy",
-      "array"
-    ]
-  },
-  {
-    "title": "ARRAYSUM",
-    "href": "function-reference.html#fn-arraysum",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Сумма числовых элементов массива.",
-    "keywords": [
-      "sum",
-      "aggregate",
-      "array"
-    ]
-  },
-  {
-    "title": "ARRAYMIN",
-    "href": "function-reference.html#fn-arraymin",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Наименьший элемент числового или строкового массива.",
-    "keywords": [
-      "min",
-      "aggregate",
-      "array"
-    ]
-  },
-  {
-    "title": "ARRAYMAX",
-    "href": "function-reference.html#fn-arraymax",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Наибольший элемент числового или строкового массива.",
-    "keywords": [
-      "max",
-      "aggregate",
-      "array"
+      "APPENDFILE",
+      "file-system-functions-text",
+      "path",
+      "text",
+      "path",
+      "text",
+      "encoding"
+    ],
+    "aliases": [
+      "APPENDFILE"
     ]
   },
   {
@@ -4120,129 +2043,14 @@ window.AxiomSearchIndex = [
     "href": "function-reference.html#fn-arrayaverage",
     "kind": "Функция",
     "category": "Массивы",
-    "description": "Среднее арифметическое числовых элементов как DOUBLE.",
+    "description": "Возвращает среднее арифметическое числовых элементов массива.",
     "keywords": [
-      "average",
-      "mean",
-      "aggregate"
-    ]
-  },
-  {
-    "title": "CINT",
-    "href": "function-reference.html#fn-cint",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Явное преобразование к INTEGER с усечением к нулю.",
-    "keywords": [
-      "convert",
-      "integer",
-      "narrowing"
-    ]
-  },
-  {
-    "title": "CLNG",
-    "href": "function-reference.html#fn-clng",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Явное преобразование к LONG с усечением к нулю.",
-    "keywords": [
-      "convert",
-      "long",
-      "narrowing"
-    ]
-  },
-  {
-    "title": "CDBL",
-    "href": "function-reference.html#fn-cdbl",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Явное преобразование к DOUBLE.",
-    "keywords": [
-      "convert",
-      "double"
-    ]
-  },
-  {
-    "title": "CDEC",
-    "href": "function-reference.html#fn-cdec",
-    "kind": "Функция",
-    "category": "Встроенные функции",
-    "description": "Явное преобразование к DECIMAL.",
-    "keywords": [
-      "convert",
-      "decimal"
-    ]
-  },
-  {
-    "title": "RANDOMIZE",
-    "href": "randomize.html",
-    "kind": "Оператор",
-    "category": "Встроенные функции",
-    "description": "Посев генератора случайных чисел для повторяемой серии RND.",
-    "keywords": [
-      "random",
-      "seed",
-      "rnd"
-    ]
-  },
-  {
-    "title": "ANDALSO",
-    "href": "arithmetic-and-logic.html",
-    "kind": "Оператор",
-    "category": "Встроенные функции",
-    "description": "Логическое И с коротким замыканием.",
-    "keywords": [
-      "and",
-      "short-circuit",
-      "logic"
-    ]
-  },
-  {
-    "title": "ORELSE",
-    "href": "arithmetic-and-logic.html",
-    "kind": "Оператор",
-    "category": "Встроенные функции",
-    "description": "Логическое ИЛИ с коротким замыканием.",
-    "keywords": [
-      "or",
-      "short-circuit",
-      "logic"
-    ]
-  },
-  {
-    "title": "ARRAYTAKE",
-    "href": "function-reference.html#fn-arraytake",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Первые элементы массива или часть выбранного измерения.",
-    "keywords": [
-      "take",
-      "slice",
-      "dimension"
-    ]
-  },
-  {
-    "title": "ARRAYSKIP",
-    "href": "function-reference.html#fn-arrayskip",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Остаток после пропуска начальной части массива или измерения.",
-    "keywords": [
-      "skip",
-      "slice",
-      "dimension"
-    ]
-  },
-  {
-    "title": "ARRAYDISTINCT",
-    "href": "function-reference.html#fn-arraydistinct",
-    "kind": "Функция",
-    "category": "Массивы",
-    "description": "Устранение повторов с сохранением порядка первого появления.",
-    "keywords": [
-      "distinct",
-      "unique",
+      "ARRAYAVERAGE",
+      "arrays-and-builtins",
       "array"
+    ],
+    "aliases": [
+      "ARRAYAVERAGE"
     ]
   },
   {
@@ -4250,11 +2058,67 @@ window.AxiomSearchIndex = [
     "href": "function-reference.html#fn-arraybinarysearch",
     "kind": "Функция",
     "category": "Массивы",
-    "description": "Бинарный поиск по отсортированному массиву.",
+    "description": "Ищет первое совпадение двоичным поиском в отсортированном массиве.",
     "keywords": [
-      "search",
-      "sorted",
-      "binary"
+      "ARRAYBINARYSEARCH",
+      "arrays-and-builtins",
+      "array",
+      "value",
+      "array",
+      "value",
+      "dimension"
+    ],
+    "aliases": [
+      "ARRAYBINARYSEARCH"
+    ]
+  },
+  {
+    "title": "ARRAYBOUNDS",
+    "href": "function-reference.html#fn-arraybounds",
+    "kind": "Функция",
+    "category": "Массивы",
+    "description": "Возвращает таблицу нижних и верхних границ всех измерений.",
+    "keywords": [
+      "ARRAYBOUNDS",
+      "arrays-functions",
+      "array"
+    ],
+    "aliases": [
+      "ARRAYBOUNDS"
+    ]
+  },
+  {
+    "title": "ARRAYCLONE",
+    "href": "function-reference.html#fn-arrayclone",
+    "kind": "Функция",
+    "category": "Массивы",
+    "description": "Создаёт независимую копию видимой части массива.",
+    "keywords": [
+      "ARRAYCLONE",
+      "arrays-and-builtins",
+      "array"
+    ],
+    "aliases": [
+      "ARRAYCLONE"
+    ]
+  },
+  {
+    "title": "ARRAYCONCAT",
+    "href": "function-reference.html#fn-arrayconcat",
+    "kind": "Функция",
+    "category": "Массивы",
+    "description": "Объединяет содержимое двух массивов в новую копию.",
+    "keywords": [
+      "ARRAYCONCAT",
+      "arrays-and-builtins",
+      "left",
+      "right",
+      "left",
+      "right",
+      "dimension"
+    ],
+    "aliases": [
+      "ARRAYCONCAT"
     ]
   },
   {
@@ -4262,11 +2126,15 @@ window.AxiomSearchIndex = [
     "href": "function-reference.html#fn-arraycontains",
     "kind": "Функция",
     "category": "Массивы",
-    "description": "Проверка наличия значения в массиве.",
+    "description": "Проверяет наличие значения среди видимых элементов массива.",
     "keywords": [
-      "contains",
-      "search",
-      "array"
+      "ARRAYCONTAINS",
+      "arrays-and-builtins",
+      "array",
+      "value"
+    ],
+    "aliases": [
+      "ARRAYCONTAINS"
     ]
   },
   {
@@ -4274,11 +2142,78 @@ window.AxiomSearchIndex = [
     "href": "function-reference.html#fn-arraycount",
     "kind": "Функция",
     "category": "Массивы",
-    "description": "Подсчёт числа совпадающих значений.",
+    "description": "Подсчитывает совпадения значения в массиве.",
     "keywords": [
-      "count",
-      "search",
+      "ARRAYCOUNT",
+      "arrays-and-builtins",
+      "array",
+      "value"
+    ],
+    "aliases": [
+      "ARRAYCOUNT"
+    ]
+  },
+  {
+    "title": "ARRAYDISTINCT",
+    "href": "function-reference.html#fn-arraydistinct",
+    "kind": "Функция",
+    "category": "Массивы",
+    "description": "Копирует первые появления различных значений в одномерный массив.",
+    "keywords": [
+      "ARRAYDISTINCT",
+      "arrays-and-builtins",
       "array"
+    ],
+    "aliases": [
+      "ARRAYDISTINCT"
+    ]
+  },
+  {
+    "title": "ARRAYEVERY",
+    "href": "function-reference.html#fn-arrayevery",
+    "kind": "Функция",
+    "category": "Массивы",
+    "description": "Проверяет, удовлетворяют ли все элементы пользовательскому условию.",
+    "keywords": [
+      "ARRAYEVERY",
+      "arrays-and-builtins",
+      "array",
+      "predicate"
+    ],
+    "aliases": [
+      "ARRAYEVERY"
+    ]
+  },
+  {
+    "title": "ARRAYFILL",
+    "href": "function-reference.html#fn-arrayfill",
+    "kind": "Функция",
+    "category": "Массивы",
+    "description": "Заполняет видимые элементы массива одним значением.",
+    "keywords": [
+      "ARRAYFILL",
+      "arrays-and-builtins",
+      "array",
+      "value"
+    ],
+    "aliases": [
+      "ARRAYFILL"
+    ]
+  },
+  {
+    "title": "ARRAYFILTER",
+    "href": "function-reference.html#fn-arrayfilter",
+    "kind": "Функция",
+    "category": "Массивы",
+    "description": "Копирует элементы, удовлетворяющие пользовательскому условию.",
+    "keywords": [
+      "ARRAYFILTER",
+      "arrays-and-builtins",
+      "array",
+      "predicate"
+    ],
+    "aliases": [
+      "ARRAYFILTER"
     ]
   },
   {
@@ -4286,11 +2221,30 @@ window.AxiomSearchIndex = [
     "href": "function-reference.html#fn-arrayfindall",
     "kind": "Функция",
     "category": "Массивы",
-    "description": "Поиск всех индексов или координат совпадения.",
+    "description": "Возвращает индексы всех совпадений значения в массиве.",
     "keywords": [
-      "findall",
-      "search",
-      "coordinates"
+      "ARRAYFINDALL",
+      "arrays-and-builtins",
+      "array",
+      "value"
+    ],
+    "aliases": [
+      "ARRAYFINDALL"
+    ]
+  },
+  {
+    "title": "ARRAYFLATTEN",
+    "href": "function-reference.html#fn-arrayflatten",
+    "kind": "Функция",
+    "category": "Массивы",
+    "description": "Копирует все видимые элементы в одномерный массив.",
+    "keywords": [
+      "ARRAYFLATTEN",
+      "arrays-and-builtins",
+      "array"
+    ],
+    "aliases": [
+      "ARRAYFLATTEN"
     ]
   },
   {
@@ -4298,11 +2252,51 @@ window.AxiomSearchIndex = [
     "href": "function-reference.html#fn-arrayindexof",
     "kind": "Функция",
     "category": "Массивы",
-    "description": "Поиск первого индекса или координат совпадения.",
+    "description": "Находит первое совпадение значения в массиве.",
     "keywords": [
-      "indexof",
-      "search",
-      "coordinates"
+      "ARRAYINDEXOF",
+      "arrays-and-builtins",
+      "array",
+      "value"
+    ],
+    "aliases": [
+      "ARRAYINDEXOF"
+    ]
+  },
+  {
+    "title": "ARRAYINSERT",
+    "href": "function-reference.html#fn-arrayinsert",
+    "kind": "Функция",
+    "category": "Массивы",
+    "description": "Вставляет элемент или срез перед заданным индексом массива.",
+    "keywords": [
+      "ARRAYINSERT",
+      "arrays-functions",
+      "array",
+      "index",
+      "value",
+      "array",
+      "index",
+      "value",
+      "dimension"
+    ],
+    "aliases": [
+      "ARRAYINSERT"
+    ]
+  },
+  {
+    "title": "ARRAYISALLOCATED",
+    "href": "function-reference.html#fn-arrayisallocated",
+    "kind": "Функция",
+    "category": "Массивы",
+    "description": "Проверяет, выделено ли хранилище элементов массива.",
+    "keywords": [
+      "ARRAYISALLOCATED",
+      "arrays-functions",
+      "array"
+    ],
+    "aliases": [
+      "ARRAYISALLOCATED"
     ]
   },
   {
@@ -4310,1496 +2304,2879 @@ window.AxiomSearchIndex = [
     "href": "function-reference.html#fn-arraylastindexof",
     "kind": "Функция",
     "category": "Массивы",
-    "description": "Поиск последнего индекса или координат совпадения.",
+    "description": "Находит последнее совпадение значения в массиве.",
     "keywords": [
-      "lastindexof",
-      "search",
-      "coordinates"
+      "ARRAYLASTINDEXOF",
+      "arrays-and-builtins",
+      "array",
+      "value"
+    ],
+    "aliases": [
+      "ARRAYLASTINDEXOF"
     ]
   },
   {
-    "title": "Функции файловой системы",
-    "href": "file-system-functions.html",
-    "kind": "Раздел",
-    "category": "Встроенные функции",
-    "description": "Файлы, папки, пути, открытые FILE-переменные и операции над ними.",
-    "keywords": [
-      "file",
-      "filesystem",
-      "path",
-      "open",
-      "close",
-      "readfile",
-      "writefile",
-      "seekfile"
-    ]
-  },
-  {
-    "title": "Файловая система: текстовые файлы",
-    "href": "file-system-functions-text.html",
-    "kind": "Раздел",
-    "category": "Встроенные функции",
-    "description": "Чтение, запись и дописывание текста с автоопределением или явной кодировкой.",
-    "keywords": [
-      "fileexists",
-      "direxists",
-      "pathexists",
-      "readfile",
-      "readalllines",
-      "writefile",
-      "appendfile",
-      "кодировка",
-      "UTF-8",
-      "WINDOWS-1251",
-      "UTF-16LE",
-      "UTF-16BE",
-      "BOM"
-    ]
-  },
-  {
-    "title": "Файловая система: открытые файлы FILE",
-    "href": "file-system-functions-open-files.html",
-    "kind": "Раздел",
-    "category": "Встроенные функции",
-    "description": "Чтение, запись и позиция открытого текстового файла.",
-    "keywords": [
-      "isopen",
-      "filepath",
-      "filemode",
-      "filepos",
-      "filelength",
-      "eof",
-      "readline",
-      "writeline",
-      "seekfile",
-      "rewind"
-    ]
-  },
-  {
-    "title": "Файловая система: пути и сведения",
-    "href": "file-system-functions-paths.html",
-    "kind": "Раздел",
-    "category": "Встроенные функции",
-    "description": "Имена, расширения, даты, размеры, перечисление и сведения о диске.",
-    "keywords": [
-      "filesize",
-      "filedate",
-      "getfiles",
-      "combinepath",
-      "filename",
-      "dirname",
-      "extname",
-      "fullpath",
-      "pathroot",
-      "drivetype"
-    ]
-  },
-  {
-    "title": "Файловая система: операции",
-    "href": "file-system-functions-management.html",
-    "kind": "Раздел",
-    "category": "Встроенные функции",
-    "description": "Создание, удаление, копирование, перенос и временные объекты.",
-    "keywords": [
-      "makedir",
-      "deletefile",
-      "copyfile",
-      "movefile",
-      "renamefile",
-      "deletedir",
-      "copydir",
-      "changedir",
-      "maketempfile"
-    ]
-  },
-  {
-    "title": "Оператор OPEN",
-    "href": "operator-reference.html#op-open-open",
-    "kind": "Оператор",
-    "category": "Файлы и файловая система",
-    "description": "Синтаксис, параметры и правила конструкции OPEN.",
-    "keywords": [
-      "using",
-      "кодировка",
-      "utf-16",
-      "open",
-      "file",
-      "input",
-      "output",
-      "append"
-    ]
-  },
-  {
-    "title": "Оператор CLOSE",
-    "href": "operator-reference.html#op-close-close",
-    "kind": "Оператор",
-    "category": "Файлы и файловая система",
-    "description": "Синтаксис, параметры и правила конструкции CLOSE.",
-    "keywords": [
-      "close",
-      "file"
-    ]
-  },
-  {
-    "title": "FILEEXISTS",
-    "href": "function-reference.html#fn-fileexists",
+    "title": "ARRAYLENGTH",
+    "href": "function-reference.html#fn-arraylength",
     "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Проверка существования файла.",
+    "category": "Массивы",
+    "description": "Возвращает число видимых элементов массива.",
     "keywords": [
-      "file",
-      "exists"
-    ]
-  },
-  {
-    "title": "DIREXISTS",
-    "href": "function-reference.html#fn-direxists",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Проверка существования папки.",
-    "keywords": [
-      "dir",
-      "directory",
-      "exists",
-      "folder"
-    ]
-  },
-  {
-    "title": "PATHEXISTS",
-    "href": "function-reference.html#fn-pathexists",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Проверка существования файла или папки.",
-    "keywords": [
-      "path",
-      "exists"
-    ]
-  },
-  {
-    "title": "READFILE",
-    "href": "function-reference.html#fn-readfile",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Чтение целого текстового файла одной строкой.",
-    "keywords": [
-      "read",
-      "text",
-      "utf8"
-    ]
-  },
-  {
-    "title": "READALLLINES",
-    "href": "function-reference.html#fn-readalllines",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Чтение файла в массив строк.",
-    "keywords": [
-      "read",
-      "lines",
+      "ARRAYLENGTH",
+      "arrays-functions",
       "array"
+    ],
+    "aliases": [
+      "ARRAYLENGTH"
     ]
   },
   {
-    "title": "WRITEFILE",
-    "href": "function-reference.html#fn-writefile",
+    "title": "ARRAYMAP",
+    "href": "function-reference.html#fn-arraymap",
     "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Запись текста в файл с начала.",
+    "category": "Массивы",
+    "description": "Преобразует каждый элемент пользовательской функцией и возвращает новый массив.",
     "keywords": [
-      "write",
-      "text",
-      "utf8"
+      "ARRAYMAP",
+      "arrays-and-builtins",
+      "array",
+      "selector"
+    ],
+    "aliases": [
+      "ARRAYMAP"
     ]
   },
   {
-    "title": "APPENDFILE",
-    "href": "function-reference.html#fn-appendfile",
+    "title": "ARRAYMAX",
+    "href": "function-reference.html#fn-arraymax",
     "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Добавление текста в конец файла.",
+    "category": "Массивы",
+    "description": "Возвращает наибольшее значение массива.",
     "keywords": [
-      "append",
-      "write",
-      "text"
-    ]
-  },
-  {
-    "title": "ISOPEN",
-    "href": "function-reference.html#fn-isopen",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Проверка, открыт ли FILE.",
-    "keywords": [
-      "file",
-      "open",
-      "state"
-    ]
-  },
-  {
-    "title": "FILEPATH",
-    "href": "function-reference.html#fn-filepath",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Полный путь открытого файла.",
-    "keywords": [
-      "file",
-      "path",
-      "open"
-    ]
-  },
-  {
-    "title": "FILEMODE",
-    "href": "function-reference.html#fn-filemode",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Режим открытия файла.",
-    "keywords": [
-      "file",
-      "mode",
-      "input",
-      "output",
-      "append"
-    ]
-  },
-  {
-    "title": "FILEPOS",
-    "href": "function-reference.html#fn-filepos",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Текущая позиция в открытом файле.",
-    "keywords": [
-      "file",
-      "position",
-      "seek"
-    ]
-  },
-  {
-    "title": "FILELENGTH",
-    "href": "function-reference.html#fn-filelength",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Длина открытого файла.",
-    "keywords": [
-      "file",
-      "length",
-      "size"
-    ]
-  },
-  {
-    "title": "EOF",
-    "href": "function-reference.html#fn-eof",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Проверка конца открытого файла.",
-    "keywords": [
-      "end of file",
-      "read"
-    ]
-  },
-  {
-    "title": "READTOEND",
-    "href": "function-reference.html#fn-readtoend",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Чтение остатка открытого файла.",
-    "keywords": [
-      "read",
-      "end",
-      "file"
-    ]
-  },
-  {
-    "title": "READTEXT",
-    "href": "function-reference.html#fn-readtext",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Чтение фрагмента текста из открытого файла.",
-    "keywords": [
-      "read",
-      "text",
-      "count"
-    ]
-  },
-  {
-    "title": "READLINE",
-    "href": "function-reference.html#fn-readline",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Чтение одной строки из открытого файла.",
-    "keywords": [
-      "read",
-      "line",
-      "input"
-    ]
-  },
-  {
-    "title": "READLINES",
-    "href": "function-reference.html#fn-readlines",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Чтение нескольких строк из открытого файла.",
-    "keywords": [
-      "read",
-      "lines",
+      "ARRAYMAX",
+      "arrays-and-builtins",
       "array"
+    ],
+    "aliases": [
+      "ARRAYMAX"
     ]
   },
   {
-    "title": "LINENUMBER",
-    "href": "function-reference.html#fn-linenumber",
+    "title": "ARRAYMIN",
+    "href": "function-reference.html#fn-arraymin",
     "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Номер текущей строки чтения.",
+    "category": "Массивы",
+    "description": "Возвращает наименьшее значение массива.",
     "keywords": [
-      "line",
-      "number",
-      "input"
+      "ARRAYMIN",
+      "arrays-and-builtins",
+      "array"
+    ],
+    "aliases": [
+      "ARRAYMIN"
     ]
   },
   {
-    "title": "SKIPLINE",
-    "href": "function-reference.html#fn-skipline",
+    "title": "ARRAYPOP",
+    "href": "function-reference.html#fn-arraypop",
     "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Пропуск текущей строки.",
+    "category": "Массивы",
+    "description": "Снимает последний элемент или срез выбранного измерения массива.",
     "keywords": [
-      "skip",
-      "line",
-      "input"
+      "ARRAYPOP",
+      "arrays-functions",
+      "array",
+      "array",
+      "dimension"
+    ],
+    "aliases": [
+      "ARRAYPOP"
     ]
   },
   {
-    "title": "WRITE",
-    "href": "function-reference.html#fn-write",
+    "title": "ARRAYPUSH",
+    "href": "function-reference.html#fn-arraypush",
     "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Запись текста без перевода строки.",
+    "category": "Массивы",
+    "description": "Добавляет элемент или срез в конец выбранного измерения массива.",
     "keywords": [
-      "write",
-      "output",
-      "append"
+      "ARRAYPUSH",
+      "arrays-functions",
+      "array",
+      "value",
+      "array",
+      "value",
+      "dimension"
+    ],
+    "aliases": [
+      "ARRAYPUSH"
     ]
   },
   {
-    "title": "WRITELINE",
-    "href": "function-reference.html#fn-writeline",
+    "title": "ARRAYRANK",
+    "href": "function-reference.html#fn-arrayrank",
     "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Запись строки с переводом строки.",
+    "category": "Массивы",
+    "description": "Возвращает число измерений массива.",
     "keywords": [
-      "write",
-      "line",
-      "output"
+      "ARRAYRANK",
+      "arrays-functions",
+      "array"
+    ],
+    "aliases": [
+      "ARRAYRANK"
     ]
   },
   {
-    "title": "NEWLINE",
-    "href": "function-reference.html#fn-newline",
+    "title": "ARRAYREDUCE",
+    "href": "function-reference.html#fn-arrayreduce",
     "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Добавление пустой строки в файл.",
+    "category": "Массивы",
+    "description": "Последовательно объединяет элементы с накопленным значением пользовательской функцией.",
     "keywords": [
-      "new line",
-      "write",
-      "output"
+      "ARRAYREDUCE",
+      "arrays-and-builtins",
+      "array",
+      "seed",
+      "reducer"
+    ],
+    "aliases": [
+      "ARRAYREDUCE"
     ]
   },
   {
-    "title": "FLUSH",
-    "href": "function-reference.html#fn-flush",
+    "title": "ARRAYREMOVE",
+    "href": "function-reference.html#fn-arrayremove",
     "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Принудительный сброс буфера записи.",
+    "category": "Массивы",
+    "description": "Удаляет и возвращает элемент или срез с заданным индексом массива.",
     "keywords": [
-      "flush",
-      "buffer",
-      "output"
-    ]
-  },
-  {
-    "title": "SEEKFILE",
-    "href": "function-reference.html#fn-seekfile",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Переход к указанной позиции открытого файла.",
-    "keywords": [
-      "seekfile",
-      "seek",
-      "position",
-      "filepos"
-    ]
-  },
-  {
-    "title": "REWIND",
-    "href": "function-reference.html#fn-rewind",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Возврат в начало открытого файла.",
-    "keywords": [
-      "rewind",
-      "seek",
-      "beginning"
-    ]
-  },
-  {
-    "title": "FILESIZE",
-    "href": "function-reference.html#fn-filesize",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Размер файла в байтах.",
-    "keywords": [
-      "file",
-      "size",
-      "length"
-    ]
-  },
-  {
-    "title": "FILEDATE",
-    "href": "function-reference.html#fn-filedate",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Дата последнего изменения файла.",
-    "keywords": [
-      "file",
-      "date",
-      "modified"
-    ]
-  },
-  {
-    "title": "FILECREATEDATE",
-    "href": "function-reference.html#fn-filecreatedate",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Дата создания файла.",
-    "keywords": [
-      "file",
-      "created",
-      "date"
-    ]
-  },
-  {
-    "title": "FILEACCESSEDDATE",
-    "href": "function-reference.html#fn-fileaccesseddate",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Дата последнего доступа к файлу.",
-    "keywords": [
-      "file",
-      "accessed",
-      "date"
-    ]
-  },
-  {
-    "title": "DIRDATE",
-    "href": "function-reference.html#fn-dirdate",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Дата последнего изменения папки.",
-    "keywords": [
-      "dir",
-      "folder",
-      "date"
-    ]
-  },
-  {
-    "title": "GETFILES",
-    "href": "function-reference.html#fn-getfiles",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Список файлов по маске.",
-    "keywords": [
-      "files",
-      "enumeration",
-      "mask"
-    ]
-  },
-  {
-    "title": "GETDIRS",
-    "href": "function-reference.html#fn-getdirs",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Список папок по маске.",
-    "keywords": [
-      "dirs",
-      "directories",
-      "enumeration",
-      "mask"
-    ]
-  },
-  {
-    "title": "COMBINEPATH",
-    "href": "function-reference.html#fn-combinepath",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Соединение частей пути.",
-    "keywords": [
-      "path",
-      "combine",
-      "join"
-    ]
-  },
-  {
-    "title": "FILENAME",
-    "href": "function-reference.html#fn-filename",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Имя файла вместе с расширением.",
-    "keywords": [
-      "file",
-      "name"
-    ]
-  },
-  {
-    "title": "DIRNAME",
-    "href": "function-reference.html#fn-dirname",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Имя последней папки в пути.",
-    "keywords": [
-      "dir",
-      "name",
-      "folder"
-    ]
-  },
-  {
-    "title": "EXTNAME",
-    "href": "function-reference.html#fn-extname",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Расширение файла вместе с точкой.",
-    "keywords": [
-      "extension",
-      "ext",
-      "suffix"
-    ]
-  },
-  {
-    "title": "FULLPATH",
-    "href": "function-reference.html#fn-fullpath",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Полный путь относительно каталога программы, включая формы с буквой диска и UNC.",
-    "keywords": [
-      "full",
-      "absolute",
-      "path",
-      "UNC",
-      "диск",
-      "относительный"
-    ]
-  },
-  {
-    "title": "PATHROOT",
-    "href": "function-reference.html#fn-pathroot",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Корневая часть полного пути.",
-    "keywords": [
-      "path",
-      "root",
-      "drive"
-    ]
-  },
-  {
-    "title": "ISABSOLUTEPATH",
-    "href": "function-reference.html#fn-isabsolutepath",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Проверка, является ли путь абсолютным.",
-    "keywords": [
-      "absolute",
-      "path"
-    ]
-  },
-  {
-    "title": "DIRSIZE",
-    "href": "function-reference.html#fn-dirsize",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Суммарный размер папки.",
-    "keywords": [
-      "dir",
-      "folder",
-      "size"
-    ]
-  },
-  {
-    "title": "ISREADONLY",
-    "href": "function-reference.html#fn-isreadonly",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Признак объекта только для чтения.",
-    "keywords": [
-      "read only",
-      "attribute"
-    ]
-  },
-  {
-    "title": "ISHIDDEN",
-    "href": "function-reference.html#fn-ishidden",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Признак скрытого объекта.",
-    "keywords": [
-      "hidden",
-      "attribute"
-    ]
-  },
-  {
-    "title": "DRIVENAME",
-    "href": "function-reference.html#fn-drivename",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Имя диска для пути.",
-    "keywords": [
-      "drive",
-      "name"
-    ]
-  },
-  {
-    "title": "DRIVEFORMAT",
-    "href": "function-reference.html#fn-driveformat",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Формат файловой системы диска.",
-    "keywords": [
-      "drive",
-      "format"
-    ]
-  },
-  {
-    "title": "DRIVETYPE",
-    "href": "function-reference.html#fn-drivetype",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Тип диска для пути.",
-    "keywords": [
-      "drive",
-      "type"
-    ]
-  },
-  {
-    "title": "FREESPACE",
-    "href": "function-reference.html#fn-freespace",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Доступное свободное место на диске.",
-    "keywords": [
-      "free",
-      "space",
-      "drive"
-    ]
-  },
-  {
-    "title": "TOTALFREESPACE",
-    "href": "function-reference.html#fn-totalfreespace",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Общее свободное место на диске.",
-    "keywords": [
-      "total",
-      "free",
-      "space",
-      "drive"
-    ]
-  },
-  {
-    "title": "TOTALSPACE",
-    "href": "function-reference.html#fn-totalspace",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Полный размер диска.",
-    "keywords": [
-      "total",
-      "space",
-      "drive",
-      "size"
-    ]
-  },
-  {
-    "title": "MAKEDIR",
-    "href": "function-reference.html#fn-makedir",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Создание папки.",
-    "keywords": [
-      "make",
-      "dir",
-      "folder",
-      "create"
-    ]
-  },
-  {
-    "title": "DELETEFILE",
-    "href": "function-reference.html#fn-deletefile",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Удаление файла.",
-    "keywords": [
-      "delete",
-      "file",
-      "remove"
-    ]
-  },
-  {
-    "title": "COPYFILE",
-    "href": "function-reference.html#fn-copyfile",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Копирование файла.",
-    "keywords": [
-      "copy",
-      "file"
-    ]
-  },
-  {
-    "title": "MOVEFILE",
-    "href": "function-reference.html#fn-movefile",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Перемещение файла.",
-    "keywords": [
-      "move",
-      "file"
-    ]
-  },
-  {
-    "title": "RENAMEFILE",
-    "href": "function-reference.html#fn-renamefile",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Переименование файла.",
-    "keywords": [
-      "rename",
-      "file"
-    ]
-  },
-  {
-    "title": "DELETEDIR",
-    "href": "function-reference.html#fn-deletedir",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Удаление пустой папки.",
-    "keywords": [
-      "delete",
-      "dir",
-      "folder"
-    ]
-  },
-  {
-    "title": "DELETEDIRRECURSIVE",
-    "href": "function-reference.html#fn-deletedirrecursive",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Рекурсивное удаление папки.",
-    "keywords": [
-      "delete",
-      "recursive",
-      "dir",
-      "folder"
-    ]
-  },
-  {
-    "title": "COPYDIR",
-    "href": "function-reference.html#fn-copydir",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Копирование папки.",
-    "keywords": [
-      "copy",
-      "dir",
-      "folder"
-    ]
-  },
-  {
-    "title": "MOVEDIR",
-    "href": "function-reference.html#fn-movedir",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Перемещение папки.",
-    "keywords": [
-      "move",
-      "dir",
-      "folder"
-    ]
-  },
-  {
-    "title": "RENAMEDIR",
-    "href": "function-reference.html#fn-renamedir",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Переименование папки.",
-    "keywords": [
-      "rename",
-      "dir",
-      "folder"
-    ]
-  },
-  {
-    "title": "CURRENTDIR",
-    "href": "function-reference.html#fn-currentdir",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Текущая рабочая папка.",
-    "keywords": [
-      "current",
-      "dir",
-      "folder",
-      "working directory"
-    ]
-  },
-  {
-    "title": "CHANGEDIR",
-    "href": "function-reference.html#fn-changedir",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Смена текущей рабочей папки.",
-    "keywords": [
-      "change",
-      "dir",
-      "folder",
-      "working directory"
-    ]
-  },
-  {
-    "title": "MAKETEMPFILE",
-    "href": "function-reference.html#fn-maketempfile",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Создание временного файла.",
-    "keywords": [
-      "temp",
-      "temporary",
-      "file"
-    ]
-  },
-  {
-    "title": "MAKETEMPDIR",
-    "href": "function-reference.html#fn-maketempdir",
-    "kind": "Функция",
-    "category": "Файловая система",
-    "description": "Создание временной папки.",
-    "keywords": [
-      "temp",
-      "temporary",
-      "dir",
-      "folder"
-    ]
-  },
-  {
-    "title": "Поиск по справочнику",
-    "href": "search.html",
-    "kind": "Инструмент",
-    "category": "Навигация",
-    "description": "Живой статический поиск по ключевым страницам.",
-    "keywords": [
-      "search",
+      "ARRAYREMOVE",
+      "arrays-functions",
+      "array",
       "index",
-      "reference"
+      "array",
+      "index",
+      "dimension"
+    ],
+    "aliases": [
+      "ARRAYREMOVE"
     ]
   },
   {
-    "title": "Строковые функции",
-    "href": "string-functions.html",
-    "kind": "Раздел",
-    "category": "Встроенные функции",
-    "description": "Длина строки, фрагменты, поиск, замена, построение и массивы строк.",
-    "keywords": [
-      "len",
-      "left",
-      "right",
-      "mid",
-      "trim",
-      "replace",
-      "split",
-      "join",
-      "string"
-    ]
-  },
-  {
-    "title": "Длина строки и фрагменты",
-    "href": "string-functions-slices-and-length.html",
-    "kind": "Раздел",
-    "category": "Строковые функции",
-    "description": "LEN, LEFT, RIGHT и MID.",
-    "keywords": [
-      "len",
-      "left",
-      "right",
-      "mid",
-      "substring"
-    ]
-  },
-  {
-    "title": "Обрезка и регистр",
-    "href": "string-functions-trim-and-case.html",
-    "kind": "Раздел",
-    "category": "Строковые функции",
-    "description": "TRIM, LTRIM, RTRIM, LCASE, UCASE и REVERSE.",
-    "keywords": [
-      "trim",
-      "ltrim",
-      "rtrim",
-      "lcase",
-      "ucase",
-      "reverse"
-    ]
-  },
-  {
-    "title": "Поиск и замена в строках",
-    "href": "string-functions-search-and-replace.html",
-    "kind": "Раздел",
-    "category": "Строковые функции",
-    "description": "CONTAINS, REPLACE, REPLACEMANY, INSTR, INSTRREV и SUBSTRCOUNT.",
-    "keywords": [
-      "contains",
-      "replace",
-      "replacemany",
-      "instr",
-      "instrrev",
-      "substrcount",
-      "startswith",
-      "endswith"
-    ]
-  },
-  {
-    "title": "Построение, заполнение и массивы строк",
-    "href": "string-functions-build-and-split.html",
-    "kind": "Раздел",
-    "category": "Строковые функции",
-    "description": "REPEAT, SPACE, STRING, PADLEFT, ASCW, CHRW, SPLIT и JOIN.",
-    "keywords": [
-      "repeat",
-      "space",
-      "string",
-      "padleft",
-      "padright",
-      "center",
-      "insert",
-      "remove",
-      "asc",
-      "ascw",
-      "chr",
-      "chrw",
-      "split",
-      "join"
-    ]
-  },
-  {
-    "title": "Символы CHR, ASC, CHRW и ASCW",
-    "href": "characters.html",
-    "kind": "Раздел",
-    "category": "Строковые функции",
-    "description": "Таблица ASCII/IBM CP866 для CHR(0..255), правила ASC и прямые Unicode-формы ASCW/CHRW.",
-    "keywords": [
-      "chr",
-      "chrw",
-      "asc",
-      "ascw",
-      "cp866",
-      "ascii",
-      "unicode",
-      "character",
-      "код",
-      "символ",
-      "таблица",
-      "рамки",
-      "блок"
-    ]
-  },
-  {
-    "title": "LEN",
-    "href": "function-reference.html#fn-len",
+    "title": "ARRAYRESHAPE",
+    "href": "function-reference.html#fn-arrayreshape",
     "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Длина строки в UTF-16, Unicode-кодах или графемах.",
+    "category": "Массивы",
+    "description": "Копирует последовательность элементов в новую форму, заданную массивом образца.",
     "keywords": [
-      "length",
-      "unicode",
-      "grapheme",
-      "codepoint"
+      "ARRAYRESHAPE",
+      "arrays-and-builtins",
+      "source",
+      "template"
+    ],
+    "aliases": [
+      "ARRAYRESHAPE"
     ]
   },
   {
-    "title": "LEFT",
-    "href": "function-reference.html#fn-left",
+    "title": "ARRAYREVERSE",
+    "href": "function-reference.html#fn-arrayreverse",
     "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Фрагмент с начала строки.",
+    "category": "Массивы",
+    "description": "Меняет порядок элементов исходного массива на обратный.",
     "keywords": [
-      "prefix",
-      "grapheme",
-      "codepoint"
+      "ARRAYREVERSE",
+      "arrays-and-builtins",
+      "array",
+      "array",
+      "dimension"
+    ],
+    "aliases": [
+      "ARRAYREVERSE"
     ]
   },
   {
-    "title": "RIGHT",
-    "href": "function-reference.html#fn-right",
+    "title": "ARRAYSKIP",
+    "href": "function-reference.html#fn-arrayskip",
     "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Фрагмент с конца строки.",
+    "category": "Массивы",
+    "description": "Копирует остаток массива после пропуска указанного количества.",
     "keywords": [
-      "suffix",
-      "grapheme",
-      "codepoint"
+      "ARRAYSKIP",
+      "arrays-and-builtins",
+      "array",
+      "count",
+      "array",
+      "count",
+      "dimension"
+    ],
+    "aliases": [
+      "ARRAYSKIP"
     ]
   },
   {
-    "title": "MID",
-    "href": "function-reference.html#fn-mid",
+    "title": "ARRAYSLICE",
+    "href": "function-reference.html#fn-arrayslice",
     "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Фрагмент строки по позиции и длине.",
+    "category": "Массивы",
+    "description": "Копирует непрерывный диапазон элементов либо срезов массива.",
     "keywords": [
-      "substring",
-      "grapheme",
-      "codepoint"
+      "ARRAYSLICE",
+      "arrays-and-builtins",
+      "array",
+      "start",
+      "count",
+      "array",
+      "start",
+      "count",
+      "dimension"
+    ],
+    "aliases": [
+      "ARRAYSLICE"
     ]
   },
   {
-    "title": "TRIM",
-    "href": "function-reference.html#fn-trim",
+    "title": "ARRAYSOME",
+    "href": "function-reference.html#fn-arraysome",
     "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Удаление символов по краям строки.",
+    "category": "Массивы",
+    "description": "Проверяет, удовлетворяет ли хотя бы один элемент пользовательскому условию.",
     "keywords": [
-      "trim"
+      "ARRAYSOME",
+      "arrays-and-builtins",
+      "array",
+      "predicate"
+    ],
+    "aliases": [
+      "ARRAYSOME"
     ]
   },
   {
-    "title": "LTRIM",
-    "href": "function-reference.html#fn-ltrim",
+    "title": "ARRAYSORT",
+    "href": "function-reference.html#fn-arraysort",
     "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Удаление символов слева.",
+    "category": "Массивы",
+    "description": "Сортирует элементы исходного массива по возрастанию.",
     "keywords": [
-      "ltrim"
+      "ARRAYSORT",
+      "arrays-and-builtins",
+      "array",
+      "array",
+      "dimension"
+    ],
+    "aliases": [
+      "ARRAYSORT"
     ]
   },
   {
-    "title": "RTRIM",
-    "href": "function-reference.html#fn-rtrim",
+    "title": "ARRAYSUM",
+    "href": "function-reference.html#fn-arraysum",
     "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Удаление символов справа.",
+    "category": "Массивы",
+    "description": "Возвращает сумму числовых элементов массива.",
     "keywords": [
-      "rtrim"
+      "ARRAYSUM",
+      "arrays-and-builtins",
+      "array"
+    ],
+    "aliases": [
+      "ARRAYSUM"
     ]
   },
   {
-    "title": "LCASE",
-    "href": "function-reference.html#fn-lcase",
+    "title": "ARRAYTAKE",
+    "href": "function-reference.html#fn-arraytake",
     "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Перевод в нижний регистр.",
+    "category": "Массивы",
+    "description": "Копирует начальную часть массива по указанному количеству.",
     "keywords": [
-      "lower",
-      "case"
+      "ARRAYTAKE",
+      "arrays-and-builtins",
+      "array",
+      "count",
+      "array",
+      "count",
+      "dimension"
+    ],
+    "aliases": [
+      "ARRAYTAKE"
     ]
   },
   {
-    "title": "UCASE",
-    "href": "function-reference.html#fn-ucase",
+    "title": "ARRAYTOREVERSED",
+    "href": "function-reference.html#fn-arraytoreversed",
     "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Перевод в верхний регистр.",
+    "category": "Массивы",
+    "description": "Возвращает копию с обратным порядком элементов.",
     "keywords": [
-      "upper",
-      "case"
+      "ARRAYTOREVERSED",
+      "arrays-and-builtins",
+      "array",
+      "array",
+      "dimension"
+    ],
+    "aliases": [
+      "ARRAYTOREVERSED"
     ]
   },
   {
-    "title": "REVERSE",
-    "href": "function-reference.html#fn-reverse",
+    "title": "ARRAYTOSORTED",
+    "href": "function-reference.html#fn-arraytosorted",
     "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Разворот строки.",
+    "category": "Массивы",
+    "description": "Возвращает отсортированную копию массива.",
     "keywords": [
-      "reverse"
-    ]
-  },
-  {
-    "title": "CONTAINS",
-    "href": "function-reference.html#fn-contains",
-    "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Проверка наличия фрагмента.",
-    "keywords": [
-      "contains"
-    ]
-  },
-  {
-    "title": "STARTSWITH",
-    "href": "function-reference.html#fn-startswith",
-    "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Проверка начала строки.",
-    "keywords": [
-      "startswith",
-      "prefix"
-    ]
-  },
-  {
-    "title": "ENDSWITH",
-    "href": "function-reference.html#fn-endswith",
-    "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Проверка конца строки.",
-    "keywords": [
-      "endswith",
-      "suffix"
-    ]
-  },
-  {
-    "title": "REPLACE",
-    "href": "function-reference.html#fn-replace",
-    "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Замена найденных вхождений.",
-    "keywords": [
-      "replace"
-    ]
-  },
-  {
-    "title": "REPLACEMANY",
-    "href": "function-reference.html#fn-replacemany",
-    "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Табличная замена многих фрагментов за один проход.",
-    "keywords": [
-      "replace",
-      "many",
-      "table",
-      "массовая",
-      "замена"
-    ]
-  },
-  {
-    "title": "INSTR",
-    "href": "function-reference.html#fn-instr",
-    "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Позиция первого вхождения.",
-    "keywords": [
-      "find",
-      "position"
-    ]
-  },
-  {
-    "title": "INSTRREV",
-    "href": "function-reference.html#fn-instrrev",
-    "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Позиция последнего вхождения.",
-    "keywords": [
-      "find",
-      "position",
-      "reverse"
-    ]
-  },
-  {
-    "title": "SUBSTRCOUNT",
-    "href": "function-reference.html#fn-substrcount",
-    "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Число непересекающихся вхождений.",
-    "keywords": [
-      "count"
-    ]
-  },
-  {
-    "title": "REPEAT",
-    "href": "function-reference.html#fn-repeat",
-    "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Повтор строки заданное число раз.",
-    "keywords": [
-      "repeat"
-    ]
-  },
-  {
-    "title": "SPACE",
-    "href": "function-reference.html#fn-space",
-    "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Строка из пробелов.",
-    "keywords": [
-      "space"
-    ]
-  },
-  {
-    "title": "STRING",
-    "href": "function-reference.html#fn-string",
-    "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Строка из символов-заполнителей.",
-    "keywords": [
-      "fill"
-    ]
-  },
-  {
-    "title": "PADLEFT",
-    "href": "function-reference.html#fn-padleft",
-    "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Дополнение строки слева.",
-    "keywords": [
-      "padleft"
-    ]
-  },
-  {
-    "title": "PADRIGHT",
-    "href": "function-reference.html#fn-padright",
-    "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Дополнение строки справа.",
-    "keywords": [
-      "padright"
-    ]
-  },
-  {
-    "title": "CENTER",
-    "href": "function-reference.html#fn-center",
-    "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Центрирование строки.",
-    "keywords": [
-      "center"
-    ]
-  },
-  {
-    "title": "INSERT",
-    "href": "function-reference.html#fn-insert",
-    "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Вставка фрагмента в строку.",
-    "keywords": [
-      "insert"
-    ]
-  },
-  {
-    "title": "REMOVE",
-    "href": "function-reference.html#fn-remove",
-    "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Удаление фрагмента из строки.",
-    "keywords": [
-      "remove"
+      "ARRAYTOSORTED",
+      "arrays-and-builtins",
+      "array",
+      "array",
+      "dimension"
+    ],
+    "aliases": [
+      "ARRAYTOSORTED"
     ]
   },
   {
     "title": "ASC",
     "href": "function-reference.html#fn-asc",
     "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Код первого символа: ASCII/IBM CP866 для представимых символов или Unicode-код.",
+    "category": "Строки и символы",
+    "description": "Возвращает код первого символа строки в CP866, если он представлен в этой таблице, иначе его Unicode-код.",
     "keywords": [
-      "unicode",
-      "code",
-      "cp866",
-      "ascii",
-      "символ"
+      "ASC",
+      "characters",
+      "text"
+    ],
+    "aliases": [
+      "ASC"
     ]
   },
   {
     "title": "ASCW",
     "href": "function-reference.html#fn-ascw",
     "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Unicode-код первого символа без CP866-подмены.",
+    "category": "Строки и символы",
+    "description": "Возвращает Unicode-код первого символа строки без преобразования через CP866.",
     "keywords": [
-      "unicode",
-      "code",
-      "код",
-      "символ"
+      "ASCW",
+      "characters",
+      "text"
+    ],
+    "aliases": [
+      "ASCW"
+    ]
+  },
+  {
+    "title": "ASIN",
+    "href": "function-reference.html#fn-asin",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает арксинус числа.",
+    "keywords": [
+      "ASIN",
+      "numeric-functions-trigonometry",
+      "value"
+    ],
+    "aliases": [
+      "ASIN"
+    ]
+  },
+  {
+    "title": "ASINH",
+    "href": "function-reference.html#fn-asinh",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает обратный гиперболический синус числа.",
+    "keywords": [
+      "ASINH",
+      "numeric-functions-trigonometry",
+      "value"
+    ],
+    "aliases": [
+      "ASINH"
+    ]
+  },
+  {
+    "title": "ATANH",
+    "href": "function-reference.html#fn-atanh",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает обратный гиперболический тангенс числа.",
+    "keywords": [
+      "ATANH",
+      "numeric-functions-trigonometry",
+      "value"
+    ],
+    "aliases": [
+      "ATANH"
+    ]
+  },
+  {
+    "title": "ATN",
+    "href": "function-reference.html#fn-atn",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает арктангенс числа.",
+    "keywords": [
+      "ATN",
+      "numeric-functions-trigonometry",
+      "value"
+    ],
+    "aliases": [
+      "ATN"
+    ]
+  },
+  {
+    "title": "ATN2",
+    "href": "function-reference.html#fn-atn2",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает угол направления точки относительно положительной оси x.",
+    "keywords": [
+      "ATN2",
+      "numeric-functions-trigonometry",
+      "y",
+      "x"
+    ],
+    "aliases": [
+      "ATN2"
+    ]
+  },
+  {
+    "title": "CBRT",
+    "href": "function-reference.html#fn-cbrt",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает кубический корень числа.",
+    "keywords": [
+      "CBRT",
+      "numeric-functions-roots-rounding",
+      "value"
+    ],
+    "aliases": [
+      "CBRT"
+    ]
+  },
+  {
+    "title": "CDBL",
+    "href": "function-reference.html#fn-cdbl",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает число, преобразованное в DOUBLE.",
+    "keywords": [
+      "CDBL",
+      "numeric-functions-conversion-and-legacy",
+      "value"
+    ],
+    "aliases": [
+      "CDBL"
+    ]
+  },
+  {
+    "title": "CDEC",
+    "href": "function-reference.html#fn-cdec",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает число, преобразованное в DECIMAL.",
+    "keywords": [
+      "CDEC",
+      "numeric-functions-conversion-and-legacy",
+      "value"
+    ],
+    "aliases": [
+      "CDEC"
+    ]
+  },
+  {
+    "title": "CEIL",
+    "href": "function-reference.html#fn-ceil",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает наименьшее целое значение, не меньшее аргумента.",
+    "keywords": [
+      "CEIL",
+      "numeric-functions-roots-rounding",
+      "value"
+    ],
+    "aliases": [
+      "CEIL"
+    ]
+  },
+  {
+    "title": "CENTER",
+    "href": "function-reference.html#fn-center",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Возвращает строку, дополнив её с обеих сторон до заданной ширины.",
+    "keywords": [
+      "CENTER",
+      "string-functions-build-and-split",
+      "text",
+      "width",
+      "text",
+      "width",
+      "fill"
+    ],
+    "aliases": [
+      "CENTER"
+    ]
+  },
+  {
+    "title": "CHANGEDIR",
+    "href": "function-reference.html#fn-changedir",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Меняет рабочую папку текущего запуска.",
+    "keywords": [
+      "CHANGEDIR",
+      "file-system-functions-management",
+      "path"
+    ],
+    "aliases": [
+      "CHANGEDIR"
     ]
   },
   {
     "title": "CHR",
     "href": "function-reference.html#fn-chr",
     "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Символ по коду: ASCII/IBM CP866 для 0..255 или Unicode выше 255.",
+    "category": "Строки и символы",
+    "description": "Создаёт строку с символом по коду CP866 для значений 0–255 или по Unicode-коду для больших значений.",
     "keywords": [
-      "unicode",
-      "code",
-      "cp866",
-      "ascii",
-      "символ"
+      "CHR",
+      "characters",
+      "code"
+    ],
+    "aliases": [
+      "CHR"
     ]
   },
   {
     "title": "CHRW",
     "href": "function-reference.html#fn-chrw",
     "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Символ по Unicode-коду без CP866-подмены.",
+    "category": "Строки и символы",
+    "description": "Создаёт строку с символом по Unicode-коду без подмены младшего диапазона таблицей CP866.",
     "keywords": [
-      "unicode",
-      "code",
-      "код",
-      "символ"
+      "CHRW",
+      "characters",
+      "code"
+    ],
+    "aliases": [
+      "CHRW"
     ]
   },
   {
-    "title": "SPLIT",
-    "href": "function-reference.html#fn-split",
+    "title": "CINT",
+    "href": "function-reference.html#fn-cint",
     "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Разбиение строки в массив строк.",
+    "category": "Числа и математические функции",
+    "description": "Возвращает целую часть числа в типе INTEGER.",
     "keywords": [
-      "array"
+      "CINT",
+      "numeric-functions-conversion-and-legacy",
+      "value"
+    ],
+    "aliases": [
+      "CINT"
+    ]
+  },
+  {
+    "title": "CLAMP",
+    "href": "function-reference.html#fn-clamp",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает число, ограниченное заданным включительным диапазоном.",
+    "keywords": [
+      "CLAMP",
+      "numeric-functions-core",
+      "value",
+      "low",
+      "high"
+    ],
+    "aliases": [
+      "CLAMP"
+    ]
+  },
+  {
+    "title": "CLNG",
+    "href": "function-reference.html#fn-clng",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает целую часть числа в типе LONG.",
+    "keywords": [
+      "CLNG",
+      "numeric-functions-conversion-and-legacy",
+      "value"
+    ],
+    "aliases": [
+      "CLNG"
+    ]
+  },
+  {
+    "title": "COMBINEPATH",
+    "href": "function-reference.html#fn-combinepath",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Соединяет две строковые части пути.",
+    "keywords": [
+      "COMBINEPATH",
+      "file-system-functions-paths",
+      "left",
+      "right"
+    ],
+    "aliases": [
+      "COMBINEPATH"
+    ]
+  },
+  {
+    "title": "CONTAINS",
+    "href": "function-reference.html#fn-contains",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Проверяет, содержит ли строка указанный фрагмент.",
+    "keywords": [
+      "CONTAINS",
+      "string-functions-search-and-replace",
+      "text",
+      "fragment"
+    ],
+    "aliases": [
+      "CONTAINS"
+    ]
+  },
+  {
+    "title": "COPYDIR",
+    "href": "function-reference.html#fn-copydir",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Копирует дерево обычных файлов и каталогов.",
+    "keywords": [
+      "COPYDIR",
+      "file-system-functions-management",
+      "source",
+      "destination",
+      "source",
+      "destination",
+      "overwrite"
+    ],
+    "aliases": [
+      "COPYDIR"
+    ]
+  },
+  {
+    "title": "COPYFILE",
+    "href": "function-reference.html#fn-copyfile",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Копирует содержимое существующего файла в другой файл.",
+    "keywords": [
+      "COPYFILE",
+      "file-system-functions-management",
+      "source",
+      "destination",
+      "source",
+      "destination",
+      "overwrite"
+    ],
+    "aliases": [
+      "COPYFILE"
+    ]
+  },
+  {
+    "title": "COS",
+    "href": "function-reference.html#fn-cos",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает косинус угла.",
+    "keywords": [
+      "COS",
+      "numeric-functions-trigonometry",
+      "value"
+    ],
+    "aliases": [
+      "COS"
+    ]
+  },
+  {
+    "title": "COSH",
+    "href": "function-reference.html#fn-cosh",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает гиперболический косинус числа.",
+    "keywords": [
+      "COSH",
+      "numeric-functions-trigonometry",
+      "value"
+    ],
+    "aliases": [
+      "COSH"
+    ]
+  },
+  {
+    "title": "CURRENTDIR",
+    "href": "function-reference.html#fn-currentdir",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает полный путь рабочей папки текущего запуска.",
+    "keywords": [
+      "CURRENTDIR",
+      "file-system-functions-management"
+    ],
+    "aliases": [
+      "CURRENTDIR"
+    ]
+  },
+  {
+    "title": "DATE",
+    "href": "function-reference.html#fn-date",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает текущую календарную дату.",
+    "keywords": [
+      "DATE",
+      "date-time-functions-current",
+      "timeZone"
+    ],
+    "aliases": [
+      "DATE"
+    ]
+  },
+  {
+    "title": "DATEADD",
+    "href": "function-reference.html#fn-dateadd",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает дату или время после прибавления указанного числа интервалов.",
+    "keywords": [
+      "DATEADD",
+      "date-time-functions-arithmetic-and-validation",
+      "interval",
+      "number",
+      "value",
+      "interval",
+      "number",
+      "value",
+      "interval",
+      "number",
+      "value"
+    ],
+    "aliases": [
+      "DATEADD"
+    ]
+  },
+  {
+    "title": "DATEDIFF",
+    "href": "function-reference.html#fn-datediff",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает число пересечённых границ указанного интервала между двумя значениями.",
+    "keywords": [
+      "DATEDIFF",
+      "date-time-functions-arithmetic-and-validation",
+      "interval",
+      "fromValue",
+      "toValue",
+      "interval",
+      "fromValue",
+      "toValue",
+      "interval",
+      "fromValue",
+      "toValue"
+    ],
+    "aliases": [
+      "DATEDIFF"
+    ]
+  },
+  {
+    "title": "DATEPART",
+    "href": "function-reference.html#fn-datepart",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает выбранную календарную или временную часть значения.",
+    "keywords": [
+      "DATEPART",
+      "date-time-functions-arithmetic-and-validation",
+      "part",
+      "value",
+      "part",
+      "value",
+      "part",
+      "value"
+    ],
+    "aliases": [
+      "DATEPART"
+    ]
+  },
+  {
+    "title": "DATESERIAL",
+    "href": "function-reference.html#fn-dateserial",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает дату, собранную из года, месяца и дня.",
+    "keywords": [
+      "DATESERIAL",
+      "date-time-functions-parts-and-serial",
+      "year",
+      "month",
+      "day"
+    ],
+    "aliases": [
+      "DATESERIAL"
+    ]
+  },
+  {
+    "title": "DATEVALUE",
+    "href": "function-reference.html#fn-datevalue",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает календарную дату, прочитанную из строки.",
+    "keywords": [
+      "DATEVALUE",
+      "date-time-functions-arithmetic-and-validation",
+      "value"
+    ],
+    "aliases": [
+      "DATEVALUE"
+    ]
+  },
+  {
+    "title": "DAY",
+    "href": "function-reference.html#fn-day",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает номер дня внутри месяца.",
+    "keywords": [
+      "DAY",
+      "date-time-functions-parts-and-serial",
+      "value"
+    ],
+    "aliases": [
+      "DAY"
+    ]
+  },
+  {
+    "title": "DAYSINMONTH",
+    "href": "function-reference.html#fn-daysinmonth",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает количество дней в месяце.",
+    "keywords": [
+      "DAYSINMONTH",
+      "date-time-functions-parts-and-serial",
+      "year",
+      "month"
+    ],
+    "aliases": [
+      "DAYSINMONTH"
+    ]
+  },
+  {
+    "title": "DELETEDIR",
+    "href": "function-reference.html#fn-deletedir",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Удаляет пустой каталог.",
+    "keywords": [
+      "DELETEDIR",
+      "file-system-functions-management",
+      "path"
+    ],
+    "aliases": [
+      "DELETEDIR"
+    ]
+  },
+  {
+    "title": "DELETEDIRRECURSIVE",
+    "href": "function-reference.html#fn-deletedirrecursive",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Удаляет каталог со всем его содержимым.",
+    "keywords": [
+      "DELETEDIRRECURSIVE",
+      "file-system-functions-management",
+      "path"
+    ],
+    "aliases": [
+      "DELETEDIRRECURSIVE"
+    ]
+  },
+  {
+    "title": "DELETEFILE",
+    "href": "function-reference.html#fn-deletefile",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Удаляет файл по заданному пути.",
+    "keywords": [
+      "DELETEFILE",
+      "file-system-functions-management",
+      "path"
+    ],
+    "aliases": [
+      "DELETEFILE"
+    ]
+  },
+  {
+    "title": "DIRDATE",
+    "href": "function-reference.html#fn-dirdate",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает местные дату и время последней записи в каталог.",
+    "keywords": [
+      "DIRDATE",
+      "file-system-functions-paths",
+      "path"
+    ],
+    "aliases": [
+      "DIRDATE"
+    ]
+  },
+  {
+    "title": "DIREXISTS",
+    "href": "function-reference.html#fn-direxists",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Проверяет, существует ли каталог по заданному пути.",
+    "keywords": [
+      "DIREXISTS",
+      "file-system-functions-text",
+      "path"
+    ],
+    "aliases": [
+      "DIREXISTS"
+    ]
+  },
+  {
+    "title": "DIRNAME",
+    "href": "function-reference.html#fn-dirname",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает полный путь родительского каталога.",
+    "keywords": [
+      "DIRNAME",
+      "file-system-functions-paths",
+      "path"
+    ],
+    "aliases": [
+      "DIRNAME"
+    ]
+  },
+  {
+    "title": "DIRSIZE",
+    "href": "function-reference.html#fn-dirsize",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает суммарный размер обычных файлов дерева каталога в байтах.",
+    "keywords": [
+      "DIRSIZE",
+      "file-system-functions-management",
+      "path"
+    ],
+    "aliases": [
+      "DIRSIZE"
+    ]
+  },
+  {
+    "title": "DRIVEFORMAT",
+    "href": "function-reference.html#fn-driveformat",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает имя файловой системы диска.",
+    "keywords": [
+      "DRIVEFORMAT",
+      "file-system-functions-management",
+      "path"
+    ],
+    "aliases": [
+      "DRIVEFORMAT"
+    ]
+  },
+  {
+    "title": "DRIVENAME",
+    "href": "function-reference.html#fn-drivename",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает строковое имя корня диска.",
+    "keywords": [
+      "DRIVENAME",
+      "file-system-functions-management",
+      "path"
+    ],
+    "aliases": [
+      "DRIVENAME"
+    ]
+  },
+  {
+    "title": "DRIVETYPE",
+    "href": "function-reference.html#fn-drivetype",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает строковое название типа диска.",
+    "keywords": [
+      "DRIVETYPE",
+      "file-system-functions-management",
+      "path"
+    ],
+    "aliases": [
+      "DRIVETYPE"
+    ]
+  },
+  {
+    "title": "ENDOFMONTH",
+    "href": "function-reference.html#fn-endofmonth",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает последний день месяца исходной даты.",
+    "keywords": [
+      "ENDOFMONTH",
+      "date-time-functions-parts-and-serial",
+      "value"
+    ],
+    "aliases": [
+      "ENDOFMONTH"
+    ]
+  },
+  {
+    "title": "ENDOFYEAR",
+    "href": "function-reference.html#fn-endofyear",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает последний день года исходной даты.",
+    "keywords": [
+      "ENDOFYEAR",
+      "date-time-functions-parts-and-serial",
+      "value"
+    ],
+    "aliases": [
+      "ENDOFYEAR"
+    ]
+  },
+  {
+    "title": "ENDSWITH",
+    "href": "function-reference.html#fn-endswith",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Проверяет, заканчивается ли строка указанным фрагментом.",
+    "keywords": [
+      "ENDSWITH",
+      "string-functions-search-and-replace",
+      "text",
+      "fragment"
+    ],
+    "aliases": [
+      "ENDSWITH"
+    ]
+  },
+  {
+    "title": "EOF",
+    "href": "function-reference.html#fn-eof",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Проверяет, достигнута ли конечная байтовая позиция файла при чтении.",
+    "keywords": [
+      "EOF",
+      "file-system-functions-open-files",
+      "file"
+    ],
+    "aliases": [
+      "EOF"
+    ]
+  },
+  {
+    "title": "EXP",
+    "href": "function-reference.html#fn-exp",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает значение экспоненты e в степени аргумента.",
+    "keywords": [
+      "EXP",
+      "numeric-functions-roots-rounding",
+      "value"
+    ],
+    "aliases": [
+      "EXP"
+    ]
+  },
+  {
+    "title": "EXTNAME",
+    "href": "function-reference.html#fn-extname",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает расширение последнего компонента пути вместе с точкой.",
+    "keywords": [
+      "EXTNAME",
+      "file-system-functions-paths",
+      "path"
+    ],
+    "aliases": [
+      "EXTNAME"
+    ]
+  },
+  {
+    "title": "FILEACCESSEDDATE",
+    "href": "function-reference.html#fn-fileaccesseddate",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает местные дату и время последнего доступа к файлу.",
+    "keywords": [
+      "FILEACCESSEDDATE",
+      "file-system-functions-paths",
+      "path"
+    ],
+    "aliases": [
+      "FILEACCESSEDDATE"
+    ]
+  },
+  {
+    "title": "FILECREATEDATE",
+    "href": "function-reference.html#fn-filecreatedate",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает местные дату и время создания файла.",
+    "keywords": [
+      "FILECREATEDATE",
+      "file-system-functions-paths",
+      "path"
+    ],
+    "aliases": [
+      "FILECREATEDATE"
+    ]
+  },
+  {
+    "title": "FILEDATE",
+    "href": "function-reference.html#fn-filedate",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает местные дату и время последней записи в файл.",
+    "keywords": [
+      "FILEDATE",
+      "file-system-functions-paths",
+      "path"
+    ],
+    "aliases": [
+      "FILEDATE"
+    ]
+  },
+  {
+    "title": "FILEEXISTS",
+    "href": "function-reference.html#fn-fileexists",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Проверяет, существует ли обычный файл по заданному пути.",
+    "keywords": [
+      "FILEEXISTS",
+      "file-system-functions-text",
+      "path"
+    ],
+    "aliases": [
+      "FILEEXISTS"
+    ]
+  },
+  {
+    "title": "FILELENGTH",
+    "href": "function-reference.html#fn-filelength",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает текущую длину содержимого открытого файла в байтах.",
+    "keywords": [
+      "FILELENGTH",
+      "file-system-functions-open-files",
+      "file"
+    ],
+    "aliases": [
+      "FILELENGTH"
+    ]
+  },
+  {
+    "title": "FILEMODE",
+    "href": "function-reference.html#fn-filemode",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает строковое имя режима открытого ресурса FILE.",
+    "keywords": [
+      "FILEMODE",
+      "file-system-functions-open-files",
+      "file"
+    ],
+    "aliases": [
+      "FILEMODE"
+    ]
+  },
+  {
+    "title": "FILENAME",
+    "href": "function-reference.html#fn-filename",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает последнюю часть полного пути вместе с расширением.",
+    "keywords": [
+      "FILENAME",
+      "file-system-functions-paths",
+      "path"
+    ],
+    "aliases": [
+      "FILENAME"
+    ]
+  },
+  {
+    "title": "FILEPATH",
+    "href": "function-reference.html#fn-filepath",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает полный путь открытого ресурса FILE.",
+    "keywords": [
+      "FILEPATH",
+      "file-system-functions-open-files",
+      "file"
+    ],
+    "aliases": [
+      "FILEPATH"
+    ]
+  },
+  {
+    "title": "FILEPOS",
+    "href": "function-reference.html#fn-filepos",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает текущую байтовую позицию открытого файла.",
+    "keywords": [
+      "FILEPOS",
+      "file-system-functions-open-files",
+      "file"
+    ],
+    "aliases": [
+      "FILEPOS"
+    ]
+  },
+  {
+    "title": "FILESIZE",
+    "href": "function-reference.html#fn-filesize",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает физическую длину файла в байтах.",
+    "keywords": [
+      "FILESIZE",
+      "file-system-functions-paths",
+      "path"
+    ],
+    "aliases": [
+      "FILESIZE"
+    ]
+  },
+  {
+    "title": "FIX",
+    "href": "function-reference.html#fn-fix",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает целую часть числа после удаления дробной части.",
+    "keywords": [
+      "FIX",
+      "numeric-functions-roots-rounding",
+      "value"
+    ],
+    "aliases": [
+      "FIX"
+    ]
+  },
+  {
+    "title": "FLOOR",
+    "href": "function-reference.html#fn-floor",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает наибольшее целое значение, не превышающее аргумент.",
+    "keywords": [
+      "FLOOR",
+      "numeric-functions-roots-rounding",
+      "value"
+    ],
+    "aliases": [
+      "FLOOR"
+    ]
+  },
+  {
+    "title": "FLUSH",
+    "href": "function-reference.html#fn-flush",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Передаёт накопленные байты записи в файловый поток.",
+    "keywords": [
+      "FLUSH",
+      "file-system-functions-open-files",
+      "file"
+    ],
+    "aliases": [
+      "FLUSH"
+    ]
+  },
+  {
+    "title": "FREESPACE",
+    "href": "function-reference.html#fn-freespace",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает число свободных байтов диска, доступных текущему пользователю.",
+    "keywords": [
+      "FREESPACE",
+      "file-system-functions-management",
+      "path"
+    ],
+    "aliases": [
+      "FREESPACE"
+    ]
+  },
+  {
+    "title": "FROMUTC",
+    "href": "function-reference.html#fn-fromutc",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает дату и время, преобразованные из UTC в выбранный пояс.",
+    "keywords": [
+      "FROMUTC",
+      "date-time-functions-time-zones",
+      "value",
+      "value",
+      "timeZone"
+    ],
+    "aliases": [
+      "FROMUTC"
+    ]
+  },
+  {
+    "title": "FULLPATH",
+    "href": "function-reference.html#fn-fullpath",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Преобразует строку пути в полный путь.",
+    "keywords": [
+      "FULLPATH",
+      "file-system-functions-paths",
+      "path"
+    ],
+    "aliases": [
+      "FULLPATH"
+    ]
+  },
+  {
+    "title": "GETDIRS",
+    "href": "function-reference.html#fn-getdirs",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает массив полных путей каталогов непосредственно в указанном каталоге.",
+    "keywords": [
+      "GETDIRS",
+      "file-system-functions-paths",
+      "path",
+      "path",
+      "pattern"
+    ],
+    "aliases": [
+      "GETDIRS"
+    ]
+  },
+  {
+    "title": "GETFILES",
+    "href": "function-reference.html#fn-getfiles",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает массив полных путей файлов непосредственно в указанном каталоге.",
+    "keywords": [
+      "GETFILES",
+      "file-system-functions-paths",
+      "path",
+      "path",
+      "pattern"
+    ],
+    "aliases": [
+      "GETFILES"
+    ]
+  },
+  {
+    "title": "HOUR",
+    "href": "function-reference.html#fn-hour",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает час времени суток.",
+    "keywords": [
+      "HOUR",
+      "date-time-functions-parts-and-serial",
+      "value"
+    ],
+    "aliases": [
+      "HOUR"
+    ]
+  },
+  {
+    "title": "IMAGEHEIGHT",
+    "href": "function-reference.html#fn-imageheight",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает высоту загруженного изображения в пикселях или 0 для пустого значения изображения.",
+    "keywords": [
+      "IMAGEHEIGHT",
+      "images",
+      "image"
+    ],
+    "aliases": [
+      "IMAGEHEIGHT"
+    ]
+  },
+  {
+    "title": "IMAGEWIDTH",
+    "href": "function-reference.html#fn-imagewidth",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает ширину загруженного изображения в пикселях или 0 для пустого значения изображения.",
+    "keywords": [
+      "IMAGEWIDTH",
+      "images",
+      "image"
+    ],
+    "aliases": [
+      "IMAGEWIDTH"
+    ]
+  },
+  {
+    "title": "INKEY",
+    "href": "function-reference.html#fn-inkey",
+    "kind": "Функция",
+    "category": "Клавиатура, мышь и события",
+    "description": "Извлекает следующую клавишу из очереди ввода без ожидания и возвращает её строковое представление либо пустую строку, если очередь пуста.",
+    "keywords": [
+      "INKEY",
+      "inkey"
+    ],
+    "aliases": [
+      "INKEY"
+    ]
+  },
+  {
+    "title": "INSERT",
+    "href": "function-reference.html#fn-insert",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Возвращает строку, вставив фрагмент перед указанной позицией.",
+    "keywords": [
+      "INSERT",
+      "string-functions-build-and-split",
+      "text",
+      "start",
+      "fragment"
+    ],
+    "aliases": [
+      "INSERT"
+    ]
+  },
+  {
+    "title": "INSTR",
+    "href": "function-reference.html#fn-instr",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Возвращает позицию первого вхождения фрагмента в строку.",
+    "keywords": [
+      "INSTR",
+      "string-functions-search-and-replace",
+      "text",
+      "fragment",
+      "start",
+      "text",
+      "fragment"
+    ],
+    "aliases": [
+      "INSTR"
+    ]
+  },
+  {
+    "title": "INSTRREV",
+    "href": "function-reference.html#fn-instrrev",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Возвращает позицию вхождения фрагмента, найденного при поиске справа налево.",
+    "keywords": [
+      "INSTRREV",
+      "string-functions-search-and-replace",
+      "text",
+      "fragment",
+      "start",
+      "text",
+      "fragment"
+    ],
+    "aliases": [
+      "INSTRREV"
+    ]
+  },
+  {
+    "title": "INT",
+    "href": "function-reference.html#fn-int",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает наибольшее целое, не превышающее число.",
+    "keywords": [
+      "INT",
+      "numeric-functions-conversion-and-legacy",
+      "value"
+    ],
+    "aliases": [
+      "INT"
+    ]
+  },
+  {
+    "title": "ISABSOLUTEPATH",
+    "href": "function-reference.html#fn-isabsolutepath",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Проверяет, полностью ли задан путь без обращения к рабочему каталогу.",
+    "keywords": [
+      "ISABSOLUTEPATH",
+      "file-system-functions-paths",
+      "path"
+    ],
+    "aliases": [
+      "ISABSOLUTEPATH"
+    ]
+  },
+  {
+    "title": "ISDATE",
+    "href": "function-reference.html#fn-isdate",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает признак допустимости канонической строки даты, времени или даты-времени.",
+    "keywords": [
+      "ISDATE",
+      "date-time-functions-arithmetic-and-validation",
+      "value"
+    ],
+    "aliases": [
+      "ISDATE"
+    ]
+  },
+  {
+    "title": "ISHIDDEN",
+    "href": "function-reference.html#fn-ishidden",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Проверяет атрибут «скрытый» файла или каталога.",
+    "keywords": [
+      "ISHIDDEN",
+      "file-system-functions-management",
+      "path"
+    ],
+    "aliases": [
+      "ISHIDDEN"
+    ]
+  },
+  {
+    "title": "ISLEAPYEAR",
+    "href": "function-reference.html#fn-isleapyear",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает признак високосности года.",
+    "keywords": [
+      "ISLEAPYEAR",
+      "date-time-functions-parts-and-serial",
+      "year"
+    ],
+    "aliases": [
+      "ISLEAPYEAR"
+    ]
+  },
+  {
+    "title": "ISNUMERIC",
+    "href": "function-reference.html#fn-isnumeric",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает признак полной записи конечного числа DOUBLE в строке.",
+    "keywords": [
+      "ISNUMERIC",
+      "isnumeric",
+      "text"
+    ],
+    "aliases": [
+      "ISNUMERIC"
+    ]
+  },
+  {
+    "title": "ISOPEN",
+    "href": "function-reference.html#fn-isopen",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Проверяет, открыт ли ресурс FILE.",
+    "keywords": [
+      "ISOPEN",
+      "file-system-functions-open-files",
+      "file"
+    ],
+    "aliases": [
+      "ISOPEN"
+    ]
+  },
+  {
+    "title": "ISREADONLY",
+    "href": "function-reference.html#fn-isreadonly",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Проверяет атрибут «только для чтения» файла или каталога.",
+    "keywords": [
+      "ISREADONLY",
+      "file-system-functions-management",
+      "path"
+    ],
+    "aliases": [
+      "ISREADONLY"
     ]
   },
   {
     "title": "JOIN",
     "href": "function-reference.html#fn-join",
     "kind": "Функция",
-    "category": "Строковые функции",
-    "description": "Сборка строки из массива строк.",
+    "category": "Строки и символы",
+    "description": "Соединяет элементы массива строк и возвращает одну строку.",
     "keywords": [
-      "array"
+      "JOIN",
+      "string-functions-build-and-split",
+      "items",
+      "items",
+      "separator"
+    ],
+    "aliases": [
+      "JOIN"
     ]
   },
   {
-    "title": "Регулярные выражения",
-    "href": "regex-functions.html",
-    "kind": "Раздел",
-    "category": "Встроенные функции",
-    "description": "Проверка, извлечение, разбиение, замена и подсчёт совпадений.",
+    "title": "KEYDOWN",
+    "href": "function-reference.html#fn-keydown",
+    "kind": "Функция",
+    "category": "Клавиатура, мышь и события",
+    "description": "Проверяет текущее удержание клавиши или всех клавиш сочетания, сохраняя события в очереди ввода.",
     "keywords": [
-      "regex",
-      "pattern",
-      "match",
-      "replace",
-      "split",
+      "KEYDOWN",
+      "keydown",
+      "keyText"
+    ],
+    "aliases": [
+      "KEYDOWN"
+    ]
+  },
+  {
+    "title": "KEYPRESS",
+    "href": "function-reference.html#fn-keypress",
+    "kind": "Функция",
+    "category": "Клавиатура, мышь и события",
+    "description": "Ищет непрочитанное нажатие клавиши, удаляет первое подходящее событие из очереди и сообщает, было ли оно найдено.",
+    "keywords": [
+      "KEYPRESS",
+      "keypress",
+      "keyText"
+    ],
+    "aliases": [
+      "KEYPRESS"
+    ]
+  },
+  {
+    "title": "LBOUND",
+    "href": "function-reference.html#fn-lbound",
+    "kind": "Функция",
+    "category": "Массивы",
+    "description": "Возвращает нижнюю границу выбранного измерения массива.",
+    "keywords": [
+      "LBOUND",
+      "arrays-functions",
+      "array",
+      "array",
+      "dimension"
+    ],
+    "aliases": [
+      "LBOUND"
+    ]
+  },
+  {
+    "title": "LCASE",
+    "href": "function-reference.html#fn-lcase",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Возвращает строку, преобразовав буквы в нижний регистр.",
+    "keywords": [
+      "LCASE",
+      "string-functions-trim-and-case",
+      "text"
+    ],
+    "aliases": [
+      "LCASE"
+    ]
+  },
+  {
+    "title": "LEFT",
+    "href": "function-reference.html#fn-left",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Возвращает фрагмент заданной длины из начала строки.",
+    "keywords": [
+      "LEFT",
+      "string-functions-slices-and-length",
+      "text",
+      "count",
+      "text",
+      "count",
+      "unit"
+    ],
+    "aliases": [
+      "LEFT"
+    ]
+  },
+  {
+    "title": "LEN",
+    "href": "function-reference.html#fn-len",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Возвращает длину строки в выбранных единицах текста.",
+    "keywords": [
+      "LEN",
+      "string-functions-slices-and-length",
+      "text",
+      "text",
+      "unit"
+    ],
+    "aliases": [
+      "LEN"
+    ]
+  },
+  {
+    "title": "LINENUMBER",
+    "href": "function-reference.html#fn-linenumber",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает номер строки в текущей позиции чтения.",
+    "keywords": [
+      "LINENUMBER",
+      "file-system-functions-open-files",
+      "file"
+    ],
+    "aliases": [
+      "LINENUMBER"
+    ]
+  },
+  {
+    "title": "LOADIMAGE",
+    "href": "function-reference.html#fn-loadimage",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Загружает файл изображения и возвращает ресурс, который можно измерять и рисовать на графической поверхности.",
+    "keywords": [
+      "LOADIMAGE",
+      "images",
+      "path"
+    ],
+    "aliases": [
+      "LOADIMAGE"
+    ]
+  },
+  {
+    "title": "LOADSPRITE",
+    "href": "function-reference.html#fn-loadsprite",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Загружает изображение как спрайтовый лист и разбивает его на прямоугольные кадры указанного размера.",
+    "keywords": [
+      "LOADSPRITE",
+      "sprites",
+      "path",
+      "frameWidth",
+      "frameHeight"
+    ],
+    "aliases": [
+      "LOADSPRITE"
+    ]
+  },
+  {
+    "title": "LOADTILEMAP",
+    "href": "function-reference.html#fn-loadtilemap",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Принимает путь типа STRING, читает карту Tiled и возвращает значение типа TILEMAP.",
+    "keywords": [
+      "LOADTILEMAP",
+      "tilemaps",
+      "path"
+    ],
+    "aliases": [
+      "LOADTILEMAP"
+    ]
+  },
+  {
+    "title": "LOADTILESET",
+    "href": "function-reference.html#fn-loadtileset",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Загружает изображение с сеткой тайлов и возвращает TILESET.",
+    "keywords": [
+      "LOADTILESET",
+      "tilesets",
+      "path",
+      "tileWidth",
+      "tileHeight",
+      "path",
+      "tileWidth",
+      "tileHeight",
+      "margin",
+      "path",
+      "tileWidth",
+      "tileHeight",
+      "margin",
+      "spacing"
+    ],
+    "aliases": [
+      "LOADTILESET"
+    ]
+  },
+  {
+    "title": "LOG",
+    "href": "function-reference.html#fn-log",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает натуральный логарифм числа.",
+    "keywords": [
+      "LOG",
+      "numeric-functions-roots-rounding",
+      "value"
+    ],
+    "aliases": [
+      "LOG"
+    ]
+  },
+  {
+    "title": "LOG10",
+    "href": "function-reference.html#fn-log10",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает десятичный логарифм числа.",
+    "keywords": [
+      "LOG10",
+      "numeric-functions-roots-rounding",
+      "value"
+    ],
+    "aliases": [
+      "LOG10"
+    ]
+  },
+  {
+    "title": "LOG2",
+    "href": "function-reference.html#fn-log2",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает двоичный логарифм числа.",
+    "keywords": [
+      "LOG2",
+      "numeric-functions-roots-rounding",
+      "value"
+    ],
+    "aliases": [
+      "LOG2"
+    ]
+  },
+  {
+    "title": "LTRIM",
+    "href": "function-reference.html#fn-ltrim",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Возвращает строку после удаления заданных символов с начала текста.",
+    "keywords": [
+      "LTRIM",
+      "string-functions-trim-and-case",
+      "text",
+      "text",
+      "chars"
+    ],
+    "aliases": [
+      "LTRIM"
+    ]
+  },
+  {
+    "title": "MAKEDIR",
+    "href": "function-reference.html#fn-makedir",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Создаёт каталог и недостающие родительские каталоги.",
+    "keywords": [
+      "MAKEDIR",
+      "file-system-functions-management",
+      "path"
+    ],
+    "aliases": [
+      "MAKEDIR"
+    ]
+  },
+  {
+    "title": "MAKETEMPDIR",
+    "href": "function-reference.html#fn-maketempdir",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Создаёт каталог со случайным именем во временной папке системы.",
+    "keywords": [
+      "MAKETEMPDIR",
+      "file-system-functions-management",
+      "prefix"
+    ],
+    "aliases": [
+      "MAKETEMPDIR"
+    ]
+  },
+  {
+    "title": "MAKETEMPFILE",
+    "href": "function-reference.html#fn-maketempfile",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Создаёт пустой файл со случайным именем во временной папке системы.",
+    "keywords": [
+      "MAKETEMPFILE",
+      "file-system-functions-management",
+      "prefix"
+    ],
+    "aliases": [
+      "MAKETEMPFILE"
+    ]
+  },
+  {
+    "title": "MAPCOLUMN",
+    "href": "function-reference.html#fn-mapcolumn",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Переводит мировую координату X в номер столбца карты.",
+    "keywords": [
+      "MAPCOLUMN",
+      "tilemaps",
+      "tilemap",
+      "originX",
+      "worldX"
+    ],
+    "aliases": [
+      "MAPCOLUMN"
+    ]
+  },
+  {
+    "title": "MAPHEIGHT",
+    "href": "function-reference.html#fn-mapheight",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает высоту карты в клетках.",
+    "keywords": [
+      "MAPHEIGHT",
+      "tilemaps",
+      "tilemap"
+    ],
+    "aliases": [
+      "MAPHEIGHT"
+    ]
+  },
+  {
+    "title": "MAPLAYERCOUNT",
+    "href": "function-reference.html#fn-maplayercount",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает число слоёв карты.",
+    "keywords": [
+      "MAPLAYERCOUNT",
+      "tilemaps",
+      "tilemap"
+    ],
+    "aliases": [
+      "MAPLAYERCOUNT"
+    ]
+  },
+  {
+    "title": "MAPLAYERNAME",
+    "href": "function-reference.html#fn-maplayername",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает имя слоя.",
+    "keywords": [
+      "MAPLAYERNAME",
+      "tilemaps",
+      "tilemap",
+      "layerIndex"
+    ],
+    "aliases": [
+      "MAPLAYERNAME"
+    ]
+  },
+  {
+    "title": "MAPLAYERPROPERTY",
+    "href": "function-reference.html#fn-maplayerproperty",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает пользовательское свойство слоя.",
+    "keywords": [
+      "MAPLAYERPROPERTY",
+      "tilemaps",
+      "tilemap",
+      "layerIndex",
+      "name"
+    ],
+    "aliases": [
+      "MAPLAYERPROPERTY"
+    ]
+  },
+  {
+    "title": "MAPLAYERTYPE",
+    "href": "function-reference.html#fn-maplayertype",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает вид слоя: TILE или OBJECT.",
+    "keywords": [
+      "MAPLAYERTYPE",
+      "tilemaps",
+      "tilemap",
+      "layerIndex"
+    ],
+    "aliases": [
+      "MAPLAYERTYPE"
+    ]
+  },
+  {
+    "title": "MAPLAYERVISIBLE",
+    "href": "function-reference.html#fn-maplayervisible",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает флаг видимости слоя.",
+    "keywords": [
+      "MAPLAYERVISIBLE",
+      "tilemaps",
+      "tilemap",
+      "layerIndex"
+    ],
+    "aliases": [
+      "MAPLAYERVISIBLE"
+    ]
+  },
+  {
+    "title": "MAPOBJECTCLASS",
+    "href": "function-reference.html#fn-mapobjectclass",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает класс объекта из class или type.",
+    "keywords": [
+      "MAPOBJECTCLASS",
+      "tilemaps",
+      "tilemap",
+      "layerIndex",
+      "objectIndex"
+    ],
+    "aliases": [
+      "MAPOBJECTCLASS"
+    ]
+  },
+  {
+    "title": "MAPOBJECTCOUNT",
+    "href": "function-reference.html#fn-mapobjectcount",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает число объектов слоя.",
+    "keywords": [
+      "MAPOBJECTCOUNT",
+      "tilemaps",
+      "tilemap",
+      "layerIndex"
+    ],
+    "aliases": [
+      "MAPOBJECTCOUNT"
+    ]
+  },
+  {
+    "title": "MAPOBJECTHEIGHT",
+    "href": "function-reference.html#fn-mapobjectheight",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает высоту объекта.",
+    "keywords": [
+      "MAPOBJECTHEIGHT",
+      "tilemaps",
+      "tilemap",
+      "layerIndex",
+      "objectIndex"
+    ],
+    "aliases": [
+      "MAPOBJECTHEIGHT"
+    ]
+  },
+  {
+    "title": "MAPOBJECTKIND",
+    "href": "function-reference.html#fn-mapobjectkind",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает вид объекта: POINT или RECT.",
+    "keywords": [
+      "MAPOBJECTKIND",
+      "tilemaps",
+      "tilemap",
+      "layerIndex",
+      "objectIndex"
+    ],
+    "aliases": [
+      "MAPOBJECTKIND"
+    ]
+  },
+  {
+    "title": "MAPOBJECTNAME",
+    "href": "function-reference.html#fn-mapobjectname",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает имя объекта.",
+    "keywords": [
+      "MAPOBJECTNAME",
+      "tilemaps",
+      "tilemap",
+      "layerIndex",
+      "objectIndex"
+    ],
+    "aliases": [
+      "MAPOBJECTNAME"
+    ]
+  },
+  {
+    "title": "MAPOBJECTPROPERTY",
+    "href": "function-reference.html#fn-mapobjectproperty",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает пользовательское свойство объекта.",
+    "keywords": [
+      "MAPOBJECTPROPERTY",
+      "tilemaps",
+      "tilemap",
+      "layerIndex",
+      "objectIndex",
+      "name"
+    ],
+    "aliases": [
+      "MAPOBJECTPROPERTY"
+    ]
+  },
+  {
+    "title": "MAPOBJECTVISIBLE",
+    "href": "function-reference.html#fn-mapobjectvisible",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает флаг видимости объекта.",
+    "keywords": [
+      "MAPOBJECTVISIBLE",
+      "tilemaps",
+      "tilemap",
+      "layerIndex",
+      "objectIndex"
+    ],
+    "aliases": [
+      "MAPOBJECTVISIBLE"
+    ]
+  },
+  {
+    "title": "MAPOBJECTWIDTH",
+    "href": "function-reference.html#fn-mapobjectwidth",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает ширину объекта.",
+    "keywords": [
+      "MAPOBJECTWIDTH",
+      "tilemaps",
+      "tilemap",
+      "layerIndex",
+      "objectIndex"
+    ],
+    "aliases": [
+      "MAPOBJECTWIDTH"
+    ]
+  },
+  {
+    "title": "MAPOBJECTX",
+    "href": "function-reference.html#fn-mapobjectx",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает координату X объекта.",
+    "keywords": [
+      "MAPOBJECTX",
+      "tilemaps",
+      "tilemap",
+      "layerIndex",
+      "objectIndex"
+    ],
+    "aliases": [
+      "MAPOBJECTX"
+    ]
+  },
+  {
+    "title": "MAPOBJECTY",
+    "href": "function-reference.html#fn-mapobjecty",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает координату Y объекта.",
+    "keywords": [
+      "MAPOBJECTY",
+      "tilemaps",
+      "tilemap",
+      "layerIndex",
+      "objectIndex"
+    ],
+    "aliases": [
+      "MAPOBJECTY"
+    ]
+  },
+  {
+    "title": "MAPPIXELHEIGHT",
+    "href": "function-reference.html#fn-mappixelheight",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает высоту карты в пикселях.",
+    "keywords": [
+      "MAPPIXELHEIGHT",
+      "tilemaps",
+      "tilemap"
+    ],
+    "aliases": [
+      "MAPPIXELHEIGHT"
+    ]
+  },
+  {
+    "title": "MAPPIXELWIDTH",
+    "href": "function-reference.html#fn-mappixelwidth",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает ширину карты в пикселях.",
+    "keywords": [
+      "MAPPIXELWIDTH",
+      "tilemaps",
+      "tilemap"
+    ],
+    "aliases": [
+      "MAPPIXELWIDTH"
+    ]
+  },
+  {
+    "title": "MAPPROPERTY",
+    "href": "function-reference.html#fn-mapproperty",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает пользовательское свойство карты.",
+    "keywords": [
+      "MAPPROPERTY",
+      "tilemaps",
+      "tilemap",
+      "name"
+    ],
+    "aliases": [
+      "MAPPROPERTY"
+    ]
+  },
+  {
+    "title": "MAPROW",
+    "href": "function-reference.html#fn-maprow",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Переводит мировую координату Y в номер строки карты.",
+    "keywords": [
+      "MAPROW",
+      "tilemaps",
+      "tilemap",
+      "originY",
+      "worldY"
+    ],
+    "aliases": [
+      "MAPROW"
+    ]
+  },
+  {
+    "title": "MAPTILE",
+    "href": "function-reference.html#fn-maptile",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает номер тайла внутри тайлсета.",
+    "keywords": [
+      "MAPTILE",
+      "tilemaps",
+      "tilemap",
+      "layerIndex",
+      "column",
+      "row"
+    ],
+    "aliases": [
+      "MAPTILE"
+    ]
+  },
+  {
+    "title": "MAPTILEFLAGS",
+    "href": "function-reference.html#fn-maptileflags",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает битовую маску отражений тайла в клетке.",
+    "keywords": [
+      "MAPTILEFLAGS",
+      "tilemaps",
+      "tilemap",
+      "layerIndex",
+      "column",
+      "row"
+    ],
+    "aliases": [
+      "MAPTILEFLAGS"
+    ]
+  },
+  {
+    "title": "MAPTILEHEIGHT",
+    "href": "function-reference.html#fn-maptileheight",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает высоту одной клетки в пикселях.",
+    "keywords": [
+      "MAPTILEHEIGHT",
+      "tilemaps",
+      "tilemap"
+    ],
+    "aliases": [
+      "MAPTILEHEIGHT"
+    ]
+  },
+  {
+    "title": "MAPTILEPROPERTY",
+    "href": "function-reference.html#fn-maptileproperty",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает свойство фактического тайла в клетке.",
+    "keywords": [
+      "MAPTILEPROPERTY",
+      "tilemaps",
+      "tilemap",
+      "layerIndex",
+      "column",
+      "row",
+      "name"
+    ],
+    "aliases": [
+      "MAPTILEPROPERTY"
+    ]
+  },
+  {
+    "title": "MAPTILESET",
+    "href": "function-reference.html#fn-maptileset",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает номер тайлсета карты, к которому относится клетка.",
+    "keywords": [
+      "MAPTILESET",
+      "tilemaps",
+      "tilemap",
+      "layerIndex",
+      "column",
+      "row"
+    ],
+    "aliases": [
+      "MAPTILESET"
+    ]
+  },
+  {
+    "title": "MAPTILESETCOUNT",
+    "href": "function-reference.html#fn-maptilesetcount",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает число тайлсетов карты.",
+    "keywords": [
+      "MAPTILESETCOUNT",
+      "tilemaps",
+      "tilemap"
+    ],
+    "aliases": [
+      "MAPTILESETCOUNT"
+    ]
+  },
+  {
+    "title": "MAPTILEWIDTH",
+    "href": "function-reference.html#fn-maptilewidth",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает ширину одной клетки в пикселях.",
+    "keywords": [
+      "MAPTILEWIDTH",
+      "tilemaps",
+      "tilemap"
+    ],
+    "aliases": [
+      "MAPTILEWIDTH"
+    ]
+  },
+  {
+    "title": "MAPWIDTH",
+    "href": "function-reference.html#fn-mapwidth",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает ширину карты в клетках.",
+    "keywords": [
+      "MAPWIDTH",
+      "tilemaps",
+      "tilemap"
+    ],
+    "aliases": [
+      "MAPWIDTH"
+    ]
+  },
+  {
+    "title": "MAPWORLDX",
+    "href": "function-reference.html#fn-mapworldx",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает мировую координату левой границы столбца.",
+    "keywords": [
+      "MAPWORLDX",
+      "tilemaps",
+      "tilemap",
+      "originX",
+      "column"
+    ],
+    "aliases": [
+      "MAPWORLDX"
+    ]
+  },
+  {
+    "title": "MAPWORLDY",
+    "href": "function-reference.html#fn-mapworldy",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает мировую координату верхней границы строки.",
+    "keywords": [
+      "MAPWORLDY",
+      "tilemaps",
+      "tilemap",
+      "originY",
+      "row"
+    ],
+    "aliases": [
+      "MAPWORLDY"
+    ]
+  },
+  {
+    "title": "MAX",
+    "href": "function-reference.html#fn-max",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает большее из двух чисел.",
+    "keywords": [
+      "MAX",
+      "numeric-functions-core",
+      "left",
+      "right"
+    ],
+    "aliases": [
+      "MAX"
+    ]
+  },
+  {
+    "title": "MID",
+    "href": "function-reference.html#fn-mid",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Возвращает фрагмент строки, начиная с указанной позиции.",
+    "keywords": [
+      "MID",
+      "string-functions-slices-and-length",
+      "text",
+      "start",
+      "count",
+      "text",
+      "start",
+      "count",
+      "unit"
+    ],
+    "aliases": [
+      "MID"
+    ]
+  },
+  {
+    "title": "MIN",
+    "href": "function-reference.html#fn-min",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает меньшее из двух чисел.",
+    "keywords": [
+      "MIN",
+      "numeric-functions-core",
+      "left",
+      "right"
+    ],
+    "aliases": [
+      "MIN"
+    ]
+  },
+  {
+    "title": "MINUTE",
+    "href": "function-reference.html#fn-minute",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает минуту внутри часа.",
+    "keywords": [
+      "MINUTE",
+      "date-time-functions-parts-and-serial",
+      "value"
+    ],
+    "aliases": [
+      "MINUTE"
+    ]
+  },
+  {
+    "title": "MONTH",
+    "href": "function-reference.html#fn-month",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает номер месяца календарной даты.",
+    "keywords": [
+      "MONTH",
+      "date-time-functions-parts-and-serial",
+      "value"
+    ],
+    "aliases": [
+      "MONTH"
+    ]
+  },
+  {
+    "title": "MONTHNAME",
+    "href": "function-reference.html#fn-monthname",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает английское название месяца.",
+    "keywords": [
+      "MONTHNAME",
+      "date-time-functions-parts-and-serial",
+      "month"
+    ],
+    "aliases": [
+      "MONTHNAME"
+    ]
+  },
+  {
+    "title": "MOUSEBUTTON",
+    "href": "function-reference.html#fn-mousebutton",
+    "kind": "Функция",
+    "category": "Клавиатура, мышь и события",
+    "description": "Проверяет текущее удержание указанной кнопки мыши на активном графическом экране или холсте, не расходуя события очереди.",
+    "keywords": [
+      "MOUSEBUTTON",
+      "mousebutton",
+      "buttonNumber"
+    ],
+    "aliases": [
+      "MOUSEBUTTON"
+    ]
+  },
+  {
+    "title": "MOUSEPRESS",
+    "href": "function-reference.html#fn-mousepress",
+    "kind": "Функция",
+    "category": "Клавиатура, мышь и события",
+    "description": "Ищет непрочитанное нажатие указанной кнопки мыши, удаляет первое подходящее событие и сообщает, было ли оно найдено.",
+    "keywords": [
+      "MOUSEPRESS",
+      "mousepress",
+      "buttonNumber"
+    ],
+    "aliases": [
+      "MOUSEPRESS"
+    ]
+  },
+  {
+    "title": "MOUSEX",
+    "href": "function-reference.html#fn-mousex",
+    "kind": "Функция",
+    "category": "Клавиатура, мышь и события",
+    "description": "Возвращает LONG с горизонтальной координатой указателя: в SCREEN — физические пиксели клиентской области, на CANVAS — мировая координата с учётом VIEWPORT и CAMERA. Требует графическую поверхность.",
+    "keywords": [
+      "MOUSEX",
+      "mousex"
+    ],
+    "aliases": [
+      "MOUSEX"
+    ]
+  },
+  {
+    "title": "MOUSEY",
+    "href": "function-reference.html#fn-mousey",
+    "kind": "Функция",
+    "category": "Клавиатура, мышь и события",
+    "description": "Возвращает LONG с вертикальной координатой указателя: в SCREEN — физические пиксели клиентской области, на CANVAS — мировая координата с учётом VIEWPORT и CAMERA. Требует графическую поверхность.",
+    "keywords": [
+      "MOUSEY",
+      "mousey"
+    ],
+    "aliases": [
+      "MOUSEY"
+    ]
+  },
+  {
+    "title": "MOVEDIR",
+    "href": "function-reference.html#fn-movedir",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Переносит каталог по новому пути.",
+    "keywords": [
+      "MOVEDIR",
+      "file-system-functions-management",
+      "source",
+      "destination"
+    ],
+    "aliases": [
+      "MOVEDIR"
+    ]
+  },
+  {
+    "title": "MOVEFILE",
+    "href": "function-reference.html#fn-movefile",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Переносит существующий файл по новому пути.",
+    "keywords": [
+      "MOVEFILE",
+      "file-system-functions-management",
+      "source",
+      "destination",
+      "source",
+      "destination",
+      "overwrite"
+    ],
+    "aliases": [
+      "MOVEFILE"
+    ]
+  },
+  {
+    "title": "NEWLINE",
+    "href": "function-reference.html#fn-newline",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Записывает символ LF в открытый файл.",
+    "keywords": [
+      "NEWLINE",
+      "file-system-functions-open-files",
+      "file"
+    ],
+    "aliases": [
+      "NEWLINE"
+    ]
+  },
+  {
+    "title": "NOW",
+    "href": "function-reference.html#fn-now",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает текущую дату и время.",
+    "keywords": [
+      "NOW",
+      "date-time-functions-current",
+      "timeZone"
+    ],
+    "aliases": [
+      "NOW"
+    ]
+  },
+  {
+    "title": "PADLEFT",
+    "href": "function-reference.html#fn-padleft",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Возвращает строку, дополнив её слева до заданной ширины.",
+    "keywords": [
+      "PADLEFT",
+      "string-functions-build-and-split",
+      "text",
+      "width",
+      "text",
+      "width",
+      "fill"
+    ],
+    "aliases": [
+      "PADLEFT"
+    ]
+  },
+  {
+    "title": "PADRIGHT",
+    "href": "function-reference.html#fn-padright",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Возвращает строку, дополнив её справа до заданной ширины.",
+    "keywords": [
+      "PADRIGHT",
+      "string-functions-build-and-split",
+      "text",
+      "width",
+      "text",
+      "width",
+      "fill"
+    ],
+    "aliases": [
+      "PADRIGHT"
+    ]
+  },
+  {
+    "title": "PATHEXISTS",
+    "href": "function-reference.html#fn-pathexists",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Проверяет, существует ли файл или каталог по заданному пути.",
+    "keywords": [
+      "PATHEXISTS",
+      "file-system-functions-text",
+      "path"
+    ],
+    "aliases": [
+      "PATHEXISTS"
+    ]
+  },
+  {
+    "title": "PATHROOT",
+    "href": "function-reference.html#fn-pathroot",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает корень полного пути.",
+    "keywords": [
+      "PATHROOT",
+      "file-system-functions-paths",
+      "path"
+    ],
+    "aliases": [
+      "PATHROOT"
+    ]
+  },
+  {
+    "title": "PMAP",
+    "href": "function-reference.html#fn-pmap",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает DOUBLE с преобразованной координатой SCREEN между логической шкалой WINDOW и пиксельной системой VIEW. Без WINDOW возвращает исходную координату.",
+    "keywords": [
+      "PMAP",
+      "pmap",
+      "coordinate",
+      "selector"
+    ],
+    "aliases": [
+      "PMAP"
+    ]
+  },
+  {
+    "title": "POINT",
+    "href": "function-reference.html#fn-point",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает индекс цвета пикселя в заданной точке либо выбранную координату текущей графической позиции SCREEN.",
+    "keywords": [
+      "POINT",
+      "graphics-primitives",
+      "number",
+      "x",
+      "y"
+    ],
+    "aliases": [
+      "POINT"
+    ]
+  },
+  {
+    "title": "POW",
+    "href": "function-reference.html#fn-pow",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает первое число в степени второго.",
+    "keywords": [
+      "POW",
+      "numeric-functions-roots-rounding",
+      "value",
+      "power"
+    ],
+    "aliases": [
+      "POW"
+    ]
+  },
+  {
+    "title": "READALLLINES",
+    "href": "function-reference.html#fn-readalllines",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Читает строки файла в одномерный массив строк.",
+    "keywords": [
+      "READALLLINES",
+      "file-system-functions-text",
+      "path",
+      "path",
+      "encoding"
+    ],
+    "aliases": [
+      "READALLLINES"
+    ]
+  },
+  {
+    "title": "READFILE",
+    "href": "function-reference.html#fn-readfile",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Читает весь текст файла в строку.",
+    "keywords": [
+      "READFILE",
+      "file-system-functions-text",
+      "path",
+      "path",
+      "encoding"
+    ],
+    "aliases": [
+      "READFILE"
+    ]
+  },
+  {
+    "title": "READLINE",
+    "href": "function-reference.html#fn-readline",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Читает одну строку открытого файла без её разделителя.",
+    "keywords": [
+      "READLINE",
+      "file-system-functions-open-files",
+      "file"
+    ],
+    "aliases": [
+      "READLINE"
+    ]
+  },
+  {
+    "title": "READLINES",
+    "href": "function-reference.html#fn-readlines",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Читает не более заданного числа строк открытого файла в массив.",
+    "keywords": [
+      "READLINES",
+      "file-system-functions-open-files",
+      "file",
       "count"
+    ],
+    "aliases": [
+      "READLINES"
     ]
   },
   {
-    "title": "Проверка, первое совпадение и группы",
-    "href": "regex-functions-match-and-extract.html",
-    "kind": "Раздел",
-    "category": "Регулярные выражения",
-    "description": "REGEXISMATCH, REGEXMATCH и REGEXEXTRACT.",
+    "title": "READTEXT",
+    "href": "function-reference.html#fn-readtext",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Читает не более заданного числа скалярных значений Unicode.",
     "keywords": [
-      "regexismatch",
-      "regexmatch",
-      "regexextract",
-      "group"
-    ]
-  },
-  {
-    "title": "Все совпадения, группы и разбиение",
-    "href": "regex-functions-arrays-and-split.html",
-    "kind": "Раздел",
-    "category": "Регулярные выражения",
-    "description": "REGEXMATCHES, REGEXEXTRACTALL и REGEXSPLIT.",
-    "keywords": [
-      "regexmatches",
-      "regexextractall",
-      "regexsplit",
-      "array"
-    ]
-  },
-  {
-    "title": "Замена и подсчёт совпадений",
-    "href": "regex-functions-replace-and-count.html",
-    "kind": "Раздел",
-    "category": "Регулярные выражения",
-    "description": "REGEXREPLACE и REGEXCOUNT.",
-    "keywords": [
-      "regexreplace",
-      "regexcount",
-      "replace",
+      "READTEXT",
+      "file-system-functions-open-files",
+      "file",
       "count"
+    ],
+    "aliases": [
+      "READTEXT"
     ]
   },
   {
-    "title": "REGEXISMATCH",
-    "href": "function-reference.html#fn-regexismatch",
+    "title": "READTOEND",
+    "href": "function-reference.html#fn-readtoend",
     "kind": "Функция",
-    "category": "Регулярные выражения",
-    "description": "Проверка, найдено ли хотя бы одно совпадение.",
+    "category": "Файлы и файловая система",
+    "description": "Читает оставшийся текст открытого файла в строку.",
     "keywords": [
-      "regex",
-      "match",
-      "boolean",
-      "pattern"
-    ]
-  },
-  {
-    "title": "REGEXMATCH",
-    "href": "function-reference.html#fn-regexmatch",
-    "kind": "Функция",
-    "category": "Регулярные выражения",
-    "description": "Первое найденное совпадение целиком.",
-    "keywords": [
-      "regex",
-      "match",
-      "first"
-    ]
-  },
-  {
-    "title": "REGEXEXTRACT",
-    "href": "function-reference.html#fn-regexextract",
-    "kind": "Функция",
-    "category": "Регулярные выражения",
-    "description": "Значение указанной группы из первого совпадения.",
-    "keywords": [
-      "regex",
-      "extract",
-      "group"
-    ]
-  },
-  {
-    "title": "REGEXMATCHES",
-    "href": "function-reference.html#fn-regexmatches",
-    "kind": "Функция",
-    "category": "Регулярные выражения",
-    "description": "Все найденные совпадения как массив строк.",
-    "keywords": [
-      "regex",
-      "matches",
-      "array"
-    ]
-  },
-  {
-    "title": "REGEXEXTRACTALL",
-    "href": "function-reference.html#fn-regexextractall",
-    "kind": "Функция",
-    "category": "Регулярные выражения",
-    "description": "Значения группы из всех совпадений.",
-    "keywords": [
-      "regex",
-      "extract",
-      "all",
-      "group",
-      "array"
-    ]
-  },
-  {
-    "title": "REGEXSPLIT",
-    "href": "function-reference.html#fn-regexsplit",
-    "kind": "Функция",
-    "category": "Регулярные выражения",
-    "description": "Разбиение строки по регулярному выражению.",
-    "keywords": [
-      "regex",
-      "split",
-      "array"
-    ]
-  },
-  {
-    "title": "REGEXREPLACE",
-    "href": "function-reference.html#fn-regexreplace",
-    "kind": "Функция",
-    "category": "Регулярные выражения",
-    "description": "Замена совпадений новой строкой.",
-    "keywords": [
-      "regex",
-      "replace",
-      "substitute"
+      "READTOEND",
+      "file-system-functions-open-files",
+      "file"
+    ],
+    "aliases": [
+      "READTOEND"
     ]
   },
   {
@@ -5807,1536 +5184,1353 @@ window.AxiomSearchIndex = [
     "href": "function-reference.html#fn-regexcount",
     "kind": "Функция",
     "category": "Регулярные выражения",
-    "description": "Количество найденных совпадений.",
+    "description": "Возвращает количество совпадений с регулярным выражением.",
     "keywords": [
-      "regex",
+      "REGEXCOUNT",
+      "regex-functions-replace-and-count",
+      "text",
+      "pattern",
+      "text",
+      "pattern",
+      "modes"
+    ],
+    "aliases": [
+      "REGEXCOUNT"
+    ]
+  },
+  {
+    "title": "REGEXEXTRACT",
+    "href": "function-reference.html#fn-regexextract",
+    "kind": "Функция",
+    "category": "Регулярные выражения",
+    "description": "Возвращает значение выбранной группы первого совпадения с регулярным выражением.",
+    "keywords": [
+      "REGEXEXTRACT",
+      "regex-functions-match-and-extract",
+      "text",
+      "pattern",
+      "group",
+      "text",
+      "pattern",
+      "group",
+      "modes"
+    ],
+    "aliases": [
+      "REGEXEXTRACT"
+    ]
+  },
+  {
+    "title": "REGEXEXTRACTALL",
+    "href": "function-reference.html#fn-regexextractall",
+    "kind": "Функция",
+    "category": "Регулярные выражения",
+    "description": "Возвращает значения выбранной группы для всех совпадений с регулярным выражением как массив строк.",
+    "keywords": [
+      "REGEXEXTRACTALL",
+      "regex-functions-arrays-and-split",
+      "text",
+      "pattern",
+      "group",
+      "text",
+      "pattern",
+      "group",
+      "modes"
+    ],
+    "aliases": [
+      "REGEXEXTRACTALL"
+    ]
+  },
+  {
+    "title": "REGEXISMATCH",
+    "href": "function-reference.html#fn-regexismatch",
+    "kind": "Функция",
+    "category": "Регулярные выражения",
+    "description": "Проверяет, содержит ли текст хотя бы одно совпадение с регулярным выражением.",
+    "keywords": [
+      "REGEXISMATCH",
+      "regex-functions-match-and-extract",
+      "text",
+      "pattern",
+      "text",
+      "pattern",
+      "modes"
+    ],
+    "aliases": [
+      "REGEXISMATCH"
+    ]
+  },
+  {
+    "title": "REGEXMATCH",
+    "href": "function-reference.html#fn-regexmatch",
+    "kind": "Функция",
+    "category": "Регулярные выражения",
+    "description": "Возвращает текст первого полного совпадения с регулярным выражением.",
+    "keywords": [
+      "REGEXMATCH",
+      "regex-functions-match-and-extract",
+      "text",
+      "pattern",
+      "text",
+      "pattern",
+      "modes"
+    ],
+    "aliases": [
+      "REGEXMATCH"
+    ]
+  },
+  {
+    "title": "REGEXMATCHES",
+    "href": "function-reference.html#fn-regexmatches",
+    "kind": "Функция",
+    "category": "Регулярные выражения",
+    "description": "Возвращает все найденные совпадения с регулярным выражением как массив строк.",
+    "keywords": [
+      "REGEXMATCHES",
+      "regex-functions-arrays-and-split",
+      "text",
+      "pattern",
+      "text",
+      "pattern",
+      "modes"
+    ],
+    "aliases": [
+      "REGEXMATCHES"
+    ]
+  },
+  {
+    "title": "REGEXREPLACE",
+    "href": "function-reference.html#fn-regexreplace",
+    "kind": "Функция",
+    "category": "Регулярные выражения",
+    "description": "Заменяет совпадения с регулярным выражением и возвращает полученную строку.",
+    "keywords": [
+      "REGEXREPLACE",
+      "regex-functions-replace-and-count",
+      "text",
+      "pattern",
+      "replacement",
+      "text",
+      "pattern",
+      "replacement",
+      "modes",
+      "text",
+      "pattern",
+      "replacement",
       "count",
-      "matches"
+      "text",
+      "pattern",
+      "replacement",
+      "modes",
+      "count"
+    ],
+    "aliases": [
+      "REGEXREPLACE"
     ]
   },
   {
-    "title": "ISNUMERIC",
-    "href": "function-reference.html#fn-isnumeric",
+    "title": "REGEXSPLIT",
+    "href": "function-reference.html#fn-regexsplit",
     "kind": "Функция",
-    "category": "Числовые функции",
-    "description": "Проверка полной строки на конечное инвариантное десятичное число DOUBLE.",
+    "category": "Регулярные выражения",
+    "description": "Разбивает текст по совпадениям с регулярным выражением и возвращает полученные части как массив строк.",
     "keywords": [
-      "isnumeric",
-      "val",
-      "число",
-      "проверка",
-      "строка",
-      "переполнение"
+      "REGEXSPLIT",
+      "regex-functions-arrays-and-split",
+      "text",
+      "pattern",
+      "text",
+      "pattern",
+      "modes"
+    ],
+    "aliases": [
+      "REGEXSPLIT"
     ]
   },
   {
-    "title": "IMAGEHEIGHT",
+    "title": "REMOVE",
+    "href": "function-reference.html#fn-remove",
     "kind": "Функция",
-    "category": "Графика",
+    "category": "Строки и символы",
+    "description": "Возвращает строку, удалив заданное количество единиц текста с указанной позиции.",
     "keywords": [
-      "imageheight"
+      "REMOVE",
+      "string-functions-build-and-split",
+      "text",
+      "start",
+      "count"
     ],
-    "href": "function-reference.html#fn-imageheight",
-    "description": "Получение ширины и высоты значения IMAGE в пикселях."
+    "aliases": [
+      "REMOVE"
+    ]
   },
   {
-    "title": "IMAGEWIDTH",
+    "title": "RENAMEDIR",
+    "href": "function-reference.html#fn-renamedir",
     "kind": "Функция",
-    "category": "Графика",
+    "category": "Файлы и файловая система",
+    "description": "Меняет имя каталога внутри его родительского каталога.",
     "keywords": [
-      "imagewidth"
+      "RENAMEDIR",
+      "file-system-functions-management",
+      "path",
+      "newName"
     ],
-    "href": "function-reference.html#fn-imagewidth",
-    "description": "Получение ширины и высоты значения IMAGE в пикселях."
+    "aliases": [
+      "RENAMEDIR"
+    ]
   },
   {
-    "title": "MAPHEIGHT",
+    "title": "RENAMEFILE",
+    "href": "function-reference.html#fn-renamefile",
     "kind": "Функция",
-    "category": "Графика",
+    "category": "Файлы и файловая система",
+    "description": "Меняет имя файла в его текущем каталоге.",
     "keywords": [
-      "mapheight"
+      "RENAMEFILE",
+      "file-system-functions-management",
+      "path",
+      "newName"
     ],
-    "href": "function-reference.html#fn-mapheight",
-    "description": "Получение размеров карты в клетках и пикселях, размера клетки и числа слоёв."
+    "aliases": [
+      "RENAMEFILE"
+    ]
   },
   {
-    "title": "MAPLAYERCOUNT",
+    "title": "REPEAT",
+    "href": "function-reference.html#fn-repeat",
     "kind": "Функция",
-    "category": "Графика",
+    "category": "Строки и символы",
+    "description": "Возвращает строку, повторив исходный фрагмент указанное число раз.",
     "keywords": [
-      "maplayercount"
+      "REPEAT",
+      "string-functions-build-and-split",
+      "text",
+      "count"
     ],
-    "href": "function-reference.html#fn-maplayercount",
-    "description": "Получение размеров карты в клетках и пикселях, размера клетки и числа слоёв."
+    "aliases": [
+      "REPEAT"
+    ]
   },
   {
-    "title": "MAPPIXELHEIGHT",
+    "title": "REPLACE",
+    "href": "function-reference.html#fn-replace",
     "kind": "Функция",
-    "category": "Графика",
+    "category": "Строки и символы",
+    "description": "Возвращает строку, заменив все точные вхождения одного фрагмента другим.",
     "keywords": [
-      "mappixelheight"
+      "REPLACE",
+      "string-functions-search-and-replace",
+      "text",
+      "oldText",
+      "newText"
     ],
-    "href": "function-reference.html#fn-mappixelheight",
-    "description": "Получение размеров карты в клетках и пикселях, размера клетки и числа слоёв."
+    "aliases": [
+      "REPLACE"
+    ]
   },
   {
-    "title": "MAPPIXELWIDTH",
+    "title": "REPLACEMANY",
+    "href": "function-reference.html#fn-replacemany",
     "kind": "Функция",
-    "category": "Графика",
+    "category": "Строки и символы",
+    "description": "Возвращает строку после одновременной замены нескольких фрагментов по двум массивам правил.",
     "keywords": [
-      "mappixelwidth"
+      "REPLACEMANY",
+      "string-functions-search-and-replace",
+      "text",
+      "oldItems",
+      "newItems"
     ],
-    "href": "function-reference.html#fn-mappixelwidth",
-    "description": "Получение размеров карты в клетках и пикселях, размера клетки и числа слоёв."
+    "aliases": [
+      "REPLACEMANY"
+    ]
   },
   {
-    "title": "MAPTILE",
+    "title": "REVERSE",
+    "href": "function-reference.html#fn-reverse",
     "kind": "Функция",
-    "category": "Графика",
+    "category": "Строки и символы",
+    "description": "Возвращает строку с обратным порядком кодов Unicode.",
     "keywords": [
-      "maptile"
+      "REVERSE",
+      "string-functions-trim-and-case",
+      "text"
     ],
-    "href": "function-reference.html#fn-maptile",
-    "description": "Чтение тайла, номера тайлсета и флагов отражения одной клетки TILEMAP."
+    "aliases": [
+      "REVERSE"
+    ]
   },
   {
-    "title": "MAPTILEFLAGS",
+    "title": "REWIND",
+    "href": "function-reference.html#fn-rewind",
     "kind": "Функция",
-    "category": "Графика",
+    "category": "Файлы и файловая система",
+    "description": "Переставляет позицию открытого файла в начало содержимого.",
     "keywords": [
-      "maptileflags"
+      "REWIND",
+      "file-system-functions-open-files",
+      "file"
     ],
-    "href": "function-reference.html#fn-maptileflags",
-    "description": "Чтение тайла, номера тайлсета и флагов отражения одной клетки TILEMAP."
+    "aliases": [
+      "REWIND"
+    ]
   },
   {
-    "title": "MAPTILEHEIGHT",
+    "title": "RGB",
+    "href": "function-reference.html#fn-rgb",
     "kind": "Функция",
-    "category": "Графика",
+    "category": "Экран и графика",
+    "description": "Собирает полноцветное значение 0xRRGGBB из красной, зелёной и синей составляющих.",
     "keywords": [
-      "maptileheight"
+      "RGB",
+      "modern-graphics",
+      "red",
+      "green",
+      "blue"
     ],
-    "href": "function-reference.html#fn-maptileheight",
-    "description": "Получение размеров карты в клетках и пикселях, размера клетки и числа слоёв."
+    "aliases": [
+      "RGB"
+    ]
   },
   {
-    "title": "MAPTILESET",
+    "title": "RIGHT",
+    "href": "function-reference.html#fn-right",
     "kind": "Функция",
-    "category": "Графика",
+    "category": "Строки и символы",
+    "description": "Возвращает фрагмент заданной длины из конца строки.",
     "keywords": [
-      "maptileset"
+      "RIGHT",
+      "string-functions-slices-and-length",
+      "text",
+      "count",
+      "text",
+      "count",
+      "unit"
     ],
-    "href": "function-reference.html#fn-maptileset",
-    "description": "Чтение тайла, номера тайлсета и флагов отражения одной клетки TILEMAP."
+    "aliases": [
+      "RIGHT"
+    ]
   },
   {
-    "title": "MAPTILEWIDTH",
+    "title": "RND",
+    "href": "function-reference.html#fn-rnd",
     "kind": "Функция",
-    "category": "Графика",
+    "category": "Числа и математические функции",
+    "description": "Возвращает очередное псевдослучайное число.",
     "keywords": [
-      "maptilewidth"
+      "RND",
+      "numeric-functions-core"
     ],
-    "href": "function-reference.html#fn-maptilewidth",
-    "description": "Получение размеров карты в клетках и пикселях, размера клетки и числа слоёв."
+    "aliases": [
+      "RND"
+    ]
   },
   {
-    "title": "MAPWIDTH",
+    "title": "ROUND",
+    "href": "function-reference.html#fn-round",
     "kind": "Функция",
-    "category": "Графика",
+    "category": "Числа и математические функции",
+    "description": "Возвращает число, округлённое до ближайшего целого.",
     "keywords": [
-      "mapwidth"
+      "ROUND",
+      "numeric-functions-roots-rounding",
+      "value"
     ],
-    "href": "function-reference.html#fn-mapwidth",
-    "description": "Получение размеров карты в клетках и пикселях, размера клетки и числа слоёв."
+    "aliases": [
+      "ROUND"
+    ]
   },
   {
-    "title": "PMAP",
+    "title": "RTRIM",
+    "href": "function-reference.html#fn-rtrim",
     "kind": "Функция",
-    "category": "Встроенные функции",
+    "category": "Строки и символы",
+    "description": "Возвращает строку после удаления заданных символов с конца текста.",
     "keywords": [
-      "pmap"
+      "RTRIM",
+      "string-functions-trim-and-case",
+      "text",
+      "text",
+      "chars"
     ],
-    "href": "function-reference.html#fn-pmap",
-    "description": "Преобразование координаты между физической системой viewport и логической системой WINDOW."
+    "aliases": [
+      "RTRIM"
+    ]
   },
   {
-    "title": "POINT",
+    "title": "SCREENHEIGHT",
+    "href": "function-reference.html#fn-screenheight",
     "kind": "Функция",
-    "category": "Встроенные функции",
+    "category": "Экран и графика",
+    "description": "Возвращает INTEGER с высотой текущей поверхности SCREEN или CANVAS в пикселях. Без открытой поверхности возвращает 0.",
     "keywords": [
-      "point"
+      "SCREENHEIGHT",
+      "screen-functions"
     ],
-    "href": "function-reference.html#fn-point",
-    "description": "Получение номера цвета в указанной точке SCREEN или CANVAS, а также координат текущей графической позиции через POINT(selector)."
+    "aliases": [
+      "SCREENHEIGHT"
+    ]
+  },
+  {
+    "title": "SCREENISACTIVE",
+    "href": "function-reference.html#fn-screenisactive",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает BOOLEAN: TRUE только при активном графическом SCREEN 1..10; для SCREEN 0, CANVAS и отсутствующей поверхности возвращает FALSE.",
+    "keywords": [
+      "SCREENISACTIVE",
+      "screen-functions"
+    ],
+    "aliases": [
+      "SCREENISACTIVE"
+    ]
+  },
+  {
+    "title": "SCREENMODE",
+    "href": "function-reference.html#fn-screenmode",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает INTEGER с номером текущего режима SCREEN. Без SCREEN, в текстовом режиме и на CANVAS возвращает 0.",
+    "keywords": [
+      "SCREENMODE",
+      "screen-functions"
+    ],
+    "aliases": [
+      "SCREENMODE"
+    ]
+  },
+  {
+    "title": "SCREENWIDTH",
+    "href": "function-reference.html#fn-screenwidth",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает INTEGER с шириной текущей поверхности SCREEN или CANVAS в пикселях. Без открытой поверхности возвращает 0.",
+    "keywords": [
+      "SCREENWIDTH",
+      "screen-functions"
+    ],
+    "aliases": [
+      "SCREENWIDTH"
+    ]
+  },
+  {
+    "title": "SECOND",
+    "href": "function-reference.html#fn-second",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает секунду внутри минуты.",
+    "keywords": [
+      "SECOND",
+      "date-time-functions-parts-and-serial",
+      "value"
+    ],
+    "aliases": [
+      "SECOND"
+    ]
+  },
+  {
+    "title": "SEEKFILE",
+    "href": "function-reference.html#fn-seekfile",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Переставляет текущую позицию открытого файла на заданное байтовое смещение.",
+    "keywords": [
+      "SEEKFILE",
+      "file-system-functions-open-files",
+      "file",
+      "position"
+    ],
+    "aliases": [
+      "SEEKFILE"
+    ]
+  },
+  {
+    "title": "SETSIGN",
+    "href": "function-reference.html#fn-setsign",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает модуль первого числа со знаком второго числа.",
+    "keywords": [
+      "SETSIGN",
+      "numeric-functions-core",
+      "value",
+      "signFrom"
+    ],
+    "aliases": [
+      "SETSIGN"
+    ]
+  },
+  {
+    "title": "SGN",
+    "href": "function-reference.html#fn-sgn",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает знак числа в виде −1, 0 или 1.",
+    "keywords": [
+      "SGN",
+      "numeric-functions-core",
+      "value"
+    ],
+    "aliases": [
+      "SGN"
+    ]
+  },
+  {
+    "title": "SIN",
+    "href": "function-reference.html#fn-sin",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает синус угла.",
+    "keywords": [
+      "SIN",
+      "numeric-functions-trigonometry",
+      "value"
+    ],
+    "aliases": [
+      "SIN"
+    ]
+  },
+  {
+    "title": "SINH",
+    "href": "function-reference.html#fn-sinh",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает гиперболический синус числа.",
+    "keywords": [
+      "SINH",
+      "numeric-functions-trigonometry",
+      "value"
+    ],
+    "aliases": [
+      "SINH"
+    ]
+  },
+  {
+    "title": "SKIPLINE",
+    "href": "function-reference.html#fn-skipline",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Пропускает одну строку открытого файла.",
+    "keywords": [
+      "SKIPLINE",
+      "file-system-functions-open-files",
+      "file"
+    ],
+    "aliases": [
+      "SKIPLINE"
+    ]
+  },
+  {
+    "title": "SPACE",
+    "href": "function-reference.html#fn-space",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Возвращает строку из указанного количества пробелов.",
+    "keywords": [
+      "SPACE",
+      "string-functions-build-and-split",
+      "count"
+    ],
+    "aliases": [
+      "SPACE"
+    ]
+  },
+  {
+    "title": "SPLIT",
+    "href": "function-reference.html#fn-split",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Разбивает строку по разделителю и возвращает массив полученных частей.",
+    "keywords": [
+      "SPLIT",
+      "string-functions-build-and-split",
+      "text",
+      "text",
+      "separator"
+    ],
+    "aliases": [
+      "SPLIT"
+    ]
   },
   {
     "title": "SPRITECOUNT",
-    "kind": "Функция",
-    "category": "Графика",
-    "keywords": [
-      "spritecount"
-    ],
     "href": "function-reference.html#fn-spritecount",
-    "description": "Получение ширины кадра, высоты кадра и числа полных кадров спрайтового листа."
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает число полных кадров в переданном спрайтовом листе.",
+    "keywords": [
+      "SPRITECOUNT",
+      "sprites",
+      "sprite"
+    ],
+    "aliases": [
+      "SPRITECOUNT"
+    ]
   },
   {
     "title": "SPRITEHEIGHT",
-    "kind": "Функция",
-    "category": "Графика",
-    "keywords": [
-      "spriteheight"
-    ],
     "href": "function-reference.html#fn-spriteheight",
-    "description": "Получение ширины кадра, высоты кадра и числа полных кадров спрайтового листа."
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает высоту одного кадра переданного спрайта в пикселях.",
+    "keywords": [
+      "SPRITEHEIGHT",
+      "sprites",
+      "sprite"
+    ],
+    "aliases": [
+      "SPRITEHEIGHT"
+    ]
   },
   {
     "title": "SPRITEWIDTH",
-    "kind": "Функция",
-    "category": "Графика",
-    "keywords": [
-      "spritewidth"
-    ],
     "href": "function-reference.html#fn-spritewidth",
-    "description": "Получение ширины кадра, высоты кадра и числа полных кадров спрайтового листа."
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает ширину одного кадра переданного спрайта в пикселях.",
+    "keywords": [
+      "SPRITEWIDTH",
+      "sprites",
+      "sprite"
+    ],
+    "aliases": [
+      "SPRITEWIDTH"
+    ]
+  },
+  {
+    "title": "SQR",
+    "href": "function-reference.html#fn-sqr",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает квадратный корень числа.",
+    "keywords": [
+      "SQR",
+      "numeric-functions-roots-rounding",
+      "value"
+    ],
+    "aliases": [
+      "SQR"
+    ]
+  },
+  {
+    "title": "STARTOFMONTH",
+    "href": "function-reference.html#fn-startofmonth",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает первый день месяца исходной даты.",
+    "keywords": [
+      "STARTOFMONTH",
+      "date-time-functions-parts-and-serial",
+      "value"
+    ],
+    "aliases": [
+      "STARTOFMONTH"
+    ]
+  },
+  {
+    "title": "STARTOFYEAR",
+    "href": "function-reference.html#fn-startofyear",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает первый день года исходной даты.",
+    "keywords": [
+      "STARTOFYEAR",
+      "date-time-functions-parts-and-serial",
+      "value"
+    ],
+    "aliases": [
+      "STARTOFYEAR"
+    ]
+  },
+  {
+    "title": "STARTSWITH",
+    "href": "function-reference.html#fn-startswith",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Проверяет, начинается ли строка с указанного фрагмента.",
+    "keywords": [
+      "STARTSWITH",
+      "string-functions-search-and-replace",
+      "text",
+      "fragment"
+    ],
+    "aliases": [
+      "STARTSWITH"
+    ]
+  },
+  {
+    "title": "STR",
+    "href": "function-reference.html#fn-str",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает строковую запись числа.",
+    "keywords": [
+      "STR",
+      "numeric-functions-conversion-and-legacy",
+      "value"
+    ],
+    "aliases": [
+      "STR"
+    ]
+  },
+  {
+    "title": "STRING",
+    "href": "function-reference.html#fn-string",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Возвращает строку, повторив первую кодовую единицу заполнителя указанное число раз.",
+    "keywords": [
+      "STRING",
+      "string-functions-build-and-split",
+      "count",
+      "fill"
+    ],
+    "aliases": [
+      "STRING"
+    ]
+  },
+  {
+    "title": "SUBSTRCOUNT",
+    "href": "function-reference.html#fn-substrcount",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Возвращает количество неперекрывающихся вхождений фрагмента в строку.",
+    "keywords": [
+      "SUBSTRCOUNT",
+      "string-functions-search-and-replace",
+      "text",
+      "fragment"
+    ],
+    "aliases": [
+      "SUBSTRCOUNT"
+    ]
+  },
+  {
+    "title": "TAN",
+    "href": "function-reference.html#fn-tan",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает тангенс угла.",
+    "keywords": [
+      "TAN",
+      "numeric-functions-trigonometry",
+      "value"
+    ],
+    "aliases": [
+      "TAN"
+    ]
+  },
+  {
+    "title": "TANH",
+    "href": "function-reference.html#fn-tanh",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает гиперболический тангенс числа.",
+    "keywords": [
+      "TANH",
+      "numeric-functions-trigonometry",
+      "value"
+    ],
+    "aliases": [
+      "TANH"
+    ]
   },
   {
     "title": "TEXTHEIGHT",
-    "kind": "Функция",
-    "category": "Графика",
-    "keywords": [
-      "textheight"
-    ],
     "href": "function-reference.html#fn-textheight",
-    "description": "Измерение ширины и высоты HUD-текста в пикселях по тому же договору, который использует DRAWTEXT."
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает INTEGER с высотой текста DRAWTEXT в пикселях: число строк умножается на 12. Каждая LF добавляет строку; для пустой строки возвращает 12. Требует CANVAS.",
+    "keywords": [
+      "TEXTHEIGHT",
+      "modern-graphics",
+      "text"
+    ],
+    "aliases": [
+      "TEXTHEIGHT"
+    ]
   },
   {
     "title": "TEXTWIDTH",
-    "kind": "Функция",
-    "category": "Графика",
-    "keywords": [
-      "textwidth"
-    ],
     "href": "function-reference.html#fn-textwidth",
-    "description": "Измерение ширины и высоты HUD-текста в пикселях по тому же договору, который использует DRAWTEXT."
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает INTEGER с шириной самой длинной строки в пикселях при рисовании DRAWTEXT на CANVAS. Каждая единица UTF-16 занимает 8 пикселей; CR пропускается, LF разделяет строки. Для пустой строки возвращает 0. Требует CANVAS.",
+    "keywords": [
+      "TEXTWIDTH",
+      "modern-graphics",
+      "text"
+    ],
+    "aliases": [
+      "TEXTWIDTH"
+    ]
   },
   {
     "title": "TILECOUNT",
-    "kind": "Функция",
-    "category": "Графика",
-    "keywords": [
-      "tilecount"
-    ],
     "href": "function-reference.html#fn-tilecount",
-    "description": "Получение числа тайлов и размеров одного тайла в пикселях."
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает число тайлов в переданном наборе.",
+    "keywords": [
+      "TILECOUNT",
+      "tilesets",
+      "tileset"
+    ],
+    "aliases": [
+      "TILECOUNT"
+    ]
   },
   {
     "title": "TILEHEIGHT",
-    "kind": "Функция",
-    "category": "Графика",
-    "keywords": [
-      "tileheight"
-    ],
     "href": "function-reference.html#fn-tileheight",
-    "description": "Получение числа тайлов и размеров одного тайла в пикселях."
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает высоту одного тайла переданного набора в пикселях.",
+    "keywords": [
+      "TILEHEIGHT",
+      "tilesets",
+      "tileset"
+    ],
+    "aliases": [
+      "TILEHEIGHT"
+    ]
   },
   {
     "title": "TILEWIDTH",
-    "kind": "Функция",
-    "category": "Графика",
-    "keywords": [
-      "tilewidth"
-    ],
     "href": "function-reference.html#fn-tilewidth",
-    "description": "Получение числа тайлов и размеров одного тайла в пикселях."
-  },
-  {
-    "title": "Оператор SUB",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "kind": "Функция",
+    "category": "Экран и графика",
+    "description": "Возвращает ширину одного тайла переданного набора в пикселях.",
     "keywords": [
-      "sub"
+      "TILEWIDTH",
+      "tilesets",
+      "tileset"
     ],
-    "href": "operator-reference.html#op-subdeclaration-sub",
-    "description": "Синтаксис, параметры и правила конструкции SUB."
+    "aliases": [
+      "TILEWIDTH"
+    ]
   },
   {
-    "title": "Оператор FUNCTION",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "TIME",
+    "href": "function-reference.html#fn-time",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает текущее время суток.",
     "keywords": [
-      "function"
+      "TIME",
+      "date-time-functions-current",
+      "timeZone"
     ],
-    "href": "operator-reference.html#op-functiondeclaration-function",
-    "description": "Синтаксис, параметры и правила конструкции FUNCTION."
+    "aliases": [
+      "TIME"
+    ]
   },
   {
-    "title": "Оператор PRINT USING",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "TIMER",
+    "href": "function-reference.html#fn-timer",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает число секунд, прошедших с местной полуночи.",
     "keywords": [
-      "print using"
+      "TIMER",
+      "date-time-functions-current"
     ],
-    "href": "operator-reference.html#op-printusing-print-using",
-    "description": "Синтаксис, параметры и правила конструкции PRINT USING."
+    "aliases": [
+      "TIMER"
+    ]
   },
   {
-    "title": "Оператор RANDOMIZE",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "TIMESERIAL",
+    "href": "function-reference.html#fn-timeserial",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает время суток, собранное из часа, минуты и секунды.",
     "keywords": [
-      "randomize"
+      "TIMESERIAL",
+      "date-time-functions-parts-and-serial",
+      "hour",
+      "minute",
+      "second"
     ],
-    "href": "operator-reference.html#op-randomize-randomize",
-    "description": "Синтаксис, параметры и правила конструкции RANDOMIZE."
+    "aliases": [
+      "TIMESERIAL"
+    ]
   },
   {
-    "title": "Оператор FOR",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "TIMEVALUE",
+    "href": "function-reference.html#fn-timevalue",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает время суток, прочитанное из строки.",
     "keywords": [
-      "for"
+      "TIMEVALUE",
+      "date-time-functions-arithmetic-and-validation",
+      "value"
     ],
-    "href": "operator-reference.html#op-for-for",
-    "description": "Синтаксис, параметры и правила конструкции FOR."
+    "aliases": [
+      "TIMEVALUE"
+    ]
   },
   {
-    "title": "Оператор WHILE",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "TOTALFREESPACE",
+    "href": "function-reference.html#fn-totalfreespace",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает общее число свободных байтов диска.",
     "keywords": [
-      "while"
+      "TOTALFREESPACE",
+      "file-system-functions-management",
+      "path"
     ],
-    "href": "operator-reference.html#op-while-while",
-    "description": "Синтаксис, параметры и правила конструкции WHILE."
+    "aliases": [
+      "TOTALFREESPACE"
+    ]
   },
   {
-    "title": "Оператор DO ... LOOP",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "TOTALSPACE",
+    "href": "function-reference.html#fn-totalspace",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает полную ёмкость диска в байтах.",
     "keywords": [
-      "do ... loop"
+      "TOTALSPACE",
+      "file-system-functions-management",
+      "path"
     ],
-    "href": "operator-reference.html#op-doloop-do-loop",
-    "description": "Синтаксис, параметры и правила конструкции DO ... LOOP."
+    "aliases": [
+      "TOTALSPACE"
+    ]
   },
   {
-    "title": "Оператор EXIT FOR",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "TOUTC",
+    "href": "function-reference.html#fn-toutc",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает дату и время, преобразованные из выбранного пояса в UTC.",
     "keywords": [
-      "exit for"
+      "TOUTC",
+      "date-time-functions-time-zones",
+      "value",
+      "value",
+      "timeZone"
     ],
-    "href": "operator-reference.html#op-exitfor-exit-for",
-    "description": "Синтаксис, параметры и правила конструкции EXIT FOR."
+    "aliases": [
+      "TOUTC"
+    ]
   },
   {
-    "title": "Оператор EXIT DO",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "TRIM",
+    "href": "function-reference.html#fn-trim",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Возвращает строку после удаления заданных символов с обоих краёв текста.",
     "keywords": [
-      "exit do"
+      "TRIM",
+      "string-functions-trim-and-case",
+      "text",
+      "text",
+      "chars"
     ],
-    "href": "operator-reference.html#op-exitdo-exit-do",
-    "description": "Синтаксис, параметры и правила конструкции EXIT DO."
+    "aliases": [
+      "TRIM"
+    ]
   },
   {
-    "title": "Оператор CONTINUE FOR",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "UBOUND",
+    "href": "function-reference.html#fn-ubound",
+    "kind": "Функция",
+    "category": "Массивы",
+    "description": "Возвращает верхнюю границу выбранного измерения массива.",
     "keywords": [
-      "continue for"
+      "UBOUND",
+      "arrays-functions",
+      "array",
+      "array",
+      "dimension"
     ],
-    "href": "operator-reference.html#op-continuefor-continue-for",
-    "description": "Синтаксис, параметры и правила конструкции CONTINUE FOR."
+    "aliases": [
+      "UBOUND"
+    ]
   },
   {
-    "title": "Оператор CONTINUE WHILE",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "UCASE",
+    "href": "function-reference.html#fn-ucase",
+    "kind": "Функция",
+    "category": "Строки и символы",
+    "description": "Возвращает строку, преобразовав буквы в верхний регистр.",
     "keywords": [
-      "continue while"
+      "UCASE",
+      "string-functions-trim-and-case",
+      "text"
     ],
-    "href": "operator-reference.html#op-continuewhile-continue-while",
-    "description": "Синтаксис, параметры и правила конструкции CONTINUE WHILE."
+    "aliases": [
+      "UCASE"
+    ]
   },
   {
-    "title": "Оператор CONTINUE DO",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "UTCDATE",
+    "href": "function-reference.html#fn-utcdate",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает текущую дату по UTC.",
     "keywords": [
-      "continue do"
+      "UTCDATE",
+      "date-time-functions-current"
     ],
-    "href": "operator-reference.html#op-continuedo-continue-do",
-    "description": "Синтаксис, параметры и правила конструкции CONTINUE DO."
+    "aliases": [
+      "UTCDATE"
+    ]
   },
   {
-    "title": "Оператор REDIM",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "UTCNOW",
+    "href": "function-reference.html#fn-utcnow",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает текущую дату и время по UTC.",
     "keywords": [
-      "redim"
+      "UTCNOW",
+      "date-time-functions-current"
     ],
-    "href": "operator-reference.html#op-redim-redim",
-    "description": "Синтаксис, параметры и правила конструкции REDIM."
+    "aliases": [
+      "UTCNOW"
+    ]
   },
   {
-    "title": "Оператор REDIM PRESERVE",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "UTCOFFSET",
+    "href": "function-reference.html#fn-utcoffset",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает смещение выбранного часового пояса относительно UTC в минутах для текущего момента или заданных местных часов.",
     "keywords": [
-      "redim preserve"
+      "UTCOFFSET",
+      "date-time-functions-time-zones",
+      "value",
+      "value",
+      "timeZone"
     ],
-    "href": "operator-reference.html#op-redim-redim-preserve",
-    "description": "Синтаксис, параметры и правила конструкции REDIM PRESERVE."
+    "aliases": [
+      "UTCOFFSET"
+    ]
   },
   {
-    "title": "Оператор ERASE",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "UTCTIME",
+    "href": "function-reference.html#fn-utctime",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает текущее время суток по UTC.",
     "keywords": [
-      "erase"
+      "UTCTIME",
+      "date-time-functions-current"
     ],
-    "href": "operator-reference.html#op-erase-erase",
-    "description": "Синтаксис, параметры и правила конструкции ERASE."
+    "aliases": [
+      "UTCTIME"
+    ]
   },
   {
-    "title": "Оператор CANVAS",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "VAL",
+    "href": "function-reference.html#fn-val",
+    "kind": "Функция",
+    "category": "Числа и математические функции",
+    "description": "Возвращает число, прочитанное из строки.",
     "keywords": [
-      "canvas"
+      "VAL",
+      "numeric-functions-conversion-and-legacy",
+      "text"
     ],
-    "href": "operator-reference.html#op-canvas-canvas",
-    "description": "Синтаксис, параметры и правила конструкции CANVAS."
+    "aliases": [
+      "VAL"
+    ]
   },
   {
-    "title": "Оператор BEGINFRAME",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "WEEKDAY",
+    "href": "function-reference.html#fn-weekday",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает номер дня недели.",
     "keywords": [
-      "beginframe"
+      "WEEKDAY",
+      "date-time-functions-parts-and-serial",
+      "value"
     ],
-    "href": "operator-reference.html#op-beginframe-beginframe",
-    "description": "Синтаксис, параметры и правила конструкции BEGINFRAME."
+    "aliases": [
+      "WEEKDAY"
+    ]
   },
   {
-    "title": "Оператор PRESENT",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "WEEKDAYNAME",
+    "href": "function-reference.html#fn-weekdayname",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает английское название дня недели.",
     "keywords": [
-      "present"
+      "WEEKDAYNAME",
+      "date-time-functions-parts-and-serial",
+      "weekday"
     ],
-    "href": "operator-reference.html#op-present-present",
-    "description": "Синтаксис, параметры и правила конструкции PRESENT."
+    "aliases": [
+      "WEEKDAYNAME"
+    ]
   },
   {
-    "title": "Оператор CAMERA",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "WRITE",
+    "href": "function-reference.html#fn-write",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Записывает строку в открытый файл без добавления разделителя строки.",
     "keywords": [
-      "camera"
+      "WRITE",
+      "file-system-functions-open-files",
+      "file",
+      "text"
     ],
-    "href": "operator-reference.html#op-camera-camera",
-    "description": "Синтаксис, параметры и правила конструкции CAMERA."
+    "aliases": [
+      "WRITE"
+    ]
   },
   {
-    "title": "Оператор RESETCAMERA",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "WRITEFILE",
+    "href": "function-reference.html#fn-writefile",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Записывает текст в файл, заменяя прежнее содержимое.",
     "keywords": [
-      "resetcamera"
+      "WRITEFILE",
+      "file-system-functions-text",
+      "path",
+      "text",
+      "path",
+      "text",
+      "encoding"
     ],
-    "href": "operator-reference.html#op-resetcamera-resetcamera",
-    "description": "Синтаксис, параметры и правила конструкции RESETCAMERA."
+    "aliases": [
+      "WRITEFILE"
+    ]
   },
   {
-    "title": "Оператор DRAWLINE",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "WRITELINE",
+    "href": "function-reference.html#fn-writeline",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Записывает строку в открытый файл и добавляет символ LF.",
     "keywords": [
-      "drawline"
+      "WRITELINE",
+      "file-system-functions-open-files",
+      "file",
+      "text"
     ],
-    "href": "operator-reference.html#op-drawline-drawline",
-    "description": "Синтаксис, параметры и правила конструкции DRAWLINE."
+    "aliases": [
+      "WRITELINE"
+    ]
   },
   {
-    "title": "Оператор DRAWCIRCLE",
-    "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "title": "YEAR",
+    "href": "function-reference.html#fn-year",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает год календарной даты.",
     "keywords": [
-      "drawcircle"
+      "YEAR",
+      "date-time-functions-parts-and-serial",
+      "value"
     ],
-    "href": "operator-reference.html#op-drawcircle-drawcircle",
-    "description": "Синтаксис, параметры и правила конструкции DRAWCIRCLE."
+    "aliases": [
+      "YEAR"
+    ]
   },
   {
-    "title": "Оператор FILLCIRCLE",
+    "title": "EXIT FOR",
+    "href": "exit.html#exit-for",
     "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "category": "Циклы",
+    "description": "Синтаксис, параметры, действие и примеры EXIT FOR.",
     "keywords": [
-      "fillcircle"
+      "EXIT FOR",
+      "ExitFor"
     ],
-    "href": "operator-reference.html#op-fillcircle-fillcircle",
-    "description": "Синтаксис, параметры и правила конструкции FILLCIRCLE."
+    "aliases": [
+      "EXIT FOR"
+    ]
   },
   {
-    "title": "Оператор DRAWRECT",
+    "title": "EXIT DO",
+    "href": "exit.html#exit-do",
     "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "category": "Циклы",
+    "description": "Синтаксис, параметры, действие и примеры EXIT DO.",
     "keywords": [
-      "drawrect"
+      "EXIT DO",
+      "ExitDo"
     ],
-    "href": "operator-reference.html#op-drawrect-drawrect",
-    "description": "Синтаксис, параметры и правила конструкции DRAWRECT."
+    "aliases": [
+      "EXIT DO"
+    ]
   },
   {
-    "title": "Оператор FILLRECT",
+    "title": "VIEW PRINT",
+    "href": "view.html#view-print",
     "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "category": "Экран и графика",
+    "description": "Синтаксис, параметры, действие и примеры VIEW PRINT.",
     "keywords": [
-      "fillrect"
+      "VIEW PRINT",
+      "ViewPrint"
     ],
-    "href": "operator-reference.html#op-fillrect-fillrect",
-    "description": "Синтаксис, параметры и правила конструкции FILLRECT."
+    "aliases": [
+      "VIEW PRINT"
+    ]
   },
   {
-    "title": "Оператор DRAWTEXT",
+    "title": "CLS",
+    "href": "graphics-text.html#cls",
     "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "category": "Экран и графика",
+    "description": "Синтаксис, параметры, действие и примеры CLS.",
     "keywords": [
-      "drawtext"
+      "CLS",
+      "Cls"
     ],
-    "href": "operator-reference.html#op-drawtext-drawtext",
-    "description": "Синтаксис, параметры и правила конструкции DRAWTEXT."
+    "aliases": [
+      "CLS"
+    ]
   },
   {
-    "title": "Оператор DRAWIMAGE",
+    "title": "COLOR",
+    "href": "graphics-text.html#color",
     "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "category": "Экран и графика",
+    "description": "Синтаксис, параметры, действие и примеры COLOR.",
     "keywords": [
-      "drawimage"
+      "COLOR",
+      "Color"
     ],
-    "href": "operator-reference.html#op-drawimage-drawimage",
-    "description": "Синтаксис, параметры и правила конструкции DRAWIMAGE."
+    "aliases": [
+      "COLOR"
+    ]
   },
   {
-    "title": "Оператор DRAWSPRITE",
+    "title": "LOCATE",
+    "href": "graphics-text.html#locate",
     "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "category": "Экран и графика",
+    "description": "Синтаксис, параметры, действие и примеры LOCATE.",
     "keywords": [
-      "drawsprite"
+      "LOCATE",
+      "Locate"
     ],
-    "href": "operator-reference.html#op-drawsprite-drawsprite",
-    "description": "Синтаксис, параметры и правила конструкции DRAWSPRITE."
+    "aliases": [
+      "LOCATE"
+    ]
   },
   {
-    "title": "Оператор DRAWTILE",
+    "title": "PSET",
+    "href": "graphics-primitives.html#pset",
     "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "category": "Экран и графика",
+    "description": "Синтаксис, параметры, действие и примеры PSET.",
     "keywords": [
-      "drawtile"
+      "PSET",
+      "PSet"
     ],
-    "href": "operator-reference.html#op-drawtile-drawtile",
-    "description": "Синтаксис, параметры и правила конструкции DRAWTILE."
+    "aliases": [
+      "PSET"
+    ]
   },
   {
-    "title": "Оператор DRAWTILEMAP",
+    "title": "PRESET",
+    "href": "graphics-primitives.html#preset",
     "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "category": "Экран и графика",
+    "description": "Синтаксис, параметры, действие и примеры PRESET.",
     "keywords": [
-      "drawtilemap"
+      "PRESET",
+      "PSet"
     ],
-    "href": "operator-reference.html#op-drawtilemap-drawtilemap",
-    "description": "Синтаксис, параметры и правила конструкции DRAWTILEMAP."
+    "aliases": [
+      "PRESET"
+    ]
   },
   {
-    "title": "Оператор DRAWTILELAYER",
+    "title": "LINE",
+    "href": "graphics-primitives.html#line",
     "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "category": "Экран и графика",
+    "description": "Синтаксис, параметры, действие и примеры LINE.",
     "keywords": [
-      "drawtilelayer"
+      "LINE",
+      "Line"
     ],
-    "href": "operator-reference.html#op-drawtilelayer-drawtilelayer",
-    "description": "Синтаксис, параметры и правила конструкции DRAWTILELAYER."
+    "aliases": [
+      "LINE"
+    ]
   },
   {
-    "title": "Оператор SETMAPTILE",
+    "title": "CIRCLE",
+    "href": "graphics-primitives.html#circle",
     "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "category": "Экран и графика",
+    "description": "Синтаксис, параметры, действие и примеры CIRCLE.",
     "keywords": [
-      "setmaptile"
+      "CIRCLE",
+      "Circle"
     ],
-    "href": "operator-reference.html#op-setmaptile-setmaptile",
-    "description": "Синтаксис, параметры и правила конструкции SETMAPTILE."
+    "aliases": [
+      "CIRCLE"
+    ]
   },
   {
-    "title": "Присваивание",
+    "title": "PAINT",
+    "href": "graphics-primitives.html#paint",
     "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "category": "Экран и графика",
+    "description": "Синтаксис, параметры, действие и примеры PAINT.",
     "keywords": [
-      "присваивание"
+      "PAINT",
+      "Paint"
     ],
-    "href": "operator-reference.html#op-assignment-присваивание",
-    "description": "Синтаксис, параметры и правила конструкции Присваивание."
+    "aliases": [
+      "PAINT"
+    ]
   },
   {
-    "title": "Вызов как инструкция",
+    "title": "DRAW",
+    "href": "graphics-primitives.html#draw",
     "kind": "Оператор",
-    "category": "Операторы и инструкции",
+    "category": "Экран и графика",
+    "description": "Синтаксис, параметры, действие и примеры DRAW.",
     "keywords": [
-      "вызов как инструкция"
+      "DRAW",
+      "Draw"
     ],
-    "href": "operator-reference.html#op-expression-вызов-как-инструкция",
-    "description": "Синтаксис, параметры и правила конструкции Вызов как инструкция."
-  },
-  {
-    "title": "AND — ключевое слово",
-    "href": "keyword-reference.html#kw-and",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова AND и описание соответствующей конструкции.",
-    "keywords": [
-      "and"
-    ]
-  },
-  {
-    "title": "ANDALSO — ключевое слово",
-    "href": "keyword-reference.html#kw-andalso",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова ANDALSO и описание соответствующей конструкции.",
-    "keywords": [
-      "andalso"
-    ]
-  },
-  {
-    "title": "APPEND — ключевое слово",
-    "href": "keyword-reference.html#kw-append",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова APPEND и описание соответствующей конструкции.",
-    "keywords": [
-      "append"
-    ]
-  },
-  {
-    "title": "AS — ключевое слово",
-    "href": "keyword-reference.html#kw-as",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова AS и описание соответствующей конструкции.",
-    "keywords": [
-      "as"
-    ]
-  },
-  {
-    "title": "BEGINFRAME — ключевое слово",
-    "href": "keyword-reference.html#kw-beginframe",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова BEGINFRAME и описание соответствующей конструкции.",
-    "keywords": [
-      "beginframe"
-    ]
-  },
-  {
-    "title": "BYREF — ключевое слово",
-    "href": "keyword-reference.html#kw-byref",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова BYREF и описание соответствующей конструкции.",
-    "keywords": [
-      "byref"
-    ]
-  },
-  {
-    "title": "BYVAL — ключевое слово",
-    "href": "keyword-reference.html#kw-byval",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова BYVAL и описание соответствующей конструкции.",
-    "keywords": [
-      "byval"
-    ]
-  },
-  {
-    "title": "CAMERA — ключевое слово",
-    "href": "keyword-reference.html#kw-camera",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова CAMERA и описание соответствующей конструкции.",
-    "keywords": [
-      "camera"
-    ]
-  },
-  {
-    "title": "CANVAS — ключевое слово",
-    "href": "keyword-reference.html#kw-canvas",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова CANVAS и описание соответствующей конструкции.",
-    "keywords": [
-      "canvas"
-    ]
-  },
-  {
-    "title": "CASE — ключевое слово",
-    "href": "keyword-reference.html#kw-case",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова CASE и описание соответствующей конструкции.",
-    "keywords": [
-      "case"
-    ]
-  },
-  {
-    "title": "CATCH — ключевое слово",
-    "href": "keyword-reference.html#kw-catch",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова CATCH и описание соответствующей конструкции.",
-    "keywords": [
-      "catch"
-    ]
-  },
-  {
-    "title": "CIRCLE — ключевое слово",
-    "href": "keyword-reference.html#kw-circle",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова CIRCLE и описание соответствующей конструкции.",
-    "keywords": [
-      "circle"
-    ]
-  },
-  {
-    "title": "CLOSE — ключевое слово",
-    "href": "keyword-reference.html#kw-close",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова CLOSE и описание соответствующей конструкции.",
-    "keywords": [
-      "close"
-    ]
-  },
-  {
-    "title": "CLS — ключевое слово",
-    "href": "keyword-reference.html#kw-cls",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова CLS и описание соответствующей конструкции.",
-    "keywords": [
-      "cls"
-    ]
-  },
-  {
-    "title": "COLOR — ключевое слово",
-    "href": "keyword-reference.html#kw-color",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова COLOR и описание соответствующей конструкции.",
-    "keywords": [
-      "color"
-    ]
-  },
-  {
-    "title": "CONST — ключевое слово",
-    "href": "keyword-reference.html#kw-const",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова CONST и описание соответствующей конструкции.",
-    "keywords": [
-      "const"
-    ]
-  },
-  {
-    "title": "CONTINUE — ключевое слово",
-    "href": "keyword-reference.html#kw-continue",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова CONTINUE и описание соответствующей конструкции.",
-    "keywords": [
-      "continue"
-    ]
-  },
-  {
-    "title": "DIM — ключевое слово",
-    "href": "keyword-reference.html#kw-dim",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова DIM и описание соответствующей конструкции.",
-    "keywords": [
-      "dim"
-    ]
-  },
-  {
-    "title": "DO — ключевое слово",
-    "href": "keyword-reference.html#kw-do",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова DO и описание соответствующей конструкции.",
-    "keywords": [
-      "do"
-    ]
-  },
-  {
-    "title": "DRAW — ключевое слово",
-    "href": "keyword-reference.html#kw-draw",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова DRAW и описание соответствующей конструкции.",
-    "keywords": [
-      "draw"
-    ]
-  },
-  {
-    "title": "DRAWCIRCLE — ключевое слово",
-    "href": "keyword-reference.html#kw-drawcircle",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова DRAWCIRCLE и описание соответствующей конструкции.",
-    "keywords": [
-      "drawcircle"
-    ]
-  },
-  {
-    "title": "DRAWIMAGE — ключевое слово",
-    "href": "keyword-reference.html#kw-drawimage",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова DRAWIMAGE и описание соответствующей конструкции.",
-    "keywords": [
-      "drawimage"
-    ]
-  },
-  {
-    "title": "DRAWLINE — ключевое слово",
-    "href": "keyword-reference.html#kw-drawline",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова DRAWLINE и описание соответствующей конструкции.",
-    "keywords": [
-      "drawline"
-    ]
-  },
-  {
-    "title": "DRAWRECT — ключевое слово",
-    "href": "keyword-reference.html#kw-drawrect",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова DRAWRECT и описание соответствующей конструкции.",
-    "keywords": [
-      "drawrect"
-    ]
-  },
-  {
-    "title": "DRAWSPRITE — ключевое слово",
-    "href": "keyword-reference.html#kw-drawsprite",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова DRAWSPRITE и описание соответствующей конструкции.",
-    "keywords": [
-      "drawsprite"
-    ]
-  },
-  {
-    "title": "DRAWTEXT — ключевое слово",
-    "href": "keyword-reference.html#kw-drawtext",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова DRAWTEXT и описание соответствующей конструкции.",
-    "keywords": [
-      "drawtext"
-    ]
-  },
-  {
-    "title": "DRAWTILE — ключевое слово",
-    "href": "keyword-reference.html#kw-drawtile",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова DRAWTILE и описание соответствующей конструкции.",
-    "keywords": [
-      "drawtile"
-    ]
-  },
-  {
-    "title": "DRAWTILELAYER — ключевое слово",
-    "href": "keyword-reference.html#kw-drawtilelayer",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова DRAWTILELAYER и описание соответствующей конструкции.",
-    "keywords": [
-      "drawtilelayer"
-    ]
-  },
-  {
-    "title": "DRAWTILEMAP — ключевое слово",
-    "href": "keyword-reference.html#kw-drawtilemap",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова DRAWTILEMAP и описание соответствующей конструкции.",
-    "keywords": [
-      "drawtilemap"
-    ]
-  },
-  {
-    "title": "ELSE — ключевое слово",
-    "href": "keyword-reference.html#kw-else",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова ELSE и описание соответствующей конструкции.",
-    "keywords": [
-      "else"
-    ]
-  },
-  {
-    "title": "ELSEIF — ключевое слово",
-    "href": "keyword-reference.html#kw-elseif",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова ELSEIF и описание соответствующей конструкции.",
-    "keywords": [
-      "elseif"
-    ]
-  },
-  {
-    "title": "END — ключевое слово",
-    "href": "keyword-reference.html#kw-end",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова END и описание соответствующей конструкции.",
-    "keywords": [
-      "end"
-    ]
-  },
-  {
-    "title": "EQV — ключевое слово",
-    "href": "keyword-reference.html#kw-eqv",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова EQV и описание соответствующей конструкции.",
-    "keywords": [
-      "eqv"
-    ]
-  },
-  {
-    "title": "ERASE — ключевое слово",
-    "href": "keyword-reference.html#kw-erase",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова ERASE и описание соответствующей конструкции.",
-    "keywords": [
-      "erase"
-    ]
-  },
-  {
-    "title": "ERROR — ключевое слово",
-    "href": "keyword-reference.html#kw-error",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова ERROR и описание соответствующей конструкции.",
-    "keywords": [
-      "error"
-    ]
-  },
-  {
-    "title": "EXIT — ключевое слово",
-    "href": "keyword-reference.html#kw-exit",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова EXIT и описание соответствующей конструкции.",
-    "keywords": [
-      "exit"
-    ]
-  },
-  {
-    "title": "FALSE — ключевое слово",
-    "href": "keyword-reference.html#kw-false",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова FALSE и описание соответствующей конструкции.",
-    "keywords": [
-      "false"
-    ]
-  },
-  {
-    "title": "FILLCIRCLE — ключевое слово",
-    "href": "keyword-reference.html#kw-fillcircle",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова FILLCIRCLE и описание соответствующей конструкции.",
-    "keywords": [
-      "fillcircle"
-    ]
-  },
-  {
-    "title": "FILLRECT — ключевое слово",
-    "href": "keyword-reference.html#kw-fillrect",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова FILLRECT и описание соответствующей конструкции.",
-    "keywords": [
-      "fillrect"
-    ]
-  },
-  {
-    "title": "FINALLY — ключевое слово",
-    "href": "keyword-reference.html#kw-finally",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова FINALLY и описание соответствующей конструкции.",
-    "keywords": [
-      "finally"
-    ]
-  },
-  {
-    "title": "FOR — ключевое слово",
-    "href": "keyword-reference.html#kw-for",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова FOR и описание соответствующей конструкции.",
-    "keywords": [
-      "for"
-    ]
-  },
-  {
-    "title": "FUNCTION — ключевое слово",
-    "href": "keyword-reference.html#kw-function",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова FUNCTION и описание соответствующей конструкции.",
-    "keywords": [
-      "function"
-    ]
-  },
-  {
-    "title": "GET — ключевое слово",
-    "href": "keyword-reference.html#kw-get",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова GET и описание соответствующей конструкции.",
-    "keywords": [
-      "get"
-    ]
-  },
-  {
-    "title": "IF — ключевое слово",
-    "href": "keyword-reference.html#kw-if",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова IF и описание соответствующей конструкции.",
-    "keywords": [
-      "if"
-    ]
-  },
-  {
-    "title": "IMP — ключевое слово",
-    "href": "keyword-reference.html#kw-imp",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова IMP и описание соответствующей конструкции.",
-    "keywords": [
-      "imp"
-    ]
-  },
-  {
-    "title": "INPUT — ключевое слово",
-    "href": "keyword-reference.html#kw-input",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова INPUT и описание соответствующей конструкции.",
-    "keywords": [
-      "input"
-    ]
-  },
-  {
-    "title": "IS — ключевое слово",
-    "href": "keyword-reference.html#kw-is",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова IS и описание соответствующей конструкции.",
-    "keywords": [
-      "is"
-    ]
-  },
-  {
-    "title": "KEY — ключевое слово",
-    "href": "keyword-reference.html#kw-key",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова KEY и описание соответствующей конструкции.",
-    "keywords": [
-      "key"
-    ]
-  },
-  {
-    "title": "LINE — ключевое слово",
-    "href": "keyword-reference.html#kw-line",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова LINE и описание соответствующей конструкции.",
-    "keywords": [
-      "line"
-    ]
-  },
-  {
-    "title": "LOCATE — ключевое слово",
-    "href": "keyword-reference.html#kw-locate",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова LOCATE и описание соответствующей конструкции.",
-    "keywords": [
-      "locate"
-    ]
-  },
-  {
-    "title": "LOOP — ключевое слово",
-    "href": "keyword-reference.html#kw-loop",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова LOOP и описание соответствующей конструкции.",
-    "keywords": [
-      "loop"
-    ]
-  },
-  {
-    "title": "MOD — ключевое слово",
-    "href": "keyword-reference.html#kw-mod",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова MOD и описание соответствующей конструкции.",
-    "keywords": [
-      "mod"
-    ]
-  },
-  {
-    "title": "MOUSE — ключевое слово",
-    "href": "keyword-reference.html#kw-mouse",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова MOUSE и описание соответствующей конструкции.",
-    "keywords": [
-      "mouse"
-    ]
-  },
-  {
-    "title": "NEXT — ключевое слово",
-    "href": "keyword-reference.html#kw-next",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова NEXT и описание соответствующей конструкции.",
-    "keywords": [
-      "next"
-    ]
-  },
-  {
-    "title": "NOT — ключевое слово",
-    "href": "keyword-reference.html#kw-not",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова NOT и описание соответствующей конструкции.",
-    "keywords": [
-      "not"
-    ]
-  },
-  {
-    "title": "OFF — ключевое слово",
-    "href": "keyword-reference.html#kw-off",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова OFF и описание соответствующей конструкции.",
-    "keywords": [
-      "off"
-    ]
-  },
-  {
-    "title": "ON — ключевое слово",
-    "href": "keyword-reference.html#kw-on",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова ON и описание соответствующей конструкции.",
-    "keywords": [
-      "on"
-    ]
-  },
-  {
-    "title": "OPEN — ключевое слово",
-    "href": "keyword-reference.html#kw-open",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова OPEN и описание соответствующей конструкции.",
-    "keywords": [
-      "open"
-    ]
-  },
-  {
-    "title": "OR — ключевое слово",
-    "href": "keyword-reference.html#kw-or",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова OR и описание соответствующей конструкции.",
-    "keywords": [
-      "or"
-    ]
-  },
-  {
-    "title": "ORELSE — ключевое слово",
-    "href": "keyword-reference.html#kw-orelse",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова ORELSE и описание соответствующей конструкции.",
-    "keywords": [
-      "orelse"
-    ]
-  },
-  {
-    "title": "OUTPUT — ключевое слово",
-    "href": "keyword-reference.html#kw-output",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова OUTPUT и описание соответствующей конструкции.",
-    "keywords": [
-      "output"
-    ]
-  },
-  {
-    "title": "PAINT — ключевое слово",
-    "href": "keyword-reference.html#kw-paint",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова PAINT и описание соответствующей конструкции.",
-    "keywords": [
-      "paint"
-    ]
-  },
-  {
-    "title": "PALETTE — ключевое слово",
-    "href": "keyword-reference.html#kw-palette",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова PALETTE и описание соответствующей конструкции.",
-    "keywords": [
-      "palette"
-    ]
-  },
-  {
-    "title": "PCOPY — ключевое слово",
-    "href": "keyword-reference.html#kw-pcopy",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова PCOPY и описание соответствующей конструкции.",
-    "keywords": [
-      "pcopy"
-    ]
-  },
-  {
-    "title": "PRESENT — ключевое слово",
-    "href": "keyword-reference.html#kw-present",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова PRESENT и описание соответствующей конструкции.",
-    "keywords": [
-      "present"
-    ]
-  },
-  {
-    "title": "PRESERVE — ключевое слово",
-    "href": "keyword-reference.html#kw-preserve",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова PRESERVE и описание соответствующей конструкции.",
-    "keywords": [
-      "preserve"
-    ]
-  },
-  {
-    "title": "PRESET — ключевое слово",
-    "href": "keyword-reference.html#kw-preset",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова PRESET и описание соответствующей конструкции.",
-    "keywords": [
-      "preset"
-    ]
-  },
-  {
-    "title": "PRINT — ключевое слово",
-    "href": "keyword-reference.html#kw-print",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова PRINT и описание соответствующей конструкции.",
-    "keywords": [
-      "print"
-    ]
-  },
-  {
-    "title": "PSET — ключевое слово",
-    "href": "keyword-reference.html#kw-pset",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова PSET и описание соответствующей конструкции.",
-    "keywords": [
-      "pset"
-    ]
-  },
-  {
-    "title": "PUT — ключевое слово",
-    "href": "keyword-reference.html#kw-put",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова PUT и описание соответствующей конструкции.",
-    "keywords": [
-      "put"
-    ]
-  },
-  {
-    "title": "RANDOMIZE — ключевое слово",
-    "href": "keyword-reference.html#kw-randomize",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова RANDOMIZE и описание соответствующей конструкции.",
-    "keywords": [
-      "randomize"
-    ]
-  },
-  {
-    "title": "REDIM — ключевое слово",
-    "href": "keyword-reference.html#kw-redim",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова REDIM и описание соответствующей конструкции.",
-    "keywords": [
-      "redim"
-    ]
-  },
-  {
-    "title": "RESETCAMERA — ключевое слово",
-    "href": "keyword-reference.html#kw-resetcamera",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова RESETCAMERA и описание соответствующей конструкции.",
-    "keywords": [
-      "resetcamera"
-    ]
-  },
-  {
-    "title": "RETURN — ключевое слово",
-    "href": "keyword-reference.html#kw-return",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова RETURN и описание соответствующей конструкции.",
-    "keywords": [
-      "return"
-    ]
-  },
-  {
-    "title": "SCREEN — ключевое слово",
-    "href": "keyword-reference.html#kw-screen",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова SCREEN и описание соответствующей конструкции.",
-    "keywords": [
-      "screen"
-    ]
-  },
-  {
-    "title": "SELECT — ключевое слово",
-    "href": "keyword-reference.html#kw-select",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова SELECT и описание соответствующей конструкции.",
-    "keywords": [
-      "select"
-    ]
-  },
-  {
-    "title": "SELF — ключевое слово",
-    "href": "keyword-reference.html#kw-self",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова SELF и описание соответствующей конструкции.",
-    "keywords": [
-      "self"
-    ]
-  },
-  {
-    "title": "SETMAPTILE — ключевое слово",
-    "href": "keyword-reference.html#kw-setmaptile",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова SETMAPTILE и описание соответствующей конструкции.",
-    "keywords": [
-      "setmaptile"
-    ]
-  },
-  {
-    "title": "SLEEP — ключевое слово",
-    "href": "keyword-reference.html#kw-sleep",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова SLEEP и описание соответствующей конструкции.",
-    "keywords": [
-      "sleep"
-    ]
-  },
-  {
-    "title": "STEP — ключевое слово",
-    "href": "keyword-reference.html#kw-step",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова STEP и описание соответствующей конструкции.",
-    "keywords": [
-      "step"
-    ]
-  },
-  {
-    "title": "STOP — ключевое слово",
-    "href": "keyword-reference.html#kw-stop",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова STOP и описание соответствующей конструкции.",
-    "keywords": [
-      "stop"
-    ]
-  },
-  {
-    "title": "SUB — ключевое слово",
-    "href": "keyword-reference.html#kw-sub",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова SUB и описание соответствующей конструкции.",
-    "keywords": [
-      "sub"
-    ]
-  },
-  {
-    "title": "THEN — ключевое слово",
-    "href": "keyword-reference.html#kw-then",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова THEN и описание соответствующей конструкции.",
-    "keywords": [
-      "then"
-    ]
-  },
-  {
-    "title": "TO — ключевое слово",
-    "href": "keyword-reference.html#kw-to",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова TO и описание соответствующей конструкции.",
-    "keywords": [
-      "to"
-    ]
-  },
-  {
-    "title": "TRANSPARENT — ключевое слово",
-    "href": "keyword-reference.html#kw-transparent",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова TRANSPARENT и описание соответствующей конструкции.",
-    "keywords": [
-      "transparent"
-    ]
-  },
-  {
-    "title": "TRUE — ключевое слово",
-    "href": "keyword-reference.html#kw-true",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова TRUE и описание соответствующей конструкции.",
-    "keywords": [
-      "true"
-    ]
-  },
-  {
-    "title": "TRY — ключевое слово",
-    "href": "keyword-reference.html#kw-try",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова TRY и описание соответствующей конструкции.",
-    "keywords": [
-      "try"
-    ]
-  },
-  {
-    "title": "TYPE — ключевое слово",
-    "href": "keyword-reference.html#kw-type",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова TYPE и описание соответствующей конструкции.",
-    "keywords": [
-      "type"
-    ]
-  },
-  {
-    "title": "UNTIL — ключевое слово",
-    "href": "keyword-reference.html#kw-until",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова UNTIL и описание соответствующей конструкции.",
-    "keywords": [
-      "until"
-    ]
-  },
-  {
-    "title": "USING — ключевое слово",
-    "href": "keyword-reference.html#kw-using",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова USING и описание соответствующей конструкции.",
-    "keywords": [
-      "using"
-    ]
-  },
-  {
-    "title": "VIEW — ключевое слово",
-    "href": "keyword-reference.html#kw-view",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова VIEW и описание соответствующей конструкции.",
-    "keywords": [
-      "view"
-    ]
-  },
-  {
-    "title": "VIEWPORT — ключевое слово",
-    "href": "keyword-reference.html#kw-viewport",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова VIEWPORT и описание соответствующей конструкции.",
-    "keywords": [
-      "viewport"
-    ]
-  },
-  {
-    "title": "WHILE — ключевое слово",
-    "href": "keyword-reference.html#kw-while",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова WHILE и описание соответствующей конструкции.",
-    "keywords": [
-      "while"
+    "aliases": [
+      "DRAW"
     ]
   },
   {
-    "title": "WINDOW — ключевое слово",
-    "href": "keyword-reference.html#kw-window",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова WINDOW и описание соответствующей конструкции.",
+    "title": "DRAWIMAGE",
+    "href": "images.html#drawimage",
+    "kind": "Оператор",
+    "category": "Экран и графика",
+    "description": "Синтаксис, параметры, действие и примеры DRAWIMAGE.",
     "keywords": [
-      "window"
+      "DRAWIMAGE",
+      "DrawImage"
+    ],
+    "aliases": [
+      "DRAWIMAGE"
     ]
   },
   {
-    "title": "XOR — ключевое слово",
-    "href": "keyword-reference.html#kw-xor",
-    "kind": "Ключевое слово",
-    "category": "Ключевые слова",
-    "description": "Назначение слова XOR и описание соответствующей конструкции.",
+    "title": "DRAWSPRITE",
+    "href": "sprites.html#drawsprite",
+    "kind": "Оператор",
+    "category": "Экран и графика",
+    "description": "Синтаксис, параметры, действие и примеры DRAWSPRITE.",
     "keywords": [
-      "xor"
+      "DRAWSPRITE",
+      "DrawSprite"
+    ],
+    "aliases": [
+      "DRAWSPRITE"
     ]
   },
   {
@@ -7344,9 +6538,13 @@ window.AxiomSearchIndex = [
     "href": "keyword-reference.html#type-boolean",
     "kind": "Тип",
     "category": "Типы данных",
-    "description": "Тип данных BOOLEAN.",
+    "description": "Тип данных BOOLEAN и ссылка на его тематическое описание.",
     "keywords": [
-      "boolean"
+      "BOOLEAN",
+      "тип"
+    ],
+    "aliases": [
+      "BOOLEAN"
     ]
   },
   {
@@ -7354,9 +6552,13 @@ window.AxiomSearchIndex = [
     "href": "keyword-reference.html#type-date",
     "kind": "Тип",
     "category": "Типы данных",
-    "description": "Тип данных DATE.",
+    "description": "Тип данных DATE и ссылка на его тематическое описание.",
     "keywords": [
-      "date"
+      "DATE",
+      "тип"
+    ],
+    "aliases": [
+      "DATE"
     ]
   },
   {
@@ -7364,9 +6566,13 @@ window.AxiomSearchIndex = [
     "href": "keyword-reference.html#type-datetime",
     "kind": "Тип",
     "category": "Типы данных",
-    "description": "Тип данных DATETIME.",
+    "description": "Тип данных DATETIME и ссылка на его тематическое описание.",
     "keywords": [
-      "datetime"
+      "DATETIME",
+      "тип"
+    ],
+    "aliases": [
+      "DATETIME"
     ]
   },
   {
@@ -7374,9 +6580,13 @@ window.AxiomSearchIndex = [
     "href": "keyword-reference.html#type-decimal",
     "kind": "Тип",
     "category": "Типы данных",
-    "description": "Тип данных DECIMAL.",
+    "description": "Тип данных DECIMAL и ссылка на его тематическое описание.",
     "keywords": [
-      "decimal"
+      "DECIMAL",
+      "тип"
+    ],
+    "aliases": [
+      "DECIMAL"
     ]
   },
   {
@@ -7384,9 +6594,13 @@ window.AxiomSearchIndex = [
     "href": "keyword-reference.html#type-double",
     "kind": "Тип",
     "category": "Типы данных",
-    "description": "Тип данных DOUBLE.",
+    "description": "Тип данных DOUBLE и ссылка на его тематическое описание.",
     "keywords": [
-      "double"
+      "DOUBLE",
+      "тип"
+    ],
+    "aliases": [
+      "DOUBLE"
     ]
   },
   {
@@ -7394,9 +6608,13 @@ window.AxiomSearchIndex = [
     "href": "keyword-reference.html#type-file",
     "kind": "Тип",
     "category": "Типы данных",
-    "description": "Тип данных FILE.",
+    "description": "Тип данных FILE и ссылка на его тематическое описание.",
     "keywords": [
-      "file"
+      "FILE",
+      "тип"
+    ],
+    "aliases": [
+      "FILE"
     ]
   },
   {
@@ -7404,9 +6622,13 @@ window.AxiomSearchIndex = [
     "href": "keyword-reference.html#type-image",
     "kind": "Тип",
     "category": "Типы данных",
-    "description": "Тип данных IMAGE.",
+    "description": "Тип данных IMAGE и ссылка на его тематическое описание.",
     "keywords": [
-      "image"
+      "IMAGE",
+      "тип"
+    ],
+    "aliases": [
+      "IMAGE"
     ]
   },
   {
@@ -7414,9 +6636,13 @@ window.AxiomSearchIndex = [
     "href": "keyword-reference.html#type-integer",
     "kind": "Тип",
     "category": "Типы данных",
-    "description": "Тип данных INTEGER.",
+    "description": "Тип данных INTEGER и ссылка на его тематическое описание.",
     "keywords": [
-      "integer"
+      "INTEGER",
+      "тип"
+    ],
+    "aliases": [
+      "INTEGER"
     ]
   },
   {
@@ -7424,9 +6650,13 @@ window.AxiomSearchIndex = [
     "href": "keyword-reference.html#type-long",
     "kind": "Тип",
     "category": "Типы данных",
-    "description": "Тип данных LONG.",
+    "description": "Тип данных LONG и ссылка на его тематическое описание.",
     "keywords": [
-      "long"
+      "LONG",
+      "тип"
+    ],
+    "aliases": [
+      "LONG"
     ]
   },
   {
@@ -7434,9 +6664,13 @@ window.AxiomSearchIndex = [
     "href": "keyword-reference.html#type-sprite",
     "kind": "Тип",
     "category": "Типы данных",
-    "description": "Тип данных SPRITE.",
+    "description": "Тип данных SPRITE и ссылка на его тематическое описание.",
     "keywords": [
-      "sprite"
+      "SPRITE",
+      "тип"
+    ],
+    "aliases": [
+      "SPRITE"
     ]
   },
   {
@@ -7444,9 +6678,13 @@ window.AxiomSearchIndex = [
     "href": "keyword-reference.html#type-string",
     "kind": "Тип",
     "category": "Типы данных",
-    "description": "Тип данных STRING.",
+    "description": "Тип данных STRING и ссылка на его тематическое описание.",
     "keywords": [
-      "string"
+      "STRING",
+      "тип"
+    ],
+    "aliases": [
+      "STRING"
     ]
   },
   {
@@ -7454,9 +6692,13 @@ window.AxiomSearchIndex = [
     "href": "keyword-reference.html#type-tilemap",
     "kind": "Тип",
     "category": "Типы данных",
-    "description": "Тип данных TILEMAP.",
+    "description": "Тип данных TILEMAP и ссылка на его тематическое описание.",
     "keywords": [
-      "tilemap"
+      "TILEMAP",
+      "тип"
+    ],
+    "aliases": [
+      "TILEMAP"
     ]
   },
   {
@@ -7464,9 +6706,13 @@ window.AxiomSearchIndex = [
     "href": "keyword-reference.html#type-tileset",
     "kind": "Тип",
     "category": "Типы данных",
-    "description": "Тип данных TILESET.",
+    "description": "Тип данных TILESET и ссылка на его тематическое описание.",
     "keywords": [
-      "tileset"
+      "TILESET",
+      "тип"
+    ],
+    "aliases": [
+      "TILESET"
     ]
   },
   {
@@ -7474,351 +6720,559 @@ window.AxiomSearchIndex = [
     "href": "keyword-reference.html#type-time",
     "kind": "Тип",
     "category": "Типы данных",
-    "description": "Тип данных TIME.",
+    "description": "Тип данных TIME и ссылка на его тематическое описание.",
     "keywords": [
-      "time"
+      "TIME",
+      "тип"
+    ],
+    "aliases": [
+      "TIME"
     ]
   },
   {
-    "title": "Операция +",
-    "href": "keyword-reference.html#expr-plustoken",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Сложение чисел или объединение двух строк.",
+    "title": "AND",
+    "href": "keyword-reference.html#kw-and",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка AND.",
     "keywords": [
-      "+"
+      "AND"
+    ],
+    "aliases": [
+      "AND"
     ]
   },
   {
-    "title": "Операция -",
-    "href": "keyword-reference.html#expr-minustoken",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Вычитание чисел; унарная форма меняет знак числа.",
+    "title": "ANDALSO",
+    "href": "keyword-reference.html#kw-andalso",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка ANDALSO.",
     "keywords": [
-      "-"
+      "ANDALSO"
+    ],
+    "aliases": [
+      "ANDALSO"
     ]
   },
   {
-    "title": "Операция *",
-    "href": "keyword-reference.html#expr-startoken",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Умножение чисел.",
+    "title": "APPEND",
+    "href": "keyword-reference.html#kw-append",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка APPEND.",
     "keywords": [
-      "*"
+      "APPEND"
+    ],
+    "aliases": [
+      "APPEND"
     ]
   },
   {
-    "title": "Операция /",
-    "href": "keyword-reference.html#expr-slashtoken",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Деление с результатом DOUBLE или DECIMAL по правилам типов.",
+    "title": "AS",
+    "href": "keyword-reference.html#kw-as",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка AS.",
     "keywords": [
-      "/"
+      "AS"
+    ],
+    "aliases": [
+      "AS"
     ]
   },
   {
-    "title": "Операция \\",
-    "href": "keyword-reference.html#expr-backslashtoken",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Целочисленное деление INTEGER или LONG.",
+    "title": "BYREF",
+    "href": "keyword-reference.html#kw-byref",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка BYREF.",
     "keywords": [
-      "\\"
+      "BYREF"
+    ],
+    "aliases": [
+      "BYREF"
     ]
   },
   {
-    "title": "Операция MOD",
-    "href": "keyword-reference.html#expr-modkeyword",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Остаток целочисленного деления.",
+    "title": "BYVAL",
+    "href": "keyword-reference.html#kw-byval",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка BYVAL.",
     "keywords": [
-      "mod"
+      "BYVAL"
+    ],
+    "aliases": [
+      "BYVAL"
     ]
   },
   {
-    "title": "Операция ^",
-    "href": "keyword-reference.html#expr-carettoken",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Возведение в степень; результат DOUBLE, связывание справа налево.",
+    "title": "CASE",
+    "href": "keyword-reference.html#kw-case",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка CASE.",
     "keywords": [
-      "^"
+      "CASE"
+    ],
+    "aliases": [
+      "CASE"
     ]
   },
   {
-    "title": "Операция &",
-    "href": "keyword-reference.html#expr-ampersandtoken",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Объединение текстовых представлений скалярных значений.",
+    "title": "CATCH",
+    "href": "keyword-reference.html#kw-catch",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка CATCH.",
     "keywords": [
-      "&"
+      "CATCH"
+    ],
+    "aliases": [
+      "CATCH"
     ]
   },
   {
-    "title": "Операция =",
-    "href": "keyword-reference.html#expr-equalstoken",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Сравнение на равенство.",
+    "title": "CONTINUE",
+    "href": "keyword-reference.html#kw-continue",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка CONTINUE.",
     "keywords": [
-      "="
+      "CONTINUE"
+    ],
+    "aliases": [
+      "CONTINUE"
     ]
   },
   {
-    "title": "Операция <>",
-    "href": "keyword-reference.html#expr-notequalstoken",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Сравнение на неравенство.",
+    "title": "DO",
+    "href": "keyword-reference.html#kw-do",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка DO.",
     "keywords": [
-      "<>"
+      "DO"
+    ],
+    "aliases": [
+      "DO"
     ]
   },
   {
-    "title": "Операция <",
-    "href": "keyword-reference.html#expr-lesstoken",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Строго меньше.",
+    "title": "ELSE",
+    "href": "keyword-reference.html#kw-else",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка ELSE.",
     "keywords": [
-      "<"
+      "ELSE"
+    ],
+    "aliases": [
+      "ELSE"
     ]
   },
   {
-    "title": "Операция <=",
-    "href": "keyword-reference.html#expr-lessorequalstoken",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Меньше или равно.",
+    "title": "ELSEIF",
+    "href": "keyword-reference.html#kw-elseif",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка ELSEIF.",
     "keywords": [
-      "<="
+      "ELSEIF"
+    ],
+    "aliases": [
+      "ELSEIF"
     ]
   },
   {
-    "title": "Операция >",
-    "href": "keyword-reference.html#expr-greatertoken",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Строго больше.",
+    "title": "END",
+    "href": "keyword-reference.html#kw-end",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка END.",
     "keywords": [
-      ">"
+      "END"
+    ],
+    "aliases": [
+      "END"
     ]
   },
   {
-    "title": "Операция >=",
-    "href": "keyword-reference.html#expr-greaterorequalstoken",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Больше или равно.",
+    "title": "EQV",
+    "href": "keyword-reference.html#kw-eqv",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка EQV.",
     "keywords": [
-      ">="
+      "EQV"
+    ],
+    "aliases": [
+      "EQV"
     ]
   },
   {
-    "title": "Операция <<",
-    "href": "keyword-reference.html#expr-lesslesstoken",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Сдвиг целого числа влево.",
+    "title": "EXIT",
+    "href": "keyword-reference.html#kw-exit",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка EXIT.",
     "keywords": [
-      "<<"
+      "EXIT"
+    ],
+    "aliases": [
+      "EXIT"
     ]
   },
   {
-    "title": "Операция >>",
-    "href": "keyword-reference.html#expr-greatergreatertoken",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Сдвиг целого числа вправо.",
+    "title": "FALSE",
+    "href": "keyword-reference.html#kw-false",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка FALSE.",
     "keywords": [
-      ">>"
+      "FALSE"
+    ],
+    "aliases": [
+      "FALSE"
     ]
   },
   {
-    "title": "Операция NOT",
-    "href": "keyword-reference.html#expr-notkeyword",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Логическое или побитовое отрицание.",
+    "title": "FINALLY",
+    "href": "keyword-reference.html#kw-finally",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка FINALLY.",
     "keywords": [
-      "not"
+      "FINALLY"
+    ],
+    "aliases": [
+      "FINALLY"
     ]
   },
   {
-    "title": "Операция AND",
-    "href": "keyword-reference.html#expr-andkeyword",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Логическая конъюнкция или побитовое И.",
+    "title": "IMP",
+    "href": "keyword-reference.html#kw-imp",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка IMP.",
     "keywords": [
-      "and"
+      "IMP"
+    ],
+    "aliases": [
+      "IMP"
     ]
   },
   {
-    "title": "Операция ANDALSO",
-    "href": "keyword-reference.html#expr-andalsokeyword",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Логическое И с коротким замыканием.",
+    "title": "IS",
+    "href": "keyword-reference.html#kw-is",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка IS.",
     "keywords": [
-      "andalso"
+      "IS"
+    ],
+    "aliases": [
+      "IS"
     ]
   },
   {
-    "title": "Операция XOR",
-    "href": "keyword-reference.html#expr-xorkeyword",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Логическое или побитовое исключающее ИЛИ.",
+    "title": "KEY",
+    "href": "keyword-reference.html#kw-key",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка KEY.",
     "keywords": [
-      "xor"
+      "KEY"
+    ],
+    "aliases": [
+      "KEY"
     ]
   },
   {
-    "title": "Операция OR",
-    "href": "keyword-reference.html#expr-orkeyword",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Логическое или побитовое ИЛИ.",
+    "title": "LOOP",
+    "href": "keyword-reference.html#kw-loop",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка LOOP.",
     "keywords": [
-      "or"
+      "LOOP"
+    ],
+    "aliases": [
+      "LOOP"
     ]
   },
   {
-    "title": "Операция ORELSE",
-    "href": "keyword-reference.html#expr-orelsekeyword",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Логическое ИЛИ с коротким замыканием.",
+    "title": "MOD",
+    "href": "keyword-reference.html#kw-mod",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка MOD.",
     "keywords": [
-      "orelse"
+      "MOD"
+    ],
+    "aliases": [
+      "MOD"
     ]
   },
   {
-    "title": "Операция EQV",
-    "href": "keyword-reference.html#expr-eqvkeyword",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Логическая или побитовая эквивалентность.",
+    "title": "MOUSE",
+    "href": "keyword-reference.html#kw-mouse",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка MOUSE.",
     "keywords": [
-      "eqv"
+      "MOUSE"
+    ],
+    "aliases": [
+      "MOUSE"
     ]
   },
   {
-    "title": "Операция IMP",
-    "href": "keyword-reference.html#expr-impkeyword",
-    "kind": "Операция",
-    "category": "Выражения",
-    "description": "Логическая или побитовая импликация.",
+    "title": "NEXT",
+    "href": "keyword-reference.html#kw-next",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка NEXT.",
     "keywords": [
-      "imp"
+      "NEXT"
+    ],
+    "aliases": [
+      "NEXT"
     ]
   },
   {
-    "title": "Встроенные функции",
-    "href": "function-reference.html",
-    "kind": "Раздел",
-    "category": "Справочник языка",
-    "description": "Все 271 встроенная функция и 335 форм вызова.",
+    "title": "NOT",
+    "href": "keyword-reference.html#kw-not",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка NOT.",
     "keywords": [
-      "function-reference",
-      "встроенные функции"
+      "NOT"
+    ],
+    "aliases": [
+      "NOT"
     ]
   },
   {
-    "title": "Операторы и инструкции",
-    "href": "operator-reference.html",
-    "kind": "Раздел",
-    "category": "Справочник языка",
-    "description": "Все операторы, объявления и формы инструкций.",
+    "title": "OFF",
+    "href": "keyword-reference.html#kw-off",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка OFF.",
     "keywords": [
-      "operator-reference",
-      "операторы и инструкции"
+      "OFF"
+    ],
+    "aliases": [
+      "OFF"
     ]
   },
   {
-    "title": "Ключевые слова, типы и операции",
-    "href": "keyword-reference.html",
-    "kind": "Раздел",
-    "category": "Справочник языка",
-    "description": "Полный перечень слов, типов и операций в выражениях.",
+    "title": "ON",
+    "href": "keyword-reference.html#kw-on",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка ON.",
     "keywords": [
-      "keyword-reference",
-      "ключевые слова, типы и операции"
+      "ON"
+    ],
+    "aliases": [
+      "ON"
     ]
   },
   {
-    "title": "Оператор EXIT",
-    "href": "exit.html",
-    "kind": "Раздел",
-    "category": "Справочник языка",
-    "description": "EXIT FOR и EXIT DO: немедленное завершение цикла.",
+    "title": "OR",
+    "href": "keyword-reference.html#kw-or",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка OR.",
     "keywords": [
-      "exit",
-      "оператор exit"
+      "OR"
+    ],
+    "aliases": [
+      "OR"
     ]
   },
   {
-    "title": "Оператор REDIM",
-    "href": "redim.html",
-    "kind": "Раздел",
-    "category": "Справочник языка",
-    "description": "Выделение хранилища массива и сохранение элементов через PRESERVE.",
+    "title": "ORELSE",
+    "href": "keyword-reference.html#kw-orelse",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка ORELSE.",
     "keywords": [
-      "redim",
-      "оператор redim"
+      "ORELSE"
+    ],
+    "aliases": [
+      "ORELSE"
     ]
   },
   {
-    "title": "Оператор ERASE",
-    "href": "erase.html",
-    "kind": "Раздел",
-    "category": "Справочник языка",
-    "description": "Освобождение хранилища массива.",
+    "title": "OUTPUT",
+    "href": "keyword-reference.html#kw-output",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка OUTPUT.",
     "keywords": [
-      "erase",
-      "оператор erase"
+      "OUTPUT"
+    ],
+    "aliases": [
+      "OUTPUT"
     ]
   },
   {
-    "title": "Присваивание",
-    "href": "assignment.html",
-    "kind": "Раздел",
-    "category": "Справочник языка",
-    "description": "Запись результата выражения в переменную, элемент массива или поле.",
+    "title": "PRESERVE",
+    "href": "keyword-reference.html#kw-preserve",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка PRESERVE.",
     "keywords": [
-      "assignment",
-      "присваивание"
+      "PRESERVE"
+    ],
+    "aliases": [
+      "PRESERVE"
     ]
   },
   {
-    "title": "Вызовы процедур и функций",
-    "href": "calls.html",
-    "kind": "Раздел",
-    "category": "Справочник языка",
-    "description": "Аргументы, возвращаемое значение и вызов как инструкция.",
+    "title": "SELECT",
+    "href": "keyword-reference.html#kw-select",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка SELECT.",
     "keywords": [
-      "calls",
-      "вызовы процедур и функций"
+      "SELECT"
+    ],
+    "aliases": [
+      "SELECT"
     ]
   },
   {
-    "title": "Синтаксис и выражения",
-    "href": "language-syntax.html",
-    "kind": "Раздел",
-    "category": "Основы языка",
-    "description": "Лексические правила, имена, комментарии, литералы, формы выражений и интерполированные строки.",
+    "title": "SELF",
+    "href": "keyword-reference.html#kw-self",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка SELF.",
     "keywords": [
-      "интерполяция",
-      "литералы",
-      "комментарии",
-      "синтаксис",
-      "форматирование"
+      "SELF"
+    ],
+    "aliases": [
+      "SELF"
+    ]
+  },
+  {
+    "title": "STEP",
+    "href": "keyword-reference.html#kw-step",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка STEP.",
+    "keywords": [
+      "STEP"
+    ],
+    "aliases": [
+      "STEP"
+    ]
+  },
+  {
+    "title": "STOP",
+    "href": "keyword-reference.html#kw-stop",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка STOP.",
+    "keywords": [
+      "STOP"
+    ],
+    "aliases": [
+      "STOP"
+    ]
+  },
+  {
+    "title": "THEN",
+    "href": "keyword-reference.html#kw-then",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка THEN.",
+    "keywords": [
+      "THEN"
+    ],
+    "aliases": [
+      "THEN"
+    ]
+  },
+  {
+    "title": "TO",
+    "href": "keyword-reference.html#kw-to",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка TO.",
+    "keywords": [
+      "TO"
+    ],
+    "aliases": [
+      "TO"
+    ]
+  },
+  {
+    "title": "TRANSPARENT",
+    "href": "keyword-reference.html#kw-transparent",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка TRANSPARENT.",
+    "keywords": [
+      "TRANSPARENT"
+    ],
+    "aliases": [
+      "TRANSPARENT"
+    ]
+  },
+  {
+    "title": "TRUE",
+    "href": "keyword-reference.html#kw-true",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка TRUE.",
+    "keywords": [
+      "TRUE"
+    ],
+    "aliases": [
+      "TRUE"
+    ]
+  },
+  {
+    "title": "UNTIL",
+    "href": "keyword-reference.html#kw-until",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка UNTIL.",
+    "keywords": [
+      "UNTIL"
+    ],
+    "aliases": [
+      "UNTIL"
+    ]
+  },
+  {
+    "title": "USING",
+    "href": "keyword-reference.html#kw-using",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка USING.",
+    "keywords": [
+      "USING"
+    ],
+    "aliases": [
+      "USING"
+    ]
+  },
+  {
+    "title": "XOR",
+    "href": "keyword-reference.html#kw-xor",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка XOR.",
+    "keywords": [
+      "XOR"
+    ],
+    "aliases": [
+      "XOR"
     ]
   }
 ];

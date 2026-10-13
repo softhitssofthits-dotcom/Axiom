@@ -1,184 +1,158 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Округление и преобразование чисел</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="numeric-functions-conversion-and-legacy">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">INT, STR и VAL</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный указатель</a>
-                <span>/</span>
-                <a href="numeric-functions.html">Числовые функции</a>
-                <span>/</span>
-                <span>Округление и преобразование чисел</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Округление и преобразование чисел</h1>
-            <p class="lead">Раздел округления и преобразования чисел описывает встроенные функции <code>INT</code>, <code>STR</code> и <code>VAL</code> — переход от строки к числу, от числа к строке и округление числа вниз.</p>
-
-            <section class="article-section" id="int">
-                <h2>INT</h2>
-                <p>Функция <code>INT</code> округляет число вниз и возвращает результат в типе <code>INTEGER</code>.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = INT(value)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> задаёт числовое выражение. Результат всегда имеет тип <code>INTEGER</code>, даже если исходное значение было <code>DOUBLE</code> или <code>LONG</code>.</p>
-                <h3>Округление вниз</h3>
-                <p><code>INT</code> округляет именно вниз, а не к нулю. Поэтому <code>INT(3.9)</code> даёт <code>3</code>, а <code>INT(-3.9)</code> даёт <code>-4</code>. Если итоговое значение не помещается в диапазон <code>INTEGER</code>, выполнение завершается диагностикой переполнения.</p>
-                <h3>Пример округления вниз</h3>
-                <pre><code class="language-axiom">' Округление вниз для положительных и отрицательных значений
-PRINT INT(7.8)
-PRINT INT(-7.8)</code></pre>
-                <p>Результат:</p>
-                <pre><code>7
--8</code></pre>
-            </section>
-
-            <section class="article-section" id="str">
-                <h2>STR</h2>
-                <p>Функция <code>STR</code> преобразует число в строку.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">text = STR(value)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> задаёт числовое выражение любого поддерживаемого числового типа. Результат имеет тип <code>STRING</code>.</p>
-                <h3>Текстовое представление числа</h3>
-                <p><code>STR</code> удобна, когда числовое значение нужно объединить с другим текстом, записать в файл или показать через <code>PRINT</code> как часть более длинной строки. Для обратного преобразования используется <code>VAL</code>.</p>
-                <h3>Пример STR</h3>
-                <pre><code class="language-axiom">' Преобразование числа в строку перед объединением
-DIM amount AS DOUBLE
-
-amount = 12.5
-PRINT "Сумма: " + STR(amount)</code></pre>
-                <p>Результат:</p>
-                <pre><code>Сумма: 12.5</code></pre>
-            </section>
-
-            <section class="article-section" id="val">
-                <h2>VAL</h2>
-                <p>Функция <code>VAL</code> читает число из строки и возвращает результат в типе <code>DOUBLE</code>.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = VAL(text)</code></pre>
-                <h3>Аргументы</h3><p><code>text</code> задаёт строку, которую нужно интерпретировать как число.</p>
-                <h3>Некорректный текст</h3>
-                <p>Если строка не содержит корректного числового представления, <code>VAL</code> возвращает <code>0</code>. Поэтому при чтении пользовательского ввода удобно заранее понимать, допускается ли такое значение как осмысленный результат, или дополнительно проверять исходный текст.</p>
-                <p>Функция <code>VAL</code> возвращает только конечное число <code>DOUBLE</code>. Строки <code>"NaN"</code>, <code>"Infinity"</code> и числа, выходящие за диапазон <code>DOUBLE</code>, например <code>"1e309"</code>, дают <code>0</code>. Числовое начало строки сохраняется: <code>VAL("12abc")</code> возвращает <code>12</code>.</p>
-                <h3>Правила чтения числа</h3>
-                <ul>
-                <li>десятичным разделителем служит только точка: <code>VAL("1.5")</code> даёт <code>1.5</code>;</li>
-                <li>запятая внутри числа игнорируется как разделитель групп разрядов, поэтому <code>VAL("1,5")</code> даёт <code>15</code>, а не <code>1.5</code>;</li>
-                <li>начальные и конечные пробелы допустимы: <code>VAL(" 12 ")</code> даёт <code>12</code>;</li>
-                <li>знак ставится перед числом: <code>VAL("-4.5")</code> даёт <code>-4.5</code>, а <code>VAL("+7")</code> даёт <code>7</code>;</li>
-                <li>экспоненциальная запись поддерживается: <code>VAL("1e2")</code> даёт <code>100</code>;</li>
-                <li>шестнадцатеричные записи вида <code>&amp;HFF</code> не читаются: <code>VAL("&amp;HFF")</code> даёт <code>0</code>;</li>
-                <li>если число стоит в начале строки, а дальше следует текст, числовая часть читается: <code>VAL("12abc")</code> даёт <code>12</code>.</li>
-                </ul>
-                <h3>Пример чтения числа из строки</h3>
-                <pre><code class="language-axiom">' Преобразование строкового значения в число
-DIM text AS STRING
-
-text = "125.75"
-PRINT VAL(text) + 10</code></pre>
-                <p>Результат:</p>
-                <pre><code>135.75</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>CINT, CLNG, CDBL и CDEC</h2>
-                <p>Функции <code>CINT</code>, <code>CLNG</code>, <code>CDBL</code> и <code>CDEC</code> явно преобразуют числовое значение к целевому типу: <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code> и <code>DECIMAL</code>. Явные сужающие присваивания в языке запрещены, поэтому эти функции — законная дверь для сужения.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = CINT(value)</code></pre>
-<pre><code class="language-axiom">result = CLNG(value)</code></pre>
-<pre><code class="language-axiom">result = CDBL(value)</code></pre>
-<pre><code class="language-axiom">result = CDEC(value)</code></pre>
-                <h3>Аргументы</h3><p>Аргумент <code>value</code> задаёт числовое значение любого числового типа.</p>
-                <h3>Правила преобразования</h3>
-                <ul>
-                <li>дробная часть отбрасывается усечением к нулю: <code>CINT(-2.9)</code> даёт <code>-2</code> (для округления по правилам используйте <code>ROUND</code>, для пола — <code>INT</code>);</li>
-                <li>диапазон <code>CINT</code> проверяется после усечения: <code>CINT(2147483647.9)</code> возвращает <code>2147483647</code>, а <code>CINT(-2147483648.9)</code> — <code>-2147483648</code>;</li>
-                <li>для функции <code>CLNG</code> значение <code>DOUBLE</code>, равное <code>2^63</code>, уже выходит за верхнюю границу <code>LONG</code> и даёт <code>MB3008</code>; значение <code>-2^63</code> допустимо;</li>
-                <li>выход за диапазон целевого типа даёт диагностику <code>MB3008</code> о переполнении;</li>
-                <li>функция <code>CINT</code> также сообщает <code>MB3008</code>, если исходное значение <code>DOUBLE</code> равно <code>NaN</code> или положительной либо отрицательной бесконечности: такие значения нельзя представить целым числом;</li>
-                <li><code>CDEC</code> точно представляет все значения INTEGER и LONG. <code>CDBL</code> точно представляет INTEGER, но большие LONG и значения DECIMAL могут округляться при переходе к двоичному DOUBLE.</li>
-                </ul>
-                <h3>Явный переход из DECIMAL в DOUBLE</h3>
-                <p>CDBL — встроенная функция языка Axiom, которая возвращает DOUBLE для числового аргумента. Она работает в BytecodeVm без экранного или файлового режима. Аргумент может иметь тип INTEGER, LONG, DOUBLE или DECIMAL. Преобразование не меняет исходную переменную, но может уменьшить точность результата.</p>
-                <p>MIN, MAX и CLAMP не принимают DECIMAL вместе с DOUBLE без явного преобразования. Если для расчёта выбрана двоичная арифметика, используйте CDBL для десятичного аргумента. Весь диапазон конечных значений DECIMAL помещается в диапазон DOUBLE; это не означает сохранения всех значащих цифр. Неверный нечисловой аргумент отклоняется при проверке типов.</p>
-                <pre><code class="language-axiom">DIM exact AS DECIMAL = CDEC(CLNG(9007199254740993))
-' DOUBLE округляет это целое до соседнего представимого значения.
-PRINT CLNG(CDBL(exact))  ' 9007199254740992
-' Исходное десятичное значение осталось точным.
-PRINT exact = CDEC(CLNG(9007199254740993))  ' TRUE
-PRINT MIN(CDBL(CDEC(2)), 3.0)  ' 2</code></pre>
-                <p>Запускаемый пример: <a href="../../samples/functions/cdbl/decimal_precision.axm">Десятичное значение и точность DOUBLE</a>.</p>
-                <h3>Пример явного сужения</h3>
-                <pre><code class="language-axiom">' LONG в INTEGER через явное преобразование
-DIM big AS LONG
-DIM small AS INTEGER
-big = 42
-small = CINT(big)
-PRINT small</code></pre>
-                <h3>Обработка ошибки CINT</h3>
-                <p>Диагностику <code>MB3008</code> функции <code>CINT</code> можно обработать в блоке <code>CATCH</code>. Блок <code>FINALLY</code> выполняется после ошибки, а после завершения оператора <code>TRY</code> программа продолжает работу.</p>
-                <pre><code class="language-axiom">TRY
-    ' Число выходит за диапазон INTEGER.
-    PRINT CINT(2147483648.0)
-CATCH err
-    PRINT "Поймана ошибка:", err.Code
-FINALLY
-    PRINT "Обработка завершена."
-END TRY</code></pre>
-                <h2>Выбор между INT, STR и VAL</h2>
-                <ul>
-                    <li><code>INT</code> и <code>FIX</code> похожи только на первый взгляд: <code>INT</code> округляет вниз, а <code>FIX</code> отбрасывает дробную часть к нулю.</li>
-                    <li><code>STR</code> и <code>VAL</code> часто используются парой, когда программа читает текстовые данные, а затем возвращает числовой результат обратно в строку.</li>
-                    <li>Если нужен числовой результат строго типа <code>INTEGER</code>, используйте <code>INT</code>. Если нужно сохранить исходный числовой тип, обычно подходят <code>FLOOR</code>, <code>CEIL</code>, <code>ROUND</code> или <code>FIX</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/functions/int/basic_usage.axm">INT: округление вниз</a></li>
-                    <li><a href="../../samples/functions/int/overflow_error.axm">INT: переполнение результата</a></li>
-                    <li><a href="../../samples/functions/str/basic_usage.axm">STR: преобразование числа в строку</a></li>
-                    <li><a href="../../samples/functions/val/basic_usage.axm">VAL: чтение числа из строки</a></li>
-                    <li><a href="../../samples/functions/val/invalid_text_behavior.axm">VAL: некорректный текст возвращает 0</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="numeric-functions.html">Числовые функции</a>
-                    <a href="data-types-conversions.html">Вывод типа и преобразования</a>
-                    <a href="numeric-functions-core.html">Базовые числовые функции</a>
-                    <a href="numeric-functions-roots-rounding.html">Округление и корни</a>
-                    <a href="data-types-scalars.html">Скалярные типы и литералы</a>
-                    <a href="string-functions.html">Строковые функции</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
-
-            <section class="article-section"><h2>Проверка строки до преобразования</h2><p>Для проверки полного конечного числа используй <a href="isnumeric.html">встроенную функцию ISNUMERIC</a>. В отличие от VAL, она отклоняет строку с числовым префиксом и текстовым хвостом.</p></section>
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Округление и преобразование чисел — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="numeric-functions-conversion-and-legacy"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Округление и преобразование чисел</span></nav>
+<p class="eyebrow">Справочник языка</p><h1 class="page-title">Округление и преобразование чисел</h1><p class="lead">Раздел описывает встроенные функции INT, CINT, CLNG, CDBL, CDEC, STR и VAL. Они различаются типом результата и правилом обработки исходного значения.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="int"><h2>INT</h2>
+<p>INT — встроенная функция языка Axiom, которая возвращает наибольшее целое, не превышающее число.</p>
+<h3>Назначение</h3>
+<p>Функция нужна для явного получения числового значения требуемого типа.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">INT(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Аргумент должен быть числом типа INTEGER, LONG, DOUBLE или DECIMAL. Передайте выражение, над которым нужно выполнить указанное вычисление.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип INTEGER.</p>
+<h3>Правила и ограничения</h3>
+<p>Для отрицательного дробного числа INT округляет вниз, а CINT усекает к нулю.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3008 возникает, если значение не помещается в целевой тип.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT INT(-2.8)
+PRINT INT(2.8)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>-3
+2</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="cint"><h2>CINT</h2>
+<p>CINT — встроенная функция языка Axiom, которая возвращает целую часть числа в типе INTEGER.</p>
+<h3>Назначение</h3>
+<p>Функция нужна для явного получения числового значения требуемого типа.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">CINT(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Аргумент должен быть числом типа INTEGER, LONG, DOUBLE или DECIMAL. Передайте выражение, над которым нужно выполнить указанное вычисление.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип INTEGER.</p>
+<h3>Правила и ограничения</h3>
+<p>Дробная часть удаляется к нулю; половины не округляются.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3008 возникает, если значение не помещается в целевой тип.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT CINT(-2.8)
+PRINT CINT(2.8)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>-2
+2</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="clng"><h2>CLNG</h2>
+<p>CLNG — встроенная функция языка Axiom, которая возвращает целую часть числа в типе LONG.</p>
+<h3>Назначение</h3>
+<p>Функция нужна для явного получения числового значения требуемого типа.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">CLNG(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Аргумент должен быть числом типа INTEGER, LONG, DOUBLE или DECIMAL. Передайте выражение, над которым нужно выполнить указанное вычисление.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип LONG.</p>
+<h3>Правила и ограничения</h3>
+<p>Дробная часть удаляется к нулю. DOUBLE не может точно представить все LONG.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3008 возникает, если значение не помещается в целевой тип.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT CLNG(-2.8)
+PRINT CLNG(2.8)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>-2
+2</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="cdbl"><h2>CDBL</h2>
+<p>CDBL — встроенная функция языка Axiom, которая возвращает число, преобразованное в DOUBLE.</p>
+<h3>Назначение</h3>
+<p>Функция нужна для явного получения числового значения требуемого типа.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">CDBL(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Аргумент должен быть числом типа INTEGER, LONG, DOUBLE или DECIMAL. Передайте выражение, над которым нужно выполнить указанное вычисление.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Преобразование больших LONG или точных DECIMAL может потерять значащие цифры.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3008 возникает, если значение не помещается в целевой тип.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT CDBL(12)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>12</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="cdec"><h2>CDEC</h2>
+<p>CDEC — встроенная функция языка Axiom, которая возвращает число, преобразованное в DECIMAL.</p>
+<h3>Назначение</h3>
+<p>Функция нужна для явного получения числового значения требуемого типа.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">CDEC(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Аргумент должен быть числом типа INTEGER, LONG, DOUBLE или DECIMAL. Передайте выражение, над которым нужно выполнить указанное вычисление.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DECIMAL.</p>
+<h3>Правила и ограничения</h3>
+<p>Преобразование DOUBLE не восстанавливает точность, утраченную в исходном DOUBLE.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3008 возникает, если значение не помещается в целевой тип.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT CDEC(12.5)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>12.5</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="str"><h2>STR</h2>
+<p>STR — встроенная функция языка Axiom, которая возвращает строковую запись числа.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет включить числовое значение в строку.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">STR(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Аргумент должен быть числом типа INTEGER, LONG, DOUBLE или DECIMAL. Передайте выражение, над которым нужно выполнить указанное вычисление.</p>
+<h3>Результат</h3>
+<p>Функция возвращает значение типа STRING.</p>
+<h3>Правила и ограничения</h3>
+<p>Десятичный разделитель — точка; положительное число не получает ведущего пробела. Форматирование не зависит от языка интерфейса. Очень большие или малые DOUBLE могут иметь показатель степени.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. </p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT "[" &amp; STR(12) &amp; "]"
+PRINT STR(-2.5)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>[12]
+-2.5</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="val"><h2>VAL</h2>
+<p>VAL — встроенная функция языка Axiom, которая возвращает число, прочитанное из строки.</p>
+<h3>Назначение</h3>
+<p>Функция нужна для получения числового значения из текста. Для проверки всей строки используйте ISNUMERIC.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">VAL(&lt;текст&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте STRING с числом или с числовым началом. Аргумент не изменяется.</p>
+<h3>Результат</h3>
+<p>Результат DOUBLE; если число прочитать нельзя или оно неконечно, возвращается 0.</p>
+<h3>Правила и ограничения</h3>
+<p>Перед разбором края строки очищаются от пробельных символов. Сначала проверяется полная запись с инвариантными правилами .NET, включая разделитель групп запятую; затем читается десятичный префикс со знаком, точкой и показателем e/E. Это не строгая проверка всего текста. Пустая строка даёт 0.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. Неподходящий текст не вызывает ошибки выполнения.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT VAL("12abc")
+PRINT VAL("")
+PRINT VAL("1,234")
+PRINT VAL("1e999")</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>12
+0
+1234
+0</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

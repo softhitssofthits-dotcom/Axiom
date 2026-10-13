@@ -1,74 +1,34 @@
 (function () {
-  function normalize(text) {
-    return String(text || "").toLowerCase();
-  }
-
-  function score(entry, query) {
-    let value = 0;
-    const tokens = [entry.title, entry.kind, entry.category, entry.description, ...(entry.keywords || [])].map(normalize);
-    if (normalize(entry.title) === query) {
-      value += 100;
-      // DATE и TIME также являются именами типов: точное имя функции ведёт к её карточке.
-      if (entry.kind === "Функция") {
-        value += 10;
-      }
-    }
-    if (normalize(entry.title).startsWith(query)) {
-      value += 5;
-    }
-    for (const token of tokens) {
-      if (token.includes(query)) {
-        value += 1;
-      }
-    }
-    return value;
-  }
-
+  const normalize = value => String(value || '').toLocaleLowerCase('ru').replaceAll('ё', 'е').trim();
   function search(entries, query) {
-    if (!query.trim()) {
-      return [];
-    }
-
     const normalized = normalize(query);
-    return entries
-      .map((entry) => ({ entry, rank: score(entry, normalized) }))
-      .filter((item) => item.rank > 0)
-      .sort((a, b) => b.rank - a.rank || a.entry.title.localeCompare(b.entry.title, "ru"))
-      .map((item) => item.entry);
+    const words = normalized.split(/\s+/).filter(Boolean);
+    if (!words.length) return [];
+    return entries.map(entry => {
+      const title = normalize(entry.title);
+      const text = [title, entry.kind, entry.category, entry.description, ...(entry.keywords || [])].map(normalize).join(' ');
+      if (!words.every(word => text.includes(word))) return { entry, rank: 0 };
+      const exact = title === normalized || (entry.aliases || []).some(alias => normalize(alias) === normalized);
+      const rank = (exact ? 100 + (entry.kind === 'Функция' ? 10 : 0) : 0) + (title.startsWith(normalized) ? 20 : 0) + words.reduce((sum, word) => sum + (title.includes(word) ? 5 : 1), 0);
+      return { entry, rank };
+    }).filter(item => item.rank > 0).sort((a, b) => b.rank - a.rank || a.entry.title.localeCompare(b.entry.title, 'ru')).map(item => item.entry);
   }
-
-  function render(resultsHost, matches) {
-    resultsHost.innerHTML = "";
-    if (matches.length === 0) {
-      resultsHost.innerHTML = '<p class="empty-state">Ничего не найдено.</p>';
-      return;
-    }
-
-    for (const item of matches) {
-      const card = document.createElement("article");
-      card.className = "reference-card";
-      card.innerHTML = `
-        <h3 class="reference-card__title"><a href="${item.href}">${item.title}</a></h3>
-        <p class="reference-card__meta">${item.kind} • ${item.category}</p>
-        <p class="reference-card__description">${item.description}</p>
-      `;
-      resultsHost.appendChild(card);
-    }
-  }
-
-  const input = document.getElementById("manual-search-input");
-  const results = document.getElementById("manual-search-results");
+  const input = document.getElementById('manual-search-input');
+  const results = document.getElementById('manual-search-results');
+  const status = document.getElementById('manual-search-status');
   const entries = window.AxiomSearchIndex;
-
-  if (!(input instanceof HTMLInputElement) || !results || !Array.isArray(entries)) {
-    return;
+  if (!(input instanceof HTMLInputElement) || !Array.isArray(entries)) return;
+  if (!results) return;
+  input.value = new URLSearchParams(location.search).get('q') || '';
+  function render() {
+    const matches = search(entries, input.value); results.replaceChildren();
+    if (status) status.textContent = !input.value.trim() ? 'Введите название или несколько слов из описания.' : matches.length ? 'Найдено: ' + matches.length : 'Ничего не найдено. Попробуйте другое название или более короткий запрос.';
+    for (const item of matches) {
+      const article = document.createElement('article'); article.className = 'search-result';
+      const heading = document.createElement('h2'); const link = document.createElement('a'); link.href = item.href; link.textContent = item.title; heading.append(link);
+      const meta = document.createElement('p'); meta.className = 'search-result__meta'; meta.textContent = item.kind + ' · ' + item.category;
+      const description = document.createElement('p'); description.textContent = item.description; article.append(heading, meta, description); results.append(article);
+    }
   }
-
-  const onSearch = () => {
-    const matches = search(entries, input.value);
-    render(results, matches);
-  };
-
-  input.addEventListener("input", onSearch);
-  onSearch();
+  input.addEventListener('input', render); render();
 })();

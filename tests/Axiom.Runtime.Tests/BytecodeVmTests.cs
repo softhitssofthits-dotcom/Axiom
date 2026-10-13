@@ -3350,7 +3350,7 @@ PRINT value
         Assert.False(result.StopState!.CanStepBack);
         Assert.Equal(3, result.StoppedAt!.SourceLocation.Line);
         var request = Assert.Single(host.InputRequests);
-        Assert.Null(request.PromptText);
+        Assert.Equal("? ", request.PromptText);
         Assert.Equal(1, request.ValueCount);
         Assert.Empty(host.Output);
     }
@@ -3835,7 +3835,7 @@ PRINT firstName; age + 1
             string.Join(" | ", result.Diagnostics.Select(static diagnostic => $"{diagnostic.Code}:{diagnostic.Message}@{diagnostic.Location.Line}:{diagnostic.Location.Column}")));
         Assert.Equal(["Ada42"], host.Output);
         var request = Assert.Single(host.InputRequests);
-        Assert.Equal("Pair", request.PromptText);
+        Assert.Equal("Pair? ", request.PromptText);
         Assert.Equal(2, request.ValueCount);
     }
 

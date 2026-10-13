@@ -1,112 +1,27 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Многомерные массивы</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="arrays-multidimensional">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Массивы с тремя и более измерениями</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный и тематический указатель</a>
-                <span>/</span>
-                <a href="arrays.html">Массивы</a>
-                <span>/</span>
-                <span>Многомерные массивы</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Многомерные массивы</h1>
-            <p class="lead">Раздел многомерных массивов описывает ранг массива, границы измерений и полную форму — массивы с более чем двумя индексами.</p>
-
-            <section class="article-section">
-                <h2>Ранг и форма массива</h2>
-                <p>Многомерный массив хранит значения одного типа в прямоугольной форме из трёх и более измерений. Каждое измерение имеет собственные включительные границы, а число измерений называется рангом массива.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Синтаксис</h2>
-                <pre><code class="language-axiom">DIM &lt;имя массива&gt;(&lt;границы измерения 1&gt;, &lt;границы измерения 2&gt;, &lt;границы измерения 3&gt;[, ...]) AS &lt;тип элемента&gt;</code></pre>
-                <pre><code class="language-axiom">DIM &lt;имя массива&gt;(,,) AS &lt;тип элемента&gt;</code></pre>
-                <pre><code class="language-axiom">&lt;имя массива&gt;(&lt;индекс 1&gt;, &lt;индекс 2&gt;, &lt;индекс 3&gt;[, ...]) = &lt;выражение&gt;</code></pre>
-                <pre><code class="language-axiom">DIM cube(1 TO 3, 1 TO 4, 1 TO 2) AS INTEGER
-PRINT UBOUND(cube, 2)
-PRINT ARRAYRANK(cube)</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Параметры и части синтаксиса</h2>
-                <ul>
-                    <li><code>&lt;границы измерения N&gt;</code> — диапазон вида <code>&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;</code> для отдельного измерения.</li>
-                    <li><code>&lt;тип элемента&gt;</code> — тип всех элементов массива.</li>
-                    <li><code>&lt;индекс N&gt;</code> — индекс в соответствующем измерении. Для полного доступа к элементу нужно указать столько индексов, каков ранг массива.</li>
-                    <li><code>DIM cube(,,) AS DOUBLE</code> объявляет динамический трёхмерный массив без выделенных границ; форму задаёт последующий <code>REDIM</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Границы каждого измерения</h2>
-                <ul>
-                    <li>Ранг массива задаётся его объявлением и показывает количество измерений.</li>
-                    <li>Функция <code>ARRAYRANK</code> возвращает число измерений массива.</li>
-                    <li>Функции <code>LBOUND</code> и <code>UBOUND</code> позволяют получить границы отдельного измерения.</li>
-                    <li>Если нужно получить границы всех измерений сразу, используйте <code>ARRAYBOUNDS</code>.</li>
-                    <li><code>ARRAYBOUNDS</code> возвращает таблицу вида <code>INTEGER(1 TO rank, 1 TO 2)</code>, где каждая строка содержит нижнюю и верхнюю границу соответствующего измерения.</li>
-                    <li>Точный верхний предел ранга в пользовательском договоре не закреплён. Не рассчитывайте на конкретное число вроде <code>32</code>, если оно не указано в проверенном примере или отдельном описании реализации.</li>
-                    <li>Для невыделенного массива полезно сначала проверять состояние через <code>ARRAYISALLOCATED</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Пример чтения ранга и границ</h2>
-                <pre><code class="language-axiom">DIM cube(1 TO 3, 1 TO 4, 1 TO 2) AS INTEGER
-DIM bounds(,) AS INTEGER
-
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Многомерные массивы — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="arrays-multidimensional"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Многомерные массивы</span></nav>
+<p class="eyebrow">10 · Массивы</p><h1 class="page-title">Многомерные массивы</h1><p class="lead">Многомерный массив — тип данных Axiom с несколькими измерениями; эта статья рассматривает ранг выше 2. Каждый элемент выбирается набором индексов в порядке измерений объявления.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Назначение и контекст</h2><p>Массив сохраняет прямоугольную форму во всех измерениях. ARRAYBOUNDS возвращает таблицу (1 TO ранг, 1 TO 2): нижние границы стоят в первом столбце, верхние — во втором. При последовательном обходе встроенных функций последнее измерение меняется быстрее первого.</p><p>Работа с массивом разрешена на верхнем уровне, в процедуре и в функции; SCREEN не требуется.</p></section>
+<section class="article-section"><h2>Синтаксис</h2><pre><code class="language-axiom">DIM &lt;имя массива&gt;(&lt;границы измерения 1&gt;, &lt;границы измерения 2&gt;, &lt;границы измерения 3&gt;) AS &lt;тип элемента&gt;</code></pre><pre><code class="language-axiom">DIM &lt;имя массива&gt;(,,) AS &lt;тип элемента&gt;</code></pre><pre><code class="language-axiom">&lt;имя массива&gt;(&lt;индекс 1&gt;, &lt;индекс 2&gt;, &lt;индекс 3&gt;) = &lt;значение&gt;</code></pre></section>
+<section class="article-section"><h2>Части записи</h2><p>Каждые границы измерения записываются как числовое выражение нижней границы TO числовое выражение верхней границы. Индексы выбирают координаты в соответствующих измерениях. Тип элемента общий для всех координат. Для ранга выше 3 список продолжается; число пустых мест в динамическом объявлении задаёт ранг.</p><p>Границы задаются числовыми выражениями. INTEGER используется непосредственно; LONG должен помещаться в INTEGER; дробная часть DOUBLE и DECIMAL отбрасывается к нулю. Нижняя граница -2147483648 запрещена, потому что поисковые функции используют нижнюю границу минус 1 как признак отсутствия. Верхняя граница включается в массив. Обратный диапазон допустим только как каноническая пустая форма 1 TO 0 при DIM или REDIM.</p></section>
+<section class="article-section"><h2>Действие и ограничения</h2><p>DIM с границами создаёт элементы со значениями по умолчанию. DIM с пустыми измерениями сохраняет тип и ранг без выделения элементов. Полное индексирование возвращает один элемент; частичное индексирование создаёт представление оставшихся измерений.</p></section>
+<section class="article-section"><h2>Диагностика</h2><p>MB2003 означает несовместимый тип элемента или индекса, MB2004 — неверное число индексов. MB3002 возникает, когда индекс или диапазон при индексировании выходит за границы. MB3005 возникает при доступе к невыделенному массиву либо при недопустимой паре границ. MB3007 сообщает о запрещённой нижней границе -2147483648; выход числового значения за диапазон INTEGER даёт MB3008.</p></section>
+<section class="article-section"><h2>Пример</h2><pre><code class="language-axiom">DIM cube(1 TO 2, -1 TO 1, 4 TO 5) AS INTEGER
+cube(2, 0, 5) = 8
 PRINT ARRAYRANK(cube)
-
-bounds = ARRAYBOUNDS(cube)
-PRINT bounds(1, 1)
-PRINT bounds(1, 2)
-PRINT bounds(2, 1)
-PRINT bounds(2, 2)</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/functions/arrayrank/basic_usage.axm">ARRAYRANK: число измерений</a></li>
-                    <li><a href="../../samples/functions/arraybounds/multidimensional_shape.axm">ARRAYBOUNDS: полная форма массива</a></li>
-                    <li><a href="../../samples/smoke/engine-compare/high_rank_metadata.axm">Высокий ранг: границы и размерность</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="arrays-2d.html">Двумерные массивы</a>
-                    <a href="arrays-functions.html">ARRAY-функции</a>
-                    <a href="arrays-dynamic.html">Динамические массивы</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+PRINT cube(2, 0, 5)
+PRINT LBOUND(cube, 2)
+PRINT ARRAYLENGTH(cube)</code></pre><p>Ожидаемый вывод:</p><pre><code>3
+8
+-1
+12</code></pre></section>
+<section class="article-section"><h2>См. также</h2><p><a href="arrays.html">Массивы</a> · <a href="arrays-indexing.html">Индексирование</a> · <a href="arrays-dynamic.html">Изменение размера</a></p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

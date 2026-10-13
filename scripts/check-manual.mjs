@@ -16,6 +16,8 @@ for (const name of fs.readdirSync(manual).filter(name => name.endsWith('.html'))
   if (new Set(ids).size !== ids.length) errors.push(`${name}: повторяющиеся якоря`);
   if ([...text.matchAll(/<h1\b/g)].length !== 1) errors.push(`${name}: требуется один h1`);
   if (!/<html lang="ru">/.test(text)) errors.push(`${name}: язык страницы`);
+  if (!/class="header-search"/.test(text) || !/type="search"/.test(text) || !/for="manual-search-input"/.test(text)) errors.push(`${name}: нет доступного поиска в шапке`);
+  if (!text.includes('scripts/chapters.js')) errors.push(`${name}: нет общего оглавления`);
   if (/QuickBASIC|QBasic|Visual Basic|\bBASIC\b|Зельднер|Мокрушин/i.test(text)) errors.push(`${name}: внешнее сравнение`);
   if (/class="language-basic"/.test(text)) errors.push(`${name}: устаревшая категория примера`);
   const markup=text.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,'').replace(/<!--[\s\S]*?-->/g,'');
@@ -47,9 +49,28 @@ for (const [name, page] of pages) {
 const context = { window: {} };
 vm.runInNewContext(fs.readFileSync(path.join(manual, 'scripts/search-index.js'), 'utf8'), context);
 const index = context.window.AxiomSearchIndex;
+const searchDestinations=new Set();
+for(const entry of index){
+  if(searchDestinations.has(entry.href))errors.push(`Повторная цель в поиске: ${entry.href}`);
+  searchDestinations.add(entry.href);
+}
 for (const entry of index) checkLink(entry.href, 'scripts/search-index.js');
 const nav = fs.readFileSync(path.join(manual, 'scripts/manual.js'), 'utf8');
 for (const match of nav.matchAll(/href:\s*"([^"]+)"/g)) checkLink(match[1], 'scripts/manual.js');
+vm.runInNewContext(fs.readFileSync(path.join(manual, 'scripts/chapters.js'), 'utf8'), context);
+const chapters = context.window.AxiomManualChapters;
+if (chapters.filter(chapter => chapter.number).length !== 17) errors.push('Оглавление должно содержать 17 тематических глав.');
+const navFiles = new Set();
+for (const chapter of chapters) for (const item of chapter.items) {
+  checkLink(item.href, 'scripts/chapters.js');
+  if (navFiles.has(item.href)) errors.push(`Повторная тема в оглавлении: ${item.href}`);
+  navFiles.add(item.href);
+}
+const compatibilityPages = new Set(['language-syntax.html','data-types-scalars.html','data-types-records-and-arrays.html','arrays-1d-visual.html','arrays-2d-visual.html']);
+for (const [name] of pages) if (name !== 'index.html' && !compatibilityPages.has(name) && !navFiles.has(name)) errors.push(`${name}: отсутствует в тематическом оглавлении`);
+for (const name of ['function-reference.html','operator-reference.html']) if (pages.get(name)?.text.includes('class="reference-details"')) errors.push(`${name}: каталог повторяет полное описание тематической статьи`);
+const limits = pages.get('data-type-limits.html')?.text ?? '';
+for (const boundary of ['2147483647','9223372036854775807','79228162514264337593543950335','1.7976931348623157E+308']) if (!limits.includes(boundary)) errors.push(`Нет числового предела ${boundary} в таблице диапазонов.`);
 if (fs.existsSync(path.join(manual, 'data/language-reference.json'))) {
   const inventory = JSON.parse(fs.readFileSync(path.join(manual, 'data/language-reference.json'), 'utf8'));
   const catalog = pages.get('function-reference.html')?.text ?? '';

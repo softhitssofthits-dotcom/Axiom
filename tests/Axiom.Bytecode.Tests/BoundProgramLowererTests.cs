@@ -239,7 +239,7 @@ public sealed class BoundProgramLowererTests
             result.Program.EntryPoint.Instructions,
             static instruction => instruction.Kind == LoweredInstructionKind.Input);
 
-        Assert.Equal("Pair", input.PromptText);
+        Assert.Equal("Pair? ", input.PromptText);
         Assert.Equal(2, input.ValueCount);
         Assert.Equal(["firstName", "age"], input.Variables.Select(static variable => variable.Name).ToArray());
     }

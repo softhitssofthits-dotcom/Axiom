@@ -1,213 +1,234 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Корни, логарифмы и округление</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="numeric-functions-roots-rounding">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">SQR, CBRT, EXP, LOG, POW, FLOOR, CEIL, ROUND и FIX</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный указатель</a>
-                <span>/</span>
-                <a href="numeric-functions.html">Числовые функции</a>
-                <span>/</span>
-                <span>Корни, логарифмы и округление</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Корни, логарифмы и округление</h1>
-            <p class="lead">Раздел корней, логарифмов и округления описывает функции <code>SQR</code>, <code>CBRT</code>, <code>EXP</code>, <code>LOG</code>, <code>POW</code>, <code>FLOOR</code>, <code>CEIL</code>, <code>ROUND</code> и <code>FIX</code> — степенные вычисления, получение логарифмов и разные способы перехода от дробного числа к целому значению.</p>
-
-            <section class="article-section" id="sqr">
-                <h2>SQR</h2>
-                <p><code>SQR</code> — встроенная функция языка Axiom, которая возвращает квадратный корень числа. Функция работает в любом режиме программы без предварительного вызова оператора SCREEN.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = SQR(value)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> должен быть неотрицательным числом. Результат имеет тип <code>DOUBLE</code>.</p>
-            <h3>Промежуточные вычисления и расстояние</h3>
-<p>Функция SQR получает результат своего аргумента уже после вычисления выражения. Поэтому формула <code>SQR(x*x + y*y)</code> может завершиться диагностикой MB3008 при умножении, даже если само расстояние помещается в DOUBLE. Для очень малых координат оба квадрата могут округлиться до нуля, и прямое выражение вернёт 0.</p>
-<p>Для конечных координат риск промежуточного переполнения можно уменьшить масштабированием: сначала разделить координаты на большую из их абсолютных величин, вычислить корень, затем вернуть масштаб. Для нулевого вектора нужно отдельно вернуть 0 до деления.</p>
-<pre><code class="language-axiom">FUNCTION StableDistance(x AS DOUBLE, y AS DOUBLE) AS DOUBLE
-    DIM scale AS DOUBLE = MAX(ABS(x), ABS(y))
-    IF scale = 0 THEN
-        RETURN 0
-    END IF
-    DIM scaledX AS DOUBLE = x / scale
-    DIM scaledY AS DOUBLE = y / scale
-    RETURN scale * SQR(scaledX * scaledX + scaledY * scaledY)
-END FUNCTION
-
-PRINT StableDistance(VAL("3e200"), VAL("4e200"))
-PRINT StableDistance(VAL("3e-200"), VAL("4e-200"))</code></pre>
-<p>Результаты близки к <code>5e200</code> и <code>5e-200</code>. Небольшое отличие последней цифры допустимо из-за округления DOUBLE. Запись с показателем степени здесь передаётся строкой в VAL. StableDistance — пользовательская функция этого примера, а не новая встроенная функция языка.</p>
-<h3>Ограничения и диагностика</h3>
-<p>Отрицательный аргумент SQR даёт MB3007. Неконечный результат арифметики даёт MB3008. Масштабирование не расширяет диапазон DOUBLE: если уже само расстояние невозможно представить конечным числом, последняя операция тоже даст MB3008. Пример не обещает точное округление для всех возможных пар DOUBLE.</p>
-<p>Запускаемая программа: <a href="../../samples/functions/sqr/scaled_distance.axm">scaled_distance.axm</a>.</p>
-</section>
-
-            <section class="article-section" id="cbrt">
-                <h2>CBRT</h2>
-                <p>Функция <code>CBRT</code> возвращает кубический корень числа.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = CBRT(value)</code></pre>
-            </section>
-
-            <section class="article-section" id="exp">
-                <h2>EXP</h2>
-                <p>Функция <code>EXP</code> вычисляет число <code>e</code> в заданной степени.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = EXP(value)</code></pre>
-            </section>
-
-            <section class="article-section" id="log">
-                <h2>LOG</h2>
-                <p>Функция <code>LOG</code> возвращает натуральный логарифм числа.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = LOG(value)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> должен быть строго больше нуля.</p>
-            </section>
-
-            <section class="article-section" id="log10">
-                <h2>LOG10</h2>
-                <p>Функция <code>LOG10</code> возвращает десятичный логарифм числа.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = LOG10(value)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> должен быть строго больше нуля.</p>
-            </section>
-
-            <section class="article-section" id="log2">
-                <h2>LOG2</h2>
-                <p>Функция <code>LOG2</code> возвращает двоичный логарифм числа.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = LOG2(value)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> должен быть строго больше нуля.</p>
-            </section>
-
-            <section class="article-section" id="pow">
-                <h2>POW</h2>
-                <p><code>POW</code> — встроенная функция языка Axiom, которая возводит число в степень и возвращает результат типа <code>DOUBLE</code>. Встроенная функция работает без графического режима.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = POW(value, power)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> задаёт основание степени, а <code>power</code> показатель степени.</p>
-                <h3>Точность результата</h3>
-                <p>По принятому договору вычисление <code>POW</code> выполняется готовой функцией <code>System.Math.Pow</code>: конечный результат совпадает с результатом .NET в той же среде, включая округление и знак нуля. Axiom сохраняет собственные сообщения об ошибках: результат <code>NaN</code> преобразуется в <code>MB3007</code>, а бесконечность — в <code>MB3008</code>. Возврат этих особых значений вместо ошибки не поддерживается.</p>
-                <p>Оба движка преобразуют числовые аргументы в <code>DOUBLE</code> и вычисляют степень через <code>Math.Pow</code> среды .NET. Результат является приближённым: текущая реализация не обеспечивает математически правильное округление каждой степени к ближайшему значению <code>DOUBLE</code>. Последние разряды могут зависеть от операционной системы и архитектуры.</p>
-                <p>Например, точное значение <code>POW(2, -1075)</code> находится посередине между нулём и минимальным положительным <code>DOUBLE</code>. На проверенной Windows среда .NET возвращает <code>5E-324</code>; это наблюдение конкретной среды, а не переносимая гарантия результата. Если программе требуется правильно округлённая степень на всех границах, встроенная функция <code>POW</code> текущей реализации не подтверждает такое требование.</p>
-                <pre><code class="language-axiom">' Наблюдаем результат конкретной среды на границе DOUBLE
-PRINT POW(2, -1074)
-PRINT POW(2, -1075)
-PRINT POW(2, -1076)</code></pre>
-                <p>В проверенной среде строки результата равны <code>5E-324</code>, <code>5E-324</code> и <code>0</code>. Полный запускаемый пример: <a href="../../samples/functions/pow/rounding_boundary.axm">граница округления степени</a>.</p>
-                <h3>Диагностика</h3>
-                <p>При отрицательном основании и нецелой степени встроенная функция сообщает <code>MB3007</code>. Если вычисление даёт бесконечный результат, функция сообщает <code>MB3008</code>. Уход слишком малого результата к нулю не вызывает диагностику.</p>
-                <h3>Пример корней и степеней</h3>
-                <pre><code class="language-axiom">' Степень, логарифм и квадратный корень
-PRINT POW(2, 8)
-PRINT LOG10(1000)
-PRINT SQR(81)</code></pre>
-                <p>Результат:</p>
-                <pre><code>256
-3
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Корни, степени, логарифмы и округление — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="numeric-functions-roots-rounding"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Корни, степени, логарифмы и округление</span></nav>
+<p class="eyebrow">Справочник языка</p><h1 class="page-title">Корни, степени, логарифмы и округление</h1><p class="lead">Раздел описывает встроенные функции SQR, CBRT, EXP, LOG, LOG10, LOG2, POW, FLOOR, CEIL, ROUND и FIX. Ниже каждый вызов имеет собственный договор.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="sqr"><h2>SQR</h2>
+<p>SQR — встроенная функция языка Axiom, которая возвращает квадратный корень числа.</p>
+<h3>Назначение</h3>
+<p>Функция выполняет указанное в определении математическое преобразование непосредственно в числовом выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">SQR(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Аргумент должен быть числом типа INTEGER, LONG, DOUBLE или DECIMAL. Передайте выражение, над которым нужно выполнить указанное вычисление.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DOUBLE; числовой аргумент предварительно преобразуется в DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Аргумент должен быть неотрицательным.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. Аргумент меньше нуля вызывает MB3007. MB3008 возникает, если результат не является конечным DOUBLE.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT SQR(0)
+PRINT SQR(81)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>0
 9</code></pre>
-            </section>
-
-            <section class="article-section" id="floor">
-                <h2>FLOOR</h2>
-                <p>Функция <code>FLOOR</code> округляет число вниз и сохраняет числовой тип аргумента.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = FLOOR(value)</code></pre>
-            </section>
-
-            <section class="article-section" id="ceil">
-                <h2>CEIL</h2>
-                <p>Функция <code>CEIL</code> округляет число вверх и сохраняет числовой тип аргумента.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = CEIL(value)</code></pre>
-            </section>
-
-            <section class="article-section" id="round">
-                <h2>ROUND</h2>
-                <p>Функция <code>ROUND</code> округляет число к ближайшему целому и сохраняет числовой тип аргумента.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = ROUND(value)</code></pre>
-                <h3>Округление и отбрасывание дробной части</h3>
-                <p>В Axiom половины округляются от нуля. Поэтому <code>ROUND(2.5)</code> даёт <code>3</code>, а <code>ROUND(-2.5)</code> даёт <code>-3</code>.</p>
-            </section>
-
-            <section class="article-section" id="fix">
-                <h2>FIX</h2>
-                <p>Функция <code>FIX</code> отбрасывает дробную часть числа по направлению к нулю и сохраняет числовой тип аргумента.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = FIX(value)</code></pre>
-                <h3>Пример округления чисел</h3>
-                <pre><code class="language-axiom">' Разница между INT, FLOOR, ROUND и FIX
-PRINT INT(-3.9)
-PRINT FLOOR(-3.9)
-PRINT ROUND(-3.9)
-PRINT FIX(-3.9)</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Области определения и способы округления</h2>
-                <ul>
-                    <li><code>SQR</code> не принимает отрицательные значения, а <code>LOG</code>, <code>LOG10</code> и <code>LOG2</code> требуют аргумент строго больше нуля.</li>
-                    <li><code>POW</code> может завершиться диагностикой времени выполнения, если комбинация основания и показателя степени выходит за допустимую область определения.</li>
-                    <li><code>INT</code> отличается от <code>FLOOR</code> тем, что возвращает именно <code>INTEGER</code>, а <code>FLOOR</code> сохраняет числовой тип аргумента.</li>
-                    <li><code>FIX</code> удобен там, где нужно просто отбросить дробную часть без смещения вниз для отрицательных чисел.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/functions/sqr/basic_usage.axm">SQR: квадратный корень</a></li>
-                    <li><a href="../../samples/functions/sqr/negative_error.axm">SQR: отрицательный аргумент</a></li>
-                    <li><a href="../../samples/functions/cbrt/basic_usage.axm">CBRT: кубический корень</a></li>
-                    <li><a href="../../samples/functions/exp/basic_usage.axm">EXP: степень числа e</a></li>
-                    <li><a href="../../samples/functions/log/basic_usage.axm">LOG: натуральный логарифм</a></li>
-                    <li><a href="../../samples/functions/log/non_positive_error.axm">LOG: неположительный аргумент</a></li>
-                    <li><a href="../../samples/functions/log10/basic_usage.axm">LOG10: десятичный логарифм</a></li>
-                    <li><a href="../../samples/functions/log2/basic_usage.axm">LOG2: двоичный логарифм</a></li>
-                    <li><a href="../../samples/functions/pow/basic_usage.axm">POW: возведение в степень</a></li>
-                    <li><a href="../../samples/functions/pow/invalid_domain_error.axm">POW: недопустимая область определения</a></li>
-                    <li><a href="../../samples/functions/floor/basic_usage.axm">FLOOR: округление вниз</a></li>
-                    <li><a href="../../samples/functions/ceil/basic_usage.axm">CEIL: округление вверх</a></li>
-                    <li><a href="../../samples/functions/round/basic_usage.axm">ROUND: округление к ближайшему</a></li>
-                    <li><a href="../../samples/functions/fix/basic_usage.axm">FIX: отсечение дробной части</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="numeric-functions.html">Числовые функции</a>
-                    <a href="numeric-functions-conversion-and-legacy.html">INT, STR и VAL</a>
-                    <a href="numeric-functions-trigonometry.html">Тригонометрические функции</a>
-                    <a href="numeric-functions-core.html">Базовые числовые функции</a>
-                    <a href="data-types-scalars.html">Скалярные типы и литералы</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="cbrt"><h2>CBRT</h2>
+<p>CBRT — встроенная функция языка Axiom, которая возвращает кубический корень числа.</p>
+<h3>Назначение</h3>
+<p>Функция выполняет указанное в определении математическое преобразование непосредственно в числовом выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">CBRT(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Аргумент должен быть числом типа INTEGER, LONG, DOUBLE или DECIMAL. Передайте выражение, над которым нужно выполнить указанное вычисление.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DOUBLE; числовой аргумент предварительно преобразуется в DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Отрицательные числа допустимы.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3008 возникает, если результат не является конечным DOUBLE.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT CBRT(-8)
+PRINT CBRT(0)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>-2
+0</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="exp"><h2>EXP</h2>
+<p>EXP — встроенная функция языка Axiom, которая возвращает значение экспоненты e в степени аргумента.</p>
+<h3>Назначение</h3>
+<p>Функция выполняет указанное в определении математическое преобразование непосредственно в числовом выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">EXP(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Аргумент должен быть числом типа INTEGER, LONG, DOUBLE или DECIMAL. Передайте выражение, над которым нужно выполнить указанное вычисление.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DOUBLE; числовой аргумент предварительно преобразуется в DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Большие положительные аргументы могут переполнить DOUBLE; очень малые результаты могут округлиться к нулю.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3008 возникает, если результат не является конечным DOUBLE.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT EXP(0)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>1</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="log"><h2>LOG</h2>
+<p>LOG — встроенная функция языка Axiom, которая возвращает натуральный логарифм числа.</p>
+<h3>Назначение</h3>
+<p>Функция выполняет указанное в определении математическое преобразование непосредственно в числовом выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">LOG(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Аргумент должен быть числом типа INTEGER, LONG, DOUBLE или DECIMAL. Передайте выражение, над которым нужно выполнить указанное вычисление.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DOUBLE; числовой аргумент предварительно преобразуется в DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Аргумент должен быть строго положительным; основание логарифма равно e.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. Аргумент, равный нулю или меньше нуля, вызывает MB3007. MB3008 возникает, если результат не является конечным DOUBLE.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT LOG(1)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>0</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="log10"><h2>LOG10</h2>
+<p>LOG10 — встроенная функция языка Axiom, которая возвращает десятичный логарифм числа.</p>
+<h3>Назначение</h3>
+<p>Функция выполняет указанное в определении математическое преобразование непосредственно в числовом выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">LOG10(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Аргумент должен быть числом типа INTEGER, LONG, DOUBLE или DECIMAL. Передайте выражение, над которым нужно выполнить указанное вычисление.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DOUBLE; числовой аргумент предварительно преобразуется в DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Аргумент должен быть строго положительным; основание равно 10.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. Аргумент, равный нулю или меньше нуля, вызывает MB3007. MB3008 возникает, если результат не является конечным DOUBLE.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT LOG10(100)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>2</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="log2"><h2>LOG2</h2>
+<p>LOG2 — встроенная функция языка Axiom, которая возвращает двоичный логарифм числа.</p>
+<h3>Назначение</h3>
+<p>Функция выполняет указанное в определении математическое преобразование непосредственно в числовом выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">LOG2(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Аргумент должен быть числом типа INTEGER, LONG, DOUBLE или DECIMAL. Передайте выражение, над которым нужно выполнить указанное вычисление.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DOUBLE; числовой аргумент предварительно преобразуется в DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Аргумент должен быть строго положительным; основание равно 2.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. Аргумент, равный нулю или меньше нуля, вызывает MB3007. MB3008 возникает, если результат не является конечным DOUBLE.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT LOG2(8)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>3</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="pow"><h2>POW</h2>
+<p>POW — встроенная функция языка Axiom, которая возвращает первое число в степени второго.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет вычислить степенную зависимость с целым или дробным показателем.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">POW(&lt;основание&gt;, &lt;показатель степени&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте два числа. Основание — возводимое число; показатель степени — степень, которая может быть дробной. Оба преобразуются в DOUBLE.</p>
+<h3>Результат</h3>
+<p>Функция возвращает значение типа DOUBLE.</p>
+<h3>Правила и ограничения</h3>
+<p>Ноль в нулевой степени даёт 1. Отрицательное основание с неподходящим дробным показателем не имеет вещественного результата.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при неопределённом вещественном результате; MB3008 — при бесконечном результате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT POW(2, 3)
+PRINT POW(0, 0)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>8
+1</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="floor"><h2>FLOOR</h2>
+<p>FLOOR — встроенная функция языка Axiom, которая возвращает наибольшее целое значение, не превышающее аргумент.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет получить целое по величине значение с указанным правилом округления.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">FLOOR(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Аргумент должен быть числом типа INTEGER, LONG, DOUBLE или DECIMAL. Передайте выражение, над которым нужно выполнить указанное вычисление.</p>
+<h3>Результат</h3>
+<p>Тип результата совпадает с типом аргумента, включая DOUBLE и DECIMAL.</p>
+<h3>Правила и ограничения</h3>
+<p>Округление направлено к минус бесконечности. INTEGER и LONG возвращаются без изменения.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. </p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT FLOOR(-2.8)
+PRINT FLOOR(2.8)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>-3
+2</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="ceil"><h2>CEIL</h2>
+<p>CEIL — встроенная функция языка Axiom, которая возвращает наименьшее целое значение, не меньшее аргумента.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет получить целое по величине значение с указанным правилом округления.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">CEIL(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Аргумент должен быть числом типа INTEGER, LONG, DOUBLE или DECIMAL. Передайте выражение, над которым нужно выполнить указанное вычисление.</p>
+<h3>Результат</h3>
+<p>Тип результата совпадает с типом аргумента, включая DOUBLE и DECIMAL.</p>
+<h3>Правила и ограничения</h3>
+<p>Округление направлено к плюс бесконечности. INTEGER и LONG возвращаются без изменения.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. </p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT CEIL(-2.8)
+PRINT CEIL(2.8)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>-2
+3</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="round"><h2>ROUND</h2>
+<p>ROUND — встроенная функция языка Axiom, которая возвращает число, округлённое до ближайшего целого.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет получить целое по величине значение с указанным правилом округления.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">ROUND(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Аргумент должен быть числом типа INTEGER, LONG, DOUBLE или DECIMAL. Передайте выражение, над которым нужно выполнить указанное вычисление.</p>
+<h3>Результат</h3>
+<p>Тип результата совпадает с типом аргумента, включая DOUBLE и DECIMAL.</p>
+<h3>Правила и ограничения</h3>
+<p>Половины округляются от нуля; аргумента количества десятичных знаков нет. INTEGER и LONG возвращаются без изменения.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. </p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT ROUND(-2.5)
+PRINT ROUND(2.5)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>-3
+3</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="fix"><h2>FIX</h2>
+<p>FIX — встроенная функция языка Axiom, которая возвращает целую часть числа после удаления дробной части.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет получить целое по величине значение с указанным правилом округления.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">FIX(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Аргумент должен быть числом типа INTEGER, LONG, DOUBLE или DECIMAL. Передайте выражение, над которым нужно выполнить указанное вычисление.</p>
+<h3>Результат</h3>
+<p>Тип результата совпадает с типом аргумента, включая DOUBLE и DECIMAL.</p>
+<h3>Правила и ограничения</h3>
+<p>Усечение направлено к нулю. INTEGER и LONG возвращаются без изменения.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. </p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT FIX(-2.8)
+PRINT FIX(2.8)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>-2
+2</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

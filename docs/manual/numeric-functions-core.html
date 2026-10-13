@@ -1,212 +1,167 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Базовые числовые функции</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="numeric-functions-core">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">ABS, RND, SGN, MIN, MAX, CLAMP и SETSIGN</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный указатель</a>
-                <span>/</span>
-                <a href="numeric-functions.html">Числовые функции</a>
-                <span>/</span>
-                <span>Базовые числовые функции</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Базовые числовые функции</h1>
-            <p class="lead">Раздел базовых числовых функций описывает средства <code>ABS</code>, <code>SGN</code>, <code>MIN</code>, <code>MAX</code>, <code>CLAMP</code>, <code>SETSIGN</code> и <code>RND</code> — модуль числа, определение знака, выбор значения, ограничение диапазона, перенос знака и генерация псевдослучайного числа.</p>
-
-            <section class="article-section" id="abs">
-                <h2>ABS</h2>
-                <p>Функция <code>ABS</code> возвращает модуль числа.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = ABS(value)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> задаёт числовое выражение. Результат имеет тот же числовой тип, что и исходное значение.</p>
-                <h3>Пример модуля числа</h3>
-                <pre><code class="language-axiom">' Модуль числа всегда неотрицателен
-PRINT ABS(-18)
-PRINT ABS(3.25)</code></pre>
-                <p>Результат:</p>
-                <pre><code>18
-3.25</code></pre>
-            </section>
-
-            <section class="article-section" id="rnd">
-                <h2>RND</h2>
-                <p><code>RND</code> — встроенная функция языка Axiom, которая возвращает псевдослучайное число типа <code>DOUBLE</code>. Функция работает в любом режиме программы и не требует оператора SCREEN. Оператор RANDOMIZE позволяет повторить последовательность при одинаковом зерне.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = RND()</code></pre>
-                <h3>Случайное число от нуля до единицы</h3>
-                <p>Функция вызывается без аргументов. Результат лежит в диапазоне от <code>0</code> включительно до <code>1</code> не включительно. Если нужно получить число в другом диапазоне, обычно результат <code>RND()</code> масштабируют обычными арифметическими операциями.</p>
-                <h3>Пример случайного целого числа</h3>
-                <pre><code class="language-axiom">' Получение значения в диапазоне от 1 до 10
-DIM value AS INTEGER
-
-value = INT(RND() * 10) + 1
-PRINT value</code></pre>
-            <h3>Широкий целый диапазон</h3>
-<p>Формула <code>INT(RND()*(high-low+1))+low</code> требует, чтобы вычисление ширины не переполняло свой целый тип и результат INT помещался в INTEGER. Например, полный диапазон INTEGER имеет ширину 4294967296, которая в INTEGER не помещается. INT всегда возвращает INTEGER, даже если его аргумент был DOUBLE или LONG.</p>
-<p>Для полного диапазона INTEGER можно хранить границы и ширину в LONG, округлить произведение функцией FLOOR и преобразовать смещение через CLNG до сложения:</p>
-<pre><code class="language-axiom">DIM low AS LONG = -2147483648
-DIM high AS LONG = 2147483647
-DIM width AS LONG = high-low+1
-RANDOMIZE 42
-DIM value AS LONG = CLNG(FLOOR(RND()*width))+low
-PRINT value &gt;= low AND value &lt;= high</code></pre>
-<p>Если нижняя граница превышает точность целых чисел DOUBLE, порядок преобразования особенно важен: <code>CLNG(FLOOR(RND()*width))+low</code> прибавляет границу в LONG. Выражение <code>CLNG(FLOOR(RND()*width)+low)</code> сначала выполняет сложение в DOUBLE и может потерять соседнее целое значение.</p>
-<h3>Ограничения и диагностика</h3>
-<p>Пример не является общим решением для всех пар LONG. Ширина полного LONG-диапазона не помещается в LONG. Переполнение при вычислении ширины, выход результата INT за INTEGER или результата CLNG за LONG дают MB3008.</p>
-<p>Преобразование через умножение и округление не доказывает строго одинаковые вероятности целых результатов. RND выдаёт представимые значения DOUBLE, а не непрерывный источник. Например, восемь равновероятных входов 0, 1/8, ..., 7/8 при умножении на 3 и применении INT распределяются по трём значениям в пропорции 3:3:2. Это иллюстрация на заданном источнике, а не утверждение о частотах текущего генератора.</p>
-<p>Запускаемая программа: <a href="../../samples/functions/rnd/long_range_conversion.axm">long_range_conversion.axm</a>. Она проверяет границы результата и повторный посев. См. также <a href="randomize.html">оператор RANDOMIZE</a>.</p>
-</section>
-
-            <section class="article-section" id="sgn">
-                <h2>SGN</h2>
-                <p>Функция <code>SGN</code> определяет знак числа.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = SGN(value)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> задаёт числовое выражение. Результат имеет тип <code>INTEGER</code> и равен <code>-1</code>, <code>0</code> или <code>1</code>.</p>
-                <h3>Пример знака числа</h3>
-                <pre><code class="language-axiom">' Определение знака трёх значений
-PRINT SGN(-9)
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Модуль, знак, границы и случайные числа — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="numeric-functions-core"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Модуль, знак, границы и случайные числа</span></nav>
+<p class="eyebrow">Справочник языка</p><h1 class="page-title">Модуль, знак, границы и случайные числа</h1><p class="lead">Раздел описывает встроенные функции ABS, SGN, MIN, MAX, CLAMP, SETSIGN и RND. Синтаксис каждого вызова приведён отдельно.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="abs"><h2>ABS</h2>
+<p>ABS — встроенная функция языка Axiom, которая возвращает модуль числа.</p>
+<h3>Назначение</h3>
+<p>Функция нужна для получения расстояния или величины отклонения без знака.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">ABS(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Аргумент должен быть числом типа INTEGER, LONG, DOUBLE или DECIMAL. Передайте выражение, над которым нужно выполнить указанное вычисление.</p>
+<h3>Результат</h3>
+<p>Тип результата совпадает с типом аргумента.</p>
+<h3>Правила и ограничения</h3>
+<p>Ноль остаётся нулём. Минимальные INTEGER и LONG не имеют положительного аналога в своём типе.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3008 возникает при переполнении модуля минимального INTEGER или LONG.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT ABS(-18)
+PRINT ABS(0)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>18
+0</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="sgn"><h2>SGN</h2>
+<p>SGN — встроенная функция языка Axiom, которая возвращает знак числа в виде −1, 0 или 1.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет определить направление изменения числа по его знаку.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">SGN(&lt;значение&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Аргумент должен быть числом типа INTEGER, LONG, DOUBLE или DECIMAL. Передайте выражение, над которым нужно выполнить указанное вычисление.</p>
+<h3>Результат</h3>
+<p>Результат INTEGER: −1 для отрицательного числа, 0 для нуля, 1 для положительного.</p>
+<h3>Правила и ограничения</h3>
+<p>Положительный и отрицательный ноль DOUBLE дают 0.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. </p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT SGN(-9)
 PRINT SGN(0)
-PRINT SGN(9)</code></pre>
-                <p>Результат:</p>
-                <pre><code>-1
+PRINT SGN(9)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>-1
 0
 1</code></pre>
-            </section>
-
-            <section class="article-section" id="min">
-                <h2>MIN</h2>
-                <p>Функция <code>MIN</code> возвращает меньшее из двух чисел.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = MIN(left, right)</code></pre>
-                <h3>Аргументы</h3><p><code>left</code> и <code>right</code> задают сравниваемые числовые выражения. Если аргументы имеют разные числовые типы, язык приводит их к общему числовому типу.</p>
-                <h3>Пример меньшего и большего значения</h3>
-                <pre><code class="language-axiom">' Выбор меньшего значения
-PRINT MIN(8, 3)
-PRINT MIN(2.5, 7)</code></pre>
-                <p>Результат:</p>
-                <pre><code>3
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="min"><h2>MIN</h2>
+<p>MIN — встроенная функция языка Axiom, которая возвращает меньшее из двух чисел.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет выбрать меньшее число непосредственно в выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">MIN(&lt;первое число&gt;, &lt;второе число&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте два числовых выражения; первое и второе задают сравниваемые величины.</p>
+<h3>Результат</h3>
+<p>Результат имеет общий числовой тип аргументов.</p>
+<h3>Правила и ограничения</h3>
+<p>Аргументы приводятся к общему числовому типу до сравнения; смешение DECIMAL и DOUBLE в одном вызове отклоняется компилятором; при равенстве выбирается первый.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. </p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT MIN(8, 3)
+PRINT MIN(2.5, 7)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>3
 2.5</code></pre>
-            </section>
-
-            <section class="article-section" id="max">
-                <h2>MAX</h2>
-                <p>Функция <code>MAX</code> возвращает большее из двух чисел.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = MAX(left, right)</code></pre>
-                <h3>Аргументы</h3><p><code>left</code> и <code>right</code> задают сравниваемые числовые выражения. Возвращаемый тип определяется по тем же правилам, что и у <code>MIN</code>.</p>
-                <h3>Пример большего значения</h3>
-                <pre><code class="language-axiom">' Выбор большего значения
-PRINT MAX(8, 3)
-PRINT MAX(2.5, 7)</code></pre>
-                <p>Результат:</p>
-                <pre><code>8
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="max"><h2>MAX</h2>
+<p>MAX — встроенная функция языка Axiom, которая возвращает большее из двух чисел.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет выбрать большее число непосредственно в выражении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">MAX(&lt;первое число&gt;, &lt;второе число&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте два числовых выражения; первое и второе задают сравниваемые величины.</p>
+<h3>Результат</h3>
+<p>Результат имеет общий числовой тип аргументов.</p>
+<h3>Правила и ограничения</h3>
+<p>Аргументы приводятся к общему числовому типу до сравнения; смешение DECIMAL и DOUBLE в одном вызове отклоняется компилятором; при равенстве выбирается первый.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. </p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT MAX(8, 3)
+PRINT MAX(2.5, 7)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>8
 7</code></pre>
-            </section>
-
-            <section class="article-section" id="clamp">
-                <h2>CLAMP</h2>
-                <p>Функция <code>CLAMP</code> ограничивает значение заданным диапазоном.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = CLAMP(value, low, high)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> задаёт исходное число. <code>low</code> задаёт нижнюю границу, а <code>high</code> верхнюю. Если <code>value</code> меньше нижней границы, возвращается <code>low</code>; если больше верхней, возвращается <code>high</code>.</p>
-                <h3>Нижняя граница не выше верхней</h3>
-                <p>Нижняя граница не должна быть больше верхней. Если диапазон задан неверно, выполнение завершается диагностикой времени выполнения.</p>
-                <h3>Пример ограничения диапазоном</h3>
-                <pre><code class="language-axiom">' Ограничение значения диапазоном от 0 до 100
-PRINT CLAMP(-5, 0, 100)
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="clamp"><h2>CLAMP</h2>
+<p>CLAMP — встроенная функция языка Axiom, которая возвращает число, ограниченное заданным включительным диапазоном.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет ограничить громкость, координату или другое числовое значение допустимым диапазоном.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">CLAMP(&lt;значение&gt;, &lt;нижняя граница&gt;, &lt;верхняя граница&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Все три аргумента числовые. Значение задаёт ограничиваемое число; нижняя и верхняя границы задают допустимый диапазон.</p>
+<h3>Результат</h3>
+<p>Ниже диапазона возвращается нижняя граница, выше — верхняя; внутри диапазона возвращается исходное значение. Тип — общий числовой тип трёх аргументов.</p>
+<h3>Правила и ограничения</h3>
+<p>Границы включены. Равные границы допустимы. Смешение DECIMAL и DOUBLE среди аргументов одного вызова отклоняется компилятором.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает, если нижняя граница больше верхней.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT CLAMP(-5, 0, 100)
 PRINT CLAMP(45, 0, 100)
-PRINT CLAMP(120, 0, 100)</code></pre>
-                <p>Результат:</p>
-                <pre><code>0
+PRINT CLAMP(120, 0, 100)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>0
 45
 100</code></pre>
-            </section>
-
-            <section class="article-section" id="setsign">
-                <h2>SETSIGN</h2>
-                <p>SETSIGN — встроенная функция языка Axiom, которая переносит знак второго аргумента на первый. Функция нужна, когда величина и направление вычислены отдельно; она работает в BytecodeVm без экранного или файлового режима.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = SETSIGN(value, signFrom)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> задаёт число, модуль которого нужно сохранить. <code>signFrom</code> задаёт источник знака. Результат возвращается в числовом типе первого аргумента.</p>
-                <h3>Правила и диагностика</h3>
-                <p>Оба аргумента должны быть числовыми. Тип результата совпадает с типом value; signFrom задаёт только знак. Для DOUBLE учитывается знак нуля: SETSIGN(3, -0.0) возвращает -3, SETSIGN(3, 0.0) возвращает 3. При обычном сравнении эти два нуля равны. SGN(-0.0) возвращает 0, потому что определяет отношение к нулю, а не переносит знак.</p>
-                <p>Если положительный модуль не помещается в тип value, функция выдаёт MB3008. Например, SETSIGN(-2147483647 - 1, 1) не помещается в INTEGER; SETSIGN(-2147483647 - 1, -1) сохраняет исходное минимальное значение. Ошибку можно перехватить оператором TRY/CATCH. Неверный тип аргумента отклоняется до исполнения.</p>
-                <pre><code class="language-axiom">DIM positive AS DOUBLE = 0.0
-DIM negative AS DOUBLE = -0.0
-PRINT SETSIGN(3, positive)  ' 3
-PRINT SETSIGN(3, negative)  ' -3
-PRINT SGN(negative)        ' 0</code></pre>
-                <p>Запускаемый пример: <a href="../../samples/functions/setsign/signed_zero.axm">Знак нуля и перенос знака</a>.</p>
-                <h3>Пример переноса знака</h3>
-                <pre><code class="language-axiom">' Знак второго аргумента переносится на первый
-PRINT SETSIGN(12, -5)
-PRINT SETSIGN(-12, 5)</code></pre>
-                <p>Результат:</p>
-                <pre><code>-12
-12</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Тип результата и область применения</h2>
-                <ul>
-                    <li><code>ABS</code> и <code>SETSIGN</code> сохраняют тип первого аргумента. Для <code>MIN</code>, <code>MAX</code> и <code>CLAMP</code> аргументы приводятся к общему числовому типу по правилам продвижения типов; результат имеет этот общий тип.</li>
-                    <li><code>MIN</code> и <code>MAX</code> удобно использовать в выражениях, где не хочется писать отдельный <code>IF</code> только ради выбора одного из двух чисел.</li>
-                    <li><code>RND</code> не принимает параметров. Форма вроде <code>RND(1)</code> в Axiom не поддерживается.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/functions/abs/basic_usage.axm">ABS: модуль числа</a></li>
-                    <li><a href="../../samples/functions/rnd/basic_usage.axm">RND: случайное число</a></li>
-                    <li><a href="../../samples/functions/sgn/basic_usage.axm">SGN: знак числа</a></li>
-                    <li><a href="../../samples/functions/min/basic_usage.axm">MIN: меньшее из двух чисел</a></li>
-                    <li><a href="../../samples/functions/max/basic_usage.axm">MAX: большее из двух чисел</a></li>
-                    <li><a href="../../samples/functions/clamp/basic_usage.axm">CLAMP: ограничение диапазона</a></li>
-                    <li><a href="../../samples/functions/clamp/invalid_bounds_error.axm">CLAMP: неверные границы</a></li>
-                    <li><a href="../../samples/functions/setsign/basic_usage.axm">SETSIGN: перенос знака</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="numeric-functions.html">Числовые функции</a>
-                    <a href="numeric-functions-conversion-and-legacy.html">Преобразование чисел</a>
-                    <a href="numeric-functions-roots-rounding.html">Корни и округление</a>
-                    <a href="numeric-functions-trigonometry.html">Тригонометрические функции</a>
-                    <a href="data-types-scalars.html">Скалярные типы и литералы</a>
-                    <a href="if.html">IF</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="setsign"><h2>SETSIGN</h2>
+<p>SETSIGN — встроенная функция языка Axiom, которая возвращает модуль первого числа со знаком второго числа.</p>
+<h3>Назначение</h3>
+<p>Функция нужна для объединения отдельно вычисленных величины и направления.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">SETSIGN(&lt;значение&gt;, &lt;источник знака&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Оба аргумента числовые. Значение определяет модуль и тип результата; источник знака определяет только знак.</p>
+<h3>Результат</h3>
+<p>Тип результата совпадает с типом первого аргумента.</p>
+<h3>Правила и ограничения</h3>
+<p>Для DOUBLE учитывается знак отрицательного нуля; SGN этого различия не делает.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3008 возникает, если изменение знака минимального INTEGER или LONG требует непредставимого положительного значения.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT SETSIGN(12, -5)
+PRINT SETSIGN(-12, 5)
+PRINT SETSIGN(3, -0.0)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>-12
+12
+-3</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="rnd"><h2>RND</h2>
+<p>RND — встроенная функция языка Axiom, которая возвращает очередное псевдослучайное число.</p>
+<h3>Назначение</h3>
+<p>Получение случайных исходов; оператор RANDOMIZE задаёт начальное состояние генератора.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">RND()</code></pre>
+<h3>Аргументы</h3>
+<p>Аргументов нет.</p>
+<h3>Результат</h3>
+<p>Результат DOUBLE находится в полуинтервале [0, 1): ноль допустим, единица исключена.</p>
+<h3>Правила и ограничения</h3>
+<p>Каждый вызов продвигает состояние генератора. Одинаковое зерно RANDOMIZE воспроизводит последовательность на той же среде исполнения. При масштабировании диапазона учитывайте точность DOUBLE и переполнение промежуточной ширины. INT возвращает INTEGER, даже если ширина вычислена как LONG.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. </p>
+<h3>Пример</h3><pre><code class="language-axiom">RANDOMIZE 42
+DIM first AS DOUBLE = RND()
+RANDOMIZE 42
+PRINT RND() = first
+PRINT first &gt;= 0 AND first &lt; 1</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>TRUE
+TRUE</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

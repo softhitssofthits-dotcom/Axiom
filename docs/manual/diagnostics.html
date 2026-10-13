@@ -1,144 +1,14 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Диагностика</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="diagnostics">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Коды ошибок и их чтение</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный и тематический указатель</a>
-                <span>/</span>
-                <span>Обработка ошибок и диагностика</span>
-                <span>/</span>
-                <span>Диагностика</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Диагностика</h1>
-            <p class="lead">Раздел диагностики описывает виды ошибок Axiom, их коды и чтение сообщений: на каком этапе язык столкнулся с проблемой — при чтении текста программы, при проверке её смысла или во время выполнения.</p>
-
-            <section class="article-section">
-                <h2>Разделы диагностики</h2>
-                <ul>
-                    <li><a href="#summary">Виды ошибок</a></li>
-                    <li><a href="#format">Формат сообщения</a></li>
-                    <li><a href="#remarks">Как читать сообщения</a></li>
-                    <li><a href="#examples">Примеры ошибок</a></li>
-                    <li><a href="#diagnostics">Коды диагностики</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="summary">
-                <h2>Виды ошибок</h2>
-                <p>Сообщение об ошибке в Axiom всегда привязано к месту в тексте и содержит код, по которому можно понять класс проблемы. В текущем публичном контракте различаются ошибки чтения и разбора, смысловые ошибки и ошибки времени выполнения.</p>
-                <p>Не каждое сообщение является ошибкой. Ошибки блокируют запуск, а предупреждения и советы помогают проверить программу, не запрещая её выполнение. В Electron IDE панель сообщений позволяет отдельно выбрать ошибки, предупреждения или советы. Сообщение <code>MB2047</code> о неиспользуемом значении относится к советам.</p>
-            </section>
-
-            <section class="article-section" id="format">
-                <h2>Формат сообщения</h2>
-                <p>Каждая диагностика содержит не только текст объяснения, но и координаты проблемного участка.</p>
-                <table class="compact-table">
-                    <thead>
-                        <tr><th>Поле</th><th>Назначение</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>Код</code></td><td>Короткое обозначение вида ошибки, например <code>MB3003</code>.</td></tr>
-                        <tr><td><code>Сообщение</code></td><td>Человекочитаемое объяснение проблемы.</td></tr>
-                        <tr><td><code>Строка</code></td><td>Номер строки, к которой относится ошибка.</td></tr>
-                        <tr><td><code>Столбец</code></td><td>Позиция внутри строки.</td></tr>
-                        <tr><td><code>Длина</code></td><td>Протяжённость проблемного участка.</td></tr>
-                    </tbody>
-                </table>
-                <p>Префиксы кодов читаются так:</p>
-                <ul>
-                    <li><code>MB0xxx</code> — ошибка чтения текста программы;</li>
-                    <li><code>MB0001</code> — недопустимый символ в коде. Например, русская буква в имени <code>aя</code> запрещена; в строке <code>"Русский текст"</code> и комментарии такие буквы допустимы. Программа с этой ошибкой не запускается.</li>
-                    <li><code>MB1xxx</code> — ошибка разбора конструкции;</li>
-                    <li><code>MB2xxx</code> — смысловая ошибка;</li>
-                    <li><code>MB3xxx</code> — ошибка во время выполнения;</li>
-                    <li><code>MB4xxx</code> — служебные коды инфраструктуры выполнения, например покрытие байт-кода и захват состояния; они не относятся к пользовательскому контракту языка и не должны встречаться в обычных программах.</li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="remarks">
-                <h2>Структура сообщения</h2>
-                <ul>
-                    <li>Сначала полезно определить не точный код, а общий вид ошибки: чтение текста, проверка смысла или выполнение программы.</li>
-                    <li>Если сообщение кажется неожиданным, проверьте несколько строк выше: в блочных конструкциях реальная причина часто находится раньше, чем место окончательной остановки.</li>
-                    <li>Коды <code>MB0004</code>, <code>MB2018</code> и <code>MB3008</code> особенно важны для числовой модели языка, потому что отделяют ошибочный литерал, ошибочное константное приведение и переполнение во время выполнения.</li>
-                    <li>Ошибки во время выполнения не означают, что программа написана синтаксически неверно: они возникают только после успешного запуска.</li>
-                    <li>Если ошибка возникает внутри локальной процедуры или функции, сообщение дополнительно показывает цепочку активных вызовов и внешнюю процедуру или функцию, внутри которой локальная объявлена.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <p>Для ручной проверки в IDE удобно использовать короткие отрицательные примеры, каждый из которых показывает один основной вид ошибки.</p>
-                <ul class="resource-list">
-                    <li><a href="../../samples/acceptance/negative/undeclared_variable.axm">Необъявленное имя</a></li>
-                    <li><a href="../../samples/acceptance/negative/dim_requires_type_or_initializer.axm">Объявление DIM без типа и инициализатора</a></li>
-                    <li><a href="../../samples/acceptance/negative/if_requires_boolean.axm">Условие IF без логического значения</a></li>
-                    <li><a href="../../samples/acceptance/negative/wrong_argument_count.axm">Неверное число аргументов</a></li>
-                    <li><a href="../../samples/acceptance/negative/division_by_zero.axm">Деление на ноль</a></li>
-                    <li><a href="../../samples/acceptance/negative/for_step_zero.axm">Цикл FOR со STEP 0</a></li>
-                    <li><a href="../../samples/acceptance/negative/invalid_numeric_input.axm">Неверное преобразование INPUT</a></li>
-                    <li><a href="../../samples/expressions/numeric_literals/long_out_of_range_error.axm">Литерал вне диапазона LONG</a></li>
-                    <li><a href="../../samples/expressions/numeric_literals/decimal_out_of_range_error.axm">Константа не помещается в DECIMAL</a></li>
-                    <li><a href="../../samples/expressions/arithmetic/double_overflow_error.axm">Неконечный результат DOUBLE</a></li>
-                    <li><a href="../../samples/functions/log/non_positive_error.axm">Недопустимое значение для LOG</a></li>
-                    <li><a href="../../samples/smoke/nested_runtime_diagnostic.axm">Ошибка внутри локальной функции с цепочкой вызовов</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section" id="examples">
-                <h2>Примеры ошибок</h2>
-                <p>Опечатка в имени оператора отмечается на строке с опечаткой. Например, запись <code>PRIN $"Привет, {name}!"</code> вместо <code>PRINT</code> сообщает о необъявленном имени PRIN и может дополнительно сообщить о выражении без эффекта. Такая ошибка не должна превращаться во внутренний сбой IDE или отмечать первую строку программы.</p>
-                <p>В русской IDE описания ошибок отображаются на русском языке. Если возникает внутренняя ошибка IDE0001, интерфейс показывает русское объяснение, а технические подробности следует искать в журнале IDE.</p>
-                <pre><code class="language-axiom">IF TRUE THEN
-    DIM LOCAL_NAME AS STRING = "A"
-END IF
-
-PRINT LOCAL_NAME</code></pre>
-                <p>Этот пример читается правильно, но завершается смысловой ошибкой: имя <code>LOCAL_NAME</code> существует только внутри блока <code>IF</code>.</p>
-
-                <pre><code class="language-axiom">DIM AGE AS INTEGER
-INPUT AGE
-PRINT AGE</code></pre>
-                <p>Если пользователь введёт текст вместо числа, программа дойдёт до оператора <code>INPUT</code> и завершится ошибкой времени выполнения.</p>
-
-                <pre><code class="language-axiom">PRINT 1 / 0</code></pre>
-                <p>Деление на ноль не мешает прочитать программу, но делает невозможным корректное вычисление выражения при запуске.</p>
-
-                <pre><code class="language-axiom">PRINT Outer()
-
-FUNCTION Outer() AS DOUBLE
-    RETURN Inner()
-
-    FUNCTION Inner() AS DOUBLE
-        RETURN 10 / 0
-    END FUNCTION
-END FUNCTION</code></pre>
-                <p>Если ошибка случится в локальной функции <code>Inner</code>, диагностика сохранит координаты строки с делением и дополнительно покажет цепочку вызовов: локальную функцию, внешнюю функцию <code>Outer</code> и места их вызова.</p>
-            </section>
-
-            <section class="article-section" id="diagnostics">
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Диагностика — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="diagnostics"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Диагностика</span></nav>
+<p class="eyebrow">Справочное приложение</p><h1 class="page-title">Диагностика</h1><p class="lead">Раздел диагностики объясняет сообщения о проблемах в исходной программе и во время выполнения. Каждое сообщение содержит код, описание и доступные сведения о месте ошибки.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><span class="legacy-anchor" id="summary"></span><h2>Когда возникает сообщение</h2><p>Сначала проверяется исходный текст: допустимые символы, запись литералов и структура конструкций. Затем проверяются имена, типы и контекст использования. Ошибки этих этапов препятствуют запуску.</p><p>Во время исполнения могут возникнуть ошибки, которые зависят от данных: деление на ноль, выход индекса за границы, недопустимый ввод или отказ файловой операции. Их можно обрабатывать средствами <code>TRY</code>, когда ошибка относится к поддержанному договору языка.</p></section><section class="article-section"><span class="legacy-anchor" id="format"></span><span class="legacy-anchor" id="remarks"></span><h2>Код и место ошибки</h2><p>Код позволяет найти точное условие в справочнике. Диапазон исходного текста указывает место, которое нужно проверить. Одна ошибочная запись может вызвать несколько связанных сообщений; исправляйте исходную причину и выполняйте проверку снова.</p><p>Префиксы <code>MB0xxx</code>, <code>MB1xxx</code>, <code>MB2xxx</code> и <code>MB3xxx</code> относятся соответственно к чтению текста, разбору, смысловой проверке и выполнению. Служебные сообщения инфраструктуры не расширяют пользовательский синтаксис.</p></section><section class="article-section" id="diagnostics">
                 <h2>Коды диагностики</h2>
 
                 <h3>Ошибки чтения и разбора</h3>
@@ -208,7 +78,7 @@ END FUNCTION</code></pre>
                         <tr><td><code>MB2044</code></td><td>Внутри метода <code>TYPE</code> используется голое имя поля. Поле доступно только через <code>SELF</code>: напишите <code>SELF.ИмяПоля</code>.</td></tr>
                         <tr><td><code>MB2045</code></td><td>Предупреждение: имя используется и как переменная, и как процедура (<code>SUB</code>/<code>FUNCTION</code>). Это не ошибка — разные классы имён могут совпадать, — но компилятор советует проверить, не опечатка ли это.</td></tr>
                         <tr><td><code>MB2046</code></td><td>Графическая операция находится в заведомо неподходящем режиме: графическая поверхность ещё не создана, выбран текстовый <code>SCREEN 0</code> или оператору требуется <code>CANVAS</code>, а выбран <code>SCREEN</code> (либо наоборот). Компилятор учитывает порядок операторов, константные номера режимов, ветви и прямые вызовы процедур. Ошибка блокирует запуск.</td></tr>
-                        <tr><td><code>MB2047</code></td><td>Переменная объявлена, но её значение нигде не читается. В Electron IDE сообщение отображается как совет с мягким выделением имени переменной, а не оператора <code>DIM</code>; в панели сообщений советы отделены от ошибок и предупреждений. Одно присваивание или ввод через <code>INPUT</code> не считается использованием результата. Проверьте имя переменной; используйте значение либо уберите ненужную переменную, сохранив необходимые действия её инициализатора. При правке устаревший совет сразу снимается и уточняется новым анализом. Совет не блокирует запуск; в модели диагностики компилятора сохраняется уровень предупреждения. <a href="../../samples/operators/dim/unused_value_warning.axm">Запускаемый пример</a>.</td></tr>
+                        <tr><td><code>MB2048</code></td><td>Имя после NEXT не совпадает со счётчиком закрываемого FOR. Имя можно опустить; если оно указано, оно должно совпадать без учёта регистра. Для вложенных циклов проверяется ближайший открытый FOR. <a href="for.html">Правила FOR … NEXT</a>.</td></tr><tr><td><code>MB2047</code></td><td>Переменная объявлена, но её значение нигде не читается. В Electron IDE сообщение отображается как совет с мягким выделением имени переменной, а не оператора <code>DIM</code>; в панели сообщений советы отделены от ошибок и предупреждений. Одно присваивание или ввод через <code>INPUT</code> не считается использованием результата. Проверьте имя переменной; используйте значение либо уберите ненужную переменную, сохранив необходимые действия её инициализатора. При правке устаревший совет сразу снимается и уточняется новым анализом. Совет не блокирует запуск; в модели диагностики компилятора сохраняется уровень предупреждения. <a href="../../samples/operators/dim/unused_value_warning.axm">Запускаемый пример</a>.</td></tr>
                     </tbody>
                 </table>
 
@@ -233,23 +103,18 @@ END FUNCTION</code></pre>
                     </tbody>
                 </table>
                 <p>Если ошибка возникла внутри локальной процедуры или функции, в тексте диагностики появится блок <code>Цепочка вызовов</code> с перечнем активных вызовов, их местами вызова и внешней процедурой или функцией, где объявлена локальная.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="error-handling.html">Обработка ошибок</a>
-                    <a href="try.html">Оператор TRY</a>
-                    <a href="error.html">Оператор ERROR</a>
-                    <a href="data-type-limits.html">Диапазоны и ограничения типов</a>
-                    <a href="arrays-diagnostics.html">Ошибки массивов</a>
-                    <a href="examples.html">Примеры программ</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+            </section><section class="article-section"><span class="legacy-anchor" id="examples"></span><h2>Запускаемые примеры</h2><p>Откройте нужный файл в IDE и запустите его. Примеры с ошибкой предназначены для проверки сообщения компилятора или выполнения.</p><ul class="resource-list">
+                    <li><a href="../../samples/acceptance/negative/undeclared_variable.axm">Необъявленное имя</a></li>
+                    <li><a href="../../samples/acceptance/negative/dim_requires_type_or_initializer.axm">Объявление DIM без типа и инициализатора</a></li>
+                    <li><a href="../../samples/acceptance/negative/if_requires_boolean.axm">Условие IF без логического значения</a></li>
+                    <li><a href="../../samples/acceptance/negative/wrong_argument_count.axm">Неверное число аргументов</a></li>
+                    <li><a href="../../samples/acceptance/negative/division_by_zero.axm">Деление на ноль</a></li>
+                    <li><a href="../../samples/acceptance/negative/for_step_zero.axm">Цикл FOR со STEP 0</a></li>
+                    <li><a href="../../samples/acceptance/negative/invalid_numeric_input.axm">Неверное преобразование INPUT</a></li>
+                    <li><a href="../../samples/expressions/numeric_literals/long_out_of_range_error.axm">Литерал вне диапазона LONG</a></li>
+                    <li><a href="../../samples/expressions/numeric_literals/decimal_out_of_range_error.axm">Константа не помещается в DECIMAL</a></li>
+                    <li><a href="../../samples/expressions/arithmetic/double_overflow_error.axm">Неконечный результат DOUBLE</a></li>
+                    <li><a href="../../samples/functions/log/non_positive_error.axm">Недопустимое значение для LOG</a></li>
+                    <li><a href="../../samples/smoke/nested_runtime_diagnostic.axm">Ошибка внутри локальной функции с цепочкой вызовов</a></li>
+                </ul></section><section class="article-section"><h2>См. также</h2><div class="link-list"><a href="error-handling.html">Обработка ошибок</a><a href="arrays-diagnostics.html">Ошибки массивов</a><a href="input.html">Ошибки ввода</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

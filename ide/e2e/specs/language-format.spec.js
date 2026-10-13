@@ -7,6 +7,32 @@ async function open(S, source, tag) {
   return file;
 }
 module.exports = [
+  { id: 'language-next-counter', name: 'NEXT проверяет имя счётчика и сохраняет диагностику в редакторе', async fn({ S, C }) {
+    await open(S, 'FOR i = 1 TO 2\n    PRINT i\nNEXT wrong\n', 'next-counter');
+    await S.page.evaluate(() => window.__ide.check(false));
+    const bad = await S.page.evaluate(() => {
+      const i=window.__ide;
+      const markers=i.monaco.editor.getModelMarkers({owner:'axiom',resource:i.editor.getModel().uri});
+      return {diagnostics:i._lastDiagnostics,markers};
+    });
+    C.ok(bad.diagnostics.some(item=>item.code==='MB2048'), 'Неверный счётчик отвергнут компилятором');
+    C.ok(bad.markers.some(item=>item.code==='MB2048'&&item.startLineNumber===3&&item.startColumn===6), 'Ошибка отмечена на неверном имени');
+    await S.page.evaluate(() => window.__ide.setLanguage('en'));
+    C.ok(await S.page.evaluate(() => document.getElementById('diagnostics-content').textContent.includes("NEXT counter 'wrong' must match FOR counter 'i'")), 'Оба имени сохранены в английском сообщении');
+    await S.page.evaluate(() => window.__ide.setLanguage('ru'));
+    for(const ending of ['NEXT','NEXT i','NEXT I']){
+      await S.page.evaluate(async ending => { const i=window.__ide; i.editor.getModel().setValue('FOR i = 1 TO 2\n    PRINT i\n'+ending+'\n'); await i.check(false); }, ending);
+      C.ok(await S.page.evaluate(() => !window.__ide._lastDiagnostics.some(item=>item.severity==='error')), 'Допустимая форма '+ending+' проверена');
+      const tokens=await S.page.evaluate(() => window.__ide.monaco.editor.tokenize(window.__ide.editor.getValue(),'axiom'));
+      C.ok(tokens[2].some(item=>item.type.includes('keyword')), 'NEXT сохраняет подсветку ключевого слова');
+      if(ending!=='NEXT'){
+        const hover=await S.page.evaluate(async () => { const i=window.__ide; const card=await window.LangFeatures._hoverProvider.provideHover(i.editor.getModel(),{lineNumber:3,column:6}); return card?.contents.map(item=>item.value).join('\n')||''; });
+        C.ok(hover.includes('INTEGER'), 'Имя после NEXT связано со счётчиком компилятора');
+      }
+    }
+    await S.page.evaluate(() => window.__ide.run()); await S.waitIdle();
+    C.ok(await S.page.evaluate(() => /(?:^|\n)1\r?\n2(?:\r?\n|$)/.test(window.__ide.execution.outputText)), 'Цикл с NEXT I реально исполнен');
+  } },
   { id: 'language-hover-registry', name: 'Карточки всех встроенных функций, типов и ключевых слов соответствуют реестру', async fn({ S, C }) {
     await open(S, 'PRINT 1\n', 'hover-registry');
     const result = await S.page.evaluate(async () => {

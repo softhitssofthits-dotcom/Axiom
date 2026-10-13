@@ -1,95 +1,45 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Оператор TRY ... CATCH ... FINALLY</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="try">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Управляемая обработка ошибок</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-<main class="content">
-<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Обработка ошибок и диагностика</span><span>/</span><span>TRY</span></nav>
-<p class="eyebrow">Оператор</p>
-<h1 class="page-title">Оператор TRY ... CATCH ... FINALLY</h1>
-<p class="lead"><code>TRY</code> — оператор языка Axiom, который выделяет участок программы, где может возникнуть ошибка времени выполнения. <code>CATCH</code> получает управление, если ошибка произошла и её нужно обработать без остановки программы. <code>FINALLY</code> используют для действий, которые должны выполниться при выходе из блока.</p>
-
-<section class="article-section">
-<h2>Как TRY заменяет переход к обработчику</h2>
-<p>В Axiom эта форма заменяет старую идею <code>ON ERROR GOTO</code> без перехода по метке. Обработчик расположен рядом с опасным участком кода, а значение ошибки попадает в переменную, указанную после <code>CATCH</code>, например <code>err</code> в записи <code>CATCH err</code>.</p>
-<p>Поддержанные формы <code>TRY/CATCH/FINALLY</code> компилируются в байт-код и выполняются <code>BytecodeVm</code>. Неподдержанными остаются старые формы продолжения с точки ошибки и фильтры обработчиков.</p>
-</section>
-
-        <section class="article-section">
-<h2>Синтаксис</h2>
-<pre><code class="language-axiom">TRY
-    [tryStatements]
-CATCH errorVariable
-    [catchStatements]
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Оператор TRY — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="try"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор TRY</span></nav>
+<p class="eyebrow">13 · Обработка ошибок</p><h1 class="page-title">Оператор TRY</h1><p class="lead">TRY — оператор языка Axiom, который защищает участок программы для обработки ошибок времени выполнения. Блок CATCH получает возникшую ошибку, а блок FINALLY выполняет завершающие инструкции.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Назначение и контекст</h2><p>TRY позволяет обработать ожидаемый отказ, например недоступный файл или недопустимый аргумент, и продолжить программу после END TRY. Он доступен на верхнем уровне и внутри подпрограмм. Ошибки лексического, синтаксического и семантического анализа обнаруживаются до запуска и этим оператором не перехватываются.</p></section>
+<section class="article-section"><h2>Форма с обработчиком</h2><pre><code class="language-axiom">TRY
+    &lt;защищённые инструкции&gt;
+CATCH &lt;имя ошибки&gt;
+    &lt;инструкции обработки&gt;
+END TRY</code></pre></section>
+<section class="article-section"><h2>Форма с завершающим блоком</h2><pre><code class="language-axiom">TRY
+    &lt;защищённые инструкции&gt;
 FINALLY
-    [finallyStatements]
-END TRY</code></pre>
-<p>Должна быть указана хотя бы одна часть: <code>CATCH</code> или <code>FINALLY</code>. Если обработка ошибки не нужна, можно оставить только <code>FINALLY</code>. Если отдельная очистка не нужна, можно оставить только <code>CATCH</code>.</p>
-</section>
-
-        <section class="article-section">
-<h2>Параметры и части синтаксиса</h2>
-<p><code>TRY</code>, <code>CATCH</code>, <code>FINALLY</code> и <code>END TRY</code> — ключевые слова одного блочного оператора. Имена <code>tryStatements</code>, <code>catchStatements</code>, <code>finallyStatements</code> и <code>errorVariable</code> в синтаксисе — не слова языка, а обозначения мест, куда в реальном коде вставляются инструкции и имя переменной.</p>
-<p><code>tryStatements</code> — инструкции, при выполнении которых может возникнуть ошибка времени выполнения.</p>
-<p><code>errorVariable</code> — локальная переменная только для чтения. Она доступна только внутри блока <code>CATCH</code> и имеет встроенный тип <code>ERROR</code>.</p>
-<p><code>catchStatements</code> — инструкции обработки. Если ошибка обработана, выполнение продолжается после <code>END TRY</code>, если только обработчик сам не завершился новой ошибкой или ранним выходом.</p>
-<p><code>finallyStatements</code> — инструкции завершения. Они выполняются при обычном выходе, после <code>CATCH</code> и перед выходом с необработанной ошибкой.</p>
-</section>
-
-        <section class="article-section">
-<h2>Значение ERROR</h2>
-<p>Встроенный тип <code>ERROR</code> описывает значение ошибки. Это не сам оператор <code>ERROR</code>, а тип данных у переменной после <code>CATCH</code>:</p>
-<table class="data-table"><thead><tr><th>Поле</th><th>Тип</th><th>Назначение</th></tr></thead><tbody>
-<tr><td><code>Code</code></td><td><code>STRING</code></td><td>Полный диагностический код, например <code>MB3001</code>.</td></tr>
-<tr><td><code>Message</code></td><td><code>STRING</code></td><td>Текст сообщения времени выполнения.</td></tr>
-<tr><td><code>Line</code></td><td><code>INTEGER</code></td><td>Строка исходного кода, где возникла ошибка.</td></tr>
-<tr><td><code>Column</code></td><td><code>INTEGER</code></td><td>Колонка исходного кода, где возникла ошибка.</td></tr>
-</tbody></table>
-</section>
-
-        <section class="article-section">
-<h2>Правила и ограничения</h2>
-<ul>
-<li><code>CATCH</code> в текущем срезе не фильтрует ошибки по типу: он перехватывает любую ошибку времени выполнения из соответствующего <code>TRY</code>.</li>
-<li>Поддерживается не более одного <code>CATCH</code> в одном блоке <code>TRY</code>.</li>
-<li>Пользовательскую runtime-ошибку можно создать оператором <code>ERROR</code>; пойманную ошибку можно передать дальше формой <code>ERROR err</code>.</li>
-<li><code>FINALLY</code> выполняется гарантированно: после обычного тела <code>TRY</code>, после обработанной в <code>CATCH</code> ошибки, а также перед выходом с необработанной ошибкой. Это касается и повторного выброса (<code>ERROR err</code>), и новой ошибки, возникшей внутри тела <code>CATCH</code>: сначала выполняется <code>FINALLY</code>, и только затем ошибка передаётся внешнему обработчику или останавливает программу.</li>
-<li><code>RESUME</code>, <code>ON ERROR GOTO</code> и продолжение с точки ошибки не поддерживаются.</li>
-<li>Тело <code>TRY</code>, <code>CATCH</code> и <code>FINALLY</code> образуют отдельные блочные области видимости.</li>
-</ul>
-</section>
-
-        <section class="article-section">
-<h2>Пример перехвата ошибки</h2>
-<pre><code class="language-axiom">TRY
-    PRINT "before"
+    &lt;завершающие инструкции&gt;
+END TRY</code></pre></section>
+<section class="article-section"><h2>Форма с обоими блоками</h2><pre><code class="language-axiom">TRY
+    &lt;защищённые инструкции&gt;
+CATCH &lt;имя ошибки&gt;
+    &lt;инструкции обработки&gt;
+FINALLY
+    &lt;завершающие инструкции&gt;
+END TRY</code></pre></section>
+<section class="article-section"><h2>Части записи</h2><p>Защищённые инструкции выполняют основную операцию. Имя ошибки объявляет доступную только для чтения переменную встроенного типа ERROR внутри CATCH. Инструкции обработки выполняются при ошибке из защищённого участка. Завершающие инструкции выполняются после обычного завершения, обработки ошибки или передачи неперехваченной ошибки дальше.</p></section>
+<section class="article-section"><h2>Сведения об ошибке</h2><table class="data-table"><thead><tr><th>Поле</th><th>Тип</th><th>Назначение</th></tr></thead><tbody><tr><td>Code</td><td>STRING</td><td>Код системной или пользовательской ошибки.</td></tr><tr><td>Message</td><td>STRING</td><td>Текст сообщения.</td></tr><tr><td>Line</td><td>INTEGER</td><td>Номер строки исходника начиная с 1; 0, если место неизвестно.</td></tr><tr><td>Column</td><td>INTEGER</td><td>Номер столбца исходника начиная с 1; 0, если место неизвестно.</td></tr></tbody></table></section>
+<section class="article-section"><h2>Порядок работы и ограничения</h2><p>При ошибке оставшиеся инструкции защищённого участка пропускаются. Если CATCH завершился обычно, исполнение продолжается после FINALLY и END TRY. Ошибка внутри CATCH не перехватывается тем же CATCH: сначала выполняется FINALLY, затем ищется внешний обработчик. Ошибка из FINALLY также передаётся внешнему обработчику.</p><p>RETURN из защищённого тела или CATCH выполняет ближайший FINALLY перед возвратом. В текущей реализации при нескольких вложенных TRY/FINALLY такой RETURN пропускает внешние FINALLY после ближайшего; эта граница отдельно описана в <a href="return.html">RETURN</a>. Блоки можно вкладывать. Каждый блок имеет собственную область видимости. Нужен хотя бы один CATCH или FINALLY; допускается только один CATCH, без фильтра по коду или типу. Продолжение с места отказа не предусмотрено.</p></section>
+<section class="article-section"><h2>Диагностика</h2><p>MB1001 возникает, если отсутствует требуемый CATCH или FINALLY, имя после CATCH либо END TRY. MB2010 запрещает прямое присваивание переменной ошибки и её полям. Коды перехваченных ошибок задаются самой операцией; например, деление на ноль даёт MB3001.</p></section>
+<section class="article-section"><h2>Пример</h2><pre><code class="language-axiom">TRY
     PRINT 10 \ 0
 CATCH err
-    PRINT "caught"
     PRINT err.Code
-    PRINT err.Line
 FINALLY
-    PRINT "cleanup"
+    PRINT "finally"
 END TRY
-
-PRINT "after"</code></pre>
-<p>Деление на ноль не завершает программу: управление переходит в <code>CATCH</code>, затем выполняется <code>FINALLY</code>, после чего программа продолжает работу после <code>END TRY</code>.</p>
-</section>
-
-        <section class="article-section">
-<h2>Запускаемые примеры</h2>
-<ul class="resource-list"><li><a href="../../samples/operators/try/handled_runtime_error.axm">TRY: перехват ошибки времени выполнения и FINALLY</a></li><li><a href="../../samples/operators/try/rethrow_from_catch_runs_finally.axm">TRY: FINALLY при повторном выбросе из CATCH</a></li><li><a href="../../samples/operators/error/user_code_catch.axm">ERROR: пользовательский код и перехват через CATCH</a></li><li><a href="../../samples/operators/error/rethrow_caught_error.axm">ERROR: повторный проброс пойманной ошибки</a></li></ul>
-</section>
-
-        <section class="article-section">
-<h2>См. также</h2>
-<div class="link-list"><a href="error-handling.html">Обработка ошибок</a><a href="error.html">Оператор ERROR</a><a href="diagnostics.html">Диагностика</a><a href="return.html">Оператор RETURN</a><a href="examples.html">Примеры программ</a></div>
-</section>
-
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
+PRINT "after"</code></pre><p>Ожидаемый вывод:</p><pre><code>MB3001
+finally
+after</code></pre></section>
+<section class="article-section"><h2>См. также</h2><p><a href="error.html">ERROR</a> · <a href="return.html">RETURN</a> · <a href="error-handling.html">Обработка ошибок</a></p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

@@ -1,41 +1,14 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Диапазоны и ограничения типов</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="data-type-limits">
-<header class="topbar">
-    <div class="topbar__inner">
-        <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Числовые границы, дата и время, литералы и практические ограничения</div>
-        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-    </div>
-</header>
-<div class="layout">
-    <aside class="sidebar">
-        <div class="sidebar__inner">
-            <nav id="manual-nav"></nav>
-        </div>
-    </aside>
-    <main class="content">
-        <nav class="breadcrumbs" aria-label="Хлебные крошки">
-            <a href="index.html">Главная</a>
-            <span>/</span>
-            <a href="data-types.html">Типы данных</a>
-            <span>/</span>
-            <span>Диапазоны и ограничения типов</span>
-        </nav>
-
-        <p class="eyebrow">Раздел</p>
-        <h1 class="page-title">Диапазоны и ограничения типов</h1>
-        <p class="lead">Диапазоны и ограничения типов — быстрая таблица: какой тип какие значения хранит, где Axiom выбирает тип литерала автоматически и какие ограничения чаще всего приводят к диагностике.</p>
-
-        <section class="article-section">
-            <h2>Числовые диапазоны</h2>
-            <table class="compact-table">
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Диапазоны и ограничения типов — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="data-type-limits"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Диапазоны и ограничения типов</span></nav>
+<p class="eyebrow">Справочная статья</p><h1 class="page-title">Диапазоны и ограничения типов</h1><p class="lead">Раздел диапазонов содержит точные числовые пределы и правила выбора типа литерала. Специальные данные и массивы имеют дополнительные ограничения в своих тематических главах.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Числовые диапазоны</h2><table class="compact-table">
                 <thead>
                     <tr><th>Тип</th><th>Минимум</th><th>Максимум</th><th>Кратко</th></tr>
                 </thead>
@@ -65,59 +38,7 @@
                         <td>Точное десятичное число с 28-29 значащими цифрами.</td>
                     </tr>
                 </tbody>
-            </table>
-            <p><code>DOUBLE</code> может хранить очень большие и очень малые величины, но не каждую десятичную дробь точно. Для денег и табличных десятичных расчётов обычно выбирают <code>DECIMAL</code>, если его диапазона достаточно.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Нечисловые скалярные значения</h2>
-            <table class="compact-table">
-                <thead>
-                    <tr><th>Тип</th><th>Что хранит</th><th>Ограничение</th></tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><code>BOOLEAN</code></td>
-                        <td><code>TRUE</code> или <code>FALSE</code></td>
-                        <td>Число не подставляется вместо логического значения автоматически.</td>
-                    </tr>
-                    <tr>
-                        <td><code>DATE</code></td>
-                        <td>Календарную дату</td>
-                        <td>Годы с <code>1</code> по <code>9999</code>; канонический вид <code>yyyy-MM-dd</code>.</td>
-                    </tr>
-                    <tr>
-                        <td><code>TIME</code></td>
-                        <td>Время суток</td>
-                        <td>От <code>00:00:00</code> до <code>23:59:59</code>; канонический вид <code>HH:mm:ss</code>.</td>
-                    </tr>
-                    <tr>
-                        <td><code>DATETIME</code></td>
-                        <td>Дату и время суток</td>
-                        <td>Годы с <code>1</code> по <code>9999</code>; канонический вид <code>yyyy-MM-dd HH:mm:ss</code>.</td>
-                    </tr>
-                    <tr>
-                        <td><code>STRING</code></td>
-                        <td>Текст переменной длины</td>
-                        <td>Длина ограничена доступной памятью и возможностями среды выполнения.</td>
-                    </tr>
-                    <tr>
-                        <td><code>STRING * N</code></td>
-                        <td>Строку фиксированной длины</td>
-                        <td>При записи короткая строка дополняется пробелами справа, длинная обрезается до <code>N</code> символов.</td>
-                    </tr>
-                    <tr>
-                        <td><code>FILE</code></td>
-                        <td>Открытый файл</td>
-                        <td>Значение создаётся файловыми операциями и должно быть закрыто через <code>CLOSE</code>.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
-
-        <section class="article-section">
-            <h2>Типы литералов</h2>
-            <table class="compact-table">
+            </table><p><code>DOUBLE</code> использует двоичную плавающую точку и может округлять десятичную дробь. Для десятичной точности выбирайте <code>DECIMAL</code>, учитывая его меньший диапазон. Неконечный результат <code>DOUBLE</code> считается ошибкой выполнения.</p></section><section class="article-section"><h2>Тип числового литерала</h2><table class="compact-table">
                 <thead>
                     <tr><th>Запись</th><th>Тип</th><th>Правило</th></tr>
                 </thead>
@@ -128,33 +49,7 @@
                     <tr><td><code>&amp;HFF</code></td><td><code>INTEGER</code> или <code>LONG</code></td><td>Шестнадцатеричный литерал выбирает целочисленный тип по диапазону значения.</td></tr>
                     <tr><td><code>TRUE</code>, <code>FALSE</code></td><td><code>BOOLEAN</code></td><td>Логические литералы не являются числами.</td></tr>
                 </tbody>
-            </table>
-            <p>Отрицательное число записывается как унарный минус перед литералом. Например, в записи <code>-10</code> знак минус является операцией, а <code>10</code> остаётся числовым литералом.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Ограничения массивов и индексов</h2>
-            <ul>
-                <li>Границы массива задаются включительно: в <code>DIM a(1 TO 5) AS INTEGER</code> допустимы индексы <code>1</code>, <code>2</code>, <code>3</code>, <code>4</code> и <code>5</code>.</li>
-                <li>В текущей реализации нижняя граница массива не может быть равна <code>-2147483648</code>, потому что это значение используется внутренними поисковыми функциями массива как признак отсутствия совпадения.</li>
-                <li>Обращение к элементу за пределами выделенного диапазона приводит к ошибке времени выполнения.</li>
-                <li>Динамический массив, объявленный без диапазона, получает реальные границы только после <code>REDIM</code>.</li>
-            </ul>
-        </section>
-
-        <section class="article-section">
-            <h2>Преобразования и переполнение</h2>
-            <p>Axiom допускает только безопасные автоматические расширения: <code>INTEGER</code> может перейти в <code>LONG</code>, <code>DOUBLE</code> или <code>DECIMAL</code>, а <code>LONG</code> может перейти в <code>DOUBLE</code> или <code>DECIMAL</code>. Обратные переходы нужно делать через поддержанные функции или явную логику программы.</p>
-            <p>Если арифметика целого типа выходит за его диапазон, выполнение сообщает переполнение. Если результат <code>DOUBLE</code> становится бесконечностью или нечислом, это тоже считается ошибкой выполнения.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Дополнительные правила типов</h2>
-            <p><code>INTEGER</code> является 32-битным типом, а <code>LONG</code> — 64-битным.</p>
-            <p>Отдельного <code>SINGLE</code> нет: для вещественных вычислений используется <code>DOUBLE</code>, а для точных десятичных расчётов — <code>DECIMAL</code>.</p>
-        </section>
-
-        <section class="article-section">
+            </table><p>Минус перед числом является отдельной унарной операцией. Тип целого литерала определяется диапазоном; дробная запись с точкой сама по себе имеет тип <code>DOUBLE</code>. Особая обработка литерала при явной инициализации <code>DECIMAL</code> описана в правилах преобразования.</p></section><section class="article-section"><h2>Ограничения по темам</h2><div class="link-list"><a href="data-types-conversions.html">Преобразования и переполнение</a><a href="date-time-functions.html">Диапазоны даты и времени</a><a href="data-types-strings-and-files.html">Строки фиксированной длины</a><a href="arrays-multidimensional.html">Границы и размеры массивов</a><a href="file-system-functions.html">Файловые ресурсы</a></div></section><section class="article-section">
             <h2>Диагностика</h2>
             <ul>
                 <li><code>MB0004</code> — числовой литерал выходит за допустимый диапазон.</li>
@@ -163,22 +58,5 @@
                 <li><code>MB3007</code> — недопустимый массивный диапазон или запрещённая операция с массивом.</li>
                 <li><code>MB3008</code> — арифметическое переполнение или неконечный результат <code>DOUBLE</code>.</li>
             </ul>
-        </section>
-
-        <section class="article-section">
-            <h2>См. также</h2>
-            <div class="link-list">
-                <a href="data-types.html">Типы данных</a>
-                <a href="data-types-scalars.html">Скалярные типы и литералы</a>
-                <a href="data-types-conversions.html">Вывод типа и преобразования</a>
-                <a href="arrays.html">Массивы</a>
-                <a href="diagnostics.html">Диагностика</a>
-            </div>
-        </section>
-
-        <div id="page-pager" class="pager"></div>
-    </main>
-</div>
-<script src="scripts/manual.js"></script>
-</body>
-</html>
+        </section><section class="article-section"><h2>См. также</h2><div class="link-list"><a href="numeric-functions.html">Числа и математические функции</a><a href="data-types.html">Карта типов данных</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

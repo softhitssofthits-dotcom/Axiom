@@ -1,3 +1,4 @@
+using Axiom.Core;
 using Axiom.Syntax;
 
 namespace Axiom.Parsing;
@@ -1334,9 +1335,22 @@ public sealed partial class Parser
         var statements = ParseStatementsUntil(static parser => parser.Current.Kind == SyntaxKind.NextKeyword);
         var nextKeyword = Match(SyntaxKind.NextKeyword, "NEXT");
 
-        // QB-наследие: разрешаем имя счётчика после NEXT и игнорируем его,
-        // чтобы привычная форма не всплывала как оператор-выражение без эффекта.
-        SyntaxToken? nextCounterIdentifier = Current.Kind == SyntaxKind.IdentifierToken ? NextToken() : null;
+        // Необязательное имя сохраняется в синтаксисе; Binder проверяет его
+        // совпадение со счётчиком закрываемого FOR без учёта регистра.
+        SyntaxToken? nextCounterIdentifier = Current.Kind is SyntaxKind.IdentifierToken or SyntaxKind.LineKeyword ? NextToken() : null;
+
+        if (Current.Kind is not (SyntaxKind.NewLineToken or SyntaxKind.EndOfFileToken))
+        {
+            Diagnostics.Report(
+                DiagnosticCodes.UnexpectedToken,
+                "После NEXT и необязательного имени счётчика ожидается конец строки.",
+                Current.Location);
+
+            while (Current.Kind is not (SyntaxKind.NewLineToken or SyntaxKind.EndOfFileToken))
+            {
+                NextToken();
+            }
+        }
 
         return new ForStatementSyntax(
             forKeyword,

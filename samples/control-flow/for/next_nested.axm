@@ -1,0 +1,7 @@
+' Каждый NEXT с именем закрывает ближайший FOR с этим счётчиком.
+' Ожидается: 11, 12, 21, 22 на отдельных строках.
+FOR outerIndex = 1 TO 2
+    FOR innerIndex = 1 TO 2
+        PRINT outerIndex * 10 + innerIndex
+    NEXT innerIndex
+NEXT outerIndex

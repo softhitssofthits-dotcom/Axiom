@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 import crypto from 'node:crypto';
+import { manualPage } from './manual-page.mjs';
+import { formalParameterName } from './normalize-manual-syntax.mjs';
 import { fileURLToPath } from 'node:url';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
@@ -32,6 +34,13 @@ if(actual) {
      forms:actual.Rows.filter(r=>r.Name===name).map((r,i)=>({key:name+'/'+i,id:r.Id,parameters:r.Parameters.map(p=>({name:p.Name,type:p.Type})),returnType:r.ReturnType,binding:r.Binding,operandPolicy:r.OperandPolicy,resultPolicy:r.ResultPolicy}))};
  });
 } else functions=previous.functions;
+const explanations=JSON.parse(fs.readFileSync(path.join(manual,'data/function-explanations.json'),'utf8'));
+for(const fn of functions){
+ const entry=explanations[fn.name];
+ if(!entry?.description)throw new Error(`Нет полного определения функции ${fn.name}.`);
+ for(const form of fn.forms)for(const parameter of form.parameters)if(!entry.arguments?.[parameter.name])throw new Error(`Не объяснён аргумент ${fn.name}.${parameter.name}.`);
+ fn.description=entry.description;
+}
 
 const statementRows=[
  ['DIM','Dim','dim.html'],['CONST','Const','const.html'],['TYPE','TypeDeclaration','type.html'],
@@ -81,15 +90,7 @@ const snapshot={sourceFiles,sourceFingerprint,functions,statements,expressionOpe
 fs.mkdirSync(path.dirname(dataPath),{recursive:true});
 fs.writeFileSync(dataPath,JSON.stringify(snapshot,null,2)+'\n');
 
-function shell(id,title,lead,body){return `<!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Справочник Axiom — ${title}</title><link rel="stylesheet" href="styles/manual.css"></head>
-<body data-page="${id}"><header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">${title}</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-<main class="content"><nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><a href="reference.html">Указатель</a><span>/</span><span>${title}</span></nav>
-<p class="eyebrow">Справочный раздел</p><h1 class="page-title">${title}</h1><p class="lead">${lead}</p>
-${body}<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="notation.html">Обозначения синтаксиса</a><a href="data-types.html">Типы данных</a><a href="operator-reference.html">Операторы</a><a href="function-reference.html">Встроенные функции</a><a href="keyword-reference.html">Ключевые слова</a><a href="diagnostics.html">Диагностика</a></div></section>
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>\n`;}
+const shell=(id,title,lead,body)=>manualPage({id,title,lead,body,eyebrow:'Справочный указатель'});
 
 function parameterType(form,param) {
  if(form.binding==='Numeric' && ['PreserveNumericArguments','PromoteNumericArguments'].includes(form.operandPolicy)) return 'числовое выражение';
@@ -107,7 +108,7 @@ function parameterType(form,param) {
 function returnType(form){return ({
  SameAsFirstArgument:form.binding==='Array'?'Массив того же типа и формы, если правила функции не изменяют его границы.':'Тип первого аргумента.',
  SameAsSecondArgument:'Массив с типом элементов исходного массива и формой массива-шаблона.',
- ElementTypeOfFirstArrayArgument:'T — числовой тип элемента исходного массива.',
+ ElementTypeOfFirstArrayArgument:'T — тип элемента исходного массива.',
  ArrayOfFirstArrayElementType:'Одномерный массив элементов типа T.',
  ArrayDynamicSliceResult:'Для ранга 1 — элемент T; для ранга 2 и выше — массив T ранга на единицу меньше.',
  ArrayIndexCoordinateResult:'Для ранга 1 — INTEGER; для многомерного массива — INTEGER() с координатами.',
@@ -118,51 +119,63 @@ function returnType(form){return ({
  Integer:'INTEGER',String:'STRING',Double:'DOUBLE'
 })[form.resultPolicy]??(form.returnType==='VOID'?'Значение не возвращается; вызов используется как инструкция.':form.returnType);}
 
-function sourceDetails(entity, name) {
- const [file,anchor]=entity.sourceHref.split('#');const html=pages.get(file);
- if(!html)throw new Error(`Нет исходной страницы ${file}`);
- const chunks=sections(html);
- const exact=chunks.filter(s=>{const h=plain(s.match(/<h[23][^>]*>([\s\S]*?)<\/h[23]>/)?.[1]??'');return pattern(name).test(h);});
- const anchored=anchor?chunks.filter(s=>s.includes(`id="${anchor}"`)):[];
- const applicable=chunks.filter(s=>pattern(name).test(s) && !/^\s*(?:Запускаемые примеры|Ручная проверка|Короткие проверки функций|См\. также)/.test(plain(s.match(/<h2[^>]*>([\s\S]*?)<\/h2>/)?.[1]??'')));
- const shared=chunks.filter(s=>/^(?:Правила работы|Основные правила|Правила кодирования|Где работают|Диагностика|Нулевой символ|Координаты и цвета|Аргументы|Параметры|Ограничения)/.test(plain(s.match(/<h2[^>]*>([\s\S]*?)<\/h2>/)?.[1]??'')));
- const selected=[...new Set([...(exact.length?exact:anchored.length?anchored:applicable),...shared])];
- if(!selected.length) throw new Error(`Нет подробного описания ${name}`);
- // Каждый скопированный якорь получает собственный префикс; относительные ссылки сохраняют исходную цель.
- return selected.map(s=>s.replace(/<section\b[^>]*>/,'<div class="reference-details">').replace(/<\/section>$/,'</div>')
-   .replace(/\bid="([^"]+)"/g,(_,id)=>`id="fn-${name.toLowerCase()}-detail-${id}"`)
-   .replace(/href="#([^"]+)"/g,(_,id)=>`href="${file}#${id}"`)
-   .replace(/<(\/?)h2\b/g,'<$1h3').replace(/<(\/?)h3\b/g,'<$1h4')).join('\n');
+function argumentContract(form,param){
+ const type=parameterType(form,param);
+ const named={STRING:'строкой типа STRING',INTEGER:'целым числом типа INTEGER',LONG:'целым числом типа LONG',DOUBLE:'числом типа DOUBLE',DECIMAL:'десятичным числом типа DECIMAL',BOOLEAN:'логическим значением типа BOOLEAN',DATE:'датой типа DATE',TIME:'временем суток типа TIME',DATETIME:'датой и временем типа DATETIME',FILE:'значением открытого файла типа FILE',IMAGE:'изображением типа IMAGE',SPRITE:'спрайтом типа SPRITE',TILESET:'набором тайлов типа TILESET',TILEMAP:'тайловой картой типа TILEMAP'};
+ if(named[type])return 'Значение аргумента должно быть '+named[type]+'.';
+ if(type==='массив T')return 'Передаётся массив элементов типа T; требования к его рангу и состоянию определяются этой функцией.';
+ if(type==='T — тип элемента массива')return 'Тип передаваемого значения должен совпадать с типом элемента массива.';
+ if(type==='A — тип начального значения')return 'Передаётся начальное значение аккумулятора; его тип A определяет тип результата накопления.';
+ if(type.startsWith('FUNCTION('))return 'Передаётся пользовательская функция с подписью '+type+'.';
+ if(type.startsWith('числовое выражение'))return 'Передаётся числовое выражение. '+(type.includes('DOUBLE')?'Перед вычислением оно преобразуется в DOUBLE.':'Допустимые числовые типы и результат описаны ниже.');
+ return 'Допустимый тип значения: '+type+'.';
 }
-let body=`<section class="article-section"><h2>Содержание</h2><p>Все ${functions.length} встроенных функций и ${functions.reduce((n,f)=>n+f.forms.length,0)} зарегистрированных форм вызова. Каждая форма показана отдельно; все перечисленные в ней аргументы обязательны. Необязательный аргумент представлен отдельной более короткой формой.</p><p><code>T</code> обозначает тип элемента массива, <code>U</code> — тип результата преобразования, <code>A</code> — тип аккумулятора. Это справочные обозначения. Допустимые числовые типы: <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code>. Ограничения конкретной функции имеют приоритет над общей категорией типа.</p><div class="link-list">${functions.map(f=>`<a href="#fn-${f.name.toLowerCase()}">${f.name}</a>`).join(' ')}</div></section>`;
+function resultContract(form){
+ const named={INTEGER:'целое число типа INTEGER',LONG:'целое число типа LONG',DOUBLE:'число типа DOUBLE',DECIMAL:'десятичное число типа DECIMAL',STRING:'строку типа STRING',BOOLEAN:'логическое значение типа BOOLEAN',DATE:'дату типа DATE',TIME:'время суток типа TIME',DATETIME:'дату и время типа DATETIME',IMAGE:'изображение типа IMAGE',SPRITE:'спрайт типа SPRITE',TILESET:'набор тайлов типа TILESET',TILEMAP:'тайловую карту типа TILEMAP','STRING()':'одномерный массив строк типа STRING()','INTEGER()':'одномерный массив целых чисел типа INTEGER()','INTEGER(,)':'двумерный массив целых чисел типа INTEGER(,)'};
+ if(form.returnType==='VOID')return 'Функция выполняет действие и не возвращает значение. Используйте вызов как отдельную инструкцию.';
+ if(form.resultPolicy==='Default'&&named[form.returnType])return 'Функция возвращает '+named[form.returnType]+'.';
+ const result=returnType(form);
+ if(named[result])return 'Функция возвращает '+named[result]+'.';
+ const policies={
+   SameAsFirstArgument:form.binding==='Array'?'Функция возвращает массив с типом элементов исходного массива. Правила сохранения или изменения границ описаны в тематической статье этой функции.':'Функция возвращает значение того же числового типа, что и первый аргумент.',
+   SameAsSecondArgument:'Функция возвращает массив с типом элементов исходного массива и рангом и границами массива-образца.',
+   ElementTypeOfFirstArrayArgument:'Функция возвращает значение того же типа, что и элементы исходного массива.',
+   ArrayOfFirstArrayElementType:'Функция возвращает одномерный массив с типом элементов исходного массива.',
+   ArrayDynamicSliceResult:'Для одномерного массива функция возвращает элемент его типа. Для массива ранга 2 или выше функция возвращает массив с тем же типом элементов и рангом на единицу меньше.',
+   ArrayIndexCoordinateResult:'Для одномерного массива функция возвращает индекс типа INTEGER. Для многомерного массива функция возвращает одномерный массив INTEGER() с координатами найденного элемента.',
+   ArrayFindAllCoordinateResult:'Для одномерного массива функция возвращает массив индексов INTEGER(). Для многомерного массива функция возвращает двумерный массив INTEGER(,) с координатами найденных элементов.',
+   ArrayMapSelectorReturnArray:'Функция возвращает массив с типом элементов U, который задаётся результатом переданной функции преобразования. Ранг и границы совпадают с исходным массивом.',
+   ArrayReduceAccumulator:'Функция возвращает значение типа A, заданного начальным значением аккумулятора.',
+   PromotedNumeric:'Функция возвращает значение общего числового типа своих аргументов.'
+ };
+ if(policies[form.resultPolicy])return policies[form.resultPolicy];
+ throw new Error(`Не объяснён результат формы ${form.key}: ${result}`);
+}
+
+let body=`<section class="article-section"><h2>Содержание</h2><p>В указателе представлены ${functions.length} имя встроенных функций и ${functions.reduce((n,f)=>n+f.forms.length,0)} зарегистрированных форм вызова. Каждая форма показана отдельно; все перечисленные в ней аргументы обязательны. Необязательный аргумент представлен отдельной более короткой формой.</p><p><code>T</code> обозначает тип элемента массива, <code>U</code> — тип результата преобразования, <code>A</code> — тип аккумулятора. Это справочные обозначения. Допустимые числовые типы: <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code>. Ограничения конкретной функции имеют приоритет над общей категорией типа.</p><div class="link-list">${functions.map(f=>`<a href="#fn-${f.name.toLowerCase()}">${f.name}</a>`).join(' ')}</div></section>`;
 for(const fn of functions) {
  const samples=path.join(root,'samples/functions',fn.name.toLowerCase());
  const files=fs.existsSync(samples)?fs.readdirSync(samples).filter(f=>f.endsWith('.axm')):[];
- body+=`\n<section class="article-section" id="fn-${fn.name.toLowerCase()}"><h2>${fn.name}</h2><p><code>${fn.name}</code> — встроенная функция языка Axiom. ${escape(fn.description)}</p><h3>Синтаксис, аргументы и результат</h3>`;
+ body+=`\n<section class="article-section" id="fn-${fn.name.toLowerCase()}"><h2>${fn.name}</h2><p><code>${fn.name}</code> — встроенная функция языка Axiom, которая ${escape(fn.description[0].toLowerCase()+fn.description.slice(1))}</p><h3>Синтаксис, аргументы и результат</h3>`;
  for(const form of fn.forms) {
-   body+=`<div class="reference-form" data-form="${form.key}"><pre><code class="language-axiom">${fn.name}(${form.parameters.map(p=>'&lt;'+p.name+'&gt;').join(', ')})</code></pre>`;
-   body+=form.parameters.length?`<table><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody>${form.parameters.map(p=>`<tr><td><code>${escape(p.name)}</code></td><td>${escape(parameterType(form,p))}</td></tr>`).join('')}</tbody></table>`:'<p>Аргументы отсутствуют.</p>';
-   body+=`<p><strong>Результат:</strong> ${escape(returnType(form))}</p></div>`;
+   body+=`<div class="reference-form" data-form="${form.key}"><pre><code class="language-axiom">${fn.name}(${form.parameters.map(p=>'&lt;'+formalParameterName(p.name)+'&gt;').join(', ')})</code></pre>`;
+   body+=form.parameters.length?`<table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody>${form.parameters.map(p=>`<tr><td><code>&lt;${escape(formalParameterName(p.name))}&gt;</code></td><td><p>${escape(argumentContract(form,p))}</p><p>${escape(explanations[fn.name].arguments[p.name])}</p></td></tr>`).join('')}</tbody></table>`:'<p>Функция вызывается без аргументов.</p>';
+   body+=`<p><strong>Результат.</strong> ${escape(resultContract(form))}</p></div>`;
  }
- body+=`<h3>Поведение, ограничения и примеры</h3><p>Ниже приведены правила функции и общие условия её тематической группы. <a href="${fn.sourceHref}">Тематическая страница</a> содержит связанный контекст и дополнительные примеры.</p>${sourceDetails(fn,fn.name)}`;
+ body+=`<p><a href="${fn.sourceHref}">Описание ${fn.name}: поведение, ограничения и примеры</a></p>`;
  if(files.length)body+=`<h3>Запускаемые примеры</h3><ul>${files.map(f=>`<li><a href="../../samples/functions/${fn.name.toLowerCase()}/${escape(f)}">${escape(f)}</a></li>`).join('')}</ul>`;
  body+='</section>';
 }
-fs.writeFileSync(path.join(manual,'function-reference.html'),shell('function-reference','Встроенные функции','Раздел содержит полный справочник встроенных функций Axiom: назначение, каждую форму вызова, аргументы, результат, ограничения и примеры.',body));
+fs.writeFileSync(path.join(manual,'function-reference.html'),shell('function-reference','Встроенные функции','Раздел перечисляет встроенные функции и точные зарегистрированные формы вызова. Полное объяснение поведения каждой функции находится в её тематической статье.',body));
 
 body='<section class="article-section"><h2>Содержание</h2><p>Операторы сгруппированы по роли в программе. В перечень включены объявления, управляющие конструкции, ввод и вывод, графика, события, присваивание и вызов как инструкция. Слова завершения блоков и режимы описываются вместе с соответствующим оператором.</p><div class="link-list">'+statements.map(s=>`<a href="#op-${s.id}">${escape(s.name)}</a>`).join(' ')+'</div></section>';
 for(const op of statements){
  const [file]=op.href.split('#');const html=pages.get(file);if(!html)throw new Error(`Нет страницы ${op.name}: ${file}`);
  const lead=html.match(/<p class="lead">([\s\S]*?)<\/p>/)?.[1]??'';
- const chunks=sections(html), keyword=op.name.split(' ')[0];
- const specific=chunks.filter(s=>pattern(keyword).test(plain(s.match(/<h2[^>]*>([\s\S]*?)<\/h2>/)?.[1]??'')));
- const syntax=chunks.filter(s=>/^Синтаксис|^Параметры|^Части синтаксиса|^Диагностика|^Правила работы/.test(plain(s.match(/<h2[^>]*>([\s\S]*?)<\/h2>/)?.[1]??'')));
- const chosen=[...new Set([...specific,...syntax])];
- body+=`<section class="article-section" id="op-${op.id}"><h2>${escape(op.name)}</h2><p>${lead}</p><p><a href="${op.href}">Полная статья: ${escape(op.name)}</a></p>`;
- body+=chosen.map(s=>s.replace(/<section\b[^>]*>/,'<div class="reference-details">').replace(/<\/section>$/,'</div>').replace(/\bid="([^"]+)"/g,(_,id)=>`id="op-${op.id}-detail-${id}"`).replace(/href="#([^"]+)"/g,(_,id)=>`href="${file}#${id}"`).replace(/<(\/?)h2\b/g,'<$1h3').replace(/<(\/?)h3\b/g,'<$1h4')).join('\n');
+ body+=`<section class="article-section" id="op-${op.id}"><h2>${escape(op.name)}</h2><p>${lead}</p><p><a href="${op.href}">Описание ${escape(op.name)}: синтаксис, параметры и примеры</a></p>`;
  body+='</section>';
 }
-fs.writeFileSync(path.join(manual,'operator-reference.html'),shell('operator-reference','Операторы и инструкции','Раздел содержит все формы операторов и инструкций Axiom. Синтаксис и правила каждой конструкции приведены в её карточке и полной статье.',body));
+fs.writeFileSync(path.join(manual,'operator-reference.html'),shell('operator-reference','Операторы и инструкции','Раздел перечисляет объявления, инструкции и управляющие конструкции Axiom. Каждая запись ведёт к основному описанию соответствующей формы.',body));
 const definitions={
  AS:['Обозначает тип переменной, поля, параметра или результата; в OPEN связывает файл с переменной.','dim.html'],
  APPEND:['Режим OPEN для добавления текста в конец файла.','open.html'],OUTPUT:['Режим OPEN для записи текстового файла.','open.html'],
@@ -185,10 +198,11 @@ const definitions={
 for(const op of statements){const word=op.name.split(' ')[0];if(/^[A-Z]+$/.test(word)&&!definitions[word])definitions[word]=['Начинает конструкцию '+op.name+'. Правила, параметры и формы записи определены в полной статье.',op.href];}
 for(const op of expressionOperators)if(/^[A-Z]+$/.test(op.name))definitions[op.name]=[op.description,op.href];
 const typeDescriptions={INTEGER:'32-битное целое число.',LONG:'64-битное целое число.',DOUBLE:'Вещественное число двойной точности.',DECIMAL:'Десятичное число.',BOOLEAN:'Логическое значение TRUE или FALSE.',STRING:'Строка; поддерживается фиксированная форма STRING * N.',DATE:'Дата.',TIME:'Время суток.',DATETIME:'Дата и время.',FILE:'Значение открытого текстового файла.',IMAGE:'Изображение.',SPRITE:'Набор кадров спрайта.',TILESET:'Набор графических тайлов.',TILEMAP:'Тайловая карта.'};
+const typeHref=name=>({STRING:'data-types-strings-and-files.html',DATE:'date-time-functions.html',TIME:'date-time-functions.html',DATETIME:'date-time-functions.html',FILE:'file-system-functions.html',IMAGE:'images.html',SPRITE:'sprites.html',TILESET:'tilesets.html',TILEMAP:'tilemaps.html',BOOLEAN:'arithmetic-and-logic.html'})[name]??'numeric-functions.html';
 body='<section class="article-section"><h2>Ключевые слова</h2><p>Ключевые слова и имена встроенных типов не зависят от регистра. В справочнике используется запись заглавными буквами. Слова завершения блоков, режимы и модификаторы являются частями соответствующих конструкций.</p><table><thead><tr><th>Слово</th><th>Назначение</th><th>Описание</th></tr></thead><tbody>';
 for(const word of snapshot.keywords){if(!definitions[word])throw new Error('Нет определения ключевого слова '+word);const [text,href]=definitions[word];body+=`<tr id="kw-${word.toLowerCase()}"><td><code>${word}</code></td><td>${escape(text)}</td><td><a href="${href}">${word}</a></td></tr>`;}
 body+='</tbody></table></section><section class="article-section"><h2>Имена встроенных типов</h2><table><thead><tr><th>Тип</th><th>Назначение</th></tr></thead><tbody>';
-for(const name of snapshot.types){if(!typeDescriptions[name])throw new Error('Нет определения типа '+name);body+=`<tr id="type-${name.toLowerCase()}"><td><a href="data-types.html"><code>${name}</code></a></td><td>${escape(typeDescriptions[name])}</td></tr>`;}
+for(const name of snapshot.types){if(!typeDescriptions[name])throw new Error('Нет определения типа '+name);body+=`<tr id="type-${name.toLowerCase()}"><td><a href="${typeHref(name)}"><code>${name}</code></a></td><td>${escape(typeDescriptions[name])}</td></tr>`;}
 body+='</tbody></table></section><section class="article-section"><h2>Операции в выражениях</h2><p>Унарное отрицание числа и операция NOT принимают один операнд. Остальные перечисленные формы принимают два операнда. Приоритет, допустимые типы и ограничения определены в разделе выражений.</p><table><thead><tr><th>Знак</th><th>Назначение</th></tr></thead><tbody>';
 for(const op of expressionOperators)body+=`<tr id="expr-${op.token.toLowerCase()}"><td><a href="${op.href}"><code>${escape(op.name)}</code></a></td><td>${escape(op.description)}</td></tr>`;
 body+='</tbody></table></section>';

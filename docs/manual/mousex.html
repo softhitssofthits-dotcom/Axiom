@@ -1,60 +1,41 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Функция MOUSEX</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="mousex">
-<header class="topbar">
-    <div class="topbar__inner">
-        <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Текущая горизонтальная координата указателя</div>
-        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-    </div>
-</header>
-<div class="layout">
-    <aside class="sidebar">
-        <div class="sidebar__inner">
-            <nav id="manual-nav"></nav>
-        </div>
-    </aside>
-    <main class="content">
-        <nav class="breadcrumbs" aria-label="Хлебные крошки">
-            <a href="index.html">Главная</a><span>/</span><a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a><span>/</span><span>Функция MOUSEX</span>
-        </nav>
+<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<title>Функция MOUSEX — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="mousex"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Функция MOUSEX</span></nav>
+<p class="eyebrow">Встроенная функция</p><h1 class="page-title">Функция MOUSEX</h1><p class="lead"><code>MOUSEX</code> — встроенная функция языка Axiom, которая возвращает текущую горизонтальную координату указателя мыши. Программа выбирает момент чтения, вызывая функцию в своём цикле.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
-        <p class="eyebrow">Встроенная функция</p>
-        <h1 class="page-title">Функция MOUSEX</h1>
-        <p class="lead"><code>MOUSEX</code> — встроенная функция языка Axiom, которая возвращает текущую горизонтальную координату указателя на активной графической поверхности программы. Встроенная функция <code>MOUSEX</code> подходит для опросного режима, когда программе достаточно знать текущее положение указателя, а не получать отдельные события перемещения.</p>
 
         <section class="article-section">
-            <h2>Для чего нужна функция MOUSEX</h2>
-            <p>Встроенная функция <code>MOUSEX</code> нужна для чтения текущей X-координаты указателя мыши. В графическом режиме <code>SCREEN</code> функция возвращает экранную координату клиентской области. В режиме <code>CANVAS</code> функция возвращает мировую координату точки, на которую указывает мышь после пересчёта через <code>VIEWPORT</code> и <code>CAMERA</code>.</p>
+            <h2>Применение</h2>
+            <p>На экране <code>SCREEN</code> координата X измеряется в пикселях клиентской области. На холсте <code>CANVAS</code> результат соответствует мировому положению указателя после преобразования через <code>VIEWPORT</code> и <code>CAMERA</code>.</p>
         </section>
 
         <section class="article-section">
-            <h2>Где работает функция MOUSEX</h2>
-            <p>Встроенная функция <code>MOUSEX</code> работает при активном графическом режиме <code>SCREEN 1..10</code> или при активном <code>CANVAS</code>. Без активной рисуемой поверхности выполнение сообщает диагностику <code>MB3010</code>.</p>
-            <p>При активном <code>SCREEN</code> оператор <code>VIEW</code>, оператор <code>WINDOW</code> и функция <code>PMAP</code> не изменяют возвращаемую координату: она остаётся в клиентской системе координат активного окна <code>SCREEN</code>. При активном <code>CANVAS</code> возвращаемое значение уже находится в мировой системе координат и учитывает текущие <code>VIEWPORT</code> и <code>CAMERA</code>.</p>
-            <p>Встроенная функция <code>MOUSEX</code> выполняется <code>BytecodeVm</code> после компиляции.</p>
+            <h2>Контекст выполнения</h2>
+            <p>Для чтения нужен графический <code>SCREEN 1..10</code> или активный <code>CANVAS</code>. Отсутствие поверхности сообщает <code>MB3010</code>.</p>
+            <p>На экране <code>VIEW</code>, <code>WINDOW</code> и <code>PMAP</code> не пересчитывают координату мыши. На холсте учитываются текущие область и камера.</p>
+            <p>Функция читает текущее положение без извлечения события перемещения. Для процедуры по каждому событию используйте <a href="on-mouse.html">ON MOUSE</a>.</p>
         </section>
 
         <section class="article-section">
             <h2>Синтаксис</h2>
 <pre><code class="language-axiom">MOUSEX()</code></pre>
-            <p>Встроенная функция <code>MOUSEX</code> поддерживает только форму без аргументов.</p>
+            <p>Поддерживается единственная форма <code>MOUSEX()</code>.</p>
         </section>
 
         <section class="article-section">
             <h2>Аргументы</h2>
-            <p>У встроенной функции <code>MOUSEX</code> нет аргументов. Пустые скобки остаются частью вызова функции.</p>
+            <p>Аргументов нет; скобки остаются частью вызова.</p>
         </section>
 
         <section class="article-section">
             <h2>Что возвращает функция MOUSEX</h2>
-            <p>Тип результата: <code>LONG</code>.</p>
+            <p>Координата возвращается как значение типа <code>LONG</code>.</p>
             <ul>
                 <li>Если активен <code>SCREEN</code> и среда выполнения знает положение указателя, возвращается текущая X-координата в клиентской области активного окна.</li>
                 <li>Если активен <code>CANVAS</code> и среда выполнения знает положение указателя, возвращается мировая X-координата точки под мышью.</li>
@@ -72,6 +53,8 @@
                 <li>Для вертикальной координаты используется встроенная функция <a href="mousey.html"><code>MOUSEY</code></a>, а для кнопок — встроенная функция <a href="mousebutton.html"><code>MOUSEBUTTON</code></a>.</li>
             </ul>
         </section>
+<section class="article-section"><h2>Начало координат и отрицательные значения</h2><p>В <code>SCREEN</code> начало клиентской области находится слева сверху; X увеличивается вправо. В <code>CANVAS</code> функция возвращает камера X + физический X - левая граница области. Отрицательное мировое значение может быть допустимой координатой сцены; само по себе оно не доказывает отсутствие указателя.</p></section>
+
 
         <section class="article-section">
             <h2>Диагностика</h2>
@@ -83,8 +66,10 @@
 
         <section class="article-section">
             <h2>Пример чтения координат</h2>
-<pre><code class="language-axiom">PRINT MOUSEX()
-PRINT MOUSEY()</code></pre>
+<pre><code class="language-axiom">SCREEN 1
+PRINT MOUSEX()
+PRINT MOUSEY()
+SLEEP</code></pre><p>Программа печатает две координаты указателя в пикселях окна. Если положение ещё неизвестно, выводятся -1 и -1. Затем программа ждёт клавишу.</p>
         </section>
 
         <section class="article-section">
@@ -97,4 +82,7 @@ PRINT MOUSEY()</code></pre>
             <div class="link-list"><a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a><a href="mousey.html">Функция MOUSEY</a><a href="mousebutton.html">Функция MOUSEBUTTON</a><a href="mousepress.html">Функция MOUSEPRESS</a><a href="on-mouse.html">Оператор ON MOUSE</a><a href="screen.html">Оператор SCREEN</a></div>
         </section>
 
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
+
+
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

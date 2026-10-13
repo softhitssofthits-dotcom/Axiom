@@ -1,96 +1,20 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Числовые функции</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="numeric-functions">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Преобразование чисел, математика, тригонометрия и округление</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный и тематический указатель</a>
-                <span>/</span>
-                <span>Числовые функции</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Числовые функции</h1>
-            <p class="lead">Раздел числовых функций описывает средства Axiom для преобразования данных, типовых вычислений, работы со случайными значениями, углами, корнями, логарифмами и разными способами округления. Для удобства функции разбиты на несколько тематических страниц.</p>
-
-            <section class="article-section">
-                <h2>Группы числовых функций</h2>
-                <p>Числовые функции делятся по задаче: преобразование между числом и строкой, базовые вычисления, случайные значения, тригонометрия, корни, логарифмы и округление. Если нужно превратить текст в число, смотри <code>VAL</code>. Если нужно взять модуль, минимум или максимум, смотри базовые функции. Если нужно работать с углами, переходи к тригонометрии.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Тип результата и ошибки</h2>
-                <ul>
-                    <li><code>RND()</code> вызывается без аргументов и возвращает <code>DOUBLE</code> в диапазоне от <code>0</code> включительно до <code>1</code> не включительно.</li>
-                    <li><code>INT</code> возвращает результат именно в типе <code>INTEGER</code>, а <code>FLOOR</code>, <code>CEIL</code>, <code>ROUND</code> и <code>FIX</code> обычно сохраняют числовой тип исходного аргумента.</li>
-                    <li>Функции вроде <code>SQR</code>, <code>LOG</code>, <code>ASIN</code>, <code>ACOS</code> и <code>ATANH</code> имеют ограничения по области допустимых значений. Если аргумент не подходит, программа получает диагностику времени выполнения.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Куда перейти за конкретной функцией</h2>
-                <div class="link-list">
-                    <a href="numeric-functions-conversion-and-legacy.html">Округление и преобразование чисел</a>
-                    <a href="numeric-functions-core.html">Базовые числовые функции</a>
-                    <a href="numeric-functions-trigonometry.html">Тригонометрические функции</a>
-                    <a href="numeric-functions-roots-rounding.html">Корни, логарифмы и округление</a>
-                </div>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/functions/int/basic_usage.axm">INT: округление вниз</a></li>
-                    <li><a href="../../samples/functions/str/basic_usage.axm">STR: преобразование числа в строку</a></li>
-                    <li><a href="../../samples/functions/val/basic_usage.axm">VAL: чтение числа из строки</a></li>
-                    <li><a href="../../samples/functions/abs/basic_usage.axm">ABS: модуль числа</a></li>
-                    <li><a href="../../samples/functions/min/basic_usage.axm">MIN: меньшее значение</a></li>
-                    <li><a href="../../samples/functions/rnd/basic_usage.axm">RND: случайное значение</a></li>
-                    <li><a href="../../samples/functions/sin/basic_usage.axm">SIN: синус угла</a></li>
-                    <li><a href="../../samples/functions/sqr/basic_usage.axm">SQR: квадратный корень</a></li>
-                    <li><a href="../../samples/functions/log/basic_usage.axm">LOG: натуральный логарифм</a></li>
-                    <li><a href="../../samples/functions/round/basic_usage.axm">ROUND: округление к ближайшему</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="numeric-functions-conversion-and-legacy.html">Преобразование чисел</a>
-                    <a href="numeric-functions-core.html">Базовые числовые функции</a>
-                    <a href="numeric-functions-trigonometry.html">Тригонометрические функции</a>
-                    <a href="numeric-functions-roots-rounding.html">Корни, логарифмы и округление</a>
-                    <a href="data-types.html">Типы данных</a>
-                    <a href="data-type-limits.html">Диапазоны и ограничения типов</a>
-                    <a href="date-time-functions.html">Дата и время</a>
-                    <a href="string-functions.html">Строковые функции</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
-
-            <section class="article-section"><h2>Проверка строки до преобразования</h2><p>Для проверки полного конечного числа используй <a href="isnumeric.html">встроенную функцию ISNUMERIC</a>. В отличие от VAL, она отклоняет строку с числовым префиксом и текстовым хвостом.</p></section>
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Числа и математика — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="numeric-functions"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Числа и математика</span></nav>
+<p class="eyebrow">Справочник языка</p><h1 class="page-title">Числа и математика</h1><p class="lead">Раздел «Числа и математика» описывает числовые типы, математические встроенные функции, округление, преобразование и псевдослучайные числа.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="numeric-types"><h2>Числовые значения</h2>
+<p>INTEGER хранит целые числа от −2147483648 до 2147483647; LONG — от −9223372036854775808 до 9223372036854775807. DOUBLE хранит приближённые двоичные числа, DECIMAL — десятичные числа в пределах своего диапазона. Числовая функция не обязана сохранять тип аргумента: INT возвращает INTEGER, математические функции вроде SIN — DOUBLE.</p><p>Числа передаются выражениями. Не следует передавать строку с цифрами вместо числа: сначала выберите требуемое преобразование. Подробности о точности и допустимых преобразованиях приведены на страницах <a href="data-type-limits.html">диапазонов типов</a> и <a href="data-types-conversions.html">преобразований</a>.</p></section>
+<section class="article-section"><h2>Группы функций</h2><ul><li><a href="numeric-functions-core.html">Модуль, знак, выбор границ и RND</a> — ABS, SGN, MIN, MAX, CLAMP, SETSIGN и RND.</li><li><a href="numeric-functions-roots-rounding.html">Корни, степени, логарифмы и округление</a> — математические преобразования и правила удаления дробной части.</li><li><a href="numeric-functions-trigonometry.html">Тригонометрические функции</a> — углы в радианах и гиперболические зависимости.</li><li><a href="numeric-functions-conversion-and-legacy.html">Преобразования</a> — INT, CINT, CLNG, CDBL, CDEC, STR и VAL.</li><li><a href="isnumeric.html">ISNUMERIC</a> — проверка полной числовой строки.</li><li><a href="randomize.html">RANDOMIZE</a> — начальное состояние генератора.</li></ul></section>
+<section class="article-section"><h2>Пример выбора округления</h2><pre><code class="language-axiom">PRINT INT(-2.8)
+PRINT FIX(-2.8)
+PRINT CINT(-2.8)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>-3
+-2
+-2</code></pre></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

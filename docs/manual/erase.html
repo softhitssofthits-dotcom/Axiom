@@ -1,35 +1,23 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom — Оператор ERASE</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="erase">
-<header class="topbar">
-    <div class="topbar__inner">
-        <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Справочник по реализованному языку Axiom</div>
-        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-    </div>
-</header>
-<div class="layout">
-    <aside class="sidebar">
-        <div class="sidebar__inner">
-            <nav id="manual-nav"></nav>
-        </div>
-    </aside>
-    <main class="content"><nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><a href="operator-reference.html">Операторы</a><span>/</span><span>Оператор ERASE</span></nav><p class="eyebrow">Справочная статья</p><h1 class="page-title">Оператор ERASE</h1><p class="lead"><code>ERASE</code> — оператор языка Axiom, который освобождает хранилище массива и переводит его в невыделенное состояние.</p>
-<section class="article-section"><h2>Контекст</h2><p>Оператор работает с изменяемой переменной массива или доступным полем массива. Экранный и файловый режимы не требуются.</p></section><section class="article-section"><h2>Синтаксис</h2><pre><code class="language-axiom">ERASE &lt;массив&gt;</code></pre></section><section class="article-section"><h2>Параметр</h2><p><code>&lt;массив&gt;</code> — значение массива, хранилище которого освобождается.</p></section>
-<section class="article-section"><h2>Правила работы</h2><p>Имя, тип элементов и ранг массива сохраняются. До следующего <code>REDIM</code> обращаться к элементам нельзя. Функция <code>ARRAYISALLOCATED</code> возвращает <code>FALSE</code>. Оператор не допускается для фиксированного поля массива внутри записи <code>TYPE</code>.</p></section>
-<section class="article-section"><h2>Диагностика</h2><ul><li><code>MB2011</code> — цель не является массивом.</li><li><code>MB2010</code> — цель объявлена неизменяемой.</li><li><code>MB2025</code> — цель является фиксированным полем массива в записи <code>TYPE</code>.</li><li><code>MB3005</code> — программа обращается к элементам после освобождения хранилища.</li></ul></section><section class="article-section"><h2>Пример</h2><pre><code class="language-axiom">DIM values() AS INTEGER
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Оператор ERASE — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="erase"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор ERASE</span></nav>
+<p class="eyebrow">10 · Массивы</p><h1 class="page-title">Оператор ERASE</h1><p class="lead">ERASE — оператор Axiom, который освобождает элементы массива. После выполнения массив сохраняет объявленный тип и ранг, но становится невыделенным.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Контекст</h2><p>Цель должна быть изменяемой переменной массива или доступным массивным полем. Операция не требует дополнительных режимов выполнения.</p></section>
+<section class="article-section"><h2>Синтаксис</h2><pre><code class="language-axiom">ERASE &lt;массив&gt;</code></pre></section>
+<section class="article-section"><h2>Параметр</h2><p>Массивный аргумент указывает хранилище, которое нужно освободить.</p></section>
+<section class="article-section"><h2>Правила работы</h2><p>Объявление массива продолжает действовать, а доступных элементов больше нет. До нового <code>REDIM</code> обращение к ним вызывает ошибку. Проверка <code>ARRAYISALLOCATED</code> возвращает <code>FALSE</code>. Фиксированное массивное поле <code>TYPE</code> освобождать нельзя.</p></section>
+<section class="article-section"><h2>Диагностика</h2><ul><li><code>MB2011</code> — цель не является массивом.</li><li><code>MB2010</code> — цель объявлена неизменяемой.</li><li><code>MB2025</code> — цель является фиксированным полем массива в записи <code>TYPE</code>.</li><li><code>MB3005</code> — программа обращается к элементам после освобождения хранилища.</li></ul></section>
+<section class="article-section"><h2>Пример</h2><pre><code class="language-axiom">DIM values() AS INTEGER
 REDIM values(1 TO 2)
 PRINT ARRAYISALLOCATED(values)
 ERASE values
-PRINT ARRAYISALLOCATED(values)</code></pre><p>Результат:</p><pre><code>TRUE
-FALSE</code></pre><p>Запускаемый пример: <a href="../../samples/operators/erase/basic_usage.axm">освобождение массива</a>.</p></section><section class="article-section"><h2>См. также</h2><div class="link-list"><a href="redim.html">REDIM</a><a href="arrays-dynamic.html">Динамические массивы</a><a href="arrays-functions.html#arrayisallocated">ARRAYISALLOCATED</a></div></section><div id="page-pager" class="pager"></div></main>
-</div>
-<script src="scripts/manual.js"></script>
-</body>
-</html>
+PRINT ARRAYISALLOCATED(values)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE
+FALSE</code></pre><p>Связанный файл проверяет состояние до и после освобождения. Связанные материалы: <a href="../../samples/operators/erase/basic_usage.axm">освобождение массива</a>.</p></section>
+<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="redim.html">REDIM</a><a href="arrays-dynamic.html">Динамические массивы</a><a href="arrays-functions.html#arrayisallocated">ARRAYISALLOCATED</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

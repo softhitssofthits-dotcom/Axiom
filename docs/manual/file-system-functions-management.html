@@ -1,281 +1,171 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Операции с файлами и папками</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="file-system-functions-management">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Создание, удаление, копирование, перенос и временные объекты</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный указатель</a>
-                <span>/</span>
-                <a href="file-system-functions.html">Функции файловой системы</a>
-                <span>/</span>
-                <span>Операции с файлами и папками</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Операции с файлами и папками</h1>
-            <p class="lead">Раздел операций с файлами и папками описывает функции, которые изменяют файловую систему: создание и удаление объектов, копирование и перемещение, смена текущей рабочей папки и получение сведений о диске.</p>
-
-            <section class="article-section" id="makedir">
-                <h2>MAKEDIR</h2>
-                <p>Функция <code>MAKEDIR</code> создаёт папку по указанному пути.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = MAKEDIR(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь к новой папке. Функция возвращает логическое значение.</p>
-                <h3>Пример вызова MAKEDIR</h3>
-                <pre><code class="language-axiom">' Создание папки output
-PRINT MAKEDIR("output")</code></pre>
-            </section>
-
-            <section class="article-section" id="deletefile">
-                <h2>DELETEFILE</h2>
-                <p>Функция <code>DELETEFILE</code> удаляет файл.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = DELETEFILE(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь к файлу. Если файла нет, функция возвращает <code>FALSE</code>.</p>
-                <h3>Пример вызова DELETEFILE</h3>
-                <pre><code class="language-axiom">' Удаление файла
-PRINT DELETEFILE("notes.txt")</code></pre>
-            </section>
-
-            <section class="article-section" id="copyfile">
-                <h2>COPYFILE</h2>
-                <p><code>COPYFILE</code> — встроенная функция языка Axiom, которая копирует байты файла в другое место, сохраняя источник. Функция подходит для текстовых и двоичных файлов: содержимое не декодируется и кодировка не меняется.</p>
-                <h3>Синтаксис</h3>
-                <h4>Без замены существующего файла</h4><pre><code class="language-axiom">result = COPYFILE(sourcePath, targetPath)</code></pre><h4>С явным разрешением замены</h4><pre><code class="language-axiom">result = COPYFILE(sourcePath, targetPath, overwrite)</code></pre>
-                <h3>Аргументы</h3><p><code>sourcePath</code> задаёт исходный файл. <code>targetPath</code> задаёт путь, куда нужно поместить копию. Необязательный <code>overwrite</code> задаёт логическое значение, разрешающее перезапись существующего файла назначения.</p>
-                <h3>Правила и диагностика</h3><p>Пути должны быть строками, overwrite должен быть логическим значением; по умолчанию overwrite равен FALSE. Относительные пути разрешаются от текущего каталога программы. Родитель назначения должен существовать: функция не создаёт отсутствующие папки. При успехе возвращается TRUE. Отсутствующий источник, конфликт существующего файла без разрешённой замены, отсутствующий родитель назначения и отказ файловой системы дают MB3007.</p><h3>Символические ссылки в Windows</h3><p>Если источник — символическая ссылка на файл, копируется содержимое её цели, а новая копия является обычным файлом. Если назначение — символическая ссылка, запись идёт в её цель, сама ссылка сохраняется. При существующей цели overwrite = FALSE даёт MB3007, а TRUE разрешает заменить её байты. При отсутствующей цели она создаётся даже при overwrite = FALSE: существующего целевого файла для перезаписи нет. Это поведение проверено на Windows; другие виды ссылок и файловые системы требуют отдельной проверки.</p><h3>Копирование того же файла</h3><p>В проверенной Windows совпадающие пути и разные жёсткие ссылки на один файл дают MB3007, даже при overwrite = TRUE. Исходные байты сохраняются. Разные текстовые пути не обязательно означают разные файлы.</p><h3>Пример вызова COPYFILE</h3>
-                <pre><code class="language-axiom">' Создание копии файла
-PRINT COPYFILE("notes.txt", "notes-copy.txt")</code></pre>
-            </section>
-
-            <section class="article-section" id="movefile">
-                <h2>MOVEFILE</h2>
-                <p><code>MOVEFILE</code> — встроенная функция языка Axiom, которая перемещает файл по новому пути. При переносе по другому пути прежнее имя источника исчезает; при совпадающем пути функция может успешно ничего не менять. Содержимое файла не декодируется.</p>
-                <h3>Синтаксис</h3>
-                <h4>Без замены существующего файла</h4><pre><code class="language-axiom">result = MOVEFILE(sourcePath, targetPath)</code></pre><h4>С явным разрешением замены</h4><pre><code class="language-axiom">result = MOVEFILE(sourcePath, targetPath, overwrite)</code></pre>
-                <h3>Аргументы</h3><p><code>sourcePath</code> задаёт исходный файл. <code>targetPath</code> задаёт новое место расположения. Необязательный <code>overwrite</code> разрешает заменить существующий файл назначения.</p>
-                <h3>Правила и диагностика</h3><p>Пути должны быть строками, overwrite должен быть логическим значением; по умолчанию overwrite равен FALSE. Родитель назначения должен уже существовать. При успехе возвращается TRUE. Конфликт назначения без замены и отсутствующий родитель дают MB3007 и в проверенных случаях сохраняют источник. Функция не обещает откат любого отказа носителя или атомарность переноса между дисками.</p><h3>Символические ссылки в Windows</h3><p>Если источник — символическая ссылка на файл, перемещается сама ссылка, её цель не меняется. Если назначение является ссылкой, overwrite = FALSE даёт MB3007, в том числе при отсутствующей цели ссылки. При overwrite = TRUE ссылка назначения заменяется перемещаемым файлом, а её прежняя цель остаётся прежней. Это отличается от записи через ссылку функцией COPYFILE и проверено на Windows.</p><h3>Одинаковый файл и разные имена</h3><p>В проверенной Windows MOVEFILE(path, path, overwrite) возвращает TRUE без изменения файла при FALSE и TRUE. Если sourcePath и targetPath — два разных имени одного файла, созданные жёсткими ссылками, операция тоже успешна при обоих значениях overwrite: прежнее имя источника исчезает, байты остаются доступны под именем назначения. Это отличается от конфликта двух разных файлов.</p><pre><code class="language-axiom">DIM path AS STRING = MAKETEMPFILE("same_file_")
-PRINT WRITEFILE(path, "Сохранить😀")
-PRINT MOVEFILE(path, path, FALSE) ' TRUE; путь и текст не меняются.
-PRINT READFILE(path) = "Сохранить😀"
-PRINT DELETEFILE(path)</code></pre><p>Полная запускаемая проверка: <a href="../../samples/functions/movefile/same_file_path.axm">совпадающий путь файла</a>.</p><h3>Пример вызова MOVEFILE</h3>
-                <pre><code class="language-axiom">' Перемещение файла в подпапку archive
-PRINT MOVEFILE("notes.txt", "archive/notes.txt")</code></pre>
-            </section>
-
-            <section class="article-section" id="renamefile">
-                <h2>RENAMEFILE</h2>
-                <p>Функция <code>RENAMEFILE</code> переименовывает файл в пределах его текущей папки.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = RENAMEFILE(path, newName)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь к существующему файлу. <code>newName</code> задаёт новое имя файла без изменения родительской папки.</p>
-                <h3>Пример вызова RENAMEFILE</h3>
-                <pre><code class="language-axiom">' Переименование файла
-PRINT RENAMEFILE("notes.txt", "notes-old.txt")</code></pre>
-            </section>
-
-            <section class="article-section" id="deletedir">
-                <h2>DELETEDIR</h2>
-                <p>Функция <code>DELETEDIR</code> удаляет пустую папку.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = DELETEDIR(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь к папке. Если папки нет, функция возвращает <code>FALSE</code>.</p>
-                <h3>Пример вызова DELETEDIR</h3>
-                <pre><code class="language-axiom">' Удаление пустой папки
-PRINT DELETEDIR("output")</code></pre>
-            </section>
-
-            <section class="article-section" id="deletedirrecursive">
-                <h2>DELETEDIRRECURSIVE</h2>
-                <p>Функция <code>DELETEDIRRECURSIVE</code> удаляет папку вместе со всем её содержимым.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = DELETEDIRRECURSIVE(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь к папке, которую нужно удалить рекурсивно.</p>
-                <h3>Пример вызова DELETEDIRRECURSIVE</h3>
-                <pre><code class="language-axiom">' Рекурсивное удаление папки
-PRINT DELETEDIRRECURSIVE("output")</code></pre>
-            </section>
-
-            <section class="article-section" id="copydir">
-                <h2>COPYDIR</h2>
-                <p><code>COPYDIR</code> — встроенная функция языка Axiom, которая копирует обычные файлы и вложенные папки в другой каталог. Отсутствующая папка назначения создаётся автоматически; содержимое существующей папки дополняется. Аргумент <code>overwrite</code> разрешает замену существующих файлов, а не удаление папки назначения целиком.</p>
-                <p>Пути должны быть строками; относительные пути разрешаются так же, как в остальных файловых функциях. Вложенные символические ссылки, соединения каталогов Windows и другие точки повторного разбора пропускаются: функция не копирует их и не переходит к их целям. Если в соответствующем месте назначения уже находится ссылка, операция выдаёт <code>MB3007</code> вместо записи через эту ссылку. Явно указанная ссылка в исходном пути или пути назначения разрешается до конечного каталога. В проверенной Windows это относится и к явно указанному соединению с отсутствующей целью: если такое соединение задано как назначение, отсутствующая цель создаётся и получает копию; соединение сохраняется. Если оно задано как источник, возникает MB3007, но к этому моменту может быть создана пустая папка назначения. Этот случай отличается от вложенной ссылки назначения, которая отклоняется.</p>
-                <p>Нельзя копировать папку в саму себя или внутрь неё. Это проверяется до создания назначения и записи файлов, в том числе при пути через ссылку на исходную папку и при расширенной записи пути Windows с префиксом <code>\\?\</code>. Нарушение выдаёт <code>MB3007</code>. Отсутствующий источник, отказ доступа и конфликт существующего файла без <code>overwrite = TRUE</code> также дают <code>MB3007</code>. При прочих ошибках ввода-вывода уже скопированные файлы не откатываются. При успехе возвращается <code>TRUE</code>.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = COPYDIR(sourcePath, targetPath[, overwrite])</code></pre>
-                <h3>Аргументы</h3><p><code>sourcePath</code> задаёт исходную папку. <code>targetPath</code> задаёт папку назначения. Необязательный аргумент <code>overwrite</code> должен быть логическим значением и разрешает заменять существующие файлы; по умолчанию он равен <code>FALSE</code>.</p>
-                <h3>Отказ от вложенной копии</h3>
-                <pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_copy_guard_")
-TRY
-    PRINT COPYDIR(folder, COMBINEPATH(folder, "copy"), TRUE)
-CATCH err
-    PRINT err.Code ' MB3007: назначение находится внутри источника.
-END TRY
-PRINT NOT DIREXISTS(COMBINEPATH(folder, "copy")) ' TRUE
-PRINT DELETEDIRRECURSIVE(folder)</code></pre>
-                <p>Запускаемый пример: <a href="../../samples/functions/copydir/reject_nested_destination.axm">проверка сохранности исходного файла</a>.</p>
-                <h3>Пример вызова COPYDIR</h3>
-                <pre><code class="language-axiom">' Копирование папки docs
-PRINT COPYDIR("docs", "docs-copy")</code></pre>
-            </section>
-
-            <section class="article-section" id="movedir">
-                <h2>MOVEDIR</h2>
-                <p><code>MOVEDIR</code> — встроенная функция языка Axiom, которая перемещает папку по новому пути. Функция нужна для изменения расположения каталога вместе с его содержимым и работает с файловой системой в текущем каталоге программы.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = MOVEDIR(sourcePath, targetPath)</code></pre>
-                <h3>Аргументы</h3><p>Аргументы <code>sourcePath</code> и <code>targetPath</code> должны быть строками. Исходная папка должна существовать, конечная папка назначения не должна существовать, а её родительский каталог уже должен быть создан. Относительные пути разрешаются от текущего каталога программы.</p><h3>Результат и ограничения</h3><p>При успехе функция возвращает TRUE. MOVEDIR не объединяет содержимое с существующим назначением и не создаёт отсутствующую цепочку родительских каталогов. Если исходный путь указывает на соединение каталогов Windows, переносится само соединение, а не его целевой каталог; это отличается от разрешения явно указанной ссылки функцией COPYDIR. Поведение других видов точек повторного анализа зависит от файловой системы.</p><h3>Диагностика</h3><p>Отсутствующий источник, существующее назначение, отсутствующий родитель назначения, совпадающие пути, попытка переноса внутрь исходной папки и отказ файловой системы дают MB3007. Проверенные отказы существующего назначения и отсутствующего родителя сохраняют источник и прежние файлы назначения; функция не обещает откат любого возможного отказа носителя.</p>
-                <h3>Отказ при существующем назначении</h3><pre><code class="language-axiom">' sourcePath и targetPath задают две уже существующие папки.
-TRY
-    PRINT MOVEDIR(sourcePath, targetPath)
-CATCH err
-    PRINT err.Code ' MB3007; содержимое папок сохраняется.
-END TRY</code></pre><p>Полная запускаемая проверка с собственными временными папками: <a href="../../samples/functions/movedir/existing_destination.axm">конфликт существующего назначения</a>.</p><h3>Пример вызова MOVEDIR</h3>
-                <pre><code class="language-axiom">' Перемещение папки в архив
-PRINT MOVEDIR("docs-copy", "archive/docs-copy")</code></pre>
-            </section>
-
-            <section class="article-section" id="renamedir">
-                <h2>RENAMEDIR</h2>
-                <p>Функция <code>RENAMEDIR</code> переименовывает папку в пределах её родительского каталога.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = RENAMEDIR(path, newName)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь к папке. <code>newName</code> задаёт её новое имя.</p>
-                <h3>Пример вызова RENAMEDIR</h3>
-                <pre><code class="language-axiom">' Переименование папки
-PRINT RENAMEDIR("output", "output-old")</code></pre>
-            </section>
-
-            <section class="article-section" id="currentdir">
-                <h2>CURRENTDIR</h2>
-                <p><code>CURRENTDIR</code> — встроенная функция языка Axiom, которая возвращает полный путь текущей рабочей папки программы. От этой папки вычисляются относительные пути файловых операторов и функций.</p>
-                <p>При запуске сохранённой программы в Electron IDE начальной рабочей папкой становится папка её файла <code>.axm</code>. Для несохранённой программы используется текущая папка процесса в момент запуска. CLI сохраняет папку, из которой его вызвали; расположение переданного файла <code>.axm</code> само по себе её не меняет.</p>
-                <p>Каждый запуск через стандартный исполнитель хранит свою рабочую папку. Смена папки внутри программы не меняет рабочую папку процесса IDE и не переносится в следующий запуск; при продолжении остановленной программы её папка сохраняется.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">path = CURRENTDIR()</code></pre>
-                <h3>Аргументы</h3><p>Функция не принимает аргументов. Результатом является строка с полным путём текущей папки.</p>
-                <h3>Пример вызова CURRENTDIR</h3>
-                <pre><code class="language-axiom">' Вывод текущей рабочей папки
-PRINT CURRENTDIR()</code></pre>
-            </section>
-
-            <section class="article-section" id="changedir">
-                <h2>CHANGEDIR</h2>
-                <p><code>CHANGEDIR</code> — встроенная функция языка Axiom, которая меняет текущую рабочую папку программы для последующих файловых операций. Функция нужна, чтобы последовательно работать с файлами внутри выбранной папки без повторения полного пути.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = CHANGEDIR(path)</code></pre>
-                <h3>Аргументы и результат</h3><p>Аргумент <code>path</code> должен быть строкой с путём к существующей папке. Относительный путь вычисляется от текущей папки программы. После успешного перехода функция возвращает <code>TRUE</code>. Папки автоматически не создаются.</p>
-                <h3>Правила и диагностика</h3><p>При отсутствии папки или ошибке файловой системы функция сообщает <code>MB3007</code>, а текущая папка программы сохраняется. Уже открытый файл продолжает работать со своим прежним файлом. Базовая папка графических ресурсов остаётся папкой запуска; функция <code>CHANGEDIR</code> меняет базу файловых путей.</p>
-                <h3>Пример вызова CHANGEDIR</h3>
-                <pre><code class="language-axiom">' Переход в папку docs
-PRINT CHANGEDIR("docs")
-PRINT CURRENTDIR()</code></pre>
-                <p>Пошаговая проверка файловых путей: <a href="../../samples/functions/changedir/program_directory_scope.axm">рабочая папка текущего запуска</a>.</p>
-            </section>
-
-            <section class="article-section" id="maketempfile">
-                <h2>MAKETEMPFILE</h2>
-                <p>Функция <code>MAKETEMPFILE</code> создаёт новый временный файл и возвращает его полный путь.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">path = MAKETEMPFILE(prefix)</code></pre>
-                <h3>Аргументы</h3><p><code>prefix</code> задаёт начало имени временного файла. Результатом является строка с полным путём.</p>
-                <h3>Пример вызова MAKETEMPFILE</h3>
-                <pre><code class="language-axiom">' Создание временного файла
-DIM path AS STRING
-
-path = MAKETEMPFILE("demo_")
-PRINT path</code></pre>
-            </section>
-
-            <section class="article-section" id="maketempdir">
-                <h2>MAKETEMPDIR</h2>
-                <p>Функция <code>MAKETEMPDIR</code> создаёт новую временную папку и возвращает её полный путь.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">path = MAKETEMPDIR(prefix)</code></pre>
-                <h3>Аргументы</h3><p><code>prefix</code> задаёт начало имени временной папки. Результатом является строка с полным путём.</p>
-                <h3>Пример вызова MAKETEMPDIR</h3>
-                <pre><code class="language-axiom">' Создание временной папки
-DIM path AS STRING
-
-path = MAKETEMPDIR("demo_")
-PRINT path</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Операции меняют файловую систему</h2>
-                <ul>
-                    <li><code>DELETEFILE</code>, <code>DELETEDIR</code> и <code>DELETEDIRRECURSIVE</code> возвращают <code>FALSE</code>, если удаляемого объекта нет.</li>
-                    <li><code>COPYFILE</code>, <code>MOVEFILE</code> и <code>COPYDIR</code> принимают необязательный параметр <code>overwrite</code>, если нужно явно разрешить замену существующего объекта назначения.</li>
-                    <li><code>DELETEDIR</code> удаляет только пустую папку. Если папка содержит файлы или подпапки, используйте <code>DELETEDIRRECURSIVE</code>.</li>
-                    <li><code>CHANGEDIR</code> влияет на все последующие относительные пути в программе.</li>
-                    <li><code>MAKETEMPFILE</code> и <code>MAKETEMPDIR</code> создают объекты в системной временной папке.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li>Недоступный исходный путь, невозможность создать целевой объект или ошибка доступа дают диагностику времени выполнения <code>MB3007</code>.</li>
-                    <li>Попытка удалить непустую папку через <code>DELETEDIR</code> также завершается диагностикой <code>MB3007</code>.</li>
-                    <li>Недопустимый префикс имени для <code>MAKETEMPFILE</code> и <code>MAKETEMPDIR</code> даёт <code>MB3007</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/functions/makedir/basic_usage.axm">MAKEDIR: создание папки</a></li>
-                    <li><a href="../../samples/functions/deletefile/basic_usage.axm">DELETEFILE: удаление файла</a></li>
-                    <li><a href="../../samples/functions/copyfile/basic_usage.axm">COPYFILE: копирование файла</a></li>
-                    <li><a href="../../samples/functions/movefile/basic_usage.axm">MOVEFILE: перенос файла</a></li>
-                    <li><a href="../../samples/functions/renamefile/basic_usage.axm">RENAMEFILE: переименование файла</a></li>
-                    <li><a href="../../samples/functions/deletedir/basic_usage.axm">DELETEDIR: удаление пустой папки</a></li>
-                    <li><a href="../../samples/functions/deletedirrecursive/basic_usage.axm">DELETEDIRRECURSIVE: рекурсивное удаление</a></li>
-                    <li><a href="../../samples/functions/copydir/basic_usage.axm">COPYDIR: копирование папки</a></li>
-                    <li><a href="../../samples/functions/movedir/basic_usage.axm">MOVEDIR: перенос папки</a></li>
-                    <li><a href="../../samples/functions/renamedir/basic_usage.axm">RENAMEDIR: переименование папки</a></li>
-                    <li><a href="../../samples/functions/currentdir/basic_usage.axm">CURRENTDIR: текущая папка</a></li>
-                    <li><a href="../../samples/functions/changedir/basic_usage.axm">CHANGEDIR: смена текущей папки</a></li>
-                    <li><a href="../../samples/functions/maketempfile/basic_usage.axm">MAKETEMPFILE: временный файл</a></li>
-                    <li><a href="../../samples/functions/maketempdir/basic_usage.axm">MAKETEMPDIR: временная папка</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="file-system-functions.html">Файловая система</a>
-                    <a href="file-system-functions-paths.html">Пути и сведения</a>
-                    <a href="file-system-functions-text.html">Текстовые файлы</a>
-                    <a href="file-system-functions-open-files.html">Функции для открытого файла</a>
-                    <a href="open.html">OPEN</a>
-                    <a href="close.html">CLOSE</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Операции с файлами и каталогами — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="file-system-functions-management"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Операции с файлами и каталогами</span></nav>
+<p class="eyebrow">14 · Файловая система</p><h1 class="page-title">Операции с файлами и каталогами</h1><p class="lead">Раздел содержит встроенные функции MAKEDIR, DELETEFILE, COPYFILE, MOVEFILE, RENAMEFILE, DELETEDIR, DELETEDIRRECURSIVE, COPYDIR, MOVEDIR, RENAMEDIR, CURRENTDIR, CHANGEDIR, DIRSIZE, FREESPACE, TOTALFREESPACE, TOTALSPACE, ISREADONLY, ISHIDDEN, DRIVENAME, DRIVEFORMAT, DRIVETYPE, MAKETEMPFILE, MAKETEMPDIR, которые работают с путями и файловыми ресурсами. Подробнее назначение, аргументы и результат каждой функции объяснены ниже.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Назначение и условия работы</h2><p>Эта страница объединяет отдельные встроенные функции <code>MAKEDIR</code>, <code>DELETEFILE</code>, <code>COPYFILE</code>, <code>MOVEFILE</code>, <code>RENAMEFILE</code>, <code>DELETEDIR</code>, <code>DELETEDIRRECURSIVE</code>, <code>COPYDIR</code>, <code>MOVEDIR</code>, <code>RENAMEDIR</code>, <code>CURRENTDIR</code>, <code>CHANGEDIR</code>, <code>DIRSIZE</code>, <code>FREESPACE</code>, <code>TOTALFREESPACE</code>, <code>TOTALSPACE</code>, <code>ISREADONLY</code>, <code>ISHIDDEN</code>, <code>DRIVENAME</code>, <code>DRIVEFORMAT</code>, <code>DRIVETYPE</code>, <code>MAKETEMPFILE</code>, <code>MAKETEMPDIR</code>. Каждый блок синтаксиса относится к указанной функции; общей конструкции для всей группы нет.</p><p>Файловые операции доступны в консольной программе и в IDE без оператора SCREEN. Относительные пути разрешаются от CURRENTDIR() текущего запуска. Перед разрешением пути раскрываются переменные окружения. Нулевой символ в пути недопустим. Создание файла не создаёт родительский каталог; сначала вызовите MAKEDIR, если он нужен.</p></section>
+<section class="article-section" id="makedir"><h2>MAKEDIR</h2><p><code>MAKEDIR</code> — встроенная функция языка Axiom, которая создаёт каталог и недостающие родительские каталоги.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">MAKEDIR(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь к каталогу.</p><h3>Результат и правила работы</h3><p>При успешном завершении функция возвращает TRUE; отказ сообщается диагностикой, а не значением FALSE.</p><p>Результат имеет тип <code>BOOLEAN</code>. Уже существующий каталог считается успешным результатом TRUE.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если путь недопустим, занят обычным файлом или создание каталога запрещено правами доступа либо не удалось файловой системе.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT MAKEDIR(COMBINEPATH(folder, "a/b"))
+PRINT DIREXISTS(COMBINEPATH(folder, "a/b"))
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE
+TRUE</code></pre></section>
+<section class="article-section" id="deletefile"><h2>DELETEFILE</h2><p><code>DELETEFILE</code> — встроенная функция языка Axiom, которая удаляет файл по заданному пути.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">DELETEFILE(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь к файлу.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>BOOLEAN</code>. Если файл отсутствует, функция возвращает FALSE; успешное удаление даёт TRUE.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если путь нельзя разрешить или существующий файл нельзя удалить. Отсутствующий файл даёт FALSE.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT DELETEFILE(path)
+PRINT DELETEFILE(path)
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE
+FALSE</code></pre></section>
+<section class="article-section" id="copyfile"><h2>COPYFILE</h2><p><code>COPYFILE</code> — встроенная функция языка Axiom, которая копирует содержимое существующего файла в другой файл.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">COPYFILE(&lt;источник&gt;, &lt;назначение&gt;)</code></pre><pre><code class="language-axiom">COPYFILE(&lt;источник&gt;, &lt;назначение&gt;, &lt;замена&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;источник&gt;</code> имеет тип <code>STRING</code>. Строка источника задаёт существующий файл для переноса либо копирования.</p><p><code>&lt;назначение&gt;</code> имеет тип <code>STRING</code>. Строка назначения задаёт полный путь файла назначения, включая его имя.</p><p><code>&lt;замена&gt;</code> имеет тип <code>BOOLEAN</code>. Логическое значение TRUE разрешает замену существующих файлов; FALSE запрещает её. Без этого аргумента действует FALSE.</p><h3>Результат и правила работы</h3><p>При успешном завершении функция возвращает TRUE; отказ сообщается диагностикой, а не значением FALSE.</p><p>Результат имеет тип <code>BOOLEAN</code>. Источник должен существовать. Родительский каталог назначения автоматически не создаётся. При существующем назначении без TRUE в аргументе замены возникает ошибка.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если источник отсутствует, родитель назначения отсутствует, назначение уже существует без разрешения замены или копирование запрещено либо не удалось.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT COPYFILE(path, COMBINEPATH(folder, "copy.txt"))
+PRINT READFILE(COMBINEPATH(folder, "copy.txt"))
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE
+AB</code></pre></section>
+<section class="article-section" id="movefile"><h2>MOVEFILE</h2><p><code>MOVEFILE</code> — встроенная функция языка Axiom, которая переносит существующий файл по новому пути.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">MOVEFILE(&lt;источник&gt;, &lt;назначение&gt;)</code></pre><pre><code class="language-axiom">MOVEFILE(&lt;источник&gt;, &lt;назначение&gt;, &lt;замена&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;источник&gt;</code> имеет тип <code>STRING</code>. Строка источника задаёт существующий файл для переноса либо копирования.</p><p><code>&lt;назначение&gt;</code> имеет тип <code>STRING</code>. Строка назначения задаёт полный путь файла назначения, включая его имя.</p><p><code>&lt;замена&gt;</code> имеет тип <code>BOOLEAN</code>. Логическое значение TRUE разрешает замену существующих файлов; FALSE запрещает её. Без этого аргумента действует FALSE.</p><h3>Результат и правила работы</h3><p>При успешном завершении функция возвращает TRUE; отказ сообщается диагностикой, а не значением FALSE.</p><p>Результат имеет тип <code>BOOLEAN</code>. Источник должен существовать. Родительский каталог назначения автоматически не создаётся. При существующем назначении без TRUE в аргументе замены возникает ошибка.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если источник отсутствует, родитель назначения отсутствует, назначение уже существует без разрешения замены или перенос запрещён либо не удался.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT MOVEFILE(path, COMBINEPATH(folder, "moved.txt"))
+PRINT FILEEXISTS(path)
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE
+FALSE</code></pre></section>
+<section class="article-section" id="renamefile"><h2>RENAMEFILE</h2><p><code>RENAMEFILE</code> — встроенная функция языка Axiom, которая меняет имя файла в его текущем каталоге.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">RENAMEFILE(&lt;путь&gt;, &lt;новое имя&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь к файлу.</p><p><code>&lt;новое имя&gt;</code> имеет тип <code>STRING</code>. Строка нового имени задаёт только имя без пути; пустое имя, . и .. недопустимы. Родительский каталог сохраняется.</p><h3>Результат и правила работы</h3><p>При успешном завершении функция возвращает TRUE; отказ сообщается диагностикой, а не значением FALSE.</p><p>Результат имеет тип <code>BOOLEAN</code>. Исходный объект должен существовать. Меняется только имя в том же каталоге; существующее назначение не заменяется.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если источник отсутствует, новое имя не является простым именем, назначение уже существует или переименование недоступно.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT RENAMEFILE(path, "renamed.txt")
+PRINT FILEEXISTS(COMBINEPATH(folder, "renamed.txt"))
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE
+TRUE</code></pre></section>
+<section class="article-section" id="deletedir"><h2>DELETEDIR</h2><p><code>DELETEDIR</code> — встроенная функция языка Axiom, которая удаляет пустой каталог.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">DELETEDIR(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь к каталогу.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>BOOLEAN</code>. Если каталог отсутствует, функция возвращает FALSE. Непустой каталог не удаляется и вызывает ошибку.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если путь нельзя разрешить, каталог не пуст или удаление существующего каталога недоступно. Отсутствующий каталог даёт FALSE.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+DIM child AS STRING = COMBINEPATH(folder, "child")
+MAKEDIR(child)
+PRINT DELETEDIR(child)
+PRINT DELETEDIR(child)
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE
+FALSE</code></pre></section>
+<section class="article-section" id="deletedirrecursive"><h2>DELETEDIRRECURSIVE</h2><p><code>DELETEDIRRECURSIVE</code> — встроенная функция языка Axiom, которая удаляет каталог со всем его содержимым.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">DELETEDIRRECURSIVE(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь к каталогу.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>BOOLEAN</code>. Если каталог отсутствует, функция возвращает FALSE. При успехе удаляется всё содержимое, включая вложенные каталоги.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если путь нельзя разрешить или удаление существующего дерева недоступно либо не удалось. Отсутствующий каталог даёт FALSE.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+DIM child AS STRING = COMBINEPATH(folder, "child")
+MAKEDIR(child)
+WRITEFILE(COMBINEPATH(child, "x.txt"), "x")
+PRINT DELETEDIRRECURSIVE(child)
+PRINT DELETEDIRRECURSIVE(child)
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE
+FALSE</code></pre></section>
+<section class="article-section" id="copydir"><h2>COPYDIR</h2><p><code>COPYDIR</code> — встроенная функция языка Axiom, которая копирует дерево обычных файлов и каталогов.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">COPYDIR(&lt;источник&gt;, &lt;назначение&gt;)</code></pre><pre><code class="language-axiom">COPYDIR(&lt;источник&gt;, &lt;назначение&gt;, &lt;замена&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;источник&gt;</code> имеет тип <code>STRING</code>. Строка источника задаёт существующий каталог для переноса либо копирования.</p><p><code>&lt;назначение&gt;</code> имеет тип <code>STRING</code>. Строка назначения задаёт полный путь каталога назначения, включая его имя.</p><p><code>&lt;замена&gt;</code> имеет тип <code>BOOLEAN</code>. Логическое значение TRUE разрешает замену существующих файлов; FALSE запрещает её. Без этого аргумента действует FALSE.</p><h3>Результат и правила работы</h3><p>При успешном завершении функция возвращает TRUE; отказ сообщается диагностикой, а не значением FALSE.</p><p>Результат имеет тип <code>BOOLEAN</code>. Создаются каталог назначения и вложенные каталоги. Вложенные ссылки источника пропускаются; ссылки назначения отклоняются. Назначение не может совпадать с источником или находиться внутри него. Без TRUE существующий файл назначения не заменяется.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если источник отсутствует, назначение совпадает с источником или лежит внутри него, вложенное назначение является ссылкой, файл назначения уже существует без разрешения замены либо копирование недоступно.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+DIM child AS STRING = COMBINEPATH(folder, "child")
+MAKEDIR(child)
+WRITEFILE(COMBINEPATH(child, "x.txt"), "X")
+PRINT COPYDIR(child, COMBINEPATH(folder, "copy"))
+PRINT READFILE(COMBINEPATH(folder, "copy/x.txt"))
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE
+X</code></pre></section>
+<section class="article-section" id="movedir"><h2>MOVEDIR</h2><p><code>MOVEDIR</code> — встроенная функция языка Axiom, которая переносит каталог по новому пути.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">MOVEDIR(&lt;источник&gt;, &lt;назначение&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;источник&gt;</code> имеет тип <code>STRING</code>. Строка источника задаёт существующий каталог для переноса либо копирования.</p><p><code>&lt;назначение&gt;</code> имеет тип <code>STRING</code>. Строка назначения задаёт полный путь каталога назначения, включая его имя.</p><h3>Результат и правила работы</h3><p>При успешном завершении функция возвращает TRUE; отказ сообщается диагностикой, а не значением FALSE.</p><p>Результат имеет тип <code>BOOLEAN</code>. Каталог источника должен существовать. Назначение не должно уже существовать; родитель назначения требуется заранее. Форма с аргументом замены не поддерживается.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если источник отсутствует, назначение уже существует, родитель назначения отсутствует или файловая система не допускает такой перенос.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+DIM child AS STRING = COMBINEPATH(folder, "child")
+MAKEDIR(child)
+PRINT MOVEDIR(child, COMBINEPATH(folder, "moved"))
+PRINT DIREXISTS(child)
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE
+FALSE</code></pre></section>
+<section class="article-section" id="renamedir"><h2>RENAMEDIR</h2><p><code>RENAMEDIR</code> — встроенная функция языка Axiom, которая меняет имя каталога внутри его родительского каталога.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">RENAMEDIR(&lt;путь&gt;, &lt;новое имя&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь к каталогу.</p><p><code>&lt;новое имя&gt;</code> имеет тип <code>STRING</code>. Строка нового имени задаёт только имя без пути; пустое имя, . и .. недопустимы. Родительский каталог сохраняется.</p><h3>Результат и правила работы</h3><p>При успешном завершении функция возвращает TRUE; отказ сообщается диагностикой, а не значением FALSE.</p><p>Результат имеет тип <code>BOOLEAN</code>. Исходный объект должен существовать. Меняется только имя в том же каталоге; существующее назначение не заменяется.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если источник отсутствует, новое имя не является простым именем, назначение уже существует или переименование недоступно.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+DIM child AS STRING = COMBINEPATH(folder, "child")
+MAKEDIR(child)
+PRINT RENAMEDIR(child, "renamed")
+PRINT DIREXISTS(COMBINEPATH(folder, "renamed"))
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE
+TRUE</code></pre></section>
+<section class="article-section" id="currentdir"><h2>CURRENTDIR</h2><p><code>CURRENTDIR</code> — встроенная функция языка Axiom, которая возвращает полный путь рабочей папки текущего запуска.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">CURRENTDIR()</code></pre><h3>Аргументы</h3><p>Аргументов нет.</p><h3>Результат и правила работы</h3><p>Результат STRING содержит полный нормализованный путь рабочей папки текущего запуска. Последующие относительные пути разрешаются от этой папки.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если сохранённую рабочую папку нельзя разрешить в полный путь.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT ISABSOLUTEPATH(CURRENTDIR())
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE</code></pre></section>
+<section class="article-section" id="changedir"><h2>CHANGEDIR</h2><p><code>CHANGEDIR</code> — встроенная функция языка Axiom, которая меняет рабочую папку текущего запуска.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">CHANGEDIR(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь к каталогу.</p><h3>Результат и правила работы</h3><p>При успешном завершении функция возвращает TRUE; отказ сообщается диагностикой, а не значением FALSE.</p><p>Результат имеет тип <code>BOOLEAN</code>. Каталог должен существовать. Новый путь применяется к последующим относительным файловым операциям этого запуска.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если указанный каталог отсутствует или путь нельзя разрешить.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+DIM previous AS STRING = CURRENTDIR()
+PRINT CHANGEDIR(folder)
+PRINT CURRENTDIR() = folder
+CHANGEDIR(previous)
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE
+TRUE</code></pre></section>
+<section class="article-section" id="dirsize"><h2>DIRSIZE</h2><p><code>DIRSIZE</code> — встроенная функция языка Axiom, которая возвращает суммарный размер обычных файлов дерева каталога в байтах.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">DIRSIZE(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь к каталогу.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>LONG</code>. Обход рекурсивный; вложенные ссылки пропускаются. Каталог должен существовать. Переполнение суммы LONG вызывает MB3008.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если каталог отсутствует, путь не разрешается или обход недоступен. Переполнение суммы LONG вызывает MB3008.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT DIRSIZE(folder)
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>2</code></pre></section>
+<section class="article-section" id="freespace"><h2>FREESPACE</h2><p><code>FREESPACE</code> — встроенная функция языка Axiom, которая возвращает число свободных байтов диска, доступных текущему пользователю.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">FREESPACE(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь, по корню которого выбирается диск.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>LONG</code>. Диск выбирается по корню разрешённого полного пути. Сам указанный файл или каталог существовать не обязан; диск должен быть доступен. Результат зависит от текущего состояния системы.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если путь нельзя разрешить, он не определяет корень диска или сведения о выбранном диске недоступны.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT FREESPACE(folder) &gt; 0
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE</code></pre></section>
+<section class="article-section" id="totalfreespace"><h2>TOTALFREESPACE</h2><p><code>TOTALFREESPACE</code> — встроенная функция языка Axiom, которая возвращает общее число свободных байтов диска.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">TOTALFREESPACE(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь, по корню которого выбирается диск.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>LONG</code>. Диск выбирается по корню разрешённого полного пути. Сам указанный файл или каталог существовать не обязан; диск должен быть доступен. Результат зависит от текущего состояния системы.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если путь нельзя разрешить, он не определяет корень диска или сведения о выбранном диске недоступны.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT TOTALFREESPACE(folder) &gt; 0
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE</code></pre></section>
+<section class="article-section" id="totalspace"><h2>TOTALSPACE</h2><p><code>TOTALSPACE</code> — встроенная функция языка Axiom, которая возвращает полную ёмкость диска в байтах.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">TOTALSPACE(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь, по корню которого выбирается диск.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>LONG</code>. Диск выбирается по корню разрешённого полного пути. Сам указанный файл или каталог существовать не обязан; диск должен быть доступен. Результат зависит от текущего состояния системы.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если путь нельзя разрешить, он не определяет корень диска или сведения о выбранном диске недоступны.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT TOTALSPACE(folder) &gt;= TOTALFREESPACE(folder)
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE</code></pre></section>
+<section class="article-section" id="isreadonly"><h2>ISREADONLY</h2><p><code>ISREADONLY</code> — встроенная функция языка Axiom, которая проверяет атрибут «только для чтения» файла или каталога.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">ISREADONLY(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь к файлу или каталогу.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>BOOLEAN</code>. Объект должен существовать. Атрибут не является проверкой фактических прав записи.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если файл или каталог не существует, путь нельзя разрешить или атрибуты недоступны.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT ISREADONLY(path)
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>FALSE</code></pre></section>
+<section class="article-section" id="ishidden"><h2>ISHIDDEN</h2><p><code>ISHIDDEN</code> — встроенная функция языка Axiom, которая проверяет атрибут «скрытый» файла или каталога.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">ISHIDDEN(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь к файлу или каталогу.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>BOOLEAN</code>. Объект должен существовать. Проверяется именно атрибут файловой системы.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если файл или каталог не существует, путь нельзя разрешить или атрибуты недоступны.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT ISHIDDEN(path)
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>FALSE</code></pre></section>
+<section class="article-section" id="drivename"><h2>DRIVENAME</h2><p><code>DRIVENAME</code> — встроенная функция языка Axiom, которая возвращает строковое имя корня диска.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">DRIVENAME(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь, по корню которого выбирается диск.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>STRING</code>. Диск выбирается по корню разрешённого полного пути. Сам указанный файл или каталог существовать не обязан; диск должен быть доступен. Результат зависит от текущего состояния системы.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если путь нельзя разрешить, он не определяет корень диска или сведения о выбранном диске недоступны.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT DRIVENAME(folder) = PATHROOT(folder)
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE</code></pre></section>
+<section class="article-section" id="driveformat"><h2>DRIVEFORMAT</h2><p><code>DRIVEFORMAT</code> — встроенная функция языка Axiom, которая возвращает имя файловой системы диска.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">DRIVEFORMAT(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь, по корню которого выбирается диск.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>STRING</code>. Диск выбирается по корню разрешённого полного пути. Сам указанный файл или каталог существовать не обязан; диск должен быть доступен. Результат зависит от текущего состояния системы.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если путь нельзя разрешить, он не определяет корень диска или сведения о выбранном диске недоступны.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT LEN(DRIVEFORMAT(folder)) &gt; 0
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE</code></pre></section>
+<section class="article-section" id="drivetype"><h2>DRIVETYPE</h2><p><code>DRIVETYPE</code> — встроенная функция языка Axiom, которая возвращает строковое название типа диска.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">DRIVETYPE(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь, по корню которого выбирается диск.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>STRING</code>. Диск выбирается по корню разрешённого полного пути. Сам указанный файл или каталог существовать не обязан; диск должен быть доступен. Результат зависит от текущего состояния системы.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если путь нельзя разрешить, он не определяет корень диска или сведения о выбранном диске недоступны.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT LEN(DRIVETYPE(folder)) &gt; 0
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE</code></pre></section>
+<section class="article-section" id="maketempfile"><h2>MAKETEMPFILE</h2><p><code>MAKETEMPFILE</code> — встроенная функция языка Axiom, которая создаёт пустой файл со случайным именем во временной папке системы.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">MAKETEMPFILE(&lt;префикс&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;префикс&gt;</code> имеет тип <code>STRING</code>. Строка префикса добавляется к случайному имени временного объекта; путь и недопустимые символы имени запрещены. Пустой префикс разрешён.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>STRING</code>. Возвращается полный путь реально созданного объекта. Имена различаются между запусками. Автоматическое удаление после программы не выполняется; удаление нужно вызвать явно.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если префикс содержит путь, недопустимый символ имени, равен . или .., либо создать файл во временной папке не удалось.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+DIM temp AS STRING = MAKETEMPFILE("manual_")
+PRINT FILEEXISTS(temp)
+PRINT FILESIZE(temp)
+DELETEFILE(temp)
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE
+0</code></pre></section>
+<section class="article-section" id="maketempdir"><h2>MAKETEMPDIR</h2><p><code>MAKETEMPDIR</code> — встроенная функция языка Axiom, которая создаёт каталог со случайным именем во временной папке системы.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">MAKETEMPDIR(&lt;префикс&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;префикс&gt;</code> имеет тип <code>STRING</code>. Строка префикса добавляется к случайному имени временного объекта; путь и недопустимые символы имени запрещены. Пустой префикс разрешён.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>STRING</code>. Возвращается полный путь реально созданного объекта. Имена различаются между запусками. Автоматическое удаление после программы не выполняется; удаление нужно вызвать явно.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если префикс содержит путь, недопустимый символ имени, равен . или .., либо создать каталог во временной папке не удалось.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+DIM temp AS STRING = MAKETEMPDIR("manual_")
+PRINT DIREXISTS(temp)
+DELETEDIR(temp)
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE</code></pre></section>
+<section class="article-section"><h2>См. также</h2><p><a href="file-system-functions.html">Файловая система</a> · <a href="open.html">OPEN</a> · <a href="close.html">CLOSE</a> · <a href="try.html">TRY</a></p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

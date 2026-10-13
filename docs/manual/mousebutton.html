@@ -1,48 +1,29 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Функция MOUSEBUTTON</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="mousebutton">
-<header class="topbar">
-    <div class="topbar__inner">
-        <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Текущее состояние кнопок мыши</div>
-        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-    </div>
-</header>
-<div class="layout">
-    <aside class="sidebar">
-        <div class="sidebar__inner">
-            <nav id="manual-nav"></nav>
-        </div>
-    </aside>
-    <main class="content">
-        <nav class="breadcrumbs" aria-label="Хлебные крошки">
-            <a href="index.html">Главная</a><span>/</span><a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a><span>/</span><span>Функция MOUSEBUTTON</span>
-        </nav>
+<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<title>Функция MOUSEBUTTON — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="mousebutton"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Функция MOUSEBUTTON</span></nav>
+<p class="eyebrow">Встроенная функция</p><h1 class="page-title">Функция MOUSEBUTTON</h1><p class="lead"><code>MOUSEBUTTON</code> — встроенная функция языка Axiom, которая проверяет текущее удержание кнопки мыши. Она читает состояние и сохраняет очередь событий.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
-        <p class="eyebrow">Встроенная функция</p>
-        <h1 class="page-title">Функция MOUSEBUTTON</h1>
-        <p class="lead"><code>MOUSEBUTTON</code> — встроенная функция языка Axiom, которая возвращает текущее состояние указанной кнопки мыши. В отличие от <a href="mousepress.html"><code>MOUSEPRESS</code></a>, встроенная функция <code>MOUSEBUTTON</code> смотрит только на текущее удержание и не расходует никаких событий, как клавиатурная <a href="keydown.html"><code>KEYDOWN</code></a>.</p>
 
         <section class="article-section">
-            <h2>Для чего нужна функция MOUSEBUTTON</h2>
-            <p>Встроенная функция <code>MOUSEBUTTON</code> нужна для проверки текущего удержания кнопки мыши. Функция возвращает логическое значение: <code>TRUE</code>, если указанная кнопка сейчас нажата, и <code>FALSE</code> в остальных случаях.</p>
+            <h2>Применение</h2>
+            <p>Используйте её для действия, продолжающегося всё время удержания. Нажатая кнопка даёт <code>TRUE</code>, отпущенная — <code>FALSE</code>.</p>
         </section>
 
         <section class="article-section">
-            <h2>Где работает функция MOUSEBUTTON</h2>
-            <p>Встроенная функция <code>MOUSEBUTTON</code> работает при активном графическом режиме <code>SCREEN 1..10</code> или при активном <code>CANVAS</code>. Без активной рисуемой поверхности выполнение сообщает диагностику <code>MB3010</code>.</p>
-            <p>Встроенная функция <code>MOUSEBUTTON</code> выполняется <code>BytecodeVm</code> после компиляции.</p>
+            <h2>Контекст выполнения</h2>
+            <p>Чтение доступно при графическом <code>SCREEN 1..10</code> или активном <code>CANVAS</code>. Без рисуемой поверхности возникает <code>MB3010</code>.</p>
+            <p>Чтобы заметить отдельное нажатие один раз, используйте <a href="mousepress.html">MOUSEPRESS</a>.</p>
         </section>
 
         <section class="article-section">
             <h2>Синтаксис</h2>
-<pre><code class="language-axiom">MOUSEBUTTON(buttonNumber)</code></pre>
+<pre><code class="language-axiom">MOUSEBUTTON(&lt;номер кнопки&gt;)</code></pre>
         </section>
 
         <section class="article-section">
@@ -50,14 +31,14 @@
             <table>
                 <thead><tr><th>Аргумент</th><th>Тип</th><th>Описание</th></tr></thead>
                 <tbody>
-                    <tr><td><code>buttonNumber</code></td><td><code>INTEGER</code></td><td>Номер кнопки мыши: <code>1</code> — левая, <code>2</code> — правая, <code>3</code> — средняя.</td></tr>
+                    <tr><td><code>&lt;номер кнопки&gt;</code></td><td><code>INTEGER</code></td><td>Номер кнопки мыши: <code>1</code> — левая, <code>2</code> — правая, <code>3</code> — средняя.</td></tr>
                 </tbody>
             </table>
         </section>
 
         <section class="article-section">
             <h2>Что возвращает функция MOUSEBUTTON</h2>
-            <p>Тип результата: <code>BOOLEAN</code>.</p>
+            <p>Результат проверки имеет тип <code>BOOLEAN</code>.</p>
             <ul>
                 <li><code>TRUE</code>, если указанная кнопка сейчас удерживается.</li>
                 <li><code>FALSE</code>, если кнопка не удерживается или передан неподдерживаемый номер кнопки.</li>
@@ -68,11 +49,13 @@
             <h2>Правила работы</h2>
             <ul>
                 <li>Встроенная функция <code>MOUSEBUTTON</code> не сообщает нажатие как событие и не различает момент нажатия и удержание.</li>
-                <li>В текущем срезе нет отдельной очереди кликов, колеса мыши и захвата указателя.</li>
+                <li>События нажатия доступны через <code>MOUSEPRESS</code>, а события отпускания, перемещения и колеса — через <code>ON MOUSE</code>.</li>
                 <li>Координаты мыши читаются через встроенные функции <a href="mousex.html"><code>MOUSEX</code></a> и <a href="mousey.html"><code>MOUSEY</code></a>.</li>
                 <li>Для одноразовой проверки события нажатия кнопки используется встроенная функция <a href="mousepress.html"><code>MOUSEPRESS</code></a>.</li>
             </ul>
         </section>
+<section class="article-section"><h2>Аргумент функции</h2><p>Передайте <code>INTEGER</code> с номером кнопки: 1 — левая, 2 — правая, 3 — средняя. Результат имеет тип <code>BOOLEAN</code>. Чтение удержания не извлекает события нажатия, отпускания, перемещения или колеса. Неподдерживаемый номер возвращает <code>FALSE</code> в действующей среде ввода.</p></section>
+
 
         <section class="article-section">
             <h2>Диагностика</h2>
@@ -100,4 +83,7 @@ END IF</code></pre>
             <div class="link-list"><a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a><a href="mousex.html">Функция MOUSEX</a><a href="mousey.html">Функция MOUSEY</a><a href="mousepress.html">Функция MOUSEPRESS</a><a href="on-mouse.html">Оператор ON MOUSE</a><a href="screen.html">Оператор SCREEN</a></div>
         </section>
 
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
+
+
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

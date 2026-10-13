@@ -1,70 +1,56 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Оператор SCREEN</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="screen">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Графика</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Оператор SCREEN</span>
-            </nav>
-            <p class="eyebrow">Оператор</p>
-            <h1 class="page-title">Оператор SCREEN</h1>
-            <p class="lead"><code>SCREEN</code> — оператор языка Axiom, который выбирает экранный режим программы. Оператор <code>SCREEN</code> может открыть текстовое окно <code>SCREEN 0</code> или графический экран <code>SCREEN 1..10</code>. После оператора <code>SCREEN</code> текстовый вывод и графика идут уже не в обычный поток вывода, а в отдельное окно программы.</p>
+<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<title>Оператор SCREEN — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="screen"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор SCREEN</span></nav>
+<p class="eyebrow">Оператор</p><h1 class="page-title">Оператор SCREEN</h1><p class="lead"><code>SCREEN</code> — оператор языка Axiom, который открывает отдельное окно программы и выбирает его режим: текстовую сетку <code>SCREEN 0</code> или палитровую графику <code>SCREEN 1..10</code>.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+
 
             <section class="article-section">
                 <h2>Когда использовать SCREEN</h2>
-                <p>Оператор <code>SCREEN</code> нужен тогда, когда программе требуется собственное экранное окно с текстовой сеткой, палитровыми цветами, пиксельной графикой, экранными страницами и операторами рисования Axiom.</p>
-                <p>Если программа не вызвала оператор <code>SCREEN</code>, операторы <code>PRINT</code> и <code>INPUT</code> работают в области текстового вывода среды исполнения. Если программа вызвала оператор <code>SCREEN</code>, текст и графика переносятся в отдельное экранное окно.</p>
+                <p>Выбирайте оператор <code>SCREEN</code> для вывода по текстовым ячейкам, рисования индексными цветами и подготовки изображения на экранных страницах.</p>
+                <p>До вызова оператора <code>SCREEN</code> операторы <code>PRINT</code> и <code>INPUT</code> используют текстовую область среды исполнения. После вызова вывод и ввод переходят в открытое экранное окно.</p>
             </section>
 
         <section class="article-section">
-                <h2>Где работает оператор SCREEN</h2>
-                <p>Оператор <code>SCREEN</code> относится к экранному режиму Axiom. Этот оператор включает текстовый или графический режим <code>SCREEN</code> и управляет им.</p>
-                <p>Оператор <code>SCREEN</code> и оператор <code>CANVAS</code> относятся к разным графическим договорам. Если программа вызвала оператор <code>CANVAS</code>, последующий оператор <code>SCREEN</code> закрывает современный холст и возвращает программу к правилам экранного режима.</p>
+                <h2>Контекст выполнения</h2>
+                <p>Оператор <code>SCREEN</code> создаёт поверхность, к которой обращаются экранные операторы и функции. Текстовый режим и графические режимы предоставляют разный набор возможностей.</p>
+                <p>Окно <code>SCREEN</code> заменяет ранее открытый <a href="modern-graphics.html">холст CANVAS</a>. Для этих поверхностей действуют разные правила цвета, координат и показа кадра.</p>
             </section>
 
         <section class="article-section">
                 <h2>Синтаксис</h2>
-<pre><code class="language-axiom">SCREEN mode
-SCREEN 0
-SCREEN mode, , activePage
-SCREEN mode, , activePage, visiblePage</code></pre>
-                <p>На этой странице показаны четыре поддерживаемые формы оператора <code>SCREEN</code>. Это разные формы одного оператора, а не одна общая запись, где нужно указывать всё сразу.</p>
+<pre><code class="language-axiom">SCREEN &lt;режим&gt;</code></pre>
+<pre><code class="language-axiom">SCREEN 0</code></pre>
+<pre><code class="language-axiom">SCREEN &lt;режим&gt;, , &lt;активная страница&gt;</code></pre>
+<pre><code class="language-axiom">SCREEN &lt;режим&gt;, , &lt;активная страница&gt;, &lt;видимая страница&gt;</code></pre>
+                <p>Форма с одним аргументом выбирает режим. В формах с дополнительными аргументами программа одновременно выбирает активную и видимую страницы.</p>
             </section>
 
         <section class="article-section">
-                <h2>Параметры и части синтаксиса</h2>
+                <h2>Параметры</h2>
                 <table>
                     <thead>
                         <tr><th>Часть</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>mode</code></td><td>Целое число от <code>0</code> до <code>10</code>. Значение <code>0</code> выбирает текстовый режим. Значения <code>1..10</code> выбирают графический режим.</td></tr>
-                        <tr><td><code>activePage</code></td><td>Необязательный номер активной графической страницы от <code>0</code> до <code>3</code>. Именно в эту страницу идут операторы рисования и чтение цвета через функцию <code>POINT(x, y)</code>.</td></tr>
-                        <tr><td><code>visiblePage</code></td><td>Необязательный номер видимой графической страницы от <code>0</code> до <code>3</code>. Именно эта страница показывается в окне программы.</td></tr>
+                        <tr><td><code>&lt;режим&gt;</code></td><td>Передайте целое число от <code>0</code> до <code>10</code>. Значение <code>0</code> выбирает текстовый режим. Значения <code>1..10</code> выбирают графический режим. Передаваемое значение имеет тип <code>INTEGER</code>.</td></tr>
+                        <tr><td><code>&lt;активная страница&gt;</code></td><td>Передайте необязательный номер активной графической страницы от <code>0</code> до <code>3</code>. Именно в эту страницу идут операторы рисования и чтение цвета через функцию <code>POINT(x, y)</code>. Передаваемое значение имеет тип <code>INTEGER</code>.</td></tr>
+                        <tr><td><code>&lt;видимая страница&gt;</code></td><td>Передайте необязательный номер видимой графической страницы от <code>0</code> до <code>3</code>. Именно эта страница показывается в окне программы. Передаваемое значение имеет тип <code>INTEGER</code>.</td></tr>
                     </tbody>
                 </table>
-                <p>Пустое место после первой запятой оставлено под зарезервированный параметр <code>colorSwitch</code>. Этот параметр не поддерживается, поэтому для выбора страниц используется форма с пустым полем: <code>SCREEN 1, , 1, 0</code>.</p>
+                <p>Параметр <code>colorSwitch</code> зарезервирован и не поддерживается. При выборе страниц его место оставляют пустым: <code>SCREEN 1, , 1, 0</code>.</p>
             </section>
 
         <section class="article-section">
                 <h2>Что делает оператор SCREEN</h2>
-                <p>Форма <code>SCREEN 0</code> открывает текстовое окно с видимой сеткой <code>80 x 25</code>. В этом режиме графические операторы рисования недоступны, но текстовый вывод, <code>INPUT</code> и работа курсора идут через отдельное экранное окно.</p>
-                <p>Формы <code>SCREEN 1..10</code> открывают графический экран. После этого становятся доступны графические операторы <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code>, а также экранные операторы <code>VIEW</code>, <code>WINDOW</code>, <code>PCOPY</code>, <code>GET</code>, <code>PUT</code>, <code>COLOR</code>, <code>LOCATE</code> и связанные функции.</p>
-                <p>Если указаны <code>activePage</code> и <code>visiblePage</code>, оператор <code>SCREEN</code> одновременно выбирает страницу для рисования и страницу для показа. Это позволяет собирать кадр на скрытой странице, а затем показывать его через <code>PCOPY</code>.</p>
+                <p>Вызов <code>SCREEN 0</code> создаёт текстовое окно с видимой сеткой <code>80 x 25</code>. В нём доступны текстовый вывод и оператор <code>INPUT</code>; оператор <code>LOCATE</code> и графическое рисование требуют режима <code>SCREEN 1..10</code>.</p>
+                <p>Режимы <code>1..10</code> предоставляют графический экран. На нём работают <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code>, а также <code>VIEW</code>, <code>WINDOW</code>, <code>PCOPY</code>, <code>GET</code>, <code>PUT</code>, <code>COLOR</code>, <code>LOCATE</code> и связанные функции.</p>
+                <p>Активная страница получает рисование, а видимая страница отображается в окне. Если их номера различаются, программа может подготовить изображение без показа промежуточных изменений, затем скопировать его оператором <a href="pcopy.html">PCOPY</a>.</p>
             </section>
 
         <section class="article-section">
@@ -91,18 +77,21 @@ SCREEN mode, , activePage, visiblePage</code></pre>
 
         <section class="article-section">
                 <h2>Правила работы</h2>
-                <p>В режиме <code>SCREEN 0</code> действует текстовый договор. Новая строка из последней видимой строки прокручивает окно вверх на одну строку. В <code>Electron IDE</code> предыдущие строки не исчезают сразу: их можно просмотреть через вертикальную полосу прокрутки.</p>
-                <p>В режимах <code>SCREEN 1..10</code> действует графический договор. Текст выводится поверх графического экрана по ячейкам <code>8 x 12</code> пикселей. Количество доступных строк и столбцов зависит от выбранного режима.</p>
-                <p>Режим <code>SCREEN 10</code> выбирает максимально возможную клиентскую область с соотношением сторон <code>16:9</code>, которая помещается в рабочую область текущего монитора. Поэтому функции <code>SCREENWIDTH()</code> и <code>SCREENHEIGHT()</code> в этом режиме возвращают фактические размеры окна, а не заранее фиксированное значение.</p>
+                <p>В текстовом режиме переход на новую строку из последней видимой строки прокручивает текст вверх. В Electron IDE предыдущие строки остаются доступны через вертикальную полосу прокрутки.</p>
+                <p>В графических режимах текст рисуется поверх изображения. Ячейка занимает <code>8 x 12</code> пикселей; размер сетки определяется размером выбранного экрана.</p>
+                <p>Для режима <code>10</code> среда выбирает наибольшую клиентскую область с пропорцией <code>16:9</code>, помещающуюся в рабочей области монитора. Функции <code>SCREENWIDTH()</code> и <code>SCREENHEIGHT()</code> сообщают полученные размеры.</p>
             </section>
 
         <section class="article-section">
                 <h2>Ограничения и пограничные случаи</h2>
-                <p>Оператор <code>SCREEN</code> принимает только режимы <code>0..10</code>.</p>
-                <p>Номера <code>activePage</code> и <code>visiblePage</code> должны находиться в диапазоне <code>0..3</code>.</p>
-                <p>Если программа указывает только <code>activePage</code>, а <code>visiblePage</code> не указывает, видимой становится та же страница.</p>
-                <p>Если программа переключает графический режим, прежние настройки <code>VIEW</code>, <code>WINDOW</code>, палитры и страниц сбрасываются в договор нового режима.</p>
+                <p>Допустимые номера режима — целые значения от <code>0</code> до <code>10</code> включительно.</p>
+                <p>Обе страницы нумеруются от <code>0</code> до <code>3</code> включительно.</p>
+                <p>Если задана только активная страница, она становится и видимой.</p>
+                <p>Смена номера графического режима сбрасывает настройки <code>VIEW</code>, <code>WINDOW</code>, палитры и страниц в состояние нового режима.</p>
             </section>
+<section class="article-section"><h2>Проверка аргументов и текстовый режим</h2><p>Режим и номера страниц приводятся к <code>INTEGER</code>. Второй аргумент <code>SCREEN</code> зарезервирован: явное значение в этой позиции запрещает компиляцию с <code>MB2003</code>. Для страниц оставьте вторую позицию пустой. <code>SCREEN</code> 0 открывает текстовую поверхность; <code>COLOR</code>, <code>LOCATE</code>, VIEW PRINT и пиксельные операторы требуют графический <code>SCREEN</code> 1..10.</p>
+<p>При повторном выборе того же графического режима с теми же размерами среда сохраняет пиксели страниц и их палитры, затем выбирает переданные активную и видимую страницы. Каждый вызов SCREEN сбрасывает VIEW, WINDOW, графическую позицию, цвет последующего текста и текстовый курсор; текстовый буфер очищается. При смене режима создаются новые страницы и сбрасываются графические настройки. Рисование на скрытой странице становится видимым после её выбора для показа либо копирования на видимую страницу.</p></section>
+
 
         <section class="article-section">
                 <h2>Диагностика</h2>
@@ -117,11 +106,10 @@ SCREEN mode, , activePage, visiblePage</code></pre>
 <pre><code class="language-axiom">SCREEN 1, , 1, 0
 COLOR 15, 1
 CLS
-PRINT "Рисуем на скрытой странице 1"
 PSET (20, 20), 12
 PCOPY 1, 0
 SLEEP</code></pre>
-                <p>В этом примере оператор <code>SCREEN</code> открывает графический режим, делает страницу <code>1</code> активной для рисования и страницу <code>0</code> видимой для показа.</p>
+                <p>Программа рисует пиксель на странице <code>1</code>, сохраняя на экране страницу <code>0</code>. Экранный текст составляет общий слой поверх видимой страницы и не скрывается выбором другой активной страницы. Оператор <code>PCOPY</code> показывает подготовленное изображение, а оператор <code>SLEEP</code> оставляет его доступным до нажатия клавиши.</p>
             </section>
 
         <section class="article-section">
@@ -136,9 +124,8 @@ SLEEP</code></pre>
                 </div>
             </section>
 
-            <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+
+
+
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

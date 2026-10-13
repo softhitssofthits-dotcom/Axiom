@@ -1642,7 +1642,7 @@ PRINT name; age + 1
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Equal(["Ada42"], result.Output);
         var request = Assert.Single(inputProvider.Requests);
-        Assert.Equal("Pair", request.PromptText);
+        Assert.Equal("Pair? ", request.PromptText);
         Assert.Equal(2, request.ValueCount);
     }
 
@@ -3387,7 +3387,7 @@ PRINT name
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(["Ada"], result.Output);
         var request = Assert.Single(inputProvider.Requests);
-        Assert.Null(request.PromptText);
+        Assert.Equal("? ", request.PromptText);
         Assert.Equal(1, request.ValueCount);
     }
 
@@ -3423,7 +3423,7 @@ PRINT value + 1
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(["42"], result.Output);
-        Assert.Equal("Value", Assert.Single(inputProvider.Requests).PromptText);
+        Assert.Equal("Value? ", Assert.Single(inputProvider.Requests).PromptText);
     }
 
     [Fact]

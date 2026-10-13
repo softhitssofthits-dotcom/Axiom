@@ -1,389 +1,91 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Пути и сведения о файлах</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="file-system-functions-paths">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Имена, даты, размеры, перечисление и сведения о диске</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный указатель</a>
-                <span>/</span>
-                <a href="file-system-functions.html">Функции файловой системы</a>
-                <span>/</span>
-                <span>Пути и сведения о файлах</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Пути и сведения о файлах</h1>
-            <p class="lead">Раздел путей и сведений о файлах описывает функции для получения имён, дат, размеров и списков файлов и папок — работу с путями и свойствами файловой системы.</p>
-
-            <section class="article-section" id="filesize">
-                <h2>FILESIZE</h2>
-                <p>Функция <code>FILESIZE</code> возвращает размер файла в байтах.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">size = FILESIZE(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь к файлу. Результат имеет тип <code>LONG</code>.</p>
-                <h3>Пример вызова FILESIZE</h3>
-                <pre><code class="language-axiom">' Размер файла в байтах
-PRINT FILESIZE("notes.txt")</code></pre>
-            </section>
-
-            <section class="article-section" id="filedate">
-                <h2>FILEDATE</h2>
-                <p>Функция <code>FILEDATE</code> возвращает дату и время последнего изменения файла.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">dateText = FILEDATE(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь к файлу. Результатом является строка даты и времени.</p>
-                <h3>Пример вызова FILEDATE</h3>
-                <pre><code class="language-axiom">' Дата последнего изменения файла
-PRINT FILEDATE("notes.txt")</code></pre>
-            </section>
-
-            <section class="article-section" id="filecreatedate">
-                <h2>FILECREATEDATE</h2>
-                <p>Функция <code>FILECREATEDATE</code> возвращает дату и время создания файла.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">dateText = FILECREATEDATE(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь к файлу. Результатом является строка.</p>
-                <h3>Пример вызова FILECREATEDATE</h3>
-                <pre><code class="language-axiom">' Дата создания файла
-PRINT FILECREATEDATE("notes.txt")</code></pre>
-            </section>
-
-            <section class="article-section" id="fileaccesseddate">
-                <h2>FILEACCESSEDDATE</h2>
-                <p>Функция <code>FILEACCESSEDDATE</code> возвращает дату и время последнего доступа к файлу.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">dateText = FILEACCESSEDDATE(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь к файлу. Результатом является строка.</p>
-                <h3>Пример вызова FILEACCESSEDDATE</h3>
-                <pre><code class="language-axiom">' Дата последнего доступа к файлу
-PRINT FILEACCESSEDDATE("notes.txt")</code></pre>
-            </section>
-
-            <section class="article-section" id="dirdate">
-                <h2>DIRDATE</h2>
-                <p>Функция <code>DIRDATE</code> возвращает дату и время последнего изменения папки.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">dateText = DIRDATE(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь к папке. Результат имеет строковый тип.</p>
-                <h3>Пример вызова DIRDATE</h3>
-                <pre><code class="language-axiom">' Дата изменения папки
-PRINT DIRDATE("docs")</code></pre>
-            </section>
-
-            <section class="article-section" id="getfiles">
-                <h2>GETFILES</h2>
-                <p>Функция <code>GETFILES</code> возвращает массив полных путей файлов, найденных в папке по маске.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">files = GETFILES(directoryPath[, mask])</code></pre>
-                <h3>Аргументы</h3><p><code>directoryPath</code> задаёт папку поиска. Необязательный <code>mask</code> задаёт файловую маску, например <code>"*.txt"</code>. Если маска не указана, возвращаются все файлы ближайшего уровня. Результатом является массив <code>STRING()</code>.</p>
-                <h3>Пример вызова GETFILES</h3>
-                <pre><code class="language-axiom">' Список текстовых файлов в текущей папке
-DIM files() AS STRING
-
-files = GETFILES(".", "*.txt")
-PRINT ARRAYLENGTH(files)</code></pre>
-            </section>
-
-            <section class="article-section" id="getdirs">
-                <h2>GETDIRS</h2>
-                <p>Функция <code>GETDIRS</code> возвращает массив полных путей дочерних папок, найденных по маске.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">dirs = GETDIRS(directoryPath[, mask])</code></pre>
-                <h3>Аргументы</h3><p><code>directoryPath</code> задаёт папку поиска. Необязательный <code>mask</code> задаёт маску для имён папок. Если маска не указана, возвращаются все дочерние папки ближайшего уровня. Результатом является массив <code>STRING()</code>.</p>
-                <h3>Пример вызова GETDIRS</h3>
-                <pre><code class="language-axiom">' Список дочерних папок
-DIM dirs() AS STRING
-
-dirs = GETDIRS(".", "*")
-PRINT ARRAYLENGTH(dirs)</code></pre>
-            </section>
-
-            <section class="article-section" id="combinepath">
-                <h2>COMBINEPATH</h2>
-                <p>Функция <code>COMBINEPATH</code> соединяет две части пути в один корректный путь.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">path = COMBINEPATH(leftPart, rightPart)</code></pre>
-                <h3>Аргументы</h3><p><code>leftPart</code> задаёт левую часть пути. <code>rightPart</code> задаёт правую часть. Результатом является строка.</p>
-                <h3>Пример вызова COMBINEPATH</h3>
-                <pre><code class="language-axiom">' Построение пути к подпапке
-PRINT COMBINEPATH("docs", "manual")</code></pre>
-            <h3>Соединение и нормализация</h3>
-<p>Оба аргумента должны быть строками. COMBINEPATH соединяет части по правилам путей Windows, не создаёт файлы или папки и не требует их наличия. Компоненты <code>.</code> и <code>..</code> остаются в полученной строке; для полного нормализованного пути результат можно передать в FULLPATH.</p>
-<p>Если правая часть имеет собственный корень, она заменяет левую часть. Например, <code>COMBINEPATH("C:\base", "D:\other\file.txt")</code> возвращает <code>D:\other\file.txt</code>. Соединение не является проверкой того, что правая часть находится внутри левого каталога.</p>
-<p>COMBINEPATH восстанавливает путь из уже известных частей. Функция не вычисляет относительный маршрут от одного полного каталога до другого: строковое удаление общего префикса также неверно для соседних имён папок, разных дисков и компонентов <code>..</code>.</p>
-</section>
-
-            <section class="article-section" id="filename">
-                <h2>FILENAME</h2>
-                <p>Функция <code>FILENAME</code> возвращает имя файла вместе с расширением.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">nameText = FILENAME(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь к файлу или папке. Результатом является последняя часть пути, если она выглядит как имя файла.</p>
-                <h3>Пример вызова FILENAME</h3>
-                <pre><code class="language-axiom">' Имя файла из полного пути
-PRINT FILENAME("docs/manual/index.html")</code></pre>
-            </section>
-
-            <section class="article-section" id="dirname">
-                <h2>DIRNAME</h2>
-                <p>Функция <code>DIRNAME</code> возвращает имя последней папки в пути.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">nameText = DIRNAME(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь к файлу или папке. Результатом является имя последнего каталога.</p>
-                <h3>Пример вызова DIRNAME</h3>
-                <pre><code class="language-axiom">' Имя последней папки пути
-PRINT DIRNAME("docs/manual/index.html")</code></pre>
-            </section>
-
-            <section class="article-section" id="extname">
-                <h2>EXTNAME</h2>
-                <p>Функция <code>EXTNAME</code> возвращает расширение файла вместе с точкой.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">extension = EXTNAME(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь к файлу. Результатом является строка вида <code>.txt</code>.</p>
-                <h3>Пример вызова EXTNAME</h3>
-                <pre><code class="language-axiom">' Расширение файла
-PRINT EXTNAME("notes.txt")</code></pre>
-            </section>
-
-            <section class="article-section" id="fullpath">
-                <h2>FULLPATH</h2>
-                <p><code>FULLPATH</code> — встроенная функция языка Axiom, которая преобразует относительный путь к полному виду.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">absolutePath = FULLPATH(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт относительный или полный путь. Результатом является полный путь.</p>
-                <h3>Пример вызова FULLPATH</h3>
-                <pre><code class="language-axiom">' Полный путь к файлу
-PRINT FULLPATH("notes.txt")</code></pre>
-            <h3>Рабочая папка и формы пути</h3>
-<p>Аргумент path должен быть строкой. FULLPATH разрешает путь относительно текущего каталога именно программы, который можно изменить функцией CHANGEDIR. Каталог процесса не подменяет выбранный программой каталог. Функция возвращает STRING с полным путём; файл и каталог не обязаны существовать, ничего автоматически не создаётся.</p>
-<p>Если текущий каталог программы равен <code>D:\Проект\данные</code>, путь <code>"файл.txt"</code> становится <code>D:\Проект\данные\файл.txt</code>, запись <code>"\файл.txt"</code> — <code>D:\файл.txt</code>, а запись <code>"D:файл.txt"</code> — <code>D:\Проект\данные\файл.txt</code>. Последние две исходные записи не являются полностью абсолютными: ISABSOLUTEPATH возвращает для них FALSE.</p>
-<p>Полностью абсолютная запись с другим диском сохраняет свой диск. Если путь содержит только другую букву диска без косой черты, например <code>"C:файл.txt"</code> при текущем каталоге на D:, он разрешается от корня C:, без скрытого текущего каталога этого диска в процессе. Для текущего UNC-каталога вида <code>\\server\share\папка</code> запись <code>"\файл.txt"</code> разрешается как <code>\\server\share\файл.txt</code>.</p>
-<p>Функция сворачивает компоненты <code>.</code> и <code>..</code>, раскрывает переменные окружения по существующему договору файловых функций и сохраняет Unicode-имена. Пустая строка возвращает текущий каталог программы. Ошибка формата пути, например нулевой символ внутри строки, даёт MB3007. Нулевой символ проверяется до раскрытия переменных окружения: функция не обрезает путь и не использует часть строки перед этим символом. Ошибку можно перехватить оператором TRY/CATCH. Запускаемый пример: <a href="../../samples/functions/fullpath/null_character.axm">отказ для нулевого символа в пути</a>. Нормализация не проверяет наличие файла, права чтения или то, что путь остаётся внутри исходного каталога.</p>
-<h3>Пример выбранного каталога</h3>
-<p>В следующем коротком примере функция FULLPATH отклоняет нулевой символ, а программа продолжает работу после обработки ошибки.</p>
-<pre><code class="language-axiom">TRY
-    PRINT FULLPATH("папка" + CHR(0) + "файл.txt")
-CATCH err
-    PRINT "Ошибка пути: "; err.Code
-END TRY</code></pre>
-<pre><code class="language-axiom">DIM original AS STRING = CURRENTDIR()
-DIM folder AS STRING = MAKETEMPDIR("axiom-path-")
-PRINT CHANGEDIR(folder)
-PRINT FULLPATH("подкаталог\..\проверка.txt") = COMBINEPATH(folder, "проверка.txt")
-PRINT CHANGEDIR(original)
-PRINT DELETEDIR(folder)</code></pre>
-<p>Запускаемая проверка дополнительных форм Windows: <a href="../../samples/functions/fullpath/drive_relative_scope.axm">drive_relative_scope.axm</a>. См. также <a href="file-system-functions-management.html">работа с каталогами</a>.</p>
-</section>
-
-            <section class="article-section" id="pathroot">
-                <h2>PATHROOT</h2>
-                <p>Функция <code>PATHROOT</code> возвращает корневую часть полного пути.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">rootPath = PATHROOT(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь, для которого нужно получить корень. Результатом является строка, например буква диска с разделителем.</p>
-                <h3>Пример вызова PATHROOT</h3>
-                <pre><code class="language-axiom">' Корень полного пути
-PRINT PATHROOT(FULLPATH("notes.txt"))</code></pre>
-            </section>
-
-            <section class="article-section" id="isabsolutepath">
-                <h2>ISABSOLUTEPATH</h2>
-                <p><code>ISABSOLUTEPATH</code> — встроенная функция языка Axiom, которая проверяет, является ли путь полностью абсолютным после раскрытия переменных окружения.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = ISABSOLUTEPATH(path)</code></pre>
-                <h3>Аргументы</h3><p>Аргумент <code>path</code> должен быть строкой. Функция возвращает <code>TRUE</code>, если раскрытый путь не зависит от текущей рабочей папки. Если переменная окружения существует, запись <code>%ИМЯ%</code> заменяется её значением; неизвестная переменная остаётся в строке. Функция не превращает относительный путь в абсолютный и не проверяет существование или возможность открыть файл. Для получения полного пути используйте функцию FULLPATH. Функция COMBINEPATH соединяет строки без раскрытия переменных.</p>
-                <p>Например, если переменная <code>TEMP</code> содержит полный путь к временному каталогу, функция <code>ISABSOLUTEPATH("%TEMP%\данные.txt")</code> возвращает TRUE. Запускаемый пример: <a href="../../samples/functions/isabsolutepath/environment_expansion.axm">раскрытие переменной окружения</a>.</p>
-                <h3>Пример вызова ISABSOLUTEPATH</h3>
-                <pre><code class="language-axiom">' Сравнение относительного и полного пути
-PRINT ISABSOLUTEPATH("notes.txt")
-PRINT ISABSOLUTEPATH(FULLPATH("notes.txt"))</code></pre>
-            </section>
-
-            <section class="article-section" id="dirsize">
-                <h2>DIRSIZE</h2>
-                <p><code>DIRSIZE</code> — встроенная функция языка Axiom, которая возвращает суммарную длину обычных файлов в папке и её обычных вложенных папках. Результат измеряется в байтах и имеет тип <code>LONG</code>; это длина содержимого файлов, а не занятое место с учётом размера кластеров диска.</p>
-                <p>Вложенные символические ссылки, соединения каталогов Windows и другие точки повторного разбора пропускаются. Файлы за такими ссылками не включаются в сумму, а циклическая ссылка не вызывает повторного обхода. Явно выбранный исходный каталог может быть указан через ссылку. Пустая папка даёт 0.</p>
-                <p>Отсутствующая папка и отказ доступа дают диагностику <code>MB3007</code>; сумма, не помещающаяся в <code>LONG</code>, даёт <code>MB3008</code>. Запускаемый пример: <a href="../../samples/functions/dirsize/ordinary_nested_bytes.axm">байтовые размеры русского текста и эмодзи</a>.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">size = DIRSIZE(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт папку. Результатом является число типа <code>LONG</code>.</p>
-                <h3>Пример вызова DIRSIZE</h3>
-                <pre><code class="language-axiom">' Суммарный размер папки docs
-PRINT DIRSIZE("docs")</code></pre>
-            </section>
-
-            <section class="article-section" id="isreadonly">
-                <h2>ISREADONLY</h2>
-                <p>Функция <code>ISREADONLY</code> показывает, помечен ли файл или папка как доступные только для чтения.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = ISREADONLY(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь к файлу или папке. Функция возвращает логическое значение.</p>
-                <h3>Пример вызова ISREADONLY</h3>
-                <pre><code class="language-axiom">' Проверка атрибута только для чтения
-PRINT ISREADONLY("notes.txt")</code></pre>
-            </section>
-
-            <section class="article-section" id="ishidden">
-                <h2>ISHIDDEN</h2>
-                <p>Функция <code>ISHIDDEN</code> показывает, является ли объект скрытым.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = ISHIDDEN(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь к файлу или папке. Результат имеет логический тип.</p>
-                <h3>Пример вызова ISHIDDEN</h3>
-                <pre><code class="language-axiom">' Проверка скрытого объекта
-PRINT ISHIDDEN("notes.txt")</code></pre>
-            </section>
-
-            <section class="article-section" id="drivename">
-                <h2>DRIVENAME</h2>
-                <p>Функция <code>DRIVENAME</code> возвращает имя диска, к которому относится путь.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">nameText = DRIVENAME(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь, по которому определяется диск. Результатом является строка.</p>
-                <h3>Пример вызова DRIVENAME</h3>
-                <pre><code class="language-axiom">' Имя диска для текущего пути
-PRINT DRIVENAME(FULLPATH("."))</code></pre>
-            </section>
-
-            <section class="article-section" id="driveformat">
-                <h2>DRIVEFORMAT</h2>
-                <p>Функция <code>DRIVEFORMAT</code> возвращает формат файловой системы диска.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">formatName = DRIVEFORMAT(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь, по которому определяется диск. Результатом является строка.</p>
-                <h3>Пример вызова DRIVEFORMAT</h3>
-                <pre><code class="language-axiom">' Формат файловой системы
-PRINT DRIVEFORMAT(FULLPATH("."))</code></pre>
-            </section>
-
-            <section class="article-section" id="drivetype">
-                <h2>DRIVETYPE</h2>
-                <p>Функция <code>DRIVETYPE</code> возвращает строковое имя типа диска.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">typeName = DRIVETYPE(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь, по которому определяется диск. Результатом является строка.</p>
-                <h3>Пример вызова DRIVETYPE</h3>
-                <pre><code class="language-axiom">' Тип диска
-PRINT DRIVETYPE(FULLPATH("."))</code></pre>
-            </section>
-
-            <section class="article-section" id="freespace">
-                <h2>FREESPACE</h2>
-                <p>Функция <code>FREESPACE</code> возвращает доступное свободное место на диске для указанного пути.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">size = FREESPACE(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь на интересующем диске. Результат имеет тип <code>LONG</code>.</p>
-                <h3>Пример вызова FREESPACE</h3>
-                <pre><code class="language-axiom">' Доступное свободное место
-PRINT FREESPACE(FULLPATH("."))</code></pre>
-            </section>
-
-            <section class="article-section" id="totalfreespace">
-                <h2>TOTALFREESPACE</h2>
-                <p>Функция <code>TOTALFREESPACE</code> возвращает общее свободное место на диске.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">size = TOTALFREESPACE(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь на нужном диске. Результат имеет тип <code>LONG</code>.</p>
-                <h3>Пример вызова TOTALFREESPACE</h3>
-                <pre><code class="language-axiom">' Общее свободное место на диске
-PRINT TOTALFREESPACE(FULLPATH("."))</code></pre>
-            </section>
-
-            <section class="article-section" id="totalspace">
-                <h2>TOTALSPACE</h2>
-                <p>Функция <code>TOTALSPACE</code> возвращает полный размер диска.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">size = TOTALSPACE(path)</code></pre>
-                <h3>Аргументы</h3><p><code>path</code> задаёт путь на нужном диске. Результат имеет тип <code>LONG</code>.</p>
-                <h3>Пример вызова TOTALSPACE</h3>
-                <pre><code class="language-axiom">' Полный размер диска
-PRINT TOTALSPACE(FULLPATH("."))</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Пути, метаданные и доступность</h2>
-                <ul>
-                    <li><code>FILEDATE</code>, <code>FILECREATEDATE</code>, <code>FILEACCESSEDDATE</code> и <code>DIRDATE</code> возвращают строку формата <code>yyyy-MM-dd HH:mm:ss</code>.</li>
-                    <li><code>GETFILES</code> и <code>GETDIRS</code> можно вызывать как с маской, так и без неё. В обоих случаях возвращается массив полных путей ближайшего уровня.</li>
-                    <li><code>EXTNAME</code> возвращает расширение вместе с точкой, например <code>.txt</code>.</li>
-                    <li><code>DIRSIZE</code> учитывает вложенные файлы, но не уходит в циклические ссылки и другие точки повторного обхода.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li>Отсутствие файла или папки для функций сведений и перечисления даёт диагностику времени выполнения <code>MB3007</code>.</li>
-                    <li>Пустая маска в <code>GETFILES</code> и <code>GETDIRS</code> также даёт <code>MB3007</code>.</li>
-                    <li>Переполнение суммарного размера в <code>DIRSIZE</code> даёт диагностику времени выполнения <code>MB3008</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/functions/filesize/basic_usage.axm">FILESIZE: размер файла</a></li>
-                    <li><a href="../../samples/functions/filedate/basic_usage.axm">FILEDATE: дата изменения</a></li>
-                    <li><a href="../../samples/functions/filecreatedate/basic_usage.axm">FILECREATEDATE: дата создания</a></li>
-                    <li><a href="../../samples/functions/fileaccesseddate/basic_usage.axm">FILEACCESSEDDATE: дата доступа</a></li>
-                    <li><a href="../../samples/functions/dirdate/basic_usage.axm">DIRDATE: дата папки</a></li>
-                    <li><a href="../../samples/functions/getfiles/basic_usage.axm">GETFILES: список файлов</a></li>
-                    <li><a href="../../samples/functions/getdirs/basic_usage.axm">GETDIRS: список папок</a></li>
-                    <li><a href="../../samples/functions/combinepath/basic_usage.axm">COMBINEPATH: соединение пути</a></li>
-                    <li><a href="../../samples/functions/filename/basic_usage.axm">FILENAME: имя файла</a></li>
-                    <li><a href="../../samples/functions/dirname/basic_usage.axm">DIRNAME: имя папки</a></li>
-                    <li><a href="../../samples/functions/extname/basic_usage.axm">EXTNAME: расширение</a></li>
-                    <li><a href="../../samples/functions/fullpath/basic_usage.axm">FULLPATH: полный путь</a></li>
-                    <li><a href="../../samples/functions/pathroot/basic_usage.axm">PATHROOT: корень пути</a></li>
-                    <li><a href="../../samples/functions/isabsolutepath/basic_usage.axm">ISABSOLUTEPATH: абсолютный путь</a></li>
-                    <li><a href="../../samples/functions/dirsize/basic_usage.axm">DIRSIZE: размер папки</a></li>
-                    <li><a href="../../samples/functions/isreadonly/basic_usage.axm">ISREADONLY: атрибут только для чтения</a></li>
-                    <li><a href="../../samples/functions/ishidden/basic_usage.axm">ISHIDDEN: скрытый объект</a></li>
-                    <li><a href="../../samples/functions/drivename/basic_usage.axm">DRIVENAME: имя диска</a></li>
-                    <li><a href="../../samples/functions/driveformat/basic_usage.axm">DRIVEFORMAT: формат диска</a></li>
-                    <li><a href="../../samples/functions/drivetype/basic_usage.axm">DRIVETYPE: тип диска</a></li>
-                    <li><a href="../../samples/functions/freespace/basic_usage.axm">FREESPACE: доступное место</a></li>
-                    <li><a href="../../samples/functions/totalfreespace/basic_usage.axm">TOTALFREESPACE: общее свободное место</a></li>
-                    <li><a href="../../samples/functions/totalspace/basic_usage.axm">TOTALSPACE: полный размер диска</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="file-system-functions.html">Файловая система</a>
-                    <a href="file-system-functions-text.html">Текстовые файлы</a>
-                    <a href="file-system-functions-open-files.html">Функции для открытого файла</a>
-                    <a href="file-system-functions-management.html">Операции с файлами и папками</a>
-                    <a href="date-time-functions.html">Дата и время</a>
-                    <a href="data-types-strings-and-files.html">STRING и FILE</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Пути и сведения о файлах — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="file-system-functions-paths"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Пути и сведения о файлах</span></nav>
+<p class="eyebrow">14 · Файловая система</p><h1 class="page-title">Пути и сведения о файлах</h1><p class="lead">Раздел содержит встроенные функции FILESIZE, FILEDATE, FILECREATEDATE, FILEACCESSEDDATE, DIRDATE, GETFILES, GETDIRS, COMBINEPATH, FILENAME, DIRNAME, EXTNAME, FULLPATH, PATHROOT, ISABSOLUTEPATH, которые работают с путями и файловыми ресурсами. Подробнее назначение, аргументы и результат каждой функции объяснены ниже.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Назначение и условия работы</h2><p>Эта страница объединяет отдельные встроенные функции <code>FILESIZE</code>, <code>FILEDATE</code>, <code>FILECREATEDATE</code>, <code>FILEACCESSEDDATE</code>, <code>DIRDATE</code>, <code>GETFILES</code>, <code>GETDIRS</code>, <code>COMBINEPATH</code>, <code>FILENAME</code>, <code>DIRNAME</code>, <code>EXTNAME</code>, <code>FULLPATH</code>, <code>PATHROOT</code>, <code>ISABSOLUTEPATH</code>. Каждый блок синтаксиса относится к указанной функции; общей конструкции для всей группы нет.</p><p>Файловые операции доступны в консольной программе и в IDE без оператора SCREEN. Относительные пути разрешаются от CURRENTDIR() текущего запуска. Перед разрешением пути раскрываются переменные окружения. Нулевой символ в пути недопустим. Создание файла не создаёт родительский каталог; сначала вызовите MAKEDIR, если он нужен.</p></section>
+<section class="article-section" id="filesize"><h2>FILESIZE</h2><p><code>FILESIZE</code> — встроенная функция языка Axiom, которая возвращает физическую длину файла в байтах.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">FILESIZE(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь к файлу.</p><h3>Результат и правила работы</h3><p>Результат LONG равен физической длине файла в байтах, включая BOM, если он записан. Для пустого файла возвращается 0. Файл должен существовать.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если файл отсутствует, путь не разрешается или размер нельзя получить из-за отказа доступа либо ошибки файловой системы.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT FILESIZE(path)
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>2</code></pre></section>
+<section class="article-section" id="filedate"><h2>FILEDATE</h2><p><code>FILEDATE</code> — встроенная функция языка Axiom, которая возвращает местные дату и время последней записи в файл.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">FILEDATE(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь к файлу.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>STRING</code>. Объект должен существовать. Результат STRING имеет формат yyyy-MM-dd HH:mm:ss и отражает местное время файловой системы. Фактические метаданные зависят от ОС и файловой системы.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если файл отсутствует, путь не разрешается или его метаданные недоступны.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT LEN(FILEDATE(path))
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>19</code></pre></section>
+<section class="article-section" id="filecreatedate"><h2>FILECREATEDATE</h2><p><code>FILECREATEDATE</code> — встроенная функция языка Axiom, которая возвращает местные дату и время создания файла.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">FILECREATEDATE(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь к файлу.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>STRING</code>. Объект должен существовать. Результат STRING имеет формат yyyy-MM-dd HH:mm:ss и отражает местное время файловой системы. Фактические метаданные зависят от ОС и файловой системы.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если файл отсутствует, путь не разрешается или его метаданные недоступны.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT LEN(FILECREATEDATE(path))
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>19</code></pre></section>
+<section class="article-section" id="fileaccesseddate"><h2>FILEACCESSEDDATE</h2><p><code>FILEACCESSEDDATE</code> — встроенная функция языка Axiom, которая возвращает местные дату и время последнего доступа к файлу.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">FILEACCESSEDDATE(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь к файлу.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>STRING</code>. Объект должен существовать. Результат STRING имеет формат yyyy-MM-dd HH:mm:ss и отражает местное время файловой системы. Фактические метаданные зависят от ОС и файловой системы.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если файл отсутствует, путь не разрешается или его метаданные недоступны.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT LEN(FILEACCESSEDDATE(path))
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>19</code></pre></section>
+<section class="article-section" id="dirdate"><h2>DIRDATE</h2><p><code>DIRDATE</code> — встроенная функция языка Axiom, которая возвращает местные дату и время последней записи в каталог.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">DIRDATE(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь к каталогу.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>STRING</code>. Объект должен существовать. Результат STRING имеет формат yyyy-MM-dd HH:mm:ss и отражает местное время файловой системы. Фактические метаданные зависят от ОС и файловой системы.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если каталог отсутствует, путь не разрешается или его метаданные недоступны.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT LEN(DIRDATE(folder))
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>19</code></pre></section>
+<section class="article-section" id="getfiles"><h2>GETFILES</h2><p><code>GETFILES</code> — встроенная функция языка Axiom, которая возвращает массив полных путей файлов непосредственно в указанном каталоге.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">GETFILES(&lt;путь&gt;)</code></pre><pre><code class="language-axiom">GETFILES(&lt;путь&gt;, &lt;маска&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь к каталогу.</p><p><code>&lt;маска&gt;</code> имеет тип <code>STRING</code>. Строка маски отбирает имена в указанном каталоге; например, *.txt. Пустая маска недопустима.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>массив STRING ранга 1</code>. Без маски используется *. Обход не рекурсивный. Полные пути сортируются без учёта регистра. Результат имеет границы 1 TO N, а при отсутствии совпадений — 1 TO 0. Каталог должен существовать.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если каталог отсутствует, перечисление недоступно, маска пуста или маска недопустима для перечисления файлов этой системой.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+DIM names() AS STRING
+names = GETFILES(folder, "*.txt")
+PRINT ARRAYLENGTH(names)
+PRINT FILENAME(names(1))
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>1
+notes.txt</code></pre></section>
+<section class="article-section" id="getdirs"><h2>GETDIRS</h2><p><code>GETDIRS</code> — встроенная функция языка Axiom, которая возвращает массив полных путей каталогов непосредственно в указанном каталоге.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">GETDIRS(&lt;путь&gt;)</code></pre><pre><code class="language-axiom">GETDIRS(&lt;путь&gt;, &lt;маска&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь к каталогу.</p><p><code>&lt;маска&gt;</code> имеет тип <code>STRING</code>. Строка маски отбирает имена в указанном каталоге; например, *.txt. Пустая маска недопустима.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>массив STRING ранга 1</code>. Без маски используется *. Обход не рекурсивный. Полные пути сортируются без учёта регистра. Результат имеет границы 1 TO N, а при отсутствии совпадений — 1 TO 0. Каталог должен существовать.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если каталог отсутствует, перечисление недоступно, маска пуста или маска недопустима для перечисления каталогов этой системой.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+MAKEDIR(COMBINEPATH(folder, "child"))
+DIM names() AS STRING
+names = GETDIRS(folder)
+PRINT ARRAYLENGTH(names)
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>1</code></pre></section>
+<section class="article-section" id="combinepath"><h2>COMBINEPATH</h2><p><code>COMBINEPATH</code> — встроенная функция языка Axiom, которая соединяет две строковые части пути.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">COMBINEPATH(&lt;левая часть&gt;, &lt;правая часть&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;левая часть&gt;</code> имеет тип <code>STRING</code>. Строка левой части задаёт начало составляемого пути.</p><p><code>&lt;правая часть&gt;</code> имеет тип <code>STRING</code>. Строка правой части задаёт присоединяемый путь; абсолютная правая часть заменяет левую.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>STRING</code>. Функция не проверяет наличие объекта и не приводит результат к полному пути. Пустая часть не добавляет лишнего компонента.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. Наличие файлов и каталогов не проверяется. Абсолютная правая часть заменяет левую; это разрешённый результат, а не ошибка.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT FILENAME(COMBINEPATH(folder, "next.txt"))
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>next.txt</code></pre></section>
+<section class="article-section" id="filename"><h2>FILENAME</h2><p><code>FILENAME</code> — встроенная функция языка Axiom, которая возвращает последнюю часть полного пути вместе с расширением.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">FILENAME(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт строку пути, которую нужно разобрать или нормализовать.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>STRING</code>. Наличие объекта не проверяется. Завершающий разделитель каталога даёт пустую строку.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если строку пути нельзя разрешить, например она пуста или содержит нулевой символ. Несуществующий объект разрешён.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT FILENAME(path)
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>notes.txt</code></pre></section>
+<section class="article-section" id="dirname"><h2>DIRNAME</h2><p><code>DIRNAME</code> — встроенная функция языка Axiom, которая возвращает полный путь родительского каталога.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">DIRNAME(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт строку пути, которую нужно разобрать или нормализовать.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>STRING</code>. Функция сначала разрешает путь относительно рабочей папки. Для C:/work/data.txt результатом будет C:\work, а для корня диска — пустая строка. Наличие файла не требуется.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если строку пути нельзя разрешить, например она пуста или содержит нулевой символ. Несуществующий объект разрешён; корень даёт пустую строку.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT DIRNAME(path) = folder
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE</code></pre></section>
+<section class="article-section" id="extname"><h2>EXTNAME</h2><p><code>EXTNAME</code> — встроенная функция языка Axiom, которая возвращает расширение последнего компонента пути вместе с точкой.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">EXTNAME(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт строку пути, которую нужно разобрать или нормализовать.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>STRING</code>. Если последний компонент не содержит расширения, возвращается пустая строка. Наличие объекта не проверяется.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если строку пути нельзя разрешить, например она пуста или содержит нулевой символ. Отсутствующее расширение даёт пустую строку.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT EXTNAME(path)
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>.txt</code></pre></section>
+<section class="article-section" id="fullpath"><h2>FULLPATH</h2><p><code>FULLPATH</code> — встроенная функция языка Axiom, которая преобразует строку пути в полный путь.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">FULLPATH(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт строку пути, которую нужно разобрать или нормализовать.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>STRING</code>. Наличие объекта не проверяется; компоненты . и .. разрешаются в полном пути.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если путь нельзя привести к полному пути, например он пуст или содержит нулевой символ. Наличие объекта не требуется.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT ISABSOLUTEPATH(FULLPATH(path))
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE</code></pre></section>
+<section class="article-section" id="pathroot"><h2>PATHROOT</h2><p><code>PATHROOT</code> — встроенная функция языка Axiom, которая возвращает корень полного пути.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">PATHROOT(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт строку пути, которую нужно разобрать или нормализовать.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>STRING</code>. Наличие объекта не проверяется; относительный путь сначала превращается в полный.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если путь нельзя разрешить. Наличие объекта по этому пути не требуется.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT PATHROOT(path) = PATHROOT(folder)
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE</code></pre></section>
+<section class="article-section" id="isabsolutepath"><h2>ISABSOLUTEPATH</h2><p><code>ISABSOLUTEPATH</code> — встроенная функция языка Axiom, которая проверяет, полностью ли задан путь без обращения к рабочему каталогу.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">ISABSOLUTEPATH(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт строку пути, которую нужно разобрать или нормализовать.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>BOOLEAN</code>. На Windows C:/work является полностью заданным путём, C:work и /work — нет. Проверяется строка после раскрытия переменных окружения.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. Относительный, пустой или не полностью заданный путь даёт FALSE. Наличие объекта и доступность диска не проверяются.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
+DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
+WRITEFILE(path, "AB")
+PRINT ISABSOLUTEPATH(path)
+DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE</code></pre></section>
+<section class="article-section"><h2>См. также</h2><p><a href="file-system-functions.html">Файловая система</a> · <a href="open.html">OPEN</a> · <a href="close.html">CLOSE</a> · <a href="try.html">TRY</a></p></section>
+<section class="article-section" id="dirsize"><h2>DIRSIZE</h2><p>Описание встроенной функции DIRSIZE находится в <a href="file-system-functions-management.html#dirsize">разделе управления файловой системой</a>.</p></section><section class="article-section" id="driveformat"><h2>DRIVEFORMAT</h2><p>Описание встроенной функции DRIVEFORMAT находится в <a href="file-system-functions-management.html#driveformat">разделе управления файловой системой</a>.</p></section><section class="article-section" id="drivename"><h2>DRIVENAME</h2><p>Описание встроенной функции DRIVENAME находится в <a href="file-system-functions-management.html#drivename">разделе управления файловой системой</a>.</p></section><section class="article-section" id="drivetype"><h2>DRIVETYPE</h2><p>Описание встроенной функции DRIVETYPE находится в <a href="file-system-functions-management.html#drivetype">разделе управления файловой системой</a>.</p></section><section class="article-section" id="freespace"><h2>FREESPACE</h2><p>Описание встроенной функции FREESPACE находится в <a href="file-system-functions-management.html#freespace">разделе управления файловой системой</a>.</p></section><section class="article-section" id="ishidden"><h2>ISHIDDEN</h2><p>Описание встроенной функции ISHIDDEN находится в <a href="file-system-functions-management.html#ishidden">разделе управления файловой системой</a>.</p></section><section class="article-section" id="isreadonly"><h2>ISREADONLY</h2><p>Описание встроенной функции ISREADONLY находится в <a href="file-system-functions-management.html#isreadonly">разделе управления файловой системой</a>.</p></section><section class="article-section" id="totalfreespace"><h2>TOTALFREESPACE</h2><p>Описание встроенной функции TOTALFREESPACE находится в <a href="file-system-functions-management.html#totalfreespace">разделе управления файловой системой</a>.</p></section><section class="article-section" id="totalspace"><h2>TOTALSPACE</h2><p>Описание встроенной функции TOTALSPACE находится в <a href="file-system-functions-management.html#totalspace">разделе управления файловой системой</a>.</p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

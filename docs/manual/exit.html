@@ -1,38 +1,26 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom — Оператор EXIT</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="exit">
-<header class="topbar">
-    <div class="topbar__inner">
-        <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Справочник по реализованному языку Axiom</div>
-        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-    </div>
-</header>
-<div class="layout">
-    <aside class="sidebar">
-        <div class="sidebar__inner">
-            <nav id="manual-nav"></nav>
-        </div>
-    </aside>
-    <main class="content"><nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><a href="operator-reference.html">Операторы</a><span>/</span><span>Оператор EXIT</span></nav><p class="eyebrow">Справочная статья</p><h1 class="page-title">Оператор EXIT</h1><p class="lead"><code>EXIT</code> — оператор языка Axiom, который немедленно завершает охватывающий цикл <code>FOR</code> или <code>DO</code>. Выполнение продолжается после соответствующего оператора завершения цикла.</p>
-<section class="article-section"><h2>Контекст</h2><p>Форма <code>EXIT FOR</code> допускается внутри цикла <code>FOR</code>; форма <code>EXIT DO</code> — внутри цикла <code>DO ... LOOP</code>. Параметров у оператора нет. Во вложенных циклах завершается ближайший охватывающий цикл указанного вида.</p></section>
-<section class="article-section" id="exit-for"><h2>Синтаксис EXIT FOR</h2><pre><code class="language-axiom">EXIT FOR</code></pre><p>Управление передаётся на инструкцию после соответствующего <code>NEXT</code>. Счётчик этого цикла за его пределами недоступен.</p></section>
-<section class="article-section" id="exit-do"><h2>Синтаксис EXIT DO</h2><pre><code class="language-axiom">EXIT DO</code></pre><p>Управление передаётся на инструкцию после соответствующего <code>LOOP</code>. Условие продолжения этого цикла повторно не проверяется.</p></section>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Оператор EXIT — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="exit"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор EXIT</span></nav>
+<p class="eyebrow">Справочная статья</p><h1 class="page-title">Оператор EXIT</h1><p class="lead">EXIT — оператор языка Axiom, который завершает ближайший охватывающий цикл указанного вида. На странице описаны две отдельные формы: EXIT FOR и EXIT DO.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Назначение и контекст</h2><p>Оператор EXIT нужен для прекращения повторений, когда результат уже найден или продолжать вычисление не требуется. Форма EXIT FOR допускается внутри охватывающего FOR, а EXIT DO — внутри охватывающего DO. Обе формы работают в консольных и графических программах, включая вложенные условия и подпрограммы, и не принимают аргументов.</p></section>
+<section class="article-section" id="exit-for"><h2>EXIT FOR</h2><pre><code class="language-axiom">EXIT FOR</code></pre><p>Форма допускается внутри <code>FOR … NEXT</code> и передаёт управление после соответствующего <code>NEXT</code>. Счётчик завершённого цикла становится недоступен.</p></section>
+<section class="article-section" id="exit-do"><h2>EXIT DO</h2><pre><code class="language-axiom">EXIT DO</code></pre><p>Форма допускается внутри <code>DO … LOOP</code> и передаёт управление после соответствующего <code>LOOP</code>. Условие завершаемого цикла больше не проверяется.</p></section>
+<section class="article-section"><h2>Вложенные циклы</h2><p>Завершается ближайший охватывающий цикл именно указанного вида. Другие внешние циклы продолжают работу. Аргументов у этих форм нет; формы <code>EXIT WHILE</code> в Axiom нет.</p></section>
 <section class="article-section"><h2>Диагностика</h2><ul><li><code>MB2013</code> — <code>EXIT FOR</code> записан вне цикла <code>FOR</code>.</li><li><code>MB2014</code> — <code>EXIT DO</code> записан вне цикла <code>DO ... LOOP</code>.</li></ul></section>
-<section class="article-section"><h2>Пример</h2><pre><code class="language-axiom">FOR i = 1 TO 5
-    IF i = 3 THEN
+<section class="article-section"><h2>Пример</h2><p>Выход при значении три оставляет два напечатанных числа:</p>
+<pre><code class="language-axiom">FOR index = 1 TO 5
+    IF index = 3 THEN
         EXIT FOR
     END IF
-    PRINT i
-NEXT</code></pre><p>Результат:</p><pre><code>1
-2</code></pre></section><section class="article-section"><h2>См. также</h2><div class="link-list"><a href="for.html">FOR</a><a href="do-loop.html">DO ... LOOP</a><a href="continue.html">CONTINUE</a></div></section><div id="page-pager" class="pager"></div></main>
-</div>
-<script src="scripts/manual.js"></script>
-</body>
-</html>
+    PRINT index
+NEXT</code></pre><p>Результат:</p>
+<pre><code>1
+2</code></pre></section>
+<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="loops.html">Циклы</a><a href="for.html">FOR</a><a href="do-loop.html">DO … LOOP</a><a href="continue.html">CONTINUE</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

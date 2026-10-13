@@ -1,0 +1,19 @@
+/* Сформировано из axiom-light в ide/src/renderer/app.js. */
+.axiom-token--comment{color:#6a9955;font-style:italic;}
+.axiom-token--string{color:#a31515;}
+.axiom-token--string-escape{color:#ee0000;}
+.axiom-token--delimiter-interpolation{color:#ee0000;}
+.axiom-token--number{color:#098658;}
+.axiom-token--number-hex{color:#098658;}
+.axiom-token--keyword{color:#0000ff;}
+.axiom-token--type{color:#267f99;}
+.axiom-token--support-function{color:#795e26;}
+.axiom-token--identifier{color:#215E9C;}
+.axiom-token--invalid{color:#C40000;}
+.axiom-token--variable{color:#215E9C;}
+.axiom-token--variable-readonly{color:#8F4400;}
+.axiom-token--function{color:#795E26;}
+.axiom-token--array{color:#7552A5;}
+.axiom-token--operator{color:#AF1970;}
+.axiom-token--delimiter{color:#705A00;}
+.axiom-token--placeholder{color:#59636e}

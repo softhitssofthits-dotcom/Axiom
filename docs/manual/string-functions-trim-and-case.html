@@ -1,126 +1,31 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Обрезка, регистр и разворот строки</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="string-functions-trim-and-case">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">TRIM, LTRIM, RTRIM, LCASE, UCASE и REVERSE</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-<main class="content">
-<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Встроенные функции</span><span>/</span><span>Строки и символы</span></nav>
-<p class="eyebrow">Раздел</p>
-<h1 class="page-title">Обрезка, регистр и разворот строки</h1>
-<p class="lead">Раздел обрезки, регистра и разворота описывает функции <code>TRIM</code>, <code>LTRIM</code>, <code>RTRIM</code>, <code>LCASE</code>, <code>UCASE</code> и <code>REVERSE</code> — средства удаления символов по краям, смены регистра и обратного порядка символов.</p>
-
-<section class="article-section">
-<p>Функции этой страницы возвращают новую строку на основе исходной: удаляют лишние символы по краям, переводят буквы в другой регистр или меняют порядок символов на обратный. Исходное значение при этом не изменяется само по себе.</p>
-</section>
-
-<section class="article-section" id="boundaries">
-<h2>Общие правила и границы</h2>
-<p>Ни одна из функций не требует экранного или файлового режима. Все аргументы text и chars должны быть строками; результаты имеют тип STRING. Неверный тип отклоняется при проверке типов до исполнения. Пустая исходная строка даёт пустую строку во всех функциях этой страницы.</p>
-<p>TRIM, LTRIM и RTRIM без chars удаляют пробельные символы Unicode, включая неразрывный пробел U+00A0 и U+2003. Символ U+200B не удаляется. Явный chars является набором отдельных единиц UTF-16, а не искомой подстрокой: TRIM("абЯба", "аб") возвращает "Я". Пустой набор ничего не удаляет. Если в chars включён эмодзи, его две единицы участвуют в наборе отдельно; обрезка может оставить изолированный суррогат. Для обработки целых фрагментов используйте строковый поиск и срезы с проверенными границами.</p>
-<p>LCASE и UCASE используют правила регистра, не зависящие от выбранной культуры компьютера. Кириллица преобразуется непосредственно: UCASE("пример") возвращает "ПРИМЕР". Самодельная функция перекодировки русских букв не требуется. Изолированные единицы UTF-16 сохраняются. Смена регистра не выполняет нормализацию Unicode.</p>
-</section>
-
-<section class="article-section" id="trim">
-<h2>TRIM</h2>
-<p>Встроенная функция <code>TRIM</code> убирает символы с обоих краёв строки.</p>
-<h3>Синтаксис</h3>
-<p>Удаление пробельных символов:</p>
-<pre><code class="language-axiom">result = TRIM(text)</code></pre>
-<p>Удаление указанного набора:</p>
-<pre><code class="language-axiom">result = TRIM(text, chars)</code></pre>
-<h3>Аргументы</h3>
-<p><code>text</code> задаёт исходную строку. Необязательный <code>chars</code> задаёт набор символов, которые удаляются по краям.</p>
-<h3>Удаляемые символы</h3>
-<p>Без аргумента <code>chars</code> удаляются пробельные символы. Если <code>chars</code> указан, по краям убираются все символы из этого набора.</p>
-<h3>Пример удаления пробелов с двух сторон</h3>
-<pre><code class="language-axiom">PRINT "[" + TRIM("abc   ") + "]"
-PRINT "[" + TRIM("   abc") + "]"
-PRINT "[" + TRIM("...abc...", ".") + "]"</code></pre>
-<p>Результат:</p>
-<pre><code>[abc]
-[abc]
-[abc]</code></pre>
-</section>
-
-<section class="article-section" id="ltrim">
-<h2>LTRIM</h2>
-<p>Встроенная функция <code>LTRIM</code> убирает символы только слева.</p>
-<h3>Синтаксис</h3>
-<p>Удаление пробельных символов:</p>
-<pre><code class="language-axiom">result = LTRIM(text)</code></pre>
-<p>Удаление указанного набора:</p>
-<pre><code class="language-axiom">result = LTRIM(text, chars)</code></pre>
-<h3>Аргументы</h3>
-<p><code>text</code> задаёт исходную строку. Необязательный <code>chars</code> задаёт набор символов, которые удаляются слева.</p>
-<h3>Удаляемые символы</h3>
-<p>Без аргумента <code>chars</code> убираются пробельные символы слева. Если <code>chars</code> указан, убираются символы из этого набора.</p>
-<h3>Пример удаления начальных пробелов</h3>
-<pre><code class="language-axiom">PRINT "[" + LTRIM("   abc") + "]"
-PRINT "[" + LTRIM("...abc", ".") + "]"</code></pre>
-<p>Результат:</p>
-<pre><code>[abc]
-[abc]</code></pre>
-</section>
-
-<section class="article-section" id="rtrim">
-<h2>RTRIM</h2>
-<p>Встроенная функция <code>RTRIM</code> убирает символы только справа.</p>
-<h3>Синтаксис</h3>
-<p>Удаление пробельных символов:</p>
-<pre><code class="language-axiom">result = RTRIM(text)</code></pre>
-<p>Удаление указанного набора:</p>
-<pre><code class="language-axiom">result = RTRIM(text, chars)</code></pre>
-<h3>Аргументы</h3>
-<p><code>text</code> задаёт исходную строку. Необязательный <code>chars</code> задаёт набор символов, которые удаляются справа.</p>
-<h3>Удаляемые символы</h3>
-<p>Без аргумента <code>chars</code> убираются пробельные символы справа. Если <code>chars</code> указан, убираются символы из этого набора.</p>
-<h3>Пример удаления конечных пробелов</h3>
-<pre><code class="language-axiom">PRINT "[" + RTRIM("abc   ") + "]"
-PRINT "[" + RTRIM("abc...", ".") + "]"</code></pre>
-<p>Результат:</p>
-<pre><code>[abc]
-[abc]</code></pre>
-</section>
-
-<section class="article-section" id="lcase">
-<h2>LCASE и UCASE</h2>
-<p>Функции <code>LCASE</code> и <code>UCASE</code> возвращают строку в нижнем или верхнем регистре.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">lowerText = LCASE(text)</code></pre>
-<pre><code class="language-axiom">upperText = UCASE(text)</code></pre>
-<h3>Аргументы</h3>
-<p><code>text</code> задаёт исходную строку.</p>
-<h3>Возвращаемое значение</h3>
-<p>Обе функции возвращают новое значение и не меняют исходную строку автоматически.</p>
-<h3>Пример смены регистра</h3>
-<pre><code class="language-axiom">PRINT LCASE("ПРИМЕР")
-PRINT UCASE("пример")</code></pre>
-<p>Результат:</p>
-<pre><code>пример
-ПРИМЕР</code></pre>
-</section>
-
-<section class="article-section" id="reverse">
-<h2>REVERSE</h2>
-<p>Функция <code>REVERSE</code> возвращает строку в обратном порядке символов.</p>
-<p>Корректные пары UTF-16 остаются целыми: <code>REVERSE("А😀Б")</code> возвращает <code>"Б😀А"</code>. Изолированные единицы UTF-16, полученные, например, функцией <code>LEFT</code>, сохраняются без подмены символом <code>U+FFFD</code>. Комбинируемые знаки разворачиваются отдельно от букв; функция не объединяет графемы. Пустая строка возвращается без изменений.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">result = REVERSE(text)</code></pre>
-<h3>Аргументы</h3>
-<p><code>text</code> задаёт исходную строку.</p>
-<h3>Пример обратного порядка символов</h3>
-<pre><code class="language-axiom">PRINT REVERSE("abcd")</code></pre>
-<p>Результат:</p>
-<pre><code>dcba</code></pre>
-</section>
-
-<section class="article-section"><h2>Запускаемые примеры</h2><ul class="resource-list"><li><a href="../../samples/functions/trim/basic_usage.axm">TRIM</a></li><li><a href="../../samples/functions/ltrim/basic_usage.axm">LTRIM</a></li><li><a href="../../samples/functions/rtrim/basic_usage.axm">RTRIM</a></li><li><a href="../../samples/functions/lcase/basic_usage.axm">LCASE</a></li><li><a href="../../samples/functions/ucase/basic_usage.axm">UCASE</a></li></ul></section>
-<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="string-functions.html">Строковые функции</a><a href="string-functions-slices-and-length.html">Длина строки и фрагменты</a><a href="string-functions-search-and-replace.html">Поиск и замена в строках</a><a href="string-functions-build-and-split.html">Построение строк и массивы строк</a><a href="data-types-strings-and-files.html">Тип STRING</a></div></section>
-
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Обрезка, регистр и разворот — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="string-functions-trim-and-case"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Обрезка, регистр и разворот</span></nav>
+<p class="eyebrow">Глава 8</p><h1 class="page-title">Обрезка, регистр и разворот</h1><p class="lead">В этом разделе описаны встроенные функции языка Axiom TRIM, LTRIM, RTRIM, LCASE, UCASE, REVERSE. Они обрабатывают текст и возвращают результат без изменения исходной строки. Ниже приведён отдельный синтаксис и договор каждой функции.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="boundaries"><h2>Выбор преобразования</h2><p>Функции TRIM, LTRIM и RTRIM удаляют заполнение у краёв строки; LCASE и UCASE меняют регистр; REVERSE меняет порядок кодов Unicode. Каждая функция ниже имеет собственный синтаксис и результат.</p></section><section class="article-section" id="trim"><h2>TRIM</h2><p>TRIM — встроенная функция языка Axiom, которая возвращает строку после удаления заданных символов с обоих краёв текста.</p><h3>Назначение и контекст</h3><p>Функция помогает убрать лишнее заполнение с обоих краёв строки, сохранив её содержимое.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма 1:</p><pre><code class="language-axiom">TRIM(&lt;текст&gt;)</code></pre><p>Форма 2:</p><pre><code class="language-axiom">TRIM(&lt;текст&gt;, &lt;символы&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;символы&gt;</code></td><td>Передайте строку типа STRING, перечисляющую удаляемые кодовые единицы UTF-16. Это набор отдельных символов, а не подстрока. Если аргумент отсутствует, удаляются пробельные символы, распознаваемые .NET.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING после обрезки.</p><h3>Правила и пограничные случаи</h3><p>Пустой текст остаётся пустым. Пустой набор символов оставляет текст без изменения. Удаление продолжается до первого символа, который не входит в набор; внутри текста символы сохраняются. Форма без набора удаляет также табуляцию и другие пробельные символы, а не только обычный пробел.</p><h3>Диагностика</h3><p>Функция не имеет специальной ошибки для пустого текста или пустого набора. Неверные типы и число аргументов отклоняются при проверке программы.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT "[" + TRIM("  A  ") + "]"
+PRINT TRIM("--A--", "-")
+PRINT "[" + TRIM("") + "]"</code></pre><p>Программа выводит:</p><pre><code>[A]
+A
+[]</code></pre></section>
+<section class="article-section" id="ltrim"><h2>LTRIM</h2><p>LTRIM — встроенная функция языка Axiom, которая возвращает строку после удаления заданных символов с начала текста.</p><h3>Назначение и контекст</h3><p>Функция помогает убрать лишнее заполнение с начала строки, сохранив её содержимое.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма 1:</p><pre><code class="language-axiom">LTRIM(&lt;текст&gt;)</code></pre><p>Форма 2:</p><pre><code class="language-axiom">LTRIM(&lt;текст&gt;, &lt;символы&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;символы&gt;</code></td><td>Передайте строку типа STRING, перечисляющую удаляемые кодовые единицы UTF-16. Это набор отдельных символов, а не подстрока. Если аргумент отсутствует, удаляются пробельные символы, распознаваемые .NET.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING после обрезки.</p><h3>Правила и пограничные случаи</h3><p>Пустой текст остаётся пустым. Пустой набор символов оставляет текст без изменения. Удаление продолжается до первого символа, который не входит в набор; внутри текста символы сохраняются. Форма без набора удаляет также табуляцию и другие пробельные символы, а не только обычный пробел.</p><h3>Диагностика</h3><p>Функция не имеет специальной ошибки для пустого текста или пустого набора. Неверные типы и число аргументов отклоняются при проверке программы.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT "[" + LTRIM("  A  ") + "]"
+PRINT LTRIM("--A--", "-")</code></pre><p>Программа выводит:</p><pre><code>[A  ]
+A--</code></pre></section>
+<section class="article-section" id="rtrim"><h2>RTRIM</h2><p>RTRIM — встроенная функция языка Axiom, которая возвращает строку после удаления заданных символов с конца текста.</p><h3>Назначение и контекст</h3><p>Функция помогает убрать лишнее заполнение с конца строки, сохранив её содержимое.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма 1:</p><pre><code class="language-axiom">RTRIM(&lt;текст&gt;)</code></pre><p>Форма 2:</p><pre><code class="language-axiom">RTRIM(&lt;текст&gt;, &lt;символы&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;символы&gt;</code></td><td>Передайте строку типа STRING, перечисляющую удаляемые кодовые единицы UTF-16. Это набор отдельных символов, а не подстрока. Если аргумент отсутствует, удаляются пробельные символы, распознаваемые .NET.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING после обрезки.</p><h3>Правила и пограничные случаи</h3><p>Пустой текст остаётся пустым. Пустой набор символов оставляет текст без изменения. Удаление продолжается до первого символа, который не входит в набор; внутри текста символы сохраняются. Форма без набора удаляет также табуляцию и другие пробельные символы, а не только обычный пробел.</p><h3>Диагностика</h3><p>Функция не имеет специальной ошибки для пустого текста или пустого набора. Неверные типы и число аргументов отклоняются при проверке программы.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT "[" + RTRIM("  A  ") + "]"
+PRINT RTRIM("--A--", "-")</code></pre><p>Программа выводит:</p><pre><code>[  A]
+--A</code></pre></section>
+<section class="article-section" id="lcase"><h2>LCASE</h2><p>LCASE — встроенная функция языка Axiom, которая возвращает строку, преобразовав буквы в нижний регистр.</p><h3>Назначение и контекст</h3><p>Функция нужна, когда текст требуется представить в одном регистре.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма вызова:</p><pre><code class="language-axiom">LCASE(&lt;текст&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING.</p><h3>Правила и пограничные случаи</h3><p>Преобразование использует неизменяемые правила культуры .NET и не зависит от региональных настроек пользователя. Пустая строка остаётся пустой. Символы без соответствующего регистра сохраняются.</p><h3>Диагностика</h3><p>Неверные типы и число аргументов отклоняются при проверке программы.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT LCASE("ПрИвЕт")
+PRINT "["+LCASE("")+"]"</code></pre><p>Программа выводит:</p><pre><code>привет
+[]</code></pre></section>
+<section class="article-section" id="ucase"><h2>UCASE</h2><p>UCASE — встроенная функция языка Axiom, которая возвращает строку, преобразовав буквы в верхний регистр.</p><h3>Назначение и контекст</h3><p>Функция нужна, когда текст требуется представить в одном регистре.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма вызова:</p><pre><code class="language-axiom">UCASE(&lt;текст&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING.</p><h3>Правила и пограничные случаи</h3><p>Преобразование использует неизменяемые правила культуры .NET и не зависит от региональных настроек пользователя. Пустая строка остаётся пустой. Символы без соответствующего регистра сохраняются.</p><h3>Диагностика</h3><p>Неверные типы и число аргументов отклоняются при проверке программы.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT UCASE("ПрИвЕт")
+PRINT "["+UCASE("")+"]"</code></pre><p>Программа выводит:</p><pre><code>ПРИВЕТ
+[]</code></pre></section>
+<section class="article-section" id="reverse"><h2>REVERSE</h2><p>REVERSE — встроенная функция языка Axiom, которая возвращает строку с обратным порядком кодов Unicode.</p><h3>Назначение и контекст</h3><p>Функция позволяет развернуть последовательность символов, сохраняя целыми корректные суррогатные пары.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма вызова:</p><pre><code class="language-axiom">REVERSE(&lt;текст&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING.</p><h3>Правила и пограничные случаи</h3><p>Пустая строка остаётся пустой. Корректная суррогатная пара сохраняется целиком. Отдельные знаки ударения и части составных эмодзи меняют порядок независимо: функция не разворачивает строку по графемам. Изолированные кодовые единицы UTF-16 сохраняются без подмены.</p><h3>Диагностика</h3><p>Неверные типы и число аргументов отклоняются при проверке программы.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT REVERSE("А😀Б")
+PRINT "["+REVERSE("")+"]"</code></pre><p>Программа выводит:</p><pre><code>Б😀А
+[]</code></pre></section><section class="article-section"><h2>См. также</h2><div class="link-list"><a href="string-functions.html">Строковые функции</a><a href="string-functions-slices-and-length.html">Длина строки и фрагменты</a><a href="string-functions-search-and-replace.html">Поиск и замена подстрок</a><a href="string-functions-build-and-split.html">Построение строк и массивы строк</a><a href="characters.html">Коды символов</a><a href="regex-functions.html">Регулярные выражения</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

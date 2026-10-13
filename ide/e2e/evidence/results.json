@@ -1,44 +1,21 @@
 [
   {
-    "id": "i18n-editor-context-menu",
-    "spec": "i18n.spec.js",
-    "name": "Контекстное меню редактора полностью переводится и обновляет доступные имена",
-    "ms": 3071,
-    "passed": 16,
+    "id": "language-next-counter",
+    "spec": "language-format.spec.js",
+    "name": "NEXT проверяет имя счётчика и сохраняет диагностику в редакторе",
+    "ms": 3218,
+    "passed": 12,
     "failures": [],
     "notes": [],
     "crashed": false,
     "consoleTail": [],
     "pageErrors": [],
-    "mainStderrTail": "Debugger ending on ws://127.0.0.1:3220/c7abd359-3b78-4ab8-a0a6-afaaa8429e1d\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
-    "rendererDialogs": []
-  },
-  {
-    "id": "i18n-parity",
-    "spec": "i18n.spec.js",
-    "name": "ru and en dictionaries have identical keys covering index.html",
-    "ms": 2715,
-    "passed": 3,
-    "failures": [],
-    "notes": [],
-    "crashed": false,
-    "consoleTail": [],
-    "pageErrors": [],
-    "mainStderrTail": "Debugger ending on ws://127.0.0.1:3226/b9d714e3-4bfa-4013-a65f-05f734207fc2\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
-    "rendererDialogs": []
-  },
-  {
-    "id": "i18n-switch-to-en-and-back",
-    "spec": "i18n.spec.js",
-    "name": "Switching the locale re-inks the menu labels",
-    "ms": 2791,
-    "passed": 3,
-    "failures": [],
-    "notes": [],
-    "crashed": false,
-    "consoleTail": [],
-    "pageErrors": [],
-    "mainStderrTail": "Debugger ending on ws://127.0.0.1:3230/fd554851-6ea9-44e2-aca1-265bebc8f286\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
-    "rendererDialogs": []
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:1609/79d71ca4-5dc6-4ba8-9734-2d68e722b64a\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": [
+      {
+        "type": "confirm",
+        "message": "Перед запуском нужно сохранить документ. Сохранить и запустить?"
+      }
+    ]
   }
 ]

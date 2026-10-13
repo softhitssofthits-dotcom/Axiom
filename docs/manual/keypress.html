@@ -1,48 +1,29 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Функция KEYPRESS</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="keypress">
-<header class="topbar">
-    <div class="topbar__inner">
-        <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Одноразовая проверка нажатия клавиши</div>
-        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-    </div>
-</header>
-<div class="layout">
-    <aside class="sidebar">
-        <div class="sidebar__inner">
-            <nav id="manual-nav"></nav>
-        </div>
-    </aside>
-    <main class="content">
-        <nav class="breadcrumbs" aria-label="Хлебные крошки">
-            <a href="index.html">Главная</a><span>/</span><a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a><span>/</span><span>Функция KEYPRESS</span>
-        </nav>
+<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<title>Функция KEYPRESS — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="keypress"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Функция KEYPRESS</span></nav>
+<p class="eyebrow">Встроенная функция</p><h1 class="page-title">Функция KEYPRESS</h1><p class="lead"><code>KEYPRESS</code> — встроенная функция языка Axiom, которая ищет непрочитанное нажатие указанной клавиши. При успехе она возвращает <code>TRUE</code> и удаляет найденное событие из очереди.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
-        <p class="eyebrow">Встроенная функция</p>
-        <h1 class="page-title">Функция KEYPRESS</h1>
-        <p class="lead"><code>KEYPRESS</code> — встроенная функция языка Axiom, которая проверяет, была ли указанная клавиша нажата и ещё не прочитана программой. В отличие от <a href="keydown.html"><code>KEYDOWN</code></a>, встроенная функция <code>KEYPRESS</code> не показывает текущее удержание клавиши: одно нажатие даёт один результат <code>TRUE</code>, после чего событие считается израсходованным.</p>
 
         <section class="article-section">
-            <h2>Для чего нужна функция KEYPRESS</h2>
-            <p>Встроенная функция <code>KEYPRESS</code> удобна для действий, которые должны произойти один раз на одно нажатие: открыть меню, подтвердить выбор, переключить режим или обработать одиночную стрелку. Если нужна непрерывная реакция, пока клавиша удерживается, используется встроенная функция <code>KEYDOWN</code>. Если нужно получить саму следующую клавишу как строку, используется встроенная функция <code>INKEY</code>.</p>
+            <h2>Применение</h2>
+            <p>Используйте функцию для однократного действия: подтвердить выбор, открыть меню или переключить режим. Текущее удержание проверяет <a href="keydown.html">KEYDOWN</a>, а строку следующей клавиши возвращает <a href="inkey.html">INKEY</a>.</p>
         </section>
 
         <section class="article-section">
-            <h2>Где работает функция KEYPRESS</h2>
-            <p>Встроенная функция <code>KEYPRESS</code> читает клавиатурную очередь активной среды выполнения. Если программа работает без оператора <code>SCREEN</code>, очередь поступает из обычной поверхности ввода среды разработки. Если программа явно выбрала <code>SCREEN 0</code> или графический режим <code>SCREEN 1..10</code>, очередь поступает из окна <code>SCREEN</code>.</p>
-            <p>Встроенная функция <code>KEYPRESS</code> выполняется <code>BytecodeVm</code> после компиляции.</p>
+            <h2>Контекст выполнения</h2>
+            <p>Функция читает очередь активной поверхности ввода: текстовой области IDE либо окна <code>SCREEN 0</code> или <code>SCREEN 1..10</code>.</p>
+            <p>Направляйте ввод в окно программы; правила фокуса описаны в <a href="keyboard-mouse-events.html">разделе клавиатуры и мыши</a>.</p>
         </section>
 
         <section class="article-section">
             <h2>Синтаксис</h2>
-<pre><code class="language-axiom">KEYPRESS(keyText)</code></pre>
+<pre><code class="language-axiom">KEYPRESS(&lt;клавиша&gt;)</code></pre>
         </section>
 
         <section class="article-section">
@@ -50,14 +31,14 @@
             <table>
                 <thead><tr><th>Аргумент</th><th>Тип</th><th>Описание</th></tr></thead>
                 <tbody>
-                    <tr><td><code>keyText</code></td><td><code>STRING</code></td><td>Имя клавиши. Поддерживаются те же канонические имена и алиасы, что у <a href="keydown.html#key-names"><code>KEYDOWN</code></a> и <code>ON KEY</code>, например <code>"LEFT"</code>, <code>"ESCAPE"</code>, <code>"PAGE UP"</code>, <code>"A"</code>.</td></tr>
+                    <tr><td><code>&lt;клавиша&gt;</code></td><td><code>STRING</code></td><td>Имя клавиши. Поддерживаются те же канонические имена и алиасы, что у <a href="keydown.html#key-names"><code>KEYDOWN</code></a> и <code>ON KEY</code>, например <code>"LEFT"</code>, <code>"ESCAPE"</code>, <code>"PAGE UP"</code>, <code>"A"</code>.</td></tr>
                 </tbody>
             </table>
         </section>
 
         <section class="article-section">
             <h2>Что возвращает функция KEYPRESS</h2>
-            <p>Тип результата: <code>BOOLEAN</code>.</p>
+            <p>Результат имеет тип <code>BOOLEAN</code>.</p>
             <ul>
                 <li><code>TRUE</code>, если в очереди есть ещё не прочитанное нажатие указанной клавиши. Это нажатие удаляется из очереди.</li>
                 <li><code>FALSE</code>, если такого нажатия сейчас нет, имя пустое или среда выполнения не предоставляет клавиатурную очередь.</li>
@@ -66,10 +47,10 @@
 
         <section class="article-section">
             <h2>Поведение очереди</h2>
-            <p>Встроенная функция <code>KEYPRESS</code> ищет первое подходящее нажатие в клавиатурной очереди и удаляет только его. Неподходящие клавиши сохраняют порядок и остаются доступными для последующего <code>INKEY</code>, <code>KEYPRESS</code> или <code>ON KEY</code>.</p>
+            <p>Из очереди удаляется только первое подходящее событие. Остальные клавиши сохраняют порядок и могут быть прочитаны функциями <code>INKEY</code>, <code>KEYPRESS</code> или обработчиком <code>ON KEY</code>.</p>
 <pre><code class="language-axiom">PRINT KEYPRESS("LEFT")
 PRINT KEYPRESS("LEFT")</code></pre>
-            <p>Если пользователь нажал <code>LEFT</code> один раз, первый вызов напечатает <code>TRUE</code>, а второй — <code>FALSE</code>.</p>
+            <p>Если в очереди есть ровно одно нажатие <code>LEFT</code>, первый вызов возвращает <code>TRUE</code>, а следующий — <code>FALSE</code>.</p>
         </section>
 
         <section class="article-section">
@@ -85,8 +66,8 @@ PRINT KEYPRESS("LEFT")</code></pre>
 
         <section class="article-section">
             <h2>Модификаторы</h2>
-            <p>Встроенная функция <code>KEYPRESS</code> умеет проверять строковый аккорд клавиш через знак <code>+</code>. Последняя часть строки считается основной клавишей события, а все предыдущие части должны быть удержаны.</p>
-            <p>Проще говоря, <code>KEYPRESS("CTRL+ALT+DELETE")</code> значит: <code>CTRL</code> и <code>ALT</code> уже нажаты, а программа ждёт именно нажатие последней клавиши <code>DELETE</code>. Если оно пришло, событие <code>DELETE</code> расходуется.</p>
+            <p>В сочетании со знаком <code>+</code> последняя часть обозначает клавишу события. Все предыдущие части должны удерживаться.</p>
+            <p>Вызов <code>KEYPRESS("CTRL+ALT+DELETE")</code> ищет событие <code>DELETE</code> при удержании <code>CTRL</code> и <code>ALT</code>. Найденное событие <code>DELETE</code> удаляется.</p>
 <pre><code class="language-axiom">IF KEYPRESS("CTRL+LEFT") THEN
     PRINT "CTRL+LEFT"
 END IF
@@ -94,9 +75,12 @@ END IF
 IF KEYPRESS("CTRL+ALT+DELETE") THEN
     PRINT "CTRL+ALT+DELETE"
 END IF</code></pre>
-            <p>Форма <code>KEYPRESS("CTRL+F+A+X")</code> означает: <code>CTRL</code>, <code>F</code> и <code>A</code> удержаны, а событием пришла клавиша <code>X</code>. Если нужно проверить только удержание всех клавиш, используется встроенная функция <code>KEYDOWN</code>.</p>
-            <p>В <code>Electron IDE</code> модифицированные клавиши доставляются в очередь программы из активной поверхности ввода программы. Ввод поступает из консоли, окна <code>CANVAS</code> или нативного окна <code>SCREEN</code>, когда соответствующая поверхность имеет фокус. Клавиша Windows не доставляется как часть пользовательского ввода программы.</p>
+            <p>Аналогично, в <code>KEYPRESS("CTRL+F+A+X")</code> удерживаются <code>CTRL</code>, <code>F</code> и <code>A</code>, а нажатием завершающей клавиши служит <code>X</code>. Проверка удержания всех четырёх выполняется через <code>KEYDOWN</code>.</p>
+            <p>Electron IDE передаёт модифицированные клавиши из консоли, окна <code>CANVAS</code> или нативного окна <code>SCREEN</code>, имеющего фокус. Клавиша Windows в пользовательский ввод программы не передаётся.</p>
         </section>
+<section class="article-section"><h2>Аргумент функции и сохранение очереди</h2><p>Передайте <code>STRING</code> с именем клавиши либо сочетанием. <code>KEYPRESS</code> возвращает <code>BOOLEAN</code>: <code>TRUE</code> означает, что функция извлекла одно подходящее событие; <code>FALSE</code> — что подходящего события нет. Остальные события, включая повторные нажатия той же клавиши, остаются в очереди.</p>
+<p>Для сочетания последняя клавиша должна находиться в очереди событий, а предыдущие должны удерживаться в момент вызова. Пустая строка возвращает <code>FALSE</code>. Проверка не требует графического окна.</p></section>
+
 
         <section class="article-section">
             <h2>Диагностика</h2>
@@ -126,4 +110,7 @@ NEXT</code></pre>
             <div class="link-list"><a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a><a href="inkey.html">Функция INKEY</a><a href="keydown.html">Функция KEYDOWN</a><a href="on-key.html">Оператор ON KEY</a><a href="input.html">Оператор INPUT</a><a href="screen.html">Оператор SCREEN</a></div>
         </section>
 
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
+
+
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

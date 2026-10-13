@@ -1,134 +1,33 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Длина строки и фрагменты</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="string-functions-slices-and-length">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">LEN, LEFT, RIGHT и MID</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-<main class="content">
-<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Встроенные функции</span><span>/</span><span>Строки и символы</span></nav>
-<p class="eyebrow">Раздел</p>
-<h1 class="page-title">Длина строки и фрагменты</h1>
-<p class="lead">Раздел длины строки и фрагментов описывает функции <code>LEN</code>, <code>LEFT</code>, <code>RIGHT</code> и <code>MID</code> — основные средства измерения текста и извлечения его частей. Ниже приведены отдельные формы четырёх функций, а не одна общая конструкция. Функции работают в текстовых и графических программах без предварительного вызова оператора SCREEN.</p>
-
-<section class="article-section" id="len">
-<h2>LEN</h2>
-<p><code>LEN</code> — встроенная функция языка Axiom, которая возвращает длину строки в символах.</p>
-<p>Единицей длины служит UTF-16 кодовая единица. Базовые символы кириллицы и латиницы считаются одной единицей, а редкие символы за пределами базовой многоязычной плоскости Unicode — например, эмодзи — считаются двумя: <code>LEN("😀")</code> даёт <code>2</code>. Из этого следует поведение <code>LEFT</code>, <code>RIGHT</code> и <code>MID</code>: границы фрагментов отсчитываются в тех же единицах, поэтому фрагмент может разрезать такую пару и вернуть отдельную половинку. Полный символ из такой пары читают функции <code>ASC</code>/<code>ASCW</code> и строят <code>CHR</code>/<code>CHRW</code>, а <code>REVERSE</code> переворачивает строку, сохраняя пары целиком.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">length = LEN(text)</code></pre>
-<h3>Аргументы</h3><p><code>text</code> задаёт строку, длину которой нужно получить. Результат имеет тип <code>INTEGER</code>.</p>
-<p>Формы LEN, LEFT, RIGHT и MID без аргумента unit измеряют длину и позиции в единицах UTF-16. Пустая строка имеет длину 0; один эмодзи вроде 😀 имеет длину 2. Срез может разделить суррогатную пару, если граница проходит между её двумя единицами; автоматического расширения среза до целого символа нет.</p>
-<pre><code class="language-axiom">PRINT LEN("А😀Б")        ' 4
-PRINT MID("А😀Б", 2, 2)  ' 😀
-PRINT LEN(LEFT("😀", 1)) ' 1: половина суррогатной пары</code></pre>
-<h3>Пример длины строки</h3>
-<pre><code class="language-axiom">' Длина строки "Пример"
-PRINT LEN("Пример")</code></pre>
-<p>Результат:</p>
-<pre><code>6</code></pre>
-<h3>Форма с выбором единицы</h3>
-<pre><code class="language-axiom">length = LEN(text, unit)</code></pre>
-<p>Аргумент <code>text</code> должен быть строкой. Аргумент <code>unit</code> должен быть строкой <code>"UTF16"</code>, <code>"CODEPOINT"</code> или <code>"GRAPHEME"</code>; регистр букв не учитывается, пробелы автоматически не удаляются. <code>UTF16</code> выбирает кодовые единицы UTF-16 и совпадает с прежней формой. <code>CODEPOINT</code> выбирает Unicode-коды и сохраняет целые суррогатные пары. <code>GRAPHEME</code> выбирает составные символы: например, буква с отдельным знаком ударения или семейный эмодзи считаются одной графемой.</p>
-<p>Функция возвращает INTEGER — число выбранных единиц. Для пустой строки результат равен 0.</p>
-<h3>Ограничения и диагностика</h3>
-<p>Выбор графем использует границы текстовых элементов текущей платформы .NET. Функция не измеряет пиксельную ширину и не нормализует строку. В режиме CODEPOINT отдельная повреждённая суррогатная единица сохраняется и считается одной позицией. Результаты INSTR и других прежних позиционных функций измеряются в UTF-16; их нельзя напрямую использовать как позиции в другой единице.</p>
-<p>Неизвестный или пустой unit даёт MB3007, в том числе для пустого text. Неверный тип аргумента отклоняется до исполнения.</p>
-<h3>Пример составного символа</h3>
-<pre><code class="language-axiom">PRINT LEN("👨‍👩‍👧‍👦", "GRAPHEME") ' 1</code></pre>
-<p>Запускаемая программа: <a href="../../samples/functions/len/unicode_units.axm">unicode_units.axm</a>.</p>
-</section>
-
-<section class="article-section" id="left">
-<h2>LEFT</h2>
-<p><code>LEFT</code> — встроенная функция языка Axiom, которая возвращает указанное количество символов с начала строки.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">part = LEFT(text, count)</code></pre>
-<h3>Аргументы</h3><p><code>text</code> задаёт исходную строку. <code>count</code> задаёт, сколько символов нужно взять слева.</p>
-<h3>Количество символов слева</h3>
-<p>Количество символов должно быть строго больше нуля. Иначе выполнение завершается диагностикой <code>MB3007</code>.</p>
-<h3>Пример первых символов</h3>
-<pre><code class="language-axiom">' Первые два символа строки
-PRINT LEFT("abcdef", 2)</code></pre>
-<p>Результат:</p>
-<pre><code>ab</code></pre>
-<h3>Форма с выбором единицы</h3>
-<pre><code class="language-axiom">part = LEFT(text, count, unit)</code></pre>
-<p>Аргумент <code>text</code> должен быть строкой. Аргумент <code>unit</code> должен быть строкой <code>"UTF16"</code>, <code>"CODEPOINT"</code> или <code>"GRAPHEME"</code>; регистр букв не учитывается, пробелы автоматически не удаляются. <code>UTF16</code> выбирает кодовые единицы UTF-16 и совпадает с прежней формой. <code>CODEPOINT</code> выбирает Unicode-коды и сохраняет целые суррогатные пары. <code>GRAPHEME</code> выбирает составные символы: например, буква с отдельным знаком ударения или семейный эмодзи считаются одной графемой.</p>
-<p>Аргумент <code>count</code> должен быть положительным INTEGER и задаёт число выбранных единиц. Если единиц осталось меньше, функция возвращает весь доступный фрагмент. Для пустой строки результат — пустая строка. Результат имеет тип STRING.</p>
-<h3>Ограничения и диагностика</h3>
-<p>Выбор графем использует границы текстовых элементов текущей платформы .NET. Функция не измеряет пиксельную ширину и не нормализует строку. В режиме CODEPOINT отдельная повреждённая суррогатная единица сохраняется и считается одной позицией. Результаты INSTR и других прежних позиционных функций измеряются в UTF-16; их нельзя напрямую использовать как позиции в другой единице.</p>
-<p>Неизвестный или пустой unit даёт MB3007, в том числе для пустого text. Неверный тип аргумента отклоняется до исполнения.</p>
-<p>Нулевой или отрицательный count даёт MB3007.</p>
-<h3>Пример составного символа</h3>
-<pre><code class="language-axiom">PRINT LEFT("éтекст", 1, "GRAPHEME") ' é</code></pre>
-<p>Запускаемая программа: <a href="../../samples/functions/left/unicode_units.axm">unicode_units.axm</a>.</p>
-</section>
-
-<section class="article-section" id="right">
-<h2>RIGHT</h2>
-<p><code>RIGHT</code> — встроенная функция языка Axiom, которая возвращает указанное количество символов с конца строки.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">part = RIGHT(text, count)</code></pre>
-<h3>Аргументы</h3><p><code>text</code> задаёт исходную строку. <code>count</code> задаёт, сколько символов нужно взять справа.</p>
-<h3>Количество символов справа</h3>
-<p>Количество символов должно быть строго больше нуля. Иначе выполнение завершается диагностикой <code>MB3007</code>.</p>
-<h3>Пример последних символов</h3>
-<pre><code class="language-axiom">' Последние два символа строки
-PRINT RIGHT("abcdef", 2)</code></pre>
-<p>Результат:</p>
-<pre><code>ef</code></pre>
-<h3>Форма с выбором единицы</h3>
-<pre><code class="language-axiom">part = RIGHT(text, count, unit)</code></pre>
-<p>Аргумент <code>text</code> должен быть строкой. Аргумент <code>unit</code> должен быть строкой <code>"UTF16"</code>, <code>"CODEPOINT"</code> или <code>"GRAPHEME"</code>; регистр букв не учитывается, пробелы автоматически не удаляются. <code>UTF16</code> выбирает кодовые единицы UTF-16 и совпадает с прежней формой. <code>CODEPOINT</code> выбирает Unicode-коды и сохраняет целые суррогатные пары. <code>GRAPHEME</code> выбирает составные символы: например, буква с отдельным знаком ударения или семейный эмодзи считаются одной графемой.</p>
-<p>Аргумент <code>count</code> должен быть положительным INTEGER и задаёт число выбранных единиц. Если единиц осталось меньше, функция возвращает весь доступный фрагмент. Для пустой строки результат — пустая строка. Результат имеет тип STRING.</p>
-<h3>Ограничения и диагностика</h3>
-<p>Выбор графем использует границы текстовых элементов текущей платформы .NET. Функция не измеряет пиксельную ширину и не нормализует строку. В режиме CODEPOINT отдельная повреждённая суррогатная единица сохраняется и считается одной позицией. Результаты INSTR и других прежних позиционных функций измеряются в UTF-16; их нельзя напрямую использовать как позиции в другой единице.</p>
-<p>Неизвестный или пустой unit даёт MB3007, в том числе для пустого text. Неверный тип аргумента отклоняется до исполнения.</p>
-<p>Нулевой или отрицательный count даёт MB3007.</p>
-<h3>Пример составного символа</h3>
-<pre><code class="language-axiom">PRINT RIGHT("Страна: 🇷🇺", 1, "GRAPHEME") ' 🇷🇺</code></pre>
-<p>Запускаемая программа: <a href="../../samples/functions/right/unicode_units.axm">unicode_units.axm</a>.</p>
-</section>
-
-<section class="article-section" id="mid">
-<h2>MID</h2>
-<p><code>MID</code> — встроенная функция языка Axiom, которая возвращает фрагмент строки, начиная с заданной позиции.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">part = MID(text, start, count)</code></pre>
-<h3>Аргументы</h3><p><code>text</code> задаёт исходную строку. <code>start</code> задаёт начальную позицию. <code>count</code> задаёт длину фрагмента.</p>
-<h3>Позиция начала и длина фрагмента</h3>
-<p>Позиция считается с единицы. Если начало находится правее конца строки, функция возвращает пустую строку. Начальная позиция меньше <code>1</code> и количество меньше либо равно нулю дают <code>MB3007</code>.</p>
-<h3>Пример фрагмента из середины</h3>
-<pre><code class="language-axiom">' Фрагмент строки с третьего символа длиной два знака
-PRINT MID("abcdef", 3, 2)</code></pre>
-<p>Результат:</p>
-<pre><code>cd</code></pre>
-<h3>Форма с выбором единицы</h3>
-<pre><code class="language-axiom">part = MID(text, start, count, unit)</code></pre>
-<p>Аргумент <code>text</code> должен быть строкой. Аргумент <code>unit</code> должен быть строкой <code>"UTF16"</code>, <code>"CODEPOINT"</code> или <code>"GRAPHEME"</code>; регистр букв не учитывается, пробелы автоматически не удаляются. <code>UTF16</code> выбирает кодовые единицы UTF-16 и совпадает с прежней формой. <code>CODEPOINT</code> выбирает Unicode-коды и сохраняет целые суррогатные пары. <code>GRAPHEME</code> выбирает составные символы: например, буква с отдельным знаком ударения или семейный эмодзи считаются одной графемой.</p>
-<p>Аргумент <code>count</code> должен быть положительным INTEGER и задаёт число выбранных единиц. Если единиц осталось меньше, функция возвращает весь доступный фрагмент. Для пустой строки результат — пустая строка. Результат имеет тип STRING.</p>
-<p>Аргумент <code>start</code> должен быть INTEGER от 1 и задаёт позицию в выбранной единице. Если позиция находится за концом строки, результат — пустая строка. В форме с unit аргумент count обязателен.</p>
-<h3>Ограничения и диагностика</h3>
-<p>Выбор графем использует границы текстовых элементов текущей платформы .NET. Функция не измеряет пиксельную ширину и не нормализует строку. В режиме CODEPOINT отдельная повреждённая суррогатная единица сохраняется и считается одной позицией. Результаты INSTR и других прежних позиционных функций измеряются в UTF-16; их нельзя напрямую использовать как позиции в другой единице.</p>
-<p>Неизвестный или пустой unit даёт MB3007, в том числе для пустого text. Неверный тип аргумента отклоняется до исполнения.</p>
-<p>Нулевой или отрицательный count даёт MB3007. Значение start меньше 1 также даёт MB3007.</p>
-<h3>Пример составного символа</h3>
-<pre><code class="language-axiom">PRINT MID("А👨‍👩‍👧‍👦éБ", 2, 2, "GRAPHEME") ' 👨‍👩‍👧‍👦é</code></pre>
-<p>Запускаемая программа: <a href="../../samples/functions/mid/unicode_units.axm">unicode_units.axm</a>.</p>
-</section>
-
-<section class="article-section">
-<h2>Запускаемые примеры</h2>
-<ul class="resource-list"><li><a href="../../samples/functions/len/basic_usage.axm">LEN</a></li><li><a href="../../samples/functions/left/basic_usage.axm">LEFT</a></li><li><a href="../../samples/functions/right/basic_usage.axm">RIGHT</a></li><li><a href="../../samples/functions/mid/basic_usage.axm">MID</a></li></ul>
-</section>
-<section class="article-section">
-<h2>См. также</h2>
-<div class="link-list"><a href="string-functions.html">Строковые функции</a><a href="string-functions-trim-and-case.html">Обрезка, регистр и разворот строки</a><a href="string-functions-search-and-replace.html">Поиск и замена в строках</a><a href="data-types-strings-and-files.html">Тип STRING</a><a href="characters.html">Символы CHR, ASC, CHRW и ASCW</a></div>
-</section>
-
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Длина строки и фрагменты — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="string-functions-slices-and-length"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Длина строки и фрагменты</span></nav>
+<p class="eyebrow">Глава 8</p><h1 class="page-title">Длина строки и фрагменты</h1><p class="lead">В этом разделе описаны встроенные функции языка Axiom LEN, LEFT, RIGHT, MID. Они обрабатывают текст и возвращают результат без изменения исходной строки. Ниже приведён отдельный синтаксис и договор каждой функции.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="unicode-units"><h2>Единицы измерения текста</h2><p>Функции LEN, LEFT, RIGHT и MID имеют отдельные формы с выбором единицы. UTF16 считает кодовые единицы UTF-16; CODEPOINT — коды Unicode, сохраняя корректную суррогатную пару целиком; GRAPHEME — текстовые элементы .NET, например букву вместе с отдельным знаком ударения. Без выбора единицы используется UTF16.</p><p>Это длина текста, а не его ширина на экране. Строки не нормализуются. Изолированная суррогатная единица сохраняется и занимает одну позицию в режиме CODEPOINT. Позиции INSTR и INSTRREV всегда выражены в UTF-16: передавать их в MID с другой единицей без пересчёта нельзя.</p></section><section class="article-section" id="len"><h2>LEN</h2><p>LEN — встроенная функция языка Axiom, которая возвращает длину строки в выбранных единицах текста.</p><h3>Назначение и контекст</h3><p>Функция позволяет определить длину текста перед выделением фрагмента или проверкой ввода.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма 1:</p><pre><code class="language-axiom">LEN(&lt;текст&gt;)</code></pre><p>Форма 2:</p><pre><code class="language-axiom">LEN(&lt;текст&gt;, &lt;единица измерения&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;единица измерения&gt;</code></td><td>Передайте строку типа STRING: "UTF16", "CODEPOINT" или "GRAPHEME". Регистр букв несущественен, пробелы не удаляются. Без этого аргумента используется UTF16.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает целое число типа INTEGER — количество единиц выбранного вида. Для пустой строки результат равен 0.</p><h3>Правила и пограничные случаи</h3><p>Без аргумента единицы функция считает кодовые единицы UTF-16: обычная буква занимает одну, а эмодзи вне основной плоскости Unicode — две. Подробное сравнение единиц приведено в начале этой статьи.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает при пустой или неизвестной строке единицы измерения, в том числе если исходный текст пуст.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT LEN("А😀Б")
+PRINT LEN("А😀Б", "CODEPOINT")
+PRINT LEN("е́", "GRAPHEME")
+PRINT LEN("")</code></pre><p>Программа выводит:</p><pre><code>4
+3
+1
+0</code></pre></section>
+<section class="article-section" id="left"><h2>LEFT</h2><p>LEFT — встроенная функция языка Axiom, которая возвращает фрагмент заданной длины из начала строки.</p><h3>Назначение и контекст</h3><p>Функция подходит, чтобы извлечь префикс, например первые три буквы названия.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма 1:</p><pre><code class="language-axiom">LEFT(&lt;текст&gt;, &lt;количество&gt;)</code></pre><p>Форма 2:</p><pre><code class="language-axiom">LEFT(&lt;текст&gt;, &lt;количество&gt;, &lt;единица измерения&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;количество&gt;</code></td><td>Передайте целое число типа INTEGER, задающее количество единиц текста. Значение должно быть больше нуля.</td></tr><tr><td><code>&lt;единица измерения&gt;</code></td><td>Передайте строку типа STRING: "UTF16", "CODEPOINT" или "GRAPHEME". Регистр букв несущественен, пробелы не удаляются. Без этого аргумента используется UTF16.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING с указанным количеством единиц из начала текста.</p><h3>Правила и пограничные случаи</h3><p>Если количество больше длины текста, возвращается весь текст. Для пустого текста возвращается пустая строка. В режиме UTF16 граница может разделить суррогатную пару; CODEPOINT и GRAPHEME используют соответствующие границы текста.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает, если количество не больше нуля или указана неизвестная единица измерения.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT LEFT("Пример", 3)
+PRINT LEFT("А😀Б", 2, "CODEPOINT")
+PRINT "[" + LEFT("", 1) + "]"</code></pre><p>Программа выводит:</p><pre><code>При
+А😀
+[]</code></pre></section>
+<section class="article-section" id="right"><h2>RIGHT</h2><p>RIGHT — встроенная функция языка Axiom, которая возвращает фрагмент заданной длины из конца строки.</p><h3>Назначение и контекст</h3><p>Функция позволяет извлечь суффикс, например последние цифры кода.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма 1:</p><pre><code class="language-axiom">RIGHT(&lt;текст&gt;, &lt;количество&gt;)</code></pre><p>Форма 2:</p><pre><code class="language-axiom">RIGHT(&lt;текст&gt;, &lt;количество&gt;, &lt;единица измерения&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;количество&gt;</code></td><td>Передайте целое число типа INTEGER, задающее количество единиц текста. Значение должно быть больше нуля.</td></tr><tr><td><code>&lt;единица измерения&gt;</code></td><td>Передайте строку типа STRING: "UTF16", "CODEPOINT" или "GRAPHEME". Регистр букв несущественен, пробелы не удаляются. Без этого аргумента используется UTF16.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING с указанным количеством единиц из конца текста.</p><h3>Правила и пограничные случаи</h3><p>Если количество больше длины текста, возвращается весь текст. Для пустого текста возвращается пустая строка. Единица измерения определяет границы фрагмента так же, как у функции LEFT.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает, если количество не больше нуля или указана неизвестная единица измерения.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT RIGHT("Пример", 3)
+PRINT RIGHT("А😀Б", 2, "CODEPOINT")
+PRINT "[" + RIGHT("", 1) + "]"</code></pre><p>Программа выводит:</p><pre><code>мер
+😀Б
+[]</code></pre></section>
+<section class="article-section" id="mid"><h2>MID</h2><p>MID — встроенная функция языка Axiom, которая возвращает фрагмент строки, начиная с указанной позиции.</p><h3>Назначение и контекст</h3><p>Функция извлекает часть текста из его середины, например число внутри записи.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла. Исходные значения аргументов не изменяются.</p><h3>Синтаксис</h3><p>Форма 1:</p><pre><code class="language-axiom">MID(&lt;текст&gt;, &lt;начальная позиция&gt;, &lt;количество&gt;)</code></pre><p>Форма 2:</p><pre><code class="language-axiom">MID(&lt;текст&gt;, &lt;начальная позиция&gt;, &lt;количество&gt;, &lt;единица измерения&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте исходную строку типа STRING, которую функция должна обработать.</td></tr><tr><td><code>&lt;начальная позиция&gt;</code></td><td>Передайте целое число типа INTEGER с начальной позицией. Позиции отсчитываются от 1.</td></tr><tr><td><code>&lt;количество&gt;</code></td><td>Передайте целое число типа INTEGER, задающее количество единиц текста. Значение должно быть больше нуля.</td></tr><tr><td><code>&lt;единица измерения&gt;</code></td><td>Передайте строку типа STRING: "UTF16", "CODEPOINT" или "GRAPHEME". Регистр букв несущественен, пробелы не удаляются. Без этого аргумента используется UTF16.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING с фрагментом заданной длины, начиная с позиции 1 или более.</p><h3>Правила и пограничные случаи</h3><p>Если начальная позиция больше длины строки, результат пуст. Если до конца текста осталось меньше единиц, чем запрошено, возвращается остаток строки. Для пустого текста результат пуст. Аргумент количества обязателен; формы MID только с текстом и началом в Axiom нет.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает, если начало меньше 1, количество не больше нуля или строка единицы измерения неизвестна.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT MID("Пример", 2, 3)
+PRINT MID("А😀Б", 2, 1, "CODEPOINT")
+PRINT "[" + MID("abc", 9, 1) + "]"</code></pre><p>Программа выводит:</p><pre><code>рим
+😀
+[]</code></pre></section><section class="article-section"><h2>См. также</h2><div class="link-list"><a href="string-functions.html">Строковые функции</a><a href="string-functions-trim-and-case.html">Обрезка, регистр и разворот</a><a href="string-functions-search-and-replace.html">Поиск и замена подстрок</a><a href="string-functions-build-and-split.html">Построение строк и массивы строк</a><a href="characters.html">Коды символов</a><a href="regex-functions.html">Регулярные выражения</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

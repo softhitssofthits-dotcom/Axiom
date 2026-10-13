@@ -1,120 +1,26 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Срезы и представления массивов</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="arrays-slices">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Работа с частью массива</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="arrays.html">Массивы</a>
-                <span>/</span>
-                <span>Срезы</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Срезы и представления массивов</h1>
-            <p class="lead">Раздел срезов и представлений описывает выбор диапазона индексов без ручного копирования элементов — через <code>TO</code> в индексировании или функцию <code>ARRAYSLICE</code>.</p>
-
-            <section class="article-section">
-                <h2>Связь среза с исходным массивом</h2>
-                <p>Обычный срез является представлением: он смотрит на выбранную часть исходного массива. Если изменить элемент через представление, меняется тот же элемент исходного массива. Это удобно для строк, столбцов и прямоугольных областей, но важно помнить, что представление не является независимой копией.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Синтаксис</h2>
-                <pre><code class="language-axiom">&lt;представление&gt; = &lt;массив&gt;(&lt;начало&gt; TO &lt;конец&gt;)
-&lt;представление&gt; = &lt;массив&gt;(&lt;строка&gt;, &lt;начало&gt; TO &lt;конец&gt;)
-&lt;представление&gt; = &lt;массив&gt;(&lt;начало строки&gt; TO &lt;конец строки&gt;, &lt;начало столбца&gt; TO &lt;конец столбца&gt;)
-
-&lt;часть&gt; = ARRAYSLICE(&lt;массив&gt;, &lt;начальный индекс&gt;, &lt;количество&gt;)
-&lt;часть&gt; = ARRAYSLICE(&lt;массив&gt;, &lt;начальный индекс&gt;, &lt;количество&gt;, &lt;измерение&gt;)</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Параметры и части синтаксиса</h2>
-                <ul>
-                    <li><code>&lt;начало&gt; TO &lt;конец&gt;</code> - включительный диапазон индексов в форме индексирования.</li>
-                    <li><code>&lt;строка&gt;</code> - фиксированный индекс первого измерения, если выбирается часть одной строки.</li>
-                    <li><code>&lt;начальный индекс&gt;</code> - первый индекс для <code>ARRAYSLICE</code>.</li>
-                    <li><code>&lt;количество&gt;</code> - сколько элементов или срезов нужно взять.</li>
-                    <li><code>&lt;измерение&gt;</code> - измерение, вдоль которого строится срез в многомерном массиве.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Назначение среза</h2>
-                <ul>
-                    <li>Чтобы передать в процедуру только часть массива.</li>
-                    <li>Чтобы обработать одну строку, один столбец или прямоугольный блок двумерного массива.</li>
-                    <li>Чтобы избежать ручного цикла копирования, когда копия не нужна.</li>
-                    <li>Чтобы явно взять участок по началу и длине через <code>ARRAYSLICE</code>.</li>
-                </ul>
-                <p>Операции, которые меняют размер массива, не выполняются через представление для группы <code>ARRAYPUSH</code>, <code>ARRAYPOP</code>, <code>ARRAYINSERT</code> и <code>ARRAYREMOVE</code>. Для изменения размера используйте сам исходный массив.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Пример среза без ручного копирования</h2>
-                <pre><code class="language-axiom">' Ожидаемый вывод:
-' 20
-' 99
-DIM board(1 TO 3, 1 TO 4) AS INTEGER
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Срезы и представления — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="arrays-slices"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Срезы и представления</span></nav>
+<p class="eyebrow">10 · Массивы</p><h1 class="page-title">Срезы и представления</h1><p class="lead">Раздел срезов и представлений описывает выбор области элементов массива Axiom. Частичное индексирование и диапазон TO создают представления общей памяти; функции копирования создают независимые массивы.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Зачем выбирать область</h2><p>Представление позволяет работать с одной строкой, столбцом или прямоугольным блоком без копирования элементов. Чтение и запись обращаются к исходному хранилищу. Для независимой обработки используйте ARRAYCLONE или ARRAYSLICE. Источник должен быть выделен; графический режим не требуется.</p></section>
+<section class="article-section"><h2>Отдельные формы</h2><pre><code class="language-axiom">&lt;представление&gt; = &lt;массив&gt;(&lt;фиксированный индекс&gt;)</code></pre><pre><code class="language-axiom">&lt;представление&gt; = &lt;массив&gt;(&lt;фиксированный индекс&gt;, &lt;начало&gt; TO &lt;конец&gt;)</code></pre><pre><code class="language-axiom">&lt;представление&gt; = &lt;массив&gt;(&lt;начало 1&gt; TO &lt;конец 1&gt;, &lt;начало 2&gt; TO &lt;конец 2&gt;)</code></pre></section>
+<section class="article-section"><h2>Части записи</h2><p>Массив задаёт исходное хранилище. Фиксированный индекс является числовым выражением и выбирает координату измерения, исключаемого из результата. Начало и конец являются числовыми выражениями и задают включительный диапазон сохраняемого измерения. Представление — массивная переменная подходящего типа и ранга.</p></section>
+<section class="article-section"><h2>Границы и общая память</h2><p>Границы представления остаются логическими границами выбранной области. Изменения элемента через представление видны в источнике. REDIM и ERASE для представления запрещены с MB3007; то же ограничение действует для ARRAYPUSH, ARRAYPOP, ARRAYINSERT и ARRAYREMOVE. ARRAYFILL, ARRAYREVERSE и ARRAYSORT могут менять доступные элементы представления.</p></section>
+<section class="article-section"><h2>Диагностика</h2><p>MB2003 означает несовместимый тип элемента или индекса, MB2004 — неверное число индексов. MB3002 возникает, когда индекс или диапазон при индексировании выходит за границы. MB3005 возникает при доступе к невыделенному массиву либо при недопустимой паре границ. MB3007 сообщает о запрещённой нижней границе -2147483648; выход числового значения за диапазон INTEGER даёт MB3008.</p><p>Для независимой копии выборки функции ARRAYSLICE, ARRAYTAKE и ARRAYSKIP имеют собственные правила пустых границ: <a href="arrays-and-builtins.html#arrayslice">функции выборки</a>.</p></section>
+<section class="article-section"><h2>Пример связи с источником</h2><pre><code class="language-axiom">DIM board(1 TO 2, 2 TO 4) AS INTEGER
+board(2, 3) = 20
 DIM rowPart() AS INTEGER
-
-board(2, 2) = 20
-board(2, 3) = 30
-board(2, 4) = 40
-
-rowPart = board(2, 2 TO 4)
-PRINT rowPart(2)
-
+rowPart = board(2)
+PRINT rowPart(3)
 rowPart(3) = 99
-PRINT board(2, 3)</code></pre>
-                <pre><code class="language-axiom">DIM values(1 TO 5) AS INTEGER
-DIM part() AS INTEGER
-
-part = ARRAYSLICE(values, 2, 3)</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/smoke/multidimensional-arrays/range_indexing_view.axm">Представление на прямоугольный диапазон</a></li>
-                    <li><a href="../../samples/smoke/multidimensional-arrays/partial_indexing_view.axm">Представление на часть строки</a></li>
-                    <li><a href="../../samples/functions/arrayslice/basic_usage.axm">ARRAYSLICE: базовое использование</a></li>
-                    <li><a href="../../samples/functions/arrayslice/by_column.axm">ARRAYSLICE: срез по столбцу</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="arrays-indexing.html">Индексирование массивов</a>
-                    <a href="arrays-2d.html">Двумерные массивы</a>
-                    <a href="arrays-functions.html#arrayslice">ARRAYSLICE</a>
-                    <a href="arrays-functions.html">ARRAY-функции</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+PRINT board(2, 3)</code></pre><p>Ожидаемый вывод:</p><pre><code>20
+99</code></pre></section>
+<section class="article-section"><h2>См. также</h2><p><a href="arrays-indexing.html">Индексирование</a> · <a href="arrays-and-builtins.html">Копирование и выборка</a> · <a href="arrays-functions.html">Изменение размера</a></p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

@@ -1,0 +1,17 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const manual=path.join(root,'docs/manual');
+const inventory=JSON.parse(fs.readFileSync(path.join(manual,'data/language-reference.json'),'utf8'));
+const dictionary={keywords:inventory.keywords,types:inventory.types,builtins:inventory.functions.map(fn=>fn.name)};
+fs.writeFileSync(path.join(manual,'scripts/code-dictionary.js'),'// Сформировано из действующего реестра языка.\nwindow.AxiomCodeDictionary = '+JSON.stringify(dictionary,null,2)+';\n');
+const editor=fs.readFileSync(path.join(root,'ide/src/renderer/app.js'),'utf8');
+const light=editor.split("defineTheme('axiom-light'")[1]?.split("defineTheme('axiom-dark'")[0];
+if(!light)throw new Error('Не найдена светлая тема редактора Axiom.');
+const rules=[...light.matchAll(/\{ token: '([^']+)', foreground: '([0-9a-fA-F]+)'(?:, fontStyle: '([^']+)')? \}/g)];
+if(rules.length<10)throw new Error('Не удалось прочитать палитру редактора.');
+const css='/* Сформировано из axiom-light в ide/src/renderer/app.js. */\n'+rules.map(([,token,color,style])=>`.axiom-token--${token.replaceAll('.','-')}{color:#${color};${style==='italic'?'font-style:italic;':''}}`).join('\n')+'\n.axiom-token--placeholder{color:#59636e}\n';
+fs.writeFileSync(path.join(manual,'styles/code-colors.css'),css);
+fs.copyFileSync(path.join(root,'ide/src/renderer/semantic-colors.js'),path.join(manual,'scripts/semantic-colors.js'));
+console.log(`Подсветка: ${dictionary.builtins.length} функций, ${dictionary.types.length} типов; ${rules.length} цветов из axiom-light.`);

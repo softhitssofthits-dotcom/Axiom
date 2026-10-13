@@ -1,127 +1,26 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Массивы</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="arrays">
-<header class="topbar">
-    <div class="topbar__inner">
-        <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Одномерные, двумерные и многомерные массивы</div>
-        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-    </div>
-</header>
-<div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-    <main class="content">
-        <nav class="breadcrumbs" aria-label="Хлебные крошки">
-            <a href="index.html">Главная</a>
-            <span>/</span>
-            <a href="reference.html">Алфавитный и тематический указатель</a>
-            <span>/</span>
-            <span>Массивы</span>
-        </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Массивы</h1>
-            <p class="lead">Раздел массивов описывает, как Axiom объединяет несколько значений одного типа под одним именем: объявление, изменение размеров, индексирование и ARRAY-функции.</p>
-
-        <section class="article-section">
-            <h2>Определение массива</h2>
-            <p>Массив — упорядоченный набор элементов одного типа. Положение элемента определяется индексом в каждом измерении. Одномерный массив использует один индекс, двумерный — два, многомерный — число индексов, равное рангу массива.</p>
-            <p>Границы индексов задаются явно и входят в видимую модель массива. Поэтому массив Axiom не обязан начинаться с единицы: программа может выбрать тот диапазон, который соответствует задаче, а затем использовать <code>LBOUND</code>, <code>UBOUND</code> и другие функции, чтобы читать эти границы без догадок.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Модель массива</h2>
-            <ul>
-                <li>массив имеет тип элемента, например <code>INTEGER</code> или <code>STRING</code>;</li>
-                <li>каждое измерение имеет собственные включительные границы;</li>
-                <li>поддержаны одномерные, двумерные и многомерные формы;</li>
-                <li>динамические массивы можно перераспределять через <code>REDIM</code> и <code>REDIM PRESERVE</code>;</li>
-                <li>часть ARRAY-функций для ранга <code>2+</code> работает по выбранному измерению, а не по скрытому уплощённому списку.</li>
-            </ul>
-            <p>Срезы и частичное индексирование не создают отдельную таблицу автоматически. Там, где страница срезов говорит о представлении, результат смотрит на ту же область хранения, что и исходный массив. Это важно учитывать при изменении элементов через полученный срез.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Формы массивов</h2>
-            <div class="cards-grid">
-                <article class="card">
-                    <h3><a href="arrays-1d.html">Одномерные массивы</a></h3>
-                    <p>Когда нужен обычный список значений и базовые операции по одному индексу.</p>
-                </article>
-                <article class="card">
-                    <h3><a href="arrays-2d.html">Двумерные массивы</a></h3>
-                    <p>Когда данные удобнее мыслить как таблицу из строк и столбцов.</p>
-                </article>
-                <article class="card">
-                    <h3><a href="arrays-multidimensional.html">Многомерные массивы</a></h3>
-                    <p>Когда важно хранить прямоугольный набор данных ранга выше двух.</p>
-                </article>
-                <article class="card">
-                    <h3><a href="arrays-dynamic.html">Динамические массивы</a></h3>
-                    <p>Когда размер массива известен не сразу или меняется во время работы программы.</p>
-                </article>
-                <article class="card">
-                    <h3><a href="arrays-indexing.html">Индексирование</a></h3>
-                    <p>Когда нужно точно понять форму доступа к элементам, подмассивам и диапазонным срезам.</p>
-                </article>
-                <article class="card">
-                    <h3><a href="arrays-slices.html">Срезы и представления</a></h3>
-                    <p>Когда нужно взять часть массива без ручного копирования и понять, где результат остаётся представлением.</p>
-                </article>
-                <article class="card">
-                    <h3><a href="arrays-functions.html">ARRAY-функции</a></h3>
-                    <p>Когда нужна сортировка, фильтрация, объединение, метаданные и другие операции над массивами.</p>
-                </article>
-                <article class="card">
-                    <h3><a href="arrays-diagnostics.html">Ошибки массивов</a></h3>
-                    <p>Когда нужно разобраться с неверными границами, невыделенными массивами и конфликтами размерностей.</p>
-                </article>
-            </div>
-        </section>
-
-        <section class="article-section">
-            <h2>Обращение к элементу</h2>
-            <pre><code class="language-axiom">DIM scores(1 TO 3) AS INTEGER
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Массивы — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="arrays"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Массивы</span></nav>
+<p class="eyebrow">10 · Массивы</p><h1 class="page-title">Массивы</h1><p class="lead">Массив — тип данных языка Axiom, который хранит элементы одного типа и позволяет обращаться к ним по индексам. Раздел объясняет объявления, границы, размерность, изменение размера и встроенную обработку массивов.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Для чего нужен массив</h2><p>Массив объединяет связанные значения под одним именем. Например, вместо отдельных переменных для каждой оценки можно объявить scores и обрабатывать оценки циклом. Одномерный массив задаёт последовательность, двумерный — прямоугольную таблицу, массив большего ранга — набор значений с несколькими независимыми координатами.</p></section>
+<section class="article-section"><h2 id="lower-bound">Нижняя граница массива</h2><p>В Axiom нет общей нижней границы массива по умолчанию. При объявлении массива с выделением элементов программист явно задаёт нижнюю и верхнюю границы каждого измерения через <code>TO</code>. Например, <code>DIM a(0 TO 9) AS INTEGER</code> создаёт десять элементов с индексами от 0 до 9, а <code>DIM b(1 TO 10) AS INTEGER</code> — десять элементов с индексами от 1 до 10. Нижняя граница может быть и отрицательной: <code>DIM c(-2 TO 2) AS INTEGER</code> создаёт пять элементов. Обе границы включаются в диапазон.</p><p>Границы могут задаваться числовыми выражениями: программа вычисляет их при выполнении объявления. Сокращённая форма <code>DIM a(10) AS INTEGER</code>, в которой указана только верхняя граница, не поддерживается. Объявление <code>DIM a() AS INTEGER</code> создаёт динамический массив без выделенных элементов; оно не выбирает начало с нуля или единицы. Границы появятся после <code>REDIM</code> с явным диапазоном либо после присваивания выделенного массива.</p><p>Если массив возвращает встроенная функция, границы определяются правилами этой функции. Например, <code>SPLIT</code> возвращает массив с индексами от 1 до числа элементов, а <code>ARRAYTOSORTED</code> сохраняет границы исходного массива. Поэтому нельзя считать, что все массивы Axiom начинаются с нуля или с единицы. Фактические границы выделенного массива можно узнать через <code>LBOUND</code> и <code>UBOUND</code>.</p></section>
+<section class="article-section"><h2>Тип, ранг и состояние</h2><p>Тип элемента и ранг определяются объявлением. Ранг равен числу измерений. Каждое измерение имеет включительные нижнюю и верхнюю границы, которые можно узнать через LBOUND и UBOUND. ARRAYLENGTH считает все видимые элементы. ARRAYISALLOCATED отличает невыделенный массив от выделенного пустого массива.</p><p>Форма DIM scores(1 TO 3) AS INTEGER сразу создаёт элементы с нулевыми значениями. Форма DIM scores() AS INTEGER объявляет массив ранга 1 без элементов; перед доступом требуется REDIM или присваивание выделенного массива. Графический режим для массивов не нужен.</p></section>
+<section class="article-section"><h2>Первые действия с массивом</h2><pre><code class="language-axiom">DIM scores(1 TO 3) AS INTEGER
 scores(1) = 10
 scores(2) = 20
 scores(3) = 30
-
-PRINT scores(2)</code></pre>
-            <p>Здесь <code>scores</code> — одномерный массив целых чисел, а число в скобках выбирает один элемент. В двумерной форме запись вроде <code>board(row, column)</code> использует уже два индекса. Если индексов указано меньше, чем измерений у многомерного массива, результатом может стать подмассив; если в индексном списке используется диапазон <code>TO</code>, результатом становится срез.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Запускаемые примеры</h2>
-            <ul class="resource-list">
-                <li><a href="../../samples/smoke/multidimensional-arrays/two_dimensional_grid.axm">Двумерная сетка и многомерные границы</a></li>
-                <li><a href="../../samples/functions/arraypush/multidimensional_by_column.axm">ARRAYPUSH по измерению</a></li>
-                <li><a href="../../samples/functions/arrayinsert/multidimensional_by_column.axm">ARRAYINSERT по измерению</a></li>
-                <li><a href="../../samples/functions/arrayslice/by_column.axm">ARRAYSLICE для двумерного массива</a></li>
-            </ul>
-        </section>
-
-        <section class="article-section">
-            <h2>См. также</h2>
-            <div class="link-list">
-                <a href="data-types.html">Типы данных</a>
-                <a href="variables-and-constants.html">Переменные и константы</a>
-                <a href="arrays-functions.html">ARRAY-функции</a>
-                <a href="arrays-diagnostics.html">Ошибки массивов</a>
-            </div>
-        </section>
-
-        <div id="page-pager" class="pager"></div>
-    </main>
-</div>
-<script src="scripts/manual.js"></script>
-</body>
-</html>
+FOR i = LBOUND(scores) TO UBOUND(scores)
+    PRINT scores(i)
+NEXT</code></pre><p>Ожидаемый вывод:</p><pre><code>10
+20
+30</code></pre></section>
+<section class="article-section"><h2>Общая память и копии</h2><p>Обычное присваивание массива другой массивной переменной сохраняет общий массив. Изменение элемента будет видно через оба имени. Представление, созданное частичным индексированием или диапазоном TO, также работает с исходными элементами. Для независимого результата применяйте ARRAYCLONE или другую функцию копирования.</p></section>
+<section class="article-section"><h2>Темы раздела</h2><p><a href="arrays-1d.html">Одномерные массивы</a> · <a href="arrays-2d.html">Двумерные массивы</a> · <a href="arrays-multidimensional.html">Многомерные массивы</a> · <a href="arrays-dynamic.html">Выделение и изменение размера</a> · <a href="arrays-indexing.html">Индексирование</a> · <a href="arrays-slices.html">Представления</a> · <a href="arrays-functions.html">Форма и размер</a> · <a href="arrays-and-builtins.html">Обработка элементов</a> · <a href="arrays-diagnostics.html">Диагностика</a></p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

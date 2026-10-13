@@ -802,7 +802,7 @@ PRINT name
         Assert.True(result.Succeeded);
         Assert.Equal(["Ada"], host.Output);
         var request = Assert.Single(host.InputRequests);
-        Assert.Null(request.PromptText);
+        Assert.Equal("? ", request.PromptText);
         Assert.Equal(1, request.ValueCount);
     }
 
@@ -867,7 +867,7 @@ PRINT name
         Assert.True(result.Succeeded);
         Assert.Equal(["Ada"], host.Output);
         var request = Assert.Single(host.InputRequests);
-        Assert.Equal("Name", request.PromptText);
+        Assert.Equal("Name? ", request.PromptText);
         Assert.Equal(1, request.ValueCount);
     }
 

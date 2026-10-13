@@ -1,111 +1,19 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Функции даты и времени</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="date-time-functions">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Текущие значения, календарные части, арифметика и часовые пояса</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный и тематический указатель</a>
-                <span>/</span>
-                <span>Функции даты и времени</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Функции даты и времени</h1>
-            <p class="lead">Раздел функций даты и времени описывает средства Axiom для работы со значениями даты и времени типов <code>DATE</code>, <code>TIME</code> и <code>DATETIME</code> в канонических форматах: получение текущего значения, сборка даты из частей, извлечение компонентов, календарная арифметика и преобразование между часовыми поясами.</p>
-
-            <section class="article-section">
-                <h2>Канонические форматы</h2>
-                <ul>
-                    <li>Дата: <code>yyyy-MM-dd</code></li>
-                    <li>Время: <code>HH:mm:ss</code></li>
-                    <li>Дата и время: <code>yyyy-MM-dd HH:mm:ss</code></li>
-                </ul>
-                <p>Именно такой вид имеют значения типов <code>DATE</code>, <code>TIME</code> и <code>DATETIME</code> при выводе, и именно такие строки принимают функции этого раздела на вход. Локальные формы вроде <code>20.04.2026</code> или сокращённое время вроде <code>14:05</code> здесь не используются.</p>
-            </section>
-
-            <section class="article-section" id="typed-values">
-                <h2>Типизированные значения даты и времени</h2>
-                <p>Значения даты и времени в Axiom являются типизированными: тип <code>DATE</code> хранит дату, тип <code>TIME</code> хранит время суток, а тип <code>DATETIME</code> хранит дату и время вместе. Такие переменные объявляются обычным способом:</p>
-                <pre><code class="language-axiom">DIM day AS DATE
-DIM moment AS TIME
-
-day = DATE()
-moment = TIME()</code></pre>
-                <p>Значения этих типов сравниваются операторами <code>=</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code> и <code>&gt;=</code>, поэтому дату или время можно проверять так же, как числа. Подробности о типах, диапазонах и преобразованиях находятся в разделе <a href="data-types.html">Типы данных</a>.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Основные правила</h2>
-                <ul>
-                    <li><code>DATE</code>, <code>TIME</code> и <code>NOW</code> могут вызываться как без аргументов, так и с часовым поясом в квадратных скобках на соответствующих справочных страницах.</li>
-                    <li>Большинство функций этого раздела принимают каноническую строку либо значение типов <code>DATE</code>, <code>TIME</code>, <code>DATETIME</code>. Функции текущих значений, сборки и календарных частей возвращают типизированные значения, а числовые и логические результаты имеют явно указанный тип.</li>
-                    <li>Если строка даты или времени записана не в каноническом формате либо токен интервала не поддерживается, функция завершается диагностикой времени выполнения.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Куда перейти за конкретной задачей</h2>
-                <div class="link-list">
-                    <a href="date-time-functions-current.html">Текущие дата и время</a>
-                    <a href="date-time-functions-parts-and-serial.html">Сборка даты и календарные части</a>
-                    <a href="date-time-functions-arithmetic-and-validation.html">Арифметика, разбор и проверка</a>
-                    <a href="date-time-functions-time-zones.html">UTC и часовые пояса</a>
-                </div>
-            </section>
-
-            <section class="article-section">
-                <h2>Группы функций даты и времени</h2>
-                <p>Для текущих значений используются <code>DATE</code>, <code>TIME</code>, <code>NOW</code> и их UTC-варианты. Для сборки даты из чисел используются <code>DATESERIAL</code> и <code>TIMESERIAL</code>. Для чтения отдельных частей служат <code>YEAR</code>, <code>MONTH</code>, <code>DAY</code>, <code>HOUR</code> и соседние функции. Для расчётов между датами используются <code>DATEADD</code>, <code>DATEDIFF</code> и <code>DATEPART</code>, а для часовых поясов - <code>UTCOFFSET</code>, <code>TOUTC</code> и <code>FROMUTC</code>.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/functions/date/basic_usage.axm">DATE: текущая локальная дата</a></li>
-                    <li><a href="../../samples/functions/now/basic_usage.axm">NOW: текущие дата и время</a></li>
-                    <li><a href="../../samples/functions/dateserial/basic_usage.axm">DATESERIAL: построение даты</a></li>
-                    <li><a href="../../samples/functions/dateadd/month_end_shift.axm">DATEADD: сдвиг даты</a></li>
-                    <li><a href="../../samples/functions/datediff/day_boundary.axm">DATEDIFF: разница между датами</a></li>
-                    <li><a href="../../samples/functions/utcoffset/current_local_offset.axm">UTCOFFSET: локальное смещение</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="date-time-functions-current.html">Текущие дата и время</a>
-                    <a href="date-time-functions-parts-and-serial.html">Сборка даты и календарные части</a>
-                    <a href="date-time-functions-arithmetic-and-validation.html">Арифметика, разбор и проверка</a>
-                    <a href="date-time-functions-time-zones.html">UTC и часовые пояса</a>
-                    <a href="data-types.html">Типы данных</a>
-                    <a href="numeric-functions.html">Числовые функции</a>
-                    <a href="string-functions.html">Строковые функции</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Дата и время — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="date-time-functions"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Дата и время</span></nav>
+<p class="eyebrow">Справочник языка</p><h1 class="page-title">Дата и время</h1><p class="lead">Раздел «Дата и время» описывает типы DATE, TIME и DATETIME, чтение часов, календарные компоненты, арифметику, разбор строк и часовые пояса.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="temporal-types"><h2>Значения и запись</h2>
+<p>DATE хранит календарную дату с годом от 1 до 9999. TIME хранит время суток без календарной даты. DATETIME хранит дату и время суток без собственного часового пояса. При печати используются формы yyyy-MM-dd, HH:mm:ss и yyyy-MM-dd HH:mm:ss соответственно.</p><p>Начальные значения неинициализированных переменных — 0001-01-01, 00:00:00 и 0001-01-01 00:00:00. Строковая запись остаётся STRING, пока не выполнено допустимое преобразование.</p></section>
+<section class="article-section" id="temporal-assignment"><h2>Преобразование и арифметика</h2>
+<p>Каноническая строка может преобразоваться в временной тип при присваивании. DATE при преобразовании в DATETIME дополняется полуночью; TIME — минимальной календарной датой. Присваивание DATETIME переменной DATE или TIME отклоняется, чтобы не терять часть значения неявно.</p><p>DATEADD, DATEDIFF и DATEPART принимают только типизированные временные аргументы, без строкового преобразования. Для строки сначала используют DATEVALUE или TIMEVALUE; для DATETIME можно объявить переменную с канонической строковой инициализацией. Часовой пояс задаётся отдельным строковым аргументом соответствующих функций.</p></section>
+<section class="article-section" id="typed-values"><h2>Пример типизированной даты</h2><pre><code class="language-axiom">DIM calendarDay AS DATE = "2024-01-31"
+PRINT DATEADD("m", 1, calendarDay)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>2024-02-29</code></pre></section>
+<section class="article-section"><h2>Темы раздела</h2><ul><li><a href="date-time-functions-current.html">Текущие дата и время</a> — чтение часов и TIMER.</li><li><a href="date-time-functions-parts-and-serial.html">Календарные компоненты</a> — сборка даты, имена месяцев, високосность и границы периодов.</li><li><a href="date-time-functions-arithmetic-and-validation.html">Арифметика и разбор</a> — смещение, подсчёт границ и проверка строк.</li><li><a href="date-time-functions-time-zones.html">Часовые пояса</a> — смещение в минутах и перевод между местным временем и UTC.</li></ul></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

@@ -1,32 +1,24 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom — Вызовы процедур и функций</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="calls">
-<header class="topbar">
-    <div class="topbar__inner">
-        <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Справочник по реализованному языку Axiom</div>
-        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-    </div>
-</header>
-<div class="layout">
-    <aside class="sidebar">
-        <div class="sidebar__inner">
-            <nav id="manual-nav"></nav>
-        </div>
-    </aside>
-    <main class="content"><nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><a href="operator-reference.html">Операторы</a><span>/</span><span>Вызовы процедур и функций</span></nav><p class="eyebrow">Справочная статья</p><h1 class="page-title">Вызовы процедур и функций</h1><p class="lead">Вызов — форма языка Axiom, которая передаёт управление процедуре, функции или методу и связывает аргументы с параметрами. Функция возвращает результат; процедура выполняет действие.</p>
-<section class="article-section"><h2>Синтаксис</h2><pre><code class="language-axiom">&lt;имя&gt;(&lt;аргументы&gt;)</code></pre><pre><code class="language-axiom">&lt;получатель&gt;.&lt;метод&gt;(&lt;аргументы&gt;)</code></pre><p>Для вызова без аргументов скобки сохраняются: <code>Name()</code>. Вызов функции может входить в выражение или записываться отдельной инструкцией; в последнем случае результат не используется.</p></section><section class="article-section"><h2>Аргументы</h2><p>Аргументы записываются через запятую в порядке параметров. Число аргументов и их типы должны соответствовать выбранной форме вызова. Формы всех встроенных функций перечислены в <a href="function-reference.html">полном справочнике функций</a>.</p><p>Параметр <code>BYVAL</code> получает значение по правилам копирования соответствующего типа. Параметр <code>BYREF</code> связывается с изменяемым местом хранения; подробные ограничения определены в статьях <a href="sub.html">SUB</a> и <a href="function.html">FUNCTION</a>.</p><p>Именованная запись <code>FieldName := expression</code> служит для полей литерала записи <code>TYPE</code>. Она не является общей формой именованных аргументов процедур и встроенных функций.</p></section><section class="article-section"><h2>Функциональные значения</h2><p>Функция без параметров <code>BYREF</code> может использоваться как значение: сохраняться в переменной функционального типа, передаваться другой функции и возвращаться из функции. Вызов такого значения записывается со скобками.</p><p>Массивные функции обработки принимают функциональные значения с указанным договором: <code>ARRAYEVERY</code>, <code>ARRAYSOME</code> и <code>ARRAYFILTER</code> — <code>FUNCTION(T) AS BOOLEAN</code>; <code>ARRAYMAP</code> — <code>FUNCTION(T) AS U</code>; <code>ARRAYREDUCE</code> — <code>FUNCTION(A, T) AS A</code>. Массивный результат <code>U</code> у функции преобразования не допускается.</p></section><section class="article-section"><h2>Диагностика</h2><ul><li><code>MB2004</code> — число аргументов не соответствует форме вызова.</li><li><code>MB2003</code> — тип аргумента несовместим с типом параметра.</li><li><code>MB2020</code> — значение нельзя вызвать.</li><li><code>MB2029</code> — функция с параметром <code>BYREF</code> используется как функциональное значение.</li><li><code>MB2040</code> — отдельная инструкция содержит выражение без вызова, например одиночный литерал или имя.</li></ul></section><section class="article-section"><h2>Пример</h2><pre><code class="language-axiom">FUNCTION DoubleValue(value AS INTEGER) AS INTEGER
-    RETURN value * 2
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Вызовы — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="calls"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Вызовы</span></nav>
+<p class="eyebrow">11 · Процедуры и функции</p><h1 class="page-title">Вызовы</h1><p class="lead">Раздел вызовов описывает форму языка Axiom, которая выполняет процедуру, функцию или метод с указанными аргументами. Объявление определяет число и типы параметров, способ передачи и наличие результата.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Назначение и контекст</h2><p>Вызов допустим на верхнем уровне и в теле подпрограммы. SUB выполняется отдельной инструкцией; FUNCTION может участвовать в выражении или выполняться отдельной инструкцией с отброшенным результатом. Метод вызывает тело объявления внутри TYPE для указанной записи.</p></section>
+<section class="article-section"><h2>Отдельные формы</h2><pre><code class="language-axiom">&lt;имя&gt;([&lt;аргументы&gt;])</code></pre><pre><code class="language-axiom">&lt;функциональное значение&gt;([&lt;аргументы&gt;])</code></pre><pre><code class="language-axiom">&lt;запись&gt;.&lt;метод&gt;([&lt;аргументы&gt;])</code></pre></section>
+<section class="article-section"><h2>Части записи</h2><p>Имя обозначает объявленную подпрограмму или встроенную функцию. Функциональное значение имеет тип FUNCTION с подходящими параметрами и результатом. Запись является значением пользовательского TYPE; метод объявлен внутри этого типа. Аргументы — выражения через запятую в порядке параметров. Даже пустой вызов требует скобок.</p></section>
+<section class="article-section"><h2>Передача и ограничения</h2><p>Имя обозначает подпрограмму. Список параметров содержит объявления через запятую. Каждый параметр задаёт имя и тип после AS; пустой список допустим. Список аргументов содержит выражения в том же порядке. Тип аргумента должен совпадать с типом параметра либо допускать предусмотренное языком преобразование.</p><p>BYVAL применяется по умолчанию и передаёт значение. Присваивание скалярному параметру не меняет переменную вызывающего кода. TYPE копируется с вложенными записями и фиксированными массивными полями; динамические массивные поля обычной длины сохраняют общий массив, как описано в <a href="type.html#copying">правилах копирования TYPE</a>. Обычный массив при BYVAL сохраняет общее хранилище: изменение элемента видно снаружи, хотя присваивание самому параметру другого массива не заменяет переменную вызывающего кода.</p><p>BYREF связывает параметр с простым именем переменной. Тип должен точно совпадать; преобразование аргумента не допускается. Поле записи, элемент массива и вычисляемое выражение не являются допустимым аргументом BYREF. Проверка имени CONST в текущей реализации не запрещает запись через BYREF: такая запись может изменить константу. Для изменяемого аргумента используйте обычную переменную DIM.</p><p>Именованные аргументы Field := value поддерживаются только в именованном литерале TYPE; обычные подпрограммы и встроенные функции принимают позиционные аргументы. Все формы встроенных функций перечислены в <a href="function-reference.html">каталоге функций</a>.</p></section>
+<section class="article-section"><h2>Диагностика</h2><p>MB2004 означает неверное число аргументов; MB2003 — несовместимый тип; MB2005 — неизвестное вызываемое имя. MB2028 возникает для недопустимого аргумента BYREF. Повторное имя в одной области даёт MB2002; запрещённое перекрытие внешнего имени — MB2016. Избыточная рекурсия даёт MB3011 во время выполнения.</p><p>MB2020 означает, что значение нельзя вызвать; MB2019 — использование SUB как значения. MB2040 запрещает отдельную инструкцию из выражения без вызова. MB3009 возникает при вызове пустого функционального значения.</p></section>
+<section class="article-section"><h2>Пример</h2><pre><code class="language-axiom">FUNCTION Square(value AS INTEGER) AS INTEGER
+    RETURN value * value
 END FUNCTION
-
-PRINT DoubleValue(7)</code></pre><p>Результат:</p><pre><code>14</code></pre></section><section class="article-section"><h2>См. также</h2><div class="link-list"><a href="sub.html">SUB</a><a href="function.html">FUNCTION</a><a href="return.html">RETURN</a><a href="type.html">Методы и литералы TYPE</a></div></section><div id="page-pager" class="pager"></div></main>
-</div>
-<script src="scripts/manual.js"></script>
-</body>
-</html>
+DIM operation AS FUNCTION(INTEGER) AS INTEGER
+operation = Square
+PRINT operation(4)</code></pre><p>Ожидаемый вывод:</p><pre><code>16</code></pre></section>
+<section class="article-section"><h2>См. также</h2><p><a href="sub.html">SUB</a> · <a href="function.html">FUNCTION</a> · <a href="return.html">RETURN</a> · <a href="type.html">TYPE</a></p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

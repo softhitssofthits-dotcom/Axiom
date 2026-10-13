@@ -1,37 +1,18 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Клавиатура, мышь и события</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="keyboard-mouse-events">
-<header class="topbar">
-    <div class="topbar__inner">
-        <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Клавиатура, мышь и события</div>
-        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-    </div>
-</header>
-<div class="layout">
-    <aside class="sidebar">
-        <div class="sidebar__inner">
-            <nav id="manual-nav"></nav>
-        </div>
-    </aside>
-    <main class="content">
-        <nav class="breadcrumbs" aria-label="Хлебные крошки">
-            <a href="index.html">Главная</a><span>/</span><span>Клавиатура, мышь и события</span>
-        </nav>
+<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<title>Клавиатура, мышь и события — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="keyboard-mouse-events"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Клавиатура, мышь и события</span></nav>
+<p class="eyebrow">Раздел</p><h1 class="page-title">Клавиатура, мышь и события</h1><p class="lead">Раздел клавиатуры, мыши и событий описывает опрос текущего состояния, чтение очередей нажатий и вызов процедур-обработчиков. Здесь собраны функции <code>INKEY</code>, <code>KEYDOWN</code>, <code>KEYPRESS</code>, функции мыши и операторы <code>ON KEY</code>, <code>ON MOUSE</code>.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
-        <p class="eyebrow">Раздел</p>
-        <h1 class="page-title">Клавиатура, мышь и события</h1>
-        <p class="lead">Раздел клавиатуры, мыши и событий описывает встроенные функции и операторы языка Axiom, через которые программа получает пользовательский ввод во время выполнения. На этой странице собраны разные сущности: функции опроса клавиатуры, оператор <code>ON KEY</code>, функции мыши и оператор <code>ON MOUSE</code>.</p>
 
         <section class="article-section">
-            <h2>Что входит в раздел</h2>
-            <p>Этот раздел не описывает одну общую команду. Синтаксис отдельных страниц относится к разным встроенным функциям и операторам.</p>
+            <h2>Выбор способа ввода</h2>
+            <p>Сначала выберите способ реакции: проверять ввод в собственном цикле или назначить отдельную процедуру для подходящего события.</p>
             <ul>
                 <li>встроенная функция <code>INKEY</code> читает следующую клавишу как строку;</li>
                 <li>встроенная функция <code>KEYDOWN</code> проверяет текущее удержание клавиши или сочетания клавиш;</li>
@@ -44,7 +25,7 @@
 
         <section class="article-section">
             <h2>Клавиатура</h2>
-            <p>Клавиатурные встроенные функции работают как опрос. Программа сама вызывает нужную функцию в нужный момент и получает либо строку, либо логическое значение. Эти функции могут работать через обычную поверхность ввода IDE, через текстовый режим <code>SCREEN 0</code> и через графическое окно <code>SCREEN 1..10</code>.</p>
+            <p>При опросе программа сама вызывает функцию. Функция <code>KEYDOWN</code> читает удержание, <code>KEYPRESS</code> извлекает заданное нажатие, а <code>INKEY</code> извлекает следующую клавишу строкой. Ввод доступен из текстовой области IDE, окна <code>SCREEN 0</code> и графического окна <code>SCREEN 1..10</code>.</p>
             <table>
                 <thead><tr><th>Страница</th><th>Что описывает</th></tr></thead>
                 <tbody>
@@ -58,7 +39,7 @@
 
         <section class="article-section">
             <h2>Мышь</h2>
-            <p>Мышиные функции и оператор <code>ON MOUSE</code> работают при активном графическом режиме <code>SCREEN 1..10</code> или при активном <code>CANVAS</code>. В <code>SCREEN</code> координаты мыши измеряются в пикселях клиентской области активного окна и не пересчитываются через операторы <code>VIEW</code> и <code>WINDOW</code>. В <code>CANVAS</code> функции <code>MOUSEX</code>, <code>MOUSEY</code> и параметры <code>x/y</code> обработчика <code>ON MOUSE</code> возвращают уже мировые координаты по договору <code>VIEWPORT</code> и <code>CAMERA</code>.</p>
+            <p>Мышь требует графического <code>SCREEN 1..10</code> или <code>CANVAS</code>. На экране координаты измеряются в пикселях клиентской области, без преобразования <code>VIEW</code>/<code>WINDOW</code>. На холсте функции <code>MOUSEX</code>, <code>MOUSEY</code> и параметры обработчика уже содержат мировые координаты, рассчитанные через <code>VIEWPORT</code> и <code>CAMERA</code>.</p>
             <table>
                 <thead><tr><th>Страница</th><th>Что описывает</th></tr></thead>
                 <tbody>
@@ -73,20 +54,29 @@
 
         <section class="article-section">
             <h2>Куда направлять ввод в IDE</h2>
-            <p>Для текстовой программы в оболочке Electron щёлкните по области ввода вкладки «Консоль». В этой области работают оператор <code>INPUT</code>, функции <code>INKEY</code>, <code>KEYDOWN</code>, <code>KEYPRESS</code>, обработчики <code>ON KEY</code> и ожидание клавиши через оператор <code>SLEEP</code>. Если курсор находится в редакторе, клавиши редактируют программу.</p>
-            <p>Если программа открыла графическое окно <code>SCREEN</code> или <code>CANVAS</code>, направляйте клавиши и мышь в это окно. В окне <code>CANVAS</code> положение указателя сначала переводится из размера отображаемого изображения в пиксели холста. Затем среда выполнения учитывает операторы <code>VIEWPORT</code> и <code>CAMERA</code>, чтобы функции и обработчик мыши получили мировые координаты.</p>
-            <p>Функция <code>KEYDOWN</code> проверяет удержание: отпустите клавишу, чтобы её состояние стало ложным. Когда окно теряет фокус, сохранённые состояния клавиш и кнопок очищаются. Это предотвращает продолжение движения после переключения в другое окно.</p>
+            <p>Для текстовой программы щёлкните область ввода вкладки «Консоль». Там принимаются <code>INPUT</code>, клавиатурный опрос, события <code>ON KEY</code> и ожидание <code>SLEEP</code>. При фокусе редактора клавиши изменяют исходник.</p>
+            <p>После открытия <code>SCREEN</code> или <code>CANVAS</code> направляйте ввод в окно программы. Для холста положение мыши сначала масштабируется из размера отображаемого изображения в физические пиксели, затем переводится областью и камерой в мировую точку.</p>
+            <p>Удержание прекращается при отпускании клавиши. Потеря фокуса очищает сохранённые состояния клавиш и кнопок, чтобы программа не продолжала движение после переключения окна.</p>
         </section>
 
         <section class="article-section">
             <h2>Опрос и обработчики</h2>
-            <p>Функции опроса подходят для циклов, где программа сама регулярно проверяет состояние ввода. Операторы <code>ON KEY</code> и <code>ON MOUSE</code> подходят для случаев, когда нужно выполнить процедуру между обычными операторами программы, как только подходящее событие появилось в очереди.</p>
-            <p>Обработчики не выполняются посреди вычисления выражения. Среда выполнения проверяет очереди клавиатуры и мыши на границах операторов и на границах итераций циклов.</p>
+            <p>В цикле опроса действия выполняются в выбранном программой порядке. Операторы <code>ON KEY</code> и <code>ON MOUSE</code> назначают процедуры, которые вызываются при появлении подходящего события между инструкциями.</p>
+            <p>События проверяются на границах инструкций и итераций циклов. Обработчик не прерывает вычисление выражения. Если обработчик забрал событие, последующий опрос этой же очереди его не получает.</p>
         </section>
 
-        <section class="article-section">
+        <section class="article-section"><h2>Цикл опроса и пауза SLEEP</h2><p>В цикле регулярно читайте ввод, выполняйте действие и задавайте короткую паузу оператором <a href="sleep.html">SLEEP</a>. Число после него измеряется в миллисекундах. Форма без числа ждёт любую клавишу и забирает её из очереди; для периодического опроса нужна форма с длительностью.</p><pre><code class="language-axiom">DIM pressedKey AS STRING = ""
+DO WHILE pressedKey &lt;&gt; "ESC"
+    pressedKey = INKEY()
+    IF pressedKey &lt;&gt; "" THEN PRINT pressedKey
+    SLEEP 10
+LOOP</code></pre><p>Функция не блокирует цикл, пока очередь пуста. Нажатие <code>ESC</code> завершает цикл после текущей итерации.</p></section>
+<section class="article-section"><h2>Опрос, удержание и обработчики</h2><p><code>INKEY</code> извлекает очередное клавиатурное событие, <code>KEYPRESS</code> извлекает одно подходящее событие, а <code>KEYDOWN</code> проверяет удержание и не меняет очередь. <code>MOUSEPRESS</code> извлекает одно событие нажатия кнопки, <code>MOUSEBUTTON</code> проверяет удержание. Подходящие события, уже полученные обработчиками ON KEY или ON MOUSE, последующему опросу не возвращаются.</p>
+<p>Клавиатурный опрос не требует <code>SCREEN</code>. Чтение мыши требует графического <code>SCREEN</code> или <code>CANVAS</code>; текстовый <code>SCREEN</code> 0 не подходит. Регистрация ON MOUSE допустима до открытия поверхности: вызовы мышиных обработчиков начинаются при активной графической поверхности.</p></section>
+
+<section class="article-section">
             <h2>Запускаемые примеры</h2>
-            <p>Короткие запускаемые примеры для ручной проверки находятся в тематических каталогах <code>samples/functions/</code> и <code>samples/operators/</code>.</p>
+            <p>Запускаемые проверки клавиатуры и мыши находятся в тематических папках <code>samples/functions/</code> и <code>samples/operators/</code>.</p>
             <ul class="resource-list">
                 <li><a href="../../samples/functions/inkey/poll_keys.axm">INKEY: опрос клавиатуры в цикле</a></li>
                 <li><a href="../../samples/functions/keydown/held_modifiers.axm">KEYDOWN: удержание модификаторов</a></li>
@@ -110,9 +100,8 @@
             </div>
         </section>
 
-        <div id="page-pager" class="pager"></div>
-    </main>
-</div>
-<script src="scripts/manual.js"></script>
-</body>
-</html>
+
+
+
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

@@ -1,88 +1,24 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Оператор IF</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="if">
-<header class="topbar">
-    <div class="topbar__inner">
-        <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Условное ветвление</div>
-        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-    </div>
-</header>
-<div class="layout">
-    <aside class="sidebar">
-        <div class="sidebar__inner">
-            <nav id="manual-nav"></nav>
-        </div>
-    </aside>
-    <main class="content">
-        <nav class="breadcrumbs" aria-label="Хлебные крошки">
-            <a href="index.html">Главная</a>
-            <span>/</span>
-            <a href="reference.html">Алфавитный и тематический указатель</a>
-            <span>/</span>
-            <a href="expressions-and-branching.html">Выражения и ветвление</a>
-            <span>/</span>
-            <span>Оператор IF</span>
-        </nav>
-
-        <p class="eyebrow">Оператор</p>
-        <h1 class="page-title">Оператор IF</h1>
-        <p class="lead"><code>IF</code> — оператор языка Axiom, который выполняет один блок инструкций или другой блок инструкций в зависимости от значения логического выражения. С помощью оператора <code>IF</code> программа переходит от простого последовательного выполнения к условному ветвлению.</p>
-
-        <section class="article-section">
-            <h2>Когда использовать IF</h2>
-            <p>Оператор <code>IF</code> используется, когда дальнейшие действия программы зависят от условия. Условие вычисляется как значение типа <code>BOOLEAN</code>: если оно истинно, выполняется ветвь <code>THEN</code>; если ложно, Axiom проверяет следующие ветви <code>ELSEIF</code> или переходит к ветви <code>ELSE</code>.</p>
-            <p>Когда проверяется одно условие или небольшая цепочка связанных условий, <code>IF</code> обычно читается проще всего. Если же нужно выбрать один вариант из набора значений одного выражения, часто удобнее использовать <code>SELECT CASE</code>.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Синтаксис</h2>
-            <pre><code class="language-axiom">IF &lt;логическое выражение&gt; THEN
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Оператор IF — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="if"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор IF</span></nav>
+<p class="eyebrow">Справочная статья</p><h1 class="page-title">Оператор IF</h1><p class="lead">IF — оператор языка Axiom, который выбирает блок инструкций по логическому условию. Ветви ELSEIF задают дополнительные проверки, а ELSE — действие при отсутствии истинного условия.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Назначение и контекст</h2><p>Оператор работает на верхнем уровне программы и внутри подпрограмм и блоков, в консольной и графической программе. Специальный графический режим не требуется.</p><p>Используйте оператор для проверки данных перед действием или выбора между несколькими условиями. Условие должно иметь тип <code>BOOLEAN</code>; число само по себе не служит логическим условием.</p></section>
+<section class="article-section" id="syntax"><h2>Синтаксис</h2><pre><code class="language-axiom">IF &lt;логическое выражение&gt; THEN
     [&lt;операторы&gt;]
 [ELSEIF &lt;логическое выражение&gt; THEN
     [&lt;операторы&gt;]]
 [ELSE
     [&lt;операторы&gt;]]
-END IF</code></pre>
-        </section>
-
-        <section class="article-section">
-            <h2>Параметры и части синтаксиса</h2>
-            <ul>
-                <li><code>&lt;логическое выражение&gt;</code> — выражение типа <code>BOOLEAN</code>, которое определяет, выполняется ли соответствующая ветвь.</li>
-                <li><code>THEN</code> отделяет условие от блока операторов, выполняемого при истинном значении условия.</li>
-                <li><code>ELSEIF</code> задаёт дополнительное условие. Таких ветвей может быть несколько.</li>
-                <li><code>ELSE</code> задаёт блок операторов для случая, когда ни одно предыдущее условие не оказалось истинным.</li>
-                <li><code>END IF</code> завершает блочную конструкцию.</li>
-            </ul>
-        </section>
-
-        <section class="article-section">
-            <h2>Как условие выбирает ветвь</h2>
-            <p>Axiom сначала вычисляет условие после <code>IF</code>. Если оно имеет значение <code>TRUE</code>, выполняются операторы первой ветви, а остальные ветви пропускаются.</p>
-            <p>Если первое условие имеет значение <code>FALSE</code>, Axiom последовательно проверяет ветви <code>ELSEIF</code> сверху вниз. При первом истинном условии выполняется соответствующий блок, после чего управление передаётся на оператор, следующий за <code>END IF</code>.</p>
-            <p>Если ни одно условие не истинно, выполняется ветвь <code>ELSE</code>. Если ветвь <code>ELSE</code> отсутствует, оператор <code>IF</code> завершается без выполнения какого-либо блока.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Порядок проверки ветвей</h2>
-            <ul>
-                <li>В Axiom условие <code>IF</code> должно иметь тип <code>BOOLEAN</code>.</li>
-                <li>Документируемая форма оператора — блочная форма с обязательным завершением <code>END IF</code>.</li>
-                <li>Ветви <code>ELSEIF</code> и <code>ELSE</code> необязательны.</li>
-                <li>Каждая ветвь образует собственную блочную область видимости. Имя, объявленное внутри ветви, недоступно после <code>END IF</code>.</li>
-                <li>Блоки <code>IF</code> можно вкладывать друг в друга, если внутренняя проверка относится только к одной ветви внешнего условия.</li>
-            </ul>
-            <p>Такая форма не является правилом <code>IF</code>: числовое выражение нужно явно сравнить или преобразовать так, чтобы результатом стало значение <code>BOOLEAN</code>.</p>
-        </section>
-
-        <section class="article-section">
+END IF</code></pre></section>
+<section class="article-section"><h2>Части конструкции</h2><p><code>THEN</code> завершает запись условия. Логическое выражение задаёт проверяемое условие и должно вернуть BOOLEAN. Операторы обозначают ноль или несколько инструкций выбранной ветви. Далее на отдельных строках расположен блок инструкций. Можно добавить несколько ветвей <code>ELSEIF</code> и одну завершающую ветвь <code>ELSE</code>. Блочная конструкция заканчивается <code>END IF</code>.</p></section>
+<section class="article-section"><h2>Выбор ветви</h2><p>Условия проверяются сверху вниз. Первое значение <code>TRUE</code> выбирает соответствующий блок; остальные условия и блоки пропускаются. Если все условия ложны, выполняется <code>ELSE</code>. Без <code>ELSE</code> программа продолжает работу после <code>END IF</code>.</p><p>Каждая ветвь образует собственную область видимости. Объявленные в ней имена недоступны после завершения ветви. Внутри ветви допускается другой блок <code>IF</code>.</p></section>
+<section class="article-section">
             <h2>Диагностика</h2>
             <ul>
                 <li><code>MB2008</code> — условие после <code>IF</code> или <code>ELSEIF</code> не имеет тип <code>BOOLEAN</code>.</li>
@@ -90,49 +26,21 @@ END IF</code></pre>
                 <li><code>MB1005</code> — в конструкции <code>IF</code> допускается только один блок <code>ELSE</code>.</li>
             </ul>
         </section>
-
-        <section class="article-section">
-            <h2>Пример выбора ветви</h2>
-            <p>В этом примере проверяется значение переменной <code>value</code>. Первое условие ложно, второе истинно, поэтому выполняется только ветвь <code>ELSEIF</code>.</p>
-            <pre><code class="language-axiom">DIM value AS INTEGER = 7
-
+<section class="article-section"><h2>Пример</h2><p>Для значения семь выбирается вторая ветвь:</p>
+<pre><code class="language-axiom">DIM value AS INTEGER = 7
 IF value &gt; 10 THEN
-    PRINT "большой"
+    PRINT "Большое"
 ELSEIF value &gt; 5 THEN
-    PRINT "средний"
+    PRINT "Среднее"
 ELSE
-    PRINT "маленький"
-END IF</code></pre>
-            <p>Результат:</p>
-            <pre><code>средний</code></pre>
-        </section>
-
-        <section class="article-section">
-            <h2>Запускаемые примеры</h2>
-            <p>Эти файлы можно открыть в <code>Electron IDE</code> и запустить как короткие проверки поведения <code>IF</code>.</p>
-            <ul class="resource-list">
+    PRINT "Малое"
+END IF</code></pre><p>Результат:</p>
+<pre><code>Среднее</code></pre></section>
+<section class="article-section"><h2>Запускаемые примеры</h2><p>Откройте нужный файл в IDE и запустите его. Примеры с ошибкой предназначены для проверки сообщения компилятора или выполнения.</p><ul class="resource-list">
                 <li><a href="../../samples/control-flow/if/basic_if_else.axm">IF: базовая ветвь ELSE</a></li>
                 <li><a href="../../samples/control-flow/if/elseif_chain.axm">IF: цепочка ELSEIF</a></li>
                 <li><a href="../../samples/smoke/block_scope_semantics.axm">Блочная область видимости</a></li>
                 <li><a href="../../samples/acceptance/negative/if_requires_boolean.axm">Ошибка: условие не BOOLEAN</a></li>
-            </ul>
-        </section>
-
-        <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="expressions-and-branching.html">Выражения и ветвление</a>
-                    <a href="arithmetic-and-logic.html">Арифметика и логика</a>
-                    <a href="select-case.html">Оператор SELECT CASE</a>
-                    <a href="loops.html">Циклы</a>
-                    <a href="try.html">Оператор TRY</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
-
-        <div id="page-pager" class="pager"></div>
-    </main>
-</div>
-<script src="scripts/manual.js"></script>
-</body>
-</html>
+            </ul></section>
+<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="branching.html">Условия</a><a href="select-case.html">SELECT CASE</a><a href="arithmetic-and-logic.html">Логические операции</a><a href="variables-scope.html">Области видимости</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

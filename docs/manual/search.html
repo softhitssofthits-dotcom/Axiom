@@ -1,11 +1,12 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Справочник Axiom - Поиск</title><link rel="stylesheet" href="styles/manual.css"></head>
-<body data-page="search"><header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Живой поиск по страницам</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-<main class="content"><nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Поиск по справочнику</span></nav><p class="eyebrow">Раздел</p><h1 class="page-title">Поиск по справочнику</h1><p class="lead">Раздел «Поиск по справочнику» — вспомогательная страница, которая позволяет быстро найти нужную тему по фрагменту имени. Поиск использует тот же список страниц, что и алфавитный указатель.</p>
-<section class="article-section"><h2>Строка поиска</h2><input id="manual-search-input" class="search-input" type="text" placeholder="Введите запрос" autocomplete="off"></section>
-<section class="article-section"><h2>Результаты</h2><div id="manual-search-results" class="reference-grid"></div></section>
-<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="reference.html">Алфавитный и тематический указатель</a><a href="index.html">Главная страница справочника</a><a href="getting-started.html">Начало работы</a><a href="examples.html">Примеры программ</a><a href="cheat-sheet.html">Краткая справка</a></div></section>
-<div id="page-pager" class="pager"></div></main></div>
-<script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script>
-</body></html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Поиск по справочнику — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="search"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Поиск по справочнику</span></nav>
+<p class="eyebrow">Поиск</p><h1 class="page-title">Поиск по справочнику</h1><p class="lead">Введите запрос в поле в шапке. Можно искать по имени оператора или функции, названию темы и словам из описания.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<p id="manual-search-status" role="status" aria-live="polite"></p><div id="manual-search-results"></div><section class="article-section"><h2>См. также</h2><div class="link-list"><a href="getting-started.html">Первая программа</a><a href="reference.html">Алфавитный указатель</a><a href="examples.html">Примеры программ</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

@@ -1,55 +1,40 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Функция INKEY</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="inkey">
-<header class="topbar">
-    <div class="topbar__inner">
-        <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Клавиатура</div>
-        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-    </div>
-</header>
-<div class="layout">
-    <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-    <main class="content">
-        <nav class="breadcrumbs" aria-label="Хлебные крошки">
-            <a href="index.html">Главная</a><span>/</span><a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a><span>/</span><span>Функция INKEY</span>
-        </nav>
+<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<title>Функция INKEY — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="inkey"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Функция INKEY</span></nav>
+<p class="eyebrow">Встроенная функция</p><h1 class="page-title">Функция INKEY</h1><p class="lead"><code>INKEY</code> — встроенная функция языка Axiom, которая извлекает следующую клавишу из очереди ввода без ожидания. Если очередь пуста, результатом будет пустая строка.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
-        <p class="eyebrow">Встроенная функция</p>
-        <h1 class="page-title">Функция INKEY</h1>
-        <p class="lead"><code>INKEY</code> — встроенная функция языка Axiom, которая читает одну клавишу из очереди клавиатуры и сразу возвращает управление программе. Если очередная клавиша отсутствует, встроенная функция <code>INKEY</code> возвращает пустую строку.</p>
 
         <section class="article-section">
-            <h2>Для чего нужна функция INKEY</h2>
-            <p>Встроенная функция <code>INKEY</code> нужна для неблокирующего опроса клавиатуры. Программа может вызывать эту функцию внутри игрового цикла, цикла ожидания или короткой интерактивной проверки и не останавливаться до тех пор, пока пользователь не нажмёт <code>Enter</code>.</p>
+            <h2>Применение</h2>
+            <p>Вызывайте функцию в интерактивном цикле, когда программе нужна очередная клавиша, а остальная работа должна продолжаться без ожидания <code>Enter</code>.</p>
         </section>
 
         <section class="article-section">
-            <h2>Где работает функция INKEY</h2>
-            <p>Встроенная функция <code>INKEY</code> читает активную клавиатурную очередь программы. Если программа работает без оператора <code>SCREEN</code>, ввод приходит из обычной поверхности ввода среды разработки. Если программа явно выбрала <code>SCREEN 0</code> или графический режим <code>SCREEN 1..10</code>, ввод приходит из окна <code>SCREEN</code>.</p>
-            <p>Встроенная функция <code>INKEY</code> выполняется <code>BytecodeVm</code> после компиляции.</p>
+            <h2>Контекст выполнения</h2>
+            <p>Функция читает очередь активной поверхности ввода. В обычной текстовой программе это область ввода IDE, а после открытия <code>SCREEN 0</code> или <code>SCREEN 1..10</code> — экранное окно.</p>
+            <p>Источник клавиш определяется поверхностью, имеющей фокус; подробнее см. <a href="keyboard-mouse-events.html">клавиатура, мышь и события</a>.</p>
         </section>
 
         <section class="article-section">
             <h2>Синтаксис</h2>
 <pre><code class="language-axiom">INKEY()</code></pre>
-            <p>Встроенная функция <code>INKEY</code> поддерживает только форму без аргументов.</p>
+            <p>Единственная форма вызова — <code>INKEY()</code>.</p>
         </section>
 
         <section class="article-section">
             <h2>Аргументы</h2>
-            <p>У встроенной функции <code>INKEY</code> нет аргументов. Пустые скобки остаются частью вызова функции.</p>
+            <p>Аргументов нет; пустые скобки обязательны в записи вызова.</p>
         </section>
 
         <section class="article-section">
             <h2>Что возвращает функция INKEY</h2>
-            <p>Встроенная функция <code>INKEY</code> возвращает значение типа <code>STRING</code>.</p>
+            <p>Результат имеет тип <code>STRING</code>. Таблица показывает, как представляются обычная клавиша, специальная клавиша и отсутствие ввода.</p>
             <table>
                 <thead><tr><th>Ситуация</th><th>Результат</th></tr></thead>
                 <tbody>
@@ -62,10 +47,12 @@
 
         <section class="article-section">
             <h2>Правила работы</h2>
-            <p>Встроенная функция <code>INKEY</code> не показывает приглашение, не ждёт подтверждения <code>Enter</code> и не читает строку целиком. Для обычного пользовательского ввода строки или нескольких значений используется оператор <code>INPUT</code>.</p>
-            <p>Если для клавиши зарегистрирован обработчик через оператор <code>ON KEY</code>, совпавшая клавиша может быть обработана раньше, чем программа дойдёт до вызова встроенной функции <code>INKEY</code>. В этом случае обработанная клавиша не возвращается функцией <code>INKEY</code>.</p>
-            <p>Встроенная функция <code>INKEY</code> не сообщает текущее удержание клавиш. Для проверки удержания используется встроенная функция <code>KEYDOWN</code>.</p>
+            <p>Функция не показывает приглашение и не читает целую строку. Для ввода строки или нескольких значений используйте оператор <a href="input.html">INPUT</a>.</p>
+            <p>Обработчик <a href="on-key.html">ON KEY</a> может получить событие раньше вызова функции. Уже обработанная клавиша удаляется из очереди и не возвращается последующим опросом.</p>
+            <p>Для проверки текущего удержания клавиши используйте <a href="keydown.html">KEYDOWN</a>; чтение очереди сообщает события нажатия.</p>
         </section>
+<section class="article-section"><h2>Отсутствие событий и общий ввод</h2><p><code>INKEY</code> возвращает <code>STRING</code> без ожидания: пустая очередь даёт пустую строку. Вызов извлекает только одно событие, сохраняя последующие события для следующих вызовов. Опрос не требует графической поверхности и не создаёт её. <code>SLEEP</code> без аргумента также извлекает клавишу из этой очереди.</p></section>
+
 
         <section class="article-section">
             <h2>Диагностика</h2>
@@ -84,7 +71,7 @@ IF pressedKey = "" THEN
 ELSE
     PRINT "Нажата клавиша: "; pressedKey
 END IF</code></pre>
-            <p>В этом примере встроенная функция <code>INKEY</code> делает один неблокирующий опрос клавиатуры. Если клавиши нет, программа всё равно продолжает выполнение.</p>
+            <p>Пример делает один опрос и печатает результат. Пустая очередь не приостанавливает программу.</p>
         </section>
 
         <section class="article-section">
@@ -106,9 +93,8 @@ END IF</code></pre>
             </div>
         </section>
 
-        <div id="page-pager" class="pager"></div>
-    </main>
-</div>
-<script src="scripts/manual.js"></script>
-</body>
-</html>
+
+
+
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

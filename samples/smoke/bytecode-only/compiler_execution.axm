@@ -1,23 +1,23 @@
 ' Один путь компиляции и выполнения: процедуры, цикл и обработка ошибки.
 ' Ожидается: «Сумма: 3», пустая строка, «Шаг: 1», «Шаг: 2», «MB3007», «Завершено».
-SUB ShowStep(value AS INTEGER)
+Sub ShowStep(value As Integer)
     ' Показываем значение, переданное в процедуру.
-    PRINT "Шаг: "; value
-END SUB
+    Print "Шаг: "; value
+End Sub
 
 ' Независимый арифметический результат и пустая строка.
-PRINT "Сумма: "; 1 + 2
-PRINT
-FOR i = 1 TO 2
+Print "Сумма: "; 1 + 2
+Print
+For i = 1 To 2
     ' Выполняем тот же вызов с двумя значениями счётчика.
     ShowStep(i)
-NEXT i
+Next i
 
 ' Ошибка POW сохраняет договор Axiom, FINALLY выполняется.
-TRY
-    PRINT POW(-2, 0.5)
-CATCH err
-    PRINT err.Code
-FINALLY
-    PRINT "Завершено"
-END TRY
+Try
+    Print Pow(-2, 0.5)
+Catch err
+    Print err.Code
+Finally
+    Print "Завершено"
+End Try

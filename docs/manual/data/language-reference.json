@@ -25,11 +25,11 @@
     "src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.cs",
     "src/Axiom.Syntax/SyntaxKind.cs"
   ],
-  "sourceFingerprint": "773512d0ae37c61906f6bf42f309386715b5fcd72f9769ad59c30b8b76f44a85",
+  "sourceFingerprint": "7239688fcc6779345ee72cfd795854f00e19ffd544bb989a573e85cf0ec4df84",
   "functions": [
     {
       "name": "ABS",
-      "description": "Модуль числа.",
+      "description": "Возвращает модуль числа.",
       "sourceHref": "numeric-functions-core.html#abs",
       "forms": [
         {
@@ -50,7 +50,7 @@
     },
     {
       "name": "ACOS",
-      "description": "Арккосинус.",
+      "description": "Возвращает арккосинус числа.",
       "sourceHref": "numeric-functions-trigonometry.html#acos",
       "forms": [
         {
@@ -71,7 +71,7 @@
     },
     {
       "name": "ACOSH",
-      "description": "Обратный гиперболический косинус.",
+      "description": "Возвращает обратный гиперболический косинус числа.",
       "sourceHref": "numeric-functions-trigonometry.html#acosh",
       "forms": [
         {
@@ -92,7 +92,7 @@
     },
     {
       "name": "APPENDFILE",
-      "description": "Добавление текста в конец файла.",
+      "description": "Дописывает текст в конец файла.",
       "sourceHref": "file-system-functions-text.html#appendfile",
       "forms": [
         {
@@ -139,8 +139,8 @@
     },
     {
       "name": "ARRAYAVERAGE",
-      "description": "Среднее арифметическое числовых элементов как DOUBLE.",
-      "sourceHref": "arrays-and-builtins.html#aggregates",
+      "description": "Возвращает среднее арифметическое числовых элементов массива.",
+      "sourceHref": "arrays-and-builtins.html#arrayaverage",
       "forms": [
         {
           "key": "ARRAYAVERAGE/0",
@@ -160,8 +160,8 @@
     },
     {
       "name": "ARRAYBINARYSEARCH",
-      "description": "Бинарный поиск по отсортированному массиву.",
-      "sourceHref": "arrays-and-builtins.html#search",
+      "description": "Ищет первое совпадение двоичным поиском в отсортированном массиве.",
+      "sourceHref": "arrays-and-builtins.html#arraybinarysearch",
       "forms": [
         {
           "key": "ARRAYBINARYSEARCH/0",
@@ -207,7 +207,7 @@
     },
     {
       "name": "ARRAYBOUNDS",
-      "description": "Полная видимая форма массива как пары границ по каждому измерению.",
+      "description": "Возвращает таблицу нижних и верхних границ всех измерений.",
       "sourceHref": "arrays-functions.html#arraybounds",
       "forms": [
         {
@@ -228,8 +228,8 @@
     },
     {
       "name": "ARRAYCLONE",
-      "description": "Независимая копия массива или представления.",
-      "sourceHref": "arrays-and-builtins.html#views",
+      "description": "Создаёт независимую копию видимой части массива.",
+      "sourceHref": "arrays-and-builtins.html#arrayclone",
       "forms": [
         {
           "key": "ARRAYCLONE/0",
@@ -249,8 +249,8 @@
     },
     {
       "name": "ARRAYCONCAT",
-      "description": "Объединение совместимых массивов в новый результат.",
-      "sourceHref": "arrays-and-builtins.html#selection",
+      "description": "Объединяет содержимое двух массивов в новую копию.",
+      "sourceHref": "arrays-and-builtins.html#arrayconcat",
       "forms": [
         {
           "key": "ARRAYCONCAT/0",
@@ -296,8 +296,8 @@
     },
     {
       "name": "ARRAYCONTAINS",
-      "description": "Проверка наличия значения в массиве.",
-      "sourceHref": "arrays-and-builtins.html#search",
+      "description": "Проверяет наличие значения среди видимых элементов массива.",
+      "sourceHref": "arrays-and-builtins.html#arraycontains",
       "forms": [
         {
           "key": "ARRAYCONTAINS/0",
@@ -321,8 +321,8 @@
     },
     {
       "name": "ARRAYCOUNT",
-      "description": "Подсчёт числа совпадающих значений.",
-      "sourceHref": "arrays-and-builtins.html#search",
+      "description": "Подсчитывает совпадения значения в массиве.",
+      "sourceHref": "arrays-and-builtins.html#arraycount",
       "forms": [
         {
           "key": "ARRAYCOUNT/0",
@@ -346,8 +346,8 @@
     },
     {
       "name": "ARRAYDISTINCT",
-      "description": "Устранение повторов с сохранением порядка первого появления.",
-      "sourceHref": "arrays-and-builtins.html#selection",
+      "description": "Копирует первые появления различных значений в одномерный массив.",
+      "sourceHref": "arrays-and-builtins.html#arraydistinct",
       "forms": [
         {
           "key": "ARRAYDISTINCT/0",
@@ -367,8 +367,8 @@
     },
     {
       "name": "ARRAYEVERY",
-      "description": "Проверка, что пользовательская функция возвращает TRUE для всех элементов.",
-      "sourceHref": "arrays-and-builtins.html#callbacks",
+      "description": "Проверяет, удовлетворяют ли все элементы пользовательскому условию.",
+      "sourceHref": "arrays-and-builtins.html#arrayevery",
       "forms": [
         {
           "key": "ARRAYEVERY/0",
@@ -392,8 +392,8 @@
     },
     {
       "name": "ARRAYFILL",
-      "description": "Заполнение видимых элементов массива значением.",
-      "sourceHref": "arrays-and-builtins.html#mutation",
+      "description": "Заполняет видимые элементы массива одним значением.",
+      "sourceHref": "arrays-and-builtins.html#arrayfill",
       "forms": [
         {
           "key": "ARRAYFILL/0",
@@ -417,8 +417,8 @@
     },
     {
       "name": "ARRAYFILTER",
-      "description": "Отбор элементов по пользовательской проверяющей функции.",
-      "sourceHref": "arrays-and-builtins.html#callbacks",
+      "description": "Копирует элементы, удовлетворяющие пользовательскому условию.",
+      "sourceHref": "arrays-and-builtins.html#arrayfilter",
       "forms": [
         {
           "key": "ARRAYFILTER/0",
@@ -442,8 +442,8 @@
     },
     {
       "name": "ARRAYFINDALL",
-      "description": "Поиск всех индексов или координат совпадения.",
-      "sourceHref": "arrays-and-builtins.html#search",
+      "description": "Возвращает индексы всех совпадений значения в массиве.",
+      "sourceHref": "arrays-and-builtins.html#arrayfindall",
       "forms": [
         {
           "key": "ARRAYFINDALL/0",
@@ -467,8 +467,8 @@
     },
     {
       "name": "ARRAYFLATTEN",
-      "description": "Преобразование многомерного массива в одномерный список.",
-      "sourceHref": "arrays-and-builtins.html#flatten-contract",
+      "description": "Копирует все видимые элементы в одномерный массив.",
+      "sourceHref": "arrays-and-builtins.html#arrayflatten",
       "forms": [
         {
           "key": "ARRAYFLATTEN/0",
@@ -488,8 +488,8 @@
     },
     {
       "name": "ARRAYINDEXOF",
-      "description": "Поиск первого индекса или координат совпадения.",
-      "sourceHref": "arrays-and-builtins.html#search",
+      "description": "Находит первое совпадение значения в массиве.",
+      "sourceHref": "arrays-and-builtins.html#arrayindexof",
       "forms": [
         {
           "key": "ARRAYINDEXOF/0",
@@ -513,7 +513,7 @@
     },
     {
       "name": "ARRAYINSERT",
-      "description": "Вставка по индексу.",
+      "description": "Вставляет элемент или срез перед заданным индексом массива.",
       "sourceHref": "arrays-functions.html#arrayinsert",
       "forms": [
         {
@@ -568,7 +568,7 @@
     },
     {
       "name": "ARRAYISALLOCATED",
-      "description": "Признак выделенного массива.",
+      "description": "Проверяет, выделено ли хранилище элементов массива.",
       "sourceHref": "arrays-functions.html#arrayisallocated",
       "forms": [
         {
@@ -589,8 +589,8 @@
     },
     {
       "name": "ARRAYLASTINDEXOF",
-      "description": "Поиск последнего индекса или координат совпадения.",
-      "sourceHref": "arrays-and-builtins.html#search",
+      "description": "Находит последнее совпадение значения в массиве.",
+      "sourceHref": "arrays-and-builtins.html#arraylastindexof",
       "forms": [
         {
           "key": "ARRAYLASTINDEXOF/0",
@@ -614,7 +614,7 @@
     },
     {
       "name": "ARRAYLENGTH",
-      "description": "Количество видимых элементов массива.",
+      "description": "Возвращает число видимых элементов массива.",
       "sourceHref": "arrays-functions.html#arraylength",
       "forms": [
         {
@@ -635,8 +635,8 @@
     },
     {
       "name": "ARRAYMAP",
-      "description": "Преобразование элементов пользовательской функцией.",
-      "sourceHref": "arrays-and-builtins.html#callbacks",
+      "description": "Преобразует каждый элемент пользовательской функцией и возвращает новый массив.",
+      "sourceHref": "arrays-and-builtins.html#arraymap",
       "forms": [
         {
           "key": "ARRAYMAP/0",
@@ -660,8 +660,8 @@
     },
     {
       "name": "ARRAYMAX",
-      "description": "Наибольший элемент числового или строкового массива.",
-      "sourceHref": "arrays-and-builtins.html#aggregates",
+      "description": "Возвращает наибольшее значение массива.",
+      "sourceHref": "arrays-and-builtins.html#arraymax",
       "forms": [
         {
           "key": "ARRAYMAX/0",
@@ -681,8 +681,8 @@
     },
     {
       "name": "ARRAYMIN",
-      "description": "Наименьший элемент числового или строкового массива.",
-      "sourceHref": "arrays-and-builtins.html#aggregates",
+      "description": "Возвращает наименьшее значение массива.",
+      "sourceHref": "arrays-and-builtins.html#arraymin",
       "forms": [
         {
           "key": "ARRAYMIN/0",
@@ -702,7 +702,7 @@
     },
     {
       "name": "ARRAYPOP",
-      "description": "Снятие последнего значения или среза.",
+      "description": "Снимает последний элемент или срез выбранного измерения массива.",
       "sourceHref": "arrays-functions.html#arraypop",
       "forms": [
         {
@@ -741,7 +741,7 @@
     },
     {
       "name": "ARRAYPUSH",
-      "description": "Добавление значения или среза в массив.",
+      "description": "Добавляет элемент или срез в конец выбранного измерения массива.",
       "sourceHref": "arrays-functions.html#arraypush",
       "forms": [
         {
@@ -788,7 +788,7 @@
     },
     {
       "name": "ARRAYRANK",
-      "description": "Число измерений массива.",
+      "description": "Возвращает число измерений массива.",
       "sourceHref": "arrays-functions.html#arrayrank",
       "forms": [
         {
@@ -809,8 +809,8 @@
     },
     {
       "name": "ARRAYREDUCE",
-      "description": "Свёртка массива в одно значение через пользовательскую функцию.",
-      "sourceHref": "arrays-and-builtins.html#callbacks",
+      "description": "Последовательно объединяет элементы с накопленным значением пользовательской функцией.",
+      "sourceHref": "arrays-and-builtins.html#arrayreduce",
       "forms": [
         {
           "key": "ARRAYREDUCE/0",
@@ -838,7 +838,7 @@
     },
     {
       "name": "ARRAYREMOVE",
-      "description": "Удаление по индексу.",
+      "description": "Удаляет и возвращает элемент или срез с заданным индексом массива.",
       "sourceHref": "arrays-functions.html#arrayremove",
       "forms": [
         {
@@ -885,8 +885,8 @@
     },
     {
       "name": "ARRAYRESHAPE",
-      "description": "Сборка массива новой формы по массиву-образцу.",
-      "sourceHref": "arrays-and-builtins.html#reshape-contract",
+      "description": "Копирует последовательность элементов в новую форму, заданную массивом образца.",
+      "sourceHref": "arrays-and-builtins.html#arrayreshape",
       "forms": [
         {
           "key": "ARRAYRESHAPE/0",
@@ -910,8 +910,8 @@
     },
     {
       "name": "ARRAYREVERSE",
-      "description": "Разворот массива на месте.",
-      "sourceHref": "arrays-and-builtins.html#order",
+      "description": "Меняет порядок элементов исходного массива на обратный.",
+      "sourceHref": "arrays-and-builtins.html#arrayreverse",
       "forms": [
         {
           "key": "ARRAYREVERSE/0",
@@ -949,8 +949,8 @@
     },
     {
       "name": "ARRAYSKIP",
-      "description": "Остаток после пропуска начальной части массива или измерения.",
-      "sourceHref": "arrays-and-builtins.html#selection",
+      "description": "Копирует остаток массива после пропуска указанного количества.",
+      "sourceHref": "arrays-and-builtins.html#arrayskip",
       "forms": [
         {
           "key": "ARRAYSKIP/0",
@@ -996,8 +996,8 @@
     },
     {
       "name": "ARRAYSLICE",
-      "description": "Компактный срез массива по индексу и длине.",
-      "sourceHref": "arrays-functions.html#arrayslice",
+      "description": "Копирует непрерывный диапазон элементов либо срезов массива.",
+      "sourceHref": "arrays-and-builtins.html#arrayslice",
       "forms": [
         {
           "key": "ARRAYSLICE/0",
@@ -1051,8 +1051,8 @@
     },
     {
       "name": "ARRAYSOME",
-      "description": "Проверка, что пользовательская функция возвращает TRUE хотя бы для одного элемента.",
-      "sourceHref": "arrays-and-builtins.html#callbacks",
+      "description": "Проверяет, удовлетворяет ли хотя бы один элемент пользовательскому условию.",
+      "sourceHref": "arrays-and-builtins.html#arraysome",
       "forms": [
         {
           "key": "ARRAYSOME/0",
@@ -1076,8 +1076,8 @@
     },
     {
       "name": "ARRAYSORT",
-      "description": "Сортировка массива на месте.",
-      "sourceHref": "arrays-and-builtins.html#order",
+      "description": "Сортирует элементы исходного массива по возрастанию.",
+      "sourceHref": "arrays-and-builtins.html#arraysort",
       "forms": [
         {
           "key": "ARRAYSORT/0",
@@ -1115,8 +1115,8 @@
     },
     {
       "name": "ARRAYSUM",
-      "description": "Сумма числовых элементов массива.",
-      "sourceHref": "arrays-and-builtins.html#aggregates",
+      "description": "Возвращает сумму числовых элементов массива.",
+      "sourceHref": "arrays-and-builtins.html#arraysum",
       "forms": [
         {
           "key": "ARRAYSUM/0",
@@ -1136,8 +1136,8 @@
     },
     {
       "name": "ARRAYTAKE",
-      "description": "Первые элементы массива или часть выбранного измерения.",
-      "sourceHref": "arrays-and-builtins.html#selection",
+      "description": "Копирует начальную часть массива по указанному количеству.",
+      "sourceHref": "arrays-and-builtins.html#arraytake",
       "forms": [
         {
           "key": "ARRAYTAKE/0",
@@ -1183,8 +1183,8 @@
     },
     {
       "name": "ARRAYTOREVERSED",
-      "description": "Развёрнутая копия массива.",
-      "sourceHref": "arrays-and-builtins.html#order",
+      "description": "Возвращает копию с обратным порядком элементов.",
+      "sourceHref": "arrays-and-builtins.html#arraytoreversed",
       "forms": [
         {
           "key": "ARRAYTOREVERSED/0",
@@ -1222,8 +1222,8 @@
     },
     {
       "name": "ARRAYTOSORTED",
-      "description": "Отсортированная копия массива.",
-      "sourceHref": "arrays-and-builtins.html#order",
+      "description": "Возвращает отсортированную копию массива.",
+      "sourceHref": "arrays-and-builtins.html#arraytosorted",
       "forms": [
         {
           "key": "ARRAYTOSORTED/0",
@@ -1261,7 +1261,7 @@
     },
     {
       "name": "ASC",
-      "description": "Код первого символа: ASCII/IBM CP866 для представимых символов или Unicode-код.",
+      "description": "Возвращает код первого символа строки в CP866, если он представлен в этой таблице, иначе его Unicode-код.",
       "sourceHref": "characters.html#contract",
       "forms": [
         {
@@ -1282,7 +1282,7 @@
     },
     {
       "name": "ASCW",
-      "description": "Unicode-код первого символа без CP866-подмены.",
+      "description": "Возвращает Unicode-код первого символа строки без преобразования через CP866.",
       "sourceHref": "characters.html#contract",
       "forms": [
         {
@@ -1303,7 +1303,7 @@
     },
     {
       "name": "ASIN",
-      "description": "Арксинус.",
+      "description": "Возвращает арксинус числа.",
       "sourceHref": "numeric-functions-trigonometry.html#asin",
       "forms": [
         {
@@ -1324,7 +1324,7 @@
     },
     {
       "name": "ASINH",
-      "description": "Обратный гиперболический синус.",
+      "description": "Возвращает обратный гиперболический синус числа.",
       "sourceHref": "numeric-functions-trigonometry.html#asinh",
       "forms": [
         {
@@ -1345,7 +1345,7 @@
     },
     {
       "name": "ATANH",
-      "description": "Обратный гиперболический тангенс.",
+      "description": "Возвращает обратный гиперболический тангенс числа.",
       "sourceHref": "numeric-functions-trigonometry.html#atanh",
       "forms": [
         {
@@ -1366,7 +1366,7 @@
     },
     {
       "name": "ATN",
-      "description": "Арктангенс значения.",
+      "description": "Возвращает арктангенс числа.",
       "sourceHref": "numeric-functions-trigonometry.html#atn",
       "forms": [
         {
@@ -1387,7 +1387,7 @@
     },
     {
       "name": "ATN2",
-      "description": "Угол по координатам с учётом квадранта.",
+      "description": "Возвращает угол направления точки относительно положительной оси x.",
       "sourceHref": "numeric-functions-trigonometry.html#atn2",
       "forms": [
         {
@@ -1412,7 +1412,7 @@
     },
     {
       "name": "CBRT",
-      "description": "Кубический корень.",
+      "description": "Возвращает кубический корень числа.",
       "sourceHref": "numeric-functions-roots-rounding.html#cbrt",
       "forms": [
         {
@@ -1433,8 +1433,8 @@
     },
     {
       "name": "CDBL",
-      "description": "Явное преобразование к DOUBLE.",
-      "sourceHref": "numeric-functions-conversion-and-legacy.html",
+      "description": "Возвращает число, преобразованное в DOUBLE.",
+      "sourceHref": "numeric-functions-conversion-and-legacy.html#cdbl",
       "forms": [
         {
           "key": "CDBL/0",
@@ -1454,8 +1454,8 @@
     },
     {
       "name": "CDEC",
-      "description": "Явное преобразование к DECIMAL.",
-      "sourceHref": "numeric-functions-conversion-and-legacy.html",
+      "description": "Возвращает число, преобразованное в DECIMAL.",
+      "sourceHref": "numeric-functions-conversion-and-legacy.html#cdec",
       "forms": [
         {
           "key": "CDEC/0",
@@ -1475,7 +1475,7 @@
     },
     {
       "name": "CEIL",
-      "description": "Округление вверх с сохранением семейства.",
+      "description": "Возвращает наименьшее целое значение, не меньшее аргумента.",
       "sourceHref": "numeric-functions-roots-rounding.html#ceil",
       "forms": [
         {
@@ -1496,8 +1496,8 @@
     },
     {
       "name": "CENTER",
-      "description": "Центрирование строки.",
-      "sourceHref": "string-functions-build-and-split.html#padding",
+      "description": "Возвращает строку, дополнив её с обеих сторон до заданной ширины.",
+      "sourceHref": "string-functions-build-and-split.html#center",
       "forms": [
         {
           "key": "CENTER/0",
@@ -1543,7 +1543,7 @@
     },
     {
       "name": "CHANGEDIR",
-      "description": "Смена текущей рабочей папки.",
+      "description": "Меняет рабочую папку текущего запуска.",
       "sourceHref": "file-system-functions-management.html#changedir",
       "forms": [
         {
@@ -1564,7 +1564,7 @@
     },
     {
       "name": "CHR",
-      "description": "Символ по коду: ASCII/IBM CP866 для 0..255 или Unicode выше 255.",
+      "description": "Создаёт строку с символом по коду CP866 для значений 0–255 или по Unicode-коду для больших значений.",
       "sourceHref": "characters.html#contract",
       "forms": [
         {
@@ -1585,7 +1585,7 @@
     },
     {
       "name": "CHRW",
-      "description": "Символ по Unicode-коду без CP866-подмены.",
+      "description": "Создаёт строку с символом по Unicode-коду без подмены младшего диапазона таблицей CP866.",
       "sourceHref": "characters.html#contract",
       "forms": [
         {
@@ -1606,8 +1606,8 @@
     },
     {
       "name": "CINT",
-      "description": "Явное преобразование к INTEGER с усечением к нулю.",
-      "sourceHref": "numeric-functions-conversion-and-legacy.html",
+      "description": "Возвращает целую часть числа в типе INTEGER.",
+      "sourceHref": "numeric-functions-conversion-and-legacy.html#cint",
       "forms": [
         {
           "key": "CINT/0",
@@ -1627,7 +1627,7 @@
     },
     {
       "name": "CLAMP",
-      "description": "Ограничение значения диапазоном.",
+      "description": "Возвращает число, ограниченное заданным включительным диапазоном.",
       "sourceHref": "numeric-functions-core.html#clamp",
       "forms": [
         {
@@ -1656,8 +1656,8 @@
     },
     {
       "name": "CLNG",
-      "description": "Явное преобразование к LONG с усечением к нулю.",
-      "sourceHref": "numeric-functions-conversion-and-legacy.html",
+      "description": "Возвращает целую часть числа в типе LONG.",
+      "sourceHref": "numeric-functions-conversion-and-legacy.html#clng",
       "forms": [
         {
           "key": "CLNG/0",
@@ -1677,7 +1677,7 @@
     },
     {
       "name": "COMBINEPATH",
-      "description": "Соединение частей пути.",
+      "description": "Соединяет две строковые части пути.",
       "sourceHref": "file-system-functions-paths.html#combinepath",
       "forms": [
         {
@@ -1702,7 +1702,7 @@
     },
     {
       "name": "CONTAINS",
-      "description": "Проверка наличия фрагмента.",
+      "description": "Проверяет, содержит ли строка указанный фрагмент.",
       "sourceHref": "string-functions-search-and-replace.html#contains",
       "forms": [
         {
@@ -1727,7 +1727,7 @@
     },
     {
       "name": "COPYDIR",
-      "description": "Копирование папки.",
+      "description": "Копирует дерево обычных файлов и каталогов.",
       "sourceHref": "file-system-functions-management.html#copydir",
       "forms": [
         {
@@ -1774,7 +1774,7 @@
     },
     {
       "name": "COPYFILE",
-      "description": "Копирование файла.",
+      "description": "Копирует содержимое существующего файла в другой файл.",
       "sourceHref": "file-system-functions-management.html#copyfile",
       "forms": [
         {
@@ -1821,7 +1821,7 @@
     },
     {
       "name": "COS",
-      "description": "Косинус угла в радианах.",
+      "description": "Возвращает косинус угла.",
       "sourceHref": "numeric-functions-trigonometry.html#cos",
       "forms": [
         {
@@ -1842,7 +1842,7 @@
     },
     {
       "name": "COSH",
-      "description": "Гиперболический косинус.",
+      "description": "Возвращает гиперболический косинус числа.",
       "sourceHref": "numeric-functions-trigonometry.html#cosh",
       "forms": [
         {
@@ -1863,7 +1863,7 @@
     },
     {
       "name": "CURRENTDIR",
-      "description": "Текущая рабочая папка.",
+      "description": "Возвращает полный путь рабочей папки текущего запуска.",
       "sourceHref": "file-system-functions-management.html#currentdir",
       "forms": [
         {
@@ -1879,7 +1879,7 @@
     },
     {
       "name": "DATE",
-      "description": "Текущая дата в каноническом формате.",
+      "description": "Возвращает текущую календарную дату.",
       "sourceHref": "date-time-functions-current.html#date",
       "forms": [
         {
@@ -1909,7 +1909,7 @@
     },
     {
       "name": "DATEADD",
-      "description": "Добавление интервала к дате или времени.",
+      "description": "Возвращает дату или время после прибавления указанного числа интервалов.",
       "sourceHref": "date-time-functions-arithmetic-and-validation.html#dateadd",
       "forms": [
         {
@@ -1982,7 +1982,7 @@
     },
     {
       "name": "DATEDIFF",
-      "description": "Разница между двумя значениями даты и времени.",
+      "description": "Возвращает число пересечённых границ указанного интервала между двумя значениями.",
       "sourceHref": "date-time-functions-arithmetic-and-validation.html#datediff",
       "forms": [
         {
@@ -2055,7 +2055,7 @@
     },
     {
       "name": "DATEPART",
-      "description": "Извлечение части по токену.",
+      "description": "Возвращает выбранную календарную или временную часть значения.",
       "sourceHref": "date-time-functions-arithmetic-and-validation.html#datepart",
       "forms": [
         {
@@ -2116,7 +2116,7 @@
     },
     {
       "name": "DATESERIAL",
-      "description": "Построение канонической даты из частей.",
+      "description": "Возвращает дату, собранную из года, месяца и дня.",
       "sourceHref": "date-time-functions-parts-and-serial.html#dateserial",
       "forms": [
         {
@@ -2145,8 +2145,8 @@
     },
     {
       "name": "DATEVALUE",
-      "description": "Дата из даты-времени.",
-      "sourceHref": "date-time-functions-arithmetic-and-validation.html#datevalue-timevalue",
+      "description": "Возвращает календарную дату, прочитанную из строки.",
+      "sourceHref": "date-time-functions-arithmetic-and-validation.html#datevalue",
       "forms": [
         {
           "key": "DATEVALUE/0",
@@ -2166,8 +2166,8 @@
     },
     {
       "name": "DAY",
-      "description": "Извлечение дня месяца.",
-      "sourceHref": "date-time-functions-parts-and-serial.html#year-month-day",
+      "description": "Возвращает номер дня внутри месяца.",
+      "sourceHref": "date-time-functions-parts-and-serial.html#day",
       "forms": [
         {
           "key": "DAY/0",
@@ -2187,8 +2187,8 @@
     },
     {
       "name": "DAYSINMONTH",
-      "description": "Число дней в месяце.",
-      "sourceHref": "date-time-functions-parts-and-serial.html#calendar-helpers",
+      "description": "Возвращает количество дней в месяце.",
+      "sourceHref": "date-time-functions-parts-and-serial.html#daysinmonth",
       "forms": [
         {
           "key": "DAYSINMONTH/0",
@@ -2212,7 +2212,7 @@
     },
     {
       "name": "DELETEDIR",
-      "description": "Удаление пустой папки.",
+      "description": "Удаляет пустой каталог.",
       "sourceHref": "file-system-functions-management.html#deletedir",
       "forms": [
         {
@@ -2233,7 +2233,7 @@
     },
     {
       "name": "DELETEDIRRECURSIVE",
-      "description": "Рекурсивное удаление папки.",
+      "description": "Удаляет каталог со всем его содержимым.",
       "sourceHref": "file-system-functions-management.html#deletedirrecursive",
       "forms": [
         {
@@ -2254,7 +2254,7 @@
     },
     {
       "name": "DELETEFILE",
-      "description": "Удаление файла.",
+      "description": "Удаляет файл по заданному пути.",
       "sourceHref": "file-system-functions-management.html#deletefile",
       "forms": [
         {
@@ -2275,7 +2275,7 @@
     },
     {
       "name": "DIRDATE",
-      "description": "Дата последнего изменения папки.",
+      "description": "Возвращает местные дату и время последней записи в каталог.",
       "sourceHref": "file-system-functions-paths.html#dirdate",
       "forms": [
         {
@@ -2296,7 +2296,7 @@
     },
     {
       "name": "DIREXISTS",
-      "description": "Проверка существования папки.",
+      "description": "Проверяет, существует ли каталог по заданному пути.",
       "sourceHref": "file-system-functions-text.html#direxists",
       "forms": [
         {
@@ -2317,7 +2317,7 @@
     },
     {
       "name": "DIRNAME",
-      "description": "Имя последней папки в пути.",
+      "description": "Возвращает полный путь родительского каталога.",
       "sourceHref": "file-system-functions-paths.html#dirname",
       "forms": [
         {
@@ -2338,8 +2338,8 @@
     },
     {
       "name": "DIRSIZE",
-      "description": "Суммарный размер папки.",
-      "sourceHref": "file-system-functions-paths.html#dirsize",
+      "description": "Возвращает суммарный размер обычных файлов дерева каталога в байтах.",
+      "sourceHref": "file-system-functions-management.html#dirsize",
       "forms": [
         {
           "key": "DIRSIZE/0",
@@ -2359,8 +2359,8 @@
     },
     {
       "name": "DRIVEFORMAT",
-      "description": "Формат файловой системы диска.",
-      "sourceHref": "file-system-functions-paths.html#driveformat",
+      "description": "Возвращает имя файловой системы диска.",
+      "sourceHref": "file-system-functions-management.html#driveformat",
       "forms": [
         {
           "key": "DRIVEFORMAT/0",
@@ -2380,8 +2380,8 @@
     },
     {
       "name": "DRIVENAME",
-      "description": "Имя диска для пути.",
-      "sourceHref": "file-system-functions-paths.html#drivename",
+      "description": "Возвращает строковое имя корня диска.",
+      "sourceHref": "file-system-functions-management.html#drivename",
       "forms": [
         {
           "key": "DRIVENAME/0",
@@ -2401,8 +2401,8 @@
     },
     {
       "name": "DRIVETYPE",
-      "description": "Тип диска для пути.",
-      "sourceHref": "file-system-functions-paths.html#drivetype",
+      "description": "Возвращает строковое название типа диска.",
+      "sourceHref": "file-system-functions-management.html#drivetype",
       "forms": [
         {
           "key": "DRIVETYPE/0",
@@ -2422,8 +2422,8 @@
     },
     {
       "name": "ENDOFMONTH",
-      "description": "Конец месяца.",
-      "sourceHref": "date-time-functions-parts-and-serial.html#calendar-helpers",
+      "description": "Возвращает последний день месяца исходной даты.",
+      "sourceHref": "date-time-functions-parts-and-serial.html#endofmonth",
       "forms": [
         {
           "key": "ENDOFMONTH/0",
@@ -2443,8 +2443,8 @@
     },
     {
       "name": "ENDOFYEAR",
-      "description": "Конец года.",
-      "sourceHref": "date-time-functions-parts-and-serial.html#calendar-helpers",
+      "description": "Возвращает последний день года исходной даты.",
+      "sourceHref": "date-time-functions-parts-and-serial.html#endofyear",
       "forms": [
         {
           "key": "ENDOFYEAR/0",
@@ -2464,8 +2464,8 @@
     },
     {
       "name": "ENDSWITH",
-      "description": "Проверка конца строки.",
-      "sourceHref": "string-functions-search-and-replace.html#contains",
+      "description": "Проверяет, заканчивается ли строка указанным фрагментом.",
+      "sourceHref": "string-functions-search-and-replace.html#endswith",
       "forms": [
         {
           "key": "ENDSWITH/0",
@@ -2489,7 +2489,7 @@
     },
     {
       "name": "EOF",
-      "description": "Проверка конца открытого файла.",
+      "description": "Проверяет, достигнута ли конечная байтовая позиция файла при чтении.",
       "sourceHref": "file-system-functions-open-files.html#eof",
       "forms": [
         {
@@ -2510,7 +2510,7 @@
     },
     {
       "name": "EXP",
-      "description": "Экспонента e^x.",
+      "description": "Возвращает значение экспоненты e в степени аргумента.",
       "sourceHref": "numeric-functions-roots-rounding.html#exp",
       "forms": [
         {
@@ -2531,7 +2531,7 @@
     },
     {
       "name": "EXTNAME",
-      "description": "Расширение файла вместе с точкой.",
+      "description": "Возвращает расширение последнего компонента пути вместе с точкой.",
       "sourceHref": "file-system-functions-paths.html#extname",
       "forms": [
         {
@@ -2552,7 +2552,7 @@
     },
     {
       "name": "FILEACCESSEDDATE",
-      "description": "Дата последнего доступа к файлу.",
+      "description": "Возвращает местные дату и время последнего доступа к файлу.",
       "sourceHref": "file-system-functions-paths.html#fileaccesseddate",
       "forms": [
         {
@@ -2573,7 +2573,7 @@
     },
     {
       "name": "FILECREATEDATE",
-      "description": "Дата создания файла.",
+      "description": "Возвращает местные дату и время создания файла.",
       "sourceHref": "file-system-functions-paths.html#filecreatedate",
       "forms": [
         {
@@ -2594,7 +2594,7 @@
     },
     {
       "name": "FILEDATE",
-      "description": "Дата последнего изменения файла.",
+      "description": "Возвращает местные дату и время последней записи в файл.",
       "sourceHref": "file-system-functions-paths.html#filedate",
       "forms": [
         {
@@ -2615,7 +2615,7 @@
     },
     {
       "name": "FILEEXISTS",
-      "description": "Проверка существования файла.",
+      "description": "Проверяет, существует ли обычный файл по заданному пути.",
       "sourceHref": "file-system-functions-text.html#fileexists",
       "forms": [
         {
@@ -2636,7 +2636,7 @@
     },
     {
       "name": "FILELENGTH",
-      "description": "Длина открытого файла.",
+      "description": "Возвращает текущую длину содержимого открытого файла в байтах.",
       "sourceHref": "file-system-functions-open-files.html#filelength",
       "forms": [
         {
@@ -2657,7 +2657,7 @@
     },
     {
       "name": "FILEMODE",
-      "description": "Режим открытия файла.",
+      "description": "Возвращает строковое имя режима открытого ресурса FILE.",
       "sourceHref": "file-system-functions-open-files.html#filemode",
       "forms": [
         {
@@ -2678,7 +2678,7 @@
     },
     {
       "name": "FILENAME",
-      "description": "Имя файла вместе с расширением.",
+      "description": "Возвращает последнюю часть полного пути вместе с расширением.",
       "sourceHref": "file-system-functions-paths.html#filename",
       "forms": [
         {
@@ -2699,7 +2699,7 @@
     },
     {
       "name": "FILEPATH",
-      "description": "Полный путь открытого файла.",
+      "description": "Возвращает полный путь открытого ресурса FILE.",
       "sourceHref": "file-system-functions-open-files.html#filepath",
       "forms": [
         {
@@ -2720,7 +2720,7 @@
     },
     {
       "name": "FILEPOS",
-      "description": "Текущая позиция в открытом файле.",
+      "description": "Возвращает текущую байтовую позицию открытого файла.",
       "sourceHref": "file-system-functions-open-files.html#filepos",
       "forms": [
         {
@@ -2741,7 +2741,7 @@
     },
     {
       "name": "FILESIZE",
-      "description": "Размер файла в байтах.",
+      "description": "Возвращает физическую длину файла в байтах.",
       "sourceHref": "file-system-functions-paths.html#filesize",
       "forms": [
         {
@@ -2762,7 +2762,7 @@
     },
     {
       "name": "FIX",
-      "description": "Отсечение дробной части к нулю.",
+      "description": "Возвращает целую часть числа после удаления дробной части.",
       "sourceHref": "numeric-functions-roots-rounding.html#fix",
       "forms": [
         {
@@ -2783,7 +2783,7 @@
     },
     {
       "name": "FLOOR",
-      "description": "Округление вниз с сохранением семейства.",
+      "description": "Возвращает наибольшее целое значение, не превышающее аргумент.",
       "sourceHref": "numeric-functions-roots-rounding.html#floor",
       "forms": [
         {
@@ -2804,7 +2804,7 @@
     },
     {
       "name": "FLUSH",
-      "description": "Принудительный сброс буфера записи.",
+      "description": "Передаёт накопленные байты записи в файловый поток.",
       "sourceHref": "file-system-functions-open-files.html#flush",
       "forms": [
         {
@@ -2825,8 +2825,8 @@
     },
     {
       "name": "FREESPACE",
-      "description": "Доступное свободное место на диске.",
-      "sourceHref": "file-system-functions-paths.html#freespace",
+      "description": "Возвращает число свободных байтов диска, доступных текущему пользователю.",
+      "sourceHref": "file-system-functions-management.html#freespace",
       "forms": [
         {
           "key": "FREESPACE/0",
@@ -2846,7 +2846,7 @@
     },
     {
       "name": "FROMUTC",
-      "description": "Перевод из UTC.",
+      "description": "Возвращает дату и время, преобразованные из UTC в выбранный пояс.",
       "sourceHref": "date-time-functions-time-zones.html#fromutc",
       "forms": [
         {
@@ -2885,7 +2885,7 @@
     },
     {
       "name": "FULLPATH",
-      "description": "Полный путь относительно каталога программы, включая формы с буквой диска и UNC.",
+      "description": "Преобразует строку пути в полный путь.",
       "sourceHref": "file-system-functions-paths.html#fullpath",
       "forms": [
         {
@@ -2906,7 +2906,7 @@
     },
     {
       "name": "GETDIRS",
-      "description": "Список папок по маске.",
+      "description": "Возвращает массив полных путей каталогов непосредственно в указанном каталоге.",
       "sourceHref": "file-system-functions-paths.html#getdirs",
       "forms": [
         {
@@ -2945,7 +2945,7 @@
     },
     {
       "name": "GETFILES",
-      "description": "Список файлов по маске.",
+      "description": "Возвращает массив полных путей файлов непосредственно в указанном каталоге.",
       "sourceHref": "file-system-functions-paths.html#getfiles",
       "forms": [
         {
@@ -2984,8 +2984,8 @@
     },
     {
       "name": "HOUR",
-      "description": "Извлечение часа.",
-      "sourceHref": "date-time-functions-parts-and-serial.html#hour-minute-second",
+      "description": "Возвращает час времени суток.",
+      "sourceHref": "date-time-functions-parts-and-serial.html#hour",
       "forms": [
         {
           "key": "HOUR/0",
@@ -3005,7 +3005,7 @@
     },
     {
       "name": "IMAGEHEIGHT",
-      "description": "Получение ширины и высоты значения IMAGE в пикселях.",
+      "description": "Возвращает высоту загруженного изображения в пикселях или 0 для пустого значения изображения.",
       "sourceHref": "images.html#size",
       "forms": [
         {
@@ -3026,7 +3026,7 @@
     },
     {
       "name": "IMAGEWIDTH",
-      "description": "Получение ширины и высоты значения IMAGE в пикселях.",
+      "description": "Возвращает ширину загруженного изображения в пикселях или 0 для пустого значения изображения.",
       "sourceHref": "images.html#size",
       "forms": [
         {
@@ -3047,7 +3047,7 @@
     },
     {
       "name": "INKEY",
-      "description": "Неблокирующее чтение одной клавиши из очереди клавиатуры.",
+      "description": "Извлекает следующую клавишу из очереди ввода без ожидания и возвращает её строковое представление либо пустую строку, если очередь пуста.",
       "sourceHref": "inkey.html",
       "forms": [
         {
@@ -3063,8 +3063,8 @@
     },
     {
       "name": "INSERT",
-      "description": "Вставка фрагмента в строку.",
-      "sourceHref": "string-functions-build-and-split.html#insertremove",
+      "description": "Возвращает строку, вставив фрагмент перед указанной позицией.",
+      "sourceHref": "string-functions-build-and-split.html#insert",
       "forms": [
         {
           "key": "INSERT/0",
@@ -3092,7 +3092,7 @@
     },
     {
       "name": "INSTR",
-      "description": "Позиция первого вхождения.",
+      "description": "Возвращает позицию первого вхождения фрагмента в строку.",
       "sourceHref": "string-functions-search-and-replace.html#instr",
       "forms": [
         {
@@ -3139,8 +3139,8 @@
     },
     {
       "name": "INSTRREV",
-      "description": "Позиция последнего вхождения.",
-      "sourceHref": "string-functions-search-and-replace.html#instr",
+      "description": "Возвращает позицию вхождения фрагмента, найденного при поиске справа налево.",
+      "sourceHref": "string-functions-search-and-replace.html#instrrev",
       "forms": [
         {
           "key": "INSTRREV/0",
@@ -3186,7 +3186,7 @@
     },
     {
       "name": "INT",
-      "description": "Округление вниз до INTEGER.",
+      "description": "Возвращает наибольшее целое, не превышающее число.",
       "sourceHref": "numeric-functions-conversion-and-legacy.html#int",
       "forms": [
         {
@@ -3207,7 +3207,7 @@
     },
     {
       "name": "ISABSOLUTEPATH",
-      "description": "Проверка, является ли путь абсолютным.",
+      "description": "Проверяет, полностью ли задан путь без обращения к рабочему каталогу.",
       "sourceHref": "file-system-functions-paths.html#isabsolutepath",
       "forms": [
         {
@@ -3228,7 +3228,7 @@
     },
     {
       "name": "ISDATE",
-      "description": "Проверка канонической строки даты или времени.",
+      "description": "Возвращает признак допустимости канонической строки даты, времени или даты-времени.",
       "sourceHref": "date-time-functions-arithmetic-and-validation.html#isdate",
       "forms": [
         {
@@ -3249,8 +3249,8 @@
     },
     {
       "name": "ISHIDDEN",
-      "description": "Признак скрытого объекта.",
-      "sourceHref": "file-system-functions-paths.html#ishidden",
+      "description": "Проверяет атрибут «скрытый» файла или каталога.",
+      "sourceHref": "file-system-functions-management.html#ishidden",
       "forms": [
         {
           "key": "ISHIDDEN/0",
@@ -3270,8 +3270,8 @@
     },
     {
       "name": "ISLEAPYEAR",
-      "description": "Проверка високосного года.",
-      "sourceHref": "date-time-functions-parts-and-serial.html#calendar-helpers",
+      "description": "Возвращает признак високосности года.",
+      "sourceHref": "date-time-functions-parts-and-serial.html#isleapyear",
       "forms": [
         {
           "key": "ISLEAPYEAR/0",
@@ -3291,8 +3291,8 @@
     },
     {
       "name": "ISNUMERIC",
-      "description": "Проверка полной строки на конечное инвариантное десятичное число DOUBLE.",
-      "sourceHref": "isnumeric.html",
+      "description": "Возвращает признак полной записи конечного числа DOUBLE в строке.",
+      "sourceHref": "isnumeric.html#isnumeric",
       "forms": [
         {
           "key": "ISNUMERIC/0",
@@ -3312,7 +3312,7 @@
     },
     {
       "name": "ISOPEN",
-      "description": "Проверка, открыт ли FILE.",
+      "description": "Проверяет, открыт ли ресурс FILE.",
       "sourceHref": "file-system-functions-open-files.html#isopen",
       "forms": [
         {
@@ -3333,8 +3333,8 @@
     },
     {
       "name": "ISREADONLY",
-      "description": "Признак объекта только для чтения.",
-      "sourceHref": "file-system-functions-paths.html#isreadonly",
+      "description": "Проверяет атрибут «только для чтения» файла или каталога.",
+      "sourceHref": "file-system-functions-management.html#isreadonly",
       "forms": [
         {
           "key": "ISREADONLY/0",
@@ -3354,8 +3354,8 @@
     },
     {
       "name": "JOIN",
-      "description": "Сборка строки из массива строк.",
-      "sourceHref": "string-functions-build-and-split.html#split",
+      "description": "Соединяет элементы массива строк и возвращает одну строку.",
+      "sourceHref": "string-functions-build-and-split.html#join",
       "forms": [
         {
           "key": "JOIN/0",
@@ -3393,7 +3393,7 @@
     },
     {
       "name": "KEYDOWN",
-      "description": "Проверка текущего удержания клавиши, модификатора или строкового аккорда клавиш через +.",
+      "description": "Проверяет текущее удержание клавиши или всех клавиш сочетания, сохраняя события в очереди ввода.",
       "sourceHref": "keydown.html",
       "forms": [
         {
@@ -3414,7 +3414,7 @@
     },
     {
       "name": "KEYPRESS",
-      "description": "Одноразовая проверка нажатия клавиши или строкового аккорда, где последняя клавиша является событием.",
+      "description": "Ищет непрочитанное нажатие клавиши, удаляет первое подходящее событие из очереди и сообщает, было ли оно найдено.",
       "sourceHref": "keypress.html",
       "forms": [
         {
@@ -3435,7 +3435,7 @@
     },
     {
       "name": "LBOUND",
-      "description": "Нижняя граница массива.",
+      "description": "Возвращает нижнюю границу выбранного измерения массива.",
       "sourceHref": "arrays-functions.html#lbound",
       "forms": [
         {
@@ -3474,7 +3474,7 @@
     },
     {
       "name": "LCASE",
-      "description": "Перевод в нижний регистр.",
+      "description": "Возвращает строку, преобразовав буквы в нижний регистр.",
       "sourceHref": "string-functions-trim-and-case.html#lcase",
       "forms": [
         {
@@ -3495,7 +3495,7 @@
     },
     {
       "name": "LEFT",
-      "description": "Фрагмент с начала строки.",
+      "description": "Возвращает фрагмент заданной длины из начала строки.",
       "sourceHref": "string-functions-slices-and-length.html#left",
       "forms": [
         {
@@ -3542,7 +3542,7 @@
     },
     {
       "name": "LEN",
-      "description": "Длина строки в UTF-16, Unicode-кодах или графемах.",
+      "description": "Возвращает длину строки в выбранных единицах текста.",
       "sourceHref": "string-functions-slices-and-length.html#len",
       "forms": [
         {
@@ -3581,7 +3581,7 @@
     },
     {
       "name": "LINENUMBER",
-      "description": "Номер текущей строки чтения.",
+      "description": "Возвращает номер строки в текущей позиции чтения.",
       "sourceHref": "file-system-functions-open-files.html#linenumber",
       "forms": [
         {
@@ -3602,7 +3602,7 @@
     },
     {
       "name": "LOADIMAGE",
-      "description": "Загрузка файла изображения в значение IMAGE.",
+      "description": "Загружает файл изображения и возвращает ресурс, который можно измерять и рисовать на графической поверхности.",
       "sourceHref": "images.html#loadimage",
       "forms": [
         {
@@ -3623,7 +3623,7 @@
     },
     {
       "name": "LOADSPRITE",
-      "description": "Загрузка файла изображения в значение SPRITE с заданным размером кадра.",
+      "description": "Загружает изображение как спрайтовый лист и разбивает его на прямоугольные кадры указанного размера.",
       "sourceHref": "sprites.html#loadsprite",
       "forms": [
         {
@@ -3652,7 +3652,7 @@
     },
     {
       "name": "LOADTILEMAP",
-      "description": "Загрузка карты Tiled JSON в значение TILEMAP.",
+      "description": "Принимает путь типа STRING, читает карту Tiled и возвращает значение типа TILEMAP.",
       "sourceHref": "tilemaps.html#loadtilemap",
       "forms": [
         {
@@ -3673,7 +3673,7 @@
     },
     {
       "name": "LOADTILESET",
-      "description": "Загрузка изображения-атласа в значение TILESET с заданными размерами тайла, отступом и интервалом.",
+      "description": "Загружает изображение с сеткой тайлов и возвращает TILESET.",
       "sourceHref": "tilesets.html#loadtileset",
       "forms": [
         {
@@ -3758,7 +3758,7 @@
     },
     {
       "name": "LOG",
-      "description": "Натуральный логарифм.",
+      "description": "Возвращает натуральный логарифм числа.",
       "sourceHref": "numeric-functions-roots-rounding.html#log",
       "forms": [
         {
@@ -3779,7 +3779,7 @@
     },
     {
       "name": "LOG10",
-      "description": "Десятичный логарифм.",
+      "description": "Возвращает десятичный логарифм числа.",
       "sourceHref": "numeric-functions-roots-rounding.html#log10",
       "forms": [
         {
@@ -3800,7 +3800,7 @@
     },
     {
       "name": "LOG2",
-      "description": "Двоичный логарифм.",
+      "description": "Возвращает двоичный логарифм числа.",
       "sourceHref": "numeric-functions-roots-rounding.html#log2",
       "forms": [
         {
@@ -3821,7 +3821,7 @@
     },
     {
       "name": "LTRIM",
-      "description": "Удаление символов слева.",
+      "description": "Возвращает строку после удаления заданных символов с начала текста.",
       "sourceHref": "string-functions-trim-and-case.html#ltrim",
       "forms": [
         {
@@ -3860,7 +3860,7 @@
     },
     {
       "name": "MAKEDIR",
-      "description": "Создание папки.",
+      "description": "Создаёт каталог и недостающие родительские каталоги.",
       "sourceHref": "file-system-functions-management.html#makedir",
       "forms": [
         {
@@ -3881,7 +3881,7 @@
     },
     {
       "name": "MAKETEMPDIR",
-      "description": "Создание временной папки.",
+      "description": "Создаёт каталог со случайным именем во временной папке системы.",
       "sourceHref": "file-system-functions-management.html#maketempdir",
       "forms": [
         {
@@ -3902,7 +3902,7 @@
     },
     {
       "name": "MAKETEMPFILE",
-      "description": "Создание временного файла.",
+      "description": "Создаёт пустой файл со случайным именем во временной папке системы.",
       "sourceHref": "file-system-functions-management.html#maketempfile",
       "forms": [
         {
@@ -3923,7 +3923,7 @@
     },
     {
       "name": "MAPCOLUMN",
-      "description": "MAPCOLUMN переводит мировую координату X в номер столбца карты.",
+      "description": "Переводит мировую координату X в номер столбца карты.",
       "sourceHref": "tilemaps.html#mapcolumn",
       "forms": [
         {
@@ -3952,8 +3952,8 @@
     },
     {
       "name": "MAPHEIGHT",
-      "description": "Получение размеров карты в клетках и пикселях, размера клетки и числа слоёв.",
-      "sourceHref": "tilemaps.html#map-size",
+      "description": "Возвращает высоту карты в клетках.",
+      "sourceHref": "tilemaps.html#mapheight",
       "forms": [
         {
           "key": "MAPHEIGHT/0",
@@ -3973,8 +3973,8 @@
     },
     {
       "name": "MAPLAYERCOUNT",
-      "description": "Получение размеров карты в клетках и пикселях, размера клетки и числа слоёв.",
-      "sourceHref": "tilemaps.html#map-size",
+      "description": "Возвращает число слоёв карты.",
+      "sourceHref": "tilemaps.html#maplayercount",
       "forms": [
         {
           "key": "MAPLAYERCOUNT/0",
@@ -3994,7 +3994,7 @@
     },
     {
       "name": "MAPLAYERNAME",
-      "description": "MAPLAYERNAME возвращает имя слоя.",
+      "description": "Возвращает имя слоя.",
       "sourceHref": "tilemaps.html#maplayername",
       "forms": [
         {
@@ -4019,7 +4019,7 @@
     },
     {
       "name": "MAPLAYERPROPERTY",
-      "description": "MAPLAYERPROPERTY возвращает пользовательское свойство слоя.",
+      "description": "Возвращает пользовательское свойство слоя.",
       "sourceHref": "tilemaps.html#maplayerproperty",
       "forms": [
         {
@@ -4048,7 +4048,7 @@
     },
     {
       "name": "MAPLAYERTYPE",
-      "description": "MAPLAYERTYPE возвращает вид слоя: TILE или OBJECT.",
+      "description": "Возвращает вид слоя: TILE или OBJECT.",
       "sourceHref": "tilemaps.html#maplayertype",
       "forms": [
         {
@@ -4073,7 +4073,7 @@
     },
     {
       "name": "MAPLAYERVISIBLE",
-      "description": "MAPLAYERVISIBLE возвращает флаг видимости слоя.",
+      "description": "Возвращает флаг видимости слоя.",
       "sourceHref": "tilemaps.html#maplayervisible",
       "forms": [
         {
@@ -4098,7 +4098,7 @@
     },
     {
       "name": "MAPOBJECTCLASS",
-      "description": "MAPOBJECTCLASS возвращает класс объекта из class или type.",
+      "description": "Возвращает класс объекта из class или type.",
       "sourceHref": "tilemaps.html#mapobjectclass",
       "forms": [
         {
@@ -4127,7 +4127,7 @@
     },
     {
       "name": "MAPOBJECTCOUNT",
-      "description": "MAPOBJECTCOUNT возвращает число объектов слоя.",
+      "description": "Возвращает число объектов слоя.",
       "sourceHref": "tilemaps.html#mapobjectcount",
       "forms": [
         {
@@ -4152,7 +4152,7 @@
     },
     {
       "name": "MAPOBJECTHEIGHT",
-      "description": "MAPOBJECTHEIGHT возвращает высоту объекта.",
+      "description": "Возвращает высоту объекта.",
       "sourceHref": "tilemaps.html#mapobjectheight",
       "forms": [
         {
@@ -4181,7 +4181,7 @@
     },
     {
       "name": "MAPOBJECTKIND",
-      "description": "MAPOBJECTKIND возвращает вид объекта: POINT или RECT.",
+      "description": "Возвращает вид объекта: POINT или RECT.",
       "sourceHref": "tilemaps.html#mapobjectkind",
       "forms": [
         {
@@ -4210,7 +4210,7 @@
     },
     {
       "name": "MAPOBJECTNAME",
-      "description": "MAPOBJECTNAME возвращает имя объекта.",
+      "description": "Возвращает имя объекта.",
       "sourceHref": "tilemaps.html#mapobjectname",
       "forms": [
         {
@@ -4239,7 +4239,7 @@
     },
     {
       "name": "MAPOBJECTPROPERTY",
-      "description": "MAPOBJECTPROPERTY возвращает пользовательское свойство объекта.",
+      "description": "Возвращает пользовательское свойство объекта.",
       "sourceHref": "tilemaps.html#mapobjectproperty",
       "forms": [
         {
@@ -4272,7 +4272,7 @@
     },
     {
       "name": "MAPOBJECTVISIBLE",
-      "description": "MAPOBJECTVISIBLE возвращает флаг видимости объекта.",
+      "description": "Возвращает флаг видимости объекта.",
       "sourceHref": "tilemaps.html#mapobjectvisible",
       "forms": [
         {
@@ -4301,7 +4301,7 @@
     },
     {
       "name": "MAPOBJECTWIDTH",
-      "description": "MAPOBJECTWIDTH возвращает ширину объекта.",
+      "description": "Возвращает ширину объекта.",
       "sourceHref": "tilemaps.html#mapobjectwidth",
       "forms": [
         {
@@ -4330,7 +4330,7 @@
     },
     {
       "name": "MAPOBJECTX",
-      "description": "MAPOBJECTX возвращает координату X объекта.",
+      "description": "Возвращает координату X объекта.",
       "sourceHref": "tilemaps.html#mapobjectx",
       "forms": [
         {
@@ -4359,7 +4359,7 @@
     },
     {
       "name": "MAPOBJECTY",
-      "description": "MAPOBJECTY возвращает координату Y объекта.",
+      "description": "Возвращает координату Y объекта.",
       "sourceHref": "tilemaps.html#mapobjecty",
       "forms": [
         {
@@ -4388,8 +4388,8 @@
     },
     {
       "name": "MAPPIXELHEIGHT",
-      "description": "Получение размеров карты в клетках и пикселях, размера клетки и числа слоёв.",
-      "sourceHref": "tilemaps.html#map-size",
+      "description": "Возвращает высоту карты в пикселях.",
+      "sourceHref": "tilemaps.html#mappixelheight",
       "forms": [
         {
           "key": "MAPPIXELHEIGHT/0",
@@ -4409,8 +4409,8 @@
     },
     {
       "name": "MAPPIXELWIDTH",
-      "description": "Получение размеров карты в клетках и пикселях, размера клетки и числа слоёв.",
-      "sourceHref": "tilemaps.html#map-size",
+      "description": "Возвращает ширину карты в пикселях.",
+      "sourceHref": "tilemaps.html#mappixelwidth",
       "forms": [
         {
           "key": "MAPPIXELWIDTH/0",
@@ -4430,7 +4430,7 @@
     },
     {
       "name": "MAPPROPERTY",
-      "description": "MAPPROPERTY возвращает пользовательское свойство карты.",
+      "description": "Возвращает пользовательское свойство карты.",
       "sourceHref": "tilemaps.html#mapproperty",
       "forms": [
         {
@@ -4455,7 +4455,7 @@
     },
     {
       "name": "MAPROW",
-      "description": "MAPROW переводит мировую координату Y в номер строки карты.",
+      "description": "Переводит мировую координату Y в номер строки карты.",
       "sourceHref": "tilemaps.html#maprow",
       "forms": [
         {
@@ -4484,8 +4484,8 @@
     },
     {
       "name": "MAPTILE",
-      "description": "Чтение тайла, номера тайлсета и флагов отражения одной клетки TILEMAP.",
-      "sourceHref": "tilemaps.html#map-cell",
+      "description": "Возвращает номер тайла внутри тайлсета.",
+      "sourceHref": "tilemaps.html#maptile",
       "forms": [
         {
           "key": "MAPTILE/0",
@@ -4517,8 +4517,8 @@
     },
     {
       "name": "MAPTILEFLAGS",
-      "description": "Чтение тайла, номера тайлсета и флагов отражения одной клетки TILEMAP.",
-      "sourceHref": "tilemaps.html#map-cell",
+      "description": "Возвращает битовую маску отражений тайла в клетке.",
+      "sourceHref": "tilemaps.html#maptileflags",
       "forms": [
         {
           "key": "MAPTILEFLAGS/0",
@@ -4550,8 +4550,8 @@
     },
     {
       "name": "MAPTILEHEIGHT",
-      "description": "Получение размеров карты в клетках и пикселях, размера клетки и числа слоёв.",
-      "sourceHref": "tilemaps.html#map-size",
+      "description": "Возвращает высоту одной клетки в пикселях.",
+      "sourceHref": "tilemaps.html#maptileheight",
       "forms": [
         {
           "key": "MAPTILEHEIGHT/0",
@@ -4571,7 +4571,7 @@
     },
     {
       "name": "MAPTILEPROPERTY",
-      "description": "MAPTILEPROPERTY возвращает свойство фактического тайла в клетке.",
+      "description": "Возвращает свойство фактического тайла в клетке.",
       "sourceHref": "tilemaps.html#maptileproperty",
       "forms": [
         {
@@ -4608,8 +4608,8 @@
     },
     {
       "name": "MAPTILESET",
-      "description": "Чтение тайла, номера тайлсета и флагов отражения одной клетки TILEMAP.",
-      "sourceHref": "tilemaps.html#map-cell",
+      "description": "Возвращает номер тайлсета карты, к которому относится клетка.",
+      "sourceHref": "tilemaps.html#maptileset",
       "forms": [
         {
           "key": "MAPTILESET/0",
@@ -4641,7 +4641,7 @@
     },
     {
       "name": "MAPTILESETCOUNT",
-      "description": "MAPTILESETCOUNT возвращает число тайлсетов карты.",
+      "description": "Возвращает число тайлсетов карты.",
       "sourceHref": "tilemaps.html#maptilesetcount",
       "forms": [
         {
@@ -4662,8 +4662,8 @@
     },
     {
       "name": "MAPTILEWIDTH",
-      "description": "Получение размеров карты в клетках и пикселях, размера клетки и числа слоёв.",
-      "sourceHref": "tilemaps.html#map-size",
+      "description": "Возвращает ширину одной клетки в пикселях.",
+      "sourceHref": "tilemaps.html#maptilewidth",
       "forms": [
         {
           "key": "MAPTILEWIDTH/0",
@@ -4683,8 +4683,8 @@
     },
     {
       "name": "MAPWIDTH",
-      "description": "Получение размеров карты в клетках и пикселях, размера клетки и числа слоёв.",
-      "sourceHref": "tilemaps.html#map-size",
+      "description": "Возвращает ширину карты в клетках.",
+      "sourceHref": "tilemaps.html#mapwidth",
       "forms": [
         {
           "key": "MAPWIDTH/0",
@@ -4704,7 +4704,7 @@
     },
     {
       "name": "MAPWORLDX",
-      "description": "MAPWORLDX возвращает мировую координату левой границы столбца.",
+      "description": "Возвращает мировую координату левой границы столбца.",
       "sourceHref": "tilemaps.html#mapworldx",
       "forms": [
         {
@@ -4733,7 +4733,7 @@
     },
     {
       "name": "MAPWORLDY",
-      "description": "MAPWORLDY возвращает мировую координату верхней границы строки.",
+      "description": "Возвращает мировую координату верхней границы строки.",
       "sourceHref": "tilemaps.html#mapworldy",
       "forms": [
         {
@@ -4762,7 +4762,7 @@
     },
     {
       "name": "MAX",
-      "description": "Большее из двух чисел.",
+      "description": "Возвращает большее из двух чисел.",
       "sourceHref": "numeric-functions-core.html#max",
       "forms": [
         {
@@ -4787,7 +4787,7 @@
     },
     {
       "name": "MID",
-      "description": "Фрагмент строки по позиции и длине.",
+      "description": "Возвращает фрагмент строки, начиная с указанной позиции.",
       "sourceHref": "string-functions-slices-and-length.html#mid",
       "forms": [
         {
@@ -4842,7 +4842,7 @@
     },
     {
       "name": "MIN",
-      "description": "Меньшее из двух чисел.",
+      "description": "Возвращает меньшее из двух чисел.",
       "sourceHref": "numeric-functions-core.html#min",
       "forms": [
         {
@@ -4867,8 +4867,8 @@
     },
     {
       "name": "MINUTE",
-      "description": "Извлечение минуты.",
-      "sourceHref": "date-time-functions-parts-and-serial.html#hour-minute-second",
+      "description": "Возвращает минуту внутри часа.",
+      "sourceHref": "date-time-functions-parts-and-serial.html#minute",
       "forms": [
         {
           "key": "MINUTE/0",
@@ -4888,8 +4888,8 @@
     },
     {
       "name": "MONTH",
-      "description": "Извлечение номера месяца.",
-      "sourceHref": "date-time-functions-parts-and-serial.html#year-month-day",
+      "description": "Возвращает номер месяца календарной даты.",
+      "sourceHref": "date-time-functions-parts-and-serial.html#month",
       "forms": [
         {
           "key": "MONTH/0",
@@ -4909,7 +4909,7 @@
     },
     {
       "name": "MONTHNAME",
-      "description": "Имя месяца.",
+      "description": "Возвращает английское название месяца.",
       "sourceHref": "date-time-functions-parts-and-serial.html#monthname",
       "forms": [
         {
@@ -4930,7 +4930,7 @@
     },
     {
       "name": "MOUSEBUTTON",
-      "description": "Проверка текущего удержания левой, правой или средней кнопки мыши в SCREEN или CANVAS.",
+      "description": "Проверяет текущее удержание указанной кнопки мыши на активном графическом экране или холсте, не расходуя события очереди.",
       "sourceHref": "mousebutton.html",
       "forms": [
         {
@@ -4951,7 +4951,7 @@
     },
     {
       "name": "MOUSEPRESS",
-      "description": "Одноразовая проверка нажатия кнопки мыши с удалением подходящего события из очереди в SCREEN или CANVAS.",
+      "description": "Ищет непрочитанное нажатие указанной кнопки мыши, удаляет первое подходящее событие и сообщает, было ли оно найдено.",
       "sourceHref": "mousepress.html",
       "forms": [
         {
@@ -4972,7 +4972,7 @@
     },
     {
       "name": "MOUSEX",
-      "description": "Горизонтальная координата указателя: клиентская в SCREEN и мировая в CANVAS через VIEWPORT и CAMERA.",
+      "description": "Возвращает LONG с горизонтальной координатой указателя: в SCREEN — физические пиксели клиентской области, на CANVAS — мировая координата с учётом VIEWPORT и CAMERA. Требует графическую поверхность.",
       "sourceHref": "mousex.html",
       "forms": [
         {
@@ -4988,7 +4988,7 @@
     },
     {
       "name": "MOUSEY",
-      "description": "Вертикальная координата указателя: клиентская в SCREEN и мировая в CANVAS через VIEWPORT и CAMERA.",
+      "description": "Возвращает LONG с вертикальной координатой указателя: в SCREEN — физические пиксели клиентской области, на CANVAS — мировая координата с учётом VIEWPORT и CAMERA. Требует графическую поверхность.",
       "sourceHref": "mousey.html",
       "forms": [
         {
@@ -5004,7 +5004,7 @@
     },
     {
       "name": "MOVEDIR",
-      "description": "Перемещение папки.",
+      "description": "Переносит каталог по новому пути.",
       "sourceHref": "file-system-functions-management.html#movedir",
       "forms": [
         {
@@ -5029,7 +5029,7 @@
     },
     {
       "name": "MOVEFILE",
-      "description": "Перемещение файла.",
+      "description": "Переносит существующий файл по новому пути.",
       "sourceHref": "file-system-functions-management.html#movefile",
       "forms": [
         {
@@ -5076,7 +5076,7 @@
     },
     {
       "name": "NEWLINE",
-      "description": "Добавление пустой строки в файл.",
+      "description": "Записывает символ LF в открытый файл.",
       "sourceHref": "file-system-functions-open-files.html#newline",
       "forms": [
         {
@@ -5097,7 +5097,7 @@
     },
     {
       "name": "NOW",
-      "description": "Текущие дата и время.",
+      "description": "Возвращает текущую дату и время.",
       "sourceHref": "date-time-functions-current.html#now",
       "forms": [
         {
@@ -5127,8 +5127,8 @@
     },
     {
       "name": "PADLEFT",
-      "description": "Дополнение строки слева.",
-      "sourceHref": "string-functions-build-and-split.html#padding",
+      "description": "Возвращает строку, дополнив её слева до заданной ширины.",
+      "sourceHref": "string-functions-build-and-split.html#padleft",
       "forms": [
         {
           "key": "PADLEFT/0",
@@ -5174,8 +5174,8 @@
     },
     {
       "name": "PADRIGHT",
-      "description": "Дополнение строки справа.",
-      "sourceHref": "string-functions-build-and-split.html#padding",
+      "description": "Возвращает строку, дополнив её справа до заданной ширины.",
+      "sourceHref": "string-functions-build-and-split.html#padright",
       "forms": [
         {
           "key": "PADRIGHT/0",
@@ -5221,7 +5221,7 @@
     },
     {
       "name": "PATHEXISTS",
-      "description": "Проверка существования файла или папки.",
+      "description": "Проверяет, существует ли файл или каталог по заданному пути.",
       "sourceHref": "file-system-functions-text.html#pathexists",
       "forms": [
         {
@@ -5242,7 +5242,7 @@
     },
     {
       "name": "PATHROOT",
-      "description": "Корневая часть полного пути.",
+      "description": "Возвращает корень полного пути.",
       "sourceHref": "file-system-functions-paths.html#pathroot",
       "forms": [
         {
@@ -5263,7 +5263,7 @@
     },
     {
       "name": "PMAP",
-      "description": "Преобразование координаты между физической системой viewport и логической системой WINDOW.",
+      "description": "Возвращает DOUBLE с преобразованной координатой SCREEN между логической шкалой WINDOW и пиксельной системой VIEW. Без WINDOW возвращает исходную координату.",
       "sourceHref": "pmap.html",
       "forms": [
         {
@@ -5288,7 +5288,7 @@
     },
     {
       "name": "POINT",
-      "description": "Получение номера цвета в указанной точке SCREEN или CANVAS, а также координат текущей графической позиции через POINT(selector).",
+      "description": "Возвращает индекс цвета пикселя в заданной точке либо выбранную координату текущей графической позиции SCREEN.",
       "sourceHref": "graphics-primitives.html#point",
       "forms": [
         {
@@ -5327,7 +5327,7 @@
     },
     {
       "name": "POW",
-      "description": "Возведение в степень.",
+      "description": "Возвращает первое число в степени второго.",
       "sourceHref": "numeric-functions-roots-rounding.html#pow",
       "forms": [
         {
@@ -5352,7 +5352,7 @@
     },
     {
       "name": "READALLLINES",
-      "description": "Чтение файла в массив строк.",
+      "description": "Читает строки файла в одномерный массив строк.",
       "sourceHref": "file-system-functions-text.html#readalllines",
       "forms": [
         {
@@ -5391,7 +5391,7 @@
     },
     {
       "name": "READFILE",
-      "description": "Чтение целого текстового файла одной строкой.",
+      "description": "Читает весь текст файла в строку.",
       "sourceHref": "file-system-functions-text.html#readfile",
       "forms": [
         {
@@ -5430,7 +5430,7 @@
     },
     {
       "name": "READLINE",
-      "description": "Чтение одной строки из открытого файла.",
+      "description": "Читает одну строку открытого файла без её разделителя.",
       "sourceHref": "file-system-functions-open-files.html#readline",
       "forms": [
         {
@@ -5451,7 +5451,7 @@
     },
     {
       "name": "READLINES",
-      "description": "Чтение нескольких строк из открытого файла.",
+      "description": "Читает не более заданного числа строк открытого файла в массив.",
       "sourceHref": "file-system-functions-open-files.html#readlines",
       "forms": [
         {
@@ -5476,7 +5476,7 @@
     },
     {
       "name": "READTEXT",
-      "description": "Чтение фрагмента текста из открытого файла.",
+      "description": "Читает не более заданного числа скалярных значений Unicode.",
       "sourceHref": "file-system-functions-open-files.html#readtext",
       "forms": [
         {
@@ -5501,7 +5501,7 @@
     },
     {
       "name": "READTOEND",
-      "description": "Чтение остатка открытого файла.",
+      "description": "Читает оставшийся текст открытого файла в строку.",
       "sourceHref": "file-system-functions-open-files.html#readtoend",
       "forms": [
         {
@@ -5522,7 +5522,7 @@
     },
     {
       "name": "REGEXCOUNT",
-      "description": "Количество найденных совпадений.",
+      "description": "Возвращает количество совпадений с регулярным выражением.",
       "sourceHref": "regex-functions-replace-and-count.html#regexcount",
       "forms": [
         {
@@ -5569,7 +5569,7 @@
     },
     {
       "name": "REGEXEXTRACT",
-      "description": "Значение указанной группы из первого совпадения.",
+      "description": "Возвращает значение выбранной группы первого совпадения с регулярным выражением.",
       "sourceHref": "regex-functions-match-and-extract.html#regexextract",
       "forms": [
         {
@@ -5624,7 +5624,7 @@
     },
     {
       "name": "REGEXEXTRACTALL",
-      "description": "Значения группы из всех совпадений.",
+      "description": "Возвращает значения выбранной группы для всех совпадений с регулярным выражением как массив строк.",
       "sourceHref": "regex-functions-arrays-and-split.html#regexextractall",
       "forms": [
         {
@@ -5679,7 +5679,7 @@
     },
     {
       "name": "REGEXISMATCH",
-      "description": "Проверка, найдено ли хотя бы одно совпадение.",
+      "description": "Проверяет, содержит ли текст хотя бы одно совпадение с регулярным выражением.",
       "sourceHref": "regex-functions-match-and-extract.html#regexismatch",
       "forms": [
         {
@@ -5726,7 +5726,7 @@
     },
     {
       "name": "REGEXMATCH",
-      "description": "Первое найденное совпадение целиком.",
+      "description": "Возвращает текст первого полного совпадения с регулярным выражением.",
       "sourceHref": "regex-functions-match-and-extract.html#regexmatch",
       "forms": [
         {
@@ -5773,7 +5773,7 @@
     },
     {
       "name": "REGEXMATCHES",
-      "description": "Все найденные совпадения как массив строк.",
+      "description": "Возвращает все найденные совпадения с регулярным выражением как массив строк.",
       "sourceHref": "regex-functions-arrays-and-split.html#regexmatches",
       "forms": [
         {
@@ -5820,7 +5820,7 @@
     },
     {
       "name": "REGEXREPLACE",
-      "description": "Замена совпадений новой строкой.",
+      "description": "Заменяет совпадения с регулярным выражением и возвращает полученную строку.",
       "sourceHref": "regex-functions-replace-and-count.html#regexreplace",
       "forms": [
         {
@@ -5931,7 +5931,7 @@
     },
     {
       "name": "REGEXSPLIT",
-      "description": "Разбиение строки по регулярному выражению.",
+      "description": "Разбивает текст по совпадениям с регулярным выражением и возвращает полученные части как массив строк.",
       "sourceHref": "regex-functions-arrays-and-split.html#regexsplit",
       "forms": [
         {
@@ -5978,8 +5978,8 @@
     },
     {
       "name": "REMOVE",
-      "description": "Удаление фрагмента из строки.",
-      "sourceHref": "string-functions-build-and-split.html#insertremove",
+      "description": "Возвращает строку, удалив заданное количество единиц текста с указанной позиции.",
+      "sourceHref": "string-functions-build-and-split.html#remove",
       "forms": [
         {
           "key": "REMOVE/0",
@@ -6007,7 +6007,7 @@
     },
     {
       "name": "RENAMEDIR",
-      "description": "Переименование папки.",
+      "description": "Меняет имя каталога внутри его родительского каталога.",
       "sourceHref": "file-system-functions-management.html#renamedir",
       "forms": [
         {
@@ -6032,7 +6032,7 @@
     },
     {
       "name": "RENAMEFILE",
-      "description": "Переименование файла.",
+      "description": "Меняет имя файла в его текущем каталоге.",
       "sourceHref": "file-system-functions-management.html#renamefile",
       "forms": [
         {
@@ -6057,7 +6057,7 @@
     },
     {
       "name": "REPEAT",
-      "description": "Повтор строки заданное число раз.",
+      "description": "Возвращает строку, повторив исходный фрагмент указанное число раз.",
       "sourceHref": "string-functions-build-and-split.html#repeat",
       "forms": [
         {
@@ -6082,7 +6082,7 @@
     },
     {
       "name": "REPLACE",
-      "description": "Замена найденных вхождений.",
+      "description": "Возвращает строку, заменив все точные вхождения одного фрагмента другим.",
       "sourceHref": "string-functions-search-and-replace.html#replace",
       "forms": [
         {
@@ -6111,7 +6111,7 @@
     },
     {
       "name": "REPLACEMANY",
-      "description": "Табличная замена многих фрагментов за один проход.",
+      "description": "Возвращает строку после одновременной замены нескольких фрагментов по двум массивам правил.",
       "sourceHref": "string-functions-search-and-replace.html#replacemany",
       "forms": [
         {
@@ -6140,7 +6140,7 @@
     },
     {
       "name": "REVERSE",
-      "description": "Разворот строки.",
+      "description": "Возвращает строку с обратным порядком кодов Unicode.",
       "sourceHref": "string-functions-trim-and-case.html#reverse",
       "forms": [
         {
@@ -6161,7 +6161,7 @@
     },
     {
       "name": "REWIND",
-      "description": "Возврат в начало открытого файла.",
+      "description": "Переставляет позицию открытого файла в начало содержимого.",
       "sourceHref": "file-system-functions-open-files.html#rewind",
       "forms": [
         {
@@ -6182,7 +6182,7 @@
     },
     {
       "name": "RGB",
-      "description": "Сборка полноцветного значения 0xRRGGBB из компонентов red, green и blue.",
+      "description": "Собирает полноцветное значение 0xRRGGBB из красной, зелёной и синей составляющих.",
       "sourceHref": "modern-graphics.html",
       "forms": [
         {
@@ -6211,7 +6211,7 @@
     },
     {
       "name": "RIGHT",
-      "description": "Фрагмент с конца строки.",
+      "description": "Возвращает фрагмент заданной длины из конца строки.",
       "sourceHref": "string-functions-slices-and-length.html#right",
       "forms": [
         {
@@ -6258,7 +6258,7 @@
     },
     {
       "name": "RND",
-      "description": "Псевдослучайное число DOUBLE.",
+      "description": "Возвращает очередное псевдослучайное число.",
       "sourceHref": "numeric-functions-core.html#rnd",
       "forms": [
         {
@@ -6274,7 +6274,7 @@
     },
     {
       "name": "ROUND",
-      "description": "Округление к ближайшему целому.",
+      "description": "Возвращает число, округлённое до ближайшего целого.",
       "sourceHref": "numeric-functions-roots-rounding.html#round",
       "forms": [
         {
@@ -6295,7 +6295,7 @@
     },
     {
       "name": "RTRIM",
-      "description": "Удаление символов справа.",
+      "description": "Возвращает строку после удаления заданных символов с конца текста.",
       "sourceHref": "string-functions-trim-and-case.html#rtrim",
       "forms": [
         {
@@ -6334,7 +6334,7 @@
     },
     {
       "name": "SCREENHEIGHT",
-      "description": "Высота активной поверхности SCREEN.",
+      "description": "Возвращает INTEGER с высотой текущей поверхности SCREEN или CANVAS в пикселях. Без открытой поверхности возвращает 0.",
       "sourceHref": "screen-functions.html#screenheight",
       "forms": [
         {
@@ -6350,7 +6350,7 @@
     },
     {
       "name": "SCREENISACTIVE",
-      "description": "Признак активного графического режима.",
+      "description": "Возвращает BOOLEAN: TRUE только при активном графическом SCREEN 1..10; для SCREEN 0, CANVAS и отсутствующей поверхности возвращает FALSE.",
       "sourceHref": "screen-functions.html#screenisactive",
       "forms": [
         {
@@ -6366,7 +6366,7 @@
     },
     {
       "name": "SCREENMODE",
-      "description": "Номер текущего режима SCREEN или 0.",
+      "description": "Возвращает INTEGER с номером текущего режима SCREEN. Без SCREEN, в текстовом режиме и на CANVAS возвращает 0.",
       "sourceHref": "screen-functions.html#screenmode",
       "forms": [
         {
@@ -6382,7 +6382,7 @@
     },
     {
       "name": "SCREENWIDTH",
-      "description": "Ширина активной поверхности SCREEN.",
+      "description": "Возвращает INTEGER с шириной текущей поверхности SCREEN или CANVAS в пикселях. Без открытой поверхности возвращает 0.",
       "sourceHref": "screen-functions.html#screenwidth",
       "forms": [
         {
@@ -6398,8 +6398,8 @@
     },
     {
       "name": "SECOND",
-      "description": "Извлечение секунды.",
-      "sourceHref": "date-time-functions-parts-and-serial.html#hour-minute-second",
+      "description": "Возвращает секунду внутри минуты.",
+      "sourceHref": "date-time-functions-parts-and-serial.html#second",
       "forms": [
         {
           "key": "SECOND/0",
@@ -6419,7 +6419,7 @@
     },
     {
       "name": "SEEKFILE",
-      "description": "Переход к указанной позиции открытого файла.",
+      "description": "Переставляет текущую позицию открытого файла на заданное байтовое смещение.",
       "sourceHref": "file-system-functions-open-files.html#seekfile",
       "forms": [
         {
@@ -6444,7 +6444,7 @@
     },
     {
       "name": "SETSIGN",
-      "description": "Перенос знака второго аргумента на первый.",
+      "description": "Возвращает модуль первого числа со знаком второго числа.",
       "sourceHref": "numeric-functions-core.html#setsign",
       "forms": [
         {
@@ -6469,7 +6469,7 @@
     },
     {
       "name": "SGN",
-      "description": "Знак числа как -1, 0 или 1.",
+      "description": "Возвращает знак числа в виде −1, 0 или 1.",
       "sourceHref": "numeric-functions-core.html#sgn",
       "forms": [
         {
@@ -6490,7 +6490,7 @@
     },
     {
       "name": "SIN",
-      "description": "Синус угла в радианах.",
+      "description": "Возвращает синус угла.",
       "sourceHref": "numeric-functions-trigonometry.html#sin",
       "forms": [
         {
@@ -6511,7 +6511,7 @@
     },
     {
       "name": "SINH",
-      "description": "Гиперболический синус.",
+      "description": "Возвращает гиперболический синус числа.",
       "sourceHref": "numeric-functions-trigonometry.html#sinh",
       "forms": [
         {
@@ -6532,7 +6532,7 @@
     },
     {
       "name": "SKIPLINE",
-      "description": "Пропуск текущей строки.",
+      "description": "Пропускает одну строку открытого файла.",
       "sourceHref": "file-system-functions-open-files.html#skipline",
       "forms": [
         {
@@ -6553,8 +6553,8 @@
     },
     {
       "name": "SPACE",
-      "description": "Строка из пробелов.",
-      "sourceHref": "string-functions-build-and-split.html#repeat",
+      "description": "Возвращает строку из указанного количества пробелов.",
+      "sourceHref": "string-functions-build-and-split.html#space",
       "forms": [
         {
           "key": "SPACE/0",
@@ -6574,7 +6574,7 @@
     },
     {
       "name": "SPLIT",
-      "description": "Разбиение строки в массив строк.",
+      "description": "Разбивает строку по разделителю и возвращает массив полученных частей.",
       "sourceHref": "string-functions-build-and-split.html#split",
       "forms": [
         {
@@ -6613,7 +6613,7 @@
     },
     {
       "name": "SPRITECOUNT",
-      "description": "Получение ширины кадра, высоты кадра и числа полных кадров спрайтового листа.",
+      "description": "Возвращает число полных кадров в переданном спрайтовом листе.",
       "sourceHref": "sprites.html#parts",
       "forms": [
         {
@@ -6634,7 +6634,7 @@
     },
     {
       "name": "SPRITEHEIGHT",
-      "description": "Получение ширины кадра, высоты кадра и числа полных кадров спрайтового листа.",
+      "description": "Возвращает высоту одного кадра переданного спрайта в пикселях.",
       "sourceHref": "sprites.html#parts",
       "forms": [
         {
@@ -6655,7 +6655,7 @@
     },
     {
       "name": "SPRITEWIDTH",
-      "description": "Получение ширины кадра, высоты кадра и числа полных кадров спрайтового листа.",
+      "description": "Возвращает ширину одного кадра переданного спрайта в пикселях.",
       "sourceHref": "sprites.html#parts",
       "forms": [
         {
@@ -6676,7 +6676,7 @@
     },
     {
       "name": "SQR",
-      "description": "Квадратный корень.",
+      "description": "Возвращает квадратный корень числа.",
       "sourceHref": "numeric-functions-roots-rounding.html#sqr",
       "forms": [
         {
@@ -6697,8 +6697,8 @@
     },
     {
       "name": "STARTOFMONTH",
-      "description": "Начало месяца.",
-      "sourceHref": "date-time-functions-parts-and-serial.html#calendar-helpers",
+      "description": "Возвращает первый день месяца исходной даты.",
+      "sourceHref": "date-time-functions-parts-and-serial.html#startofmonth",
       "forms": [
         {
           "key": "STARTOFMONTH/0",
@@ -6718,8 +6718,8 @@
     },
     {
       "name": "STARTOFYEAR",
-      "description": "Начало года.",
-      "sourceHref": "date-time-functions-parts-and-serial.html#calendar-helpers",
+      "description": "Возвращает первый день года исходной даты.",
+      "sourceHref": "date-time-functions-parts-and-serial.html#startofyear",
       "forms": [
         {
           "key": "STARTOFYEAR/0",
@@ -6739,8 +6739,8 @@
     },
     {
       "name": "STARTSWITH",
-      "description": "Проверка начала строки.",
-      "sourceHref": "string-functions-search-and-replace.html#contains",
+      "description": "Проверяет, начинается ли строка с указанного фрагмента.",
+      "sourceHref": "string-functions-search-and-replace.html#startswith",
       "forms": [
         {
           "key": "STARTSWITH/0",
@@ -6764,7 +6764,7 @@
     },
     {
       "name": "STR",
-      "description": "Явное преобразование числа в строку.",
+      "description": "Возвращает строковую запись числа.",
       "sourceHref": "numeric-functions-conversion-and-legacy.html#str",
       "forms": [
         {
@@ -6785,8 +6785,8 @@
     },
     {
       "name": "STRING",
-      "description": "Строка из символов-заполнителей.",
-      "sourceHref": "string-functions-build-and-split.html#repeat",
+      "description": "Возвращает строку, повторив первую кодовую единицу заполнителя указанное число раз.",
+      "sourceHref": "string-functions-build-and-split.html#string",
       "forms": [
         {
           "key": "STRING/0",
@@ -6810,7 +6810,7 @@
     },
     {
       "name": "SUBSTRCOUNT",
-      "description": "Число непересекающихся вхождений.",
+      "description": "Возвращает количество неперекрывающихся вхождений фрагмента в строку.",
       "sourceHref": "string-functions-search-and-replace.html#substrcount",
       "forms": [
         {
@@ -6835,7 +6835,7 @@
     },
     {
       "name": "TAN",
-      "description": "Тангенс угла в радианах.",
+      "description": "Возвращает тангенс угла.",
       "sourceHref": "numeric-functions-trigonometry.html#tan",
       "forms": [
         {
@@ -6856,7 +6856,7 @@
     },
     {
       "name": "TANH",
-      "description": "Гиперболический тангенс.",
+      "description": "Возвращает гиперболический тангенс числа.",
       "sourceHref": "numeric-functions-trigonometry.html#tanh",
       "forms": [
         {
@@ -6877,7 +6877,7 @@
     },
     {
       "name": "TEXTHEIGHT",
-      "description": "Измерение ширины и высоты HUD-текста в пикселях по тому же договору, который использует DRAWTEXT.",
+      "description": "Возвращает INTEGER с высотой текста DRAWTEXT в пикселях: число строк умножается на 12. Каждая LF добавляет строку; для пустой строки возвращает 12. Требует CANVAS.",
       "sourceHref": "modern-graphics.html",
       "forms": [
         {
@@ -6898,7 +6898,7 @@
     },
     {
       "name": "TEXTWIDTH",
-      "description": "Измерение ширины и высоты HUD-текста в пикселях по тому же договору, который использует DRAWTEXT.",
+      "description": "Возвращает INTEGER с шириной самой длинной строки в пикселях при рисовании DRAWTEXT на CANVAS. Каждая единица UTF-16 занимает 8 пикселей; CR пропускается, LF разделяет строки. Для пустой строки возвращает 0. Требует CANVAS.",
       "sourceHref": "modern-graphics.html",
       "forms": [
         {
@@ -6919,7 +6919,7 @@
     },
     {
       "name": "TILECOUNT",
-      "description": "Получение числа тайлов и размеров одного тайла в пикселях.",
+      "description": "Возвращает число тайлов в переданном наборе.",
       "sourceHref": "tilesets.html#parts",
       "forms": [
         {
@@ -6940,7 +6940,7 @@
     },
     {
       "name": "TILEHEIGHT",
-      "description": "Получение числа тайлов и размеров одного тайла в пикселях.",
+      "description": "Возвращает высоту одного тайла переданного набора в пикселях.",
       "sourceHref": "tilesets.html#parts",
       "forms": [
         {
@@ -6961,7 +6961,7 @@
     },
     {
       "name": "TILEWIDTH",
-      "description": "Получение числа тайлов и размеров одного тайла в пикселях.",
+      "description": "Возвращает ширину одного тайла переданного набора в пикселях.",
       "sourceHref": "tilesets.html#parts",
       "forms": [
         {
@@ -6982,7 +6982,7 @@
     },
     {
       "name": "TIME",
-      "description": "Текущее время в каноническом формате.",
+      "description": "Возвращает текущее время суток.",
       "sourceHref": "date-time-functions-current.html#time",
       "forms": [
         {
@@ -7012,7 +7012,7 @@
     },
     {
       "name": "TIMER",
-      "description": "Секунды с локальной полуночи.",
+      "description": "Возвращает число секунд, прошедших с местной полуночи.",
       "sourceHref": "date-time-functions-current.html#timer",
       "forms": [
         {
@@ -7028,7 +7028,7 @@
     },
     {
       "name": "TIMESERIAL",
-      "description": "Построение канонического времени из частей.",
+      "description": "Возвращает время суток, собранное из часа, минуты и секунды.",
       "sourceHref": "date-time-functions-parts-and-serial.html#timeserial",
       "forms": [
         {
@@ -7057,8 +7057,8 @@
     },
     {
       "name": "TIMEVALUE",
-      "description": "Время из даты-времени.",
-      "sourceHref": "date-time-functions-arithmetic-and-validation.html#datevalue-timevalue",
+      "description": "Возвращает время суток, прочитанное из строки.",
+      "sourceHref": "date-time-functions-arithmetic-and-validation.html#timevalue",
       "forms": [
         {
           "key": "TIMEVALUE/0",
@@ -7078,8 +7078,8 @@
     },
     {
       "name": "TOTALFREESPACE",
-      "description": "Общее свободное место на диске.",
-      "sourceHref": "file-system-functions-paths.html#totalfreespace",
+      "description": "Возвращает общее число свободных байтов диска.",
+      "sourceHref": "file-system-functions-management.html#totalfreespace",
       "forms": [
         {
           "key": "TOTALFREESPACE/0",
@@ -7099,8 +7099,8 @@
     },
     {
       "name": "TOTALSPACE",
-      "description": "Полный размер диска.",
-      "sourceHref": "file-system-functions-paths.html#totalspace",
+      "description": "Возвращает полную ёмкость диска в байтах.",
+      "sourceHref": "file-system-functions-management.html#totalspace",
       "forms": [
         {
           "key": "TOTALSPACE/0",
@@ -7120,7 +7120,7 @@
     },
     {
       "name": "TOUTC",
-      "description": "Перевод в UTC.",
+      "description": "Возвращает дату и время, преобразованные из выбранного пояса в UTC.",
       "sourceHref": "date-time-functions-time-zones.html#toutc",
       "forms": [
         {
@@ -7159,7 +7159,7 @@
     },
     {
       "name": "TRIM",
-      "description": "Удаление символов по краям строки.",
+      "description": "Возвращает строку после удаления заданных символов с обоих краёв текста.",
       "sourceHref": "string-functions-trim-and-case.html#trim",
       "forms": [
         {
@@ -7198,7 +7198,7 @@
     },
     {
       "name": "UBOUND",
-      "description": "Верхняя граница массива.",
+      "description": "Возвращает верхнюю границу выбранного измерения массива.",
       "sourceHref": "arrays-functions.html#ubound",
       "forms": [
         {
@@ -7237,8 +7237,8 @@
     },
     {
       "name": "UCASE",
-      "description": "Перевод в верхний регистр.",
-      "sourceHref": "string-functions-trim-and-case.html#lcase",
+      "description": "Возвращает строку, преобразовав буквы в верхний регистр.",
+      "sourceHref": "string-functions-trim-and-case.html#ucase",
       "forms": [
         {
           "key": "UCASE/0",
@@ -7258,7 +7258,7 @@
     },
     {
       "name": "UTCDATE",
-      "description": "Текущая дата в UTC.",
+      "description": "Возвращает текущую дату по UTC.",
       "sourceHref": "date-time-functions-current.html#utcdate",
       "forms": [
         {
@@ -7274,7 +7274,7 @@
     },
     {
       "name": "UTCNOW",
-      "description": "Текущие дата и время в UTC.",
+      "description": "Возвращает текущую дату и время по UTC.",
       "sourceHref": "date-time-functions-current.html#utcnow",
       "forms": [
         {
@@ -7290,7 +7290,7 @@
     },
     {
       "name": "UTCOFFSET",
-      "description": "Смещение часового пояса относительно UTC.",
+      "description": "Возвращает смещение выбранного часового пояса относительно UTC в минутах для текущего момента или заданных местных часов.",
       "sourceHref": "date-time-functions-time-zones.html#utcoffset",
       "forms": [
         {
@@ -7338,7 +7338,7 @@
     },
     {
       "name": "UTCTIME",
-      "description": "Текущее время в UTC.",
+      "description": "Возвращает текущее время суток по UTC.",
       "sourceHref": "date-time-functions-current.html#utctime",
       "forms": [
         {
@@ -7354,7 +7354,7 @@
     },
     {
       "name": "VAL",
-      "description": "Чтение числа из строки.",
+      "description": "Возвращает число, прочитанное из строки.",
       "sourceHref": "numeric-functions-conversion-and-legacy.html#val",
       "forms": [
         {
@@ -7375,7 +7375,7 @@
     },
     {
       "name": "WEEKDAY",
-      "description": "Номер дня недели по схеме Monday..Sunday.",
+      "description": "Возвращает номер дня недели.",
       "sourceHref": "date-time-functions-parts-and-serial.html#weekday",
       "forms": [
         {
@@ -7396,8 +7396,8 @@
     },
     {
       "name": "WEEKDAYNAME",
-      "description": "Имя дня недели.",
-      "sourceHref": "date-time-functions-parts-and-serial.html#weekday",
+      "description": "Возвращает английское название дня недели.",
+      "sourceHref": "date-time-functions-parts-and-serial.html#weekdayname",
       "forms": [
         {
           "key": "WEEKDAYNAME/0",
@@ -7417,7 +7417,7 @@
     },
     {
       "name": "WRITE",
-      "description": "Запись текста без перевода строки.",
+      "description": "Записывает строку в открытый файл без добавления разделителя строки.",
       "sourceHref": "file-system-functions-open-files.html#write",
       "forms": [
         {
@@ -7442,7 +7442,7 @@
     },
     {
       "name": "WRITEFILE",
-      "description": "Запись текста в файл с начала.",
+      "description": "Записывает текст в файл, заменяя прежнее содержимое.",
       "sourceHref": "file-system-functions-text.html#writefile",
       "forms": [
         {
@@ -7489,7 +7489,7 @@
     },
     {
       "name": "WRITELINE",
-      "description": "Запись строки с переводом строки.",
+      "description": "Записывает строку в открытый файл и добавляет символ LF.",
       "sourceHref": "file-system-functions-open-files.html#writeline",
       "forms": [
         {
@@ -7514,8 +7514,8 @@
     },
     {
       "name": "YEAR",
-      "description": "Извлечение года из даты или даты-времени.",
-      "sourceHref": "date-time-functions-parts-and-serial.html#year-month-day",
+      "description": "Возвращает год календарной даты.",
+      "sourceHref": "date-time-functions-parts-and-serial.html#year",
       "forms": [
         {
           "key": "YEAR/0",

@@ -1,114 +1,31 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Динамические массивы</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="arrays-dynamic">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">REDIM, REDIM PRESERVE и ERASE</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="reference.html">Алфавитный и тематический указатель</a>
-                <span>/</span>
-                <a href="arrays.html">Массивы</a>
-                <span>/</span>
-                <span>Динамические массивы</span>
-            </nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Динамические массивы</h1>
-            <p class="lead">Раздел динамических массивов описывает изменение границ массива после объявления — когда размер данных неизвестен заранее и может меняться во время выполнения.</p>
-
-            <section class="article-section">
-                <h2>Выделение памяти массива</h2>
-                <p>Динамический массив объявляется без конкретных границ, а затем получает их через <code>REDIM</code>. Такой подход удобен, когда размер массива становится известен только во время выполнения программы.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Синтаксис</h2>
-                <pre><code class="language-axiom">DIM &lt;имя массива&gt;() AS &lt;тип элемента&gt;</code></pre>
-                <pre><code class="language-axiom">REDIM &lt;имя массива&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;)</code></pre>
-                <pre><code class="language-axiom">REDIM PRESERVE &lt;имя массива&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;)</code></pre>
-                <pre><code class="language-axiom">ERASE &lt;имя массива&gt;</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Параметры и части синтаксиса</h2>
-                <ul>
-                    <li><code>&lt;имя массива&gt;</code> — имя динамического массива.</li>
-                    <li><code>&lt;тип элемента&gt;</code> — тип элементов массива.</li>
-                    <li><code>&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;</code> — новые включительные границы массива.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Выделение, сохранение и очистка</h2>
-                <ul>
-                    <li><code>DIM values() AS INTEGER</code> объявляет динамический массив без выделения памяти для элементов.</li>
-                    <li><code>REDIM</code> задаёт новые границы массива и выделяет память в соответствии с ними.</li>
-                    <li><code>REDIM PRESERVE</code> изменяет размер массива с сохранением тех элементов, которые попадают в область пересечения старых и новых границ.</li>
-                    <li><code>ERASE</code> возвращает динамический массив в невыделенное состояние.</li>
-                    <li>После <code>ERASE</code> массив нельзя использовать снова, пока ему не будут заново назначены границы через <code>REDIM</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Пример расширения с сохранением значений</h2>
-                <pre><code class="language-axiom">' Программа создаёт массив, расширяет его и сохраняет первые значения
-' Ожидаемый вывод:
-' 10
-' 30
-DIM values() AS INTEGER
-
-REDIM values(1 TO 3)
-values(1) = 10
-values(2) = 20
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Динамические массивы — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="arrays-dynamic"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Динамические массивы</span></nav>
+<p class="eyebrow">10 · Массивы</p><h1 class="page-title">Динамические массивы</h1><p class="lead">Динамический массив — тип данных Axiom, границы которого можно установить и изменить во время выполнения. Раздел описывает отдельные операторы DIM, REDIM, REDIM PRESERVE и ERASE; их формы не являются одной инструкцией.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Назначение и контекст</h2><p>DIM без границ задаёт тип элемента и ранг до получения размера. REDIM выделяет элементы по текущим значениям границ. REDIM PRESERVE сохраняет пересечение старой и новой области. ERASE освобождает хранилище. Эти действия не требуют SCREEN.</p></section>
+<section class="article-section"><h2>Отдельные формы</h2><pre><code class="language-axiom">DIM &lt;массив&gt;() AS &lt;тип элемента&gt;</code></pre><pre><code class="language-axiom">DIM &lt;массив&gt;(,) AS &lt;тип элемента&gt;</code></pre><pre><code class="language-axiom">REDIM &lt;массив&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;)</code></pre><pre><code class="language-axiom">REDIM PRESERVE &lt;массив&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;)</code></pre><pre><code class="language-axiom">REDIM PRESERVE &lt;массив&gt;(&lt;границы 1&gt;, &lt;границы 2&gt;)</code></pre><pre><code class="language-axiom">ERASE &lt;массив&gt;</code></pre></section>
+<section class="article-section"><h2>Части записи</h2><p>Массив обозначает изменяемое массивное значение или динамическое массивное поле TYPE. Тип элемента и ранг не изменяются. Для многомерного массива после REDIM указываются границы каждого измерения.</p><p>Границы задаются числовыми выражениями. INTEGER используется непосредственно; LONG должен помещаться в INTEGER; дробная часть DOUBLE и DECIMAL отбрасывается к нулю. Нижняя граница -2147483648 запрещена, потому что поисковые функции используют нижнюю границу минус 1 как признак отсутствия. Верхняя граница включается в массив. Обратный диапазон допустим только как каноническая пустая форма 1 TO 0 при DIM или REDIM.</p></section>
+<section class="article-section"><h2>Выделение и сохранение</h2><p>Обычный REDIM заменяет элементы значениями по умолчанию. REDIM PRESERVE сохраняет значения по тем же координатам в пересечении границ всех измерений; новые координаты получают значения по умолчанию. Можно менять несколько измерений и нижние границы одновременно, сохраняя ранг.</p><p>Массив, изначально объявленный с границами DIM, также допускает REDIM. Представление не допускает изменения размера. Фиксированное массивное поле TYPE нельзя передавать операторам REDIM или ERASE.</p><p>После ERASE ARRAYISALLOCATED возвращает FALSE, ARRAYLENGTH — 0, ARRAYRANK сохраняет ранг. Для повторного доступа нужны REDIM либо присваивание выделенного массива. Выделенный пустой массив 1 TO 0 имеет состояние TRUE, хотя элементов в нём нет.</p></section>
+<section class="article-section"><h2>Диагностика</h2><p>MB2003 означает несовместимый тип элемента или индекса, MB2004 — неверное число индексов. MB3002 возникает, когда индекс или диапазон при индексировании выходит за границы. MB3005 возникает при доступе к невыделенному массиву либо при недопустимой паре границ. MB3007 сообщает о запрещённой нижней границе -2147483648; выход числового значения за диапазон INTEGER даёт MB3008.</p><p>MB2011 возникает, если цель REDIM или ERASE не является массивом. MB2025 запрещает эти операторы для фиксированного массивного поля TYPE. MB3007 запрещает изменение размера представления.</p></section>
+<section class="article-section"><h2>Пример</h2><pre><code class="language-axiom">DIM values() AS INTEGER
+PRINT ARRAYISALLOCATED(values)
+REDIM values(2 TO 3)
+values(2) = 10
 values(3) = 30
-
-REDIM PRESERVE values(1 TO 5)
-PRINT values(1)
-PRINT values(3)
-
-ERASE values</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/operators/dim/dynamic_array_declaration.axm">DIM: объявление динамического массива</a></li>
-                    <li><a href="../../samples/operators/redim/basic_usage.axm">REDIM: базовое изменение размера</a></li>
-                    <li><a href="../../samples/operators/redim/preserve_basic_usage.axm">REDIM PRESERVE: сохранение значений</a></li>
-                    <li><a href="../../samples/operators/erase/basic_usage.axm">ERASE: возврат в невыделенное состояние</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="arrays.html">Массивы</a>
-                    <a href="arrays-1d.html">Одномерные массивы</a>
-                    <a href="arrays-multidimensional.html">Многомерные массивы</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+REDIM PRESERVE values(1 TO 4)
+PRINT values(2)
+PRINT values(4)
+ERASE values
+PRINT ARRAYISALLOCATED(values)</code></pre><p>Ожидаемый вывод:</p><pre><code>FALSE
+10
+0
+FALSE</code></pre></section>
+<section class="article-section"><h2>См. также</h2><p><a href="arrays.html">Массивы</a> · <a href="arrays-functions.html">Форма и размер</a> · <a href="arrays-diagnostics.html">Диагностика</a></p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

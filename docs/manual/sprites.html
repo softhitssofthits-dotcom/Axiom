@@ -1,167 +1,94 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Спрайты SPRITE</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="sprites">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Графика</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a><span>/</span><a href="graphics.html">Графика</a><span>/</span><span>Спрайты SPRITE</span>
-            </nav>
-            <p class="eyebrow">Тип, функции и операторы</p>
-            <h1 class="page-title">Спрайты SPRITE</h1>
-            <p class="lead">Раздел спрайтов описывает тип данных SPRITE, встроенные функции LOADSPRITE, SPRITEWIDTH, SPRITEHEIGHT, SPRITECOUNT и оператор DRAWSPRITE. Тип SPRITE хранит спрайтовый лист — изображение, разбитое на одинаковые кадры.</p>
+<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<title>Спрайты SPRITE — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="sprites"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Спрайты SPRITE</span></nav>
+<p class="eyebrow">Тип, функции и операторы</p><h1 class="page-title">Спрайты SPRITE</h1><p class="lead">Раздел спрайтов описывает тип данных <code>SPRITE</code>, функции <code>LOADSPRITE</code>, <code>SPRITEWIDTH</code>, <code>SPRITEHEIGHT</code>, <code>SPRITECOUNT</code> и оператор <code>DRAWSPRITE</code>. Спрайтовый лист содержит кадры одинакового размера; программа выбирает кадр по номеру.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+
 
             <section class="article-section" id="type">
                 <h2>Что такое тип SPRITE</h2>
-                <p><code>SPRITE</code> — встроенный ссылочный тип данных языка Axiom.</p>
-                <p>Значение типа <code>SPRITE</code> хранит спрайтовый лист и сведения о размере одного кадра. Программа обычно получает такое значение через функцию <code>LOADSPRITE</code>, а затем выбирает кадры по номеру через оператор <code>DRAWSPRITE</code>.</p>
+                <p>Тип <code>SPRITE</code> хранит ссылку на спрайтовый лист и его разметку.</p>
+                <p>Функция <code>LOADSPRITE</code> загружает лист с указанным размером кадра. Для анимации программа меняет номер кадра, передаваемый в <code>DRAWSPRITE</code>.</p>
             </section>
 
             <section class="article-section">
                 <h2>Где работают функции и оператор</h2>
-                <p>Функции <code>LOADSPRITE</code>, <code>SPRITEWIDTH</code>, <code>SPRITEHEIGHT</code> и <code>SPRITECOUNT</code> работают с самим значением типа <code>SPRITE</code>.</p>
-                <p>Оператор <code>DRAWSPRITE</code> работает только при активном графическом выводе. Этот оператор можно использовать либо в палитровом графическом режиме <code>SCREEN 1..10</code>, либо в полноцветном графическом режиме <code>CANVAS</code>.</p>
+                <p>Загрузка и чтение размеров выполняются над значением спрайта и не требуют графического окна.</p>
+                <p>Оператор <code>DRAWSPRITE</code> требует графического режима <code>SCREEN 1..10</code> или холста <code>CANVAS</code>.</p>
             </section>
 
             <section class="article-section">
                 <h2>Синтаксис</h2>
-<pre><code class="language-axiom">DIM name AS SPRITE
-name = LOADSPRITE(path, frameWidth, frameHeight)
-
-SPRITEWIDTH(sprite)
-SPRITEHEIGHT(sprite)
-SPRITECOUNT(sprite)
-
-DRAWSPRITE sprite, frame, x, y
-DRAWSPRITE sprite, frame, x, y, width, height</code></pre>
+<pre><code class="language-axiom">DIM &lt;имя&gt; AS SPRITE</code></pre>
+<pre><code class="language-axiom">LOADSPRITE(&lt;путь&gt;, &lt;ширина кадра&gt;, &lt;высота кадра&gt;)</code></pre>
+<pre><code class="language-axiom">SPRITEWIDTH(&lt;спрайт&gt;)</code></pre>
+<pre><code class="language-axiom">SPRITEHEIGHT(&lt;спрайт&gt;)</code></pre>
+<pre><code class="language-axiom">SPRITECOUNT(&lt;спрайт&gt;)</code></pre>
+<pre><code class="language-axiom">DRAWSPRITE &lt;спрайт&gt;, &lt;кадр&gt;, &lt;координата X&gt;, &lt;координата Y&gt;</code></pre>
+<pre><code class="language-axiom">DRAWSPRITE &lt;спрайт&gt;, &lt;кадр&gt;, &lt;координата X&gt;, &lt;координата Y&gt;, &lt;ширина&gt;, &lt;высота&gt;</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Параметры и части синтаксиса</h2>
+                <h2>Параметры</h2>
                 <table>
                     <thead>
                         <tr><th>Часть</th><th>Описание</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><code>name</code></td><td>Переменная типа <code>SPRITE</code>.</td></tr>
-                        <tr><td><code>path</code></td><td>Строковый путь к файлу изображения.</td></tr>
-                        <tr><td><code>frameWidth</code>, <code>frameHeight</code></td><td>Положительные размеры одного кадра в пикселях.</td></tr>
-                        <tr><td><code>sprite</code></td><td>Выражение типа <code>SPRITE</code>.</td></tr>
-                        <tr><td><code>frame</code></td><td>Номер кадра, начиная с <code>0</code>.</td></tr>
-                        <tr><td><code>x</code>, <code>y</code></td><td>Координаты левого верхнего угла вывода.</td></tr>
-                        <tr><td><code>width</code>, <code>height</code></td><td>Положительные размеры итогового вывода в пикселях.</td></tr>
+                        <tr><td><code>&lt;имя свойства&gt;</code></td><td>Переменная типа <code>SPRITE</code>.</td></tr>
+                        <tr><td><code>&lt;путь&gt;</code></td><td>Передайте строковый путь к файлу изображения.</td></tr>
+                        <tr><td><code>&lt;ширина кадра&gt;</code>, <code>&lt;высота кадра&gt;</code></td><td>Передайте положительные размеры одного кадра в пикселях. Каждый перечисленный аргумент имеет тип <code>LONG</code>.</td></tr>
+                        <tr><td><code>&lt;спрайт&gt;</code></td><td>Передайте выражение типа <code>SPRITE</code>.</td></tr>
+                        <tr><td><code>&lt;кадр&gt;</code></td><td>Передайте номер кадра, начиная с <code>0</code>. Передаваемое значение имеет тип <code>LONG</code>.</td></tr>
+                        <tr><td><code>&lt;координата X&gt;</code>, <code>&lt;координата Y&gt;</code></td><td>Передайте координаты левого верхнего угла вывода. Каждый перечисленный аргумент имеет тип <code>LONG</code>.</td></tr>
+                        <tr><td><code>&lt;ширина&gt;</code>, <code>&lt;высота&gt;</code></td><td>Передайте положительные размеры итогового вывода в пикселях. Каждый перечисленный аргумент имеет тип <code>LONG</code>.</td></tr>
                     </tbody>
                 </table>
             </section>
 
             <section class="article-section" id="loadsprite">
                 <h2>Функция LOADSPRITE</h2>
-                <p><code>LOADSPRITE</code> — встроенная функция языка Axiom, которая загружает изображение и разбивает его на кадры одинакового размера.</p>
-<pre><code class="language-axiom">LOADSPRITE(path, frameWidth, frameHeight)</code></pre>
-                <p>Аргумент <code>path</code> должен быть строкой.</p>
-                <p>Аргументы <code>frameWidth</code> и <code>frameHeight</code> задают размер одного кадра спрайтового листа.</p>
+                <p>Встроенная функция <code>LOADSPRITE</code> читает изображение, разбивает его на прямоугольные кадры одинакового размера и возвращает значение типа <code>SPRITE</code>.</p>
+<h3>Синтаксис</h3>
+<pre><code class="language-axiom">LOADSPRITE(&lt;путь&gt;, &lt;ширина кадра&gt;, &lt;высота кадра&gt;)</code></pre>
+                <p>Аргумент <code>&lt;путь&gt;</code> должен иметь тип <code>STRING</code>. Правила разрешения пути приведены на странице <a href="images.html">изображений</a>.</p>
+                <p>Аргументы <code>&lt;ширина кадра&gt;</code> и <code>&lt;высота кадра&gt;</code> задают ширину и высоту одного кадра в пикселях.</p>
             </section>
 
             <section class="article-section" id="parts">
                 <h2>Функции SPRITEWIDTH, SPRITEHEIGHT и SPRITECOUNT</h2>
-                <p><code>SPRITEWIDTH</code> возвращает ширину одного кадра в пикселях.</p>
-                <p><code>SPRITEHEIGHT</code> возвращает высоту одного кадра в пикселях.</p>
-                <p><code>SPRITECOUNT</code> возвращает количество доступных кадров.</p>
-<pre><code class="language-axiom">SPRITEWIDTH(sprite)
-SPRITEHEIGHT(sprite)
-SPRITECOUNT(sprite)</code></pre>
+                <p>Встроенная функция <code>SPRITEWIDTH</code> возвращает <code>INTEGER</code> с шириной кадра в пикселях.</p>
+                <p>Встроенная функция <code>SPRITEHEIGHT</code> возвращает <code>INTEGER</code> с высотой кадра в пикселях.</p>
+                <p>Встроенная функция <code>SPRITECOUNT</code> возвращает <code>INTEGER</code> с числом доступных полных кадров листа.</p>
+<pre><code class="language-axiom">SPRITEWIDTH(&lt;спрайт&gt;)</code></pre>
+<pre><code class="language-axiom">SPRITEHEIGHT(&lt;спрайт&gt;)</code></pre>
+<pre><code class="language-axiom">SPRITECOUNT(&lt;спрайт&gt;)</code></pre>
             </section>
 
             <section class="article-section" id="drawsprite">
                 <h2>Оператор DRAWSPRITE</h2>
-                <p><code>DRAWSPRITE</code> — оператор языка Axiom, который выводит выбранный кадр спрайтового листа на активную графическую поверхность.</p>
-<pre><code class="language-axiom">DRAWSPRITE sprite, frame, x, y
-DRAWSPRITE sprite, frame, x, y, width, height</code></pre>
-                <p>Первая форма выводит кадр в натуральном размере.</p>
-                <p>Вторая форма выводит кадр с масштабированием до размера <code>width x height</code> пикселей.</p>
-                <p>В режиме <code>SCREEN</code> координаты читаются по экранному договору <code>SCREEN</code>, <code>VIEW</code> и <code>WINDOW</code>. В режиме <code>CANVAS</code> координаты читаются по договору современного слоя и могут зависеть от оператора <code>CAMERA</code>.</p>
+                <p>Оператор <code>DRAWSPRITE</code> выводит кадр с указанным номером на текущую поверхность.</p>
+<pre><code class="language-axiom">DRAWSPRITE &lt;спрайт&gt;, &lt;кадр&gt;, &lt;координата X&gt;, &lt;координата Y&gt;</code></pre>
+<pre><code class="language-axiom">DRAWSPRITE &lt;спрайт&gt;, &lt;кадр&gt;, &lt;координата X&gt;, &lt;координата Y&gt;, &lt;ширина&gt;, &lt;высота&gt;</code></pre>
+                <p>Без дополнительных размеров кадр выводится в натуральном размере.</p>
+                <p>С аргументами <code>width</code> и <code>height</code> кадр масштабируется до заданного размера в пикселях.</p>
+                <p>На экране координаты преобразуются настройками <code>VIEW</code> и <code>WINDOW</code>. На холсте координаты мировые и учитывают камеру.</p>
             </section>
 
             <section class="article-section">
                 <h2>Правила работы</h2>
-                <p>Кадры нумеруются слева направо и сверху вниз.</p>
-                <p>Если изображение спрайтового листа не делится на кадры без остатка, неполные остатки справа и снизу не считаются кадрами.</p>
-                <p>Значение типа <code>SPRITE</code> копируется как ссылка на один и тот же спрайтовый лист, а не как отдельная копия пикселей.</p>
-                <p>Если часть спрайта выходит за границы доступной поверхности, результат обрезается по границе экрана или холста.</p>
+                <p>Порядок кадров соответствует чтению изображения: слева направо, затем сверху вниз.</p>
+                <p>Неполные участки изображения справа и снизу не образуют кадров, если размер листа не делится на размер кадра без остатка.</p>
+                <p>При присваивании копируется ссылка на лист. Пиксели не дублируются.</p>
+                <p>Вывод обрезается по доступным границам экрана или холста.</p>
             </section>
-
-            <section class="article-section">
-                <h2>Пример</h2>
-<pre><code class="language-axiom">SCREEN 1
-DIM walk AS SPRITE
-walk = LOADSPRITE("assets/walk_sheet.png", 16, 16)
-
-PRINT "Кадров="; SPRITECOUNT(walk)
-DRAWSPRITE walk, 1, 16, 24
-DRAWSPRITE walk, 3, 64, 24, 32, 32
-SLEEP</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <p>Эти файлы можно открыть в <code>Electron IDE</code> и запустить как короткие проверки поведения типа <code>SPRITE</code> и оператора <code>DRAWSPRITE</code>.</p>
-                <ul class="resource-list">
-                    <li><a href="../../samples/graphics/sprites/walk_cycle.axm">SPRITE: анимация ходьбы</a></li>
-                    <li><a href="../../samples/graphics/sprites/page_flip_walk.axm">SPRITE: анимация со сменой страниц</a></li>
-                    <li><a href="../../samples/graphics/sprites/invalid_frame_error.axm">SPRITE: ошибка неверного номера кадра</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li><code>MB3007</code>: путь в функции <code>LOADSPRITE</code> пустой.</li>
-                    <li><code>MB3007</code>: ширина или высота кадра в функции <code>LOADSPRITE</code> меньше либо равна нулю.</li>
-                    <li><code>MB3005</code>: файл спрайтового листа отсутствует, недоступен, повреждён или не поддерживается текущим декодером.</li>
-                    <li><code>MB3005</code>: оператор <code>DRAWSPRITE</code> получил пустое значение <code>SPRITE</code> или лист без доступных кадров.</li>
-                    <li><code>MB3007</code>: номер кадра меньше <code>0</code> или не меньше <code>SPRITECOUNT(sprite)</code>.</li>
-                    <li><code>MB3007</code>: ширина или высота в масштабированной форме <code>DRAWSPRITE</code> меньше либо равна нулю.</li>
-                    <li><code>MB3010</code>: оператор <code>DRAWSPRITE</code> вызван без активного графического режима <code>SCREEN</code> или <code>CANVAS</code>.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="images.html">Изображения IMAGE</a>
-                    <a href="screen.html">Оператор SCREEN</a>
-                    <a href="modern-graphics.html">Современная графика CANVAS</a>
-                </div>
-            </section>
-
-            <section class="article-section"><h2>Короткие проверки функций</h2><p>Короткие примеры выводят ожидаемый результат в текстовую панель IDE. Примеры загрузки используют существующие ресурсы репозитория и реальные относительные пути; отдельный графический холст для чтения свойств не требуется.</p><ul>
-                    <li><a href="../../samples/functions/spritewidth/loaded_resource_property.axm">SPRITEWIDTH: короткая проверка результата</a></li>
-                    <li><a href="../../samples/functions/spriteheight/loaded_resource_property.axm">SPRITEHEIGHT: короткая проверка результата</a></li>
-                    <li><a href="../../samples/functions/spritecount/loaded_resource_property.axm">SPRITECOUNT: короткая проверка результата</a></li>
-                    <li><a href="../../samples/functions/loadsprite/loaded_resource_property.axm">LOADSPRITE: короткая проверка результата</a></li>
-                </ul></section>
-<section class="article-section"><h2>Нулевой символ в пути ресурса</h2><p>Функции LOADIMAGE, LOADSPRITE, LOADTILESET и LOADTILEMAP требуют строковый путь без нулевого символа. Такой символ отклоняется до раскрытия переменных окружения: загрузчик не использует часть пути перед ним. Неверный путь даёт MB3005, которую можно перехватить оператором TRY/CATCH; программа продолжает работу после обработки ошибки.</p><p>Короткий запускаемый пример: <a href="../../samples/smoke/resources/null_path.axm">отказ загрузки изображения по пути с нулевым символом</a>.</p><pre><code class="language-axiom">DIM picture AS IMAGE
-TRY
-    picture = LOADIMAGE("рисунок.png" + CHR(0) + "другой.png")
-CATCH err
-    PRINT "Отказ загрузки: "; err.Code
-END TRY</code></pre></section>
-            <nav class="pager" id="page-pager" aria-label="Навигация по справочнику"></nav>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<section class="article-section"><h2>Встроенная функция SPRITEWIDTH</h2><p><code>SPRITEWIDTH</code> — встроенная функция языка Axiom, которая возвращает ширину одного кадра в пикселях. Она читает свойства значения без графического окна; результат доступен сразу.</p><h3>Синтаксис</h3><pre><code class="language-axiom">SPRITEWIDTH(&lt;спрайт&gt;)</code></pre><h3>Аргумент</h3><p>Передайте выражение типа <code>SPRITE</code>, свойства которого нужно прочитать. Пустая переменная после объявления допустима.</p><h3>Результат, ограничения и диагностика</h3><p>Функция возвращает <code>INTEGER</code>. Для пустого значения результат равен 0. Чтение свойства не загружает файл и не вызывает ошибку из-за пустого ресурса. Несовместимый тип или неверное число аргументов отклоняется компилятором.</p><h3>Пример</h3><pre><code class="language-axiom">DIM sheet AS SPRITE
+PRINT SPRITEWIDTH(sheet)</code></pre><p>Программа печатает 0, поскольку ресурс ещё не загружен. После успешной загрузки функция возвращает фактическое свойство.</p><h3>См. также</h3><p><a href="sprites.html">Загрузка и рисование ресурса</a>.</p></section><section class="article-section"><h2>Встроенная функция SPRITEHEIGHT</h2><p><code>SPRITEHEIGHT</code> — встроенная функция языка Axiom, которая возвращает высоту одного кадра в пикселях. Она читает свойства значения без графического окна; результат доступен сразу.</p><h3>Синтаксис</h3><pre><code class="language-axiom">SPRITEHEIGHT(&lt;спрайт&gt;)</code></pre><h3>Аргумент</h3><p>Передайте выражение типа <code>SPRITE</code>, свойства которого нужно прочитать. Пустая переменная после объявления допустима.</p><h3>Результат, ограничения и диагностика</h3><p>Функция возвращает <code>INTEGER</code>. Для пустого значения результат равен 0. Чтение свойства не загружает файл и не вызывает ошибку из-за пустого ресурса. Несовместимый тип или неверное число аргументов отклоняется компилятором.</p><h3>Пример</h3><pre><code class="language-axiom">DIM sheet AS SPRITE
+PRINT SPRITEHEIGHT(sheet)</code></pre><p>Программа печатает 0, поскольку ресурс ещё не загружен. После успешной загрузки функция возвращает фактическое свойство.</p><h3>См. также</h3><p><a href="sprites.html">Загрузка и рисование ресурса</a>.</p></section><section class="article-section"><h2>Встроенная функция SPRITECOUNT</h2><p><code>SPRITECOUNT</code> — встроенная функция языка Axiom, которая возвращает количество полных кадров листа. Она читает свойства значения без графического окна; результат доступен сразу.</p><h3>Синтаксис</h3><pre><code class="language-axiom">SPRITECOUNT(&lt;спрайт&gt;)</code></pre><h3>Аргумент</h3><p>Передайте выражение типа <code>SPRITE</code>, свойства которого нужно прочитать. Пустая переменная после объявления допустима.</p><h3>Результат, ограничения и диагностика</h3><p>Функция возвращает <code>INTEGER</code>. Для пустого значения результат равен 0. Чтение свойства не загружает файл и не вызывает ошибку из-за пустого ресурса. Несовместимый тип или неверное число аргументов отклоняется компилятором.</p><h3>Пример</h3><pre><code class="language-axiom">DIM sheet AS SPRITE
+PRINT SPRITECOUNT(sheet)</code></pre><p>Программа печатает 0, поскольку ресурс ещё не загружен. После успешной загрузки функция возвращает фактическое свойство.</p><h3>См. также</h3><p><a href="sprites.html">Загрузка и рисование ресурса</a>.</p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

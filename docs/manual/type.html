@@ -1,331 +1,116 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Оператор TYPE</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="type">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">Поля, точка, создание записи, методы и конструкторы</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-        <main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки">
-                <a href="index.html">Главная</a>
-                <span>/</span>
-                <a href="data-types-records-and-arrays.html">Записи TYPE и массивы</a>
-                <span>/</span>
-                <span>Оператор TYPE</span>
-            </nav>
-            <p class="eyebrow">Оператор</p>
-            <h1 class="page-title">Оператор TYPE</h1>
-            <p class="lead"><code>TYPE ... END TYPE</code> — оператор языка Axiom, который объявляет пользовательскую запись: новый тип данных, в котором несколько полей хранятся как одно значение. Каждое поле имеет имя и тип.</p>
-
-            <section class="article-section" id="what-type-does">
-                <h2>Назначение</h2>
-                <p>Обычная переменная хранит одно значение. Запись хранит несколько связанных значений сразу. Например, человеку нужны имя и возраст, точке на экране нужны координаты, товару нужны название и цена.</p>
-                <pre><code class="language-axiom">TYPE Person
-    Name AS STRING
-    Age AS INTEGER
-END TYPE</code></pre>
-                <p>Объявление определяет структуру типа <code>Person</code>. Значение этого типа содержит поля <code>Name</code> и <code>Age</code>; экземпляр создаётся при объявлении переменной или вычислении литерала записи.</p>
-            </section>
-
-        <section class="article-section" id="simple-example">
-                <h2>Пример записи</h2>
-                <pre><code class="language-axiom">TYPE Person
-    Name AS STRING
-    Age AS INTEGER
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Оператор TYPE — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="type"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор TYPE</span></nav>
+<p class="eyebrow">12 · Пользовательские типы</p><h1 class="page-title">Оператор TYPE</h1><p class="lead">TYPE — оператор языка Axiom, который объявляет пользовательский тип записи с именованными полями. Тип может содержать методы, перегруженные конструкторы и проверку IsValid после конструктора.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="what-type-does"><h2>Назначение и контекст</h2><p>TYPE объединяет связанные данные, например имя и возраст человека, в один пользовательский тип. Каждый экземпляр хранит собственные поля записи. Методы задают действия над экземпляром, а конструктор выполняет его явную начальную настройку. TYPE объявляется на верхнем уровне программы и доступен в DIM, параметрах и результатах функций. SCREEN не требуется.</p></section>
+<section class="article-section" id="syntax"><h2>Синтаксис объявления</h2><pre><code class="language-axiom">TYPE &lt;имя типа&gt;
+    &lt;имя поля&gt; AS &lt;тип поля&gt;
+END TYPE</code></pre><pre><code class="language-axiom">TYPE &lt;имя типа&gt;
+    &lt;имя поля&gt; AS &lt;тип поля&gt; = &lt;значение по умолчанию&gt;
+END TYPE</code></pre><pre><code class="language-axiom">TYPE &lt;имя типа&gt;
+    &lt;имя массива&gt;() AS &lt;тип элемента&gt;
+    &lt;имя фиксированного массива&gt;(&lt;границы&gt;) AS &lt;тип элемента&gt;
+END TYPE</code></pre><p>Внутри TYPE также можно объявить SUB и FUNCTION с обычным синтаксисом подпрограмм. Конструктор записывается как SUB New, а проверка после конструктора — как FUNCTION IsValid() AS BOOLEAN.</p></section>
+<section class="article-section"><h2>Части объявления</h2><p>Имя типа становится названием пользовательского типа данных. Имя поля выбирает значение внутри записи. Тип поля задаёт допустимые значения: числовой, строковый, логический или временной тип, другой TYPE либо массив допустимых элементов. Поля FILE и FUNCTION не поддерживаются.</p><p>Значение по умолчанию задаёт начальное скалярное или строковое поле. Оно должно быть константным литералом совместимого типа; выражения с вызовами, переменными, полями и массивами здесь недопустимы. Обычная строка изначально пуста, число равно 0, BOOLEAN равен FALSE; заданный литерал заменяет обычное начальное значение.</p><p>Имя массива задаёт массивное поле. Пустые измерения определяют динамическое поле без элементов. Границы фиксированного поля должны быть целочисленными константными выражениями, при необходимости использующими глобальные целочисленные CONST. Тип элемента общий для всех координат. STRING * N разрешён для строкового поля и строковых элементов фиксированной длины.</p></section>
+<section class="article-section" id="field-and-dot"><h2>Чтение и изменение поля</h2><pre><code class="language-axiom">&lt;запись&gt;.&lt;поле&gt;</code></pre><pre><code class="language-axiom">&lt;запись&gt;.&lt;поле&gt; = &lt;значение&gt;</code></pre><p>Запись — переменная или выражение пользовательского типа. Поле обозначает объявленное имя, а значение присваивания должно быть совместимо с типом поля. Вложенный доступ последовательно выбирает записи: user.Home.City. Для массива записей сначала выбирается элемент: people(1).Name.</p></section>
+<section class="article-section" id="creation"><h2>Создание записи</h2><pre><code class="language-axiom">DIM &lt;переменная&gt; AS &lt;имя типа&gt;</code></pre><pre><code class="language-axiom">&lt;имя типа&gt;()</code></pre><pre><code class="language-axiom">&lt;имя типа&gt;(&lt;поле&gt; := &lt;значение&gt;[, ...])</code></pre><pre><code class="language-axiom">&lt;имя типа&gt;(&lt;позиционные значения&gt;)</code></pre><p>DIM создаёт поля со значениями по умолчанию и не вызывает конструктор. Если конструкторов нет, форма без аргументов делает такую же запись. Именованная форма задаёт поля в любом порядке; пропущенные поля сохраняют начальные значения. Она не вызывает конструктор и IsValid.</p><p>Если конструкторов нет, позиционная форма задаёт все поля в порядке объявления и требует ровно столько значений, сколько полей. Если объявлен хотя бы один конструктор, неименованная форма выбирает подходящий SUB New по числу и типам аргументов; обычная форма без аргументов также требует подходящий New(). Смешивать позиционные и именованные значения нельзя.</p></section>
+<span id="manual-check"></span><section class="article-section" id="simple-example"><h2>Пример именованной и позиционной формы</h2><pre><code class="language-axiom">TYPE Person
+    Name AS STRING = "Unknown"
+    Age AS INTEGER = 0
 END TYPE
-
 DIM user AS Person
-
-user.Name = "Ada"
-user.Age = 36
-
+user = Person(Name := "Ada")
 PRINT user.Name
-PRINT user.Age</code></pre>
-                <p>Здесь есть три шага. Сначала <code>TYPE Person</code> описывает форму записи. Потом <code>DIM user AS Person</code> создаёт переменную такого типа. Потом через точку заполняются и читаются поля этой переменной.</p>
-            </section>
-
-        <section class="article-section" id="syntax">
-                <h2>Синтаксис объявления</h2>
-                <pre><code class="language-axiom">TYPE имяТипа
-    имяПоля AS типПоля
-    другоеПоле AS другойТип = значениеПоУмолчанию
-END TYPE</code></pre>
-                <ul>
-                    <li><code>имяТипа</code> становится новым типом данных. Его можно использовать в <code>DIM</code>, параметрах процедур и типах результата функций.</li>
-                    <li><code>имяПоля</code> — имя отдельного значения внутри записи.</li>
-                    <li><code>типПоля</code> может быть скалярным типом, строкой, другой записью или массивным типом.</li>
-                    <li><code>TYPE ... END TYPE</code> объявляется на верхнем уровне программы.</li>
-                </ul>
-            </section>
-
-        <section class="article-section" id="field-and-dot">
-                <h2>Поле и точка</h2>
-                <p>Поле — это подписанная часть записи. Точка показывает, какое поле нужно взять из какой записи.</p>
-                <pre><code class="language-axiom">user.Name = "Ada"
-PRINT user.Name</code></pre>
-                <p>Читается так: у записи <code>user</code> возьми поле <code>Name</code>. Если поле само является записью, точки можно продолжать.</p>
-                <pre><code class="language-axiom">TYPE Address
-    City AS STRING
-END TYPE
-
-TYPE Person
-    Name AS STRING
-    Home AS Address
-END TYPE
-
-DIM user AS Person
-user.Home.City = "London"
-PRINT user.Home.City</code></pre>
-            </section>
-
-        <section class="article-section" id="creation">
-                <h2>Как создать запись</h2>
-                <p>Переменную записи можно заполнить по полям вручную или создать запись выражением <code>TypeName(...)</code>. В этой записи <code>TypeName</code> — не ключевое слово, а имя вашего типа, например <code>Person(...)</code> или <code>Counter(...)</code>.</p>
-
-                <h3>Пустая запись</h3>
-                <pre><code class="language-axiom">DIM user AS Person
-user = Person()</code></pre>
-                <p>Без конструктора такая форма создаёт запись со значениями по умолчанию: числа получают <code>0</code>, строки — пустой текст, <code>BOOLEAN</code> — <code>FALSE</code>. Если у типа есть <code>SUB New()</code> без параметров, будет вызван он.</p>
-
-                <h3>Именованная форма</h3>
-                <pre><code class="language-axiom">DIM user AS Person
-user = Person(Name := "Ada", Age := 36)</code></pre>
-                <p>Эта форма заполняет поля по именам. Она самая понятная, когда полей много. Важно: именованная форма с <code>:=</code> не вызывает <code>SUB New(...)</code> и не запускает <code>IsValid()</code>.</p>
-
-                <h3>Позиционная форма</h3>
-                <pre><code class="language-axiom">DIM user AS Person
-user = Person("Ada", 36)</code></pre>
-                <p>Значения идут по порядку. Если конструкторов нет, это позиционный литерал записи. Если внутри <code>TYPE</code> есть хотя бы один <code>SUB New(...)</code>, неименованная форма становится вызовом конструктора.</p>
-
-                <ul>
-                    <li>В одном <code>TypeName(...)</code> нельзя смешивать позиционные аргументы и именованные аргументы <code>Field := value</code>.</li>
-                    <li>Для позиционной формы число аргументов должно подходить к полям или к одному из конструкторов.</li>
-                    <li>Для именованной формы можно указывать поля в удобном порядке.</li>
-                </ul>
-            </section>
-
-        <section class="article-section" id="type-and-arrays">
-                <h2>TYPE и массивы: три случая</h2>
-                <p>Записи и массивы часто встречаются рядом. Главное — понимать, где карточка, а где набор карточек или набор значений.</p>
-
-                <h3>Массив записей</h3>
-                <pre><code class="language-axiom">DIM people(1 TO 3) AS Person
-
-people(1).Name = "Ada"
-people(2).Name = "Grace"</code></pre>
-                <p><code>people</code> — массив, а каждый его элемент — запись <code>Person</code>.</p>
-
-                <h3>Массивное поле внутри записи</h3>
-                <pre><code class="language-axiom">TYPE Student
-    Name AS STRING
-    Marks() AS INTEGER
-END TYPE
-
-DIM pupil AS Student
-REDIM pupil.Marks(1 TO 3)
-
-pupil.Marks(1) = 5</code></pre>
-                <p><code>pupil</code> — одна запись, а <code>pupil.Marks</code> — массив внутри этой записи. Поддерживаются динамические и фиксированные массивные поля, включая многомерные.</p>
-
-                <h3>Запись как поле другой записи</h3>
-                <pre><code class="language-axiom">TYPE Address
-    City AS STRING
-END TYPE
-
-TYPE Person
-    Name AS STRING
-    Home AS Address
-END TYPE</code></pre>
-                <p>Так запись можно разбивать на понятные части. Пользовательские типы не могут образовывать прямой или косвенный цикл вложенности.</p>
-            </section>
-
-        <section class="article-section" id="methods">
-                <h2>Методы и SELF</h2>
-                <p>Метод — это процедура или функция внутри <code>TYPE</code>. Он нужен, когда действие естественно принадлежит самой записи. <code>SELF</code> внутри метода означает текущую запись.</p>
-                <pre><code class="language-axiom">TYPE Counter
-    Value AS INTEGER
-
-    SUB Add(stepValue AS INTEGER)
-        SELF.Value = SELF.Value + stepValue
+PRINT user.Age
+user = Person("Grace", 40)
+PRINT user.Name
+PRINT user.Age</code></pre><p>Ожидаемый вывод:</p><pre><code>Ada
+0
+Grace
+40</code></pre></section>
+<section class="article-section" id="type-and-arrays"><h2>Массивные и вложенные поля</h2><p>Динамическое массивное поле выделяется оператором REDIM и может освобождаться через ERASE. Фиксированное массивное поле сразу получает элементы и запрещает REDIM и ERASE. Ранг и тип элементов сохраняются; поля могут быть многомерными. Прямая и косвенная циклическая вложенность TYPE запрещена.</p><pre><code class="language-axiom">REDIM &lt;запись&gt;.&lt;массивное поле&gt;(&lt;границы&gt;)</code></pre><pre><code class="language-axiom">&lt;запись&gt;.&lt;массивное поле&gt;(&lt;индексы&gt;) = &lt;значение&gt;</code></pre><p>Границы и индексы имеют те же числовые правила, что у обычного массива. Запись сначала выбирает экземпляр TYPE, массивное поле — его хранилище, а индексы — элемент.</p></section>
+<section class="article-section" id="methods"><h2>Методы и SELF</h2><p>Метод SUB или FUNCTION объявляется внутри TYPE и вызывается через точку у конкретной записи. SELF обозначает эту запись и вводится автоматически; объявлять SELF вручную не нужно. Поля внутри метода читаются и изменяются через SELF.ИмяПоля. Самостоятельное имя поля без SELF не заменяет такой доступ.</p><pre><code class="language-axiom">&lt;запись&gt;.&lt;метод&gt;([&lt;аргументы&gt;])</code></pre><p>Запись задаёт экземпляр, метод — объявленную подпрограмму этого TYPE, аргументы передаются по обычным правилам BYVAL и BYREF. Методы можно перегружать по числу и типам параметров. Процедура не возвращает значения, функция возвращает результат объявленного типа.</p><pre><code class="language-axiom">TYPE Counter
+    Value AS INTEGER = 0
+    SUB Add(amount AS INTEGER)
+        SELF.Value = SELF.Value + amount
     END SUB
-
     FUNCTION Current() AS INTEGER
         RETURN SELF.Value
     END FUNCTION
 END TYPE
-
 DIM counter AS Counter
-counter.Add(2)
 counter.Add(3)
-
-PRINT counter.Current()</code></pre>
-                <ul>
-                    <li><code>counter.Add(2)</code> вызывает метод у записи <code>counter</code>.</li>
-                    <li><code>SELF.Value</code> внутри метода означает поле <code>Value</code> у той записи, для которой метод вызвали.</li>
-                    <li><code>SELF</code> не нужно объявлять вручную.</li>
-                    <li>Методы можно перегружать по числу и типам параметров. Если выбор неоднозначен, Axiom сообщает <code>MB2033</code>.</li>
-                </ul>
-            </section>
-
-        <section class="article-section" id="constructors">
-                <h2>Конструктор SUB New</h2>
-                <p><code>SUB New(...)</code> — специальная процедура внутри <code>TYPE</code>. Она запускается при создании записи неименованной формой <code>TypeName(...)</code>, если подходит по числу и типам аргументов.</p>
-                <pre><code class="language-axiom">TYPE Person
+PRINT counter.Current()</code></pre><p>Ожидаемый вывод:</p><pre><code>3</code></pre></section>
+<section class="article-section" id="constructors"><h2>Конструктор SUB New</h2><pre><code class="language-axiom">TYPE &lt;имя типа&gt;
+    &lt;поля&gt;
+    SUB New([&lt;параметры&gt;])
+        &lt;инструкции&gt;
+    END SUB
+END TYPE</code></pre><p>Поля задают структуру записи; параметры задают входные аргументы конструктора по обычному договору SUB. Перед входом в New поля уже имеют начальные значения. Инструкции конструктора могут менять поля через SELF. Поддержаны несколько перегрузок New с разными сигнатурами; наиболее точное совпадение типов выбирается до допустимых преобразований.</p></section>
+<section class="article-section" id="invariant"><h2>Проверка IsValid</h2><pre><code class="language-axiom">FUNCTION IsValid() AS BOOLEAN
+    RETURN &lt;условие&gt;
+END FUNCTION</code></pre><p>Метод IsValid не принимает видимых параметров и возвращает BOOLEAN. Условие проверяет текущие поля через SELF. После успешного конструктора проверка вызывается автоматически; FALSE вызывает MB3005 и отклоняет создание. Именованный литерал, DIM и позиционный литерал без конструктора этой проверки не вызывают.</p><pre><code class="language-axiom">TYPE Person
     Name AS STRING = "Unknown"
     Age AS INTEGER = 0
-
     SUB New(name AS STRING, age AS INTEGER)
         SELF.Name = name
         SELF.Age = age
     END SUB
-END TYPE
-
-DIM user AS Person
-user = Person("Ada", 36)
-
-PRINT user.Name
-PRINT user.Age</code></pre>
-                <ul>
-                    <li>Перед входом в <code>SUB New(...)</code> запись уже создана, а поля уже имеют значения по умолчанию.</li>
-                    <li>Внутри конструктора поля обычно заполняют через <code>SELF</code>.</li>
-                    <li>У одного <code>TYPE</code> может быть несколько <code>SUB New(...)</code> с разными параметрами.</li>
-                    <li><code>Person(Name := "Ada", Age := 36)</code> остаётся именованным литералом записи и конструктор не вызывает.</li>
-                </ul>
-            </section>
-
-        <section class="article-section" id="invariant">
-                <h2>Проверка IsValid</h2>
-                <p><code>FUNCTION IsValid() AS BOOLEAN</code> — специальная проверка после конструктора. Она отвечает на простой вопрос: получилась ли допустимая запись?</p>
-                <pre><code class="language-axiom">TYPE Person
-    Name AS STRING = ""
-    Age AS INTEGER = 0
-
-    SUB New(name AS STRING, age AS INTEGER)
-        SELF.Name = name
-        SELF.Age = age
-    END SUB
-
     FUNCTION IsValid() AS BOOLEAN
         RETURN SELF.Name &lt;&gt; "" AND SELF.Age &gt;= 0
     END FUNCTION
 END TYPE
-
 DIM user AS Person
-user = Person("Ada", 36)</code></pre>
-                <ul>
-                    <li><code>IsValid()</code> запускается только после успешного <code>SUB New(...)</code>.</li>
-                    <li>Если функция вернула <code>TRUE</code>, запись создана.</li>
-                    <li>Если функция вернула <code>FALSE</code>, создание завершается runtime-ошибкой <code>MB3005</code>.</li>
-                    <li><code>IsValid()</code> не вызывается для именованной формы <code>TypeName(Field := value)</code>.</li>
-                </ul>
-            </section>
-
-        <section class="article-section" id="copying">
-                <h2>Копирование и сравнение</h2>
-                <p>Запись <code>TYPE</code> ведёт себя как значение. Когда вы присваиваете одну запись другой, Axiom копирует запись целиком.</p>
-                <pre><code class="language-axiom">TYPE Person
-    Name AS STRING
-    Age AS INTEGER
+user = Person("Ada", 36)
+PRINT user.Name
+TRY
+    user = Person("", -1)
+CATCH err
+    PRINT err.Code
+END TRY
+user = Person(Name := "", Age := -1)
+PRINT user.Age</code></pre><p>Ожидаемый вывод:</p><pre><code>Ada
+MB3005
+-1</code></pre></section>
+<section class="article-section" id="copying"><h2>Копирование и сравнение</h2><p>Присваивание TYPE копирует скалярные поля и вложенные записи. Изменение такого поля у одной записи не меняет копию. Фиксированные массивные поля копируются отдельно. Динамическое массивное поле обычной длины сохраняет общий массив; для независимого массива его нужно заменить результатом ARRAYCLONE. Строковое массивное поле фиксированной длины также копируется при хранении.</p><p>Операторы = и <> сравнивают записи одного пользовательского типа по полям, если все поля поддерживают структурное сравнение. Наличие массивного поля запрещает такое сравнение; упорядочивание записей не поддерживается.</p><pre><code class="language-axiom">TYPE Address
+    City AS STRING
 END TYPE
-
+TYPE Person
+    Name AS STRING
+    Home AS Address
+END TYPE
 DIM first AS Person
 DIM second AS Person
-
-first = Person(Name := "Ada", Age := 36)
+first.Name = "Ada"
+first.Home.City = "London"
 second = first
-
 first.Name = "Grace"
-
-PRINT first.Name
-PRINT second.Name</code></pre>
-                <p>После присваивания <code>second</code> хранит свою копию. Изменение <code>first.Name</code> не меняет <code>second.Name</code>.</p>
-                <ul>
-                    <li><code>=</code> и <code>&lt;&gt;</code> сравнивают две записи одного пользовательского типа по полям.</li>
-                    <li>Структурное сравнение не поддерживается для записей с массивными полями.</li>
-                    <li>Если поле само является записью, копируется и эта вложенная запись.</li>
-                </ul>
-            </section>
-
-        <section class="article-section" id="what-to-remember">
-                <h2>Что важно помнить</h2>
-                <ul>
-                    <li><code>TYPE</code> описывает форму записи, а <code>DIM name AS TypeName</code> создаёт переменную этой формы.</li>
-                    <li>Поле читается и записывается через точку: <code>record.Field</code>.</li>
-                    <li>Массив записей записывается как <code>items(index).Field</code>.</li>
-                    <li>Массивное поле записывается как <code>record.Items(index)</code>.</li>
-                    <li>Именованная форма <code>TypeName(Field := value)</code> не вызывает <code>SUB New(...)</code>.</li>
-                    <li>Неименованная форма <code>TypeName(...)</code> при наличии конструктора выбирает <code>SUB New(...)</code>.</li>
-                    <li><code>SELF</code> доступен только внутри методов и конструкторов записи.</li>
-                </ul>
-            </section>
-
-        <section class="article-section" id="diagnostics">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li><code>MB2002</code> — имя типа, поля или сигнатура метода внутри одного <code>TYPE</code> объявлены повторно.</li>
-                    <li><code>MB2021</code> — тип после <code>AS</code> не найден.</li>
-                    <li><code>MB2022</code> — внутри <code>TYPE</code> использована неподдерживаемая форма члена.</li>
-                    <li><code>MB2023</code> — указанного поля нет в записи.</li>
-                    <li><code>MB2024</code> — доступ через точку применён к значению без пользовательского типа.</li>
-                    <li><code>MB2025</code> — <code>REDIM</code> или <code>ERASE</code> применены к фиксированному массивному полю.</li>
-                    <li><code>MB2027</code> — значение поля по умолчанию недопустимо.</li>
-                    <li><code>MB2031</code> — в одном <code>TypeName(...)</code> смешаны именованные и позиционные аргументы.</li>
-                    <li><code>MB2032</code> — позиционная форма <code>TypeName(...)</code> получила неверное число аргументов.</li>
-                    <li><code>MB2033</code> — вызов конструктора или перегруженного метода оказался неоднозначным.</li>
-                    <li><code>MB3005</code> — <code>IsValid()</code> вернул <code>FALSE</code> после конструктора или массивное поле использовано до выделения.</li>
-                </ul>
-            </section>
-
-        <section class="article-section" id="manual-check">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/operators/type/field_access.axm">TYPE: поля, вложенный TYPE и копирование записи</a></li>
-                    <li><a href="../../samples/operators/type/named_literals.axm">TYPE: именованные литералы</a></li>
-                    <li><a href="../../samples/operators/type/positional_constructor.axm">TYPE: позиционная форма TypeName(...)</a></li>
-                    <li><a href="../../samples/operators/type/methods_self.axm">TYPE: методы и SELF</a></li>
-                    <li><a href="../../samples/operators/type/method_receivers_field_and_array.axm">TYPE: методы у поля записи и элемента массива</a></li>
-                    <li><a href="../../samples/operators/type/method_receivers_temporary.axm">TYPE: методы у временного значения</a></li>
-                    <li><a href="../../samples/operators/type/method_overloads.axm">TYPE: перегрузка методов</a></li>
-                    <li><a href="../../samples/operators/type/constructor_new.axm">TYPE: пользовательский конструктор</a></li>
-                    <li><a href="../../samples/operators/type/constructor_invariant.axm">TYPE: проверка IsValid после конструктора</a></li>
-                    <li><a href="../../samples/operators/type/array_fields.axm">TYPE: массивные поля</a></li>
-                    <li><a href="../../samples/operators/type/multidimensional_array_fields.axm">TYPE: многомерные массивные поля</a></li>
-                    <li><a href="../../samples/operators/type/structural_equality.axm">TYPE: структурное сравнение записей</a></li>
-                </ul>
-            </section>
-
-        <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="data-types.html">Типы данных</a>
-                    <a href="data-types-records-and-arrays.html">Записи TYPE и массивы</a>
-                    <a href="arrays.html">Массивы</a>
-                    <a href="arrays-indexing.html">Индексирование массивов</a>
-                    <a href="dim.html">Оператор DIM</a>
-                    <a href="sub.html">Процедура SUB</a>
-                    <a href="function.html">Функция FUNCTION</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+first.Home.City = "Paris"
+PRINT second.Name
+PRINT second.Home.City</code></pre><p>Ожидаемый вывод:</p><pre><code>Ada
+London</code></pre><pre><code class="language-axiom">TYPE Collection
+    Shared() AS INTEGER
+    Owned(1 TO 2) AS INTEGER
+END TYPE
+DIM first AS Collection
+DIM second AS Collection
+REDIM first.Shared(1 TO 2)
+first.Shared(1) = 3
+first.Owned(1) = 4
+second = first
+first.Shared(1) = 8
+first.Owned(1) = 9
+PRINT second.Shared(1)
+PRINT second.Owned(1)</code></pre><p>Ожидаемый вывод:</p><pre><code>8
+4</code></pre></section>
+<section class="article-section" id="what-to-remember"><h2>Правила доступа и создания</h2><p>Оператор TYPE объявляет структуру; DIM создаёт переменную этой структуры. Поля доступны через точку, массивные поля — через точку и индексы. Для настройки с проверкой используйте конструктор; для прямого заполнения выбранных полей — именованный литерал. Семантика общего динамического массива отличается от копирования самой записи.</p></section>
+<section class="article-section" id="diagnostics"><h2>Диагностика</h2><p>MB2002 означает повторное имя типа, поля или сигнатуры метода. MB2021 означает неизвестный тип после AS. MB2022 возникает для недопустимого поля, циклической структуры или неподдерживаемого члена TYPE. MB2023 означает неизвестное поле, MB2024 — доступ к полю значения неподходящего типа.</p><p>MB2025 запрещает REDIM и ERASE для фиксированного массивного поля. MB2027 сообщает о недопустимом значении по умолчанию. MB2031 означает смешивание именованных и позиционных значений, MB2032 — неверное число позиционных значений литерала. MB2004 означает неверное число аргументов конструктора.</p><p>MB2033 означает неоднозначный выбор перегрузки конструктора или метода. MB2044 требует SELF для обращения к полю в методе. MB3005 возникает, если IsValid вернул FALSE после конструктора; ошибки внутри конструктора передаются с собственными кодами.</p></section>
+<section class="article-section"><h2>См. также</h2><p><a href="sub.html">SUB</a> · <a href="function.html">FUNCTION</a> · <a href="calls.html">Вызовы</a> · <a href="arrays.html">Массивы</a> · <a href="try.html">TRY</a></p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

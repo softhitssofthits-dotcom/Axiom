@@ -1,136 +1,333 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Сборка даты и календарные части</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="date-time-functions-parts-and-serial">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">DATESERIAL, TIMESERIAL, YEAR, MONTH и связанные функции</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-<main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Встроенные функции</span><span>/</span><span>Дата и время</span></nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Сборка даты и календарные части</h1>
-            <p class="lead">Раздел сборки даты и календарных частей описывает функции <code>DATESERIAL</code>, <code>TIMESERIAL</code>, <code>YEAR</code>, <code>MONTH</code>, <code>DAY</code>, <code>HOUR</code>, <code>MINUTE</code>, <code>SECOND</code>, <code>WEEKDAY</code>, <code>WEEKDAYNAME</code> и <code>MONTHNAME</code> — построение канонических значений и извлечение календарных компонентов.</p>
-
-            <section class="article-section" id="dateserial">
-                <h2>DATESERIAL</h2>
-                <p>Функция <code>DATESERIAL</code> строит значение типа <code>DATE</code> из года, месяца и дня.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = DATESERIAL(year, month, day)</code></pre>
-                <h3>Аргументы</h3><p><code>year</code>, <code>month</code> и <code>day</code> задают числовые компоненты даты. Результат имеет тип <code>DATE</code> и при выводе записывается в формате <code>yyyy-MM-dd</code>. Год задаётся целым числом от 1 до 9999, месяц — от 1 до 12, день — от 1 до числа дней выбранного месяца. Годы от 1 до 99 обозначают именно эти годы, без преобразования в двадцатый или двадцать первый век.</p>
-                <h3>Проверка реальной календарной даты</h3>
-                <p>Компоненты должны образовывать реальную календарную дату. Автоматического переноса переполненных значений вроде тринадцатого месяца здесь нет.</p>
-            </section>
-
-            <section class="article-section" id="timeserial">
-                <h2>TIMESERIAL</h2>
-                <p>Функция <code>TIMESERIAL</code> строит значение типа <code>TIME</code> из часов, минут и секунд.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = TIMESERIAL(hour, minute, second)</code></pre>
-                <h3>Аргументы</h3><p><code>hour</code>, <code>minute</code> и <code>second</code> задают числовые компоненты времени. Результат имеет тип <code>TIME</code> и при выводе записывается в формате <code>HH:mm:ss</code>. Часы задаются целым числом от 0 до 23, минуты и секунды — от 0 до 59. Функция TIMESERIAL не переносит переполнение: например, 60 секунд вызывают диагностику <code>MB3007</code>.</p>
-            </section>
-
-            <section class="article-section" id="year-month-day">
-                <h2>YEAR, MONTH, DAY</h2>
-                <p>Эти функции извлекают из канонической даты или даты-времени год, номер месяца и номер дня.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = YEAR(value)
-result = MONTH(value)
-result = DAY(value)</code></pre>
-                <h3>Аргументы</h3><p><code>value</code> задаёт строку даты или даты-времени в каноническом формате. Результат каждой функции имеет тип <code>INTEGER</code>.</p>
-            </section>
-
-            <section class="article-section" id="hour-minute-second">
-                <h2>HOUR, MINUTE, SECOND</h2>
-                <p>Эти функции извлекают из канонического времени или даты-времени часы, минуты и секунды.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = HOUR(value)
-result = MINUTE(value)
-result = SECOND(value)</code></pre>
-            </section>
-
-            <section class="article-section" id="weekday">
-                <h2>WEEKDAY и WEEKDAYNAME</h2>
-                <p><code>WEEKDAY</code> возвращает номер дня недели, а <code>WEEKDAYNAME</code> его полное английское имя.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = WEEKDAY(value)
-result = WEEKDAYNAME(weekday)</code></pre>
-                <h3>Аргументы</h3><p>Для <code>WEEKDAY</code> аргумент <code>value</code> задаёт строку даты или даты-времени. Функция возвращает номер по схеме <code>1 = Monday</code>, <code>7 = Sunday</code>. Для <code>WEEKDAYNAME</code> аргумент <code>weekday</code> задаёт номер дня недели.</p>
-            </section>
-
-            <section class="article-section" id="monthname">
-                <h2>MONTHNAME</h2>
-                <p>Функция <code>MONTHNAME</code> возвращает полное английское имя месяца по его номеру.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = MONTHNAME(month)</code></pre>
-            </section>
-
-            <section class="article-section" id="calendar-helpers">
-                <h2>ISLEAPYEAR, DAYSINMONTH, STARTOFMONTH, ENDOFMONTH, STARTOFYEAR, ENDOFYEAR</h2>
-                <p>Эти функции проверяют свойства календаря и возвращают границы месяца или года.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = ISLEAPYEAR(year)
-result = DAYSINMONTH(year, month)
-result = STARTOFMONTH(value)
-result = ENDOFMONTH(value)
-result = STARTOFYEAR(value)
-result = ENDOFYEAR(value)</code></pre>
-                <h3>Аргументы</h3><p><code>ISLEAPYEAR</code> возвращает <code>BOOLEAN</code>, <code>DAYSINMONTH</code> возвращает <code>INTEGER</code>, а функции начала и конца месяца или года возвращают значение типа <code>DATE</code>, которое при выводе записывается в формате <code>yyyy-MM-dd</code>.</p>
-                <h3>Пример сборки и чтения даты</h3>
-                <pre><code class="language-axiom">' Сборка даты и работа с календарными частями
-PRINT DATESERIAL(2026, 4, 20)
-PRINT YEAR("2026-04-20 14:05:06")
-PRINT MONTHNAME(4)
-PRINT WEEKDAYNAME(WEEKDAY("2026-04-26"))
-PRINT DAYSINMONTH(2024, 2)
-PRINT ENDOFMONTH("2024-02-11")</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li>Неверные компоненты в <code>DATESERIAL</code> и <code>TIMESERIAL</code> приводят к ошибке аргумента встроенной функции.</li>
-                    <li>Значения вне диапазона для <code>MONTHNAME</code>, <code>WEEKDAYNAME</code>, <code>ISLEAPYEAR</code> и <code>DAYSINMONTH</code> также считаются ошибкой аргумента.</li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/functions/dateserial/basic_usage.axm">DATESERIAL: построение даты</a></li>
-                    <li><a href="../../samples/functions/timeserial/basic_usage.axm">TIMESERIAL: построение времени</a></li>
-                    <li><a href="../../samples/functions/year/basic_usage.axm">YEAR: извлечение года</a></li>
-                    <li><a href="../../samples/functions/monthname/calendar_month_name.axm">MONTHNAME: имя месяца</a></li>
-                    <li><a href="../../samples/functions/weekdayname/weekend_name.axm">WEEKDAYNAME: имя дня недели</a></li>
-                    <li><a href="../../samples/functions/daysinmonth/february_leap_year.axm">DAYSINMONTH: количество дней в месяце</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="date-time-functions.html">Функции даты и времени</a>
-                    <a href="date-time-functions-arithmetic-and-validation.html">Арифметика, разбор и проверка</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Сборка даты и календарные части — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="date-time-functions-parts-and-serial"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Сборка даты и календарные части</span></nav>
+<p class="eyebrow">Справочник языка</p><h1 class="page-title">Сборка даты и календарные части</h1><p class="lead">Раздел описывает встроенные функции создания даты и времени, извлечения компонентов и определения календарных границ. Ниже синтаксис относится к разным функциям.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="dateserial"><h2>DATESERIAL</h2>
+<p>DATESERIAL — встроенная функция языка Axiom, которая возвращает дату, собранную из года, месяца и дня.</p>
+<h3>Назначение</h3>
+<p>Функция нужна для создания значения DATE, когда год, месяц и день получены отдельно.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">DATESERIAL(&lt;год&gt;, &lt;месяц&gt;, &lt;день&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Все аргументы должны иметь тип INTEGER: год от 1 до 9999; месяц от 1 до 12; день от 1 до 31, существующий в указанном месяце.</p>
+<h3>Результат</h3>
+<p>Функция возвращает значение типа DATE.</p>
+<h3>Правила и ограничения</h3>
+<p>Лишние дни или месяцы не переносятся в соседний месяц или год; например, 29 февраля невисокосного года недопустимо.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимой строке, номере или календарной дате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT DATESERIAL(2024, 2, 29)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>2024-02-29</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="timeserial"><h2>TIMESERIAL</h2>
+<p>TIMESERIAL — встроенная функция языка Axiom, которая возвращает время суток, собранное из часа, минуты и секунды.</p>
+<h3>Назначение</h3>
+<p>Функция нужна для создания значения TIME из отдельно вычисленных часа, минуты и секунды.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">TIMESERIAL(&lt;час&gt;, &lt;минута&gt;, &lt;секунда&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Все аргументы INTEGER: час от 0 до 23, минута и секунда от 0 до 59.</p>
+<h3>Результат</h3>
+<p>Функция возвращает значение типа TIME.</p>
+<h3>Правила и ограничения</h3>
+<p>Избыточные компоненты не нормализуются. Час 24, отрицательные компоненты и секунда 60 недопустимы.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимой строке, номере или календарной дате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT TIMESERIAL(23, 59, 59)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>23:59:59</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section><span id="year-month-day"></span><section class="article-section" id="year"><h2>YEAR</h2>
+<p>YEAR — встроенная функция языка Axiom, которая возвращает год календарной даты.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет извлечь нужный календарный компонент или вычислить границу периода для исходной даты.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">YEAR(&lt;дата&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте DATE, DATETIME или STRING в точной форме yyyy-MM-dd либо yyyy-MM-dd HH:mm:ss. У DATETIME используется только календарная часть; строка должна содержать действительную календарную дату.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип INTEGER от 1 до 9999.</p>
+<h3>Правила и ограничения</h3>
+<p>Время суток не влияет на результат.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимой строке, номере или календарной дате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT YEAR("2024-02-29")</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>2024</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="month"><h2>MONTH</h2>
+<p>MONTH — встроенная функция языка Axiom, которая возвращает номер месяца календарной даты.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет извлечь нужный календарный компонент или вычислить границу периода для исходной даты.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">MONTH(&lt;дата&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте DATE, DATETIME или STRING в точной форме yyyy-MM-dd либо yyyy-MM-dd HH:mm:ss. У DATETIME используется только календарная часть; строка должна содержать действительную календарную дату.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип INTEGER от 1 до 12.</p>
+<h3>Правила и ограничения</h3>
+<p>Январь имеет номер 1.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимой строке, номере или календарной дате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT MONTH("2024-02-29")</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>2</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="day"><h2>DAY</h2>
+<p>DAY — встроенная функция языка Axiom, которая возвращает номер дня внутри месяца.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет извлечь нужный календарный компонент или вычислить границу периода для исходной даты.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">DAY(&lt;дата&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте DATE, DATETIME или STRING в точной форме yyyy-MM-dd либо yyyy-MM-dd HH:mm:ss. У DATETIME используется только календарная часть; строка должна содержать действительную календарную дату.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип INTEGER от 1 до 31.</p>
+<h3>Правила и ограничения</h3>
+<p>Это день месяца, а не порядковый день года.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимой строке, номере или календарной дате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT DAY("2024-02-29")</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>29</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="weekday"><h2>WEEKDAY</h2>
+<p>WEEKDAY — встроенная функция языка Axiom, которая возвращает номер дня недели.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет извлечь нужный календарный компонент или вычислить границу периода для исходной даты.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">WEEKDAY(&lt;дата&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте DATE, DATETIME или STRING в точной форме yyyy-MM-dd либо yyyy-MM-dd HH:mm:ss. У DATETIME используется только календарная часть; строка должна содержать действительную календарную дату.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип INTEGER от 1 до 7.</p>
+<h3>Правила и ограничения</h3>
+<p>Понедельник имеет номер 1, воскресенье — 7. Аргумента первого дня недели нет.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимой строке, номере или календарной дате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT WEEKDAY("2024-02-29")</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>4</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="startofmonth"><h2>STARTOFMONTH</h2>
+<p>STARTOFMONTH — встроенная функция языка Axiom, которая возвращает первый день месяца исходной даты.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет извлечь нужный календарный компонент или вычислить границу периода для исходной даты.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">STARTOFMONTH(&lt;дата&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте DATE, DATETIME или STRING в точной форме yyyy-MM-dd либо yyyy-MM-dd HH:mm:ss. У DATETIME используется только календарная часть; строка должна содержать действительную календарную дату.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DATE.</p>
+<h3>Правила и ограничения</h3>
+<p>День результата равен 1.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимой строке, номере или календарной дате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT STARTOFMONTH("2024-02-20")</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>2024-02-01</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="endofmonth"><h2>ENDOFMONTH</h2>
+<p>ENDOFMONTH — встроенная функция языка Axiom, которая возвращает последний день месяца исходной даты.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет извлечь нужный календарный компонент или вычислить границу периода для исходной даты.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">ENDOFMONTH(&lt;дата&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте DATE, DATETIME или STRING в точной форме yyyy-MM-dd либо yyyy-MM-dd HH:mm:ss. У DATETIME используется только календарная часть; строка должна содержать действительную календарную дату.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DATE.</p>
+<h3>Правила и ограничения</h3>
+<p>Февраль учитывает високосность года.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимой строке, номере или календарной дате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT ENDOFMONTH("2024-02-20")</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>2024-02-29</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="startofyear"><h2>STARTOFYEAR</h2>
+<p>STARTOFYEAR — встроенная функция языка Axiom, которая возвращает первый день года исходной даты.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет извлечь нужный календарный компонент или вычислить границу периода для исходной даты.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">STARTOFYEAR(&lt;дата&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте DATE, DATETIME или STRING в точной форме yyyy-MM-dd либо yyyy-MM-dd HH:mm:ss. У DATETIME используется только календарная часть; строка должна содержать действительную календарную дату.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DATE.</p>
+<h3>Правила и ограничения</h3>
+<p>Возвращается 1 января того же года.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимой строке, номере или календарной дате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT STARTOFYEAR("2024-02-20")</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>2024-01-01</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="endofyear"><h2>ENDOFYEAR</h2>
+<p>ENDOFYEAR — встроенная функция языка Axiom, которая возвращает последний день года исходной даты.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет извлечь нужный календарный компонент или вычислить границу периода для исходной даты.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">ENDOFYEAR(&lt;дата&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте DATE, DATETIME или STRING в точной форме yyyy-MM-dd либо yyyy-MM-dd HH:mm:ss. У DATETIME используется только календарная часть; строка должна содержать действительную календарную дату.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DATE.</p>
+<h3>Правила и ограничения</h3>
+<p>Возвращается 31 декабря того же года.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимой строке, номере или календарной дате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT ENDOFYEAR("2024-02-20")</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>2024-12-31</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section><span id="hour-minute-second"></span><section class="article-section" id="hour"><h2>HOUR</h2>
+<p>HOUR — встроенная функция языка Axiom, которая возвращает час времени суток.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет отдельно прочитать компонент времени суток, например для проверки расписания.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">HOUR(&lt;время&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте TIME, DATETIME или STRING в точной форме HH:mm:ss либо yyyy-MM-dd HH:mm:ss. У DATETIME используется только время суток.</p>
+<h3>Результат</h3>
+<p>Результат INTEGER в диапазоне 0–23.</p>
+<h3>Правила и ограничения</h3>
+<p>Компонент не означает полную длительность; например, MINUTE не считает минуты от полуночи.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимой строке, номере или календарной дате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT HOUR("23:45:56")</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>23</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="minute"><h2>MINUTE</h2>
+<p>MINUTE — встроенная функция языка Axiom, которая возвращает минуту внутри часа.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет отдельно прочитать компонент времени суток, например для проверки расписания.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">MINUTE(&lt;время&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте TIME, DATETIME или STRING в точной форме HH:mm:ss либо yyyy-MM-dd HH:mm:ss. У DATETIME используется только время суток.</p>
+<h3>Результат</h3>
+<p>Результат INTEGER в диапазоне 0–59.</p>
+<h3>Правила и ограничения</h3>
+<p>Компонент не означает полную длительность; например, MINUTE не считает минуты от полуночи.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимой строке, номере или календарной дате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT MINUTE("23:45:56")</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>45</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="second"><h2>SECOND</h2>
+<p>SECOND — встроенная функция языка Axiom, которая возвращает секунду внутри минуты.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет отдельно прочитать компонент времени суток, например для проверки расписания.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">SECOND(&lt;время&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте TIME, DATETIME или STRING в точной форме HH:mm:ss либо yyyy-MM-dd HH:mm:ss. У DATETIME используется только время суток.</p>
+<h3>Результат</h3>
+<p>Результат INTEGER в диапазоне 0–59.</p>
+<h3>Правила и ограничения</h3>
+<p>Компонент не означает полную длительность; например, MINUTE не считает минуты от полуночи.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимой строке, номере или календарной дате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT SECOND("23:45:56")</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>56</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="monthname"><h2>MONTHNAME</h2>
+<p>MONTHNAME — встроенная функция языка Axiom, которая возвращает английское название месяца.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет получить календарную характеристику, указанную в её определении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">MONTHNAME(&lt;номер месяца&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте INTEGER от 1 до 12, задающий номер месяца.</p>
+<h3>Результат</h3>
+<p>Функция возвращает значение типа STRING.</p>
+<h3>Правила и ограничения</h3>
+<p>Названия от January до December не зависят от языка интерфейса; краткой формы нет.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимой строке, номере или календарной дате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT MONTHNAME(2)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>February</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="weekdayname"><h2>WEEKDAYNAME</h2>
+<p>WEEKDAYNAME — встроенная функция языка Axiom, которая возвращает английское название дня недели.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет получить календарную характеристику, указанную в её определении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">WEEKDAYNAME(&lt;номер дня недели&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте INTEGER от 1 до 7: понедельник имеет номер 1.</p>
+<h3>Результат</h3>
+<p>Функция возвращает значение типа STRING.</p>
+<h3>Правила и ограничения</h3>
+<p>Названия от Monday до Sunday не зависят от языка интерфейса; краткой формы нет.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимой строке, номере или календарной дате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT WEEKDAYNAME(7)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>Sunday</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section><span id="calendar-helpers"></span><section class="article-section" id="isleapyear"><h2>ISLEAPYEAR</h2>
+<p>ISLEAPYEAR — встроенная функция языка Axiom, которая возвращает признак високосности года.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет получить календарную характеристику, указанную в её определении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">ISLEAPYEAR(&lt;год&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте INTEGER от 1 до 9999, задающий календарный год.</p>
+<h3>Результат</h3>
+<p>Функция возвращает значение типа BOOLEAN.</p>
+<h3>Правила и ограничения</h3>
+<p>Используется григорианское правило: делимость на 4, исключение столетий, кроме делимых на 400.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимой строке, номере или календарной дате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT ISLEAPYEAR(2000)
+PRINT ISLEAPYEAR(1900)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>TRUE
+FALSE</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="daysinmonth"><h2>DAYSINMONTH</h2>
+<p>DAYSINMONTH — встроенная функция языка Axiom, которая возвращает количество дней в месяце.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет получить календарную характеристику, указанную в её определении.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">DAYSINMONTH(&lt;год&gt;, &lt;месяц&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Передайте два INTEGER: год от 1 до 9999 и месяц от 1 до 12.</p>
+<h3>Результат</h3>
+<p>Результат INTEGER от 28 до 31.</p>
+<h3>Правила и ограничения</h3>
+<p>Февраль содержит 28 или 29 дней в зависимости от года.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимой строке, номере или календарной дате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">PRINT DAYSINMONTH(2024, 2)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>29</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

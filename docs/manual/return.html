@@ -1,126 +1,28 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Оператор RETURN</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="return">
-<header class="topbar">
-    <div class="topbar__inner">
-        <a class="brand" href="index.html">Справочник Axiom</a>
-        <div class="topbar__meta">Выход из SUB и возврат значения из FUNCTION</div>
-        <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-    </div>
-</header>
-<div class="layout">
-    <aside class="sidebar">
-        <div class="sidebar__inner">
-            <nav id="manual-nav"></nav>
-        </div>
-    </aside>
-    <main class="content">
-        <nav class="breadcrumbs" aria-label="Хлебные крошки">
-            <a href="index.html">Главная</a><span>/</span><a href="procedures-and-functions.html">Процедуры и функции</a><span>/</span><span>Оператор RETURN</span>
-        </nav>
-
-        <p class="eyebrow">Оператор</p>
-        <h1 class="page-title">Оператор RETURN</h1>
-        <p class="lead"><code>RETURN</code> — оператор языка Axiom, который завершает выполнение текущей процедуры или функции. В функции оператор <code>RETURN</code> отдаёт вызывающему коду вычисленное значение, а в процедуре служит досрочным выходом без результата.</p>
-
-        <section class="article-section">
-            <h2>Когда использовать RETURN</h2>
-            <p>Оператор <code>RETURN</code> нужен для завершения текущей процедуры или функции. В <code>FUNCTION</code> оператор <code>RETURN</code> обязателен на исполняемом пути, который должен вернуть результат. В <code>SUB</code> оператор <code>RETURN</code> не обязателен: процедура может спокойно дойти до <code>END SUB</code>, а <code>RETURN</code> нужен только для раннего завершения.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Где работает оператор RETURN</h2>
-            <p>Оператор <code>RETURN</code> допустим только внутри <code>SUB</code> или <code>FUNCTION</code>. Оператор <code>RETURN</code> выполняется <code>BytecodeVm</code> после компиляции.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Синтаксис</h2>
-<pre><code class="language-axiom">RETURN &lt;выражение&gt;</code></pre>
-<pre><code class="language-axiom">RETURN</code></pre>
-            <p>Оператор <code>RETURN</code> поддерживает две формы: с выражением для функций и без выражения для процедур.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Параметры и части синтаксиса</h2>
-            <table>
-                <thead><tr><th>Часть</th><th>Описание</th></tr></thead>
-                <tbody>
-                    <tr><td><code>&lt;выражение&gt;</code></td><td>Значение, которое возвращает текущая функция. Эта форма допустима только внутри <code>FUNCTION</code>.</td></tr>
-                </tbody>
-            </table>
-            <p>Форма <code>RETURN</code> без выражения допустима только внутри <code>SUB</code>.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Правила работы</h2>
-            <ul>
-                <li>После выполнения <code>RETURN</code> оставшиеся инструкции текущей процедуры или функции не выполняются.</li>
-                <li><code>RETURN &lt;выражение&gt;</code> должен вернуть значение, совместимое с типом результата текущей функции.</li>
-                <li><code>RETURN</code> без значения в <code>SUB</code> удобен для проверки особого случая в начале процедуры.</li>
-            </ul>
-            <p>Оператор <code>RETURN</code> завершает вызов процедуры или функции. В процедуре <code>SUB</code> значение не указывается; в функции <code>FUNCTION</code> указывается возвращаемое выражение.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Диагностика</h2>
-            <ul>
-                <li>Оператор <code>RETURN</code> записан вне <code>SUB</code> или <code>FUNCTION</code>.</li>
-                <li><code>SUB</code> возвращает значение через <code>RETURN</code>.</li>
-                <li><code>FUNCTION</code> использует <code>RETURN</code> без значения.</li>
-                <li>Тип возвращаемого выражения не подходит к типу результата функции.</li>
-                <li>Функция завершилась без возвращённого значения.</li>
-            </ul>
-        </section>
-
-        <section class="article-section">
-            <h2>Пример досрочного возврата</h2>
-<pre><code class="language-axiom">' Ожидаемый вывод:
-' 42
-' before return
-' after if
-FUNCTION DoubleValue(value AS INTEGER) AS INTEGER
-    RETURN value + value
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Оператор RETURN — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="return"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор RETURN</span></nav>
+<p class="eyebrow">11 · Процедуры и функции</p><h1 class="page-title">Оператор RETURN</h1><p class="lead">RETURN — оператор языка Axiom, который завершает текущий вызов процедуры или функции. В процедуре он возвращает управление, а в функции дополнительно возвращает вычисленное значение.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Назначение и контекст</h2><p>RETURN позволяет закончить подпрограмму до конца тела, например после проверки входного аргумента. Оператор разрешён только внутри SUB или FUNCTION, включая методы TYPE; на верхнем уровне он недопустим.</p></section>
+<section class="article-section"><h2>Выход из процедуры</h2><pre><code class="language-axiom">RETURN</code></pre></section>
+<section class="article-section"><h2>Возврат из функции</h2><pre><code class="language-axiom">RETURN &lt;выражение&gt;</code></pre></section>
+<section class="article-section"><h2>Части записи</h2><p>В процедуре аргументов нет. В функции выражение вычисляет результат; его тип должен быть совместим с объявленным типом результата FUNCTION.</p></section>
+<section class="article-section"><h2>Действие и ограничения</h2><p>После RETURN следующие обычные инструкции тела не выполняются. Завершается только текущий вызов, а вызывающая программа продолжает работу. При RETURN выполняется ближайший активный FINALLY перед возвратом. В текущей реализации RETURN внутри вложенных TRY/FINALLY после ближайшего FINALLY завершает вызов, не выполняя внешние FINALLY; не рассчитывайте на их выполнение при такой форме выхода.</p><p>Достижение END SUB завершает процедуру. Достижение END FUNCTION без возвращённого значения является ошибкой времени выполнения.</p></section>
+<section class="article-section"><h2>Диагностика</h2><p>MB2012 означает RETURN вне подпрограммы. MB2006 означает RETURN со значением в SUB, MB2007 — RETURN без выражения в FUNCTION, MB2003 — несовместимый тип результата. MB3006 возникает, если выполненная ветвь функции дошла до конца без значения.</p></section>
+<section class="article-section"><h2>Пример выхода с FINALLY</h2><pre><code class="language-axiom">FUNCTION Value() AS INTEGER
+    TRY
+        RETURN 7
+    FINALLY
+        PRINT "finally"
+    END TRY
 END FUNCTION
-
-SUB Show(flag AS BOOLEAN)
-    IF flag THEN
-        PRINT "before return"
-        RETURN
-    END IF
-
-    PRINT "after if"
-END SUB
-
-PRINT DoubleValue(21)
-Show(TRUE)
-Show(FALSE)</code></pre>
-        </section>
-
-        <section class="article-section">
-            <h2>Запускаемые примеры</h2>
-            <ul class="resource-list">
-                <li><a href="../../samples/control-flow/return/function_value.axm">RETURN: возврат значения из FUNCTION</a></li>
-                <li><a href="../../samples/control-flow/return/sub_early_exit.axm">RETURN: досрочный выход из SUB</a></li>
-                <li><a href="../../samples/operators/function/returned_closure.axm">FUNCTION: возврат функции с захваченными данными</a></li>
-            </ul>
-        </section>
-
-        <section class="article-section">
-            <h2>См. также</h2>
-            <div class="link-list">
-                <a href="procedures-and-functions.html">Процедуры и функции</a>
-                <a href="sub.html">Процедура SUB</a>
-                <a href="function.html">Функция FUNCTION</a>
-                <a href="if.html">Оператор IF</a>
-                <a href="do-loop.html">Оператор DO ... LOOP</a>
-                <a href="diagnostics.html">Диагностика</a>
-            </div>
-        </section>
-
-<div id="page-pager" class="pager"></div></main></div><script src="scripts/manual.js"></script></body></html>
+PRINT Value()</code></pre><p>Ожидаемый вывод:</p><pre><code>finally
+7</code></pre></section>
+<section class="article-section"><h2>См. также</h2><p><a href="sub.html">SUB</a> · <a href="function.html">FUNCTION</a> · <a href="try.html">TRY</a></p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

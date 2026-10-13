@@ -1,89 +1,20 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Замена и подсчёт совпадений</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="regex-functions-replace-and-count">
-    <header class="topbar">
-        <div class="topbar__inner">
-            <a class="brand" href="index.html">Справочник Axiom</a>
-            <div class="topbar__meta">REGEXREPLACE и REGEXCOUNT</div>
-            <button class="nav-toggle" type="button" data-nav-toggle>Темы</button>
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar__inner">
-                <nav id="manual-nav"></nav>
-            </div>
-        </aside>
-<main class="content">
-            <nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Встроенные функции</span><span>/</span><span>Регулярные выражения</span></nav>
-            <p class="eyebrow">Раздел</p>
-            <h1 class="page-title">Замена и подсчёт совпадений</h1>
-            <p class="lead">Раздел замены и подсчёта совпадений описывает функции <code>REGEXREPLACE</code> и <code>REGEXCOUNT</code> — массовую замену найденных фрагментов и подсчёт числа совпадений.</p>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Замена и подсчёт совпадений — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="regex-functions-replace-and-count"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Замена и подсчёт совпадений</span></nav>
+<p class="eyebrow">Глава 15</p><h1 class="page-title">Замена и подсчёт совпадений</h1><p class="lead">В этом разделе описаны две встроенные функции языка Axiom: REGEXREPLACE заменяет совпадения с регулярным выражением, а REGEXCOUNT возвращает их количество. Формы синтаксиса ниже относятся к отдельным функциям.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
-            <section class="article-section" id="regexreplace">
-                <h2>REGEXREPLACE</h2>
-                <p>Функция <code>REGEXREPLACE</code> возвращает новую строку, где найденные совпадения заменены указанным текстом.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = REGEXREPLACE(text, pattern, replacement[, modes][, count])</code></pre>
-                <h3>Аргументы</h3><p><code>replacement</code> задаёт строку замены. Если указан <code>count</code>, заменяются только первые найденные совпадения в этом количестве. После достижения count функция не ищет следующие совпадения; оставшаяся часть строки сохраняется без изменений.</p>
-                <h3>Количество замен и ссылки на группы</h3>
-                <p>Если <code>count</code> равен нулю, функция возвращает исходный текст без изменений. Отрицательное количество замен даёт <code>MB3007</code>. В строке замены можно использовать ссылки на группы через <code>$1</code>, <code>$2</code> и далее.</p>
-                <h3>Ограничение количества замен</h3><pre><code class="language-axiom">' Меняем только первое найденное совпадение.
-PRINT REGEXREPLACE("код12 код34", "[0-9]+", "#", 1)</code></pre><p>Результат: «код# код34». Проверочный пример: <a href="../../samples/functions/regexreplace/stop_at_count.axm">остановка поиска после count</a>.</p>
-<h3>Пример замены по шаблону</h3>
-                <pre><code class="language-axiom">PRINT REGEXREPLACE("one 12 two 34", "\d+", "#")
+<section class="article-section" id="regexreplace"><h2>REGEXREPLACE</h2><p>REGEXREPLACE — встроенная функция языка Axiom, которая заменяет совпадения с регулярным выражением и возвращает полученную строку.</p><h3>Назначение и контекст</h3><p>Функция позволяет заменить фрагменты, описанные правилом: например, скрыть все числа или переставить части найденного кода.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла.</p><h3>Синтаксис</h3><p>Четыре поддерживаемые формы вызова:</p><pre><code class="language-axiom">REGEXREPLACE(&lt;текст&gt;, &lt;шаблон&gt;, &lt;замена&gt;)</code></pre><pre><code class="language-axiom">REGEXREPLACE(&lt;текст&gt;, &lt;шаблон&gt;, &lt;замена&gt;, &lt;режимы&gt;)</code></pre><pre><code class="language-axiom">REGEXREPLACE(&lt;текст&gt;, &lt;шаблон&gt;, &lt;замена&gt;, &lt;количество&gt;)</code></pre><pre><code class="language-axiom">REGEXREPLACE(&lt;текст&gt;, &lt;шаблон&gt;, &lt;замена&gt;, &lt;режимы&gt;, &lt;количество&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте строку типа STRING, в которой функция должна искать совпадения.</td></tr><tr><td><code>&lt;шаблон&gt;</code></td><td>Передайте строку типа STRING с регулярным выражением, которое задаёт искомые совпадения.</td></tr><tr><td><code>&lt;режимы&gt;</code></td><td>Необязательная строка типа STRING задаёт режимы поиска. Буква <code>i</code> отключает различение регистра, <code>m</code> позволяет <code>^</code> и <code>$</code> обозначать границы отдельных строк, <code>s</code> позволяет точке совпадать с переводом строки, а <code>x</code> разрешает пробелы и комментарии в шаблоне. Буквы можно сочетать, например <code>"im"</code>; регистр букв не имеет значения. По умолчанию дополнительные режимы выключены.</td></tr><tr><td><code>&lt;замена&gt;</code></td><td>Передайте строку типа STRING с текстом замены. В ней можно использовать ссылки на захватывающие группы, например <code>$1</code> и <code>$2</code>.</td></tr><tr><td><code>&lt;количество&gt;</code></td><td>Передайте неотрицательное целое число типа INTEGER, ограничивающее число замен. Если аргумент отсутствует, заменяются все совпадения. Значение 0 запрещает замену.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает строку типа STRING. Исходное строковое значение не изменяется. Если совпадений нет, функция возвращает исходный текст.</p><h3>Правила и пограничные случаи</h3><p>При заданном количестве замен функция обрабатывает первые совпадения слева направо. После достижения предела оставшаяся часть текста переносится без изменений. Если количество равно 0, функция возвращает исходный текст без проверки шаблона и режимов; выражения всех аргументов при этом вычисляются.</p><p>Пустой текст может содержать пустое совпадение. Например, замена шаблона <code>"^$"</code> на <code>"x"</code> в пустой строке даёт строку <code>"x"</code>.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает при отрицательном количестве замен, недопустимом шаблоне, неизвестной букве режима, ошибке разбора строки замены или превышении пятисекундного предела поиска. При количестве 0 шаблон, режимы и строка замены не проверяются.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT REGEXREPLACE("one 12 two 34", "\d+", "#")
 PRINT REGEXREPLACE("one 12 two 34", "\d+", "#", 1)
-PRINT REGEXREPLACE("A12 B34", "([A-Z])(\d+)", "$1-$2")</code></pre>
-                <p>Результат:</p>
-                <pre><code>one # two #
+PRINT REGEXREPLACE("A12 B34", "([A-Z])(\d+)", "$1-$2")</code></pre><p>Программа выводит:</p><pre><code>one # two #
 one # two 34
-A-12 B-34</code></pre>
-            </section>
-
-            <section class="article-section" id="regexcount">
-                <h2>REGEXCOUNT</h2>
-                <p>Функция <code>REGEXCOUNT</code> возвращает количество совпадений с регулярным выражением.</p>
-                <h3>Синтаксис</h3>
-                <pre><code class="language-axiom">result = REGEXCOUNT(text, pattern[, modes])</code></pre>
-                <h3>Аргументы</h3><p><code>text</code> задаёт исходную строку, <code>pattern</code> задаёт регулярное выражение, <code>modes</code> при необходимости включает дополнительные режимы поиска. Результат имеет тип <code>INTEGER</code>.</p>
-                <h3>Ноль при отсутствии совпадений</h3>
-                <p>Если совпадений нет, результат равен <code>0</code>. Эта функция удобна, когда нужно только число найденных фрагментов без извлечения самих значений.</p>
-                <h3>Пример подсчёта совпадений</h3>
-                <pre><code class="language-axiom">PRINT REGEXCOUNT("one 12 two 34", "\d+")
-PRINT REGEXCOUNT("A12 b34", "[a-z]\d+", "i")</code></pre>
-                <p>Результат:</p>
-                <pre><code>2
-2</code></pre>
-            </section>
-
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/functions/regexreplace/basic_usage.axm">REGEXREPLACE: замена по шаблону</a></li>
-                    <li><a href="../../samples/functions/regexcount/basic_usage.axm">REGEXCOUNT: подсчёт совпадений</a></li>
-                </ul>
-            </section>
-
-            <section class="article-section">
-                <h2>См. также</h2>
-                <div class="link-list">
-                    <a href="regex-functions.html">Функции регулярных выражений</a>
-                    <a href="regex-functions-match-and-extract.html">Проверка, первое совпадение и группы</a>
-                    <a href="regex-functions-arrays-and-split.html">Все совпадения, группы и разбиение</a>
-                    <a href="string-functions-search-and-replace.html">Строковый поиск и замена</a>
-                    <a href="diagnostics.html">Диагностика</a>
-                </div>
-            </section>
-
-            <div id="page-pager" class="pager"></div>
-        </main>
-    </div>
-    <script src="scripts/manual.js"></script>
-</body>
-</html>
+A-12 B-34</code></pre><p>Дополнительный пример: <a href="../../samples/functions/regexreplace/stop_at_count.axm">stop_at_count.axm</a>.</p></section>
+<section class="article-section" id="regexcount"><h2>REGEXCOUNT</h2><p>REGEXCOUNT — встроенная функция языка Axiom, которая возвращает количество совпадений с регулярным выражением.</p><h3>Назначение и контекст</h3><p>Функция подходит, когда требуется только число найденных фрагментов, без массива их текстовых значений.</p><p>Функция вызывается в выражении и не требует открытия экрана, холста или файла.</p><h3>Синтаксис</h3><p>Вызов без дополнительных режимов:</p><pre><code class="language-axiom">REGEXCOUNT(&lt;текст&gt;, &lt;шаблон&gt;)</code></pre><p>Вызов с явно заданными режимами:</p><pre><code class="language-axiom">REGEXCOUNT(&lt;текст&gt;, &lt;шаблон&gt;, &lt;режимы&gt;)</code></pre><h3>Аргументы</h3><table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody><tr><td><code>&lt;текст&gt;</code></td><td>Передайте строку типа STRING, в которой функция должна искать совпадения.</td></tr><tr><td><code>&lt;шаблон&gt;</code></td><td>Передайте строку типа STRING с регулярным выражением, которое задаёт искомые совпадения.</td></tr><tr><td><code>&lt;режимы&gt;</code></td><td>Необязательная строка типа STRING задаёт режимы поиска. Буква <code>i</code> отключает различение регистра, <code>m</code> позволяет <code>^</code> и <code>$</code> обозначать границы отдельных строк, <code>s</code> позволяет точке совпадать с переводом строки, а <code>x</code> разрешает пробелы и комментарии в шаблоне. Буквы можно сочетать, например <code>"im"</code>; регистр букв не имеет значения. По умолчанию дополнительные режимы выключены.</td></tr></tbody></table><h3>Возвращаемое значение</h3><p>Функция возвращает неотрицательное целое число типа INTEGER. Если совпадений нет, функция возвращает 0.</p><h3>Правила и пограничные случаи</h3><p>Пустые совпадения также входят в счёт. Поэтому вызов <code>REGEXCOUNT("", "^$")</code> возвращает 1.</p><h3>Диагностика</h3><p>Ошибка MB3007 возникает, если шаблон содержит недопустимое регулярное выражение, строка режимов содержит символ помимо <code>i</code>, <code>m</code>, <code>s</code> и <code>x</code>. Та же ошибка возникает, если поиск превышает установленный предел времени в пять секунд. Отсутствие совпадений ошибкой не является.</p><h3>Пример</h3><pre><code class="language-axiom">PRINT REGEXCOUNT("one 12 two 34", "\d+")
+PRINT REGEXCOUNT("A12 b34", "[a-z]\d+", "i")</code></pre><p>Программа выводит:</p><pre><code>2
+2</code></pre></section><section class="article-section"><h2>См. также</h2><div class="link-list"><a href="regex-functions.html">Регулярные выражения</a><a href="regex-functions-arrays-and-split.html">Все совпадения и разбиение</a><a href="regex-functions-match-and-extract.html">Первое совпадение и группы</a><a href="regex-functions-replace-and-count.html">Замена и подсчёт</a><a href="diagnostics.html">Диагностика</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

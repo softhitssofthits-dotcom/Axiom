@@ -1,27 +1,23 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Строковые функции</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="string-functions">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">Длина, фрагменты, обрезка, поиск, замена и массивы строк</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-<main class="content">
-<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Встроенные функции</span><span>/</span><span>Строки и символы</span></nav>
-<p class="eyebrow">Раздел</p>
-<h1 class="page-title">Строковые функции</h1>
-<p class="lead">Раздел строковых функций описывает средства Axiom для работы с текстом: измерение длины, извлечение фрагментов, обрезка по краям, смена регистр, поиск и замена подстрок, построение строк из повторов и заполнителей, а также переход между строкой и массивом строк.</p>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Строки и символы — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="string-functions"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Строки и символы</span></nav>
+<p class="eyebrow">Глава 8</p><h1 class="page-title">Строки и символы</h1><p class="lead">Раздел строк и символов описывает текстовые значения типа STRING и функции для их обработки: измерение длины, выделение фрагментов, поиск, замену, преобразование регистра и построение текста. Подробные правила литералов и каждой группы функций находятся на отдельных страницах главы.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="string-model"><h2>Представление текста</h2><p>Тип STRING и строки фиксированной длины STRING*N описаны на странице <a href="data-types-strings-and-files.html">строковых типов</a>. Запись литералов, кавычки и интерполяция приведены в <a href="string-literals.html">строковых литералах</a>. Эти правила определяют, как текст попадает в программу; функции ниже определяют, как он обрабатывается.</p><p>Одна кодовая единица UTF-16 не всегда совпадает с одним видимым символом. Эмодзи может занимать суррогатную пару, а буква со знаком ударения — несколько кодов. В <a href="string-functions-slices-and-length.html">LEN, LEFT, RIGHT и MID</a> можно выбрать UTF16, CODEPOINT или GRAPHEME. Позиции INSTR и других обычных позиционных функций остаются позициями UTF-16.</p><p><a href="characters.html">CHR и ASC</a> связывают младшие коды с таблицей CP866; CHRW и ASCW работают непосредственно с Unicode-кодами. Код символа, длина строки и ширина нарисованного текста — разные величины.</p></section>
+
 
 <section class="article-section">
 <h2>Какие задачи решают строковые функции</h2>
-<p>Строковые функции Axiom позволяют измерять длину текста, извлекать фрагменты, убирать символы по краям, менять регистр, искать и заменять подстроки, строить новые строки из повторов и заполнителей, а также переходить между строкой и массивом строк.</p>
+<p>Выбирайте функцию по тому, что требуется получить. Функция LEN возвращает длину текста. Функции LEFT, RIGHT и MID возвращают фрагмент строки. Функция INSTR возвращает позицию найденного фрагмента, а функция CONTAINS отвечает, есть ли такой фрагмент в строке. Замена, обрезка и дополнение возвращают строковое значение; чтобы сохранить его в переменной, нужно присвоить ей результат вызова.</p>
 </section>
 
 <section class="article-section">
-<h2>Куда перейти за строковой задачей</h2>
+<h2>Темы главы</h2>
 <div class="link-list">
 <a href="string-functions-slices-and-length.html">Длина строки и фрагменты</a>
 <a href="string-functions-trim-and-case.html">Обрезка, регистр и разворот строки</a>
@@ -33,20 +29,21 @@
 <section class="article-section">
 <h2>Группы строковых функций</h2>
 <ul>
-<li><code>LEN</code>, <code>LEFT</code>, <code>RIGHT</code>, <code>MID</code></li>
-<li><code>TRIM</code>, <code>LTRIM</code>, <code>RTRIM</code>, <code>LCASE</code>, <code>UCASE</code>, <code>REVERSE</code></li>
-<li><code>CONTAINS</code>, <code>STARTSWITH</code>, <code>ENDSWITH</code>, <code>REPLACE</code>, <code>REPLACEMANY</code>, <code>INSTR</code>, <code>INSTRREV</code>, <code>SUBSTRCOUNT</code></li>
-<li><code>REPEAT</code>, <code>SPACE</code>, <code>STRING</code>, <code>PADLEFT</code>, <code>PADRIGHT</code>, <code>CENTER</code>, <code>INSERT</code>, <code>REMOVE</code>, <code>ASC</code>, <code>ASCW</code>, <code>CHR</code>, <code>CHRW</code>, <code>SPLIT</code>, <code>JOIN</code></li>
+<li>Функции LEN, LEFT, RIGHT и MID измеряют текст и выделяют его части. Для них можно выбрать кодовые единицы UTF-16, коды Unicode или графемы.</li>
+<li>Функции TRIM, LTRIM и RTRIM убирают заполнение у краёв строки; LCASE и UCASE меняют регистр, а REVERSE разворачивает порядок кодов Unicode.</li>
+<li>Функции поиска проверяют наличие фрагмента, находят его позицию или считают вхождения. Функции REPLACE и REPLACEMANY заменяют точные фрагменты.</li>
+<li>Функции построения повторяют текст, добавляют заполнение, вставляют или удаляют фрагменты. Функция SPLIT разбивает текст на массив строк, а JOIN соединяет элементы массива.</li>
+<li>Функции ASC, ASCW, CHR и CHRW преобразуют символы и числовые коды; их правила описаны в статье «Коды символов».</li>
 </ul>
-<p>Поиск по регулярному выражению вынесен отдельно на страницу <a href="regex-functions.html">Регулярные выражения</a>.</p>
+<p>Поиск по шаблону выполняют <a href="regex-functions.html">регулярные выражения</a>. Обычный строковый поиск сравнивает заданный фрагмент буквально.</p>
 </section>
 
 <section class="article-section">
 <h2>Позиции, параметры и тип строки</h2>
 <ul>
-<li>Строковые позиции в функциях вроде <code>MID</code>, <code>INSTR</code>, <code>INSTRREV</code>, <code>INSERT</code> и <code>REMOVE</code> считаются с единицы.</li>
-<li>Необязательные параметры, например у <code>TRIM</code>, <code>SPLIT</code>, <code>JOIN</code>, <code>PADLEFT</code>, <code>PADRIGHT</code> и <code>CENTER</code>, на справочных страницах показываются в квадратных скобках.</li>
-<li>Функции этого раздела работают с обычными строками <code>STRING</code>. Для массивов символов отдельного типа в языке нет.</li>
+<li>Начальная позиция строковых операций равна 1; ноль используется как результат отсутствующего совпадения в INSTR и INSTRREV.</li>
+<li>Необязательность параметра определяется формой вызова. Например, TRIM допускает явный набор, SPLIT и JOIN — разделитель, функции дополнения — заполнитель.</li>
+<li>Тип аргумента зависит от его назначения: текст передаётся строкой STRING, позиция или количество — целым числом INTEGER, а набор строк — массивом STRING(). Точный договор каждого аргумента приведён рядом с соответствующей функцией.</li>
 </ul>
 </section>
 
@@ -64,20 +61,7 @@
 </ul>
 </section>
 
-<section class="article-section">
-<h2>См. также</h2>
-<div class="link-list">
-<a href="string-functions-slices-and-length.html">Длина строки и фрагменты</a>
-<a href="string-functions-trim-and-case.html">Обрезка, регистр и разворот строки</a>
-<a href="string-functions-search-and-replace.html">Поиск и замена в строках</a>
-<a href="string-functions-build-and-split.html">Построение строк и массивы строк</a>
-<a href="characters.html">Символы CHR, ASC, CHRW и ASCW</a>
-<a href="regex-functions.html">Регулярные выражения</a>
-<a href="data-types-strings-and-files.html">STRING и FILE</a>
-</div>
-</section>
 
-<div id="page-pager" class="pager"></div></main></div>
-<script src="scripts/manual.js"></script>
-</body>
-</html>
+
+<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="reference.html">Алфавитный указатель</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

@@ -1,112 +1,151 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Справочник Axiom - Текущие дата и время</title>
-    <link rel="stylesheet" href="styles/manual.css">
-</head>
-<body data-page="date-time-functions-current">
-<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Справочник Axiom</a><div class="topbar__meta">DATE, TIME, NOW, UTCNOW и TIMER</div><button class="nav-toggle" type="button" data-nav-toggle>Темы</button></div></header>
-<div class="layout"><aside class="sidebar"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-<main class="content">
-<nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span>/</span><span>Встроенные функции</span><span>/</span><span>Дата и время</span></nav>
-<p class="eyebrow">Раздел</p>
-<h1 class="page-title">Текущие дата и время</h1>
-<p class="lead">Раздел текущих даты и времени описывает функции <code>DATE</code>, <code>TIME</code>, <code>NOW</code>, <code>UTCNOW</code> и <code>TIMER</code> — средства чтения текущих значений в локальном времени и в UTC.</p>
-
-<section class="article-section" id="date">
-<h2>DATE</h2>
-<p>Функция <code>DATE</code> возвращает текущую дату в формате <code>yyyy-MM-dd</code>.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">dateText = DATE([timeZone])</code></pre>
-<h3>Аргументы</h3><p>Если <code>timeZone</code> не указан, используется локальный часовой пояс. Если он указан, возвращается текущая дата для этого пояса.</p>
-<h3>Пример текущей даты</h3>
-<pre><code class="language-axiom">' Текущая локальная дата и дата в UTC
-PRINT DATE()
-PRINT DATE("UTC")</code></pre>
-</section>
-
-<section class="article-section" id="time">
-<h2>TIME</h2>
-<p>Функция <code>TIME</code> возвращает текущее время в формате <code>HH:mm:ss</code>.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">timeText = TIME([timeZone])</code></pre>
-<h3>Аргументы</h3><p>Если <code>timeZone</code> не указан, используется локальный часовой пояс. Если он указан, время вычисляется для этого пояса.</p>
-<h3>Пример текущего времени</h3>
-<pre><code class="language-axiom">' Текущее локальное время и время в UTC
-PRINT TIME()
-PRINT TIME("UTC")</code></pre>
-</section>
-
-<section class="article-section" id="now">
-<h2>NOW</h2>
-<p>Функция <code>NOW</code> возвращает текущие дату и время в формате <code>yyyy-MM-dd HH:mm:ss</code>.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">dateTimeText = NOW([timeZone])</code></pre>
-<h3>Аргументы</h3><p>Если <code>timeZone</code> не указан, используется локальный часовой пояс. Если он указан, дата и время вычисляются для него.</p>
-<h3>Пример текущих даты и времени</h3>
-<pre><code class="language-axiom">' Текущие дата и время в локальном поясе и в UTC
-PRINT NOW()
-PRINT NOW("UTC")</code></pre>
-</section>
-
-<section class="article-section" id="utcdate">
-<h2>UTCDATE</h2>
-<p>Функция <code>UTCDATE</code> возвращает текущую дату в UTC.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">dateText = UTCDATE()</code></pre>
-</section>
-
-<section class="article-section" id="utctime">
-<h2>UTCTIME</h2>
-<p>Функция <code>UTCTIME</code> возвращает текущее время в UTC.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">timeText = UTCTIME()</code></pre>
-</section>
-
-<section class="article-section" id="utcnow">
-<h2>UTCNOW</h2>
-<p>Функция <code>UTCNOW</code> возвращает текущие дату и время в UTC.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">dateTimeText = UTCNOW()</code></pre>
-</section>
-
-<section class="article-section" id="timer">
-<h2>TIMER</h2>
-<p>Функция <code>TIMER</code> возвращает число секунд, прошедших с локальной полуночи текущего дня.</p>
-<h3>Синтаксис</h3>
-<pre><code class="language-axiom">seconds = TIMER()</code></pre>
-<h3>Аргументы</h3><p>Результат имеет тип <code>DOUBLE</code>.</p>
-<h3>Измерение внутри одного дня</h3>
-<p>Эта функция удобна для простых измерений времени внутри одного дня.</p>
-<h3>Пример секунд от полуночи</h3>
-<pre><code class="language-axiom">' Количество секунд от полуночи
-PRINT TIMER()</code></pre>
-</section>
-
-<section class="article-section">
-<h2>Запускаемые примеры</h2>
-<ul class="resource-list">
-<li><a href="../../samples/functions/date/basic_usage.axm">DATE</a></li>
-<li><a href="../../samples/functions/time/basic_usage.axm">TIME</a></li>
-<li><a href="../../samples/functions/now/basic_usage.axm">NOW</a></li>
-<li><a href="../../samples/functions/utcdate/current_utc_date.axm">UTCDATE</a></li>
-<li><a href="../../samples/functions/utctime/current_utc_time.axm">UTCTIME</a></li>
-<li><a href="../../samples/functions/utcnow/current_utc_now.axm">UTCNOW</a></li>
-<li><a href="../../samples/functions/timer/basic_usage.axm">TIMER</a></li>
-</ul>
-</section>
-
-<section class="article-section">
-<h2>См. также</h2>
-<div class="link-list">
-<a href="date-time-functions.html">Дата и время</a>
-<a href="date-time-functions-time-zones.html">UTC и часовые пояса</a>
-</div>
-</section>
-
-<div id="page-pager" class="pager"></div></main></div>
-<script src="scripts/manual.js"></script>
-</body>
-</html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Текущие дата и время — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="date-time-functions-current"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Текущие дата и время</span></nav>
+<p class="eyebrow">Справочник языка</p><h1 class="page-title">Текущие дата и время</h1><p class="lead">Раздел описывает встроенные функции DATE, TIME, NOW, UTCDATE, UTCTIME, UTCNOW и TIMER. Они читают часы среды запуска; синтаксис разных функций показан отдельно.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="date"><h2>DATE</h2>
+<p>DATE — встроенная функция языка Axiom, которая возвращает текущую календарную дату.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет прочитать системные часы в выбранном часовом поясе.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">DATE()</code></pre><pre><code class="language-axiom">DATE(&lt;часовой пояс&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Форма без аргументов использует местное время среды запуска. Часовой пояс должен быть STRING: "UTC", "LOCAL" или идентификатор, который знает среда запуска. "LOCAL" означает системный местный пояс. Пустая строка и неизвестный идентификатор недопустимы; набор идентификаторов зависит от платформы.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DATE.</p>
+<h3>Правила и ограничения</h3>
+<p>Вызов читает часы заново; последовательные вызовы могут относиться к разным мгновениям, особенно около полуночи. Значение не хранит идентификатор пояса. При печати дата имеет форму yyyy-MM-dd, время HH:mm:ss, дата-время yyyy-MM-dd HH:mm:ss.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимом часовом поясе.</p>
+<h3>Пример</h3><pre><code class="language-axiom">DIM value AS DATE = DATE("UTC")
+PRINT ISDATE(value &amp; "")</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>TRUE</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="time"><h2>TIME</h2>
+<p>TIME — встроенная функция языка Axiom, которая возвращает текущее время суток.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет прочитать системные часы в выбранном часовом поясе.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">TIME()</code></pre><pre><code class="language-axiom">TIME(&lt;часовой пояс&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Форма без аргументов использует местное время среды запуска. Часовой пояс должен быть STRING: "UTC", "LOCAL" или идентификатор, который знает среда запуска. "LOCAL" означает системный местный пояс. Пустая строка и неизвестный идентификатор недопустимы; набор идентификаторов зависит от платформы.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип TIME.</p>
+<h3>Правила и ограничения</h3>
+<p>Вызов читает часы заново; последовательные вызовы могут относиться к разным мгновениям, особенно около полуночи. Значение не хранит идентификатор пояса. При печати дата имеет форму yyyy-MM-dd, время HH:mm:ss, дата-время yyyy-MM-dd HH:mm:ss.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимом часовом поясе.</p>
+<h3>Пример</h3><pre><code class="language-axiom">DIM value AS TIME = TIME("UTC")
+PRINT ISDATE(value &amp; "")</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>TRUE</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="now"><h2>NOW</h2>
+<p>NOW — встроенная функция языка Axiom, которая возвращает текущую дату и время.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет прочитать системные часы в выбранном часовом поясе.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">NOW()</code></pre><pre><code class="language-axiom">NOW(&lt;часовой пояс&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Форма без аргументов использует местное время среды запуска. Часовой пояс должен быть STRING: "UTC", "LOCAL" или идентификатор, который знает среда запуска. "LOCAL" означает системный местный пояс. Пустая строка и неизвестный идентификатор недопустимы; набор идентификаторов зависит от платформы.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DATETIME.</p>
+<h3>Правила и ограничения</h3>
+<p>Вызов читает часы заново; последовательные вызовы могут относиться к разным мгновениям, особенно около полуночи. Значение не хранит идентификатор пояса. При печати дата имеет форму yyyy-MM-dd, время HH:mm:ss, дата-время yyyy-MM-dd HH:mm:ss.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. MB3007 возникает при недопустимом часовом поясе.</p>
+<h3>Пример</h3><pre><code class="language-axiom">DIM value AS DATETIME = NOW("UTC")
+PRINT ISDATE(value &amp; "")</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>TRUE</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="utcdate"><h2>UTCDATE</h2>
+<p>UTCDATE — встроенная функция языка Axiom, которая возвращает текущую дату по UTC.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет прочитать системные часы по единой шкале UTC.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">UTCDATE()</code></pre>
+<h3>Аргументы</h3>
+<p>Аргументов нет.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DATE.</p>
+<h3>Правила и ограничения</h3>
+<p>Каждый вызов читает часы заново. Значение не хранит метку UTC; его происхождение нужно учитывать при последующем преобразовании.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. </p>
+<h3>Пример</h3><pre><code class="language-axiom">DIM value AS DATE = UTCDATE()
+PRINT ISDATE(value &amp; "")</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>TRUE</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="utctime"><h2>UTCTIME</h2>
+<p>UTCTIME — встроенная функция языка Axiom, которая возвращает текущее время суток по UTC.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет прочитать системные часы по единой шкале UTC.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">UTCTIME()</code></pre>
+<h3>Аргументы</h3>
+<p>Аргументов нет.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип TIME.</p>
+<h3>Правила и ограничения</h3>
+<p>Каждый вызов читает часы заново. Значение не хранит метку UTC; его происхождение нужно учитывать при последующем преобразовании.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. </p>
+<h3>Пример</h3><pre><code class="language-axiom">DIM value AS TIME = UTCTIME()
+PRINT ISDATE(value &amp; "")</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>TRUE</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="utcnow"><h2>UTCNOW</h2>
+<p>UTCNOW — встроенная функция языка Axiom, которая возвращает текущую дату и время по UTC.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет прочитать системные часы по единой шкале UTC.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">UTCNOW()</code></pre>
+<h3>Аргументы</h3>
+<p>Аргументов нет.</p>
+<h3>Результат</h3>
+<p>Результат имеет тип DATETIME.</p>
+<h3>Правила и ограничения</h3>
+<p>Каждый вызов читает часы заново. Значение не хранит метку UTC; его происхождение нужно учитывать при последующем преобразовании.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. </p>
+<h3>Пример</h3><pre><code class="language-axiom">DIM value AS DATETIME = UTCNOW()
+PRINT ISDATE(value &amp; "")</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>TRUE</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="timer"><h2>TIMER</h2>
+<p>TIMER — встроенная функция языка Axiom, которая возвращает число секунд, прошедших с местной полуночи.</p>
+<h3>Назначение</h3>
+<p>Функция позволяет определить положение текущего мгновения внутри местных суток.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">TIMER()</code></pre>
+<h3>Аргументы</h3>
+<p>Аргументов нет.</p>
+<h3>Результат</h3>
+<p>Результат DOUBLE в диапазоне от 0 включительно до 86400 исключительно; дробная часть задаёт долю секунды.</p>
+<h3>Правила и ограничения</h3>
+<p>Это местные системные часы, а не монотонный счётчик времени работы программы. В полночь значение начинается заново; перевод системных часов может изменить разность двух показаний.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. </p>
+<h3>Пример</h3><pre><code class="language-axiom">DIM seconds AS DOUBLE = TIMER()
+PRINT seconds &gt;= 0 AND seconds &lt; 86400</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>TRUE</code></pre>
+<h3>См. также</h3>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>
