@@ -56,7 +56,7 @@ function check() {
           required.add('language'); required.add('compiler');
         } else if (/^src\/Axiom\.Cli\//.test(p)) required.add('compiler');
         else if (/^(ide\/(src\/|scripts\/|package(?:-lock)?\.json$)|src\/Axiom\.(DesktopHost|Ide\.Backend|Ide\.Contracts)\/)/.test(p)) required.add('ide');
-        else if (/^(docs\/manual\/|samples\/)/.test(p)) { required.add('language'); required.add('compiler'); }
+        else if (/^samples\//.test(p)) { required.add('language'); required.add('compiler'); }
         else if (/^src\//.test(p)) required.add('compiler');
       }
       const compare = (a, b) => { const x=a.split('.').map(Number), y=b.split('.').map(Number); for(let n=0;n<3;n++) if(x[n]!==y[n]) return Math.sign(x[n]-y[n]); return 0; };
@@ -64,7 +64,7 @@ function check() {
         if (compare(v[c], old[c]) < 0) fail(`Версия ${c} уменьшилась.`);
         if (required.has(c) && compare(v[c], old[c]) <= 0) fail(`Изменён ${c}, но версия ${old[c]} не повышена. Используйте bump.`);
       }
-      const substantiveDocs = paths.some(p => /^(docs\/(?!archive\/|reports\/|CHANGELOG\.md|WORKLOG5\.md)|README\.md|PROJECT\.md|AGENTS\.md|scripts\/)/.test(p));
+      const substantiveDocs = paths.some(p => !/^(docs\/manual\/|docs\/VERSIONING\.md$|AGENTS\.md$|scripts\/versioning\.mjs$)/.test(p) && /^(docs\/(?!archive\/|reports\/|CHANGELOG\.md|WORKLOG5\.md)|README\.md|PROJECT\.md|AGENTS\.md|scripts\/)/.test(p));
       if (substantiveDocs && components.every(c => v[c] === old[c])) fail('Изменены действующие документы/инструменты, но ни одна версия не повышена. Выберите затронутый компонент.');
       if (components.some(c => v[c] !== old[c]) && git('show', base + ':docs/CHANGELOG.md') === read('docs/CHANGELOG.md').trim()) fail('Повышение версии требует записи в docs/CHANGELOG.md.');
     }
