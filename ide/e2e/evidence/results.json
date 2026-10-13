@@ -1,16 +1,21 @@
 [
   {
-    "id": "language-catch-message",
+    "id": "language-binary-hex",
     "spec": "language-format.spec.js",
-    "name": "Message системной ошибки английское при обоих языках IDE; ERROR сохраняет авторский текст",
-    "ms": 3600,
-    "passed": 4,
+    "name": "Двоичные и шестнадцатеричные литералы: типы, подсветка, форматирование и выполнение",
+    "ms": 3300,
+    "passed": 10,
     "failures": [],
     "notes": [],
     "crashed": false,
     "consoleTail": [],
     "pageErrors": [],
-    "mainStderrTail": "Debugger ending on ws://127.0.0.1:4062/31805850-f948-41eb-8761-5c7213e11006\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
-    "rendererDialogs": []
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:4902/4b9eef71-96ee-4779-93a2-cef44778e327\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": [
+      {
+        "type": "confirm",
+        "message": "Перед запуском нужно сохранить документ. Сохранить и запустить?"
+      }
+    ]
   }
 ]

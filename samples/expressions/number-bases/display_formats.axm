@@ -1,0 +1,9 @@
+' Одно значение выводится десятичным, шестнадцатеричным и двоичным текстом.
+DIM value AS INTEGER = &H2A
+PRINT value
+PRINT $"{value:X}"
+PRINT $"{value:B}"
+PRINT $"{value:X4}"
+PRINT $"{value:B8}"
+PRINT $"{-1:X}"
+PRINT $"{CLNG(-1):X}"

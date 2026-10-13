@@ -1,0 +1,9 @@
+' Тип левого операнда определяет ширину сдвига.
+DIM wide AS LONG = &B1
+PRINT NOT &HFFFFFFFF
+PRINT 1 << 31
+PRINT 1 << 32
+PRINT wide << 32
+PRINT wide << 63
+PRINT -8 >> 2
+PRINT -1 >> 1

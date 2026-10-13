@@ -6,3 +6,10 @@ test('Цвета объявлений различают процедуры, к�
  assert.ok(decoded.some(t=>t.name==='Draw'&&t.type===1)); assert.ok(decoded.some(t=>t.name==='items'&&t.type===3));
  assert.equal(decoded.find(t=>t.line===3&&t.name==='limit').modifier,0);assert.equal(decoded.find(t=>t.line===5&&t.name==='limit').modifier,1);
 });
+
+test('Префиксы двоичных и шестнадцатеричных чисел не являются пользовательскими именами',()=>{
+ const source='PRINT &B1010 &HFF';
+ const data=classify(source,[[{offset:0,type:'keyword.axiom'},{offset:5,type:'white.axiom'},
+  {offset:6,type:'number.binary.axiom'},{offset:12,type:'white.axiom'},{offset:13,type:'number.hex.axiom'}]]).data;
+ assert.equal(data.length,0);
+});

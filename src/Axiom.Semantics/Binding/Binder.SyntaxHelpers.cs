@@ -173,6 +173,28 @@ public sealed partial class Binder
             return false;
         }
 
+        var digits = literalText.AsSpan();
+        var negative = digits.Length > 0 && digits[0] == '-';
+        if (negative) digits = digits[1..];
+        var binary = digits.StartsWith("&B", StringComparison.OrdinalIgnoreCase);
+        if (binary || digits.StartsWith("&H", StringComparison.OrdinalIgnoreCase))
+        {
+            // Лексер уже проверил диапазон положительной величины литерала.
+            // Минус остаётся отдельной операцией, а целевой тип проверяется здесь.
+            var style = binary ? NumberStyles.AllowBinarySpecifier : NumberStyles.AllowHexSpecifier;
+            if (!ulong.TryParse(digits[2..], style,
+                CultureInfo.InvariantCulture, out var magnitude) || magnitude > long.MaxValue)
+                return false;
+            var signedValue = negative ? -(long)magnitude : (long)magnitude;
+            if (expectedType == TypeSymbol.Integer && signedValue is >= int.MinValue and <= int.MaxValue)
+                value = (int)signedValue;
+            else if (expectedType == TypeSymbol.Long)
+                value = signedValue;
+            else if (expectedType == TypeSymbol.Decimal)
+                value = (decimal)signedValue;
+            return value is not null;
+        }
+
         if (expectedType == TypeSymbol.Integer
             && int.TryParse(literalText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var integerValue))
         {

@@ -1,0 +1,8 @@
+' Префикс &H сохраняет величину в явном числовом контексте.
+DIM wide AS LONG = &HFF
+DIM exact AS DECIMAL = &H7FFFFFFFFFFFFFFF
+DIM minimum AS INTEGER = -&H80000000
+PRINT wide
+PRINT exact
+PRINT minimum
+PRINT wide OR &H0F

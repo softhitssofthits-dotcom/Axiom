@@ -1,0 +1,7 @@
+' Формат двоичного целого не подходит DOUBLE; ошибка перехватывается.
+TRY
+    PRINT $"{1.5:B}"
+CATCH problem
+    PRINT problem.Code
+    PRINT problem.Message
+END TRY

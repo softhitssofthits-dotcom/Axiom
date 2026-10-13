@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 113,
+  "count": 114,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -356,6 +356,11 @@
       "id": "language-next-counter",
       "spec": "language-format.spec.js",
       "name": "NEXT проверяет имя счётчика и сохраняет диагностику в редакторе"
+    },
+    {
+      "id": "language-binary-hex",
+      "spec": "language-format.spec.js",
+      "name": "Двоичные и шестнадцатеричные литералы: типы, подсветка, форматирование и выполнение"
     },
     {
       "id": "language-catch-message",

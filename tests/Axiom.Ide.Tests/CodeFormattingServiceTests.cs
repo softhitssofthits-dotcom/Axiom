@@ -7,6 +7,14 @@ public sealed class CodeFormattingServiceTests
     private readonly AxiomCodeFormattingService _service = new();
 
     [Theory]
+    [InlineData(CodeFormattingStyle.Classic, "PRINT &b1010 AND &B1100")]
+    [InlineData(CodeFormattingStyle.Modern, "Print &b1010 And &B1100")]
+    public void BinaryLiteralIsPreservedByBothFormattingStyles(CodeFormattingStyle style, string expected)
+    {
+        Assert.Equal(expected, _service.FormatLine("print &b1010 and &B1100", style));
+    }
+
+    [Theory]
     [InlineData("maptilesetcount", "level")]
     [InlineData("mapproperty", "level, \"role\"")]
     [InlineData("maplayerproperty", "level, 1, \"role\"")]

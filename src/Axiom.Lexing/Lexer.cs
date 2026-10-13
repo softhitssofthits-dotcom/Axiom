@@ -214,9 +214,9 @@ public sealed class Lexer
             return CreateToken(TokenKind.InterpolatedStringExpressionEndToken, start, 1);
         }
 
-        if (Current == '&' && (Peek(1) == 'H' || Peek(1) == 'h'))
+        if (Current == '&' && Peek(1) is 'H' or 'h' or 'B' or 'b')
         {
-            return ReadHexLiteral();
+            return ReadRadixLiteral(Peek(1) is 'B' or 'b');
         }
 
         if (char.IsDigit(Current))
@@ -366,57 +366,38 @@ public sealed class Lexer
         return CreateToken(TokenKind.LongLiteralToken, start, _position - start, 0L);
     }
 
-    private Token ReadHexLiteral()
+    private Token ReadRadixLiteral(bool binary)
     {
         var start = _position;
         _position += 2;
         var digitsStart = _position;
-
-        while (IsHexDigit(Current))
-        {
+        while (binary ? Current is '0' or '1' : IsHexDigit(Current))
             _position++;
-        }
-
-        if (_position == digitsStart)
+        var digitsEnd = _position;
+        // Неверная цифра или суффикс относится к этому литералу, а не к следующему выражению.
+        while (IsIdentifierPart(Current))
+            _position++;
+        var text = _text[start.._position];
+        var name = binary ? "двоичный" : "шестнадцатеричный";
+        var prefix = binary ? "&B" : "&H";
+        if (digitsEnd == digitsStart || digitsEnd != _position)
         {
-            var text = _text[start.._position];
-            ReportDiagnostic(
-                start,
-                text.Length,
-                DiagnosticCodes.InvalidNumericLiteral,
-                $"Недопустимый шестнадцатеричный литерал '{text}': после &H должна идти хотя бы одна шестнадцатеричная цифра.");
+            ReportDiagnostic(start, text.Length, DiagnosticCodes.InvalidNumericLiteral,
+                $"Недопустимый {name} литерал '{text}': после {prefix} требуются цифры соответствующей системы счисления без суффикса.");
             return CreateToken(TokenKind.IntegerLiteralToken, start, _position - start, 0);
         }
 
-        var literalText = _text[start.._position];
-        var digits = literalText[2..];
-
-        if (!ulong.TryParse(digits, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var unsignedValue))
+        var style = binary ? NumberStyles.AllowBinarySpecifier : NumberStyles.AllowHexSpecifier;
+        if (!ulong.TryParse(text.AsSpan(2), style, CultureInfo.InvariantCulture, out var unsignedValue)
+            || unsignedValue > long.MaxValue)
         {
-            ReportDiagnostic(
-                start,
-                literalText.Length,
-                DiagnosticCodes.NumericLiteralOutOfRange,
-                $"Шестнадцатеричный литерал '{literalText}' выходит за диапазон LONG.");
+            ReportDiagnostic(start, text.Length, DiagnosticCodes.NumericLiteralOutOfRange,
+                $"Литерал '{text}' выходит за диапазон LONG.");
             return CreateToken(TokenKind.LongLiteralToken, start, _position - start, 0L);
         }
-
-        if (unsignedValue <= int.MaxValue)
-        {
-            return CreateToken(TokenKind.IntegerLiteralToken, start, _position - start, (int)unsignedValue);
-        }
-
-        if (unsignedValue <= long.MaxValue)
-        {
-            return CreateToken(TokenKind.LongLiteralToken, start, _position - start, (long)unsignedValue);
-        }
-
-        ReportDiagnostic(
-            start,
-            literalText.Length,
-            DiagnosticCodes.NumericLiteralOutOfRange,
-            $"Шестнадцатеричный литерал '{literalText}' выходит за диапазон LONG.");
-        return CreateToken(TokenKind.LongLiteralToken, start, _position - start, 0L);
+        return unsignedValue <= int.MaxValue
+            ? CreateToken(TokenKind.IntegerLiteralToken, start, _position - start, (int)unsignedValue)
+            : CreateToken(TokenKind.LongLiteralToken, start, _position - start, (long)unsignedValue);
     }
 
     private void ValidateNumericLiteral(int start, string text, int integerPartLength)

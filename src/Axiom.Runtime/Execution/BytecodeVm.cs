@@ -1312,8 +1312,18 @@ public sealed partial class BytecodeVm
         var alignment = stack.Pop().AsInteger();
         var value = stack.Pop();
 
-        var formatted = FormatInterpolatedValue(value, alignment, formatSpec);
-        stack.Push(RuntimeValue.FromString(formatted));
+        try
+        {
+            var formatted = FormatInterpolatedValue(value, alignment, formatSpec);
+            stack.Push(RuntimeValue.FromString(formatted));
+        }
+        catch (FormatException)
+        {
+            ReportRuntimeDiagnostic(DiagnosticCodes.BuiltinArgument,
+                $"Numeric format '{formatSpec}' is not supported for {value.Type.Name}.",
+                ResolveLocation(frame.Routine.Id, instructionIndex));
+            throw new RuntimeFailureException();
+        }
     }
 
     private static string FormatInterpolatedValue(RuntimeValue value, int alignment, string format)

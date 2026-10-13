@@ -33,6 +33,27 @@ module.exports = [
     await S.page.evaluate(() => window.__ide.run()); await S.waitIdle();
     C.ok(await S.page.evaluate(() => /(?:^|\n)1\r?\n2(?:\r?\n|$)/.test(window.__ide.execution.outputText)), 'Цикл с NEXT I реально исполнен');
   } },
+  { id: 'language-binary-hex', name: 'Двоичные и шестнадцатеричные литералы: типы, подсветка, форматирование и выполнение', async fn({ S, C }) {
+    const source = 'DIM small AS INTEGER = &b1010\nDIM wide AS LONG = &HFF\nPRINT small\nPRINT wide OR &B1111\nPRINT $"{small:B8}"\nPRINT &HFF&"x"\nPRINT $"{&B1111&"y"}"\nTRY\n    PRINT $"{1.5:B}"\nCATCH problem\n    PRINT problem.Code\nEND TRY\n';
+    await open(S, source, 'binary-hex');
+    await S.page.evaluate(() => window.__ide.check(false));
+    C.ok(await S.page.evaluate(() => !window.__ide._lastDiagnostics.some(item => item.severity === 'error')), 'Литералы и преобразование HEX в LONG проверены');
+    const tokens = await S.page.evaluate(() => window.__ide.monaco.editor.tokenize(window.__ide.editor.getValue(), 'axiom'));
+    C.ok(tokens[0].some(item => item.type === 'number.binary.axiom'), 'Префикс &b имеет числовую категорию');
+    C.ok(tokens[6].some(item => item.type === 'number.binary.axiom'), 'Двоичный литерал выделен внутри интерполяции');
+    C.ok(tokens[5].some(item => item.offset === 10 && item.type === 'operator.axiom'), 'Амперсанд после HEX является отдельным оператором');
+    for (const [theme, color] of [['light','rgb(9, 134, 88)'], ['dark','rgb(181, 206, 168)'], ['basic','rgb(255, 255, 170)']]) {
+      await S.page.evaluate(theme => window.__ide.setTheme(theme), theme);
+      await S.page.waitForFunction(color => [...document.querySelectorAll('.view-lines span')].some(item => item.textContent === '&b1010' && getComputedStyle(item).color === color), color);
+      C.ok(true, 'Двоичный литерал имеет цвет числа в теме ' + theme);
+    }
+    await S.page.evaluate(async () => { const i = window.__ide; i.settings.formattingStyle = 'Classic'; await i.formatWholeDocument('binary-e2e'); });
+    C.ok(await S.page.evaluate(() => window.__ide.editor.getValue().includes('&b1010')), 'Форматирование сохраняет префикс и цифры');
+    await S.page.evaluate(() => window.__ide.run()); await S.waitIdle();
+    C.eq(await S.page.evaluate(() => window.__ide.execution.outputText.replace(/\r/g, '').trim()), '10\n255\n00001010\n255x\n15y\nMB3007', 'Исполнение двоичной записи, HEX, форматов и перехват ошибки');
+    await S.page.evaluate(async () => { const i = window.__ide; i.editor.getModel().setValue('PRINT &B102'); await i.check(false); });
+    C.ok(await S.page.evaluate(() => window.__ide._lastDiagnostics.some(item => item.code === 'MB0003')), 'Недопустимая двоичная цифра отмечена в редакторе');
+  } },
   { id: 'language-catch-message', name: 'Message системной ошибки английское при обоих языках IDE; ERROR сохраняет авторский текст', async fn({ S, C }) {
     await open(S, 'TRY\n    PRINT POW(-2, 0.5)\nCATCH err\n    PRINT err.Message\nEND TRY\nTRY\n    ERROR "MB3007", "Моя ошибка"\nCATCH manual\n    PRINT manual.Message\nEND TRY\n', 'catch-message');
     const expected = "Function POW: argument 'value' cannot be used with the specified exponent.\nМоя ошибка";

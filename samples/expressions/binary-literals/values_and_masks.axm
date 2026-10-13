@@ -1,0 +1,9 @@
+' Двоичная запись: десятичное значение и результаты масок.
+DIM value AS INTEGER = &b1010
+DIM mask AS LONG = &B1100
+PRINT value
+PRINT $"{value:B8}"
+PRINT $"{value AND mask:B4}"
+PRINT $"{value OR mask:B4}"
+PRINT $"{value XOR mask:B4}"
+PRINT $"{value AND NOT mask:B4}"

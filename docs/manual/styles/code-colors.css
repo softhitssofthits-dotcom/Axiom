@@ -5,6 +5,7 @@
 .axiom-token--delimiter-interpolation{color:#ee0000;}
 .axiom-token--number{color:#098658;}
 .axiom-token--number-hex{color:#098658;}
+.axiom-token--number-binary{color:#098658;}
 .axiom-token--keyword{color:#0000ff;}
 .axiom-token--type{color:#267f99;}
 .axiom-token--support-function{color:#795e26;}

@@ -162,7 +162,7 @@ class AxiomIDE {
     );
 
     // BASIC: case-insensitive; ' and REM comments; "..." with "" escapes; $"..." with
-    // {expression} holes; &H hex literals; decimal numbers with type suffixes.
+    // {expression} holes; &H and &B integer literals; decimal numbers.
     monaco.languages.setMonarchTokensProvider('axiom', {
       ignoreCase: true,
       defaultToken: '',
@@ -175,7 +175,8 @@ class AxiomIDE {
           [/'.*$/, 'comment'],
           [/(\$)(")/, ['delimiter.interpolation', { token: 'string.quote', bracket: '@open', next: '@interpolatedString' }]],
           [/"/, { token: 'string.quote', bracket: '@open', next: '@string' }],
-          [/&H[0-9a-fA-F]+&?/, 'number.hex'],
+          [/&H[0-9a-fA-F]+/, 'number.hex'],
+          [/&B[01]+/, 'number.binary'],
           [/\d+\.\d*(#[DRFdrf]?|\d*)/, 'number'],
           [/\d+[%&#DRFSILdrfsil]?/, 'number'],
           [/<>|<=|>=|=|<|>/, 'operator'],
@@ -208,7 +209,8 @@ class AxiomIDE {
           [/"/, { token: 'string.quote', bracket: '@open', next: '@nestedString' }],
           [/\{/, { token: '@brackets', bracket: '@open', next: '@push' }],
           [/\}/, { token: 'delimiter.interpolation', bracket: '@close', next: '@pop' }],
-          [/&H[0-9a-fA-F]+&?/, 'number.hex'],
+          [/&H[0-9a-fA-F]+/, 'number.hex'],
+          [/&B[01]+/, 'number.binary'],
           [/\d+\.\d*(#[DRFdrf]?)?/, 'number'],
           [/\d+%?[DL]?/, 'number'],
           [/<>|<=|>=|=|<|>/, 'operator'],
@@ -262,6 +264,7 @@ class AxiomIDE {
         { token: 'delimiter.interpolation', foreground: 'ee0000' },
         { token: 'number', foreground: '098658' },
         { token: 'number.hex', foreground: '098658' },
+        { token: 'number.binary', foreground: '098658' },
         { token: 'keyword', foreground: '0000ff' },
         { token: 'type', foreground: '267f99' },
         { token: 'support.function', foreground: '795e26' },
@@ -292,6 +295,7 @@ class AxiomIDE {
         { token: 'delimiter.interpolation', foreground: 'd7ba7d' },
         { token: 'number', foreground: 'b5cea8' },
         { token: 'number.hex', foreground: 'b5cea8' },
+        { token: 'number.binary', foreground: 'b5cea8' },
         { token: 'keyword', foreground: 'c586c0' },
         { token: 'type', foreground: '4ec9b0' },
         { token: 'support.function', foreground: 'dcdcaa' },
@@ -330,6 +334,7 @@ class AxiomIDE {
         { token: 'delimiter.interpolation', foreground: '55FFFF' },
         { token: 'number', foreground: 'FFFFAA' },
         { token: 'number.hex', foreground: 'FFFFAA' },
+        { token: 'number.binary', foreground: 'FFFFAA' },
         { token: 'operator', foreground: 'FFFF55' },
         { token: 'delimiter', foreground: 'FFFFFF' },
         { token: 'invalid', foreground: 'FFAAAA' },

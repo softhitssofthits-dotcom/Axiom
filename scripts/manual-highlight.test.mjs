@@ -37,3 +37,14 @@ test('Цвета светлой темы и семантические кате�
  for(const match of light.matchAll(/token: '([^']+)', foreground: '([0-9a-fA-F]+)'/g))assert.ok(css.includes('.axiom-token--'+match[1].replaceAll('.','-')+'{color:#'+match[2]),match[1]);
  assert.equal(fs.readFileSync(path.join(root,'docs/manual/scripts/semantic-colors.js'),'utf8'),fs.readFileSync(path.join(root,'ide/src/renderer/semantic-colors.js'),'utf8'));
 });
+
+
+test('Двоичная и шестнадцатеричная запись выделены как числа и отделены от &',()=>{
+ const source='PRINT &b1010&"x"\nPRINT $"{&B1111:B8}"\nPRINT &HFF&"y"';
+ const tokens=highlighter().tokenize(source);
+ assert.equal(tokens.map(token=>token.text).join(''),source);
+ assert.ok(tokens.some(token=>token.text==='&b1010'&&token.type==='number.binary'));
+ assert.ok(tokens.some(token=>token.text==='&B1111'&&token.type==='number.binary'));
+ assert.ok(tokens.some(token=>token.text==='&HFF'&&token.type==='number.hex'));
+ assert.ok(tokens.some(token=>token.text==='&'&&token.type==='operator'));
+});

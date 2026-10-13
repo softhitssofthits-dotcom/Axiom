@@ -52,6 +52,8 @@
         if (placeholder) { emit(position + placeholder[0].length, 'placeholder'); continue; }
         const hexadecimal = rest.match(/^&H[0-9a-f]+/i);
         if (hexadecimal) { emit(position + hexadecimal[0].length, 'number.hex'); continue; }
+        const binary = rest.match(/^&B[01]+/i);
+        if (binary) { emit(position + binary[0].length, 'number.binary'); continue; }
         const number = rest.match(/^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/);
         if (number) { emit(position + number[0].length, 'number'); continue; }
         const word = rest.match(/^[A-Za-z_][A-Za-z_0-9]*/);
