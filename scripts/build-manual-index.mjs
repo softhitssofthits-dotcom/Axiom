@@ -42,7 +42,7 @@ for(const chapter of chapters)for(const item of chapter.items){
  const html=fs.readFileSync(path.join(dir,item.href.split('#')[0]),'utf8');
  const title=plain(html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/)?.[1]||item.label);
  const description=plain(html.match(/<p class="lead">([\s\S]*?)<\/p>/)?.[1]||item.label);
- index.push({title,href:item.href,kind:chapter.number?'Тема':'Приложение',category:chapter.title,description,keywords:[item.label,chapter.title]});
+ index.push({title,href:item.searchHref||item.href,kind:chapter.number?'Тема':'Приложение',category:chapter.title,description,keywords:[item.label,chapter.title,...(item.searchTerms||[])]});
 }
 index.push({title:'Справочник Axiom',href:'index.html',kind:'Оглавление',category:'Справочник',description:'Семнадцать глав от первой программы до событий.',keywords:['главная','оглавление']});
 const categoryFor=href=>chapters.find(c=>c.items.some(i=>i.href.split('#')[0]===href.split('#')[0]))?.title||'Справочник';

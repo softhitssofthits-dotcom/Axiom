@@ -47,32 +47,7 @@
 
         <section class="article-section" id="key-names">
             <h2>Имена клавиш</h2>
-            <p>Таблица имён общая для <code>INKEY</code>, <code>KEYDOWN</code>, <code>KEYPRESS</code> и <code>ON KEY</code>. Функция <code>INKEY</code> возвращает каноническое имя, остальные формы принимают и его, и перечисленные варианты записи. Регистр, пробелы, дефисы и подчёркивания в альтернативных именах не меняют смысл. Имя <code>"ANY"</code> зарезервировано только для запасного обработчика <code>ON KEY</code> и не обозначает физическую клавишу.</p>
-            <table>
-                <thead><tr><th>Каноническое имя</th><th>Допустимые алиасы</th></tr></thead>
-                <tbody>
-                    <tr><td><code>"LEFT"</code></td><td><code>"LEFTARROW"</code>, <code>"ARROWLEFT"</code></td></tr>
-                    <tr><td><code>"RIGHT"</code></td><td><code>"RIGHTARROW"</code>, <code>"ARROWRIGHT"</code></td></tr>
-                    <tr><td><code>"UP"</code></td><td><code>"UPARROW"</code>, <code>"ARROWUP"</code></td></tr>
-                    <tr><td><code>"DOWN"</code></td><td><code>"DOWNARROW"</code>, <code>"ARROWDOWN"</code></td></tr>
-                    <tr><td><code>"ESC"</code></td><td><code>"ESCAPE"</code></td></tr>
-                    <tr><td><code>"ENTER"</code></td><td><code>"RETURN"</code></td></tr>
-                    <tr><td><code>"BACKSPACE"</code></td><td><code>"BACK"</code>, <code>"BKSP"</code></td></tr>
-                    <tr><td><code>"TAB"</code></td><td>-</td></tr>
-                    <tr><td><code>"DELETE"</code></td><td><code>"DEL"</code></td></tr>
-                    <tr><td><code>"INSERT"</code></td><td><code>"INS"</code></td></tr>
-                    <tr><td><code>"HOME"</code></td><td>-</td></tr>
-                    <tr><td><code>"END"</code></td><td>-</td></tr>
-                    <tr><td><code>"PAGEUP"</code></td><td><code>"PAGE UP"</code>, <code>"PAGE-UP"</code>, <code>"PGUP"</code>, <code>"PRIOR"</code></td></tr>
-                    <tr><td><code>"PAGEDOWN"</code></td><td><code>"PAGE DOWN"</code>, <code>"PAGE-DOWN"</code>, <code>"PGDN"</code>, <code>"PGDOWN"</code>, <code>"NEXT"</code></td></tr>
-                    <tr><td><code>"SPACE"</code></td><td><code>"SPACEBAR"</code>, <code>"SPACE BAR"</code>, <code>"SPACE-BAR"</code></td></tr>
-                    <tr><td><code>"SHIFT"</code></td><td><code>"SHIFTKEY"</code>, <code>"SHIFT KEY"</code>, <code>"SHIFT-KEY"</code></td></tr>
-                    <tr><td><code>"CTRL"</code></td><td><code>"CONTROL"</code>, <code>"CONTROLKEY"</code>, <code>"CONTROL KEY"</code>, <code>"CONTROL-KEY"</code>, <code>"CTL"</code></td></tr>
-                    <tr><td><code>"ALT"</code></td><td><code>"ALTKEY"</code>, <code>"ALT KEY"</code>, <code>"ALT-KEY"</code>, <code>"MENU"</code></td></tr>
-                    <tr><td><code>"F1"</code> ... <code>"F12"</code></td><td>-</td></tr>
-                </tbody>
-            </table>
-            <p>Печатную клавишу обозначают односимвольной строкой, например <code>"A"</code>, <code>"a"</code> или <code>"1"</code>. Строковое имя клавиши не является ключевым словом и не конфликтует с функциями <code>LEFT()</code> или <code>RIGHT()</code>.</p>
+            <p>Функция <code>KEYDOWN</code> принимает канонические имена клавиш и алиасы. Полная таблица имён и правила их записи приведены в разделе <a href="keyboard-mouse-events.html#key-aliases">«Имена клавиш»</a>.</p>
         </section>
 
         <section class="article-section">

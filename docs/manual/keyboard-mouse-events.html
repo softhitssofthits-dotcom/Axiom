@@ -7,7 +7,7 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Клавиатура, мышь и события</span></nav>
-<p class="eyebrow">Раздел</p><h1 class="page-title">Клавиатура, мышь и события</h1><p class="lead">Раздел клавиатуры, мыши и событий описывает опрос текущего состояния, чтение очередей нажатий и вызов процедур-обработчиков. Здесь собраны функции <code>INKEY</code>, <code>KEYDOWN</code>, <code>KEYPRESS</code>, функции мыши и операторы <code>ON KEY</code>, <code>ON MOUSE</code>.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<p class="eyebrow">Раздел</p><h1 class="page-title">Клавиатура, мышь и события</h1><p class="lead">Раздел клавиатуры, мыши и событий описывает опрос текущего состояния, чтение очередей нажатий и вызов процедур-обработчиков. Здесь собраны функции <code>INKEY</code>, <code>KEYDOWN</code>, <code>KEYPRESS</code>, функции мыши и операторы <code>ON KEY</code>, <code>ON MOUSE</code>. Канонические имена клавиш и их алиасы собраны в <a href="#key-aliases">таблице имён клавиш</a>.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
 
         <section class="article-section">
@@ -35,6 +35,42 @@
                     <tr><td><a href="on-key.html"><code>ON KEY</code></a></td><td>Регистрация, пауза, возобновление и отключение обработчика клавиатурного события.</td></tr>
                 </tbody>
             </table>
+        </section>
+
+        <section class="article-section" id="key-aliases">
+            <h2>Имена клавиш</h2>
+            <p>Функции <a href="keydown.html"><code>KEYDOWN</code></a> и <a href="keypress.html"><code>KEYPRESS</code></a>, а также оператор <a href="on-key.html"><code>ON KEY</code></a> принимают имена клавиш из этой таблицы. Функция <a href="inkey.html"><code>INKEY</code></a> не принимает имя: для именованной клавиши она возвращает каноническую запись, например <code>"ESC"</code> или <code>"LEFT"</code>, а для печатного ввода — полученный символ.</p>
+            <table>
+                <thead><tr><th>Клавиша</th><th>Каноническое имя Axiom</th><th>Допустимые алиасы</th></tr></thead>
+                <tbody>
+                    <tr><td>Стрелка влево</td><td><code>"LEFT"</code></td><td><code>"LEFTARROW"</code>, <code>"ARROWLEFT"</code></td></tr>
+                    <tr><td>Стрелка вправо</td><td><code>"RIGHT"</code></td><td><code>"RIGHTARROW"</code>, <code>"ARROWRIGHT"</code></td></tr>
+                    <tr><td>Стрелка вверх</td><td><code>"UP"</code></td><td><code>"UPARROW"</code>, <code>"ARROWUP"</code></td></tr>
+                    <tr><td>Стрелка вниз</td><td><code>"DOWN"</code></td><td><code>"DOWNARROW"</code>, <code>"ARROWDOWN"</code></td></tr>
+                    <tr><td>Escape</td><td><code>"ESC"</code></td><td><code>"ESCAPE"</code></td></tr>
+                    <tr><td>Enter</td><td><code>"ENTER"</code></td><td><code>"RETURN"</code></td></tr>
+                    <tr><td>Backspace</td><td><code>"BACKSPACE"</code></td><td><code>"BACK"</code>, <code>"BKSP"</code></td></tr>
+                    <tr><td>Tab</td><td><code>"TAB"</code></td><td>—</td></tr>
+                    <tr><td>Delete</td><td><code>"DELETE"</code></td><td><code>"DEL"</code></td></tr>
+                    <tr><td>Insert</td><td><code>"INSERT"</code></td><td><code>"INS"</code></td></tr>
+                    <tr><td>Home</td><td><code>"HOME"</code></td><td>—</td></tr>
+                    <tr><td>End</td><td><code>"END"</code></td><td>—</td></tr>
+                    <tr><td>Page Up</td><td><code>"PAGEUP"</code></td><td><code>"PAGE UP"</code>, <code>"PAGE-UP"</code>, <code>"PGUP"</code>, <code>"PRIOR"</code></td></tr>
+                    <tr><td>Page Down</td><td><code>"PAGEDOWN"</code></td><td><code>"PAGE DOWN"</code>, <code>"PAGE-DOWN"</code>, <code>"PGDN"</code>, <code>"PGDOWN"</code>, <code>"NEXT"</code></td></tr>
+                    <tr><td>Пробел</td><td><code>"SPACE"</code></td><td><code>"SPACEBAR"</code>, <code>"SPACE BAR"</code>, <code>"SPACE-BAR"</code></td></tr>
+                    <tr><td>Shift</td><td><code>"SHIFT"</code></td><td><code>"SHIFTKEY"</code>, <code>"SHIFT KEY"</code>, <code>"SHIFT-KEY"</code></td></tr>
+                    <tr><td>Control</td><td><code>"CTRL"</code></td><td><code>"CONTROL"</code>, <code>"CONTROLKEY"</code>, <code>"CONTROL KEY"</code>, <code>"CONTROL-KEY"</code>, <code>"CTL"</code></td></tr>
+                    <tr><td>Alt</td><td><code>"ALT"</code></td><td><code>"ALTKEY"</code>, <code>"ALT KEY"</code>, <code>"ALT-KEY"</code>, <code>"MENU"</code></td></tr>
+                    <tr><td>Функциональные клавиши</td><td><code>"F1"</code>–<code>"F12"</code></td><td>—</td></tr>
+                    <tr><td>Буквенные клавиши</td><td><code>"A"</code>–<code>"Z"</code></td><td>—</td></tr>
+                    <tr><td>Цифровые клавиши</td><td><code>"0"</code>–<code>"9"</code></td><td>—</td></tr>
+                </tbody>
+            </table>
+            <p>Для именованных клавиш регистр не важен. Пробелы, дефисы и подчёркивания в имени игнорируются, поэтому <code>"PAGEUP"</code>, <code>"PAGE UP"</code>, <code>"PAGE-UP"</code> и <code>"PAGE_UP"</code> обозначают одну клавишу.</p>
+            <p>Буквы <code>"A"</code>–<code>"Z"</code> и цифры <code>"0"</code>–<code>"9"</code> в таблице обозначают имена, которые проверяет функция <code>KEYDOWN</code>; клавиша цифры основного ряда и соответствующая клавиша цифрового блока имеют одно имя. Функции <code>KEYPRESS</code> и <code>INKEY</code>, а также оператор <code>ON KEY</code> для обычного печатного ввода используют поступивший символ, в том числе знак пунктуации. Символ зависит от раскладки и клавиши <code>SHIFT</code>, поэтому он не является алиасом именованной клавиши. Функция <code>KEYDOWN</code> не проверяет произвольные знаки пунктуации как состояние клавиш.</p>
+            <p>Имена <code>SHIFT</code>, <code>CTRL</code> и <code>ALT</code> проверяют удержание в функции <code>KEYDOWN</code>. В сочетании клавиш они задают удерживаемый модификатор, например <code>CTRL+LEFT</code>; событием в таком сочетании остаётся последняя клавиша. Модификаторы не передаются как отдельные события в <code>INKEY</code>, <code>KEYPRESS</code> или <code>ON KEY</code>.</p>
+            <p>Имя <code>ANY</code> и алиасы <code>ANYKEY</code>, <code>ANY KEY</code> и <code>ANY-KEY</code> задают цель обработчика <code>ON KEY</code> для любой клавиши. Эта цель не обозначает отдельную физическую клавишу.</p>
+            <p>Запускаемый пример с алиасами: <a href="../../samples/functions/keydown/canonical_aliases.axm">KEYDOWN: CONTROL и PAGE UP</a>.</p>
         </section>
 
         <section class="article-section">

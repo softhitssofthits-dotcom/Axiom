@@ -38,7 +38,7 @@ END SUB</code></pre>
             <h2>Параметры</h2>
             <p>В записи синтаксиса <code>keyText</code> обозначает строковое имя, а <code>HandlerName</code> — имя объявленной процедуры, например <code>HandleLeft</code>. Слова <code>ON</code>, <code>STOP</code> и <code>OFF</code> после запятой управляют состоянием обработчика.</p>
             <ul>
-                <li><code>keyText</code> — строковое выражение с именем клавиши, например <code>"LEFT"</code>, <code>"ESCAPE"</code> или <code>"A"</code>. Канонические имена и алиасы перечислены в <a href="keydown.html#key-names">общей таблице имён клавиш</a>. Специальная строка <code>"ANY"</code> задаёт обработчик любой клавиши.</li>
+                <li><code>keyText</code> — строковое выражение с именем клавиши, например <code>"LEFT"</code>, <code>"ESCAPE"</code> или <code>"A"</code>. Канонические имена и алиасы перечислены в <a href="keyboard-mouse-events.html#key-aliases">общей таблице имён клавиш</a>. Специальная строка <code>"ANY"</code> задаёт обработчик любой клавиши.</li>
                 <li><code>HandlerName</code> — видимая в текущем месте процедура <code>SUB</code> без параметров или с одним параметром <code>STRING</code>.</li>
                 <li><code>ON</code> — возобновление ранее зарегистрированного обработчика.</li>
                 <li><code>STOP</code> — пауза ранее зарегистрированного обработчика без удаления регистрации.</li>
