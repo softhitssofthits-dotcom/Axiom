@@ -1,0 +1,8 @@
+' Столбцы: A, B | AND OR XOR EQV IMP.
+SUB ShowTruthRow(a AS BOOLEAN, b AS BOOLEAN)
+    PRINT a; " "; b; " | "; a AND b; " "; a OR b; " "; a XOR b; " "; a EQV b; " "; a IMP b
+END SUB
+ShowTruthRow(FALSE, FALSE)
+ShowTruthRow(FALSE, TRUE)
+ShowTruthRow(TRUE, FALSE)
+ShowTruthRow(TRUE, TRUE)

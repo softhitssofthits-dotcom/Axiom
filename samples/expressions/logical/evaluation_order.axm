@@ -1,0 +1,11 @@
+' AND/OR вычисляют правый операнд; ANDALSO/ORELSE могут его пропустить.
+FUNCTION RightValue() AS BOOLEAN
+    PRINT "right"
+    RETURN TRUE
+END FUNCTION
+PRINT FALSE AND RightValue()
+PRINT TRUE OR RightValue()
+PRINT FALSE ANDALSO RightValue()
+PRINT TRUE ORELSE RightValue()
+PRINT TRUE ANDALSO RightValue()
+PRINT FALSE ORELSE RightValue()

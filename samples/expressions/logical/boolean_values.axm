@@ -1,0 +1,12 @@
+' BOOLEAN хранит TRUE или FALSE; числа для логического типа не используются.
+DIM ready AS BOOLEAN
+DIM allowed = 2 > 1
+CONST enabled AS BOOLEAN = NOT FALSE
+PRINT ready
+PRINT allowed
+PRINT enabled
+PRINT "ready=" & ready
+PRINT NOT FALSE
+PRINT NOT 0
+PRINT NOT 1 = 2
+PRINT NOT (1 = 2)
