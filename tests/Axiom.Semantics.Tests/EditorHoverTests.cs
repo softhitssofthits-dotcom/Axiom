@@ -110,6 +110,30 @@ public sealed class EditorHoverTests
     }
 
     [Fact]
+    public void CatchVariableIsReadOnlyErrorRatherThanConstant()
+    {
+        var source = """
+            CONST limit AS INTEGER = 2
+            TRY
+                PRINT POW(-2, 0.5)
+            CATCH problem
+                PRINT problem.Code, problem.Message, problem.Line, problem.Column
+            END TRY
+            PRINT limit
+            """;
+        var items = Hovers(source);
+        var caught = items.Where(h => h.Name == "problem").ToArray();
+        Assert.Equal(5, caught.Length);
+        Assert.All(caught, h => {
+            Assert.Equal("errorVariable", h.Kind);
+            Assert.Equal("ERROR", h.Type);
+        });
+        Assert.All(items.Where(h => h.Name == "limit"), h => Assert.Equal("constant", h.Kind));
+        foreach (var (name, type) in new[] { ("Code", "STRING"), ("Message", "STRING"), ("Line", "INTEGER"), ("Column", "INTEGER") })
+            Assert.Contains(items, h => h.Name == name && h.Kind == "field" && h.Type == type);
+    }
+
+    [Fact]
     public void BlockShadowingAndArbitraryTypeInferenceComeFromBinder()
     {
         var source = """

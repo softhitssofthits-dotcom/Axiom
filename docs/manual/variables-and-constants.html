@@ -12,7 +12,7 @@
 <pre><code class="language-axiom">DIM count AS INTEGER = 2
 count = count + 1
 PRINT count</code></pre><p>Результат:</p>
-<pre><code>3</code></pre><p>Переменная должна быть объявлена. Одно присваивание не создаёт новое имя. Полные формы объявления находятся в статье оператора <code>DIM</code>.</p></section>
+<pre><code>3</code></pre><p>Переменная должна быть объявлена. Одно присваивание не создаёт новое имя. Обычные переменные объявляются оператором <code>DIM</code>, но отдельные конструкции также объявляют собственные имена: параметры в заголовке подпрограммы, счётчик <code>FOR</code> и переменная ошибки после <code>CATCH</code>. Например, <code>CATCH err</code> является объявлением переменной <code>err</code>, поэтому отдельный <code>DIM err</code> не нужен. Полные формы обычных объявлений находятся в статье <a href="dim.html">DIM</a>; специальное объявление обработчика описано в <a href="try.html#catch-declaration">TRY</a>.</p></section>
 <section class="article-section"><span class="legacy-anchor" id="dim"></span><span class="legacy-anchor" id="strict"></span><h2>Тип и начальное значение</h2><p>Тип определяет, что хранит переменная и какие операции можно выполнять с её значением. Для первых программ достаточно чисел <code>INTEGER</code> и <code>DOUBLE</code>, текста <code>STRING</code> и логического значения <code>BOOLEAN</code>.</p>
 <pre><code class="language-axiom">DIM title AS STRING = "Отчёт"
 DIM price AS DOUBLE = 12.5

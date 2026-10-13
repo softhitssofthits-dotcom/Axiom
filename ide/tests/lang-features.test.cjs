@@ -126,3 +126,20 @@ test('Подпись пользовательской функции берёт 
   const help = await p.features._sigProvider.provideSignatureHelp(p.model, {lineNumber: 1, column: source.length + 1});
   assert.equal(help.value.signatures[0].parameters[0].label, 'BYREF value AS DECIMAL');
 });
+
+
+test('Переменная CATCH только для чтения отличается от CONST на обоих языках', async () => {
+  const p = providers('PRINT problem, limit', [
+    {start: 6, length: 7, name: 'problem', kind: 'errorVariable', type: 'ERROR'},
+    {start: 15, length: 5, name: 'limit', kind: 'constant', type: 'INTEGER'},
+  ]);
+  const hover = async column => (await p.features._hoverProvider.provideHover(p.model, {lineNumber: 1, column})).contents[0].value;
+  assert.match(await hover(7), /переменная ошибки, только для чтения/);
+  assert.match(await hover(7), /Тип: `ERROR`/);
+  assert.doesNotMatch(await hover(7), /константа/);
+  assert.match(await hover(16), /константа/);
+  p.language('en');
+  assert.match(await hover(7), /error variable, read-only/);
+  assert.match(await hover(7), /Type: `ERROR`/);
+  assert.match(await hover(16), /constant/);
+});

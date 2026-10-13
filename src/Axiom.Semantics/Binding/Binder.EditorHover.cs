@@ -29,7 +29,9 @@ public sealed partial class Binder
             items[span.Start] = new(span.Start, span.Length, name, kind, type, signature, fields, parameters);
         }
         void Variable(TextSpan span, VariableSymbol symbol) => Add(span, symbol.Name,
-            symbol is ParameterSymbol ? "parameter" : symbol.IsReadOnly ? "constant" : "variable", symbol.Type.Name);
+            symbol is ParameterSymbol ? "parameter" :
+            symbol.Type == TypeSymbol.RuntimeError && symbol.IsReadOnly ? "errorVariable" :
+            symbol.IsReadOnly ? "constant" : "variable", symbol.Type.Name);
         void Function(TextSpan span, FunctionSymbol symbol)
         {
             if (symbol.IsBuiltIn) return; // Все перегрузки берутся из реестра языка.

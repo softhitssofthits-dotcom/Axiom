@@ -1,21 +1,16 @@
 [
   {
-    "id": "language-next-counter",
+    "id": "language-hover-catch",
     "spec": "language-format.spec.js",
-    "name": "NEXT проверяет имя счётчика и сохраняет диагностику в редакторе",
-    "ms": 3218,
-    "passed": 12,
+    "name": "CATCH объявляет переменную ошибки только для чтения, а CONST остаётся константой",
+    "ms": 3686,
+    "passed": 17,
     "failures": [],
     "notes": [],
     "crashed": false,
     "consoleTail": [],
     "pageErrors": [],
-    "mainStderrTail": "Debugger ending on ws://127.0.0.1:1609/79d71ca4-5dc6-4ba8-9734-2d68e722b64a\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
-    "rendererDialogs": [
-      {
-        "type": "confirm",
-        "message": "Перед запуском нужно сохранить документ. Сохранить и запустить?"
-      }
-    ]
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:3432/8c47bf22-3426-4d79-a59d-5b8b2bf08a06\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
   }
 ]

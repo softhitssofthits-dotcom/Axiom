@@ -33,6 +33,40 @@ module.exports = [
     await S.page.evaluate(() => window.__ide.run()); await S.waitIdle();
     C.ok(await S.page.evaluate(() => /(?:^|\n)1\r?\n2(?:\r?\n|$)/.test(window.__ide.execution.outputText)), 'Цикл с NEXT I реально исполнен');
   } },
+  { id: 'language-hover-catch', name: 'CATCH объявляет переменную ошибки только для чтения, а CONST остаётся константой', async fn({ S, C }) {
+    await open(S, 'CONST limit AS INTEGER = 2\nTRY\n    PRINT POW(-2, 0.5)\nCATCH err\n    PRINT err.Code, err.Message, err.Line, err.Column\nEND TRY\nPRINT limit\n', 'hover-catch');
+    await S.page.evaluate(() => window.__ide.check(false));
+    C.ok(await S.page.evaluate(() => !window.__ide._lastDiagnostics.some(item => item.severity === 'error')), 'CATCH объявляет err без DIM');
+    async function hover(lineNumber, column) {
+      return S.page.evaluate(async position => {
+        const result = await window.LangFeatures._hoverProvider.provideHover(window.__ide.editor.getModel(), position);
+        return result?.contents.map(item => item.value).join('\n') || '';
+      }, {lineNumber, column});
+    }
+    {
+      C.contains(await hover(4, 7), 'переменная ошибки, только для чтения', 'Категория имени после CATCH');
+      C.contains(await hover(4, 7), 'Тип: `ERROR`', 'Тип объявления CATCH');
+    }
+    for (const column of [11, 21, 34, 44])
+      C.contains(await hover(5, column), 'переменная ошибки, только для чтения', 'Категория err при чтении поля');
+    for (const [column, type] of [[15, 'STRING'], [25, 'STRING'], [38, 'INTEGER'], [48, 'INTEGER']])
+      C.contains(await hover(5, column), 'Тип: `' + type + '`', 'Тип поля ERROR');
+    C.contains(await hover(7, 7), 'константа', 'CONST остаётся константой');
+    await S.page.evaluate(async () => {
+      const i = window.__ide; i.editor.setPosition({lineNumber: 4, column: 7});
+      i.editor.focus(); await i.editor.getAction('editor.action.showHover').run();
+    });
+    await S.page.waitForFunction(() => [...document.querySelectorAll('.monaco-hover')].some(el => el.textContent.includes('переменная ошибки, только для чтения') && el.textContent.includes('Тип: ERROR')));
+    C.ok(true, 'Настоящая карточка Monaco показывает переменную ошибки');
+    await S.page.keyboard.press('Escape');
+    await S.page.evaluate(() => window.__ide.setLanguage('en'));
+    C.contains(await hover(4, 7), 'error variable, read-only', 'Категория объявления по-английски');
+    C.contains(await hover(5, 11), 'error variable, read-only', 'Категория использования по-английски');
+    C.contains(await hover(7, 7), 'constant', 'CONST по-английски');
+    await S.page.evaluate(() => window.__ide.setLanguage('ru'));
+    await S.page.evaluate(() => window.__ide.run()); await S.waitIdle();
+    C.ok(await S.page.evaluate(() => window.__ide.execution.outputText.includes('MB3007')), 'Ошибка POW перехвачена и поля прочитаны');
+  } },
   { id: 'language-hover-registry', name: 'Карточки всех встроенных функций, типов и ключевых слов соответствуют реестру', async fn({ S, C }) {
     await open(S, 'PRINT 1\n', 'hover-registry');
     const result = await S.page.evaluate(async () => {
