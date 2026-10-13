@@ -19,7 +19,7 @@ public sealed class TilemapLoadFailureTests
             """, inputProvider: host));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
-        Assert.Equal(new[] { "MB3005", "LOADTILEMAP: Проверочный отказ.", "2" }, result.Output);
+        Assert.Equal(new[] { "MB3005", "LOADTILEMAP: Invalid runtime state.", "2" }, result.Output);
         Assert.Equal(2, host.Calls);
     }
     private sealed class FailingOnceHost : IInputProvider, IGraphicsHost

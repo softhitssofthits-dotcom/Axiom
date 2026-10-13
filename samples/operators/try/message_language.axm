@@ -1,0 +1,12 @@
+' Системное сообщение всегда английское; пользовательский текст сохраняется.
+TRY
+    PRINT POW(-2, 0.5)
+CATCH systemError
+    PRINT systemError.Code
+    PRINT systemError.Message
+END TRY
+TRY
+    ERROR "APP001", "Моя ошибка"
+CATCH userError
+    PRINT userError.Message
+END TRY

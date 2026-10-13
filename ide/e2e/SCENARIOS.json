@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 112,
+  "count": 113,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -356,6 +356,11 @@
       "id": "language-next-counter",
       "spec": "language-format.spec.js",
       "name": "NEXT проверяет имя счётчика и сохраняет диагностику в редакторе"
+    },
+    {
+      "id": "language-catch-message",
+      "spec": "language-format.spec.js",
+      "name": "Message системной ошибки английское при обоих языках IDE; ERROR сохраняет авторский текст"
     },
     {
       "id": "language-hover-catch",

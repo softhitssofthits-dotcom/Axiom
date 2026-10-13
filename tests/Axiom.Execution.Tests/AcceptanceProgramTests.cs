@@ -1328,7 +1328,7 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded);
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
-        Assert.Equal(["before", "caught", "MB3001", "4", "Деление на ноль.", "cleanup", "after"], result.Output);
+        Assert.Equal(["before", "caught", "MB3001", "4", "Division by zero.", "cleanup", "after"], result.Output);
     }
 
     [Fact]

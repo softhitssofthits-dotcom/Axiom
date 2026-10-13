@@ -28,7 +28,7 @@ public sealed class BytecodeOnlyContractTests
         Assert.True(result.Succeeded);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
         Assert.Empty(result.Diagnostics);
-        Assert.Equal(["Сумма: 3", "", "Шаг: 1", "Шаг: 2", "MB3007", "Завершено"], result.Output);
+        Assert.Equal(["Сумма: 3", "", "Шаг: 1", "Шаг: 2", "MB3007", "Function POW: argument 'value' cannot be used with the specified exponent.", "Завершено"], result.Output);
     }
 
     [Fact]

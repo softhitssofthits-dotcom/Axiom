@@ -6,6 +6,144 @@ namespace Axiom.Runtime.Tests;
 
 public sealed partial class LanguageContractTests
 {
+    [Theory]
+    [InlineData("ru-RU")]
+    [InlineData("en-US")]
+    public void Execute_CaughtSystemMessagesAreEnglishIndependentOfCulture(string culture)
+    {
+        var previous = System.Globalization.CultureInfo.CurrentCulture;
+        var previousUi = System.Globalization.CultureInfo.CurrentUICulture;
+        try
+        {
+            System.Globalization.CultureInfo.CurrentCulture = new(culture);
+            System.Globalization.CultureInfo.CurrentUICulture = new(culture);
+            var (_, host, result) = ExecuteProgram("""
+                TRY
+                    PRINT POW(-2, 0.5)
+                CATCH problem
+                    PRINT problem.Message
+                END TRY
+                TRY
+                    PRINT 1 / 0
+                CATCH division
+                    PRINT division.Message
+                END TRY
+                """);
+            Assert.True(result.Succeeded);
+            Assert.Equal(["Function POW: argument 'value' cannot be used with the specified exponent.", "Division by zero."], host.Output);
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = previous;
+            System.Globalization.CultureInfo.CurrentUICulture = previousUi;
+        }
+    }
+
+    [Fact]
+    public void Execute_EnglishArrayMessageKeepsIndicesAndBounds()
+    {
+        var (_, host, result) = ExecuteProgram("""
+            DIM a(1 TO 3) AS INTEGER
+            TRY
+                PRINT a(5)
+            CATCH err
+                PRINT err.Message
+            END TRY
+            """);
+        Assert.True(result.Succeeded);
+        Assert.Equal(["Indices (5) are outside the bounds of array 'a' (1..3)."], host.Output);
+    }
+
+    [Fact]
+    public void Execute_EnglishGraphicsMessageKeepsOperationAndMode()
+    {
+        var (_, host, result) = ExecuteProgram("""
+            TRY
+                DRAWRECT 1, 2, 3, 4, RGB(255, 0, 0)
+            CATCH err
+                PRINT err.Message
+            END TRY
+            """);
+        Assert.True(result.Succeeded);
+        Assert.Equal(["DRAWRECT requires active CANVAS graphics mode."], host.Output);
+    }
+
+    [Theory]
+    [InlineData("Деление на ноль.")]
+    [InlineData("x' Деление на ноль.")]
+    public void Execute_EnglishInputMessageKeepsTypeAndOriginalInput(string input)
+    {
+        var (_, host, result) = ExecuteProgram("""
+            DIM number AS INTEGER
+            TRY
+                INPUT number
+            CATCH err
+                PRINT err.Message
+            END TRY
+            """, input);
+        Assert.True(result.Succeeded);
+        Assert.Contains($"Cannot convert input '{input}' to type INTEGER.", host.Output);
+    }
+
+    [Fact]
+    public void Execute_EnglishInputMessageKeepsExpectedAndActualCounts()
+    {
+        var (_, host, result) = ExecuteProgram("""
+            DIM first AS INTEGER, second AS INTEGER
+            TRY
+                INPUT first, second
+            CATCH err
+                PRINT err.Message
+            END TRY
+            """, "1");
+        Assert.True(result.Succeeded);
+        Assert.Contains("Expected 2 INPUT values, received 1.", host.Output);
+    }
+
+    [Fact]
+    public void Execute_SystemMessageKeepsEnglishCallChainAndSurvivesRethrow()
+    {
+        var (_, host, result) = ExecuteProgram("""
+            SUB Fail()
+                PRINT POW(-2, 0.5)
+            END SUB
+            TRY
+                TRY
+                    Fail()
+                CATCH inner
+                    ERROR inner
+                END TRY
+            CATCH outer
+                PRINT outer.Message
+            END TRY
+            """);
+        Assert.True(result.Succeeded);
+        var message = Assert.Single(host.Output);
+        Assert.StartsWith("Function POW: argument 'value' cannot be used with the specified exponent.", message);
+        Assert.Contains("Call chain:", message);
+        Assert.Contains("procedure 'Fail'", message);
+        Assert.DoesNotMatch("[А-Яа-яЁё]", message);
+    }
+
+    [Fact]
+    public void Execute_UserMessageWithSystemCodeIsPreservedThroughRethrow()
+    {
+        var (_, host, result) = ExecuteProgram("""
+            TRY
+                TRY
+                    ERROR "MB3007", "Моя ошибка"
+                CATCH inner
+                    ERROR inner
+                END TRY
+            CATCH outer
+                PRINT outer.Code
+                PRINT outer.Message
+            END TRY
+            """);
+        Assert.True(result.Succeeded);
+        Assert.Equal(["MB3007", "Моя ошибка"], host.Output);
+    }
+
     [Fact]
     public void Execute_TryFinallyRunsBeforeUnhandledFailureEscapes()
     {
@@ -120,7 +258,7 @@ END TRY
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["Пользовательская ошибка APP002."], host.Output);
+        Assert.Equal(["User error APP002."], host.Output);
     }
 
     [Fact]

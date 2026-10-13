@@ -1,16 +1,16 @@
 [
   {
-    "id": "language-hover-catch",
+    "id": "language-catch-message",
     "spec": "language-format.spec.js",
-    "name": "CATCH объявляет переменную ошибки только для чтения, а CONST остаётся константой",
-    "ms": 3686,
-    "passed": 17,
+    "name": "Message системной ошибки английское при обоих языках IDE; ERROR сохраняет авторский текст",
+    "ms": 3600,
+    "passed": 4,
     "failures": [],
     "notes": [],
     "crashed": false,
     "consoleTail": [],
     "pageErrors": [],
-    "mainStderrTail": "Debugger ending on ws://127.0.0.1:3432/8c47bf22-3426-4d79-a59d-5b8b2bf08a06\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:4062/31805850-f948-41eb-8761-5c7213e11006\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
     "rendererDialogs": []
   }
 ]

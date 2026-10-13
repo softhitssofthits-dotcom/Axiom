@@ -24,7 +24,7 @@ public sealed class DirectoryTraversalContractTests
                     PRINT COPYDIR("{{root}}", "{{destinationArgument}}")
                 CATCH err
                     PRINT err.Code
-                    PRINT INSTR(err.Message, "исход") > 0
+                    PRINT INSTR(err.Message, "source") > 0
                 END TRY
                 PRINT FILEEXISTS("{{destination}}\a.dat")
                 """;

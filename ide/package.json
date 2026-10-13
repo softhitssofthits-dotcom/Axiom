@@ -1,6 +1,6 @@
 {
   "name": "axiom-ide",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Desktop IDE for the Axiom language (Electron + Monaco Editor)",
   "main": "src/main/main.js",
   "scripts": {

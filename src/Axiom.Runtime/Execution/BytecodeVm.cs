@@ -49,6 +49,7 @@ public sealed partial class BytecodeVm
     private BytecodeVmExecutionSnapshot? _skipStopOnceAt;
     private BytecodeVmStateSnapshot? _previousReversibleStateSnapshot;
     private Diagnostic? _lastRuntimeFailureDiagnostic;
+    private string? _lastRuntimeErrorMessage;
     private int? _suppressLineBreakpointsUntilDifferentLine;
     private DebugStepBoundary? _debugStepBoundary;
     private bool _canUseFastInstructionPath;
@@ -1118,7 +1119,8 @@ public sealed partial class BytecodeVm
             ReportRuntimeDiagnostic(
                 existingError.Code,
                 existingError.Message,
-                new TextLocation(new TextSpan(0, 0), existingError.Line, existingError.Column));
+                new TextLocation(new TextSpan(0, 0), existingError.Line, existingError.Column),
+                preserveMessage: true);
             throw new RuntimeFailureException();
         }
 
@@ -1136,7 +1138,7 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        ReportRuntimeDiagnostic(code, message ?? $"Пользовательская ошибка {code}.", location);
+        ReportRuntimeDiagnostic(code, message ?? $"User error {code}.", location, preserveMessage: true);
         throw new RuntimeFailureException();
     }
 
@@ -1206,7 +1208,9 @@ public sealed partial class BytecodeVm
     private RuntimeValue ConsumeLastRuntimeError()
     {
         var diagnostic = _lastRuntimeFailureDiagnostic;
+        var errorMessage = _lastRuntimeErrorMessage;
         _lastRuntimeFailureDiagnostic = null;
+        _lastRuntimeErrorMessage = null;
 
         if (diagnostic is null)
         {
@@ -1216,7 +1220,7 @@ public sealed partial class BytecodeVm
         _diagnostics.Remove(diagnostic);
         return RuntimeValue.FromRuntimeError(new RuntimeErrorValue(
             diagnostic.Code,
-            diagnostic.Message,
+            errorMessage ?? RuntimeErrorMessageFormatter.Format(diagnostic.Code, diagnostic.Message),
             diagnostic.Location.Line,
             diagnostic.Location.Column));
     }
@@ -6296,6 +6300,7 @@ public sealed partial class BytecodeVm
             location);
         _diagnostics.Report(diagnostic);
         _lastRuntimeFailureDiagnostic = diagnostic;
+        _lastRuntimeErrorMessage = RuntimeErrorMessageFormatter.Format(diagnostic.Code, diagnostic.Message);
     }
 
     private T ReportInvalidRuntimeState<T>(string message, TextLocation? location = null)
@@ -6305,10 +6310,14 @@ public sealed partial class BytecodeVm
     }
 
     private void ReportRuntimeDiagnostic(string code, string message, TextLocation location)
+        => ReportRuntimeDiagnostic(code, message, location, preserveMessage: false);
+
+    private void ReportRuntimeDiagnostic(string code, string message, TextLocation location, bool preserveMessage)
     {
         var diagnostic = new Diagnostic(code, AppendCallChain(message), location);
         _diagnostics.Report(diagnostic);
         _lastRuntimeFailureDiagnostic = diagnostic;
+        _lastRuntimeErrorMessage = preserveMessage ? message : RuntimeErrorMessageFormatter.Format(code, diagnostic.Message);
     }
 
     private string AppendCallChain(string message, IReadOnlyList<RuntimeCallChainFrame>? extraChainFrames = null)

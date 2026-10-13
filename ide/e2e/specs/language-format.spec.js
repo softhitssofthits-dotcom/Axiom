@@ -33,6 +33,17 @@ module.exports = [
     await S.page.evaluate(() => window.__ide.run()); await S.waitIdle();
     C.ok(await S.page.evaluate(() => /(?:^|\n)1\r?\n2(?:\r?\n|$)/.test(window.__ide.execution.outputText)), 'Цикл с NEXT I реально исполнен');
   } },
+  { id: 'language-catch-message', name: 'Message системной ошибки английское при обоих языках IDE; ERROR сохраняет авторский текст', async fn({ S, C }) {
+    await open(S, 'TRY\n    PRINT POW(-2, 0.5)\nCATCH err\n    PRINT err.Message\nEND TRY\nTRY\n    ERROR "MB3007", "Моя ошибка"\nCATCH manual\n    PRINT manual.Message\nEND TRY\n', 'catch-message');
+    const expected = "Function POW: argument 'value' cannot be used with the specified exponent.\nМоя ошибка";
+    for (const locale of ['ru', 'en']) {
+      await S.page.evaluate(locale => window.__ide.setLanguage(locale), locale);
+      await S.page.evaluate(() => window.__ide.run()); await S.waitIdle();
+      const output = await S.page.evaluate(() => window.__ide.execution.outputText.replace(/\r/g, '').trim());
+      C.eq(output, expected, 'Системное сообщение и авторский текст при языке ' + locale);
+      C.ok(await S.page.evaluate(() => !window.__ide._lastDiagnostics.some(item => item.severity === 'error')), 'Ошибки обработаны при языке ' + locale);
+    }
+  } },
   { id: 'language-hover-catch', name: 'CATCH объявляет переменную ошибки только для чтения, а CONST остаётся константой', async fn({ S, C }) {
     await open(S, 'CONST limit AS INTEGER = 2\nTRY\n    PRINT POW(-2, 0.5)\nCATCH err\n    PRINT err.Code, err.Message, err.Line, err.Column\nEND TRY\nPRINT limit\n', 'hover-catch');
     await S.page.evaluate(() => window.__ide.check(false));
