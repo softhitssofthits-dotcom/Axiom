@@ -3291,7 +3291,7 @@
     },
     {
       "name": "ISNUMERIC",
-      "description": "Возвращает признак полной записи конечного числа DOUBLE в строке.",
+      "description": "Проверяет, можно ли прочитать строку целиком как число типа DOUBLE. Возвращает TRUE или FALSE.",
       "sourceHref": "isnumeric.html#isnumeric",
       "forms": [
         {

@@ -1,38 +1,58 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ISNUMERIC — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<title>Функция ISNUMERIC — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
 <body data-page="isnumeric"><a class="skip-link" href="#main-content">Перейти к статье</a>
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
 <form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
-<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>ISNUMERIC</span></nav>
-<p class="eyebrow">Справочник языка</p><h1 class="page-title">ISNUMERIC</h1><p class="lead">ISNUMERIC — встроенная функция языка Axiom, которая возвращает признак полной записи конечного числа DOUBLE в строке.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-<section class="article-section" id="isnumeric"><h2>ISNUMERIC</h2>
-<p>ISNUMERIC — встроенная функция языка Axiom, которая возвращает признак полной записи конечного числа DOUBLE в строке.</p>
-<h3>Назначение</h3>
-<p>Функция позволяет проверить пользовательский текст до преобразования в число.</p>
-<h3>Где работает</h3>
-<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
-<h3>Синтаксис</h3><pre><code class="language-axiom">ISNUMERIC(&lt;текст&gt;)</code></pre>
-<h3>Аргументы</h3>
-<p>Передайте STRING с проверяемой записью; числовой аргумент автоматически строкой не становится.</p>
-<h3>Результат</h3>
-<p>Результат BOOLEAN: TRUE для полной конечной записи DOUBLE, FALSE в остальных случаях.</p>
-<h3>Правила и ограничения</h3>
-<p>Допустимы знак, десятичная точка, показатель e/E; на краях — обычный пробел и символы U+0009–U+000D. Пустая строка, U+0000, запятые, Unicode-пробелы, постороннее окончание, NaN, Infinity и переполнение дают FALSE. Очень малое число может округлиться к нулю и дать TRUE. TRUE не проверяет диапазон INTEGER, LONG или DECIMAL.</p>
-<h3>Диагностика</h3>
-<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. Некорректное содержимое строки возвращает FALSE без ошибки выполнения.</p>
-<h3>Пример</h3><pre><code class="language-axiom">PRINT ISNUMERIC("12abc")
-PRINT ISNUMERIC(".5")
-PRINT ISNUMERIC("")
-PRINT ISNUMERIC("1e999")
-PRINT ISNUMERIC("1e-999")</code></pre><p>Ожидаемый вывод:</p>
-<pre><code>FALSE
-TRUE
-FALSE
-FALSE
-TRUE</code></pre>
-<h3>См. также</h3>
-<p><a href="function-reference.html">Указатель встроенных функций</a></p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Функция ISNUMERIC</span></nav>
+<p class="eyebrow">Справочник языка</p><h1 class="page-title">Функция ISNUMERIC</h1><p class="lead">ISNUMERIC — встроенная функция языка Axiom, которая проверяет, можно ли преобразовать строку целиком в число типа DOUBLE.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<p>Функция используется для проверки числового текста перед вызовом VAL или другим действием. Результат имеет тип BOOLEAN; исходная строка не изменяется.</p>
+<section class="article-section" id="syntax"><span id="isnumeric"></span><h2>Синтаксис</h2>
+<pre><code class="language-axiom">ISNUMERIC(&lt;текст&gt;)</code></pre></section>
+<section class="article-section" id="argument"><h2>Аргумент</h2>
+<p><code>&lt;текст&gt;</code> — строковое выражение типа STRING, которое нужно проверить. Например, это может быть строка <code>"12.5"</code> или строковая переменная. Вызов <code>ISNUMERIC(12.5)</code> недопустим: аргументом должна быть строка.</p></section>
+<section class="article-section" id="result"><h2>Возвращаемое значение</h2>
+<p>Функция возвращает значение типа BOOLEAN:</p>
+<ul><li><code>TRUE</code> — если строку целиком можно прочитать как число типа DOUBLE. Допустимые пробельные символы в начале и конце строки не учитываются.</li>
+<li><code>FALSE</code> — если строка пуста, содержит недопустимые символы или число слишком велико для типа DOUBLE.</li></ul>
+<p>Проверяется вся строка. Поэтому <code>ISNUMERIC("12abc")</code> возвращает FALSE, хотя функция <code>VAL("12abc")</code> возвращает 12: VAL умеет читать число в начале строки.</p></section>
+<section class="article-section" id="rules"><h2>Правила записи числа</h2>
+<p>В строке можно использовать цифры от 0 до 9, знак <code>+</code> или <code>-</code> перед числом и точку для дробной части. Экспоненциальная запись тоже допустима: например, <code>"1e3"</code> обозначает 1000. Вместо <code>e</code> можно написать <code>E</code>.</p>
+<p>Десятичный разделитель всегда точка, независимо от языка интерфейса и настроек системы. Запятая и разделители групп разрядов не допускаются. Строки с префиксами <code>&amp;H</code> и <code>&amp;B</code> функция не распознаёт.</p>
+<table><thead><tr><th>Вызов</th><th>Результат</th><th>Причина</th></tr></thead><tbody>
+<tr><td><code>ISNUMERIC("12")</code></td><td>TRUE</td><td>Целое число.</td></tr>
+<tr><td><code>ISNUMERIC("12.5")</code></td><td>TRUE</td><td>Дробное число с десятичной точкой.</td></tr>
+<tr><td><code>ISNUMERIC("-.5")</code></td><td>TRUE</td><td>Отрицательное число −0,5; ноль перед точкой можно опустить.</td></tr>
+<tr><td><code>ISNUMERIC("1e3")</code></td><td>TRUE</td><td>Число в экспоненциальной записи.</td></tr>
+<tr><td><code>ISNUMERIC(" 12 ")</code></td><td>TRUE</td><td>Обычные пробелы по краям допустимы.</td></tr>
+<tr><td><code>ISNUMERIC("")</code></td><td>FALSE</td><td>В строке нет числа.</td></tr>
+<tr><td><code>ISNUMERIC("12abc")</code></td><td>FALSE</td><td>После числа находятся посторонние символы.</td></tr>
+<tr><td><code>ISNUMERIC("12,5")</code></td><td>FALSE</td><td>Запятая не допускается.</td></tr>
+</tbody></table>
+<h3>Диапазон и округление</h3>
+<p>Проверка использует тип DOUBLE. Строка <code>"1e999"</code> содержит слишком большое число и даёт FALSE. Строка <code>"1e-999"</code> даёт TRUE: при чтении такого малого числа в DOUBLE получается ноль. Таким образом, TRUE не гарантирует сохранение исходной точности.</p>
+<p>Значения <code>"NaN"</code>, <code>"Infinity"</code> и <code>"-Infinity"</code> не считаются допустимыми числами. Результат TRUE также не гарантирует, что число поместится в INTEGER, LONG или DECIMAL. Например, <code>ISNUMERIC("2147483648")</code> возвращает TRUE, хотя это число превышает верхнюю границу INTEGER.</p>
+<h3>Пробельные и скрытые символы</h3>
+<p>В начале и конце строки допустимы обычный пробел U+0020 и символы U+0009–U+000D, в том числе табуляция и перевод строки. Пробел внутри числа недопустим. Другие пробельные символы, например неразрывный пробел U+00A0, дают FALSE. Нулевой символ U+0000 недопустим в любой части строки.</p></section>
+<section class="article-section" id="diagnostics"><h2>Диагностика</h2>
+<p>Недопустимое содержимое строки возвращает FALSE без ошибки выполнения. Компилятор сообщает об ошибке в следующих случаях:</p>
+<ul><li><code>MB2003</code> — аргумент имеет тип, отличный от STRING. Например, вызов <code>ISNUMERIC(12)</code> передаёт число вместо строки.</li>
+<li><code>MB2004</code> — передано неверное количество аргументов. Функция принимает ровно один аргумент.</li></ul></section>
+<section class="article-section" id="example"><h2>Пример</h2>
+<p>Программа проверяет строку и, если в ней записано число, преобразует её функцией VAL и удваивает полученное значение.</p>
+<pre><code class="language-axiom">DIM text AS STRING = "12.5"
+IF ISNUMERIC(text) THEN
+    PRINT VAL(text) * 2
+ELSE
+    PRINT "Введите число"
+END IF</code></pre>
+<p>Программа выводит:</p><pre><code>25</code></pre>
+<p>Если заменить <code>"12.5"</code> на <code>"12abc"</code>, программа выведет <code>Введите число</code>.</p>
+<p><a href="../../samples/functions/isnumeric/full_number_check.axm">Запускаемый пример дополнительных проверок ISNUMERIC</a></p></section>
+<section class="article-section" id="related"><h2>См. также</h2>
+<ul><li><a href="numeric-functions-conversion-and-legacy.html#val">Функция VAL</a></li>
+<li><a href="boolean.html">Тип BOOLEAN и значения TRUE/FALSE</a></li>
+<li><a href="data-type-limits.html">Диапазоны числовых типов</a></li></ul></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
 <script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

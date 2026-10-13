@@ -65,7 +65,11 @@ function check() {
         if (required.has(c) && compare(v[c], old[c]) <= 0) fail(`Изменён ${c}, но версия ${old[c]} не повышена. Используйте bump.`);
       }
       const substantiveDocs = paths.some(p => !/^(docs\/manual\/|docs\/VERSIONING\.md$|AGENTS\.md$|scripts\/versioning\.mjs$)/.test(p) && /^(docs\/(?!archive\/|reports\/|CHANGELOG\.md|WORKLOG5\.md)|README\.md|PROJECT\.md|AGENTS\.md|scripts\/)/.test(p));
-      if (substantiveDocs && components.every(c => v[c] === old[c])) fail('Изменены действующие документы/инструменты, но ни одна версия не повышена. Выберите затронутый компонент.');
+      // Сопровождающие записи и генерация справочника входят в редакционную задачу.
+      const manualOnly = paths.some(p => p.startsWith('docs/manual/')) && paths.every(p => !p
+        || /^(docs\/(manual\/|archive\/|reports\/|(PLANS4|WORKLOG5|BYTECODE_COVERAGE|BYTECODE_PERF_MATRIX|VERSIONING)\.md$)|AGENTS\.md$)/.test(p)
+        || /^scripts\/(build-manual-index|build-language-reference|build-manual-highlighting|manual-page|manual-search-index|normalize-manual-syntax|check-manual|manual-[\w-]+\.test|versioning|versioning-check\.test)\.mjs$/.test(p));
+      if (substantiveDocs && !manualOnly && components.every(c => v[c] === old[c])) fail('Изменены действующие документы/инструменты, но ни одна версия не повышена. Выберите затронутый компонент.');
       if (components.some(c => v[c] !== old[c]) && git('show', base + ':docs/CHANGELOG.md') === read('docs/CHANGELOG.md').trim()) fail('Повышение версии требует записи в docs/CHANGELOG.md.');
     }
   }
