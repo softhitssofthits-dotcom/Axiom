@@ -1195,6 +1195,33 @@ PRESENT
     }
 
     [Fact]
+    public void Execute_CompiledSmoothChangesGlobalFrameSmoothingBeforeOrAfterSurfaceSelection()
+    {
+        const string text = "SMOOTH ON\nSCREEN 1\nSMOOTH OFF\nCANVAS 20, 10\nSMOOTH ON";
+        var host = new TestRuntimeHost();
+
+        var (module, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        var smoothInstructions = module.Routines.SelectMany(static routine => routine.Instructions)
+            .Where(static instruction => instruction.Opcode == Opcode.Smooth).ToArray();
+        Assert.Equal([1, 0, 1], smoothInstructions.Select(static instruction => instruction.GetOperand(0)));
+        Assert.Equal([true, false, true], host.GraphicsSmoothingChanges);
+    }
+
+    [Fact]
+    public void Execute_CompiledSmoothDoesNotChangeLogicalPointColor()
+    {
+        const string text = "SCREEN 1\nPSET (10, 10), 7\nPRINT POINT(10, 10)\nSMOOTH ON\nPRINT POINT(10, 10)";
+        var host = new TestRuntimeHost();
+
+        var (_, _, result) = ExecuteProgram(text, host);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(["7", "7"], host.Output);
+    }
+
+    [Fact]
     public void Execute_CompiledCanvasImageAndSpriteUseModernGraphicsHost()
     {
         const string text = """
@@ -7251,6 +7278,8 @@ END FUNCTION
 
         public List<(long Width, long Height)> CanvasActivations { get; } = [];
 
+        public List<bool> GraphicsSmoothingChanges { get; } = [];
+
         public List<int> FrameClears { get; } = [];
 
         public List<DrawRectCall> DrawRects { get; } = [];
@@ -7418,6 +7447,8 @@ END FUNCTION
             ResetTextViewport();
             CanvasActivations.Add((width, height));
         }
+
+        public void SetGraphicsSmoothing(bool enabled) => GraphicsSmoothingChanges.Add(enabled);
 
         public void BeginFrame()
         {

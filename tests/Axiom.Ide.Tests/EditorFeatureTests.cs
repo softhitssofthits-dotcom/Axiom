@@ -27,7 +27,7 @@ public sealed class EditorFeatureTests
         Assert.Contains("Present(PresentSyncInterval, PresentFlags.None)", renderer, StringComparison.Ordinal);
         Assert.Contains("UpdateSubresource", renderer, StringComparison.Ordinal);
         Assert.Contains("PresentFrame(ScreenFramebufferSnapshot", renderer, StringComparison.Ordinal);
-        Assert.Contains("ScaleFramePixels", renderer, StringComparison.Ordinal);
+        Assert.Contains("DrawFrame", renderer, StringComparison.Ordinal);
     }
 
     [Fact]

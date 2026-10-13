@@ -35,6 +35,7 @@ public enum LoweredInstructionKind
     PauseMouseHandler,
     ResumeMouseHandler,
     Screen,
+    Smooth,
     Canvas,
     BeginFrame,
     Present,

@@ -117,6 +117,7 @@ public enum TokenKind
     SelectKeyword,
     SetMapTileKeyword,
     ScreenKeyword,
+    SmoothKeyword,
     SleepKeyword,
     RandomizeKeyword,
     AndAlsoKeyword,

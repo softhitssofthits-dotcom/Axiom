@@ -7202,6 +7202,18 @@ VIEWPORT
         Assert.Null(viewport.BottomExpression);
     }
 
+    [Theory]
+    [InlineData("SMOOTH ON", true)]
+    [InlineData("SMOOTH OFF", false)]
+    public void Bind_SmoothStatement(string source, bool expectedEnabled)
+    {
+        var program = BindProgram(source, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = Assert.IsType<BoundSmoothStatement>(Assert.Single(program.GlobalStatements));
+        Assert.Equal(expectedEnabled, statement.Enabled);
+    }
+
     [Fact]
     public void Bind_ViewportRectangleStatement()
     {

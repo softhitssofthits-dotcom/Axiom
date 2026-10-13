@@ -134,7 +134,7 @@ class AxiomIDE {
   // Monarch dictionaries come from `axiom metadata` (the language registry of the CLI).
   // Embedded lists below are only a fallback when axiom.exe is missing or broken.
   static FALLBACK_DICTS = {
-    keywords: ['AND','APPEND','AS','BEGINFRAME','BYREF','BYVAL','CAMERA','CANVAS','CASE','CATCH','CIRCLE','CLOSE','CLS','COLOR','CONST','CONTINUE','DIM','DO','DRAW','DRAWCIRCLE','DRAWIMAGE','DRAWLINE','DRAWRECT','DRAWSPRITE','DRAWTILE','DRAWTILELAYER','DRAWTILEMAP','DRAWTEXT','ELSE','ELSEIF','END','ERROR','EQV','ERASE','EXIT','FALSE','TRUE','FILLCIRCLE','FILLRECT','FINALLY','FOR','FUNCTION','GET','IF','IMP','INPUT','IS','KEY','LINE','LOCATE','LOOP','MOD','MOUSE','NEXT','NOT','OFF','ON','OPEN','OR','OUTPUT','PAINT','PALETTE','PCOPY','PRESERVE','PRESENT','PRESET','PRINT','PSET','PUT','REDIM','RESETCAMERA','RETURN','SCREEN','SELECT','SELF','SETMAPTILE','SLEEP','STEP','STOP','SUB','THEN','TO','TRANSPARENT','TRY','TYPE','UNTIL','USING','VIEW','VIEWPORT','WHILE','WINDOW','XOR'],
+    keywords: ['AND','APPEND','AS','BEGINFRAME','BYREF','BYVAL','CAMERA','CANVAS','CASE','CATCH','CIRCLE','CLOSE','CLS','COLOR','CONST','CONTINUE','DIM','DO','DRAW','DRAWCIRCLE','DRAWIMAGE','DRAWLINE','DRAWRECT','DRAWSPRITE','DRAWTILE','DRAWTILELAYER','DRAWTILEMAP','DRAWTEXT','ELSE','ELSEIF','END','ERROR','EQV','ERASE','EXIT','FALSE','TRUE','FILLCIRCLE','FILLRECT','FINALLY','FOR','FUNCTION','GET','IF','IMP','INPUT','IS','KEY','LINE','LOCATE','LOOP','MOD','MOUSE','NEXT','NOT','OFF','ON','OPEN','OR','OUTPUT','PAINT','PALETTE','PCOPY','PRESERVE','PRESENT','PRESET','PRINT','PSET','PUT','REDIM','RESETCAMERA','RETURN','SCREEN','SELECT','SELF','SETMAPTILE','SMOOTH','SLEEP','STEP','STOP','SUB','THEN','TO','TRANSPARENT','TRY','TYPE','UNTIL','USING','VIEW','VIEWPORT','WHILE','WINDOW','XOR'],
     typeNames: ['BOOLEAN','DATE','DATETIME','DECIMAL','DOUBLE','FILE','IMAGE','INTEGER','LONG','SPRITE','STRING','TILEMAP','TILESET','TIME'],
     builtins: ['ABS','ASC','CHR','DATE','DATEADD','DATEDIFF','DAY','EOF','EXP','FILEEXISTS','FLOOR','INSTR','INT','JOIN','LCASE','LEFT','LEN','LOG','LTRIM','MID','MIN','MAX','MONTH','NOW','POW','READFILE','REPLACE','RGB','RIGHT','RND','ROUND','SGN','SIN','SQR','STR','SUBSTRCOUNT','TAN','TIME','TIMER','TRIM','TYPE','UCASE','VAL','WEEKDAY','WRITEFILE','YEAR'],
   };
@@ -257,6 +257,7 @@ class AxiomIDE {
 
     monaco.editor.defineTheme('axiom-light', {
       base: 'vs', inherit: true, semanticHighlighting: true,
+      semanticTokenColors: { keyword: '#0000ff' },
       rules: [
         { token: 'comment', foreground: '6a9955', fontStyle: 'italic' },
         { token: 'string', foreground: 'a31515' },
@@ -288,6 +289,7 @@ class AxiomIDE {
 
     monaco.editor.defineTheme('axiom-dark', {
       base: 'vs-dark', inherit: true, semanticHighlighting: true,
+      semanticTokenColors: { keyword: '#c586c0' },
       rules: [
         { token: 'comment', foreground: '6a9955', fontStyle: 'italic' },
         { token: 'string', foreground: 'ce9178' },
@@ -319,6 +321,7 @@ class AxiomIDE {
 
     monaco.editor.defineTheme('axiom-basic', {
       base: 'vs-dark', inherit: true, semanticHighlighting: true,
+      semanticTokenColors: { keyword: '#FFFF55' },
       rules: [
         { token: 'comment', foreground: 'B8C7E8', fontStyle: 'italic' },
         { token: 'keyword', foreground: 'FFFF55' },

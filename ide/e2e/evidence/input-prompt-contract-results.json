@@ -1,0 +1,16 @@
+[
+  {
+    "id": "input-prompt-separators",
+    "spec": "input-prompts.spec.js",
+    "name": "INPUT: разделители приглашения, пустая строка и пунктуация",
+    "ms": 6803,
+    "passed": 7,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:56992/b979f7eb-163c-4064-ba22-1f34287aa034\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

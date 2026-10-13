@@ -67,7 +67,8 @@ internal sealed class FramePipe : IDisposable
                 var snapshot = frame.Snapshot;
                 byte[] header = JsonSerializer.SerializeToUtf8Bytes(new { frameId = id, frame.SessionId,
                     surfaceId = frame.SessionId + ":canvas", width = snapshot.Width, height = snapshot.Height,
-                    stride = checked(snapshot.Width * 4), format = "BGRA8", byteLength = checked(snapshot.BgraPixels.Length * 4) },
+                    stride = checked(snapshot.Width * 4), format = "BGRA8", byteLength = checked(snapshot.BgraPixels.Length * 4),
+                    smooth = snapshot.Smooth },
                     new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
                 byte[] size = new byte[4]; BinaryPrimitives.WriteUInt32LittleEndian(size, (uint)header.Length);
                 await _pipe.WriteAsync(size, _closed.Token);

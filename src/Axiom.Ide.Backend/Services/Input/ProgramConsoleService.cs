@@ -236,6 +236,9 @@ public sealed partial class ProgramConsoleService : ViewModelBase, IProgramConso
     public void ActivateCanvas(long width, long height) =>
         _graphicsHostService.ActivateCanvas(width, height);
 
+    public void SetGraphicsSmoothing(bool enabled) =>
+        _graphicsHostService.SetGraphicsSmoothing(enabled);
+
     public void DeactivateScreen() =>
         _graphicsHostService.DeactivateScreen();
 
@@ -310,6 +313,9 @@ public sealed partial class ProgramConsoleService : ViewModelBase, IProgramConso
 
     public int GetAbsolutePixel(long x, long y) =>
         _graphicsHostService.GetAbsolutePixel(x, y);
+
+    public int[]? CaptureAbsolutePixels(long x, long y, int width, int height) =>
+        _graphicsHostService.CaptureAbsolutePixels(x, y, width, height);
 
     public void DrawLine(long x1, long y1, long x2, long y2, int color, GraphicsLineKind kind) =>
         _graphicsHostService.DrawLine(x1, y1, x2, y2, color, kind);

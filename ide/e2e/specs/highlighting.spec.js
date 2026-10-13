@@ -5,23 +5,24 @@ module.exports = [{ id: 'highlight-punctuation-and-maze', name: 'Пунктуа�
   const sample = require('fs').readFileSync(require('path').join(ROOT, 'samples/graphics/game/maze_chase.axm'), 'utf8');
   const result = await S.page.evaluate(source => {
     const m = window.__ide.monaco;
-    const text = 'SUB DrawWalls(firstRow AS INTEGER, lastRow AS INTEGER)\nDRAWIMAGE image, 0, 0 : PRINT 1; 2 \' Комментарий\nPRINT $"{RGB(1, 2, 3)}"';
+    const text = 'SMOOTH ON\nSMOOTH OFF\nSUB DrawWalls(firstRow AS INTEGER, lastRow AS INTEGER)\nDRAWIMAGE image, 0, 0 : PRINT 1; 2 \' Комментарий\nPRINT $"{RGB(1, 2, 3)}"';
     const meta = window.__ide.langMeta;
     return {
       lines: m.editor.tokenize(text, 'axiom'),
       maze: m.editor.tokenize(source, 'axiom').length,
-      metadata: { keyword: meta?.keywords?.includes('PRINT'), type: meta?.typeNames?.includes('INTEGER'), builtin: meta?.builtins?.some(b => b.name === 'RGB') },
+      metadata: { keyword: meta?.keywords?.includes('PRINT'), smooth: meta?.keywords?.includes('SMOOTH'), type: meta?.typeNames?.includes('INTEGER'), builtin: meta?.builtins?.some(b => b.name === 'RGB') },
     };
   }, sample);
-  C.ok(result.lines[0].some(t => t.type === 'type.axiom'), 'INTEGER распознан как тип');
-  C.ok(result.lines[1].some(t => t.type === 'keyword.axiom'), 'DRAWIMAGE и PRINT распознаны как операторы');
-  C.ok(result.lines[1].some(t => t.type === 'comment.axiom'), 'Комментарий после пунктуации окрашен');
-  C.ok(result.lines[2].some(t => t.type === 'support.function.axiom'), 'Функция внутри интерполяции распознана');
+  C.ok(result.lines[0].some(t => t.type === 'keyword.axiom') && result.lines[1].some(t => t.type === 'keyword.axiom'), 'Оператор SMOOTH и его обе формы ON/OFF распознаны');
+  C.ok(result.lines[2].some(t => t.type === 'type.axiom'), 'INTEGER распознан как тип');
+  C.ok(result.lines[3].some(t => t.type === 'keyword.axiom'), 'DRAWIMAGE и PRINT распознаны как операторы');
+  C.ok(result.lines[3].some(t => t.type === 'comment.axiom'), 'Комментарий после пунктуации окрашен');
+  C.ok(result.lines[4].some(t => t.type === 'support.function.axiom'), 'Функция внутри интерполяции распознана');
   C.eq(result.maze, sample.split(/\r?\n/).length, 'Весь maze_chase разобран без ошибки подсветки');
-  C.ok(result.metadata.keyword && result.metadata.type && result.metadata.builtin, 'Операторы, типы и функции соответствуют реестру language metadata');
+  C.ok(result.metadata.keyword && result.metadata.smooth && result.metadata.type && result.metadata.builtin, 'Операторы, типы и функции соответствуют реестру language metadata');
   await S.page.evaluate(() => {
     const i = window.__ide; i.settings.formatOnBlur = false; i.settings.checkOnChange = false;
-    i.editor.getModel().setValue('DIM count AS INTEGER = 7 : PRINT RGB(1, 2, 3), "текст" \' Комментарий');
+    i.editor.getModel().setValue('SMOOTH ON\nDIM count AS INTEGER = 7 : PRINT RGB(1, 2, 3), "текст" \' Комментарий');
   });
   for (const [theme, typeColor, keywordColor, functionColor, stringColor, commentColor, operatorColor] of [
     ['dark', 'rgb(78, 201, 176)', 'rgb(197, 134, 192)', 'rgb(220, 220, 170)', 'rgb(206, 145, 120)', 'rgb(106, 153, 85)', 'rgb(230, 155, 200)'],
@@ -30,6 +31,7 @@ module.exports = [{ id: 'highlight-punctuation-and-maze', name: 'Пунктуа�
   ]) {
     await S.page.evaluate(t => window.__ide.setTheme(t), theme);
     await S.page.waitForFunction(expected => [...document.querySelectorAll('.view-lines span')].some(s => s.textContent.trim() === 'INTEGER' && getComputedStyle(s).color === expected), typeColor);
+    C.ok(await S.page.evaluate(expected => [...document.querySelectorAll('.view-lines span')].some(s => s.textContent.trim() === 'SMOOTH' && getComputedStyle(s).color === expected), keywordColor), 'SMOOTH сохраняет цвет ключевого слова в теме ' + theme);
     C.ok(await S.page.evaluate(expected => [...document.querySelectorAll('.view-lines span')].some(s => s.textContent.trim() === 'DIM' && getComputedStyle(s).color === expected), keywordColor), 'Операторы имеют свой цвет в теме ' + theme);
     C.ok(await S.page.evaluate(expected => [...document.querySelectorAll('.view-lines span')].some(s => s.textContent.trim() === 'RGB' && getComputedStyle(s).color === expected), functionColor), 'Встроенная функция имеет свой цвет в теме ' + theme);
     C.ok(await S.page.evaluate(expected => [...document.querySelectorAll('.view-lines span')].some(s => s.textContent.includes('текст') && getComputedStyle(s).color === expected), stringColor), 'Строка имеет свой цвет в теме ' + theme);

@@ -104,6 +104,10 @@ public interface IGraphicsHost
     {
     }
 
+    void SetGraphicsSmoothing(bool enabled)
+    {
+    }
+
     void BeginFrame()
     {
     }
@@ -241,6 +245,9 @@ public interface IGraphicsHost
     }
 
     int GetAbsolutePixel(long x, long y) => 0;
+
+    // Необязательное чтение области одним запросом. null сохраняет прежний путь хоста.
+    int[]? CaptureAbsolutePixels(long x, long y, int width, int height) => null;
 
     void SetPixel(long x, long y, int color)
     {

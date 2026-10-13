@@ -361,6 +361,30 @@ public sealed class ParserTests
         Assert.Equal(10, Assert.IsType<int>(mode.LiteralToken.Value));
     }
 
+    [Theory]
+    [InlineData("SMOOTH ON", true)]
+    [InlineData("SMOOTH OFF", false)]
+    public void Parse_SmoothStatement(string source, bool expectedEnabled)
+    {
+        var program = ParseProgram(source, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var statement = AssertGlobalStatement<SmoothStatementSyntax>(program);
+        Assert.Equal(expectedEnabled, statement.Enabled);
+        Assert.Equal(expectedEnabled ? SyntaxKind.OnKeyword : SyntaxKind.OffKeyword, statement.ModeKeyword.Kind);
+    }
+
+    [Theory]
+    [InlineData("SMOOTH", "MB1001")]
+    [InlineData("SMOOTH MAYBE", "MB1001")]
+    [InlineData("SMOOTH ON 1", "MB1004")]
+    public void Parse_ReportsInvalidSmoothForms(string source, string expectedCode)
+    {
+        ParseProgram(source, out var diagnostics);
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == expectedCode);
+    }
+
     [Fact]
     public void Parse_ScreenStatementSupportsPages()
     {

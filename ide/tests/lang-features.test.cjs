@@ -37,13 +37,19 @@ function providers(source, hovers = []) {
           return {word: match[0], startColumn: match.index + 1, endColumn: match.index + match[0].length + 1};
       return null;
     },
+    getWordUntilPosition(p) {
+      const prefix = this.getLineContent(p.lineNumber).slice(0, p.column - 1);
+      const match = prefix.match(/[A-Za-z_]\w*$/);
+      const startColumn = match ? p.column - match[0].length : p.column;
+      return {word: match?.[0] || '', startColumn, endColumn: p.column};
+    },
     getValueInRange: r => model.getLineContent(r.startLineNumber).slice(r.startColumn - 1, r.endColumn - 1),
   };
   const runtime = {window: {}, document: {querySelectorAll: () => []}};
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/renderer/locale.js'), 'utf8'), runtime);
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/renderer/lang-features.js'), 'utf8'), runtime);
   const features = runtime.window.LangFeatures;
-  const meta = {keywords: ['PRINT'], typeNames: ['DECIMAL'], builtins: [
+  const meta = {keywords: ['PRINT', 'SMOOTH'], typeNames: ['DECIMAL'], builtins: [
     {name: 'LEN', params: [{name: 'text', type: 'STRING'}], returnType: 'INTEGER'},
     {name: 'LEN', params: [{name: 'text', type: 'STRING'}, {name: 'unit', type: 'STRING'}], returnType: 'INTEGER'},
     {name: 'LEFT', params: [{name: 'text', type: 'STRING'}, {name: 'count', type: 'INTEGER'}], returnType: 'STRING'},
@@ -57,6 +63,14 @@ function providers(source, hovers = []) {
   return {model, features, requests: () => requests, edit: value => {source = value; version++;},
     markers: value => {markers = value;}, language: locale => vm.runInNewContext(`I18N.setLocale('${locale}')`, runtime)};
 }
+
+test('Ключевое слово SMOOTH доступно в редакторе как оператор, а не имя программы', async () => {
+  const p = providers('SMOOTH ON');
+  const hover = await p.features._hoverProvider.provideHover(p.model, {lineNumber: 1, column: 2});
+  assert.match(hover.contents[0].value, /ключевое слово/);
+  const suggestions = p.features._completionProvider.provideCompletionItems(p.model, {lineNumber: 1, column: 8}).suggestions;
+  assert.ok(suggestions.some(item => item.label === 'SMOOTH'));
+});
 
 test('Подсказка использует тип компилятора и обновляет кеш после правки', async () => {
   const symbols = [{start: 6, length: 5, name: 'price', kind: 'variable', type: 'DECIMAL'}];

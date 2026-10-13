@@ -2,6 +2,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { Session, ROOT } = require('./helpers');
+const { nativeCanvas } = require('./native-canvas');
 const output = path.join(ROOT, '.artifacts', 'samples-electron');
 const sandbox = path.join(output, 'workspace');
 fs.mkdirSync(sandbox, { recursive: true });
@@ -67,12 +68,12 @@ async function main() {
             await session.page.evaluate(async value => await window.__ide.execution.input(value + '\r'), value);
             result.inputs.push(value); inputCount++;
           }
-          const canvas = (await session.electronApp.windows()).find(p => p.url().endsWith('/canvas.html'));
+          const canvas = await session.page.evaluate(() => window.__ide.execution.surface?.kind === 'canvas' && window.__ide.execution.surface.windowVisible);
           if (process.argv[4] !== 'manual' && Date.now() - started > 800 && Date.now() - lastKeyAt > 650 && !state.request) {
             const sequence = /canonical_aliases/.test(file) ? ['Control+PageUp'] : /held_modifiers|modified_keypress/.test(file) ? ['Control+ArrowLeft'] :
               /chord_handler/.test(file) ? ['Control+ArrowLeft','Escape'] : ['ArrowLeft','ArrowLeft','Space','Escape'];
             const key = sequence[Math.min(keyIndex++, sequence.length-1)];
-            if (canvas) await canvas.keyboard.press(key,{delay:100});
+            if (canvas && !key.includes('+')) (await nativeCanvas(session)).pressKey(key);
             else { await session.page.locator('.xterm-helper-textarea').focus(); await session.page.keyboard.press(key,{delay:100}); }
             result.keys.push(key); lastKeyAt = Date.now();
           }
@@ -87,18 +88,15 @@ async function main() {
         result.finished = [...result.events].reverse().find(e => e.event === 'execution.finished')?.payload;
         const nativeSurfaces = result.events.filter(e=>e.event==='graphics.surface' && e.payload.kind==='screen' && e.payload.windowHandle!=='0');
         if (nativeSurfaces.length) result.screenVisible = nativeSurfaces.some(e=>e.payload.windowVisible===true);
-        const canvasPage = (await session.electronApp.windows()).find(p => p.url().endsWith('/canvas.html'));
-        if (canvasPage) {
+        const canvasVisible = await session.page.evaluate(() => window.__ide.execution.surface?.kind === 'canvas' && window.__ide.execution.surface.windowVisible);
+        if (canvasVisible) {
+          const canvasPage = await nativeCanvas(session);
           const shots = path.join(output,'shots'); fs.mkdirSync(shots,{recursive:true});
           const shot = result.path.replace(/[^A-Za-z0-9_-]/g,'_') + '.png';
-          await canvasPage.screenshot({path:path.join(shots,shot)});
+          const captured = canvasPage.capture(path.join(shots,shot));
           result.canvasScreenshot = 'shots/' + shot;
-          result.canvas = await canvasPage.evaluate(() => {
-            const c = document.getElementById('program-canvas');
-            const pixels = c.getContext('2d').getImageData(0,0,c.width,c.height).data;
-            let opaque = 0; for(let i=3;i<pixels.length;i+=4) if(pixels[i])opaque++;
-            return {width:c.width,height:c.height,opaquePixels:opaque};
-          });
+          result.canvas = { width:canvasPage.width, height:canvasPage.height,
+            nativeWidth:captured.width, nativeHeight:captured.height, windowHandle:canvasPage.hwnd };
         }
         result.markers = await session.page.evaluate(() => {
           const ide = window.__ide;

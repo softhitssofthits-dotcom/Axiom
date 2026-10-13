@@ -31,6 +31,7 @@ public sealed partial class Parser
             SyntaxKind.SleepKeyword => ParseSleepStatement(),
             SyntaxKind.RandomizeKeyword => ParseRandomizeStatement(),
             SyntaxKind.ScreenKeyword => ParseScreenStatement(),
+            SyntaxKind.SmoothKeyword => ParseSmoothStatement(),
             SyntaxKind.CanvasKeyword => ParseCanvasStatement(),
             SyntaxKind.BeginFrameKeyword => new BeginFrameStatementSyntax(Match(SyntaxKind.BeginFrameKeyword, "BEGINFRAME")),
             SyntaxKind.PresentKeyword => new PresentStatementSyntax(Match(SyntaxKind.PresentKeyword, "PRESENT")),
@@ -310,6 +311,25 @@ public sealed partial class Parser
         var minusToken = Match(SyntaxKind.MinusToken, "'-' между углами VIEWPORT");
         var bottomRightPoint = ParseGraphicsPoint();
         return new ViewportStatementSyntax(viewportKeyword, topLeftPoint, minusToken, bottomRightPoint);
+    }
+
+    private SmoothStatementSyntax ParseSmoothStatement()
+    {
+        var smoothKeyword = Match(SyntaxKind.SmoothKeyword, "SMOOTH");
+        var modeKeyword = Current.Kind is SyntaxKind.OnKeyword or SyntaxKind.OffKeyword
+            ? NextToken()
+            : Match(SyntaxKind.OnKeyword, "ON или OFF после SMOOTH");
+
+        if (!IsStatementTerminator(Current.Kind))
+        {
+            ReportUnexpectedToken(Current, "После ON или OFF ожидается конец оператора SMOOTH");
+            while (Current.Kind is not (SyntaxKind.NewLineToken or SyntaxKind.EndOfFileToken))
+            {
+                NextToken();
+            }
+        }
+
+        return new SmoothStatementSyntax(smoothKeyword, modeKeyword, modeKeyword.Kind == SyntaxKind.OnKeyword);
     }
 
     private ResetCameraStatementSyntax ParseResetCameraStatement()

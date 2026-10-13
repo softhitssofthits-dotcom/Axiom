@@ -44,7 +44,13 @@ internal sealed class DesktopHost : IDisposable
     {
         _application = application;
         _console = new ProgramConsoleService(dispatcher: application.Dispatcher);
-        _console.GraphicsHost.UseNativeCanvasWindow = false;
+        _console.GraphicsHost.UseNativeCanvasWindow = true;
+        _console.GraphicsHost.UseGpuCanvas = true;
+        _console.GraphicsHost.GraphicsError += message =>
+        {
+            Event("graphics.error", new { code = "GRAPHICS_DEVICE_ERROR", message });
+            Cancel();
+        };
         _runner = new ProgramRunService(new AxiomExecutionPipeline(), _console);
         _outputTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(50), DispatcherPriority.Background,
             (_, _) => PublishOutput(), application.Dispatcher);
@@ -63,8 +69,11 @@ internal sealed class DesktopHost : IDisposable
                     state = _console.IsScreenOutputActive || _console.IsCanvasActive ? "changed" : "closed",
                     logicalWidth = _console.ScreenWidth, logicalHeight = _console.ScreenHeight,
                     windowHandle = _console.ScreenWindowHandle.ToInt64().ToString(),
-                    windowVisible = _console.GraphicsHost.ScreenWindowVisible });
-                if (_console.IsCanvasActive && _console.GraphicsFrame is { } frame) _frames?.Publish(_sessionId!, frame);
+                    windowVisible = _console.GraphicsHost.ScreenWindowVisible,
+                    graphicsDriver = _console.GraphicsHost.CanvasGraphicsDriver,
+                    smooth = _console.GraphicsHost.GraphicsSmoothingEnabled });
+                if (_console.IsCanvasActive && !_console.GraphicsHost.UseNativeCanvasWindow && _console.GraphicsFrame is { } frame)
+                    _frames?.Publish(_sessionId!, frame);
             }
             if (e.PropertyName != nameof(ProgramConsoleService.IsWaitingForInput) || _sessionId is null) return;
             if (_console.IsWaitingForInput)
@@ -341,6 +350,7 @@ internal sealed class DesktopHost : IDisposable
         _cancel?.Cancel();
         _inputRequestId = null;
         if (_console.IsWaitingForInput) _console.CancelPendingInput();
+        if (_console.IsCanvasActive) _console.DeactivateScreen();
         if (_debugger is not null && !_working)
         {
             _debugger = null;

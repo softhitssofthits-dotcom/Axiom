@@ -1,5 +1,6 @@
 const { testWorkspace, writeAxm, ROOT } = require('../helpers');
 const path = require('node:path');
+const { nativeCanvas } = require('../native-canvas');
 async function open(S, source, tag) {
   const file = writeAxm(testWorkspace(tag), 'программа.axm', source);
   await S.launch(); await S.stubOpenDialog([file]);
@@ -14,44 +15,43 @@ module.exports = [
     await S.page.evaluate(() => window.__ide.handleAction('open'));
     await S.page.waitForFunction(p => window.__ide.activeFile === p, file);
     await S.page.evaluate(() => window.__ide.run());
-    let page;
-    for (let i=0;i<200;i++) { page=(await S.electronApp.windows()).find(p=>p.url().endsWith('/canvas.html')); if(page)break;await S.page.waitForTimeout(50); }
-    if (!page) throw new Error('Maze Chase не открыл холст');
-    await page.waitForFunction(() => document.getElementById('program-canvas').width === 1024);
-    const playerX = () => page.evaluate(() => {
-      const d=document.getElementById('program-canvas').getContext('2d').getImageData(0,30,1024,630).data;
+    const page = await nativeCanvas(S);
+    C.eq(page.width, 1024, 'Maze Chase открыл нативную логическую поверхность');
+    const playerX = () => {
+      const frame = page.capture(), bounds = page.bounds(frame), d=frame.data;
       let sum=0, count=0;
-      for(let i=0;i<d.length;i+=4) if(d[i]>200 && d[i+1]>170 && d[i+2]<70) { sum+=(i/4)%1024;count++; }
+      for(let y=bounds.y;y<bounds.y+bounds.height;y++) for(let x=bounds.x;x<bounds.x+bounds.width;x++) {
+        const logicalY=(y-bounds.y)*page.height/bounds.height, i=(y*frame.width+x)*4;
+        if(logicalY>=30 && logicalY<660 && d[i+2]>200 && d[i+1]>170 && d[i]<70) { sum+=(x-bounds.x)*page.width/bounds.width;count++; }
+      }
       return count ? sum/count : null;
-    });
+    };
     let before;
-    for(let i=0;i<100;i++){before=await playerX();if(before!==null)break;await page.waitForTimeout(50);}
+    for(let i=0;i<30;i++){before=playerX();if(before!==null)break;await S.page.waitForTimeout(50);}
     C.ok(before!==null, 'Герой найден по жёлтым пикселям в стартовом коридоре');
-    await page.keyboard.down('ArrowRight');
+    page.key('down', 'ArrowRight');
     let after=before;
-    for(let i=0;i<100;i++){after=await playerX();if(after!==null && after>before+12)break;await page.waitForTimeout(50);}
-    await page.keyboard.up('ArrowRight');
+    for(let i=0;i<30;i++){after=playerX();if(after!==null && after>before+12)break;await S.page.waitForTimeout(50);}
+    page.key('up', 'ArrowRight');
     C.ok(after!==null && after>before+12, `Стрелка переместила героя: ${before} → ${after}`);
     await page.close(); await S.waitIdle(); await S.page.waitForTimeout(300);
-    C.eq((await S.electronApp.windows()).filter(p=>p.url().endsWith('/canvas.html')).length, 0, 'После закрытия игры второе окно не появляется');
+    C.eq(page.exists(), false, 'После закрытия игры нативное окно уничтожено');
     C.eq(await S.page.locator('#diagnostics-content .diagnostic-icon.error').count(), 0, 'Игра остановлена без ошибок; предупреждения о переменных допустимы');
   } },
   { id: 'backend-canvas-keyboard', name: 'Клавиши CANVAS, отпускание, потеря фокуса и закрытие', async fn({ S, C }) {
     await open(S, 'CANVAS 16, 12\nDO\nBEGINFRAME\nIF KEYDOWN("RIGHT") THEN\nCLS RGB(255, 0, 0)\nELSE\nCLS RGB(0, 255, 0)\nEND IF\nIF KEYPRESS("SPACE") THEN\nPRINT "Пауза"\nEND IF\nPRESENT\nSLEEP 10\nLOOP\n', 'canvas-keyboard');
     await S.page.evaluate(() => window.__ide.run());
-    let page;
-    for (let i=0;i<100;i++) { page=(await S.electronApp.windows()).find(p=>p.url().endsWith('/canvas.html')); if(page)break;await S.page.waitForTimeout(50); }
-    if (!page) throw new Error('Нет окна CANVAS');
-    const color = channel => page.waitForFunction(c => document.getElementById('program-canvas').getContext('2d').getImageData(0,0,1,1).data[c] === 255, channel);
-    await color(1); await page.keyboard.down('ArrowRight'); await color(0);
+    const page = await nativeCanvas(S);
+    const color = channel => page.wait(() => page.pixel(0, 0)[channel] === 255);
+    await color(1); page.key('down', 'ArrowRight'); await color(0);
     C.ok(true, 'KEYDOWN видит удерживаемую стрелку');
-    await page.keyboard.up('ArrowRight'); await color(1); C.ok(true, 'KEYUP отпускает стрелку');
-    await page.keyboard.press('Space'); await S.waitConsole('Пауза'); C.ok(true, 'KEYPRESS получает SPACE');
-    await page.keyboard.down('ArrowRight'); await color(0);
-    await page.evaluate(() => window.dispatchEvent(new Event('blur'))); await color(1);
+    page.key('up', 'ArrowRight'); await color(1); C.ok(true, 'KEYUP отпускает стрелку');
+    page.pressKey('Space'); await S.waitConsole('Пауза'); C.ok(true, 'KEYPRESS получает SPACE');
+    page.key('down', 'ArrowRight'); await color(0);
+    page.action('blur'); await color(1);
     C.ok(true, 'Уход фокуса сбрасывает удерживаемую стрелку');
     await page.close(); await S.waitIdle(); await S.page.waitForTimeout(300);
-    C.eq((await S.electronApp.windows()).filter(p=>p.url().endsWith('/canvas.html')).length, 0, 'Поздние кадры не создают второе окно');
+    C.eq(page.exists(), false, 'Поздние кадры не восстанавливают закрытое нативное окно');
     C.eq((await S.diagnosticItems()).length, 0, 'Закрытие без ошибки');
   } },
   { id: 'backend-input-stop-and-repeat', name: 'Отмена INPUT и чистый повтор', async fn({ S, C }) {
@@ -76,18 +76,12 @@ module.exports = [
   { id: 'backend-canvas-present-pixel', name: 'Настоящее отдельное окно CANVAS, пиксели и закрытие', async fn({ S, C }) {
     await open(S, 'CANVAS 16, 12\nBEGINFRAME\nCLS RGB(255, 0, 0)\nPRESENT\nDO\nLOOP\n', 'backend-canvas');
     await S.page.evaluate(() => window.__ide.run());
-    let canvasPage;
-    await S.page.waitForFunction(() => window.__ide.execution.surface?.kind === 'canvas');
-    for (let i = 0; i < 100; i++) {
-      canvasPage = (await S.electronApp.windows()).find(p => p.url().endsWith('/canvas.html'));
-      if (canvasPage) break;
-      await S.page.waitForTimeout(50);
-    }
-    if (!canvasPage) throw new Error('Нет отдельного окна CANVAS');
-    await canvasPage.waitForFunction(() => document.getElementById('program-canvas').getContext('2d').getImageData(0,0,1,1).data[0] === 255);
-    C.eq(await canvasPage.evaluate(() => [...document.getElementById('program-canvas').getContext('2d').getImageData(0,0,1,1).data].join(',')), '255,0,0,255', 'Настоящий BGRA кадр преобразован в RGBA');
+    const canvasPage = await nativeCanvas(S);
+    await canvasPage.wait(() => canvasPage.pixel(0, 0)[0] === 255);
+    C.eq(canvasPage.pixel(0, 0).join(','), '255,0,0,255', 'Нативное окно показывает правильный красный пиксель');
     C.eq(await S.page.locator('#program-canvas').count(), 0, 'Кадр отсутствует в консоли');
-    C.ok((await canvasPage.evaluate(() => innerWidth)) > 1000, 'Большое отдельное окно');
+    const nativeSize = canvasPage.action('size');
+    C.ok(nativeSize.width >= 750 && nativeSize.height >= 550, 'Отдельное окно удобно для маленькой логической поверхности', JSON.stringify(nativeSize));
     await canvasPage.close(); await S.waitIdle(); await S.waitStatus('Остановлено');
     C.eq((await S.diagnosticItems()).length, 0, 'Закрытие окна отменяет VM без ошибки');
 
@@ -95,17 +89,14 @@ module.exports = [
   { id: 'backend-canvas-finished-frame', name: 'Последний кадр завершённой программы и повторный запуск', async fn({ S, C }) {
     await open(S, 'CANVAS 16, 12\nBEGINFRAME\nCLS RGB(0, 255, 0)\nPRESENT\nPRINT 42\n', 'backend-canvas-finished');
     await S.page.evaluate(() => window.__ide.run()); await S.waitIdle(); await S.waitConsole('42');
-    let page;
-    for (let i=0;i<100;i++) { page=(await S.electronApp.windows()).find(p=>p.url().endsWith('/canvas.html')); if(page)break;await S.page.waitForTimeout(50); }
-    if(!page)throw new Error('Последний кадр потерян после finished');
-    await page.waitForFunction(()=>document.getElementById('program-canvas').getContext('2d').getImageData(0,0,1,1).data[1]===255);
+    const page = await nativeCanvas(S);
+    await page.wait(() => page.pixel(0, 0)[1] === 255);
     C.ok(true,'Последний зелёный кадр остаётся после завершения');
     await S.page.evaluate(() => window.__ide.run()); await S.waitIdle();
-    let replacement;
-    for(let i=0;i<100;i++){replacement=(await S.electronApp.windows()).find(p=>p.url().endsWith('/canvas.html'));if(replacement)break;await S.page.waitForTimeout(50);}
-    if(!replacement)throw new Error('Повтор не открыл окно последнего кадра');
-    await replacement.waitForFunction(()=>document.getElementById('program-canvas').getContext('2d').getImageData(0,0,1,1).data[1]===255);
-    C.eq((await S.electronApp.windows()).filter(p=>p.url().endsWith('/canvas.html')).length,1,'Повтор заменяет прежнее окно');
+    const replacement = await nativeCanvas(S);
+    await replacement.wait(() => replacement.pixel(0, 0)[1] === 255);
+    C.ok(replacement.exists(), 'Повтор открыл нативное окно последнего кадра');
+    C.eq((await S.electronApp.windows()).filter(p=>p.url().endsWith('/canvas.html')).length,0,'CANVAS не создаёт дополнительное окно Electron');
   } },
   { id: 'backend-debug-step-and-continue', name: 'Пауза, шаг и продолжение в Electron', async fn({ S, C }) {
     await open(S, 'DIM value AS INTEGER = 4\nvalue = value + 1\nPRINT value\n', 'backend-debug');

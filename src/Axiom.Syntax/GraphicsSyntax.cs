@@ -70,6 +70,26 @@ public sealed class CanvasStatementSyntax : StatementSyntax
     public ExpressionSyntax HeightExpression { get; }
 }
 
+public sealed class SmoothStatementSyntax : StatementSyntax
+{
+    public SmoothStatementSyntax(SyntaxToken smoothKeyword, SyntaxToken modeKeyword, bool enabled)
+    {
+        ArgumentNullException.ThrowIfNull(smoothKeyword);
+        ArgumentNullException.ThrowIfNull(modeKeyword);
+        SmoothKeyword = smoothKeyword;
+        ModeKeyword = modeKeyword;
+        Enabled = enabled;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.SmoothStatement;
+
+    public SyntaxToken SmoothKeyword { get; }
+
+    public SyntaxToken ModeKeyword { get; }
+
+    public bool Enabled { get; }
+}
+
 public sealed class BeginFrameStatementSyntax : StatementSyntax
 {
     public BeginFrameStatementSyntax(SyntaxToken beginFrameKeyword)

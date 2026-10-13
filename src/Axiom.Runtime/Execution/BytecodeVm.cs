@@ -869,6 +869,11 @@ public sealed partial class BytecodeVm
                 InvalidateReverseExecutionHistory();
                 break;
 
+            case Opcode.Smooth:
+                _host.SetGraphicsSmoothing(instruction.GetOperand(0) != 0);
+                InvalidateReverseExecutionHistory();
+                break;
+
             case Opcode.BeginFrame:
                 ExecuteBeginFrameInstruction(frame, instructionIndex);
                 InvalidateReverseExecutionHistory();

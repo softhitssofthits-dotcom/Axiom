@@ -7,6 +7,27 @@ async function open(S, source, tag) {
   return file;
 }
 module.exports = [
+  { id: 'format-smooth-two-styles', name: 'SMOOTH форматируется через меню и Enter в Classic и Modern', async fn({ S, C }) {
+    const source = 'smooth on\nsMoOtH oFf\nprint "smooth on"\n\' smooth off\n';
+    await open(S, source, 'format-smooth');
+    for (const [style, on, off, print] of [['Classic','SMOOTH ON','SMOOTH OFF','PRINT'], ['Modern','Smooth On','Smooth Off','Print']]) {
+      await S.page.evaluate(source => window.__ide.editor.getModel().setValue(source), source);
+      await S.page.locator('[data-menu="edit"] .menu-label').click();
+      await S.page.locator('#formatting-submenu .submenu-trigger').hover();
+      await S.page.locator('[data-action="format-' + style.toLowerCase() + '"]').click();
+      await S.page.waitForFunction(({style, on}) => window.__ide.settings.formattingStyle === style &&
+        !window.__ide._formatBusy && window.__ide.editor.getModel().getLineContent(1) === on, {style, on});
+      C.eq(await S.page.evaluate(() => window.__ide.editor.getValue().replace(/\r/g, '')),
+        `${on}\n${off}\n${print} "smooth on"\n' smooth off\n`, 'Обе формы SMOOTH, строки и комментарии в ' + style);
+      await S.page.evaluate(() => {
+        const i = window.__ide; i.editor.getModel().setValue('smooth on');
+        i.editor.setPosition({lineNumber:1, column:10}); i.editor.focus();
+      });
+      await S.page.keyboard.press('Enter');
+      await S.page.waitForFunction(on => window.__ide.editor.getModel().getLineContent(1) === on, on);
+      C.eq(await S.page.evaluate(() => window.__ide.editor.getModel().getLineContent(1)), on, 'Enter форматирует SMOOTH в ' + style);
+    }
+  } },
   { id: 'language-next-counter', name: 'NEXT проверяет имя счётчика и сохраняет диагностику в редакторе', async fn({ S, C }) {
     await open(S, 'FOR i = 1 TO 2\n    PRINT i\nNEXT wrong\n', 'next-counter');
     await S.page.evaluate(() => window.__ide.check(false));

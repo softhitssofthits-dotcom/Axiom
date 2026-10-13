@@ -16,6 +16,55 @@ public sealed class BytecodeModuleValidatorTests
         Assert.Empty(result.Diagnostics);
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public void Validate_SmoothWithBooleanOperand_Succeeds(int enabled)
+    {
+        var module = CreateValidModule(instructions:
+        [
+            new BytecodeInstruction(Opcode.Smooth, [enabled]),
+            new BytecodeInstruction(Opcode.Return)
+        ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Diagnostics);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(2)]
+    public void Validate_SmoothWithInvalidMode_ReturnsDiagnostic(int enabled)
+    {
+        var module = CreateValidModule(instructions:
+        [
+            new BytecodeInstruction(Opcode.Smooth, [enabled]),
+            new BytecodeInstruction(Opcode.Return)
+        ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "BC4125");
+    }
+
+    [Fact]
+    public void Validate_SmoothWithoutOperand_ReturnsDiagnostic()
+    {
+        var module = CreateValidModule(instructions:
+        [
+            new BytecodeInstruction(Opcode.Smooth),
+            new BytecodeInstruction(Opcode.Return)
+        ]);
+
+        var result = new BytecodeModuleValidator().Validate(module);
+
+        Assert.False(result.Succeeded);
+        Assert.NotEmpty(result.Diagnostics);
+    }
+
     [Fact]
     public void Validate_AddLongIntegerWithLongAndInteger_Succeeds()
     {

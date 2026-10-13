@@ -7,6 +7,17 @@ public sealed class CodeFormattingServiceTests
     private readonly AxiomCodeFormattingService _service = new();
 
     [Theory]
+    [InlineData(CodeFormattingStyle.Classic, "SMOOTH ON", "SMOOTH OFF")]
+    [InlineData(CodeFormattingStyle.Modern, "Smooth On", "Smooth Off")]
+    public void SmoothIsFormattedInBothStyles(CodeFormattingStyle style, string on, string off)
+    {
+        Assert.Equal(on, _service.FormatLine("smooth on", style));
+        Assert.Equal(off, _service.FormatLine("sMoOtH oFf", style));
+        Assert.Equal($"{on}\n{off}\nPRINT \"smooth on\"\n' smooth off\n".Replace("PRINT", style == CodeFormattingStyle.Classic ? "PRINT" : "Print"),
+            _service.FormatDocument("smooth on\nsMoOtH oFf\nprint \"smooth on\"\n' smooth off\n", style));
+    }
+
+    [Theory]
     [InlineData(CodeFormattingStyle.Classic, "PRINT &b1010 AND &B1100")]
     [InlineData(CodeFormattingStyle.Modern, "Print &b1010 And &B1100")]
     public void BinaryLiteralIsPreservedByBothFormattingStyles(CodeFormattingStyle style, string expected)

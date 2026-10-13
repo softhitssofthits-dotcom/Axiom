@@ -51,6 +51,7 @@ canvas.addEventListener('wheel', event => {
 }, { passive:false });
 window.canvasHost.onFrame(({ header, pixels }) => {
   canvas.width = header.width; canvas.height = header.height;
+  canvas.style.imageRendering = header.smooth ? 'auto' : 'pixelated';
   const bgra = new Uint8Array(pixels), rgba = new Uint8ClampedArray(bgra.length);
   for (let i = 0; i < bgra.length; i += 4) {
     rgba[i] = bgra[i + 2]; rgba[i + 1] = bgra[i + 1];

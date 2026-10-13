@@ -23,6 +23,10 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     private const int WmKeyDown = 0x0100;
     private const int WmKeyUp = 0x0101;
     private const int WmChar = 0x0102;
+    private const int WmKillFocus = 0x0008;
+    private const int WmCaptureChanged = 0x0215;
+    private const int WmActivate = 0x0006;
+    private const int WmActivateApp = 0x001C;
     private const int WmMouseMove = 0x0200;
     private const int WmLButtonDown = 0x0201;
     private const int WmLButtonUp = 0x0202;
@@ -55,11 +59,13 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     private readonly GraphicsHostService _graphicsHost;
     private readonly IGraphicsWindowInputSink _inputSink;
     private Direct3D11SwapChainRenderer? _renderer;
+    private readonly CanvasRenderSession? _canvasRenderer;
     private ScreenFramebufferSnapshot? _lastFrame;
     private bool _isVerticalScrollBarVisible;
     private int _clientWidth;
     private int _clientHeight;
     private int _capturedMouseButtons;
+    private readonly HashSet<string> _heldKeys = new(StringComparer.OrdinalIgnoreCase);
     private bool _closed;
     private bool _disposed;
     private GCHandle _windowGcHandle;
@@ -71,22 +77,23 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
         _graphicsHost = graphicsHost;
         _inputSink = inputSink;
+        _canvasRenderer = graphicsHost.CanvasRenderer;
         RegisterWindowClass();
 
         var windowRect = new Rect
         {
             Left = 0,
             Top = 0,
-            Right = Math.Max(1, width),
-            Bottom = Math.Max(1, height)
+            Right = _canvasRenderer is null ? Math.Max(1, width) : Math.Clamp(width, 800, 1600),
+            Bottom = _canvasRenderer is null ? Math.Max(1, height) : Math.Clamp(height, 600, 900)
         };
-        var windowStyle = WsOverlappedWindow | WsVScroll;
+        var windowStyle = WsOverlappedWindow | (_canvasRenderer is null ? WsVScroll : 0);
         AdjustWindowRectEx(ref windowRect, windowStyle, false, 0);
 
         Hwnd = CreateWindowEx(
             0,
             WindowClassName,
-            "Axiom SCREEN",
+            _canvasRenderer is null ? "Axiom SCREEN" : "Axiom CANVAS",
             windowStyle,
             CwUseDefault,
             CwUseDefault,
@@ -108,10 +115,12 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
             SetWindowLongPtr(Hwnd, -21, GCHandle.ToIntPtr(_windowGcHandle));
             ShowScrollBar(Hwnd, SbVert, false);
             (_clientWidth, _clientHeight) = GetClientSize(Hwnd);
-            _renderer = new Direct3D11SwapChainRenderer(Hwnd, _clientWidth, _clientHeight);
+            if (_canvasRenderer is not null) _canvasRenderer.AttachWindow(Hwnd, _clientWidth, _clientHeight);
+            else _renderer = new Direct3D11SwapChainRenderer(Hwnd, _clientWidth, _clientHeight);
         }
         catch
         {
+            SetWindowLongPtr(Hwnd, -21, IntPtr.Zero);
             if (_windowGcHandle.IsAllocated)
             {
                 _windowGcHandle.Free();
@@ -134,13 +143,27 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         // служебного процесса Electron. Следующий вызов явно показывает SCREEN.
         if (!IsVisible) ShowWindow(Hwnd, SwShowNormal);
         UpdateWindow(Hwnd);
-        SetFocus(Hwnd);
+        Activate();
     }
 
     public void Activate()
     {
-        SetForegroundWindow(Hwnd);
-        SetFocus(Hwnd);
+        if (_closed || Hwnd == IntPtr.Zero) return;
+        var currentThread = GetCurrentThreadId();
+        var foregroundThread = GetWindowThreadProcessId(GetForegroundWindow(), out _);
+        // Electron и DesktopHost имеют разные очереди ввода. На время открытия
+        // связываем их, чтобы передать активность из IDE в окно программы.
+        var attached = foregroundThread != 0 && foregroundThread != currentThread &&
+            AttachThreadInput(currentThread, foregroundThread, true);
+        try
+        {
+            SetForegroundWindow(Hwnd);
+            SetFocus(Hwnd);
+        }
+        finally
+        {
+            if (attached) AttachThreadInput(currentThread, foregroundThread, false);
+        }
     }
 
     public void PresentFrame(ScreenFramebufferSnapshot? frame)
@@ -229,6 +252,22 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
                 HandleChar((char)(int)wParam);
                 return IntPtr.Zero;
 
+            case WmKillFocus:
+                ResetHeldInput();
+                return IntPtr.Zero;
+
+            case WmActivate:
+                if (GetLowWord(wParam) == 0) ResetHeldInput();
+                return DefWindowProc(hwnd, message, wParam, lParam);
+
+            case WmActivateApp:
+                if (wParam == IntPtr.Zero) ResetHeldInput();
+                return DefWindowProc(hwnd, message, wParam, lParam);
+
+            case WmCaptureChanged:
+                if (_capturedMouseButtons != 0) ResetHeldInput();
+                return IntPtr.Zero;
+
             case WmMouseMove:
                 SetFocus(Hwnd);
                 if (TryUpdateMousePositionFromClientPoint(GetX(lParam), GetY(lParam)))
@@ -276,6 +315,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     {
         if (TryMapVirtualKey(virtualKey, out var keyName))
         {
+            _heldKeys.Add(keyName);
             _inputSink.SetKeyDown(keyName);
             if (!_inputSink.IsWaitingForInput && ShouldEnqueueKeyDown(virtualKey))
             {
@@ -288,6 +328,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     {
         if (TryMapVirtualKey(virtualKey, out var keyName))
         {
+            _heldKeys.Remove(keyName);
             _inputSink.SetKeyUp(keyName);
         }
     }
@@ -322,6 +363,17 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         {
             _inputSink.EnqueueKey(character.ToString());
         }
+    }
+
+    private void ResetHeldInput()
+    {
+        foreach (var key in _heldKeys) _inputSink.SetKeyUp(key);
+        _heldKeys.Clear();
+        var buttons = _capturedMouseButtons;
+        _capturedMouseButtons = 0;
+        for (var button = 1; button <= 3; button++)
+            if ((buttons & GetMouseButtonMask(button)) != 0) _inputSink.SetMouseButtonUp(button);
+        if (buttons != 0) ReleaseCapture();
     }
 
     private void HandleMouseButton(IntPtr lParam, int button, bool down)
@@ -515,6 +567,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
         _clientWidth = width;
         _clientHeight = height;
+        _canvasRenderer?.Resize(width, height);
         _renderer?.Resize(width, height);
     }
 
@@ -527,6 +580,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
         _clientWidth = width;
         _clientHeight = height;
+        _canvasRenderer?.Resize(width, height);
         _renderer?.Resize(width, height);
         if (_lastFrame is not null)
         {
@@ -537,6 +591,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     private void HandlePaint()
     {
         ValidateRect(Hwnd, IntPtr.Zero);
+        _canvasRenderer?.Repaint();
         if (_lastFrame is not null)
         {
             _renderer?.PresentFrame(_lastFrame);
@@ -553,12 +608,14 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         _closed = true;
         try
         {
+            ResetHeldInput();
             if (_capturedMouseButtons != 0)
             {
                 ReleaseCapture();
             }
 
             _capturedMouseButtons = 0;
+            _canvasRenderer?.DetachWindow();
             _renderer?.Dispose();
             _renderer = null;
         }
@@ -739,6 +796,18 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
     [DllImport("user32.dll")]
     private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+
+    [DllImport("kernel32.dll")]
+    private static extern uint GetCurrentThreadId();
+
+    [DllImport("user32.dll")]
+    private static extern bool AttachThreadInput(uint first, uint second, bool attach);
 
     [DllImport("user32.dll")]
     private static extern IntPtr SetFocus(IntPtr hWnd);

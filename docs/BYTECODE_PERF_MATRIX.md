@@ -72,3 +72,7 @@ dotnet run --project src/Axiom.ManualChecks -- benchmark-bytecode --iterations 3
 - `samples/smoke/engine-compare/temp_storage_roundtrip.axm`
 - `samples/smoke/engine-compare/temp_writefile_probe.axm`
 - `samples/smoke/engine-compare/type_record_roundtrip.axm`
+
+## Отдельные измерения GPU-CANVAS — 13 октября 2026 года
+
+Существующие семьи modern_canvas_primitive_burst и modern_canvas_sprite_burst остаются нагрузками исполнения BytecodeVm. Для настоящего графического вывода добавлен `scripts/perf/CanvasGpuProbe/`: CPU-контроль и GPU-путь рисуют 500 спрайтов либо 825 тайлов с камерой и текстом в нативном окне 1024 × 768. Измеряются CPU-время процесса, аппаратный интервал команд, полное время кадра, выделения памяти, загрузки текстур и передачи GPU → CPU. Условия, показатели и пределы выводов записаны в `reports/graphics/CANVAS_GPU_MIGRATION.md`. Новые графические показатели не выдаются за ускорение VM и не меняют каталог engine-compare.

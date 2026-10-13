@@ -146,6 +146,7 @@ internal static class GraphicsBufferTransfer
         ArgumentNullException.ThrowIfNull(host);
         ArgumentNullException.ThrowIfNull(buffer);
 
+        var pixels = host.CaptureAbsolutePixels(rectangle.LeftAbsolute, rectangle.TopAbsolute, shape.Width, shape.Height);
         Span<int> indices = stackalloc int[2];
         for (var xIndex = shape.XLowerBound; xIndex <= shape.XUpperBound; xIndex++)
         {
@@ -157,7 +158,7 @@ internal static class GraphicsBufferTransfer
                 indices[1] = yIndex;
                 var absoluteY = rectangle.TopAbsolute + (yIndex - shape.YLowerBound);
                 var color = GraphicsCoordinateSpaceMath.IsInsideClip(host, absoluteX, absoluteY)
-                    ? host.GetAbsolutePixel(absoluteX, absoluteY)
+                    ? pixels is null ? host.GetAbsolutePixel(absoluteX, absoluteY) : pixels[(yIndex - shape.YLowerBound) * shape.Width + xIndex - shape.XLowerBound]
                     : 0;
                 buffer.SetValue(indices, CreateBufferElementValue(buffer.ElementType, color));
             }
@@ -174,6 +175,7 @@ internal static class GraphicsBufferTransfer
         ArgumentNullException.ThrowIfNull(host);
         ArgumentNullException.ThrowIfNull(buffer);
 
+        var destinationPixels = host.CaptureAbsolutePixels(anchor.AbsoluteX, anchor.AbsoluteY, shape.Width, shape.Height);
         Span<int> indices = stackalloc int[2];
         for (var xIndex = shape.XLowerBound; xIndex <= shape.XUpperBound; xIndex++)
         {
@@ -195,7 +197,8 @@ internal static class GraphicsBufferTransfer
                     continue;
                 }
 
-                var destinationColor = host.GetAbsolutePixel(absoluteX, absoluteY);
+                var destinationColor = destinationPixels is null ? host.GetAbsolutePixel(absoluteX, absoluteY)
+                    : destinationPixels[(yIndex - shape.YLowerBound) * shape.Width + xIndex - shape.XLowerBound];
                 host.SetAbsolutePixel(absoluteX, absoluteY, ApplyPutAction(destinationColor, sourceColor, action));
             }
         }

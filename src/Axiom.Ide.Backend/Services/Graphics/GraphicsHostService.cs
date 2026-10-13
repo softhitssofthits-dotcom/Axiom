@@ -74,8 +74,16 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
     private double _windowBottom;
     private int _graphicsInputRequestCount;
     private ScreenFramebuffer? _framebuffer;
+    private CanvasRenderSession? _canvasRenderer;
+    private CanvasPaintRegion? _canvasPaintRegion;
+    internal CanvasRenderSession? CanvasRenderer => _canvasRenderer;
+    public bool UseGpuCanvas { get; set; }
+    public string? CanvasGraphicsDriver => _canvasRenderer?.DriverName;
+    public bool GraphicsSmoothingEnabled => _graphicsSmoothingEnabled;
+    public event Action<string>? GraphicsError;
     private ScreenFramebuffer?[] _screenPages = new ScreenFramebuffer?[4];
     private ScreenFramebufferSnapshot? _graphicsFrame;
+    private bool _graphicsSmoothingEnabled;
     private bool _graphicsVisualRefreshPending;
     private DispatcherTimer? _graphicsVisualRefreshTimer;
     private NativeGraphicsScreenWindow? _graphicsWindow;
@@ -140,7 +148,9 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
 
     public ScreenFramebufferSnapshot? GraphicsFrame
     {
-        get => _graphicsFrame;
+        get => _graphicsFrame ?? (_canvasRenderer is null ? null :
+            _graphicsFrame = new ScreenFramebufferSnapshot(_screenWidth, _screenHeight,
+                _canvasRenderer.Invoke(surface => surface.ReadPublished()), _graphicsSmoothingEnabled));
         private set => SetProperty(ref _graphicsFrame, value);
     }
 
@@ -235,6 +245,7 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
             }
 
             var preservePages = _screenMode == mode && _screenWidth == width && _screenHeight == height && _screenPages.Length == 4;
+            if (_canvasRenderer is not null) ReleaseCanvasRenderer();
             _isScreenActive = mode != 0;
             _isCanvasActive = false;
             _isScreenOutputActive = true;
@@ -303,6 +314,25 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
                 return;
             }
 
+            CloseGraphicsWindow();
+            _canvasRenderer?.Dispose();
+            _canvasRenderer = null;
+            try { if (UseGpuCanvas) _canvasRenderer = new CanvasRenderSession((int)width, (int)height); }
+            catch { DeactivateScreen(); throw; }
+            if (_canvasRenderer is not null)
+            {
+                var ownerDispatcher = Dispatcher.CurrentDispatcher;
+                var renderer = _canvasRenderer;
+                renderer.Faulted += error => ownerDispatcher.BeginInvoke(() =>
+                {
+                    if (!ReferenceEquals(_canvasRenderer, renderer)) return;
+                    _sessionManager.IsCancellationRequested = true;
+                    _inputPrompt.CancelPendingFrame();
+                    WriteGraphicsEvent("canvas.device-error", error.Message);
+                    GraphicsError?.Invoke(error.Message);
+                });
+            }
+
             _isScreenActive = false;
             _isCanvasActive = true;
             _isScreenOutputActive = false;
@@ -318,8 +348,8 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
             ResetViewportCore();
             ResetWindowCore();
             _screenPages = new ScreenFramebuffer?[4];
-            _framebuffer = new ScreenFramebuffer(_screenWidth, _screenHeight);
-            _framebuffer.ClearTrueColor(0);
+            _framebuffer = _canvasRenderer is null ? new ScreenFramebuffer(_screenWidth, _screenHeight) : null;
+            _framebuffer?.ClearTrueColor(0);
             _graphicsTextBuffer.Clear();
             _pendingGraphicsTraceLine.Clear();
             GraphicsText = string.Empty;
@@ -344,10 +374,41 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
         });
     }
 
+    public void SetGraphicsSmoothing(bool enabled)
+    {
+        InvokeOnDispatcher(() =>
+        {
+            if (_graphicsSmoothingEnabled == enabled)
+            {
+                return;
+            }
+
+            _graphicsSmoothingEnabled = enabled;
+            if (_canvasRenderer is not null)
+            {
+                _canvasRenderer.SetSmoothing(enabled);
+                if (_graphicsFrame is not null) _graphicsFrame = _graphicsFrame with { Smooth = enabled };
+                OnPropertyChanged(nameof(GraphicsFrame));
+                return;
+            }
+            if (_isCanvasActive && _canvasFrameInProgress && GraphicsFrame is { } publishedFrame)
+            {
+                var updatedFrame = publishedFrame with { Smooth = enabled };
+                GraphicsFrame = updatedFrame;
+                _graphicsWindow?.PresentFrame(updatedFrame);
+                RecordGraphicsFramePublished(coalesced: false);
+                return;
+            }
+
+            PublishGraphicsFrame();
+        });
+    }
+
     public void DeactivateScreen()
     {
         InvokeOnDispatcher(() =>
         {
+            ReleaseCanvasRenderer();
             var previousMode = _screenMode;
             var previousWidth = _screenWidth;
             var previousHeight = _screenHeight;
@@ -389,19 +450,22 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
     {
         InvokeOnDispatcher(() =>
         {
-            if (!_isCanvasActive || _framebuffer is null)
+            if (!_isCanvasActive || (_framebuffer is null && _canvasRenderer is null))
             {
                 return;
             }
 
             _canvasFrameInProgress = true;
             CancelScheduledGraphicsVisualRefresh();
-            _framebuffer.ClearTrueColor(0);
+            if (_canvasRenderer is not null) _canvasRenderer.Enqueue(surface => surface.Clear(0));
+            else _framebuffer!.ClearTrueColor(0);
         });
     }
 
     public void PresentFrame()
     {
+        // VM ждёт предыдущий вывод вне Dispatcher, сохраняя отзывчивость нативного окна.
+        _canvasRenderer?.WaitForPreviousPresentation();
         InvokeOnDispatcher(() =>
         {
             if (!_isCanvasActive)
@@ -419,12 +483,13 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
     {
         InvokeOnDispatcher(() =>
         {
-            if (!_isCanvasActive || _framebuffer is null)
+            if (!_isCanvasActive || (_framebuffer is null && _canvasRenderer is null))
             {
                 return;
             }
 
-            _framebuffer.ClearTrueColor(color);
+            if (_canvasRenderer is not null) _canvasRenderer.Enqueue(surface => surface.Clear(color));
+            else _framebuffer!.ClearTrueColor(color);
         });
     }
 
@@ -496,7 +561,7 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
     {
         InvokeOnDispatcher(() =>
         {
-            if (!_isCanvasActive || _framebuffer is null)
+            if (!_isCanvasActive || (_framebuffer is null && _canvasRenderer is null))
             {
                 return;
             }
@@ -504,10 +569,12 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
             var viewport = GetEffectiveViewportCore();
             var left = TranslateCanvasX(x, viewport);
             var top = TranslateCanvasY(y, viewport);
-            DrawAbsoluteLineCore(left, top, left + width - 1, top, color, trueColor: true, viewport);
-            DrawAbsoluteLineCore(left + width - 1, top, left + width - 1, top + height - 1, color, trueColor: true, viewport);
-            DrawAbsoluteLineCore(left + width - 1, top + height - 1, left, top + height - 1, color, trueColor: true, viewport);
-            DrawAbsoluteLineCore(left, top + height - 1, left, top, color, trueColor: true, viewport);
+            var right = GraphicsLineMath.SaturatingAdd(left, width - 1);
+            var bottom = GraphicsLineMath.SaturatingAdd(top, height - 1);
+            DrawAbsoluteLineCore(left, top, right, top, color, trueColor: true, viewport);
+            DrawAbsoluteLineCore(right, top, right, bottom, color, trueColor: true, viewport);
+            DrawAbsoluteLineCore(right, bottom, left, bottom, color, trueColor: true, viewport);
+            DrawAbsoluteLineCore(left, bottom, left, top, color, trueColor: true, viewport);
         });
     }
 
@@ -515,7 +582,7 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
     {
         InvokeOnDispatcher(() =>
         {
-            if (!_isCanvasActive || _framebuffer is null)
+            if (!_isCanvasActive || (_framebuffer is null && _canvasRenderer is null))
             {
                 return;
             }
@@ -525,9 +592,11 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
             var top = TranslateCanvasY(y, viewport);
             var clippedLeft = Math.Max(left, viewport.Left);
             var clippedTop = Math.Max(top, viewport.Top);
-            var clippedRight = Math.Min(left + width - 1, viewport.Right);
-            var clippedBottom = Math.Min(top + height - 1, viewport.Bottom);
-            _framebuffer.FillTrueColorRectangle(clippedLeft, clippedTop, clippedRight, clippedBottom, color);
+            var clippedRight = Math.Min(GraphicsLineMath.SaturatingAdd(left, width - 1), viewport.Right);
+            var clippedBottom = Math.Min(GraphicsLineMath.SaturatingAdd(top, height - 1), viewport.Bottom);
+            if (_canvasRenderer is not null)
+                _canvasRenderer.Enqueue(surface => surface.Fill(clippedLeft, clippedTop, clippedRight, clippedBottom, color));
+            else _framebuffer!.FillTrueColorRectangle(clippedLeft, clippedTop, clippedRight, clippedBottom, color);
         });
     }
 
@@ -535,7 +604,7 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
     {
         InvokeOnDispatcher(() =>
         {
-            if (!_isCanvasActive || _framebuffer is null)
+            if (!_isCanvasActive || (_framebuffer is null && _canvasRenderer is null))
             {
                 return;
             }
@@ -556,7 +625,7 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
     {
         InvokeOnDispatcher(() =>
         {
-            if (!_isCanvasActive || _framebuffer is null)
+            if (!_isCanvasActive || (_framebuffer is null && _canvasRenderer is null))
             {
                 return;
             }
@@ -569,7 +638,7 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
     {
         InvokeOnDispatcher(() =>
         {
-            if (!_isCanvasActive || _framebuffer is null)
+            if (!_isCanvasActive || (_framebuffer is null && _canvasRenderer is null))
             {
                 return;
             }
@@ -583,13 +652,20 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
         ArgumentNullException.ThrowIfNull(text);
         InvokeOnDispatcher(() =>
         {
-            if (!_isCanvasActive || _framebuffer is null)
+            if (!_isCanvasActive || (_framebuffer is null && _canvasRenderer is null))
             {
                 return;
             }
 
             var viewport = GetEffectiveViewportCore();
-            _framebuffer.DrawTrueColorText(
+            if (_canvasRenderer is not null)
+            {
+                var textX = TranslateCanvasX(x, viewport); var textY = TranslateCanvasY(y, viewport);
+                _canvasRenderer.Enqueue(surface => surface.DrawText(text, textX, textY, color,
+                    viewport.Left, viewport.Top, viewport.Right, viewport.Bottom));
+                return;
+            }
+            _framebuffer!.DrawTrueColorText(
                 TranslateCanvasX(x, viewport),
                 TranslateCanvasY(y, viewport),
                 text,
@@ -640,7 +716,25 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
 
         InvokeOnDispatcher(() =>
         {
-            RunBatchedGraphicsUpdate(() => GraphicsHostDrawing.Paint(this, request));
+            RunBatchedGraphicsUpdate(() =>
+            {
+                if (_canvasRenderer is null) { GraphicsHostDrawing.Paint(this, request); return; }
+                var viewport = GetEffectiveViewportCore();
+                if (viewport.IsEmpty) return;
+                var left = (int)Math.Max(0, viewport.Left); var top = (int)Math.Max(0, viewport.Top);
+                var width = (int)Math.Min(_screenWidth - left, viewport.Right - left + 1);
+                var height = (int)Math.Min(_screenHeight - top, viewport.Bottom - top + 1);
+                var pairs = _canvasRenderer.Invoke(surface => surface.ReadWorkingRegion(left, top, width, height));
+                var region = new CanvasPaintRegion(left, top, width, height, pairs);
+                _canvasPaintRegion = region;
+                try { GraphicsHostDrawing.Paint(this, request); }
+                finally
+                {
+                    _canvasPaintRegion = null;
+                    if (region.Changed)
+                        _canvasRenderer.Enqueue(surface => surface.UploadWorkingRegion(left, top, width, height, pairs));
+                }
+            });
             SetGraphicsCurrentPositionCore(request.X, request.Y);
         });
     }
@@ -669,6 +763,17 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
         var color = 0;
         InvokeOnDispatcher(() => color = GetLogicalPixelCore(x, y), DispatcherPriority.Background);
         return color;
+    }
+
+    public int[]? CaptureAbsolutePixels(long x, long y, int width, int height)
+    {
+        int[]? pixels = null;
+        InvokeOnDispatcher(() =>
+        {
+            if (_canvasRenderer is not null)
+                pixels = _canvasRenderer.Invoke(surface => surface.ReadWorkingIndices(x, y, width, height));
+        });
+        return pixels;
     }
 
     public void SetAbsolutePixel(long x, long y, int color)
@@ -1116,6 +1221,8 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
     /// </summary>
     public void ResetGraphicsState()
     {
+        ReleaseCanvasRenderer();
+        _graphicsSmoothingEnabled = false;
         _isScreenActive = false;
         _isScreenOutputActive = false;
         _isCanvasActive = false;
@@ -1145,7 +1252,7 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
         _graphicsCurrentY = 0;
         ResetViewportCore();
         ResetWindowCore();
-        CloseGraphicsWindow();
+        ReleaseCanvasRenderer();
     }
 
     #endregion
@@ -1265,13 +1372,20 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
 
     private void DrawImageOnCanvas(RuntimeImageValue image, long x, long y, int width, int height)
     {
-        if (_framebuffer is null || _screenWidth <= 0 || _screenHeight <= 0)
+        if ((_framebuffer is null && _canvasRenderer is null) || _screenWidth <= 0 || _screenHeight <= 0)
         {
             return;
         }
 
         var viewport = GetEffectiveViewportCore();
-        _framebuffer.DrawImage(
+        if (_canvasRenderer is not null)
+        {
+            var imageX = TranslateCanvasX(x, viewport); var imageY = TranslateCanvasY(y, viewport);
+            _canvasRenderer.Enqueue(surface => surface.DrawImageRegion(image, 0, 0, image.Width, image.Height,
+                imageX, imageY, width, height, viewport.Left, viewport.Top, viewport.Right, viewport.Bottom));
+            return;
+        }
+        _framebuffer!.DrawImage(
             image,
             TranslateCanvasX(x, viewport),
             TranslateCanvasY(y, viewport),
@@ -1285,13 +1399,21 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
 
     private void DrawSpriteOnCanvas(RuntimeSpriteValue sprite, int frame, long x, long y, int width, int height)
     {
-        if (_framebuffer is null || _screenWidth <= 0 || _screenHeight <= 0)
+        if ((_framebuffer is null && _canvasRenderer is null) || _screenWidth <= 0 || _screenHeight <= 0)
         {
             return;
         }
 
         var viewport = GetEffectiveViewportCore();
-        _framebuffer.DrawSprite(
+        if (_canvasRenderer is not null)
+        {
+            var imageX = TranslateCanvasX(x, viewport); var imageY = TranslateCanvasY(y, viewport);
+            _canvasRenderer.Enqueue(surface => surface.DrawImageRegion(sprite.Image,
+                sprite.GetFrameLeft(frame), sprite.GetFrameTop(frame), sprite.FrameWidth, sprite.FrameHeight,
+                imageX, imageY, width, height, viewport.Left, viewport.Top, viewport.Right, viewport.Bottom));
+            return;
+        }
+        _framebuffer!.DrawSprite(
             sprite,
             frame,
             TranslateCanvasX(x, viewport),
@@ -1306,13 +1428,20 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
 
     private void DrawImageRegionOnCanvas(RuntimeImageValue image, int sourceX, int sourceY, int sourceWidth, int sourceHeight, long x, long y, int width, int height)
     {
-        if (_framebuffer is null || _screenWidth <= 0 || _screenHeight <= 0)
+        if ((_framebuffer is null && _canvasRenderer is null) || _screenWidth <= 0 || _screenHeight <= 0)
         {
             return;
         }
 
         var viewport = GetEffectiveViewportCore();
-        _framebuffer.DrawImageRegion(
+        if (_canvasRenderer is not null)
+        {
+            var imageX = TranslateCanvasX(x, viewport); var imageY = TranslateCanvasY(y, viewport);
+            _canvasRenderer.Enqueue(surface => surface.DrawImageRegion(image, sourceX, sourceY, sourceWidth, sourceHeight,
+                imageX, imageY, width, height, viewport.Left, viewport.Top, viewport.Right, viewport.Bottom));
+            return;
+        }
+        _framebuffer!.DrawImageRegion(
             image,
             sourceX,
             sourceY,
@@ -1585,7 +1714,22 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
             return;
         }
 
-        _framebuffer?.SetPixel(x, y, color);
+        if (_canvasPaintRegion is { } region && region.Contains(x, y))
+        {
+            var offset = (int)(y - region.Top) * region.Width + (int)(x - region.Left);
+            var index = ScreenFramebuffer.NormalizeColorIndex(color);
+            region.Indices[offset] = index;
+            region.Pairs[offset * 2] = ScreenFramebuffer.MapColorToBgra(index);
+            region.Pairs[offset * 2 + 1] = (uint)index;
+            region.Changed = true;
+        }
+        else if (_canvasRenderer is not null)
+        {
+            var pixel = ScreenFramebuffer.MapColorToBgra(color);
+            _canvasRenderer.Enqueue(surface => surface.Fill(x, y, x, y, (int)(pixel & 0xffffff),
+                (uint)ScreenFramebuffer.NormalizeColorIndex(color)));
+        }
+        else _framebuffer?.SetPixel(x, y, color);
         _graphicsBatchHasChanges = true;
     }
 
@@ -1596,7 +1740,8 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
             return;
         }
 
-        _framebuffer?.SetTrueColorPixel(x, y, color);
+        if (_canvasRenderer is not null) _canvasRenderer.Enqueue(surface => surface.Fill(x, y, x, y, color));
+        else _framebuffer?.SetTrueColorPixel(x, y, color);
         _graphicsBatchHasChanges = true;
     }
 
@@ -1632,7 +1777,21 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
 
     private int GetPixelCore(long x, long y)
     {
-        return _framebuffer?.GetPixel(x, y) ?? 0;
+        if (_canvasPaintRegion is { } region && region.Contains(x, y))
+            return region.Indices[(int)(y - region.Top) * region.Width + (int)(x - region.Left)];
+        return _canvasRenderer is not null ? _canvasRenderer.Invoke(surface => surface.GetPixel(x, y)) : _framebuffer?.GetPixel(x, y) ?? 0;
+    }
+
+    private sealed class CanvasPaintRegion(int left, int top, int width, int height, uint[] pairs)
+    {
+        public int Left { get; } = left;
+        public int Top { get; } = top;
+        public int Width { get; } = width;
+        public int Height { get; } = height;
+        public uint[] Pairs { get; } = pairs;
+        public int[] Indices { get; } = CanvasGpuSurface.ConvertIndices(pairs);
+        public bool Changed { get; set; }
+        public bool Contains(long x, long y) => x >= Left && y >= Top && x < Left + Width && y < Top + Height;
     }
 
     private int GetLogicalPixelCore(long x, long y)
@@ -1694,6 +1853,15 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
 
     private void DrawAbsoluteLineCore(long x1, long y1, long x2, long y2, int color, bool trueColor = false, GraphicsViewport? clipViewport = null)
     {
+        if (_canvasRenderer is not null)
+        {
+            var clip = clipViewport ?? new GraphicsViewport(0, 0, _screenWidth - 1L, _screenHeight - 1L, false);
+            var rgb = trueColor ? color : (int)(ScreenFramebuffer.MapColorToBgra(color) & 0xffffff);
+            var index = trueColor ? uint.MaxValue : (uint)ScreenFramebuffer.NormalizeColorIndex(color);
+            _canvasRenderer.Enqueue(surface => surface.DrawLine(x1, y1, x2, y2, rgb,
+                clip.Left, clip.Top, clip.Right, clip.Bottom, index));
+            return;
+        }
         var dx = Math.Abs(x2 - x1);
         var sx = x1 < x2 ? 1 : -1;
         var dy = -Math.Abs(y2 - y1);
@@ -1737,7 +1905,7 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
 
     private void DrawCanvasCircleCore(long worldX, long worldY, long radius, int color, bool filled)
     {
-        if (_framebuffer is null || _screenWidth <= 0 || _screenHeight <= 0 || radius < 0)
+        if ((_framebuffer is null && _canvasRenderer is null) || _screenWidth <= 0 || _screenHeight <= 0 || radius < 0)
         {
             return;
         }
@@ -1745,6 +1913,12 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
         var viewport = GetEffectiveViewportCore();
         var centerX = TranslateCanvasX(worldX, viewport);
         var centerY = TranslateCanvasY(worldY, viewport);
+        if (_canvasRenderer is not null)
+        {
+            _canvasRenderer.Enqueue(surface => surface.DrawCircle(centerX, centerY, radius, color, filled,
+                viewport.Left, viewport.Top, viewport.Right, viewport.Bottom));
+            return;
+        }
         if (radius == 0)
         {
             if (viewport.IsInsideAbsolute(centerX, centerY))
@@ -1766,7 +1940,7 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
                     continue;
                 }
 
-                _framebuffer.FillTrueColorRectangle(
+                _framebuffer!.FillTrueColorRectangle(
                     Math.Max(centerX - span, viewport.Left),
                     rowY,
                     Math.Min(centerX + span, viewport.Right),
@@ -2118,20 +2292,32 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
 
     private void PublishGraphicsFrame(bool coalesced = false)
     {
+        if (_canvasRenderer is not null)
+        {
+            _canvasRenderer.Publish(_graphicsSmoothingEnabled);
+            _graphicsFrame = null;
+            OnPropertyChanged(nameof(GraphicsFrame));
+            RecordGraphicsFramePublished(coalesced);
+            return;
+        }
         var (firstVisibleRow, visibleRows, visibleColumns) = GetGraphicsTextViewport();
         var inputRow = ResolveGraphicsTextBufferRow(_graphicsRow);
         GraphicsText = BuildVisibleGraphicsText();
         var displayFramebuffer = _isScreenActive ? _screenPages[_visualScreenPage] : _framebuffer;
-        var frame = displayFramebuffer?.CreateSnapshot(
-            _graphicsTextBuffer,
-            _graphicsForeground,
-            _graphicsBackground,
-            _inputPrompt.IsWaitingForInput ? _inputPrompt.CurrentPromptText + _inputPrompt.CurrentInputText : null,
-            inputRow,
-            _graphicsColumn,
-            firstVisibleRow,
-            visibleRows,
-            visibleColumns);
+        ScreenFramebufferSnapshot? frame = null;
+        if (displayFramebuffer is not null)
+        {
+            frame = displayFramebuffer.CreateSnapshot(
+                _graphicsTextBuffer,
+                _graphicsForeground,
+                _graphicsBackground,
+                _inputPrompt.IsWaitingForInput ? _inputPrompt.CurrentPromptText + _inputPrompt.CurrentInputText : null,
+                inputRow,
+                _graphicsColumn,
+                firstVisibleRow,
+                visibleRows,
+                visibleColumns) with { Smooth = _graphicsSmoothingEnabled };
+        }
         GraphicsFrame = frame;
         _graphicsWindow?.PresentFrame(frame);
         RecordGraphicsFramePublished(coalesced);
@@ -2217,7 +2403,7 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
         _graphicsWindow = new NativeGraphicsScreenWindow(this, _getInputSink(), _screenWidth, _screenHeight);
         _graphicsWindow.Closed += OnGraphicsWindowClosed;
         _graphicsWindow.Show();
-        _graphicsWindow.PresentFrame(GraphicsFrame);
+        if (_canvasRenderer is null) _graphicsWindow.PresentFrame(GraphicsFrame);
         OnPropertyChanged(nameof(ScreenWindowHandle));
     }
 
@@ -2235,6 +2421,14 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
         OnPropertyChanged(nameof(ScreenWindowHandle));
     }
 
+    private void ReleaseCanvasRenderer()
+    {
+        CloseGraphicsWindow();
+        _canvasRenderer?.Dispose();
+        _canvasRenderer = null;
+        _graphicsFrame = null;
+    }
+
     private void OnGraphicsWindowClosed(object? sender, EventArgs e)
     {
         if (_graphicsWindow is null)
@@ -2244,12 +2438,17 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
 
         _graphicsWindow.Closed -= OnGraphicsWindowClosed;
         _graphicsWindow = null;
+        var wasGpuCanvas = _canvasRenderer is not null;
         if (!_sessionManager.IsSessionActive)
         {
+            if (wasGpuCanvas) DeactivateScreen();
             return;
         }
 
         _sessionManager.IsCancellationRequested = true;
+        _inputPrompt.CancelPendingFrame();
+        _inputPrompt.ResetInputState();
+        if (wasGpuCanvas) DeactivateScreen();
         WriteGraphicsEvent("screen.closed-by-user", "SCREEN window was closed by the user; run cancellation requested.");
     }
 
@@ -2429,6 +2628,7 @@ public sealed class GraphicsHostService : ViewModelBase, IGraphicsHost
 
     private void InvokeOnDispatcher(Action action, DispatcherPriority priority = DispatcherPriority.Send)
     {
+        _canvasRenderer?.WaitForQueueSpace();
         _invokeOnDispatcher(action, priority);
     }
 

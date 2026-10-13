@@ -298,6 +298,19 @@ public sealed class BoundBeginFrameStatement : BoundStatement
     public override BoundNodeKind Kind => BoundNodeKind.BeginFrameStatement;
 }
 
+public sealed class BoundSmoothStatement : BoundStatement
+{
+    public BoundSmoothStatement(TextLocation location, bool enabled)
+        : base(location)
+    {
+        Enabled = enabled;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.SmoothStatement;
+
+    public bool Enabled { get; }
+}
+
 public sealed class BoundPresentStatement : BoundStatement
 {
     public BoundPresentStatement(TextLocation location)

@@ -138,6 +138,7 @@
             <Word>SELECT</Word>
             <Word>SELF</Word>
             <Word>SETMAPTILE</Word>
+            <Word>SMOOTH</Word>
             <Word>SLEEP</Word>
             <Word>STEP</Word>
             <Word>STOP</Word>

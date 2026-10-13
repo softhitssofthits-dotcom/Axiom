@@ -14,6 +14,25 @@ public sealed class NativeGraphicsScreenWindowTests
     private const int WmVScroll = 0x0115;
     private const int SbTop = 6;
 
+    [Fact]
+    public void SmoothedFrame_RepaintDoesNotAllocateAnotherWindowSizedPixelBuffer()
+    {
+        var service = new ProgramConsoleService();
+        using var window = new NativeGraphicsScreenWindow(service.GraphicsHost, service, 960, 540);
+        var frame = new ScreenFramebufferSnapshot(640, 360, new uint[640 * 360], Smooth: true);
+        window.PresentFrame(frame);
+
+        var allocatedBefore = GC.GetAllocatedBytesForCurrentThread();
+        for (var index = 0; index < 3; index++)
+        {
+            SendMessage(window.Hwnd, WmPaint, IntPtr.Zero, IntPtr.Zero);
+        }
+
+        var allocated = GC.GetAllocatedBytesForCurrentThread() - allocatedBefore;
+        Assert.True(allocated < 64 * 1024, $"Повторный показ готового кадра выделил {allocated:N0} байт.");
+        window.Close();
+    }
+
     [Theory]
     [InlineData(0x25)] // LEFT
     [InlineData(0x20)] // SPACE

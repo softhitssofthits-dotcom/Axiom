@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { Session, Checks, testWorkspace, writeAxm } = require('./helpers');
+const { nativeCanvas } = require('./native-canvas');
 const root = path.resolve(__dirname, '../..');
 const source = path.join(root, '.artifacts/distribution/Axiom IDE');
 const folder = path.join(testWorkspace('portable-ide'), 'Проверка поставки с пробелами');
@@ -26,17 +27,12 @@ const resultPath = path.join(root, '.artifacts/portable-acceptance-results.json'
     const canvas = writeAxm(dir,'холст.axm','CANVAS 40,30\nBEGINFRAME\nCLS RGB(10,20,30)\nPRESENT\nDIM value AS STRING\nINPUT value\n');
     await S.page.evaluate(async file => { await window.__ide.openFile(file); await window.__ide.run(); },canvas);
     await S.waitStatus('Ожидание ввода');
-    let canvasPage;
-    for (let i=0; i<100; i++) {
-      canvasPage = S.electronApp.windows().find(p => p.url().endsWith('/canvas.html'));
-      if (canvasPage) break;
-      await S.sleep(50);
-    }
+    const canvasPage = await nativeCanvas(S);
     C.ok(!!canvasPage,'CANVAS открыт из поставки');
     if (canvasPage) {
-      await canvasPage.waitForFunction(() => document.getElementById('program-canvas').width === 40);
-      await canvasPage.waitForFunction(() => Array.from(document.getElementById('program-canvas').getContext('2d').getImageData(1,1,1,1).data).join(',') === '10,20,30,255');
-      C.eq(await canvasPage.evaluate(() => Array.from(document.getElementById('program-canvas').getContext('2d').getImageData(1,1,1,1).data).join(',')),'10,20,30,255','Показан правильный пиксель CANVAS');
+      C.eq(canvasPage.width, 40, 'Логический размер нативного CANVAS сохранён');
+      await canvasPage.wait(() => canvasPage.pixel(1,1).join(',') === '10,20,30,255');
+      C.eq(canvasPage.pixel(1,1).join(','),'10,20,30,255','Показан правильный пиксель CANVAS');
     }
     await S.page.evaluate(() => window.__ide.handleAction('stop')); await S.waitIdle();
     const screen = writeAxm(dir,'экран.axm','SCREEN 10\nCIRCLE (20,20),10,14\nSLEEP\n');

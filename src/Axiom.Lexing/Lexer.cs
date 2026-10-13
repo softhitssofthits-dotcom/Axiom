@@ -91,6 +91,7 @@ public sealed class Lexer
         ["SELECT"] = TokenKind.SelectKeyword,
         ["SETMAPTILE"] = TokenKind.SetMapTileKeyword,
         ["SCREEN"] = TokenKind.ScreenKeyword,
+        ["SMOOTH"] = TokenKind.SmoothKeyword,
         ["SLEEP"] = TokenKind.SleepKeyword,
         ["ANDALSO"] = TokenKind.AndAlsoKeyword,
         ["ORELSE"] = TokenKind.OrElseKeyword,

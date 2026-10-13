@@ -80,6 +80,7 @@ window.AxiomCodeDictionary = {
     "SELF",
     "SETMAPTILE",
     "SLEEP",
+    "SMOOTH",
     "STEP",
     "STOP",
     "SUB",

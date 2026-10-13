@@ -25,7 +25,7 @@
     "src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.cs",
     "src/Axiom.Syntax/SyntaxKind.cs"
   ],
-  "sourceFingerprint": "816c0362bb893a785a1eb955403d23f88597095f0a2c8270ff8dae32b19c4d79",
+  "sourceFingerprint": "7890994216b695061bb322b9be1496ff68db8fb8f2fdbd3026e6111a43a0b5b2",
   "functions": [
     {
       "name": "ABS",
@@ -7710,6 +7710,12 @@
       "href": "screen.html"
     },
     {
+      "id": "smooth-smooth",
+      "name": "SMOOTH",
+      "syntax": "Smooth",
+      "href": "smooth.html"
+    },
+    {
       "id": "canvas-canvas",
       "name": "CANVAS",
       "syntax": "Canvas",
@@ -8164,6 +8170,7 @@
     "SELF",
     "SETMAPTILE",
     "SLEEP",
+    "SMOOTH",
     "STEP",
     "STOP",
     "SUB",

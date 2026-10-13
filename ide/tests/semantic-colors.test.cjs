@@ -11,5 +11,17 @@ test('Префиксы двоичных и шестнадцатеричных ч
  const source='PRINT &B1010 &HFF';
  const data=classify(source,[[{offset:0,type:'keyword.axiom'},{offset:5,type:'white.axiom'},
   {offset:6,type:'number.binary.axiom'},{offset:12,type:'white.axiom'},{offset:13,type:'number.hex.axiom'}]]).data;
- assert.equal(data.length,0);
+ assert.equal(data.length % 5,0);
+ for(let i=3;i<data.length;i+=5) assert.equal(data[i],4,'PRINT остаётся ключевым словом, числа не получают семантический токен');
+});
+
+test('Оператор SMOOTH и состояния ON/OFF получают семантическую категорию ключевого слова',()=>{
+ const source='SMOOTH ON\nSMOOTH OFF';
+ const tokens=[[{offset:0,type:'keyword.axiom'},{offset:6,type:'white.axiom'},{offset:7,type:'keyword.axiom'}],
+  [{offset:0,type:'keyword.axiom'},{offset:6,type:'white.axiom'},{offset:7,type:'keyword.axiom'}]];
+ const data=[...classify(source,tokens).data];
+ const decoded=[];let line=0,column=0;
+ for(let i=0;i<data.length;i+=5){line+=data[i];column=data[i]===0?column+data[i+1]:data[i+1];decoded.push({word:source.split('\n')[line].slice(column,column+data[i+2]),kind:data[i+3]});}
+ assert.deepEqual(decoded.map(token=>token.word),['SMOOTH','ON','SMOOTH','OFF']);
+ assert.ok(decoded.every(token=>token.kind===4));
 });

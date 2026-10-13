@@ -624,7 +624,7 @@ public sealed class ScreenFramebuffer
         return ToBgra(red, green, blue);
     }
 
-    private static int FindNearestDefaultPaletteIndex(uint pixel)
+    internal static int FindNearestDefaultPaletteIndex(uint pixel)
     {
         var red = (int)((pixel >> 16) & 0xFF);
         var green = (int)((pixel >> 8) & 0xFF);
@@ -731,4 +731,5 @@ public sealed class ScreenFramebuffer
     private readonly record struct ScaleMapKey(int SourceLength, int TargetLength);
 }
 
-public sealed record ScreenFramebufferSnapshot(int Width, int Height, uint[] BgraPixels);
+/// <summary>Опубликованный снимок владеет своим массивом пикселей; после публикации массив не изменяется.</summary>
+public sealed record ScreenFramebufferSnapshot(int Width, int Height, uint[] BgraPixels, bool Smooth = false);

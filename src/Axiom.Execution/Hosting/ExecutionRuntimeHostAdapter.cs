@@ -215,6 +215,14 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
         }
     }
 
+    public void SetGraphicsSmoothing(bool enabled)
+    {
+        if (_inputProvider is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.SetGraphicsSmoothing(enabled);
+        }
+    }
+
     public void BeginFrame()
     {
         if (_inputProvider is IGraphicsHost graphicsHost)
@@ -435,6 +443,9 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
 
     public int GetAbsolutePixel(long x, long y) =>
         _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.GetAbsolutePixel(x, y) : 0;
+
+    public int[]? CaptureAbsolutePixels(long x, long y, int width, int height) =>
+        (_inputProvider as IGraphicsHost)?.CaptureAbsolutePixels(x, y, width, height);
 
     public void Paint(GraphicsPaintRequest request)
     {

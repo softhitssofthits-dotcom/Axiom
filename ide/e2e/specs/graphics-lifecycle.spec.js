@@ -1,15 +1,65 @@
 const { testWorkspace, writeAxm } = require('../helpers');
+const { execFileSync } = require('child_process');
+const path = require('path');
+const { nativeCanvas, probe } = require('../native-canvas');
 
 async function canvasPage(S) {
-  for (let i = 0; i < 100; i++) {
-    const page = (await S.electronApp.windows()).find(p => p.url().endsWith('/canvas.html'));
-    if (page) return page;
-    await S.page.waitForTimeout(50);
-  }
-  throw new Error('Окно CANVAS не появилось');
+  return nativeCanvas(S);
 }
 
 module.exports = [
+  {
+    id: 'graphics-smooth-screen-frame-filter',
+    name: 'SMOOTH работает с готовым кадром SCREEN',
+    async fn({ S, C }) {
+      const file = writeAxm(testWorkspace('graphics-smooth-screen'), 'smooth.axm',
+        'SCREEN 8\nSMOOTH ON\nPSET (10, 10), 12\nPRESET (11, 10), 0\n' +
+        'LINE (20, 20) - (220, 80), 10\nLINE (30, 100) - (180, 160), 11, B\n' +
+        'LINE (220, 100) - (360, 660), 11, BF\nCIRCLE (420, 160), 50, 14\n' +
+        'PRINT "Цвет точки (10, 10): "; POINT(10, 10)\nSMOOTH OFF\nSMOOTH ON\n' +
+        'DO WHILE NOT KEYPRESS("ESC")\nLOOP\nSCREEN 0\n');
+      await S.launch();
+      await S.page.evaluate(async p => { await window.__ide.openFile(p); await window.__ide.run(); }, file);
+      await S.page.waitForFunction(() => window.__ide.execution.surface?.kind === 'screen' &&
+        BigInt(window.__ide.execution.surface.windowHandle || '0') > 0n &&
+        window.__ide.execution.surface.windowVisible === true);
+      C.ok(true, 'SMOOTH ON/OFF исполняются с открытым окном SCREEN и готовым графическим кадром');
+      const hwnd = await S.page.evaluate(() => window.__ide.execution.surface.windowHandle);
+      if (!/^\d+$/.test(hwnd)) throw new Error('Некорректный дескриптор SCREEN');
+      const latency = JSON.parse(execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-File',
+        path.join(__dirname, '..', 'native-screen-probe.ps1'), '-WindowHandle', hwnd],
+        { encoding:'utf8', timeout:45000 }));
+      C.eq(latency.count, 12, 'Перемещение, изменение размера и перерисовка нативного SCREEN выполнены 12 раз');
+      C.ok(latency.medianMs < 100, 'Перерисовка SCREEN 8 с SMOOTH не блокирует окно на сотни миллисекунд',
+        `median=${latency.medianMs.toFixed(2)}ms, max=${latency.maxMs.toFixed(2)}ms`);
+      C.note(`SCREEN 8 move/resize/paint: median=${latency.medianMs.toFixed(2)}ms, max=${latency.maxMs.toFixed(2)}ms`);
+      await S.page.evaluate(() => window.__ide.stop());
+      await S.waitIdle();
+      C.eq(await S.page.locator('#diagnostics-content .diagnostic-icon.error').count(), 0,
+        'Переключение фильтра SCREEN не создаёт диагностики');
+    },
+  },
+  {
+    id: 'graphics-smooth-canvas-frame-filter',
+    name: 'SMOOTH немедленно переключает сглаживание всего кадра CANVAS',
+    async fn({ S, C }) {
+      const file = writeAxm(testWorkspace('graphics-smooth-canvas'), 'smooth.axm',
+        'SMOOTH ON\nCANVAS 64, 48\nCLS RGB(0, 0, 0)\nDRAWLINE 2, 3, 60, 40, RGB(255, 255, 255)\nDRAWTEXT "Текст кадра", 4, 4, RGB(255, 255, 0)\n' +
+        'SLEEP 1500\nSMOOTH OFF\nSLEEP 1500\nSMOOTH ON\nSLEEP\n');
+      await S.launch();
+      await S.page.evaluate(async p => { await window.__ide.openFile(p); await window.__ide.run(); }, file);
+      const page = await canvasPage(S);
+      await S.page.waitForFunction(() => window.__ide.execution.surface?.smooth === true);
+      C.ok(true, 'SMOOTH ON до CANVAS включает фильтр нативного окна');
+      await S.page.waitForFunction(() => window.__ide.execution.surface?.smooth === false);
+      C.ok(true, 'SMOOTH OFF сразу возвращает точечный показ текущего кадра');
+      await S.page.waitForFunction(() => window.__ide.execution.surface?.smooth === true);
+      C.ok(true, 'Повторный SMOOTH ON меняет показ без повторного рисования');
+      await S.page.evaluate(() => window.__ide.stop());
+      await S.waitIdle();
+      C.eq(page.exists(), false, 'Остановка уничтожает нативное окно CANVAS');
+    },
+  },
   {
     id: 'graphics-canvas-input-close-repeat',
     name: 'Закрытие CANVAS при INPUT отменяет запрос и допускает новый ввод',
@@ -49,19 +99,15 @@ module.exports = [
       await S.launch();
       await S.page.evaluate(async p => { await window.__ide.openFile(p); await window.__ide.run(); }, file);
       const page = await canvasPage(S);
-      await page.waitForFunction(() => document.getElementById('program-canvas').width === 800);
+      C.eq(page.width, 800, 'CANVAS сохраняет логическую ширину');
       for (const factor of [1, 1.25, 1.5, 2]) {
-        await S.electronApp.evaluate(({ BrowserWindow }, factor) => {
-          const window = BrowserWindow.getAllWindows().find(w => w.webContents.getURL().endsWith('/canvas.html'));
-          window.setSize(460, 320); window.webContents.setZoomFactor(factor);
-        }, factor);
-        await page.waitForTimeout(150);
-        const bounds = await page.locator('#program-canvas').boundingBox();
-        await page.mouse.move(bounds.x + bounds.width * 0.25, bounds.y + bounds.height * 0.25);
+        page.action('resize', { Width:Math.round(460 * factor), Height:Math.round(320 * factor) });
+        await S.page.waitForTimeout(150);
+        page.pointer(0.25, 0.25);
         const before = await S.page.evaluate(() => window.__ide.execution.outputText.length);
-        await page.mouse.down();
+        page.button('press');
         await S.page.waitForFunction(offset => /Нажата=1 x=\d+ y=\d+ состояние=TRUE/.test(window.__ide.execution.outputText.slice(offset)), before);
-        await page.mouse.up();
+        page.button('release');
         await S.page.waitForFunction(offset => window.__ide.execution.outputText.slice(offset).includes('Отпущена=1 состояние=FALSE'), before);
         const added = await S.page.evaluate(offset => window.__ide.execution.outputText.slice(offset), before);
         const coordinates = added.match(/Нажата=1 x=(\d+) y=(\d+) состояние=TRUE/);
@@ -71,38 +117,34 @@ module.exports = [
         C.eq((added.match(/Нажата=1/g) || []).length, 1, 'Один щелчок доставляется один раз');
       }
       for (const [name, number] of [['right', 2], ['middle', 3]]) {
-        const bounds = await page.locator('#program-canvas').boundingBox();
-        await page.mouse.move(bounds.x + bounds.width / 4, bounds.y + bounds.height / 4);
-        await page.mouse.down({ button:name });
+        page.pointer(0.25, 0.25);
+        page.button('press', number);
         await S.page.waitForFunction(number => new RegExp(`Нажата=${number} x=\\d+ y=\\d+ состояние=TRUE`).test(window.__ide.execution.outputText), number);
-        await page.mouse.up({ button:name });
+        page.button('release', number);
         await S.waitConsole(`Отпущена=${number} состояние=FALSE`);
         C.ok(true, `Кнопка ${number} нажимается и отпускается`);
       }
-      await page.mouse.wheel(0, 120); await S.waitConsole('Колесо=-120');
-      await page.mouse.wheel(0, -120); await S.waitConsole('Колесо=120');
+      page.action('wheel', { Delta:-120, X:page.lastX, Y:page.lastY }); await S.waitConsole('Колесо=-120');
+      page.action('wheel', { Delta:120, X:page.lastX, Y:page.lastY }); await S.waitConsole('Колесо=120');
       C.ok(true, 'Оба направления колеса доставлены в VM');
-      // Playwright по умолчанию имитирует постоянный фокус. Здесь нужен настоящий blur.
-      const cdp = await page.context().newCDPSession(page);
-      await cdp.send('Emulation.setFocusEmulationEnabled', { enabled:false });
-      await S.electronApp.evaluate(({ BrowserWindow }) => {
-        const window = BrowserWindow.getAllWindows().find(w => w.webContents.getURL().endsWith('/canvas.html'));
-        window.focus(); window.webContents.focus();
-      });
-      await page.waitForFunction(() => document.hasFocus());
+      C.eq(page.action('focus').focused, true, 'Нативное окно действительно получило системный фокус');
       const beforeBlur = await S.page.evaluate(() => window.__ide.execution.outputText.length);
-      await page.mouse.down();
+      page.button('press');
       await S.page.waitForFunction(offset => window.__ide.execution.outputText.slice(offset).includes('состояние=TRUE'), beforeBlur);
       await S.electronApp.evaluate(({ BrowserWindow }) => {
         const window = BrowserWindow.getAllWindows().find(w => w.webContents.getURL().endsWith('/index.html'));
         window.focus(); window.webContents.focus();
       });
-      await page.waitForFunction(() => !document.hasFocus());
+      const ideHandle = await S.electronApp.evaluate(({ BrowserWindow }) =>
+        BrowserWindow.getAllWindows().find(w => w.webContents.getURL().endsWith('/index.html'))
+          .getNativeWindowHandle().readBigUInt64LE(0).toString());
+      C.eq(probe(ideHandle, 'focus').focused, true, 'Системный фокус действительно перешёл к IDE');
+      C.eq(page.action('state').focused, false, 'Нативный CANVAS действительно потерял фокус');
       await S.page.locator('.xterm-helper-textarea').focus();
       await S.page.keyboard.press('Space');
       await S.waitConsole('Сброс=FALSEFALSEFALSE');
       C.ok(true, 'Настоящая потеря фокуса сбрасывает удержанную кнопку CANVAS');
-      await page.mouse.up(); await cdp.detach();
+      page.button('release');
       await S.page.evaluate(() => window.__ide.stop()); await S.waitIdle();
     },
   },
@@ -121,11 +163,12 @@ module.exports = [
         await S.page.evaluate(async p => { await window.__ide.openFile(p); await window.__ide.run(); }, canvas);
         const page = await canvasPage(S);
         await S.waitConsole('FALSE');
-        C.eq((await S.electronApp.windows()).filter(p => p.url().endsWith('/canvas.html')).length, 1, 'Открыто одно окно CANVAS');
-        await page.keyboard.down('ArrowRight');
+        C.ok(page.exists(), 'Открыто нативное окно CANVAS');
+        C.eq((await S.electronApp.windows()).filter(p => p.url().endsWith('/canvas.html')).length, 0, 'Дополнительное окно Electron отсутствует');
+        page.key('down', 'ArrowRight');
         await page.close(); await S.waitIdle(); await S.waitStatus('Остановлено');
         await S.page.waitForTimeout(150);
-        C.eq((await S.electronApp.windows()).filter(p => p.url().endsWith('/canvas.html')).length, 0, 'Закрытая поверхность не открывается поздним кадром');
+        C.eq(page.exists(), false, 'Закрытая нативная поверхность уничтожена');
       }
       C.eq(await S.page.locator('#diagnostics-content .diagnostic-icon.error').count(), 0, 'Повторы не вызвали ошибок');
     },

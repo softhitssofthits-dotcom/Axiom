@@ -106,6 +106,22 @@ public sealed class LexerTests
     }
 
     [Fact]
+    public void Lex_RecognizesSmoothOnAndOffCaseInsensitively()
+    {
+        var tokens = Lex("smooth on\r\nSMOOTH OFF", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        AssertTokenKinds(
+            tokens,
+            TokenKind.SmoothKeyword,
+            TokenKind.OnKeyword,
+            TokenKind.NewLineToken,
+            TokenKind.SmoothKeyword,
+            TokenKind.OffKeyword,
+            TokenKind.EndOfFileToken);
+    }
+
+    [Fact]
     public void Lex_RecognizesIdentifiersAndPreservesSourceText()
     {
         var tokens = Lex("alpha _Beta Beta123 remark REMark REMx", out var diagnostics);

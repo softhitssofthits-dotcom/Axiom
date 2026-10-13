@@ -1,0 +1,36 @@
+' Ожидается: отдельное окно CANVAS показывает движущиеся круги и русский текст.
+' 1 — выключить сглаживание, 2 — включить; стрелки перемещают камеру, ESC завершает пример.
+
+CANVAS 640, 360 ' Задаём логический размер игрового кадра.
+DIM cameraX AS LONG = 0
+DIM tick AS INTEGER = 0
+
+DO
+    IF KEYDOWN("LEFT") THEN
+        cameraX = cameraX - 3
+    END IF
+    IF KEYDOWN("RIGHT") THEN
+        cameraX = cameraX + 3
+    END IF
+    IF KEYPRESS("1") THEN
+        SMOOTH OFF
+    END IF
+    IF KEYPRESS("2") THEN
+        SMOOTH ON
+    END IF
+
+    BEGINFRAME ' Новый рабочий кадр остаётся скрытым до PRESENT.
+    CLS RGB(12, 18, 30)
+    VIEWPORT (0, 40)-(640, 360) ' Оставляем сверху полосу для подписи.
+    CAMERA cameraX, 0
+    FOR objectIndex = 0 TO 99
+        FILLCIRCLE (objectIndex * 41 + tick) MOD 1000, 30 + (objectIndex MOD 8) * 32, 8, RGB(255, 190, 60)
+    NEXT objectIndex
+    DRAWRECT 10, 10, 600, 290, RGB(80, 180, 255)
+    RESETCAMERA
+    VIEWPORT ' Возвращаем вывод на весь холст для неподвижной подписи.
+    DRAWTEXT "Стрелки — камера; 1 / 2 — сглаживание; ESC — выход", 8, 12, RGB(240, 240, 255)
+    PRESENT ' Показываем готовый кадр целиком.
+    tick = (tick + 1) MOD 1000
+    SLEEP 10
+LOOP WHILE NOT KEYPRESS("ESC")

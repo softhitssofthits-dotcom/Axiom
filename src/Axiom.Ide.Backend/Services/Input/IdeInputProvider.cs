@@ -185,6 +185,14 @@ internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider,
         }
     }
 
+    public void SetGraphicsSmoothing(bool enabled)
+    {
+        if (_promptService is IGraphicsHost graphicsHost)
+        {
+            graphicsHost.SetGraphicsSmoothing(enabled);
+        }
+    }
+
     public void BeginFrame()
     {
         if (_promptService is IGraphicsHost graphicsHost)
@@ -405,6 +413,9 @@ internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider,
 
     public int GetAbsolutePixel(long x, long y) =>
         _promptService is IGraphicsHost graphicsHost ? graphicsHost.GetAbsolutePixel(x, y) : 0;
+
+    public int[]? CaptureAbsolutePixels(long x, long y, int width, int height) =>
+        (_promptService as IGraphicsHost)?.CaptureAbsolutePixels(x, y, width, height);
 
     public void Paint(GraphicsPaintRequest request)
     {

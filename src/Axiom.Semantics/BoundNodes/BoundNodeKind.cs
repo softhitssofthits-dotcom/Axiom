@@ -15,6 +15,7 @@ public enum BoundNodeKind
     SleepStatement,
     RandomizeStatement,
     ScreenStatement,
+    SmoothStatement,
     CanvasStatement,
     BeginFrameStatement,
     PresentStatement,

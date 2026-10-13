@@ -741,6 +741,18 @@ public sealed class BytecodeModuleValidator
 
                 case Opcode.PCopy:
                 case Opcode.Canvas:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
+                    break;
+
+                case Opcode.Smooth:
+                    var smoothOperandCountValid = instruction.OperandCount == 1;
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    if (smoothOperandCountValid && instruction.GetOperand(0) is not 0 and not 1)
+                    {
+                        Report("BC4125", $"Инструкция Smooth в процедуре '{routine.Name}' ожидает значение 0 или 1.", module, routine.Id, instructionIndex);
+                    }
+                    break;
+
                 case Opcode.BeginFrame:
                 case Opcode.Present:
                 case Opcode.Camera:

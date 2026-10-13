@@ -787,6 +787,7 @@ public sealed class BytecodeCompiler
             LoweredInstructionKind.PauseMouseHandler => new BytecodeInstruction(Opcode.PauseMouseHandler, [instruction.Flags]),
             LoweredInstructionKind.ResumeMouseHandler => new BytecodeInstruction(Opcode.ResumeMouseHandler, [instruction.Flags]),
             LoweredInstructionKind.Screen => new BytecodeInstruction(Opcode.Screen),
+            LoweredInstructionKind.Smooth => new BytecodeInstruction(Opcode.Smooth, [instruction.Flags]),
             LoweredInstructionKind.Canvas => new BytecodeInstruction(Opcode.Canvas),
             LoweredInstructionKind.BeginFrame => new BytecodeInstruction(Opcode.BeginFrame),
             LoweredInstructionKind.Present => new BytecodeInstruction(Opcode.Present),

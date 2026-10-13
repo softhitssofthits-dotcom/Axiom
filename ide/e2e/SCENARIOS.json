@@ -1,7 +1,12 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 114,
+  "count": 122,
   "scenarios": [
+    {
+      "id": "graphics-open-foreground",
+      "spec": "graphics-foreground.spec.js",
+      "name": "SCREEN и CANVAS сразу выходят на передний план при запуске"
+    },
     {
       "id": "backend-maze-chase-controls",
       "spec": "backend.spec.js",
@@ -238,6 +243,26 @@
       "name": "Проверка всегда включена, сохранение и смена фокуса не форматируют документ"
     },
     {
+      "id": "gpu-canvas-queue-without-present",
+      "spec": "gpu-canvas.spec.js",
+      "name": "CANVAS: очередь без PRESENT сохраняет отзывчивость окна и остановку"
+    },
+    {
+      "id": "gpu-canvas-native-tile-layers",
+      "spec": "gpu-canvas.spec.js",
+      "name": "CANVAS: Tiled рисует видимый слой и явно выбранный скрытый слой в нативном окне"
+    },
+    {
+      "id": "gpu-canvas-native-game-frame",
+      "spec": "gpu-canvas.spec.js",
+      "name": "CANVAS: сто движущихся кругов, нативный кадр, фильтр и выход по ESC"
+    },
+    {
+      "id": "gpu-canvas-get-put-camera",
+      "spec": "gpu-canvas.spec.js",
+      "name": "CANVAS: GET и PUT сохраняют индексы и координаты камеры в настоящем запуске"
+    },
+    {
       "id": "graphics-shell-hard-crash",
       "spec": "graphics-crash.spec.js",
       "name": "Аварийное завершение своей оболочки освобождает DesktopHost при CANVAS/INPUT и SCREEN/SLEEP"
@@ -261,6 +286,16 @@
       "id": "graphics-renderer-bounded-stall",
       "spec": "graphics-crash.spec.js",
       "name": "После ограниченного зависания интерфейса запрос закрытия завершает собственную VM"
+    },
+    {
+      "id": "graphics-smooth-screen-frame-filter",
+      "spec": "graphics-lifecycle.spec.js",
+      "name": "SMOOTH работает с готовым кадром SCREEN"
+    },
+    {
+      "id": "graphics-smooth-canvas-frame-filter",
+      "spec": "graphics-lifecycle.spec.js",
+      "name": "SMOOTH немедленно переключает сглаживание всего кадра CANVAS"
     },
     {
       "id": "graphics-canvas-input-close-repeat",
@@ -351,6 +386,11 @@
       "id": "interpolation-print-typo-location",
       "spec": "interpolation-typo.spec.js",
       "name": "Опечатка PRIN перед интерполяцией: русская ошибка на строке 9"
+    },
+    {
+      "id": "format-smooth-two-styles",
+      "spec": "language-format.spec.js",
+      "name": "SMOOTH форматируется через меню и Enter в Classic и Modern"
     },
     {
       "id": "language-next-counter",

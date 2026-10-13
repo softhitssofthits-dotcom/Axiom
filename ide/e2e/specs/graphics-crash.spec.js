@@ -1,5 +1,6 @@
 const { execFileSync } = require('node:child_process');
 const { testWorkspace, writeAxm } = require('../helpers');
+const { nativeCanvas, probe } = require('../native-canvas');
 function alive(pid) { try { process.kill(pid, 0); return true; } catch (e) { if(e.code === 'ESRCH') return false; throw e; } }
 async function ownedHost(S) {
   const parent = await S.electronApp.evaluate(() => process.pid);
@@ -23,6 +24,7 @@ module.exports = [{
       await S.page.evaluate(async p => { await window.__ide.openFile(p); await window.__ide.run(); }, file);
       if(name === 'canvas') await S.waitStatus('Ожидание ввода');
       else await S.page.waitForFunction(() => window.__ide.execution.surface?.windowVisible === true);
+      const hwnd = await S.page.evaluate(() => window.__ide.execution.surface.windowHandle);
       const { parent, pid } = await ownedHost(S);
       const closed = S.electronApp.waitForEvent('close', {timeout:15000});
       // Завершается только основной процесс созданной тестом оболочки.
@@ -31,6 +33,7 @@ module.exports = [{
       for(let i=0; i<100 && alive(pid); i++) await new Promise(r => setTimeout(r,50));
       const orphan = alive(pid);
       C.eq(orphan, false, `DesktopHost завершился после аварии ${name}`);
+      C.eq(probe(hwnd, 'exists').exists, false, `Нативное окно ${name} уничтожено после аварии`);
       // Убираем только подтверждённый собственный процесс при провале проверки.
       if(orphan) process.kill(pid);
       await S.close();
@@ -50,6 +53,7 @@ module.exports.push({
     const file = writeAxm(testWorkspace('renderer-crash'), 'input.axm', 'CANVAS 40,30\nBEGINFRAME\nCLS RGB(0,255,0)\nPRESENT\nDIM value AS INTEGER\nINPUT value\n');
     await S.launch(); await S.page.evaluate(async p => { await window.__ide.openFile(p); await window.__ide.run(); }, file);
     await S.waitStatus('Ожидание ввода');
+    const native = await nativeCanvas(S);
     const {pid} = await ownedHost(S);
     await S.electronApp.evaluate(({dialog}) => { dialog.showMessageBox = async () => ({response:0}); });
     const restored = S.electronApp.waitForEvent('window', {timeout:20000, predicate: async page => {
@@ -58,7 +62,7 @@ module.exports.push({
     await S.electronApp.evaluate(({BrowserWindow}) => { const window = BrowserWindow.getAllWindows().find(w => w.webContents.getURL().endsWith('/index.html')); setTimeout(() => window.webContents.forcefullyCrashRenderer(),100); });
     for(let i=0;i<100 && alive(pid);i++) await new Promise(r => setTimeout(r,50));
     C.eq(alive(pid), false, 'DesktopHost завершён после отказа интерфейса');
-    C.eq(S.electronApp.windows().filter(page => page.url().endsWith('/canvas.html')).length,0,'Графическое окно закрыто');
+    C.eq(native.exists(),false,'Нативное графическое окно закрыто');
     S.page = await restored;
     await S.page.waitForSelector('#app.ready', {timeout:20000});
     C.eq(await S.page.evaluate(() => window.__ide.running),false,'Восстановленный интерфейс не запускает прежнюю VM');
@@ -79,6 +83,7 @@ module.exports.push({
     await S.launch();
     await S.page.evaluate(async p => { await window.__ide.openFile(p); await window.__ide.run(); }, file);
     await S.waitStatus('Ожидание ввода');
+    const native = await nativeCanvas(S);
     await S.page.evaluate(text => window.__ide.editor.getModel().setValue(text), source + "' Завершённая несохранённая правка\n");
     C.eq(await S.editorValue(),source + "' Завершённая несохранённая правка\n",'Правка действительно внесена до зависания');
     const {pid} = await ownedHost(S);
@@ -103,7 +108,7 @@ module.exports.push({
       await S.page.waitForSelector('#app.ready', {timeout:20000});
       for(let i=0;i<100 && alive(pid);i++) await new Promise(r => setTimeout(r,50));
       C.eq(alive(pid),false,'Прежний собственный DesktopHost завершён');
-      C.eq(S.electronApp.windows().filter(page => page.url().endsWith('/canvas.html')).length,0,'CANVAS закрыт');
+      C.eq(native.exists(),false,'Нативный CANVAS закрыт');
       C.eq(await S.editorValue(),source + "' Завершённая несохранённая правка\n",'Несохранённый текст восстановлен');
       C.eq(await S.page.evaluate(() => window.__ide.running),false,'Прежняя VM не запускается автоматически');
       const dialogs = await S.electronApp.evaluate(() => global.stallDialogs);

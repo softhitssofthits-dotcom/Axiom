@@ -35,6 +35,7 @@ internal static class BoundExpressionTraversal
             BoundScreenStatement node => [node.ModeExpression, node.ColorSwitchExpression, node.ActivePageExpression, node.VisualPageExpression],
             BoundCanvasStatement node => [node.WidthExpression, node.HeightExpression],
             BoundBeginFrameStatement node => [],
+            BoundSmoothStatement node => [],
             BoundPresentStatement node => [],
             BoundCameraStatement node => [node.XExpression, node.YExpression],
             BoundViewportStatement node => [node.LeftExpression, node.TopExpression, node.RightExpression, node.BottomExpression],

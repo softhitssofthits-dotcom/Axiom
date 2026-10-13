@@ -15,6 +15,13 @@ internal sealed class Direct3D11SwapChainRenderer : IDisposable
     private readonly IDXGISwapChain _swapChain;
     private ID3D11Texture2D? _backBuffer;
     private ID3D11RenderTargetView? _renderTargetView;
+    private ID3D11Texture2D? _frameTexture;
+    private ID3D11ShaderResourceView? _frameView;
+    private ID3D11VertexShader? _vertexShader;
+    private ID3D11PixelShader? _pixelShader;
+    private ID3D11SamplerState? _linearSampler;
+    private ID3D11Buffer? _frameParameters;
+    private uint[]? _uploadedPixels;
     private int _width;
     private int _height;
     private bool _disposed;
@@ -72,6 +79,25 @@ internal sealed class Direct3D11SwapChainRenderer : IDisposable
         _device = device ?? throw new InvalidOperationException("D3D11 device was not created.");
         _context = context ?? throw new InvalidOperationException("D3D11 device context was not created.");
         CreateRenderTargetView();
+        try
+        {
+            _vertexShader = _device.CreateVertexShader(ScreenFrameShaders.Vertex.Span);
+            _pixelShader = _device.CreatePixelShader(ScreenFrameShaders.Pixel.Span);
+            _linearSampler = _device.CreateSamplerState(new SamplerDescription
+            {
+                Filter = Filter.MinMagMipLinear,
+                AddressU = TextureAddressMode.Clamp,
+                AddressV = TextureAddressMode.Clamp,
+                AddressW = TextureAddressMode.Clamp,
+                MaxLOD = float.MaxValue
+            });
+            _frameParameters = _device.CreateBuffer(32, BindFlags.ConstantBuffer);
+        }
+        catch
+        {
+            Dispose();
+            throw;
+        }
     }
 
     public void Resize(int width, int height)
@@ -105,6 +131,12 @@ internal sealed class Direct3D11SwapChainRenderer : IDisposable
 
     public void PresentFrame(ScreenFramebufferSnapshot frame)
     {
+        DrawFrame(frame);
+        _swapChain.Present(PresentSyncInterval, PresentFlags.None);
+    }
+
+    internal void DrawFrame(ScreenFramebufferSnapshot frame)
+    {
         ArgumentNullException.ThrowIfNull(frame);
 
         if (frame.Width <= 0 || frame.Height <= 0 || frame.BgraPixels.Length != frame.Width * frame.Height)
@@ -117,55 +149,61 @@ internal sealed class Direct3D11SwapChainRenderer : IDisposable
             return;
         }
 
-        var pixels = frame.Width == _width && frame.Height == _height
-            ? frame.BgraPixels
-            : ScaleFramePixels(frame, _width, _height);
-
-        _context.UpdateSubresource(
-            pixels.AsSpan(),
-            _backBuffer,
-            0,
-            (uint)(_width * sizeof(uint)),
-            0,
-            null);
-        _swapChain.Present(PresentSyncInterval, PresentFlags.None);
-    }
-
-    internal static uint[] ScaleFramePixels(ScreenFramebufferSnapshot frame, int targetWidth, int targetHeight)
-    {
-        ArgumentNullException.ThrowIfNull(frame);
-
-        if (targetWidth <= 0 || targetHeight <= 0)
+        EnsureFrameTexture(frame);
+        // Снимки опубликованного кадра неизменны. Перерисовка окна и смена
+        // фильтра не требуют повторной загрузки того же логического буфера.
+        if (!ReferenceEquals(_uploadedPixels, frame.BgraPixels))
         {
-            throw new ArgumentOutOfRangeException(nameof(targetWidth), "Target dimensions must be positive.");
+            _context.UpdateSubresource(frame.BgraPixels.AsSpan(), _frameTexture!, 0,
+                (uint)(frame.Width * sizeof(uint)), 0, null);
+            _uploadedPixels = frame.BgraPixels;
         }
 
-        if (frame.Width == targetWidth && frame.Height == targetHeight)
-        {
-            return frame.BgraPixels;
-        }
-
-        var scale = Math.Min((double)targetWidth / frame.Width, (double)targetHeight / frame.Height);
+        var scale = Math.Min((double)_width / frame.Width, (double)_height / frame.Height);
         var scaledWidth = Math.Max(1, (int)Math.Floor(frame.Width * scale));
         var scaledHeight = Math.Max(1, (int)Math.Floor(frame.Height * scale));
-        var offsetX = (targetWidth - scaledWidth) / 2;
-        var offsetY = (targetHeight - scaledHeight) / 2;
-        var scaled = new uint[targetWidth * targetHeight];
-        Array.Fill(scaled, 0xFF000000u);
-
-        for (var y = 0; y < scaledHeight; y++)
+        var offsetX = (_width - scaledWidth) / 2;
+        var offsetY = (_height - scaledHeight) / 2;
+        Span<uint> parameters = stackalloc uint[8]
         {
-            var sourceY = y * frame.Height / scaledHeight;
-            var sourceRow = sourceY * frame.Width;
-            var targetRow = (offsetY + y) * targetWidth;
-            for (var x = 0; x < scaledWidth; x++)
-            {
-                var sourceX = x * frame.Width / scaledWidth;
-                scaled[targetRow + offsetX + x] = frame.BgraPixels[sourceRow + sourceX];
-            }
-        }
+            (uint)frame.Width, (uint)frame.Height, (uint)scaledWidth, (uint)scaledHeight,
+            (uint)offsetX, (uint)offsetY, frame.Smooth ? 1u : 0u, 0u
+        };
+        _context.UpdateSubresource(parameters, _frameParameters!);
+        _context.ClearRenderTargetView(_renderTargetView!, new Color4(0, 0, 0, 1));
+        _context.OMSetRenderTargets(_renderTargetView!);
+        _context.RSSetViewport(new Viewport(offsetX, offsetY, scaledWidth, scaledHeight));
+        _context.IASetPrimitiveTopology(PrimitiveTopology.TriangleList);
+        _context.VSSetShader(_vertexShader);
+        _context.PSSetShader(_pixelShader);
+        _context.PSSetConstantBuffer(0, _frameParameters);
+        _context.PSSetShaderResource(0, _frameView!);
+        _context.PSSetSampler(0, _linearSampler);
+        _context.Draw(3, 0);
+        _context.PSSetShaderResource(0, null!);
+    }
 
-        return scaled;
+    private void EnsureFrameTexture(ScreenFramebufferSnapshot frame)
+    {
+        if (_frameTexture is not null && _frameTexture.Description.Width == frame.Width &&
+            _frameTexture.Description.Height == frame.Height)
+            return;
+
+        _frameView?.Dispose();
+        _frameTexture?.Dispose();
+        _uploadedPixels = null;
+        _frameTexture = _device.CreateTexture2D(new Texture2DDescription
+        {
+            Width = (uint)frame.Width,
+            Height = (uint)frame.Height,
+            MipLevels = 1,
+            ArraySize = 1,
+            Format = Format.B8G8R8A8_UNorm,
+            SampleDescription = new SampleDescription(1, 0),
+            Usage = ResourceUsage.Default,
+            BindFlags = BindFlags.ShaderResource
+        });
+        _frameView = _device.CreateShaderResourceView(_frameTexture);
     }
 
     public void Dispose()
@@ -177,6 +215,13 @@ internal sealed class Direct3D11SwapChainRenderer : IDisposable
 
         _disposed = true;
 
+        try { _context.ClearState(); } catch { /* COM cleanup best-effort */ }
+        try { _frameView?.Dispose(); } catch { /* COM cleanup best-effort */ }
+        try { _frameTexture?.Dispose(); } catch { /* COM cleanup best-effort */ }
+        try { _frameParameters?.Dispose(); } catch { /* COM cleanup best-effort */ }
+        try { _linearSampler?.Dispose(); } catch { /* COM cleanup best-effort */ }
+        try { _pixelShader?.Dispose(); } catch { /* COM cleanup best-effort */ }
+        try { _vertexShader?.Dispose(); } catch { /* COM cleanup best-effort */ }
         try { _renderTargetView?.Dispose(); } catch { /* COM cleanup best-effort */ }
         try { _backBuffer?.Dispose(); } catch { /* COM cleanup best-effort */ }
         try { _swapChain.Dispose(); } catch { /* COM cleanup best-effort */ }

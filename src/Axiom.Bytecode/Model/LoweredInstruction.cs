@@ -572,6 +572,11 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.Canvas, location, valueCount: 2);
     }
 
+    public static LoweredInstruction Smooth(TextLocation location, bool enabled)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.Smooth, location, flags: enabled ? 1 : 0);
+    }
+
     public static LoweredInstruction BeginFrame(TextLocation location)
     {
         return new LoweredInstruction(LoweredInstructionKind.BeginFrame, location);

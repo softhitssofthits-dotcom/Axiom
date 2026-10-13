@@ -24,11 +24,32 @@ public sealed class ProgramConsoleServiceTests
             service.SubmitInput();
         });
 
-        var result = service.RequestInput(new ProgramInputRequest(1, "Name", 1));
+        var result = service.RequestInput(new ProgramInputRequest(1, "Name? ", 1));
 
         Assert.Equal("Ada", result);
         Assert.False(service.IsWaitingForInput);
         Assert.Equal("Name? Ada", service.OutputText);
+    }
+
+    [Theory]
+    [InlineData(null, "? ")]
+    [InlineData("", "")]
+    [InlineData("Name", "Name")]
+    [InlineData("Name? ", "Name? ")]
+    [InlineData("  Name  ", "  Name  ")]
+    public void RequestInput_PreservesCompilerPreparedPrompt(string? prompt, string expectedPrompt)
+    {
+        var service = new ProgramConsoleService();
+        var dispatcher = Dispatcher.CurrentDispatcher;
+        dispatcher.BeginInvoke(() =>
+        {
+            Assert.Equal(expectedPrompt, service.CurrentPromptText);
+            service.CurrentInputText = "Ada";
+            service.SubmitInput();
+        });
+
+        Assert.Equal("Ada", service.RequestInput(new ProgramInputRequest(1, prompt, 1)));
+        Assert.Equal(expectedPrompt + "Ada", service.OutputText);
     }
 
     [Fact]
@@ -333,7 +354,7 @@ public sealed class ProgramConsoleServiceTests
             service.SubmitInput();
         });
 
-        var result = service.ReadGraphicsInput(new InputRequest("Name", 1));
+        var result = service.ReadGraphicsInput(new InputRequest("Name? ", 1));
 
         Assert.Equal("Ada", result);
         Assert.Equal(string.Empty, service.OutputText);
@@ -361,7 +382,7 @@ public sealed class ProgramConsoleServiceTests
             Assert.False(HasCellPixels(service.GraphicsFrame, row: 2, column: 1));
         });
 
-        var result = service.ReadGraphicsInput(new InputRequest("Name", 1));
+        var result = service.ReadGraphicsInput(new InputRequest("Name? ", 1));
 
         Assert.Equal("Ada", result);
         Assert.Equal(string.Empty, service.OutputText);
@@ -997,7 +1018,9 @@ public sealed class ProgramConsoleServiceTests
     {
         var frame = new ScreenFramebufferSnapshot(2, 2, [1u, 2u, 3u, 4u]);
 
-        var scaled = Direct3D11SwapChainRenderer.ScaleFramePixels(frame, 4, 4);
+        using var surface = new ScreenRendererTestSurface(4, 4);
+        surface.Renderer.DrawFrame(frame);
+        var scaled = surface.ReadPixels();
 
         Assert.Equal(
             [
@@ -1014,7 +1037,9 @@ public sealed class ProgramConsoleServiceTests
     {
         var frame = new ScreenFramebufferSnapshot(2, 2, [1u, 2u, 3u, 4u]);
 
-        var scaled = Direct3D11SwapChainRenderer.ScaleFramePixels(frame, 6, 4);
+        using var surface = new ScreenRendererTestSurface(6, 4);
+        surface.Renderer.DrawFrame(frame);
+        var scaled = surface.ReadPixels();
 
         Assert.Equal(
             [
@@ -1024,6 +1049,74 @@ public sealed class ProgramConsoleServiceTests
                 0xFF000000u, 3u, 3u, 4u, 4u, 0xFF000000u
             ],
             scaled);
+    }
+
+    [Fact]
+    public void ScreenRenderer_SmoothlyScalesFinishedFrameWithBilinearInterpolation()
+    {
+        var frame = new ScreenFramebufferSnapshot(2, 2,
+            [0xFFFFFFFFu, 0xFF000000u, 0xFF000000u, 0xFF000000u], Smooth: true);
+
+        using var surface = new ScreenRendererTestSurface(3, 3);
+        surface.Renderer.DrawFrame(frame);
+        var scaledUp = surface.ReadPixels();
+        surface.Renderer.Resize(1, 1);
+        surface.Renderer.DrawFrame(frame);
+        var scaledDown = surface.ReadPixels();
+
+        Assert.Equal(0xFF404040u, scaledUp[4]);
+        Assert.Equal(0xFF404040u, scaledDown[0]);
+    }
+
+    [Fact]
+    public void ScreenRenderer_SmoothingDoesNotChangePixelsWhenFrameSizeMatches()
+    {
+        uint[] pixels = [0xFF123456u, 0xFFABCDEFu];
+        var frame = new ScreenFramebufferSnapshot(2, 1, pixels, Smooth: true);
+
+        using var surface = new ScreenRendererTestSurface(2, 1);
+        surface.Renderer.DrawFrame(frame);
+        Assert.Equal(pixels, surface.ReadPixels());
+    }
+
+    [Fact]
+    public void GraphicsSmoothing_IsOffByDefaultPerSessionAndPersistsAcrossSurfaces()
+    {
+        var service = new ProgramConsoleService();
+
+        service.SetGraphicsSmoothing(true);
+        service.ActivateScreen(1);
+        Assert.True(Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame).Smooth);
+
+        service.ActivateCanvas(8, 8);
+        Assert.True(Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame).Smooth);
+
+        service.BeginSession();
+        service.ActivateScreen(1);
+        Assert.False(Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame).Smooth);
+    }
+
+    [Fact]
+    public void GraphicsSmoothing_DuringCanvasFrameDoesNotPublishUnfinishedPixels()
+    {
+        var service = new ProgramConsoleService();
+        service.ActivateCanvas(2, 1);
+        service.ClearFrame(0x000000);
+        service.PresentFrame();
+        var finishedPixels = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame).BgraPixels.ToArray();
+
+        service.BeginFrame();
+        service.ClearFrame(0xFFFFFF);
+        service.SetGraphicsSmoothing(true);
+
+        var frameDuringDrawing = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        Assert.True(frameDuringDrawing.Smooth);
+        Assert.Equal(finishedPixels, frameDuringDrawing.BgraPixels);
+
+        service.PresentFrame();
+        var finishedSmoothedFrame = Assert.IsType<ScreenFramebufferSnapshot>(service.GraphicsFrame);
+        Assert.True(finishedSmoothedFrame.Smooth);
+        Assert.NotEqual(finishedPixels, finishedSmoothedFrame.BgraPixels);
     }
 
     [Fact]
@@ -1564,7 +1657,7 @@ public sealed class ProgramConsoleServiceTests
             service.SubmitInput();
         });
 
-        var result = service.RequestInput(new ProgramInputRequest(1, "Name", 1));
+        var result = service.RequestInput(new ProgramInputRequest(1, "Name? ", 1));
 
         Assert.Equal("Ada", result);
         Assert.Equal("Name? Ada", service.OutputText);
@@ -1586,7 +1679,7 @@ public sealed class ProgramConsoleServiceTests
             service.SubmitInput();
         });
 
-        var result = service.RequestInput(new ProgramInputRequest(1, "Name", 1));
+        var result = service.RequestInput(new ProgramInputRequest(1, "Name? ", 1));
 
         Assert.Equal("Ada", result);
         Assert.Contains(traceService.Entries, static entry => entry.Category == "console.begin");

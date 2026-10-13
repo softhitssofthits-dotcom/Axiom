@@ -1,0 +1,28 @@
+' Режим ON применяется к CANVAS и переключается без повторного рисования.
+' Нажмите S, чтобы переключить сглаживание готового кадра; нажмите ESC для выхода.
+SMOOTH ON
+CANVAS 320, 180
+
+DIM smoothingEnabled AS BOOLEAN = TRUE
+
+DO
+    BEGINFRAME
+    CLS RGB(8, 12, 24)
+    DRAWLINE 16, 24, 300, 148, RGB(80, 210, 255)
+    DRAWCIRCLE 160, 90, 48, RGB(255, 220, 80)
+    DRAWTEXT "Сглаживание всего кадра", 16, 12, RGB(255, 255, 255)
+    DRAWTEXT "S — переключить, ESC — выход", 16, 30, RGB(190, 210, 240)
+    PRESENT
+
+    IF KEYPRESS("S") THEN
+        IF smoothingEnabled THEN
+            smoothingEnabled = FALSE
+            SMOOTH OFF
+        ELSE
+            smoothingEnabled = TRUE
+            SMOOTH ON
+        END IF
+    END IF
+
+    SLEEP 16
+LOOP WHILE NOT KEYPRESS("ESC")

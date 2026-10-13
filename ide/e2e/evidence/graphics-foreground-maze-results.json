@@ -1,0 +1,16 @@
+[
+  {
+    "id": "backend-maze-chase-controls",
+    "spec": "backend.spec.js",
+    "name": "Настоящий Maze Chase: движение героя и единственное окно",
+    "ms": 15066,
+    "passed": 5,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57102/6c5413e2-a7b2-4825-9c16-8d3fd47c0e56\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

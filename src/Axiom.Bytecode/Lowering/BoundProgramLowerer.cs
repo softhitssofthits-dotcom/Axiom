@@ -325,6 +325,9 @@ public sealed class BoundProgramLowerer
                 LowerModernGraphicsIntegralExpression(canvas.HeightExpression, instructions);
                 instructions.Add(LoweredInstruction.Canvas(canvas.Location));
                 break;
+            case BoundSmoothStatement smooth:
+                instructions.Add(LoweredInstruction.Smooth(smooth.Location, smooth.Enabled));
+                break;
             case BoundBeginFrameStatement beginFrame:
                 instructions.Add(LoweredInstruction.BeginFrame(beginFrame.Location));
                 break;

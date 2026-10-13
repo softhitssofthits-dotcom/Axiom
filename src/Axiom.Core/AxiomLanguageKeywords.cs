@@ -29,7 +29,7 @@ public static class AxiomLanguageKeywords
         "OFF", "ON", "OPEN", "ORELSE", "OR", "OUTPUT",
         "PAINT", "PALETTE", "PCOPY", "PRESERVE", "PRESENT", "PRESET", "PRINT", "RANDOMIZE", "PSET", "PUT",
         "REDIM", "RESETCAMERA", "RETURN",
-        "SCREEN", "SELECT", "SELF", "SETMAPTILE", "SLEEP", "STEP", "STOP", "SUB",
+        "SCREEN", "SELECT", "SELF", "SETMAPTILE", "SMOOTH", "SLEEP", "STEP", "STOP", "SUB",
         "THEN", "TO", "TRANSPARENT", "TRY", "TYPE",
         "UNTIL", "USING",
         "VIEW", "VIEWPORT",

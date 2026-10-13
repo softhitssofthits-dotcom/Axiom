@@ -126,5 +126,6 @@ public enum Opcode
     PushErrorHandler,
     PopErrorHandler,
     RaiseError,
-    EndFinally
+    EndFinally,
+    Smooth
 }

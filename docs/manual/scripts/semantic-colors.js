@@ -1,5 +1,5 @@
 (function(root) {
-  const legend = { tokenTypes: ['variable', 'function', 'type', 'array'], tokenModifiers: ['readonly'] };
+  const legend = { tokenTypes: ['variable', 'function', 'type', 'array', 'keyword'], tokenModifiers: ['readonly'] };
   function classify(source, tokenLines) {
     const lines = source.split(/\r\n|\r|\n/);
     const scopes = [new Map()];
@@ -22,12 +22,14 @@
     });
     const data = []; let previousLine = 0, previousStart = 0;
     tokenLines.forEach((tokens, n) => tokens.forEach((token, k) => {
-      if (!/^identifier(?:\.axiom)?$/.test(token.type)) return;
       const start = token.offset; const end = tokens[k + 1]?.offset ?? lines[n].length;
+      const tokenKind = token.type === 'keyword.axiom' ? 4 : /^identifier(?:\.axiom)?$/.test(token.type) ? 0 : -1;
+      if (tokenKind < 0) return;
       for (const match of lines[n].slice(start, end).matchAll(/[A-Za-z_]\w*/g)) {
         const offset = start + match.index;
         const category = scopeAt[n]?.get(match[0].toUpperCase()) || globals.get(match[0].toUpperCase()) || [0, 0];
-        data.push(n - previousLine, n === previousLine ? offset - previousStart : offset, match[0].length, category[0], category[1]);
+        data.push(n - previousLine, n === previousLine ? offset - previousStart : offset, match[0].length,
+          tokenKind === 4 ? 4 : category[0], tokenKind === 4 ? 0 : category[1]);
         previousLine = n; previousStart = offset;
       }
     }));

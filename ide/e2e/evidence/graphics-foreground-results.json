@@ -1,0 +1,16 @@
+[
+  {
+    "id": "graphics-open-foreground",
+    "spec": "graphics-foreground.spec.js",
+    "name": "SCREEN и CANVAS сразу выходят на передний план при запуске",
+    "ms": 10406,
+    "passed": 3,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57096/00cf416f-7287-44fc-956d-bedadf27669a\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

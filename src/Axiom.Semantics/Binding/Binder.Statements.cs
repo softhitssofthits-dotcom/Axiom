@@ -31,6 +31,7 @@ public sealed partial class Binder
             SleepStatementSyntax sleepStatement => BindSleepStatement(sleepStatement),
             RandomizeStatementSyntax randomizeStatement => BindRandomizeStatement(randomizeStatement),
             ScreenStatementSyntax screenStatement => BindScreenStatement(screenStatement),
+            SmoothStatementSyntax smoothStatement => new BoundSmoothStatement(GetLocation(smoothStatement), smoothStatement.Enabled),
             CanvasStatementSyntax canvasStatement => BindCanvasStatement(canvasStatement),
             BeginFrameStatementSyntax beginFrameStatement => new BoundBeginFrameStatement(GetLocation(beginFrameStatement)),
             PresentStatementSyntax presentStatement => new BoundPresentStatement(GetLocation(presentStatement)),

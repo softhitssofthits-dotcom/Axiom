@@ -384,6 +384,7 @@ public sealed partial class Parser
             TokenKind.SelectKeyword => SyntaxKind.SelectKeyword,
             TokenKind.SetMapTileKeyword => SyntaxKind.SetMapTileKeyword,
             TokenKind.ScreenKeyword => SyntaxKind.ScreenKeyword,
+            TokenKind.SmoothKeyword => SyntaxKind.SmoothKeyword,
             TokenKind.SleepKeyword => SyntaxKind.SleepKeyword,
             TokenKind.RandomizeKeyword => SyntaxKind.RandomizeKeyword,
             TokenKind.AndAlsoKeyword => SyntaxKind.AndAlsoKeyword,

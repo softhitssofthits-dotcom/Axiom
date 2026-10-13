@@ -44,6 +44,19 @@ public sealed class BoundProgramLowererTests
     }
 
     [Fact]
+    public void Lower_SmoothStatements_EmitModeFlagsWithoutStackOperations()
+    {
+        var result = Lower("SMOOTH ON\nSMOOTH OFF");
+
+        Assert.True(result.Succeeded);
+        var instructions = result.Program!.EntryPoint.Instructions;
+        Assert.Equal(
+            [LoweredInstructionKind.Smooth, LoweredInstructionKind.Smooth, LoweredInstructionKind.Return],
+            instructions.Select(static instruction => instruction.Kind));
+        Assert.Equal([1, 0], instructions.Take(2).Select(static instruction => instruction.Flags));
+    }
+
+    [Fact]
     public void Lower_RepeatedProgram_ProducesDeterministicInstructionShape()
     {
         const string source = """

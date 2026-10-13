@@ -73,6 +73,7 @@ public sealed partial class Binder
             SleepStatementSyntax sleepStatement => sleepStatement.SleepKeyword.Location,
             RandomizeStatementSyntax randomizeStatement => randomizeStatement.RandomizeKeyword.Location,
             ScreenStatementSyntax screenStatement => screenStatement.ScreenKeyword.Location,
+            SmoothStatementSyntax smoothStatement => smoothStatement.SmoothKeyword.Location,
             CanvasStatementSyntax canvasStatement => canvasStatement.CanvasKeyword.Location,
             BeginFrameStatementSyntax beginFrameStatement => beginFrameStatement.BeginFrameKeyword.Location,
             PresentStatementSyntax presentStatement => presentStatement.PresentKeyword.Location,
