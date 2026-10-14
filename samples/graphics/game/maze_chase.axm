@@ -2,85 +2,85 @@
 ' В одном файле собраны CANVAS, кадровый цикл, камера, спрайты, примитивы и HUD.              ' Так удобнее видеть всю игровую механику целиком.
 ' Управление: стрелки ведут героя, SPACE ставит паузу, ESC завершает пример.                  ' Подсказка сразу объясняет, как запускать и проверять программу.
 
-DIM TILE AS INTEGER = 16                                                                        ' Размер одной логической клетки лабиринта в пикселях.
-DIM VIEW_WIDTH AS INTEGER = 1024                                                                ' Широкий холст даёт нормальное окно без ощущения вытянутого поля.
-DIM VIEW_HEIGHT AS INTEGER = 660                                                                ' Высота холста вмещает весь лабиринт и HUD без ручного сдвига подложки.
-DIM HUD_HEIGHT AS INTEGER = 30 ' Высота верхней панели со счётом и подсказкой.
+Dim TILE As Integer = 16                                                                        ' Размер одной логической клетки лабиринта в пикселях.
+Dim VIEW_WIDTH As Integer = 1024                                                                ' Широкий холст даёт нормальное окно без ощущения вытянутого поля.
+Dim VIEW_HEIGHT As Integer = 660                                                                ' Высота холста вмещает весь лабиринт и HUD без ручного сдвига подложки.
+Dim HUD_HEIGHT As Integer = 30 ' Высота верхней панели со счётом и подсказкой.
 
-DIM PLAYER_SPEED AS INTEGER = 4                                                                 ' Скорость героя в пикселях за кадр.
-DIM GHOST_SPEED AS INTEGER = 3                                                                  ' Скорость призрака в пикселях за кадр.
+Dim PLAYER_SPEED As Integer = 4                                                                 ' Скорость героя в пикселях за кадр.
+Dim GHOST_SPEED As Integer = 3                                                                  ' Скорость призрака в пикселях за кадр.
 
 Dim DIR_LEFT As Integer = 1                                                                     ' Код направления влево.
-DIM DIR_RIGHT AS INTEGER = 2                                                                    ' Код направления вправо.
+Dim DIR_RIGHT As Integer = 2                                                                    ' Код направления вправо.
 Dim DIR_UP As Integer = 3                                                                       ' Код направления вверх.
 Dim DIR_DOWN As Integer = 4                                                                     ' Код направления вниз.
 
-DIM WALL_FILL_COLOR AS INTEGER = RGB(12, 40, 118)                                              ' Цвет заливки стен, оставлен как часть палитры примера.
-DIM WALL_LIGHT_COLOR AS INTEGER = RGB(90, 214, 255)                                            ' Светлая голубая линия для HUD и декоративных контуров.
-DIM WALL_SHADOW_COLOR AS INTEGER = RGB(7, 18, 62)                                              ' Тёмный оттенок палитры стен, оставлен для возможных доработок.
-DIM BACKGROUND_COLOR AS INTEGER = RGB(1, 4, 14)                                                ' Почти чёрный фон за пределами картинки лабиринта.
-DIM POWER_PELLET_COLOR AS INTEGER = RGB(255, 240, 176)                                         ' Цвет обычных и крупных точек.
-DIM HUD_BACKGROUND_COLOR AS INTEGER = RGB(4, 8, 18)                                            ' Фон информационной панели сверху.
-DIM HUD_TEXT_COLOR AS INTEGER = RGB(255, 244, 180)                                             ' Цвет строки со счётом и числом жизней.
-DIM HUD_STATUS_COLOR AS INTEGER = RGB(210, 228, 255)                                           ' Цвет строки статуса с подсказками игроку.
-DIM CALIBRATION_LINE_COLOR AS INTEGER = RGB(255, 80, 80)                                      ' Цвет яркой направляющей линии в режиме ручной калибровки.
-DIM CALIBRATION_TEXT_COLOR AS INTEGER = RGB(255, 230, 130)                                     ' Цвет текста калибровки, чтобы он отличался от обычного HUD.
-DIM CALIBRATION_GRID_COLOR AS INTEGER = RGB(10, 34, 52)                                        ' Цвет тонкой сетки сделан более приглушённым, чтобы она меньше спорила с лабиринтом.
-DIM CALIBRATION_PANEL_X AS INTEGER = 8                                                         ' Левая координата боковой панели калибровки.
-DIM CALIBRATION_PANEL_Y AS INTEGER = 88                                                        ' Верхняя координата боковой панели, чтобы она не закрывала верх поля.
-DIM CALIBRATION_PANEL_WIDTH AS INTEGER = 264                                                    ' Ширина боковой панели с подсказками.
-DIM CALIBRATION_PANEL_HEIGHT AS INTEGER = 172                                                   ' Высота боковой панели увеличена, чтобы длинный статус помещался в две строки.
-DIM CALIBRATION_GRID_STEP AS INTEGER = 8                                                        ' Шаг мелкой сетки в пикселях, как в тетрадке по математике.
+Dim WALL_FILL_COLOR As Integer = Rgb(12, 40, 118)                                              ' Цвет заливки стен, оставлен как часть палитры примера.
+Dim WALL_LIGHT_COLOR As Integer = Rgb(90, 214, 255)                                            ' Светлая голубая линия для HUD и декоративных контуров.
+Dim WALL_SHADOW_COLOR As Integer = Rgb(7, 18, 62)                                              ' Тёмный оттенок палитры стен, оставлен для возможных доработок.
+Dim BACKGROUND_COLOR As Integer = Rgb(1, 4, 14)                                                ' Почти чёрный фон за пределами картинки лабиринта.
+Dim POWER_PELLET_COLOR As Integer = Rgb(255, 240, 176)                                         ' Цвет обычных и крупных точек.
+Dim HUD_BACKGROUND_COLOR As Integer = Rgb(4, 8, 18)                                            ' Фон информационной панели сверху.
+Dim HUD_TEXT_COLOR As Integer = Rgb(255, 244, 180)                                             ' Цвет строки со счётом и числом жизней.
+Dim HUD_STATUS_COLOR As Integer = Rgb(210, 228, 255)                                           ' Цвет строки статуса с подсказками игроку.
+Dim CALIBRATION_LINE_COLOR As Integer = Rgb(255, 80, 80)                                      ' Цвет яркой направляющей линии в режиме ручной калибровки.
+Dim CALIBRATION_TEXT_COLOR As Integer = Rgb(255, 230, 130)                                     ' Цвет текста калибровки, чтобы он отличался от обычного HUD.
+Dim CALIBRATION_GRID_COLOR As Integer = Rgb(10, 34, 52)                                        ' Цвет тонкой сетки сделан более приглушённым, чтобы она меньше спорила с лабиринтом.
+Dim CALIBRATION_PANEL_X As Integer = 8                                                         ' Левая координата боковой панели калибровки.
+Dim CALIBRATION_PANEL_Y As Integer = 88                                                        ' Верхняя координата боковой панели, чтобы она не закрывала верх поля.
+Dim CALIBRATION_PANEL_WIDTH As Integer = 264                                                    ' Ширина боковой панели с подсказками.
+Dim CALIBRATION_PANEL_HEIGHT As Integer = 172                                                   ' Высота боковой панели увеличена, чтобы длинный статус помещался в две строки.
+Dim CALIBRATION_GRID_STEP As Integer = 8                                                        ' Шаг мелкой сетки в пикселях, как в тетрадке по математике.
 
-DIM CALIBRATION_ROW_MODE AS INTEGER = 1                                                        ' Код режима, в котором двигаем вертикальное положение выбранной строки.
-DIM CALIBRATION_COL_MODE AS INTEGER = 2                                                        ' Код режима, в котором двигаем горизонтальное положение выбранного столбца.
+Dim CALIBRATION_ROW_MODE As Integer = 1                                                        ' Код режима, в котором двигаем вертикальное положение выбранной строки.
+Dim CALIBRATION_COL_MODE As Integer = 2                                                        ' Код режима, в котором двигаем горизонтальное положение выбранного столбца.
 
-DIM maze(1 TO 36) AS STRING                                                                     ' Массив строк, в котором хранится логическая карта лабиринта.
-DIM mazeRows AS INTEGER = 36                                                                    ' Количество строк логической карты.
-DIM mazeCols AS INTEGER = 0                                                                     ' Количество столбцов логической карты, вычисляется после загрузки.
+Dim maze(1 To 36) As String                                                                     ' Массив строк, в котором хранится логическая карта лабиринта.
+Dim mazeRows As Integer = 36                                                                    ' Количество строк логической карты.
+Dim mazeCols As Integer = 0                                                                     ' Количество столбцов логической карты, вычисляется после загрузки.
 
-DIM mazeBackground AS IMAGE                                                                     ' Фоновая картинка лабиринта, которую мы рисуем как эталонный контур.
-DIM playerFrames(1 TO 12) AS SPRITE                                                            ' Набор кадров героя: 4 направления по 3 кадра.
-DIM ghostSprite AS SPRITE                                                                       ' Спрайт призрака, который гонится за героем.
+Dim mazeBackground As Image                                                                     ' Фоновая картинка лабиринта, которую мы рисуем как эталонный контур.
+Dim playerFrames(1 To 12) As Sprite                                                            ' Набор кадров героя: 4 направления по 3 кадра.
+Dim ghostSprite As Sprite                                                                       ' Спрайт призрака, который гонится за героем.
 
-DIM pelletCenterRows(1 TO 36) AS INTEGER                                                        ' Таблица вертикальных центров проходов по строкам лабиринта.
-DIM pelletCenterCols(1 TO 28) AS INTEGER                                                        ' Таблица горизонтальных центров проходов по столбцам лабиринта.
+Dim pelletCenterRows(1 To 36) As Integer                                                        ' Таблица вертикальных центров проходов по строкам лабиринта.
+Dim pelletCenterCols(1 To 28) As Integer                                                        ' Таблица горизонтальных центров проходов по столбцам лабиринта.
 
-DIM playerStartCol AS INTEGER                                                                   ' Стартовый столбец героя на логической сетке.
-DIM playerStartRow AS INTEGER                                                                   ' Стартовая строка героя на логической сетке.
-DIM ghostStartCol AS INTEGER                                                                    ' Стартовый столбец призрака на логической сетке.
-DIM ghostStartRow AS INTEGER                                                                    ' Стартовая строка призрака на логической сетке.
+Dim playerStartCol As Integer                                                                   ' Стартовый столбец героя на логической сетке.
+Dim playerStartRow As Integer                                                                   ' Стартовая строка героя на логической сетке.
+Dim ghostStartCol As Integer                                                                    ' Стартовый столбец призрака на логической сетке.
+Dim ghostStartRow As Integer                                                                    ' Стартовая строка призрака на логической сетке.
 
-DIM playerCol AS INTEGER                                                                        ' Текущий столбец героя.
-DIM playerRow AS INTEGER                                                                        ' Текущая строка героя.
-DIM playerDir AS INTEGER                                                                        ' Текущее фактическое направление героя.
-DIM playerWantDir AS INTEGER                                                                    ' Желаемое направление героя, выбранное клавишами.
-DIM playerFacing AS INTEGER                                                                     ' Направление, куда герой смотрит спрайтом.
-DIM playerTravel AS INTEGER                                                                     ' Сколько пикселей герой уже прошёл внутри текущей клетки.
-DIM playerAnimStep AS INTEGER                                                                   ' Текущий шаг анимации рта героя.
+Dim playerCol As Integer                                                                        ' Текущий столбец героя.
+Dim playerRow As Integer                                                                        ' Текущая строка героя.
+Dim playerDir As Integer                                                                        ' Текущее фактическое направление героя.
+Dim playerWantDir As Integer                                                                    ' Желаемое направление героя, выбранное клавишами.
+Dim playerFacing As Integer                                                                     ' Направление, куда герой смотрит спрайтом.
+Dim playerTravel As Integer                                                                     ' Сколько пикселей герой уже прошёл внутри текущей клетки.
+Dim playerAnimStep As Integer                                                                   ' Текущий шаг анимации рта героя.
 
-DIM ghostCol AS INTEGER                                                                         ' Текущий столбец призрака.
-DIM ghostRow AS INTEGER                                                                         ' Текущая строка призрака.
-DIM ghostDir AS INTEGER                                                                         ' Текущее фактическое направление призрака.
-DIM ghostWantDir AS INTEGER                                                                     ' Желаемое направление призрака, которое выбирает простая логика погони.
-DIM ghostTravel AS INTEGER                                                                      ' Сколько пикселей призрак уже прошёл внутри текущей клетки.
+Dim ghostCol As Integer                                                                         ' Текущий столбец призрака.
+Dim ghostRow As Integer                                                                         ' Текущая строка призрака.
+Dim ghostDir As Integer                                                                         ' Текущее фактическое направление призрака.
+Dim ghostWantDir As Integer                                                                     ' Желаемое направление призрака, которое выбирает простая логика погони.
+Dim ghostTravel As Integer                                                                      ' Сколько пикселей призрак уже прошёл внутри текущей клетки.
 
-DIM pelletsLeft AS INTEGER                                                                      ' Сколько точек осталось на карте.
-DIM score AS INTEGER                                                                            ' Сколько очков уже набрал игрок.
-DIM lives AS INTEGER = 3                                                                        ' Сколько жизней осталось у игрока.
-DIM worldWidthPixels AS INTEGER                                                                 ' Полная ширина мира в пикселях.
-DIM worldHeightPixels AS INTEGER                                                                ' Полная высота мира в пикселях.
-DIM exitRequested AS BOOLEAN = FALSE                                                            ' Флаг ручного выхода из программы по ESC.
-DIM finished AS BOOLEAN = FALSE                                                                 ' Флаг завершения партии по победе или проигрышу.
-DIM paused AS BOOLEAN = FALSE                                                                   ' Флаг паузы: TRUE означает, что игра временно остановлена.
-DIM statusText AS STRING = "Стрелки ведут героя. SPACE пауза. ESC выход."                      ' Текст подсказки и игровых сообщений в HUD.
-DIM calibrationMode AS BOOLEAN = FALSE                                                         ' Флаг ручной калибровки: TRUE означает, что стрелки двигают точки, а не героя.
-DIM calibrationTarget AS INTEGER = CALIBRATION_ROW_MODE                                        ' Что сейчас калибруем: строку точек или столбец точек.
-DIM calibrationRow AS INTEGER = 5                                                              ' Номер выбранной строки точек; по умолчанию берём первый видимый верхний ряд.
-DIM calibrationCol AS INTEGER = 1                                                              ' Номер выбранного столбца точек; его можно переключить клавишами W и S.
-DIM calibrationFilePath AS STRING = ""                                                         ' Путь к файлу рядом с игрой, куда по R записываются готовые строки настройки.
-DIM calibrationStatusText AS STRING = "Готово к калибровке."                                   ' Первая строка текущего статуса режима калибровки.
-DIM calibrationStatusTextLine2 AS STRING = "r линия. t вся таблица."                           ' Вторая строка статуса нужна для длинных сообщений без наползания на поле.
+Dim pelletsLeft As Integer                                                                      ' Сколько точек осталось на карте.
+Dim score As Integer                                                                            ' Сколько очков уже набрал игрок.
+Dim lives As Integer = 3                                                                        ' Сколько жизней осталось у игрока.
+Dim worldWidthPixels As Integer                                                                 ' Полная ширина мира в пикселях.
+Dim worldHeightPixels As Integer                                                                ' Полная высота мира в пикселях.
+Dim exitRequested As Boolean = False                                                            ' Флаг ручного выхода из программы по ESC.
+Dim finished As Boolean = False                                                                 ' Флаг завершения партии по победе или проигрышу.
+Dim paused As Boolean = False                                                                   ' Флаг паузы: TRUE означает, что игра временно остановлена.
+Dim statusText As String = "Стрелки ведут героя. SPACE пауза. ESC выход."                      ' Текст подсказки и игровых сообщений в HUD.
+Dim calibrationMode As Boolean = False                                                         ' Флаг ручной калибровки: TRUE означает, что стрелки двигают точки, а не героя.
+Dim calibrationTarget As Integer = CALIBRATION_ROW_MODE                                        ' Что сейчас калибруем: строку точек или столбец точек.
+Dim calibrationRow As Integer = 5                                                              ' Номер выбранной строки точек; по умолчанию берём первый видимый верхний ряд.
+Dim calibrationCol As Integer = 1                                                              ' Номер выбранного столбца точек; его можно переключить клавишами W и S.
+Dim calibrationFilePath As String = ""                                                         ' Путь к файлу рядом с игрой, куда по R записываются готовые строки настройки.
+Dim calibrationStatusText As String = "Готово к калибровке."                                   ' Первая строка текущего статуса режима калибровки.
+Dim calibrationStatusTextLine2 As String = "r линия. t вся таблица."                           ' Вторая строка статуса нужна для длинных сообщений без наползания на поле.
 
 LoadResources()                                                                                 ' Загружаем фон лабиринта и спрайты персонажей.
 InitPelletAlignment()                                                                           ' Настраиваем реальные центры проходов, чтобы точки легли в тоннели картинки.
@@ -91,37 +91,39 @@ ResetActors()                                                                   
 worldWidthPixels = mazeCols * TILE                                                              ' Переводим ширину карты из клеток в пиксели.
 worldHeightPixels = mazeRows * TILE                                                             ' Переводим высоту карты из клеток в пиксели.
 
-CANVAS VIEW_WIDTH, VIEW_HEIGHT                                                                  ' Открываем холст, в который теперь помещается весь лабиринт целиком.
+Smooth On
 
-DO WHILE NOT exitRequested                                                                      ' Главный игровой цикл продолжается, пока игрок не попросит выход.
-    BEGINFRAME                                                                                  ' Начинаем новый кадр современного графического холста.
-    CLS BACKGROUND_COLOR                                                                        ' Очищаем фон кадра перед рисованием.
+Canvas VIEW_WIDTH, VIEW_HEIGHT                                                                  ' Открываем холст, в который теперь помещается весь лабиринт целиком.
 
-    IF CalibrationHotKeyPressed("K") THEN                                                       ' Если нажали K или k...
-        calibrationMode = NOT calibrationMode                                                   ' ...включаем или выключаем режим ручной калибровки точек.
-        IF calibrationMode THEN                                                                 ' Если режим калибровки теперь включён...
-            paused = FALSE                                                                      ' ...снимаем обычную паузу, потому что калибровка сама замораживает механику.
+Do While Not exitRequested                                                                      ' Главный игровой цикл продолжается, пока игрок не попросит выход.
+    Beginframe                                                                                  ' Начинаем новый кадр современного графического холста.
+    Cls BACKGROUND_COLOR                                                                        ' Очищаем фон кадра перед рисованием.
+
+    If CalibrationHotKeyPressed("K") Then                                                       ' Если нажали K или k...
+        calibrationMode = Not calibrationMode                                                   ' ...включаем или выключаем режим ручной калибровки точек.
+        If calibrationMode Then                                                                 ' Если режим калибровки теперь включён...
+            paused = False                                                                      ' ...снимаем обычную паузу, потому что калибровка сама замораживает механику.
             SetCalibrationStatusText("Калибровка включена.", "t запишет всю таблицу.")         ' Показываем понятное подтверждение включения режима в две короткие строки.
-        ELSE                                                                                    ' Если калибровку выключили...
+        Else                                                                                    ' Если калибровку выключили...
             SetCalibrationStatusText("Калибровка выключена.", "K включает её снова.")          ' Сообщаем, что режим больше не активен, и тоже не растягиваем строку.
-        END IF                                                                                  ' Завершаем переключение калибровки.
-    END IF                                                                                      ' Завершаем обработку клавиши K.
+        End If                                                                                  ' Завершаем переключение калибровки.
+    End If                                                                                      ' Завершаем обработку клавиши K.
 
-    IF calibrationMode THEN                                                                     ' Если включена ручная калибровка...
+    If calibrationMode Then                                                                     ' Если включена ручная калибровка...
         HandleCalibrationInput()                                                                ' ...читаем клавиши калибровки и двигаем выбранные точки.
-    END IF                                                                                      ' Завершаем обработку режима калибровки.
+    End If                                                                                      ' Завершаем обработку режима калибровки.
 
-    IF KEYPRESS("SPACE") AND NOT finished AND NOT calibrationMode THEN                          ' Если нажали пробел и мы не в режиме калибровки...
-        paused = NOT paused                                                                     ' ...переключаем паузу туда или обратно.
-    END IF                                                                                      ' Завершаем обработку клавиши паузы.
+    If Keypress("SPACE") And Not finished And Not calibrationMode Then                          ' Если нажали пробел и мы не в режиме калибровки...
+        paused = Not paused                                                                     ' ...переключаем паузу туда или обратно.
+    End If                                                                                      ' Завершаем обработку клавиши паузы.
 
-    IF NOT finished AND NOT paused AND NOT calibrationMode THEN                                  ' Пока игра не закончилась, не стоит на паузе и не калибруется, обновляем механику.
+    If Not finished And Not paused And Not calibrationMode Then                                  ' Пока игра не закончилась, не стоит на паузе и не калибруется, обновляем механику.
         UpdatePlayerInput()                                                                     ' Считываем клавиши и записываем желаемое направление героя.
         StepWalker(playerCol, playerRow, playerDir, playerWantDir, playerTravel, PLAYER_SPEED) ' Двигаем героя по сетке с учётом стены и пиксельного остатка.
 
-        IF playerDir <> 0 THEN                                                                  ' Если герой реально движется...
+        If playerDir <> 0 Then                                                                  ' Если герой реально движется...
             playerFacing = playerDir                                                            ' ...поворачиваем его спрайт в это направление.
-        END IF                                                                                  ' Завершаем обновление направления взгляда.
+        End If                                                                                  ' Завершаем обновление направления взгляда.
 
         UpdatePlayerAnimation()                                                                 ' Обновляем фазу анимации рта героя.
         EatPelletIfNeeded()                                                                     ' Проверяем, стоит ли герой на точке, и съедаем её.
@@ -129,67 +131,67 @@ DO WHILE NOT exitRequested                                                      
         UpdateGhostDecision()                                                                   ' В узлах карты выбираем новое направление для призрака.
         StepWalker(ghostCol, ghostRow, ghostDir, ghostWantDir, ghostTravel, GHOST_SPEED)       ' Двигаем призрака той же общей процедурой.
 
-        IF EntitiesOverlap() THEN                                                               ' Если герой и призрак подошли слишком близко...
+        If EntitiesOverlap() Then                                                               ' Если герой и призрак подошли слишком близко...
             lives = lives - 1                                                                   ' ...уменьшаем число жизней.
-            IF lives <= 0 THEN                                                                  ' Если жизней больше не осталось...
-                finished = TRUE                                                                 ' ...завершаем партию поражением.
+            If lives <= 0 Then                                                                  ' Если жизней больше не осталось...
+                finished = True                                                                 ' ...завершаем партию поражением.
                 statusText = "Жизни закончились. Нажмите ESC."                                 ' Показываем сообщение о проигрыше.
-            ELSE                                                                                ' Иначе у игрока ещё есть шанс продолжить.
+            Else                                                                                ' Иначе у игрока ещё есть шанс продолжить.
                 statusText = "Призрак догнал героя. Позиции сброшены."                         ' Сообщаем о столкновении и новом старте.
                 ResetActors()                                                                   ' Возвращаем обоих персонажей на стартовые позиции.
-            END IF                                                                              ' Завершаем обработку потери жизни.
-        END IF                                                                                  ' Завершаем проверку столкновения.
+            End If                                                                              ' Завершаем обработку потери жизни.
+        End If                                                                                  ' Завершаем проверку столкновения.
 
-        IF pelletsLeft = 0 THEN                                                                 ' Если на карте не осталось точек...
-            finished = TRUE                                                                     ' ...завершаем партию победой.
+        If pelletsLeft = 0 Then                                                                 ' Если на карте не осталось точек...
+            finished = True                                                                     ' ...завершаем партию победой.
             statusText = "Все точки собраны. Нажмите ESC."                                     ' Показываем сообщение о победе.
-        END IF                                                                                  ' Завершаем проверку победы.
-    ELSE                                                                                        ' Если партия завершена или стоит на паузе...
+        End If                                                                                  ' Завершаем проверку победы.
+    Else                                                                                        ' Если партия завершена или стоит на паузе...
         playerAnimStep = 0                                                                      ' ...останавливаем анимацию героя, чтобы он не жевал в паузе.
-    END IF                                                                                      ' Завершаем обновление логики кадра.
+    End If                                                                                      ' Завершаем обновление логики кадра.
 
     DrawMazeWorld()                                                                             ' Рисуем лабиринт, точки и персонажей в мировых координатах.
-    IF calibrationMode THEN                                                                     ' Если сейчас идёт ручная калибровка...
+    If calibrationMode Then                                                                     ' Если сейчас идёт ручная калибровка...
         DrawCalibrationOverlay()                                                                ' ...рисуем направляющую линию поверх выбранной строки или столбца.
-    END IF                                                                                      ' Завершаем рисование калибровочного слоя.
+    End If                                                                                      ' Завершаем рисование калибровочного слоя.
     DrawHud()                                                                                   ' Рисуем верхнюю информационную панель в экранных координатах.
-    PRESENT                                                                                     ' Показываем собранный кадр на экране.
-    SLEEP 16                                                                                    ' Делаем короткую паузу, чтобы цикл шёл спокойно и предсказуемо.
+    Present                                                                                     ' Показываем собранный кадр на экране.
+    Sleep 16                                                                                    ' Делаем короткую паузу, чтобы цикл шёл спокойно и предсказуемо.
 
-    IF KEYPRESS("ESC") THEN                                                                     ' Если в этом кадре нажали ESC...
-        exitRequested = TRUE                                                                    ' ...запрашиваем выход из главного цикла.
-    END IF                                                                                      ' Завершаем проверку клавиши ESC.
-LOOP                                                                                            ' Возвращаемся к следующему кадру.
+    If Keypress("ESC") Then                                                                     ' Если в этом кадре нажали ESC...
+        exitRequested = True                                                                    ' ...запрашиваем выход из главного цикла.
+    End If                                                                                      ' Завершаем проверку клавиши ESC.
+Loop                                                                                            ' Возвращаемся к следующему кадру.
 
-SCREEN 0                                                                                        ' Возвращаем обычный текстовый экран после выхода из игры.
+Screen 0                                                                                        ' Возвращаем обычный текстовый экран после выхода из игры.
 
-SUB LoadResources()                                                                             ' Процедура загружает все графические ресурсы игры.
-    mazeBackground = LOADIMAGE("art/Background.gif")                                            ' Загружаем эталонный фон лабиринта из GIF-файла.
+Sub LoadResources()                                                                             ' Процедура загружает все графические ресурсы игры.
+    mazeBackground = Loadimage("art/Background.gif")                                            ' Загружаем эталонный фон лабиринта из GIF-файла.
 
-    playerFrames(SpriteSlot(DIR_RIGHT, 1)) = LOADSPRITE("art/pacman-right/1.png", 16, 16)     ' Загружаем первый кадр героя, смотрящего вправо.
-    playerFrames(SpriteSlot(DIR_RIGHT, 2)) = LOADSPRITE("art/pacman-right/2.png", 16, 16)     ' Загружаем второй кадр героя, смотрящего вправо.
-    playerFrames(SpriteSlot(DIR_RIGHT, 3)) = LOADSPRITE("art/pacman-right/3.png", 16, 16)     ' Загружаем третий кадр героя, смотрящего вправо.
+    playerFrames(SpriteSlot(DIR_RIGHT, 1)) = Loadsprite("art/pacman-right/1.png", 16, 16)     ' Загружаем первый кадр героя, смотрящего вправо.
+    playerFrames(SpriteSlot(DIR_RIGHT, 2)) = Loadsprite("art/pacman-right/2.png", 16, 16)     ' Загружаем второй кадр героя, смотрящего вправо.
+    playerFrames(SpriteSlot(DIR_RIGHT, 3)) = Loadsprite("art/pacman-right/3.png", 16, 16)     ' Загружаем третий кадр героя, смотрящего вправо.
 
-    playerFrames(SpriteSlot(DIR_LEFT, 1)) = LOADSPRITE("art/pacman-left/1.png", 16, 16)       ' Загружаем первый кадр героя, смотрящего влево.
-    playerFrames(SpriteSlot(DIR_LEFT, 2)) = LOADSPRITE("art/pacman-left/2.png", 16, 16)       ' Загружаем второй кадр героя, смотрящего влево.
-    playerFrames(SpriteSlot(DIR_LEFT, 3)) = LOADSPRITE("art/pacman-left/3.png", 16, 16)       ' Загружаем третий кадр героя, смотрящего влево.
+    playerFrames(SpriteSlot(DIR_LEFT, 1)) = Loadsprite("art/pacman-left/1.png", 16, 16)       ' Загружаем первый кадр героя, смотрящего влево.
+    playerFrames(SpriteSlot(DIR_LEFT, 2)) = Loadsprite("art/pacman-left/2.png", 16, 16)       ' Загружаем второй кадр героя, смотрящего влево.
+    playerFrames(SpriteSlot(DIR_LEFT, 3)) = Loadsprite("art/pacman-left/3.png", 16, 16)       ' Загружаем третий кадр героя, смотрящего влево.
 
-    playerFrames(SpriteSlot(DIR_UP, 1)) = LOADSPRITE("art/pacman-up/1.png", 16, 16)           ' Загружаем первый кадр героя, смотрящего вверх.
-    playerFrames(SpriteSlot(DIR_UP, 2)) = LOADSPRITE("art/pacman-up/2.png", 16, 16)           ' Загружаем второй кадр героя, смотрящего вверх.
-    playerFrames(SpriteSlot(DIR_UP, 3)) = LOADSPRITE("art/pacman-up/3.png", 16, 16)           ' Загружаем третий кадр героя, смотрящего вверх.
+    playerFrames(SpriteSlot(DIR_UP, 1)) = Loadsprite("art/pacman-up/1.png", 16, 16)           ' Загружаем первый кадр героя, смотрящего вверх.
+    playerFrames(SpriteSlot(DIR_UP, 2)) = Loadsprite("art/pacman-up/2.png", 16, 16)           ' Загружаем второй кадр героя, смотрящего вверх.
+    playerFrames(SpriteSlot(DIR_UP, 3)) = Loadsprite("art/pacman-up/3.png", 16, 16)           ' Загружаем третий кадр героя, смотрящего вверх.
 
-    playerFrames(SpriteSlot(DIR_DOWN, 1)) = LOADSPRITE("art/pacman-down/1.png", 16, 16)       ' Загружаем первый кадр героя, смотрящего вниз.
-    playerFrames(SpriteSlot(DIR_DOWN, 2)) = LOADSPRITE("art/pacman-down/2.png", 16, 16)       ' Загружаем второй кадр героя, смотрящего вниз.
-    playerFrames(SpriteSlot(DIR_DOWN, 3)) = LOADSPRITE("art/pacman-down/3.png", 16, 16)       ' Загружаем третий кадр героя, смотрящего вниз.
+    playerFrames(SpriteSlot(DIR_DOWN, 1)) = Loadsprite("art/pacman-down/1.png", 16, 16)       ' Загружаем первый кадр героя, смотрящего вниз.
+    playerFrames(SpriteSlot(DIR_DOWN, 2)) = Loadsprite("art/pacman-down/2.png", 16, 16)       ' Загружаем второй кадр героя, смотрящего вниз.
+    playerFrames(SpriteSlot(DIR_DOWN, 3)) = Loadsprite("art/pacman-down/3.png", 16, 16)       ' Загружаем третий кадр героя, смотрящего вниз.
 
-    ghostSprite = LOADSPRITE("art/ghosts/blinky.png", 16, 16)                                  ' Загружаем спрайт красного призрака.
-END SUB                                                                                         ' Завершаем загрузку ресурсов.
+    ghostSprite = Loadsprite("art/ghosts/blinky.png", 16, 16)                                  ' Загружаем спрайт красного призрака.
+End Sub                                                                                         ' Завершаем загрузку ресурсов.
 
-SUB InitCalibrationFile()                                                                       ' Процедура готовит путь для файла ручной калибровки рядом с игрой.
-    calibrationFilePath = COMBINEPATH(CURRENTDIR(), "maze_chase_pellet_calibration.txt")       ' Запоминаем файл рядом с `maze_chase.axm`, куда R дописывает значения.
-END SUB                                                                                         ' Завершаем подготовку файла калибровки.
+Sub InitCalibrationFile()                                                                       ' Процедура готовит путь для файла ручной калибровки рядом с игрой.
+    calibrationFilePath = Combinepath(Currentdir(), "maze_chase_pellet_calibration.txt")       ' Запоминаем файл рядом с `maze_chase.axm`, куда R дописывает значения.
+End Sub                                                                                         ' Завершаем подготовку файла калибровки.
 
-SUB InitPelletAlignment()                                                                       ' Процедура задаёт реальные центры тоннелей на фоне лабиринта.
+Sub InitPelletAlignment()                                                                       ' Процедура задаёт реальные центры тоннелей на фоне лабиринта.
     ' Здесь мы задаём высоту точек по строкам карты.                                            ' Больше число = точка ниже. Меньше число = точка выше.
     ' Эти числа удобно крутить вручную и сразу смотреть результат в IDE.                        ' Так проще попасть в центр тоннеля по картинке.
     pelletCenterRows(1) = -37                                                                   ' Значение строки 1 полностью перенесено из файла калибровки.
@@ -258,11 +260,11 @@ SUB InitPelletAlignment()                                                       
     pelletCenterCols(26) = 0                                                                    ' Значение столбца 26 полностью перенесено из файла калибровки.
     pelletCenterCols(27) = 5                                                                    ' Значение столбца 27 полностью перенесено из файла калибровки.
     pelletCenterCols(28) = 6                                                                    ' Значение столбца 28 полностью перенесено из файла калибровки.
-END SUB                                                                                         ' Завершаем настройку центров точек.
+End Sub                                                                                         ' Завершаем настройку центров точек.
                                                                                          ' Завершаем настройку центров точек.
                                                                                          ' Завершаем настройку центров точек.
 
-SUB InitMaze()                                                                                  ' Процедура загружает текстовую карту и стартовые метки.
+Sub InitMaze()                                                                                  ' Процедура загружает текстовую карту и стартовые метки.
     maze(1) = "############################"                                                    ' Верхняя рамка лабиринта.
     maze(2) = "############################"                                                    ' Вторая верхняя строка рамки.
     maze(3) = "############################"                                                    ' Третья верхняя строка рамки.
@@ -300,35 +302,35 @@ SUB InitMaze()                                                                  
     maze(35) = "############################"                                                   ' Предпоследняя строка нижней рамки.
     maze(36) = "############################"                                                   ' Последняя строка нижней рамки.
 
-    mazeCols = LEN(maze(1))                                                                     ' Вычисляем число столбцов по длине первой строки.
+    mazeCols = Len(maze(1))                                                                     ' Вычисляем число столбцов по длине первой строки.
     pelletsLeft = 0                                                                             ' Перед пересчётом начинаем с нуля точек.
 
-    DIM tileText AS STRING                                                                      ' Символ текущей клетки карты.
+    Dim tileText As String                                                                      ' Символ текущей клетки карты.
 
-    FOR rowIndex = 1 TO mazeRows                                                                ' Проходим все строки карты.
-        FOR columnIndex = 1 TO mazeCols                                                         ' Проходим все столбцы в текущей строке.
-            tileText = MID(maze(rowIndex), columnIndex, 1)                                      ' Берём один символ из текущей клетки карты.
+    For rowIndex = 1 To mazeRows                                                                ' Проходим все строки карты.
+        For columnIndex = 1 To mazeCols                                                         ' Проходим все столбцы в текущей строке.
+            tileText = Mid(maze(rowIndex), columnIndex, 1)                                      ' Берём один символ из текущей клетки карты.
 
-            IF tileText = "." OR tileText = "o" THEN                                            ' Если клетка содержит обычную или крупную точку...
+            If tileText = "." Or tileText = "o" Then                                            ' Если клетка содержит обычную или крупную точку...
                 pelletsLeft = pelletsLeft + 1                                                   ' ...увеличиваем общий счётчик точек.
-            END IF                                                                              ' Завершаем подсчёт точки.
+            End If                                                                              ' Завершаем подсчёт точки.
 
-            IF tileText = "P" THEN                                                              ' Если нашли старт героя...
+            If tileText = "P" Then                                                              ' Если нашли старт героя...
                 playerStartCol = columnIndex                                                    ' ...запоминаем его столбец.
                 playerStartRow = rowIndex                                                       ' ...запоминаем его строку.
                 maze(rowIndex) = ReplaceCell(maze(rowIndex), columnIndex, " ")                  ' ...и очищаем клетку, чтобы герой не считался стеной или точкой.
-            END IF                                                                              ' Завершаем обработку старта героя.
+            End If                                                                              ' Завершаем обработку старта героя.
 
-            IF tileText = "G" THEN                                                              ' Если нашли старт призрака...
+            If tileText = "G" Then                                                              ' Если нашли старт призрака...
                 ghostStartCol = columnIndex                                                     ' ...запоминаем его столбец.
                 ghostStartRow = rowIndex                                                        ' ...запоминаем его строку.
                 maze(rowIndex) = ReplaceCell(maze(rowIndex), columnIndex, " ")                  ' ...и очищаем логическую клетку карты.
-            END IF                                                                              ' Завершаем обработку старта призрака.
-        NEXT                                                                                    ' Переходим к следующему столбцу.
-    NEXT                                                                                        ' Переходим к следующей строке.
-END SUB                                                                                         ' Завершаем инициализацию карты.
+            End If                                                                              ' Завершаем обработку старта призрака.
+        Next                                                                                    ' Переходим к следующему столбцу.
+    Next                                                                                        ' Переходим к следующей строке.
+End Sub                                                                                         ' Завершаем инициализацию карты.
 
-SUB ResetActors()                                                                               ' Процедура возвращает героя и призрака в стартовые точки.
+Sub ResetActors()                                                                               ' Процедура возвращает героя и призрака в стартовые точки.
     playerCol = playerStartCol                                                                  ' Возвращаем героя в стартовый столбец.
     playerRow = playerStartRow                                                                  ' Возвращаем героя в стартовую строку.
     playerDir = 0                                                                               ' Герой сразу после сброса ещё не движется.
@@ -342,705 +344,705 @@ SUB ResetActors()                                                               
     ghostDir = DIR_LEFT                                                                         ' По умолчанию призрак стартует движением влево.
     ghostWantDir = DIR_LEFT                                                                     ' И желаемое направление у него тоже влево.
     ghostTravel = 0                                                                             ' Внутриклеточный путь призрака также обнуляем.
-END SUB                                                                                         ' Завершаем сброс актёров.
+End Sub                                                                                         ' Завершаем сброс актёров.
 
-SUB UpdatePlayerInput()                                                                         ' Процедура читает клавиши и выбирает желаемое направление.
-    IF KEYDOWN("LEFT") THEN                                                                     ' Если зажата стрелка влево...
+Sub UpdatePlayerInput()                                                                         ' Процедура читает клавиши и выбирает желаемое направление.
+    If Keydown("LEFT") Then                                                                     ' Если зажата стрелка влево...
         playerWantDir = DIR_LEFT                                                                ' ...просим героя повернуть влево.
-    END IF                                                                                      ' Завершаем проверку удержания влево.
+    End If                                                                                      ' Завершаем проверку удержания влево.
 
-    IF KEYDOWN("RIGHT") THEN                                                                    ' Если зажата стрелка вправо...
+    If Keydown("RIGHT") Then                                                                    ' Если зажата стрелка вправо...
         playerWantDir = DIR_RIGHT                                                               ' ...просим героя повернуть вправо.
-    END IF                                                                                      ' Завершаем проверку удержания вправо.
+    End If                                                                                      ' Завершаем проверку удержания вправо.
 
-    IF KEYDOWN("UP") THEN                                                                       ' Если зажата стрелка вверх...
+    If Keydown("UP") Then                                                                       ' Если зажата стрелка вверх...
         playerWantDir = DIR_UP                                                                  ' ...просим героя повернуть вверх.
-    END IF                                                                                      ' Завершаем проверку удержания вверх.
+    End If                                                                                      ' Завершаем проверку удержания вверх.
 
-    IF KEYDOWN("DOWN") THEN                                                                     ' Если зажата стрелка вниз...
+    If Keydown("DOWN") Then                                                                     ' Если зажата стрелка вниз...
         playerWantDir = DIR_DOWN                                                                ' ...просим героя повернуть вниз.
-    END IF                                                                                      ' Завершаем проверку удержания вниз.
+    End If                                                                                      ' Завершаем проверку удержания вниз.
     ' Для живого управления игрой намеренно не используем KEYPRESS для стрелок.                ' Иначе в очереди могут догонять старые повороты и герой будет слушаться с опозданием.
     ' Здесь важнее текущее удержание клавиши, поэтому обычная игра читает только KEYDOWN.      ' KEYPRESS оставляем для калибровки, где нужны одиночные щелчки по одному пикселю.
-END SUB                                                                                         ' Завершаем чтение управления игрока.
+End Sub                                                                                         ' Завершаем чтение управления игрока.
 
-SUB UpdatePlayerAnimation()                                                                     ' Процедура обновляет шаг анимации героя.
-    IF playerDir = 0 THEN                                                                       ' Если герой стоит на месте...
+Sub UpdatePlayerAnimation()                                                                     ' Процедура обновляет шаг анимации героя.
+    If playerDir = 0 Then                                                                       ' Если герой стоит на месте...
         playerAnimStep = 0                                                                      ' ...держим рот в спокойном состоянии.
-        RETURN                                                                                  ' И выходим из процедуры сразу.
-    END IF                                                                                      ' Завершаем обработку неподвижного героя.
+        Return                                                                                  ' И выходим из процедуры сразу.
+    End If                                                                                      ' Завершаем обработку неподвижного героя.
 
     playerAnimStep = playerAnimStep + 1                                                         ' Переходим к следующему шагу анимации.
-    IF playerAnimStep > 4 THEN                                                                  ' Если вышли за число шагов цикла...
+    If playerAnimStep > 4 Then                                                                  ' Если вышли за число шагов цикла...
         playerAnimStep = 1                                                                      ' ...возвращаемся в начало цикла.
-    END IF                                                                                      ' Завершаем циклическую анимацию.
-END SUB                                                                                         ' Завершаем обновление анимации героя.
+    End If                                                                                      ' Завершаем циклическую анимацию.
+End Sub                                                                                         ' Завершаем обновление анимации героя.
 
-SUB UpdateGhostDecision()                                                                       ' Процедура выбирает новое направление призрака только в узлах.
-    IF ghostTravel <> 0 THEN                                                                    ' Если призрак ещё не дошёл до центра следующей клетки...
-        RETURN                                                                                  ' ...не меняем его решение на полпути.
-    END IF                                                                                      ' Завершаем защиту от поворота посреди коридора.
+Sub UpdateGhostDecision()                                                                       ' Процедура выбирает новое направление призрака только в узлах.
+    If ghostTravel <> 0 Then                                                                    ' Если призрак ещё не дошёл до центра следующей клетки...
+        Return                                                                                  ' ...не меняем его решение на полпути.
+    End If                                                                                      ' Завершаем защиту от поворота посреди коридора.
 
     ghostWantDir = ChooseGhostDirection()                                                       ' Вычисляем новое желаемое направление погони.
-END SUB                                                                                         ' Завершаем обновление решения призрака.
+End Sub                                                                                         ' Завершаем обновление решения призрака.
 
-SUB StepWalker(BYREF tileCol AS INTEGER, BYREF tileRow AS INTEGER, BYREF dir AS INTEGER, BYREF wantedDir AS INTEGER, BYREF travel AS INTEGER, speed AS INTEGER)
-    DIM remaining AS INTEGER = speed                                                            ' Сколько пикселей ещё нужно пройти в этом кадре.
-    DIM chunk AS INTEGER                                                                        ' Размер текущего куска движения внутри одной клетки.
+Sub StepWalker(Byref tileCol As Integer, Byref tileRow As Integer, Byref dir As Integer, Byref wantedDir As Integer, Byref travel As Integer, speed As Integer)
+    Dim remaining As Integer = speed                                                            ' Сколько пикселей ещё нужно пройти в этом кадре.
+    Dim chunk As Integer                                                                        ' Размер текущего куска движения внутри одной клетки.
 
-    DO WHILE remaining > 0                                                                      ' Пока в кадре ещё остались пиксели движения...
-        IF travel = 0 THEN                                                                      ' ...и мы находимся ровно в центре клетки...
-            IF wantedDir <> 0 THEN                                                              ' ...сначала пробуем повернуть в желаемую сторону.
-                IF CanMove(tileCol, tileRow, wantedDir) THEN                                    ' Если поворот возможен по карте...
+    Do While remaining > 0                                                                      ' Пока в кадре ещё остались пиксели движения...
+        If travel = 0 Then                                                                      ' ...и мы находимся ровно в центре клетки...
+            If wantedDir <> 0 Then                                                              ' ...сначала пробуем повернуть в желаемую сторону.
+                If CanMove(tileCol, tileRow, wantedDir) Then                                    ' Если поворот возможен по карте...
                     dir = wantedDir                                                             ' ...принимаем новое направление.
-                END IF                                                                          ' Завершаем проверку поворота.
-            END IF                                                                              ' Завершаем обработку желаемого направления.
+                End If                                                                          ' Завершаем проверку поворота.
+            End If                                                                              ' Завершаем обработку желаемого направления.
 
-            IF dir <> 0 THEN                                                                    ' Если у шага есть текущее направление...
-                IF NOT CanMove(tileCol, tileRow, dir) THEN                                      ' ...но впереди неожиданно стена...
+            If dir <> 0 Then                                                                    ' Если у шага есть текущее направление...
+                If Not CanMove(tileCol, tileRow, dir) Then                                      ' ...но впереди неожиданно стена...
                     dir = 0                                                                     ' ...останавливаем движение в этом кадре.
-                END IF                                                                          ' Завершаем проверку стены.
-            END IF                                                                              ' Завершаем проверку текущего направления.
-        END IF                                                                                  ' Завершаем блок работы в узле сетки.
+                End If                                                                          ' Завершаем проверку стены.
+            End If                                                                              ' Завершаем проверку текущего направления.
+        End If                                                                                  ' Завершаем блок работы в узле сетки.
 
-        IF dir = 0 THEN                                                                         ' Если направление всё ещё равно нулю...
+        If dir = 0 Then                                                                         ' Если направление всё ещё равно нулю...
             remaining = 0                                                                       ' ...прекращаем остаток движения в кадре.
-        ELSE                                                                                    ' Иначе можно продвигаться дальше по коридору.
+        Else                                                                                    ' Иначе можно продвигаться дальше по коридору.
             chunk = TILE - travel                                                               ' Считаем, сколько пикселей осталось до следующего узла.
-            IF chunk > remaining THEN                                                           ' Если до узла дальше, чем осталось шагов в кадре...
+            If chunk > remaining Then                                                           ' Если до узла дальше, чем осталось шагов в кадре...
                 chunk = remaining                                                               ' ...ограничиваем шаг остатком этого кадра.
-            END IF                                                                              ' Завершаем ограничение размера шага.
+            End If                                                                              ' Завершаем ограничение размера шага.
 
             travel = travel + chunk                                                             ' Увеличиваем внутриклеточный пройденный путь.
             remaining = remaining - chunk                                                       ' Уменьшаем остаток шагов в текущем кадре.
 
-            IF travel >= TILE THEN                                                              ' Если дошли до следующей клетки...
+            If travel >= TILE Then                                                              ' Если дошли до следующей клетки...
                 tileCol = tileCol + DirX(dir)                                                   ' ...смещаем столбец по направлению движения.
                 tileRow = tileRow + DirY(dir)                                                   ' ...смещаем строку по направлению движения.
                 tileCol = WrapTunnelColumn(tileCol, tileRow)                                    ' ...обрабатываем телепорт в боковом туннеле.
                 travel = 0                                                                      ' ...и начинаем следующий отрезок с нулевого смещения.
-            END IF                                                                              ' Завершаем переход между клетками.
-        END IF                                                                                  ' Завершаем движение в пределах текущего кадра.
-    LOOP                                                                                        ' Продолжаем, пока не израсходуем скорость кадра.
-END SUB                                                                                         ' Завершаем общую процедуру движения героя и призрака.
+            End If                                                                              ' Завершаем переход между клетками.
+        End If                                                                                  ' Завершаем движение в пределах текущего кадра.
+    Loop                                                                                        ' Продолжаем, пока не израсходуем скорость кадра.
+End Sub                                                                                         ' Завершаем общую процедуру движения героя и призрака.
 
-SUB EatPelletIfNeeded()                                                                         ' Процедура проверяет, стоит ли герой на точке.
-    DIM tileText AS STRING                                                                      ' В этой переменной читаем символ клетки под героем.
+Sub EatPelletIfNeeded()                                                                         ' Процедура проверяет, стоит ли герой на точке.
+    Dim tileText As String                                                                      ' В этой переменной читаем символ клетки под героем.
 
-    IF playerTravel <> 0 THEN                                                                   ' Если герой ещё идёт внутри клетки...
-        RETURN                                                                                  ' ...не едим точку, пока не дойдём до центра клетки.
-    END IF                                                                                      ' Завершаем защиту от преждевременного съедания.
+    If playerTravel <> 0 Then                                                                   ' Если герой ещё идёт внутри клетки...
+        Return                                                                                  ' ...не едим точку, пока не дойдём до центра клетки.
+    End If                                                                                      ' Завершаем защиту от преждевременного съедания.
 
     tileText = CellAt(playerRow, playerCol)                                                     ' Читаем символ клетки, на которой сейчас стоит герой.
 
-    IF tileText = "." THEN                                                                      ' Если это обычная маленькая точка...
+    If tileText = "." Then                                                                      ' Если это обычная маленькая точка...
         score = score + 10                                                                      ' ...добавляем десять очков.
         pelletsLeft = pelletsLeft - 1                                                           ' ...уменьшаем число оставшихся точек.
         maze(playerRow) = ReplaceCell(maze(playerRow), playerCol, " ")                          ' ...и очищаем клетку карты от точки.
-    END IF                                                                                      ' Завершаем съедание обычной точки.
+    End If                                                                                      ' Завершаем съедание обычной точки.
 
-    IF tileText = "o" THEN                                                                      ' Если это крупная точка...
+    If tileText = "o" Then                                                                      ' Если это крупная точка...
         score = score + 50                                                                      ' ...даём больше очков.
         pelletsLeft = pelletsLeft - 1                                                           ' ...уменьшаем число оставшихся точек.
         maze(playerRow) = ReplaceCell(maze(playerRow), playerCol, " ")                          ' ...очищаем клетку карты.
         statusText = "Крупная точка принесла больше очков."                                    ' ...и выводим поясняющее сообщение в HUD.
-    END IF                                                                                      ' Завершаем съедание крупной точки.
-END SUB                                                                                         ' Завершаем проверку съедания точки.
+    End If                                                                                      ' Завершаем съедание крупной точки.
+End Sub                                                                                         ' Завершаем проверку съедания точки.
 
-SUB DrawMazeWorld()                                                                             ' Процедура рисует весь мир внутри viewport без ручных экранных смещений.
-    DIM cameraX AS INTEGER = 0                                                                   ' По X больше не прокручиваем карту: весь лабиринт уже помещается целиком.
-    DIM cameraY AS INTEGER = 0                                                                   ' По Y тоже не прокручиваем карту: весь лабиринт виден сразу.
-    DIM firstCol AS INTEGER = 1                                                                  ' Рисуем карту с самого первого столбца.
-    DIM lastCol AS INTEGER = mazeCols                                                            ' Рисуем карту до последнего столбца.
-    DIM firstRow AS INTEGER = 1                                                                  ' Рисуем карту с самой первой строки.
-    DIM lastRow AS INTEGER = mazeRows                                                            ' Рисуем карту до самой последней строки.
+Sub DrawMazeWorld()                                                                             ' Процедура рисует весь мир внутри viewport без ручных экранных смещений.
+    Dim cameraX As Integer = 0                                                                   ' По X больше не прокручиваем карту: весь лабиринт уже помещается целиком.
+    Dim cameraY As Integer = 0                                                                   ' По Y тоже не прокручиваем карту: весь лабиринт виден сразу.
+    Dim firstCol As Integer = 1                                                                  ' Рисуем карту с самого первого столбца.
+    Dim lastCol As Integer = mazeCols                                                            ' Рисуем карту до последнего столбца.
+    Dim firstRow As Integer = 1                                                                  ' Рисуем карту с самой первой строки.
+    Dim lastRow As Integer = mazeRows                                                            ' Рисуем карту до самой последней строки.
 
-    VIEWPORT (WorldViewportLeft(), WorldViewportTop()) - (WorldViewportRight(), WorldViewportBottom()) ' Отдаём отдельный прямоугольник под мир и оставляем HUD вне него.
-    CAMERA cameraX, cameraY                                                                     ' Включаем камеру мира для последующего рисования.
+    Viewport (WorldViewportLeft(), WorldViewportTop()) - (WorldViewportRight(), WorldViewportBottom()) ' Отдаём отдельный прямоугольник под мир и оставляем HUD вне него.
+    Camera cameraX, cameraY                                                                     ' Включаем камеру мира для последующего рисования.
 
     DrawVisibleWalls(firstRow, lastRow, firstCol, lastCol)                                      ' Рисуем фон лабиринта.
     DrawVisiblePellets(firstRow, lastRow, firstCol, lastCol)                                    ' Рисуем оставшиеся точки.
 
-    DRAWSPRITE playerFrames(CurrentPlayerSpriteSlot()), 0, PlayerPixelX() - (TILE \ 2), PlayerPixelY() - (TILE \ 2) ' Рисуем героя по его пиксельным координатам.
-    DRAWSPRITE ghostSprite, 0, GhostPixelX() - (TILE \ 2), GhostPixelY() - (TILE \ 2)          ' Рисуем призрака по его пиксельным координатам.
-END SUB                                                                                         ' Завершаем рисование мира.
+    Drawsprite playerFrames(CurrentPlayerSpriteSlot()), 0, PlayerPixelX() - (TILE \ 2), PlayerPixelY() - (TILE \ 2) ' Рисуем героя по его пиксельным координатам.
+    Drawsprite ghostSprite, 0, GhostPixelX() - (TILE \ 2), GhostPixelY() - (TILE \ 2)          ' Рисуем призрака по его пиксельным координатам.
+End Sub                                                                                         ' Завершаем рисование мира.
 
-SUB DrawVisibleWalls(firstRow AS INTEGER, lastRow AS INTEGER, firstCol AS INTEGER, lastCol AS INTEGER)
-    DRAWIMAGE mazeBackground, 0, 0, mazeCols * TILE, mazeRows * TILE                            ' Рисуем эталонную картинку лабиринта от начала мировых координат viewport.
-END SUB                                                                                         ' Завершаем рисование стен.
+Sub DrawVisibleWalls(firstRow As Integer, lastRow As Integer, firstCol As Integer, lastCol As Integer)
+    Drawimage mazeBackground, 0, 0, mazeCols * TILE, mazeRows * TILE                            ' Рисуем эталонную картинку лабиринта от начала мировых координат viewport.
+End Sub                                                                                         ' Завершаем рисование стен.
 
-SUB DrawVisiblePellets(firstRow AS INTEGER, lastRow AS INTEGER, firstCol AS INTEGER, lastCol AS INTEGER)
-    DIM tileText AS STRING                                                                      ' Символ клетки, чтобы понять, есть ли здесь точка.
+Sub DrawVisiblePellets(firstRow As Integer, lastRow As Integer, firstCol As Integer, lastCol As Integer)
+    Dim tileText As String                                                                      ' Символ клетки, чтобы понять, есть ли здесь точка.
 
-    FOR rowIndex = firstRow TO lastRow                                                          ' Проходим все видимые строки.
-        FOR columnIndex = firstCol TO lastCol                                                   ' Проходим все видимые столбцы.
+    For rowIndex = firstRow To lastRow                                                          ' Проходим все видимые строки.
+        For columnIndex = firstCol To lastCol                                                   ' Проходим все видимые столбцы.
             tileText = CellAt(rowIndex, columnIndex)                                            ' Считываем символ текущей клетки.
 
-            IF tileText = "." THEN                                                              ' Если клетка содержит обычную точку...
-                FILLCIRCLE PelletPixelX(columnIndex), PelletPixelY(rowIndex), 2, POWER_PELLET_COLOR ' ...рисуем маленькую точку в реальном центре коридора.
-            END IF                                                                              ' Завершаем рисование обычной точки.
+            If tileText = "." Then                                                              ' Если клетка содержит обычную точку...
+                Fillcircle PelletPixelX(columnIndex), PelletPixelY(rowIndex), 2, POWER_PELLET_COLOR ' ...рисуем маленькую точку в реальном центре коридора.
+            End If                                                                              ' Завершаем рисование обычной точки.
 
-            IF tileText = "o" THEN                                                              ' Если клетка содержит крупную точку...
-                FILLCIRCLE PelletPixelX(columnIndex), PelletPixelY(rowIndex), 5, POWER_PELLET_COLOR ' ...рисуем крупную точку в том же реальном центре тоннеля.
-            END IF                                                                              ' Завершаем рисование крупной точки.
-        NEXT                                                                                    ' Переходим к следующему столбцу.
-    NEXT                                                                                        ' Переходим к следующей строке.
-END SUB                                                                                         ' Завершаем рисование точек.
+            If tileText = "o" Then                                                              ' Если клетка содержит крупную точку...
+                Fillcircle PelletPixelX(columnIndex), PelletPixelY(rowIndex), 5, POWER_PELLET_COLOR ' ...рисуем крупную точку в том же реальном центре тоннеля.
+            End If                                                                              ' Завершаем рисование крупной точки.
+        Next                                                                                    ' Переходим к следующему столбцу.
+    Next                                                                                        ' Переходим к следующей строке.
+End Sub                                                                                         ' Завершаем рисование точек.
 
-SUB DrawHud()                                                                                   ' Процедура рисует верхнюю панель интерфейса.
-    RESETCAMERA                                                                                 ' Возвращаемся из мировых координат в экранные.
-    VIEWPORT                                                                                     ' Сбрасываем viewport на весь CANVAS, чтобы HUD жил поверх мира.
-    FILLRECT 0, 0, VIEW_WIDTH, HUD_HEIGHT, HUD_BACKGROUND_COLOR                                 ' Рисуем фон верхней панели.
-    DRAWLINE 0, HUD_HEIGHT - 1, VIEW_WIDTH - 1, HUD_HEIGHT - 1, WALL_LIGHT_COLOR               ' Проводим светлую разделительную линию под HUD.
+Sub DrawHud()                                                                                   ' Процедура рисует верхнюю панель интерфейса.
+    Resetcamera                                                                                 ' Возвращаемся из мировых координат в экранные.
+    Viewport                                                                                     ' Сбрасываем viewport на весь CANVAS, чтобы HUD жил поверх мира.
+    Fillrect 0, 0, VIEW_WIDTH, HUD_HEIGHT, HUD_BACKGROUND_COLOR                                 ' Рисуем фон верхней панели.
+    Drawline 0, HUD_HEIGHT - 1, VIEW_WIDTH - 1, HUD_HEIGHT - 1, WALL_LIGHT_COLOR               ' Проводим светлую разделительную линию под HUD.
 
-    DRAWTEXT "Очки: " + TRIM(STR(score)) + "   Жизни: " + TRIM(STR(lives)) + "   Точек осталось: " + TRIM(STR(pelletsLeft)), 8, 7, HUD_TEXT_COLOR ' Печатаем счёт, жизни и число оставшихся точек.
-    IF paused THEN                                                                              ' Если игра сейчас стоит на паузе...
-        DRAWTEXT "Пауза. Нажмите SPACE, чтобы продолжить.", 8, 19, HUD_STATUS_COLOR             ' ...показываем отдельную подсказку паузы.
-    ELSE                                                                                        ' Иначе игра идёт или уже завершена.
-        DRAWTEXT statusText, 8, 19, HUD_STATUS_COLOR                                            ' Печатаем текущую подсказку или игровое сообщение.
-    END IF                                                                                      ' Завершаем выбор строки статуса.
-END SUB                                                                                         ' Завершаем рисование HUD.
+    Drawtext "Очки: " + Trim(Str(score)) + "   Жизни: " + Trim(Str(lives)) + "   Точек осталось: " + Trim(Str(pelletsLeft)), 8, 7, HUD_TEXT_COLOR ' Печатаем счёт, жизни и число оставшихся точек.
+    If paused Then                                                                              ' Если игра сейчас стоит на паузе...
+        Drawtext "Пауза. Нажмите SPACE, чтобы продолжить.", 8, 19, HUD_STATUS_COLOR             ' ...показываем отдельную подсказку паузы.
+    Else                                                                                        ' Иначе игра идёт или уже завершена.
+        Drawtext statusText, 8, 19, HUD_STATUS_COLOR                                            ' Печатаем текущую подсказку или игровое сообщение.
+    End If                                                                                      ' Завершаем выбор строки статуса.
+End Sub                                                                                         ' Завершаем рисование HUD.
 
-SUB HandleCalibrationInput()                                                                    ' Процедура читает клавиши ручной калибровки точек.
-    IF CalibrationHotKeyPressed("C") THEN                                                       ' Если нажали C или c...
-        IF calibrationTarget = CALIBRATION_ROW_MODE THEN                                        ' Если сейчас выбрана строка...
+Sub HandleCalibrationInput()                                                                    ' Процедура читает клавиши ручной калибровки точек.
+    If CalibrationHotKeyPressed("C") Then                                                       ' Если нажали C или c...
+        If calibrationTarget = CALIBRATION_ROW_MODE Then                                        ' Если сейчас выбрана строка...
             calibrationTarget = CALIBRATION_COL_MODE                                            ' ...переключаемся на столбец.
             SetCalibrationStatusText("Выбран столбец.", "LEFT/RIGHT двигают.")                  ' Обновляем подсказку прямо в калибровочном режиме и не растягиваем строку.
-        ELSE                                                                                    ' Иначе сейчас выбран столбец.
+        Else                                                                                    ' Иначе сейчас выбран столбец.
             calibrationTarget = CALIBRATION_ROW_MODE                                            ' ...переключаемся обратно на строку.
             SetCalibrationStatusText("Выбрана строка.", "UP/DOWN двигают.")                    ' Обновляем подсказку для строк и держим её короткой.
-        END IF                                                                                  ' Завершаем переключение строки и столбца.
-    END IF                                                                                      ' Завершаем обработку клавиши C.
+        End If                                                                                  ' Завершаем переключение строки и столбца.
+    End If                                                                                      ' Завершаем обработку клавиши C.
 
-    IF CalibrationHotKeyPressed("W") THEN                                                       ' Если нажали W или w...
-        IF calibrationTarget = CALIBRATION_ROW_MODE THEN                                        ' Если калибруем строки...
+    If CalibrationHotKeyPressed("W") Then                                                       ' Если нажали W или w...
+        If calibrationTarget = CALIBRATION_ROW_MODE Then                                        ' Если калибруем строки...
             calibrationRow = ClampInt(calibrationRow - 1, 1, mazeRows)                          ' ...выбираем строку выше.
-        ELSE                                                                                    ' Иначе калибруем столбцы.
+        Else                                                                                    ' Иначе калибруем столбцы.
             calibrationCol = ClampInt(calibrationCol - 1, 1, mazeCols)                          ' ...выбираем столбец левее по номеру.
-        END IF                                                                                  ' Завершаем выбор предыдущего номера.
+        End If                                                                                  ' Завершаем выбор предыдущего номера.
         SetCalibrationStatusText("Выбран другой номер.", CalibrationSelectionText())            ' Показываем, что именно теперь выбрано, но разбиваем статус на две строки.
-    END IF                                                                                      ' Завершаем обработку клавиши W.
+    End If                                                                                      ' Завершаем обработку клавиши W.
 
-    IF CalibrationHotKeyPressed("S") THEN                                                       ' Если нажали S или s...
-        IF calibrationTarget = CALIBRATION_ROW_MODE THEN                                        ' Если калибруем строки...
+    If CalibrationHotKeyPressed("S") Then                                                       ' Если нажали S или s...
+        If calibrationTarget = CALIBRATION_ROW_MODE Then                                        ' Если калибруем строки...
             calibrationRow = ClampInt(calibrationRow + 1, 1, mazeRows)                          ' ...выбираем строку ниже.
-        ELSE                                                                                    ' Иначе калибруем столбцы.
+        Else                                                                                    ' Иначе калибруем столбцы.
             calibrationCol = ClampInt(calibrationCol + 1, 1, mazeCols)                          ' ...выбираем столбец правее по номеру.
-        END IF                                                                                  ' Завершаем выбор следующего номера.
+        End If                                                                                  ' Завершаем выбор следующего номера.
         SetCalibrationStatusText("Выбран другой номер.", CalibrationSelectionText())            ' Показываем текущий выбор, но не даём строке наползать на поле.
-    END IF                                                                                      ' Завершаем обработку клавиши S.
+    End If                                                                                      ' Завершаем обработку клавиши S.
 
-    IF calibrationTarget = CALIBRATION_ROW_MODE THEN                                            ' Если сейчас двигаем строку точек...
-        IF KEYPRESS("UP") THEN                                                                  ' Если нажали стрелку вверх...
+    If calibrationTarget = CALIBRATION_ROW_MODE Then                                            ' Если сейчас двигаем строку точек...
+        If Keypress("UP") Then                                                                  ' Если нажали стрелку вверх...
             pelletCenterRows(calibrationRow) = pelletCenterRows(calibrationRow) - 1              ' ...поднимаем выбранную строку на один пиксель.
             SetCalibrationStatusText("Строка поднята.", CalibrationAssignmentText())            ' Показываем новое значение в две строки.
-        END IF                                                                                  ' Завершаем обработку стрелки вверх.
+        End If                                                                                  ' Завершаем обработку стрелки вверх.
 
-        IF KEYPRESS("DOWN") THEN                                                                ' Если нажали стрелку вниз...
+        If Keypress("DOWN") Then                                                                ' Если нажали стрелку вниз...
             pelletCenterRows(calibrationRow) = pelletCenterRows(calibrationRow) + 1              ' ...опускаем выбранную строку на один пиксель.
             SetCalibrationStatusText("Строка опущена.", CalibrationAssignmentText())            ' Показываем новое значение в две строки.
-        END IF                                                                                  ' Завершаем обработку стрелки вниз.
-    ELSE                                                                                        ' Иначе сейчас двигаем столбец точек.
-        IF KEYPRESS("LEFT") THEN                                                                ' Если нажали стрелку влево...
+        End If                                                                                  ' Завершаем обработку стрелки вниз.
+    Else                                                                                        ' Иначе сейчас двигаем столбец точек.
+        If Keypress("LEFT") Then                                                                ' Если нажали стрелку влево...
             pelletCenterCols(calibrationCol) = pelletCenterCols(calibrationCol) - 1              ' ...сдвигаем выбранный столбец на один пиксель влево.
             SetCalibrationStatusText("Столбец влево.", CalibrationAssignmentText())             ' Показываем новое значение и сохраняем короткий статус.
-        END IF                                                                                  ' Завершаем обработку стрелки влево.
+        End If                                                                                  ' Завершаем обработку стрелки влево.
 
-        IF KEYPRESS("RIGHT") THEN                                                               ' Если нажали стрелку вправо...
+        If Keypress("RIGHT") Then                                                               ' Если нажали стрелку вправо...
             pelletCenterCols(calibrationCol) = pelletCenterCols(calibrationCol) + 1              ' ...сдвигаем выбранный столбец на один пиксель вправо.
             SetCalibrationStatusText("Столбец вправо.", CalibrationAssignmentText())            ' Показываем новое значение и сохраняем короткий статус.
-        END IF                                                                                  ' Завершаем обработку стрелки вправо.
-    END IF                                                                                      ' Завершаем обработку сдвига выбранной линии.
+        End If                                                                                  ' Завершаем обработку стрелки вправо.
+    End If                                                                                      ' Завершаем обработку сдвига выбранной линии.
 
-    IF CalibrationLowerHotKeyPressed("T") THEN                                                   ' Если нажали обычную t или русскую е...
+    If CalibrationLowerHotKeyPressed("T") Then                                                   ' Если нажали обычную t или русскую е...
         SaveAllCalibrationValues()                                                              ' ...перезаписываем файл рядом с игрой полной таблицей центров.
-    END IF                                                                                      ' Завершаем обработку полной записи таблицы.
+    End If                                                                                      ' Завершаем обработку полной записи таблицы.
 
-    IF CalibrationLowerHotKeyPressed("R") THEN                                                   ' Если нажали обычную r или русскую к...
+    If CalibrationLowerHotKeyPressed("R") Then                                                   ' Если нажали обычную r или русскую к...
         SaveCalibrationValue()                                                                  ' ...дописываем текущее присваивание в файл рядом с игрой.
-    END IF                                                                                      ' Завершаем обработку одиночной записи.
-END SUB                                                                                         ' Завершаем обработку калибровочных клавиш.
+    End If                                                                                      ' Завершаем обработку одиночной записи.
+End Sub                                                                                         ' Завершаем обработку калибровочных клавиш.
 
-SUB DrawCalibrationOverlay()                                                                    ' Процедура рисует подсказки и направляющую линию калибровки.
-    RESETCAMERA                                                                                 ' Рисуем оверлей в экранных координатах, чтобы он не зависел от камеры.
-    VIEWPORT (WorldViewportLeft(), WorldViewportTop()) - (WorldViewportRight(), WorldViewportBottom()) ' Ограничиваем сетку и направляющие только областью игрового поля.
+Sub DrawCalibrationOverlay()                                                                    ' Процедура рисует подсказки и направляющую линию калибровки.
+    Resetcamera                                                                                 ' Рисуем оверлей в экранных координатах, чтобы он не зависел от камеры.
+    Viewport (WorldViewportLeft(), WorldViewportTop()) - (WorldViewportRight(), WorldViewportBottom()) ' Ограничиваем сетку и направляющие только областью игрового поля.
     DrawCalibrationGrid()                                                                       ' Сначала рисуем тонкую сетку поверх поля для точной ручной подгонки.
 
-    IF calibrationTarget = CALIBRATION_ROW_MODE THEN                                            ' Если выбрана строка...
-        DIM selectedY AS INTEGER = PelletPixelY(calibrationRow)                                  ' Считаем фактическую Y-координату выбранного ряда точек.
-        DRAWLINE 0, selectedY, worldWidthPixels - 1, selectedY, CALIBRATION_LINE_COLOR         ' Проводим горизонтальную линию через выбранный ряд внутри viewport.
-    ELSE                                                                                        ' Иначе выбран столбец.
-        DIM selectedX AS INTEGER = PelletPixelX(calibrationCol)                                  ' Считаем фактическую X-координату выбранного столбца точек.
-        DRAWLINE selectedX, 0, selectedX, worldHeightPixels - 1, CALIBRATION_LINE_COLOR        ' Проводим вертикальную линию через выбранный столбец по тем же границам, что и сетка.
-    END IF                                                                                      ' Завершаем рисование направляющей.
+    If calibrationTarget = CALIBRATION_ROW_MODE Then                                            ' Если выбрана строка...
+        Dim selectedY As Integer = PelletPixelY(calibrationRow)                                  ' Считаем фактическую Y-координату выбранного ряда точек.
+        Drawline 0, selectedY, worldWidthPixels - 1, selectedY, CALIBRATION_LINE_COLOR         ' Проводим горизонтальную линию через выбранный ряд внутри viewport.
+    Else                                                                                        ' Иначе выбран столбец.
+        Dim selectedX As Integer = PelletPixelX(calibrationCol)                                  ' Считаем фактическую X-координату выбранного столбца точек.
+        Drawline selectedX, 0, selectedX, worldHeightPixels - 1, CALIBRATION_LINE_COLOR        ' Проводим вертикальную линию через выбранный столбец по тем же границам, что и сетка.
+    End If                                                                                      ' Завершаем рисование направляющей.
 
-    VIEWPORT                                                                                     ' Возвращаем полный холст, чтобы боковая панель не обрезалась viewport-ом мира.
-    FILLRECT CALIBRATION_PANEL_X, CALIBRATION_PANEL_Y, CALIBRATION_PANEL_WIDTH, CALIBRATION_PANEL_HEIGHT, HUD_BACKGROUND_COLOR ' Рисуем боковую плашку в пустом поле слева от лабиринта.
-    DRAWRECT CALIBRATION_PANEL_X, CALIBRATION_PANEL_Y, CALIBRATION_PANEL_WIDTH, CALIBRATION_PANEL_HEIGHT, CALIBRATION_LINE_COLOR ' Обводим боковую плашку, чтобы она читалась как отдельный режим.
-    DRAWTEXT "КАЛИБРОВКА", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 8, CALIBRATION_TEXT_COLOR ' Заголовок режима калибровки.
-    DRAWTEXT "K/k: вкл/выкл", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 24, HUD_STATUS_COLOR ' Подсказка по входу и выходу из режима.
-    DRAWTEXT "C/c: строка/столбец", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 40, HUD_STATUS_COLOR ' Подсказка по переключению типа линии.
-    DRAWTEXT "W/S: выбрать номер", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 56, HUD_STATUS_COLOR ' Подсказка по выбору строки или столбца.
-    DRAWTEXT "Стрелки: двигать", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 72, HUD_STATUS_COLOR ' Подсказка по сдвигу выбранной линии.
-    DRAWTEXT "r: записать линию", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 88, HUD_STATUS_COLOR ' Подсказка по записи текущей линии.
-    DRAWTEXT "t: записать всё", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 104, HUD_STATUS_COLOR ' Подсказка по полной страховочной записи таблицы.
-    DRAWTEXT CalibrationSelectionText(), CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 120, CALIBRATION_TEXT_COLOR ' Показываем текущий выбор и числовое значение.
-    DRAWTEXT calibrationStatusText, CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 136, HUD_STATUS_COLOR ' Показываем первую строку последнего действия.
-    DRAWTEXT calibrationStatusTextLine2, CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 152, HUD_STATUS_COLOR ' Показываем вторую строку статуса, чтобы длинные сообщения не наползали на поле.
-END SUB                                                                                         ' Завершаем рисование калибровочного оверлея.
+    Viewport                                                                                     ' Возвращаем полный холст, чтобы боковая панель не обрезалась viewport-ом мира.
+    Fillrect CALIBRATION_PANEL_X, CALIBRATION_PANEL_Y, CALIBRATION_PANEL_WIDTH, CALIBRATION_PANEL_HEIGHT, HUD_BACKGROUND_COLOR ' Рисуем боковую плашку в пустом поле слева от лабиринта.
+    Drawrect CALIBRATION_PANEL_X, CALIBRATION_PANEL_Y, CALIBRATION_PANEL_WIDTH, CALIBRATION_PANEL_HEIGHT, CALIBRATION_LINE_COLOR ' Обводим боковую плашку, чтобы она читалась как отдельный режим.
+    Drawtext "КАЛИБРОВКА", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 8, CALIBRATION_TEXT_COLOR ' Заголовок режима калибровки.
+    Drawtext "K/k: вкл/выкл", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 24, HUD_STATUS_COLOR ' Подсказка по входу и выходу из режима.
+    Drawtext "C/c: строка/столбец", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 40, HUD_STATUS_COLOR ' Подсказка по переключению типа линии.
+    Drawtext "W/S: выбрать номер", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 56, HUD_STATUS_COLOR ' Подсказка по выбору строки или столбца.
+    Drawtext "Стрелки: двигать", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 72, HUD_STATUS_COLOR ' Подсказка по сдвигу выбранной линии.
+    Drawtext "r: записать линию", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 88, HUD_STATUS_COLOR ' Подсказка по записи текущей линии.
+    Drawtext "t: записать всё", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 104, HUD_STATUS_COLOR ' Подсказка по полной страховочной записи таблицы.
+    Drawtext CalibrationSelectionText(), CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 120, CALIBRATION_TEXT_COLOR ' Показываем текущий выбор и числовое значение.
+    Drawtext calibrationStatusText, CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 136, HUD_STATUS_COLOR ' Показываем первую строку последнего действия.
+    Drawtext calibrationStatusTextLine2, CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 152, HUD_STATUS_COLOR ' Показываем вторую строку статуса, чтобы длинные сообщения не наползали на поле.
+End Sub                                                                                         ' Завершаем рисование калибровочного оверлея.
 
-SUB DrawCalibrationGrid()                                                                       ' Процедура рисует мелкую сетку поверх игрового поля.
-    DIM gridX AS INTEGER = 0                                                                    ' Текущая X-координата вертикальной линии сетки в мировых координатах viewport.
-    DIM gridY AS INTEGER = 0                                                                    ' Текущая Y-координата горизонтальной линии сетки стартует от верха мира.
-    DIM gridRight AS INTEGER = worldWidthPixels - 1                                             ' Правая граница сетки по ширине лабиринта.
-    DIM gridBottom AS INTEGER = worldHeightPixels - 1                                           ' Нижняя граница сетки по высоте мира.
+Sub DrawCalibrationGrid()                                                                       ' Процедура рисует мелкую сетку поверх игрового поля.
+    Dim gridX As Integer = 0                                                                    ' Текущая X-координата вертикальной линии сетки в мировых координатах viewport.
+    Dim gridY As Integer = 0                                                                    ' Текущая Y-координата горизонтальной линии сетки стартует от верха мира.
+    Dim gridRight As Integer = worldWidthPixels - 1                                             ' Правая граница сетки по ширине лабиринта.
+    Dim gridBottom As Integer = worldHeightPixels - 1                                           ' Нижняя граница сетки по высоте мира.
 
-    DO WHILE gridX <= gridRight                                                                 ' Идём по всем вертикальным линиям сетки.
-        DRAWLINE gridX, 0, gridX, gridBottom, CALIBRATION_GRID_COLOR                            ' Рисуем одну тонкую вертикальную линию по точным границам игрового поля.
+    Do While gridX <= gridRight                                                                 ' Идём по всем вертикальным линиям сетки.
+        Drawline gridX, 0, gridX, gridBottom, CALIBRATION_GRID_COLOR                            ' Рисуем одну тонкую вертикальную линию по точным границам игрового поля.
         gridX = gridX + CALIBRATION_GRID_STEP                                                   ' Переходим к следующей вертикальной линии с постоянным шагом.
-    LOOP                                                                                        ' Завершаем вертикальные линии сетки.
+    Loop                                                                                        ' Завершаем вертикальные линии сетки.
 
-    DO WHILE gridY <= gridBottom                                                                ' Идём по всем горизонтальным линиям сетки.
-        DRAWLINE 0, gridY, gridRight, gridY, CALIBRATION_GRID_COLOR                             ' Рисуем одну тонкую горизонтальную линию.
+    Do While gridY <= gridBottom                                                                ' Идём по всем горизонтальным линиям сетки.
+        Drawline 0, gridY, gridRight, gridY, CALIBRATION_GRID_COLOR                             ' Рисуем одну тонкую горизонтальную линию.
         gridY = gridY + CALIBRATION_GRID_STEP                                                   ' Переходим к следующей горизонтальной линии с постоянным шагом.
-    LOOP                                                                                        ' Завершаем горизонтальные линии сетки.
-END SUB                                                                                         ' Завершаем рисование мелкой сетки.
+    Loop                                                                                        ' Завершаем горизонтальные линии сетки.
+End Sub                                                                                         ' Завершаем рисование мелкой сетки.
 
-SUB SaveCalibrationValue()                                                                      ' Процедура дописывает текущее значение калибровки в файл рядом с игрой.
-    DIM lineText AS STRING = CalibrationAssignmentText()                                        ' Собираем строку присваивания, которую потом можно вставить в InitPelletAlignment.
-    DIM ok AS BOOLEAN = APPENDFILE(calibrationFilePath, lineText + CHR(13) + CHR(10))           ' Дописываем строку в файл с переводом строки Windows.
+Sub SaveCalibrationValue()                                                                      ' Процедура дописывает текущее значение калибровки в файл рядом с игрой.
+    Dim lineText As String = CalibrationAssignmentText()                                        ' Собираем строку присваивания, которую потом можно вставить в InitPelletAlignment.
+    Dim ok As Boolean = Appendfile(calibrationFilePath, lineText + Chr(13) + Chr(10))           ' Дописываем строку в файл с переводом строки Windows.
 
-    IF ok THEN                                                                                  ' Если запись прошла успешно...
+    If ok Then                                                                                  ' Если запись прошла успешно...
         SetCalibrationStatusText("Записано в файл.", lineText)                                  ' ...показываем, какая строка ушла в файл, но не растягиваем её в одну длинную ленту.
-    ELSE                                                                                        ' Иначе файловая функция вернула FALSE.
+    Else                                                                                        ' Иначе файловая функция вернула FALSE.
         SetCalibrationStatusText("Ошибка записи.", "Файл калибровки.")                          ' Сообщаем о проблеме записи короткими строками.
-    END IF                                                                                      ' Завершаем обработку результата записи.
-END SUB                                                                                         ' Завершаем запись значения калибровки.
+    End If                                                                                      ' Завершаем обработку результата записи.
+End Sub                                                                                         ' Завершаем запись значения калибровки.
 
-SUB SaveAllCalibrationValues()                                                                  ' Процедура перезаписывает файл свежим полным снимком всех координат точек.
-    DIM ok AS BOOLEAN = TRUE                                                                    ' Общий флаг успеха полной записи.
-    DIM snapshotText AS STRING = "' Полный снимок текущей калибровки maze_chase" + CHR(13) + CHR(10) ' Начинаем текст файла с понятного заголовка снимка.
+Sub SaveAllCalibrationValues()                                                                  ' Процедура перезаписывает файл свежим полным снимком всех координат точек.
+    Dim ok As Boolean = True                                                                    ' Общий флаг успеха полной записи.
+    Dim snapshotText As String = "' Полный снимок текущей калибровки maze_chase" + Chr(13) + Chr(10) ' Начинаем текст файла с понятного заголовка снимка.
 
-    FOR rowIndex = 1 TO mazeRows                                                                ' Проходим все строки таблицы центров.
-        snapshotText = snapshotText + CalibrationRowAssignmentText(rowIndex) + CHR(13) + CHR(10) ' Добавляем в снимок одну строку `pelletCenterRows`.
-    NEXT                                                                                        ' Переходим к следующей строке.
+    For rowIndex = 1 To mazeRows                                                                ' Проходим все строки таблицы центров.
+        snapshotText = snapshotText + CalibrationRowAssignmentText(rowIndex) + Chr(13) + Chr(10) ' Добавляем в снимок одну строку `pelletCenterRows`.
+    Next                                                                                        ' Переходим к следующей строке.
 
-    FOR colIndex = 1 TO mazeCols                                                                ' Проходим все столбцы таблицы центров.
-        snapshotText = snapshotText + CalibrationColAssignmentText(colIndex) + CHR(13) + CHR(10) ' Добавляем в снимок одну строку `pelletCenterCols`.
-    NEXT                                                                                        ' Переходим к следующему столбцу.
+    For colIndex = 1 To mazeCols                                                                ' Проходим все столбцы таблицы центров.
+        snapshotText = snapshotText + CalibrationColAssignmentText(colIndex) + Chr(13) + Chr(10) ' Добавляем в снимок одну строку `pelletCenterCols`.
+    Next                                                                                        ' Переходим к следующему столбцу.
 
-    ok = WRITEFILE(calibrationFilePath, snapshotText)                                            ' Полностью заменяем старый журнал новым чистым снимком таблицы.
+    ok = Writefile(calibrationFilePath, snapshotText)                                            ' Полностью заменяем старый журнал новым чистым снимком таблицы.
 
-    IF ok THEN                                                                                  ' Если все строки записались...
+    If ok Then                                                                                  ' Если все строки записались...
         SetCalibrationStatusText("Записана вся таблица.", "Строки и столбцы.")                  ' ...сообщаем об успешной страховочной записи двумя строками.
-    ELSE                                                                                        ' Иначе хотя бы одна запись вернула FALSE.
+    Else                                                                                        ' Иначе хотя бы одна запись вернула FALSE.
         SetCalibrationStatusText("Не удалось записать.", "Всю таблицу.")                        ' Сообщаем о частичной ошибке записи короткими строками.
-    END IF                                                                                      ' Завершаем обработку результата полной записи.
-END SUB                                                                                         ' Завершаем полную запись координат.
+    End If                                                                                      ' Завершаем обработку результата полной записи.
+End Sub                                                                                         ' Завершаем полную запись координат.
 
-SUB SetCalibrationStatusText(line1 AS STRING, line2 AS STRING)                                 ' Процедура разбивает статус калибровки на две короткие строки.
+Sub SetCalibrationStatusText(line1 As String, line2 As String)                                 ' Процедура разбивает статус калибровки на две короткие строки.
     calibrationStatusText = line1                                                               ' Сохраняем первую строку статуса.
     calibrationStatusTextLine2 = line2                                                          ' Сохраняем вторую строку статуса.
-END SUB                                                                                         ' Завершаем обновление двухстрочного статуса.
+End Sub                                                                                         ' Завершаем обновление двухстрочного статуса.
 
-FUNCTION CalibrationSelectionText() AS STRING                                                   ' Функция возвращает человекочитаемое описание текущего выбора.
-    IF calibrationTarget = CALIBRATION_ROW_MODE THEN                                            ' Если выбрана строка...
-        RETURN "строка " + TRIM(STR(calibrationRow)) + ", значение " + TRIM(STR(pelletCenterRows(calibrationRow))) ' Возвращаем номер строки и её Y-сдвиг.
-    END IF                                                                                      ' Завершаем строковый режим.
+Function CalibrationSelectionText() As String                                                   ' Функция возвращает человекочитаемое описание текущего выбора.
+    If calibrationTarget = CALIBRATION_ROW_MODE Then                                            ' Если выбрана строка...
+        Return "строка " + Trim(Str(calibrationRow)) + ", значение " + Trim(Str(pelletCenterRows(calibrationRow))) ' Возвращаем номер строки и её Y-сдвиг.
+    End If                                                                                      ' Завершаем строковый режим.
 
-    RETURN "столбец " + TRIM(STR(calibrationCol)) + ", значение " + TRIM(STR(pelletCenterCols(calibrationCol))) ' Возвращаем номер столбца и его X-сдвиг.
-END FUNCTION                                                                                    ' Завершаем описание текущего выбора.
+    Return "столбец " + Trim(Str(calibrationCol)) + ", значение " + Trim(Str(pelletCenterCols(calibrationCol))) ' Возвращаем номер столбца и его X-сдвиг.
+End Function                                                                                    ' Завершаем описание текущего выбора.
 
-FUNCTION CalibrationAssignmentText() AS STRING                                                  ' Функция собирает точную строку присваивания для файла калибровки.
-    IF calibrationTarget = CALIBRATION_ROW_MODE THEN                                            ' Если сейчас выбрана строка...
-        RETURN CalibrationRowAssignmentText(calibrationRow)                                     ' Возвращаем готовую строку для таблицы строк.
-    END IF                                                                                      ' Завершаем ветку строки.
+Function CalibrationAssignmentText() As String                                                  ' Функция собирает точную строку присваивания для файла калибровки.
+    If calibrationTarget = CALIBRATION_ROW_MODE Then                                            ' Если сейчас выбрана строка...
+        Return CalibrationRowAssignmentText(calibrationRow)                                     ' Возвращаем готовую строку для таблицы строк.
+    End If                                                                                      ' Завершаем ветку строки.
 
-    RETURN CalibrationColAssignmentText(calibrationCol)                                         ' Возвращаем готовую строку для таблицы столбцов.
-END FUNCTION                                                                                    ' Завершаем сборку строки присваивания.
+    Return CalibrationColAssignmentText(calibrationCol)                                         ' Возвращаем готовую строку для таблицы столбцов.
+End Function                                                                                    ' Завершаем сборку строки присваивания.
 
-FUNCTION CalibrationRowAssignmentText(rowIndex AS INTEGER) AS STRING                            ' Функция собирает строку присваивания для одной строки точек.
-    RETURN "pelletCenterRows(" + TRIM(STR(rowIndex)) + ") = " + TRIM(STR(pelletCenterRows(rowIndex))) ' Возвращаем готовую строку `pelletCenterRows`.
-END FUNCTION                                                                                    ' Завершаем сборку строки для вертикального центра.
+Function CalibrationRowAssignmentText(rowIndex As Integer) As String                            ' Функция собирает строку присваивания для одной строки точек.
+    Return "pelletCenterRows(" + Trim(Str(rowIndex)) + ") = " + Trim(Str(pelletCenterRows(rowIndex))) ' Возвращаем готовую строку `pelletCenterRows`.
+End Function                                                                                    ' Завершаем сборку строки для вертикального центра.
 
-FUNCTION CalibrationColAssignmentText(colIndex AS INTEGER) AS STRING                            ' Функция собирает строку присваивания для одного столбца точек.
-    RETURN "pelletCenterCols(" + TRIM(STR(colIndex)) + ") = " + TRIM(STR(pelletCenterCols(colIndex))) ' Возвращаем готовую строку `pelletCenterCols`.
-END FUNCTION                                                                                    ' Завершаем сборку строки для горизонтального центра.
+Function CalibrationColAssignmentText(colIndex As Integer) As String                            ' Функция собирает строку присваивания для одного столбца точек.
+    Return "pelletCenterCols(" + Trim(Str(colIndex)) + ") = " + Trim(Str(pelletCenterCols(colIndex))) ' Возвращаем готовую строку `pelletCenterCols`.
+End Function                                                                                    ' Завершаем сборку строки для горизонтального центра.
 
-FUNCTION CalibrationHotKeyPressed(keyName AS STRING) AS BOOLEAN                                 ' Функция проверяет буквенную клавишу калибровки в обоих регистрах.
-    IF CalibrationUpperHotKeyPressed(keyName) THEN                                               ' Если в очередь пришла заглавная латинская или русская буква...
-        RETURN TRUE                                                                             ' ...сразу считаем горячую клавишу нажатой.
-    END IF                                                                                      ' Завершаем проверку заглавной буквы.
+Function CalibrationHotKeyPressed(keyName As String) As Boolean                                 ' Функция проверяет буквенную клавишу калибровки в обоих регистрах.
+    If CalibrationUpperHotKeyPressed(keyName) Then                                               ' Если в очередь пришла заглавная латинская или русская буква...
+        Return True                                                                             ' ...сразу считаем горячую клавишу нажатой.
+    End If                                                                                      ' Завершаем проверку заглавной буквы.
 
-    IF CalibrationLowerHotKeyPressed(keyName) THEN                                               ' Если Windows прислал маленькую латинскую или русскую букву...
-        RETURN TRUE                                                                             ' ...тоже принимаем её как ту же команду калибровки.
-    END IF                                                                                      ' Завершаем проверку маленькой буквы.
+    If CalibrationLowerHotKeyPressed(keyName) Then                                               ' Если Windows прислал маленькую латинскую или русскую букву...
+        Return True                                                                             ' ...тоже принимаем её как ту же команду калибровки.
+    End If                                                                                      ' Завершаем проверку маленькой буквы.
 
-    RETURN FALSE                                                                                ' Если ни один вариант не найден, клавиша не нажата.
-END FUNCTION                                                                                    ' Завершаем проверку буквенной горячей клавиши.
+    Return False                                                                                ' Если ни один вариант не найден, клавиша не нажата.
+End Function                                                                                    ' Завершаем проверку буквенной горячей клавиши.
 
-FUNCTION CalibrationUpperHotKeyPressed(keyName AS STRING) AS BOOLEAN                            ' Функция проверяет именно заглавную букву команды.
-    IF KEYPRESS(keyName) THEN                                                                   ' Если пришла заглавная латинская буква...
-        RETURN TRUE                                                                             ' ...возвращаем TRUE и расходуем это событие.
-    END IF                                                                                      ' Завершаем проверку латинской заглавной буквы.
+Function CalibrationUpperHotKeyPressed(keyName As String) As Boolean                            ' Функция проверяет именно заглавную букву команды.
+    If Keypress(keyName) Then                                                                   ' Если пришла заглавная латинская буква...
+        Return True                                                                             ' ...возвращаем TRUE и расходуем это событие.
+    End If                                                                                      ' Завершаем проверку латинской заглавной буквы.
 
-    DIM altUpper AS STRING = CalibrationRussianHotKeyUpper(keyName)                             ' Для русской раскладки получаем букву на той же физической клавише.
-    IF altUpper <> "" THEN                                                                      ' Если для этой команды есть русская пара...
-        IF KEYPRESS(altUpper) THEN                                                              ' ...и в очередь пришла заглавная русская буква...
-            RETURN TRUE                                                                         ' ...тоже считаем горячую клавишу нажатой.
-        END IF                                                                                  ' Завершаем проверку заглавной русской буквы.
-    END IF                                                                                      ' Завершаем обработку русской пары в верхнем регистре.
+    Dim altUpper As String = CalibrationRussianHotKeyUpper(keyName)                             ' Для русской раскладки получаем букву на той же физической клавише.
+    If altUpper <> "" Then                                                                      ' Если для этой команды есть русская пара...
+        If Keypress(altUpper) Then                                                              ' ...и в очередь пришла заглавная русская буква...
+            Return True                                                                         ' ...тоже считаем горячую клавишу нажатой.
+        End If                                                                                  ' Завершаем проверку заглавной русской буквы.
+    End If                                                                                      ' Завершаем обработку русской пары в верхнем регистре.
 
-    RETURN FALSE                                                                                ' Если заглавная буква не найдена, возвращаем FALSE.
-END FUNCTION                                                                                    ' Завершаем проверку заглавной горячей клавиши.
+    Return False                                                                                ' Если заглавная буква не найдена, возвращаем FALSE.
+End Function                                                                                    ' Завершаем проверку заглавной горячей клавиши.
 
-FUNCTION CalibrationLowerHotKeyPressed(keyName AS STRING) AS BOOLEAN                            ' Функция проверяет именно маленькую букву команды.
-    IF KEYPRESS(LCASE(keyName)) THEN                                                            ' Если пришла маленькая латинская буква...
-        RETURN TRUE                                                                             ' ...возвращаем TRUE и расходуем это событие.
-    END IF                                                                                      ' Завершаем проверку латинской маленькой буквы.
+Function CalibrationLowerHotKeyPressed(keyName As String) As Boolean                            ' Функция проверяет именно маленькую букву команды.
+    If Keypress(Lcase(keyName)) Then                                                            ' Если пришла маленькая латинская буква...
+        Return True                                                                             ' ...возвращаем TRUE и расходуем это событие.
+    End If                                                                                      ' Завершаем проверку латинской маленькой буквы.
 
-    DIM altLower AS STRING = CalibrationRussianHotKeyLower(keyName)                             ' Получаем маленькую русскую букву с той же клавиши.
-    IF altLower <> "" THEN                                                                      ' Если русская маленькая пара существует...
-        IF KEYPRESS(altLower) THEN                                                              ' ...и в очередь пришла маленькая русская буква...
-            RETURN TRUE                                                                         ' ...принимаем её как ту же команду калибровки.
-        END IF                                                                                  ' Завершаем проверку маленькой русской буквы.
-    END IF                                                                                      ' Завершаем обработку русской пары в нижнем регистре.
+    Dim altLower As String = CalibrationRussianHotKeyLower(keyName)                             ' Получаем маленькую русскую букву с той же клавиши.
+    If altLower <> "" Then                                                                      ' Если русская маленькая пара существует...
+        If Keypress(altLower) Then                                                              ' ...и в очередь пришла маленькая русская буква...
+            Return True                                                                         ' ...принимаем её как ту же команду калибровки.
+        End If                                                                                  ' Завершаем проверку маленькой русской буквы.
+    End If                                                                                      ' Завершаем обработку русской пары в нижнем регистре.
 
-    RETURN FALSE                                                                                ' Если маленькая буква не найдена, возвращаем FALSE.
-END FUNCTION                                                                                    ' Завершаем проверку маленькой горячей клавиши.
+    Return False                                                                                ' Если маленькая буква не найдена, возвращаем FALSE.
+End Function                                                                                    ' Завершаем проверку маленькой горячей клавиши.
 
-FUNCTION CalibrationRussianHotKeyUpper(keyName AS STRING) AS STRING                             ' Функция возвращает русскую заглавную букву с той же физической клавиши.
-    IF keyName = "K" THEN                                                                       ' Если нужна команда калибровки по клавише K...
-        RETURN "Л"                                                                              ' ...в русской раскладке на этой клавише стоит буква Л.
-    END IF                                                                                      ' Завершаем проверку команды K.
+Function CalibrationRussianHotKeyUpper(keyName As String) As String                             ' Функция возвращает русскую заглавную букву с той же физической клавиши.
+    If keyName = "K" Then                                                                       ' Если нужна команда калибровки по клавише K...
+        Return "Л"                                                                              ' ...в русской раскладке на этой клавише стоит буква Л.
+    End If                                                                                      ' Завершаем проверку команды K.
 
-    IF keyName = "C" THEN                                                                       ' Если нужна команда по клавише C...
-        RETURN "С"                                                                              ' ...в русской раскладке это буква С.
-    END IF                                                                                      ' Завершаем проверку команды C.
+    If keyName = "C" Then                                                                       ' Если нужна команда по клавише C...
+        Return "С"                                                                              ' ...в русской раскладке это буква С.
+    End If                                                                                      ' Завершаем проверку команды C.
 
-    IF keyName = "W" THEN                                                                       ' Если нужна команда по клавише W...
-        RETURN "Ц"                                                                              ' ...в русской раскладке это буква Ц.
-    END IF                                                                                      ' Завершаем проверку команды W.
+    If keyName = "W" Then                                                                       ' Если нужна команда по клавише W...
+        Return "Ц"                                                                              ' ...в русской раскладке это буква Ц.
+    End If                                                                                      ' Завершаем проверку команды W.
 
-    IF keyName = "S" THEN                                                                       ' Если нужна команда по клавише S...
-        RETURN "Ы"                                                                              ' ...в русской раскладке это буква Ы.
-    END IF                                                                                      ' Завершаем проверку команды S.
+    If keyName = "S" Then                                                                       ' Если нужна команда по клавише S...
+        Return "Ы"                                                                              ' ...в русской раскладке это буква Ы.
+    End If                                                                                      ' Завершаем проверку команды S.
 
-    IF keyName = "R" THEN                                                                       ' Если нужна команда записи по клавише R...
-        RETURN "К"                                                                              ' ...в русской раскладке это буква К.
-    END IF                                                                                      ' Завершаем проверку команды R.
+    If keyName = "R" Then                                                                       ' Если нужна команда записи по клавише R...
+        Return "К"                                                                              ' ...в русской раскладке это буква К.
+    End If                                                                                      ' Завершаем проверку команды R.
 
-    IF keyName = "T" THEN                                                                       ' Если нужна команда полной записи по клавише T...
-        RETURN "Е"                                                                              ' ...в русской раскладке это буква Е.
-    END IF                                                                                      ' Завершаем проверку команды T.
+    If keyName = "T" Then                                                                       ' Если нужна команда полной записи по клавише T...
+        Return "Е"                                                                              ' ...в русской раскладке это буква Е.
+    End If                                                                                      ' Завершаем проверку команды T.
 
-    RETURN ""                                                                                   ' Для остальных клавиш русскую пару не задаём.
-END FUNCTION                                                                                    ' Завершаем выбор русской заглавной пары.
+    Return ""                                                                                   ' Для остальных клавиш русскую пару не задаём.
+End Function                                                                                    ' Завершаем выбор русской заглавной пары.
 
-FUNCTION CalibrationRussianHotKeyLower(keyName AS STRING) AS STRING                             ' Функция возвращает русскую маленькую букву с той же физической клавиши.
-    IF keyName = "K" THEN                                                                       ' Если нужна команда калибровки по клавише K...
-        RETURN "л"                                                                              ' ...в русской раскладке на этой клавише стоит буква л.
-    END IF                                                                                      ' Завершаем проверку команды K.
+Function CalibrationRussianHotKeyLower(keyName As String) As String                             ' Функция возвращает русскую маленькую букву с той же физической клавиши.
+    If keyName = "K" Then                                                                       ' Если нужна команда калибровки по клавише K...
+        Return "л"                                                                              ' ...в русской раскладке на этой клавише стоит буква л.
+    End If                                                                                      ' Завершаем проверку команды K.
 
-    IF keyName = "C" THEN                                                                       ' Если нужна команда по клавише C...
-        RETURN "с"                                                                              ' ...в русской раскладке это буква с.
-    END IF                                                                                      ' Завершаем проверку команды C.
+    If keyName = "C" Then                                                                       ' Если нужна команда по клавише C...
+        Return "с"                                                                              ' ...в русской раскладке это буква с.
+    End If                                                                                      ' Завершаем проверку команды C.
 
-    IF keyName = "W" THEN                                                                       ' Если нужна команда по клавише W...
-        RETURN "ц"                                                                              ' ...в русской раскладке это буква ц.
-    END IF                                                                                      ' Завершаем проверку команды W.
+    If keyName = "W" Then                                                                       ' Если нужна команда по клавише W...
+        Return "ц"                                                                              ' ...в русской раскладке это буква ц.
+    End If                                                                                      ' Завершаем проверку команды W.
 
-    IF keyName = "S" THEN                                                                       ' Если нужна команда по клавише S...
-        RETURN "ы"                                                                              ' ...в русской раскладке это буква ы.
-    END IF                                                                                      ' Завершаем проверку команды S.
+    If keyName = "S" Then                                                                       ' Если нужна команда по клавише S...
+        Return "ы"                                                                              ' ...в русской раскладке это буква ы.
+    End If                                                                                      ' Завершаем проверку команды S.
 
-    IF keyName = "R" THEN                                                                       ' Если нужна команда записи по клавише R...
-        RETURN "к"                                                                              ' ...в русской раскладке это буква к.
-    END IF                                                                                      ' Завершаем проверку команды R.
+    If keyName = "R" Then                                                                       ' Если нужна команда записи по клавише R...
+        Return "к"                                                                              ' ...в русской раскладке это буква к.
+    End If                                                                                      ' Завершаем проверку команды R.
 
-    IF keyName = "T" THEN                                                                       ' Если нужна команда полной записи по клавише T...
-        RETURN "е"                                                                              ' ...в русской раскладке это буква е.
-    END IF                                                                                      ' Завершаем проверку команды T.
+    If keyName = "T" Then                                                                       ' Если нужна команда полной записи по клавише T...
+        Return "е"                                                                              ' ...в русской раскладке это буква е.
+    End If                                                                                      ' Завершаем проверку команды T.
 
-    RETURN ""                                                                                   ' Для остальных клавиш маленькую русскую пару не задаём.
-END FUNCTION                                                                                    ' Завершаем выбор русской маленькой пары.
+    Return ""                                                                                   ' Для остальных клавиш маленькую русскую пару не задаём.
+End Function                                                                                    ' Завершаем выбор русской маленькой пары.
 
-FUNCTION CurrentPlayerSpriteSlot() AS INTEGER                                                   ' Функция выбирает индекс текущего спрайта героя.
-    DIM animationFrame AS INTEGER = 3                                                           ' По умолчанию берём кадр с самым открытым ртом.
+Function CurrentPlayerSpriteSlot() As Integer                                                   ' Функция выбирает индекс текущего спрайта героя.
+    Dim animationFrame As Integer = 3                                                           ' По умолчанию берём кадр с самым открытым ртом.
 
-    IF playerAnimStep = 1 THEN                                                                  ' Если сейчас первый шаг анимации...
+    If playerAnimStep = 1 Then                                                                  ' Если сейчас первый шаг анимации...
         animationFrame = 1                                                                      ' ...берём первый кадр.
-    END IF                                                                                      ' Завершаем выбор первого кадра.
+    End If                                                                                      ' Завершаем выбор первого кадра.
 
-    IF playerAnimStep = 2 OR playerAnimStep = 4 THEN                                            ' Если сейчас средняя фаза открытия или закрытия рта...
+    If playerAnimStep = 2 Or playerAnimStep = 4 Then                                            ' Если сейчас средняя фаза открытия или закрытия рта...
         animationFrame = 2                                                                      ' ...берём промежуточный кадр.
-    END IF                                                                                      ' Завершаем выбор промежуточного кадра.
+    End If                                                                                      ' Завершаем выбор промежуточного кадра.
 
-    RETURN SpriteSlot(playerFacing, animationFrame)                                             ' Возвращаем общий индекс кадра по направлению и фазе анимации.
-END FUNCTION                                                                                    ' Завершаем выбор текущего кадра героя.
+    Return SpriteSlot(playerFacing, animationFrame)                                             ' Возвращаем общий индекс кадра по направлению и фазе анимации.
+End Function                                                                                    ' Завершаем выбор текущего кадра героя.
 
-FUNCTION SpriteSlot(dir AS INTEGER, frameNumber AS INTEGER) AS INTEGER                          ' Функция переводит направление и номер кадра в индекс массива спрайтов.
-    RETURN ((dir - 1) * 3) + frameNumber                                                        ' Считаем смещение по три кадра на каждое направление.
-END FUNCTION                                                                                    ' Завершаем вычисление индекса спрайта.
+Function SpriteSlot(dir As Integer, frameNumber As Integer) As Integer                          ' Функция переводит направление и номер кадра в индекс массива спрайтов.
+    Return ((dir - 1) * 3) + frameNumber                                                        ' Считаем смещение по три кадра на каждое направление.
+End Function                                                                                    ' Завершаем вычисление индекса спрайта.
 
-FUNCTION ChooseGhostDirection() AS INTEGER                                                      ' Функция выбирает, куда призраку идти дальше.
-    DIM bestDirection AS INTEGER = 0                                                            ' Лучшее найденное направление.
-    DIM bestScore AS INTEGER = 1000000                                                          ' Лучшая оценка расстояния до героя.
-    DIM availableMoves AS INTEGER = CountAvailableMoves(ghostCol, ghostRow)                     ' Сколько путей доступно призраку в текущем узле.
-    DIM nextCol AS INTEGER                                                                      ' Временный столбец для оценки следующей клетки.
-    DIM nextRow AS INTEGER                                                                      ' Временная строка для оценки следующей клетки.
-    DIM distance AS INTEGER                                                                     ' Манхэттенское расстояние от следующей клетки до героя.
+Function ChooseGhostDirection() As Integer                                                      ' Функция выбирает, куда призраку идти дальше.
+    Dim bestDirection As Integer = 0                                                            ' Лучшее найденное направление.
+    Dim bestScore As Integer = 1000000                                                          ' Лучшая оценка расстояния до героя.
+    Dim availableMoves As Integer = CountAvailableMoves(ghostCol, ghostRow)                     ' Сколько путей доступно призраку в текущем узле.
+    Dim nextCol As Integer                                                                      ' Временный столбец для оценки следующей клетки.
+    Dim nextRow As Integer                                                                      ' Временная строка для оценки следующей клетки.
+    Dim distance As Integer                                                                     ' Манхэттенское расстояние от следующей клетки до героя.
 
-    FOR candidate = 1 TO 4                                                                     ' Пробуем все четыре направления.
-        IF CanMove(ghostCol, ghostRow, candidate) THEN                                          ' Сначала фильтруем только реально проходимые направления.
-            IF availableMoves = 1 OR candidate <> OppositeDirection(ghostDir) THEN              ' На развилке стараемся не разворачиваться без необходимости.
+    For candidate = 1 To 4                                                                     ' Пробуем все четыре направления.
+        If CanMove(ghostCol, ghostRow, candidate) Then                                          ' Сначала фильтруем только реально проходимые направления.
+            If availableMoves = 1 Or candidate <> OppositeDirection(ghostDir) Then              ' На развилке стараемся не разворачиваться без необходимости.
                 nextCol = ghostCol + DirX(candidate)                                            ' Считаем столбец следующей клетки.
                 nextRow = ghostRow + DirY(candidate)                                            ' Считаем строку следующей клетки.
                 nextCol = WrapTunnelColumn(nextCol, nextRow)                                    ' Учитываем телепорт через боковой туннель.
                 distance = AbsInt(nextCol - playerCol) + AbsInt(nextRow - playerRow)            ' Оцениваем, приблизит ли ход призрака к герою.
 
-                IF distance < bestScore THEN                                                    ' Если это направление лучше предыдущих...
+                If distance < bestScore Then                                                    ' Если это направление лучше предыдущих...
                     bestScore = distance                                                        ' ...сохраняем новую лучшую оценку.
                     bestDirection = candidate                                                   ' ...и запоминаем это направление.
-                END IF                                                                          ' Завершаем сравнение качества хода.
-            END IF                                                                              ' Завершаем защиту от лишнего разворота.
-        END IF                                                                                  ' Завершаем проверку проходимости кандидата.
-    NEXT                                                                                        ' Переходим к следующему направлению.
+                End If                                                                          ' Завершаем сравнение качества хода.
+            End If                                                                              ' Завершаем защиту от лишнего разворота.
+        End If                                                                                  ' Завершаем проверку проходимости кандидата.
+    Next                                                                                        ' Переходим к следующему направлению.
 
-    IF bestDirection = 0 THEN                                                                   ' Если подходящее направление так и не нашли...
-        FOR candidate = 1 TO 4                                                                  ' ...делаем запасной проход по всем направлениям.
-            IF CanMove(ghostCol, ghostRow, candidate) THEN                                      ' Берём первое доступное направление...
-                RETURN candidate                                                                ' ...и сразу возвращаем его.
-            END IF                                                                              ' Завершаем запасную проверку проходимости.
-        NEXT                                                                                    ' Переходим к следующему кандидату в запасном цикле.
-    END IF                                                                                      ' Завершаем обработку запасного случая.
+    If bestDirection = 0 Then                                                                   ' Если подходящее направление так и не нашли...
+        For candidate = 1 To 4                                                                  ' ...делаем запасной проход по всем направлениям.
+            If CanMove(ghostCol, ghostRow, candidate) Then                                      ' Берём первое доступное направление...
+                Return candidate                                                                ' ...и сразу возвращаем его.
+            End If                                                                              ' Завершаем запасную проверку проходимости.
+        Next                                                                                    ' Переходим к следующему кандидату в запасном цикле.
+    End If                                                                                      ' Завершаем обработку запасного случая.
 
-    RETURN bestDirection                                                                        ' Возвращаем лучшее найденное направление.
-END FUNCTION                                                                                    ' Завершаем выбор направления призрака.
+    Return bestDirection                                                                        ' Возвращаем лучшее найденное направление.
+End Function                                                                                    ' Завершаем выбор направления призрака.
 
-FUNCTION CountAvailableMoves(tileCol AS INTEGER, tileRow AS INTEGER) AS INTEGER                 ' Функция считает, сколько ходов доступно из текущей клетки.
-    DIM total AS INTEGER = 0                                                                    ' Счётчик доступных направлений.
+Function CountAvailableMoves(tileCol As Integer, tileRow As Integer) As Integer                 ' Функция считает, сколько ходов доступно из текущей клетки.
+    Dim total As Integer = 0                                                                    ' Счётчик доступных направлений.
 
-    FOR candidate = 1 TO 4                                                                     ' Проверяем все четыре стороны.
-        IF CanMove(tileCol, tileRow, candidate) THEN                                            ' Если в эту сторону можно идти...
+    For candidate = 1 To 4                                                                     ' Проверяем все четыре стороны.
+        If CanMove(tileCol, tileRow, candidate) Then                                            ' Если в эту сторону можно идти...
             total = total + 1                                                                   ' ...увеличиваем счётчик.
-        END IF                                                                                  ' Завершаем проверку одного направления.
-    NEXT                                                                                        ' Переходим к следующему направлению.
+        End If                                                                                  ' Завершаем проверку одного направления.
+    Next                                                                                        ' Переходим к следующему направлению.
 
-    RETURN total                                                                                ' Возвращаем число доступных ходов.
-END FUNCTION                                                                                    ' Завершаем подсчёт доступных ходов.
+    Return total                                                                                ' Возвращаем число доступных ходов.
+End Function                                                                                    ' Завершаем подсчёт доступных ходов.
 
-FUNCTION EntitiesOverlap() AS BOOLEAN                                                           ' Функция проверяет близость героя и призрака.
-    RETURN ABS(PlayerPixelX() - GhostPixelX()) < 12 AND ABS(PlayerPixelY() - GhostPixelY()) < 12 ' Столкновение считаем по близости центров спрайтов.
-END FUNCTION                                                                                    ' Завершаем проверку столкновения.
+Function EntitiesOverlap() As Boolean                                                           ' Функция проверяет близость героя и призрака.
+    Return Abs(PlayerPixelX() - GhostPixelX()) < 12 And Abs(PlayerPixelY() - GhostPixelY()) < 12 ' Столкновение считаем по близости центров спрайтов.
+End Function                                                                                    ' Завершаем проверку столкновения.
 
-FUNCTION PlayerPixelX() AS INTEGER                                                              ' Функция возвращает текущую X-координату героя в пикселях.
-    RETURN EntityPixelX(playerCol, playerRow, playerDir, playerTravel)                          ' Считаем её по тем же реальным центрам тоннелей, что и точки.
-END FUNCTION                                                                                    ' Завершаем вычисление X героя.
+Function PlayerPixelX() As Integer                                                              ' Функция возвращает текущую X-координату героя в пикселях.
+    Return EntityPixelX(playerCol, playerRow, playerDir, playerTravel)                          ' Считаем её по тем же реальным центрам тоннелей, что и точки.
+End Function                                                                                    ' Завершаем вычисление X героя.
 
-FUNCTION PlayerPixelY() AS INTEGER                                                              ' Функция возвращает текущую Y-координату героя в пикселях.
-    RETURN EntityPixelY(playerCol, playerRow, playerDir, playerTravel)                          ' Считаем её по тем же реальным центрам тоннелей, что и точки.
-END FUNCTION                                                                                    ' Завершаем вычисление Y героя.
+Function PlayerPixelY() As Integer                                                              ' Функция возвращает текущую Y-координату героя в пикселях.
+    Return EntityPixelY(playerCol, playerRow, playerDir, playerTravel)                          ' Считаем её по тем же реальным центрам тоннелей, что и точки.
+End Function                                                                                    ' Завершаем вычисление Y героя.
 
-FUNCTION GhostPixelX() AS INTEGER                                                               ' Функция возвращает текущую X-координату призрака в пикселях.
-    RETURN EntityPixelX(ghostCol, ghostRow, ghostDir, ghostTravel)                              ' Используем ту же общую формулу реальных центров.
-END FUNCTION                                                                                    ' Завершаем вычисление X призрака.
+Function GhostPixelX() As Integer                                                               ' Функция возвращает текущую X-координату призрака в пикселях.
+    Return EntityPixelX(ghostCol, ghostRow, ghostDir, ghostTravel)                              ' Используем ту же общую формулу реальных центров.
+End Function                                                                                    ' Завершаем вычисление X призрака.
 
-FUNCTION GhostPixelY() AS INTEGER                                                               ' Функция возвращает текущую Y-координату призрака в пикселях.
-    RETURN EntityPixelY(ghostCol, ghostRow, ghostDir, ghostTravel)                              ' Используем ту же общую формулу реальных центров.
-END FUNCTION                                                                                    ' Завершаем вычисление Y призрака.
+Function GhostPixelY() As Integer                                                               ' Функция возвращает текущую Y-координату призрака в пикселях.
+    Return EntityPixelY(ghostCol, ghostRow, ghostDir, ghostTravel)                              ' Используем ту же общую формулу реальных центров.
+End Function                                                                                    ' Завершаем вычисление Y призрака.
 
-FUNCTION EntityPixelX(tileCol AS INTEGER, tileRow AS INTEGER, dir AS INTEGER, travel AS INTEGER) AS INTEGER ' Функция переводит положение актёра в реальную X-координату тоннеля.
-    DIM startX AS INTEGER = PelletPixelX(tileCol)                                               ' Начинаем не из математического центра клетки, а из центра точки в этом столбце.
-    DIM nextCol AS INTEGER = WrapTunnelColumn(tileCol + DirX(dir), tileRow + DirY(dir))        ' Считаем следующий столбец и учитываем боковой туннель.
-    DIM targetX AS INTEGER = PelletPixelX(nextCol)                                              ' Берём реальный центр следующего столбца.
+Function EntityPixelX(tileCol As Integer, tileRow As Integer, dir As Integer, travel As Integer) As Integer ' Функция переводит положение актёра в реальную X-координату тоннеля.
+    Dim startX As Integer = PelletPixelX(tileCol)                                               ' Начинаем не из математического центра клетки, а из центра точки в этом столбце.
+    Dim nextCol As Integer = WrapTunnelColumn(tileCol + DirX(dir), tileRow + DirY(dir))        ' Считаем следующий столбец и учитываем боковой туннель.
+    Dim targetX As Integer = PelletPixelX(nextCol)                                              ' Берём реальный центр следующего столбца.
 
-    IF dir = 0 OR travel = 0 THEN                                                               ' Если актёр стоит или ещё не начал шаг...
-        RETURN startX                                                                           ' ...возвращаем точный центр текущего тоннеля.
-    END IF                                                                                      ' Завершаем быстрый возврат для неподвижного актёра.
+    If dir = 0 Or travel = 0 Then                                                               ' Если актёр стоит или ещё не начал шаг...
+        Return startX                                                                           ' ...возвращаем точный центр текущего тоннеля.
+    End If                                                                                      ' Завершаем быстрый возврат для неподвижного актёра.
 
-    IF dir = DIR_LEFT AND tileCol = 1 AND IsTunnelPassageRow(tileRow) THEN                      ' Если актёр уходит влево через крайний туннель...
-        RETURN startX - travel                                                                  ' ...рисуем его движущимся за левый край, а не через всю карту.
-    END IF                                                                                      ' Завершаем специальный случай левого туннеля.
+    If dir = DIR_LEFT And tileCol = 1 And IsTunnelPassageRow(tileRow) Then                      ' Если актёр уходит влево через крайний туннель...
+        Return startX - travel                                                                  ' ...рисуем его движущимся за левый край, а не через всю карту.
+    End If                                                                                      ' Завершаем специальный случай левого туннеля.
 
-    IF dir = DIR_RIGHT AND tileCol = mazeCols AND IsTunnelPassageRow(tileRow) THEN              ' Если актёр уходит вправо через крайний туннель...
-        RETURN startX + travel                                                                  ' ...рисуем его движущимся за правый край.
-    END IF                                                                                      ' Завершаем специальный случай правого туннеля.
+    If dir = DIR_RIGHT And tileCol = mazeCols And IsTunnelPassageRow(tileRow) Then              ' Если актёр уходит вправо через крайний туннель...
+        Return startX + travel                                                                  ' ...рисуем его движущимся за правый край.
+    End If                                                                                      ' Завершаем специальный случай правого туннеля.
 
-    RETURN startX + ((targetX - startX) * travel) \ TILE                                        ' Плавно идём от одного реального центра тоннеля к следующему.
-END FUNCTION                                                                                    ' Завершаем вычисление мировой X-координаты.
+    Return startX + ((targetX - startX) * travel) \ TILE                                        ' Плавно идём от одного реального центра тоннеля к следующему.
+End Function                                                                                    ' Завершаем вычисление мировой X-координаты.
 
-FUNCTION EntityPixelY(tileCol AS INTEGER, tileRow AS INTEGER, dir AS INTEGER, travel AS INTEGER) AS INTEGER ' Функция переводит положение актёра в реальную Y-координату тоннеля.
-    DIM startY AS INTEGER = PelletPixelY(tileRow)                                               ' Начинаем из реального центра точки в текущей строке.
-    DIM nextRow AS INTEGER = ClampInt(tileRow + DirY(dir), 1, mazeRows)                         ' Считаем следующую строку и не выпускаем её за карту.
-    DIM targetY AS INTEGER = PelletPixelY(nextRow)                                              ' Берём реальный центр следующей строки.
+Function EntityPixelY(tileCol As Integer, tileRow As Integer, dir As Integer, travel As Integer) As Integer ' Функция переводит положение актёра в реальную Y-координату тоннеля.
+    Dim startY As Integer = PelletPixelY(tileRow)                                               ' Начинаем из реального центра точки в текущей строке.
+    Dim nextRow As Integer = ClampInt(tileRow + DirY(dir), 1, mazeRows)                         ' Считаем следующую строку и не выпускаем её за карту.
+    Dim targetY As Integer = PelletPixelY(nextRow)                                              ' Берём реальный центр следующей строки.
 
-    IF dir = 0 OR travel = 0 THEN                                                               ' Если актёр стоит или шаг ещё не начат...
-        RETURN startY                                                                           ' ...возвращаем точный центр текущего тоннеля.
-    END IF                                                                                      ' Завершаем быстрый возврат для неподвижного актёра.
+    If dir = 0 Or travel = 0 Then                                                               ' Если актёр стоит или шаг ещё не начат...
+        Return startY                                                                           ' ...возвращаем точный центр текущего тоннеля.
+    End If                                                                                      ' Завершаем быстрый возврат для неподвижного актёра.
 
-    RETURN startY + ((targetY - startY) * travel) \ TILE                                        ' Плавно идём от одного реального центра строки к следующему.
-END FUNCTION                                                                                    ' Завершаем вычисление мировой Y-координаты.
+    Return startY + ((targetY - startY) * travel) \ TILE                                        ' Плавно идём от одного реального центра строки к следующему.
+End Function                                                                                    ' Завершаем вычисление мировой Y-координаты.
 
-FUNCTION PelletPixelX(tileCol AS INTEGER) AS INTEGER                                            ' Функция возвращает реальную X-координату точки внутри клетки.
-    RETURN (tileCol - 1) * TILE + pelletCenterCols(tileCol)                                    ' Добавляем к клетке не математический центр, а измеренный центр тоннеля.
-END FUNCTION                                                                                    ' Завершаем вычисление X точки.
+Function PelletPixelX(tileCol As Integer) As Integer                                            ' Функция возвращает реальную X-координату точки внутри клетки.
+    Return (tileCol - 1) * TILE + pelletCenterCols(tileCol)                                    ' Добавляем к клетке не математический центр, а измеренный центр тоннеля.
+End Function                                                                                    ' Завершаем вычисление X точки.
 
-FUNCTION PelletPixelY(tileRow AS INTEGER) AS INTEGER                                            ' Функция возвращает реальную Y-координату точки внутри клетки.
-    RETURN (tileRow - 1) * TILE + pelletCenterRows(tileRow)                                    ' Берём верх мира и добавляем к строке измеренный центр прохода.
-END FUNCTION                                                                                    ' Завершаем вычисление Y точки.
+Function PelletPixelY(tileRow As Integer) As Integer                                            ' Функция возвращает реальную Y-координату точки внутри клетки.
+    Return (tileRow - 1) * TILE + pelletCenterRows(tileRow)                                    ' Берём верх мира и добавляем к строке измеренный центр прохода.
+End Function                                                                                    ' Завершаем вычисление Y точки.
 
-FUNCTION CanMove(tileCol AS INTEGER, tileRow AS INTEGER, dir AS INTEGER) AS BOOLEAN            ' Функция проверяет, можно ли сделать шаг из клетки в данном направлении.
-    DIM nextCol AS INTEGER = tileCol + DirX(dir)                                                ' Вычисляем столбец следующей клетки.
-    DIM nextRow AS INTEGER = tileRow + DirY(dir)                                                ' Вычисляем строку следующей клетки.
+Function CanMove(tileCol As Integer, tileRow As Integer, dir As Integer) As Boolean            ' Функция проверяет, можно ли сделать шаг из клетки в данном направлении.
+    Dim nextCol As Integer = tileCol + DirX(dir)                                                ' Вычисляем столбец следующей клетки.
+    Dim nextRow As Integer = tileRow + DirY(dir)                                                ' Вычисляем строку следующей клетки.
 
-    IF dir = DIR_LEFT AND tileCol = 1 AND IsTunnelPassageRow(tileRow) THEN                      ' Если идём влево из левого края туннеля...
-        RETURN CellAt(tileRow, mazeCols) <> "#"                                                 ' ...смотрим на правый край той же туннельной строки.
-    END IF                                                                                      ' Завершаем специальную проверку левого телепорта.
+    If dir = DIR_LEFT And tileCol = 1 And IsTunnelPassageRow(tileRow) Then                      ' Если идём влево из левого края туннеля...
+        Return CellAt(tileRow, mazeCols) <> "#"                                                 ' ...смотрим на правый край той же туннельной строки.
+    End If                                                                                      ' Завершаем специальную проверку левого телепорта.
 
-    IF dir = DIR_RIGHT AND tileCol = mazeCols AND IsTunnelPassageRow(tileRow) THEN              ' Если идём вправо из правого края туннеля...
-        RETURN CellAt(tileRow, 1) <> "#"                                                        ' ...смотрим на левый край той же строки.
-    END IF                                                                                      ' Завершаем специальную проверку правого телепорта.
+    If dir = DIR_RIGHT And tileCol = mazeCols And IsTunnelPassageRow(tileRow) Then              ' Если идём вправо из правого края туннеля...
+        Return CellAt(tileRow, 1) <> "#"                                                        ' ...смотрим на левый край той же строки.
+    End If                                                                                      ' Завершаем специальную проверку правого телепорта.
 
-    RETURN CellAt(nextRow, nextCol) <> "#"                                                      ' В обычном случае достаточно проверить, что впереди не стена.
-END FUNCTION                                                                                    ' Завершаем проверку возможности движения.
+    Return CellAt(nextRow, nextCol) <> "#"                                                      ' В обычном случае достаточно проверить, что впереди не стена.
+End Function                                                                                    ' Завершаем проверку возможности движения.
 
-FUNCTION CellAt(rowIndex AS INTEGER, columnIndex AS INTEGER) AS STRING                          ' Функция безопасно читает символ клетки карты.
-    IF rowIndex < 1 OR rowIndex > mazeRows THEN                                                 ' Если строка вышла за карту...
-        RETURN "#"                                                                              ' ...возвращаем стену как безопасный барьер.
-    END IF                                                                                      ' Завершаем проверку строки.
+Function CellAt(rowIndex As Integer, columnIndex As Integer) As String                          ' Функция безопасно читает символ клетки карты.
+    If rowIndex < 1 Or rowIndex > mazeRows Then                                                 ' Если строка вышла за карту...
+        Return "#"                                                                              ' ...возвращаем стену как безопасный барьер.
+    End If                                                                                      ' Завершаем проверку строки.
 
-    IF columnIndex < 1 OR columnIndex > mazeCols THEN                                           ' Если столбец вышел за карту...
-        RETURN "#"                                                                              ' ...тоже возвращаем стену.
-    END IF                                                                                      ' Завершаем проверку столбца.
+    If columnIndex < 1 Or columnIndex > mazeCols Then                                           ' Если столбец вышел за карту...
+        Return "#"                                                                              ' ...тоже возвращаем стену.
+    End If                                                                                      ' Завершаем проверку столбца.
 
-    RETURN MID(maze(rowIndex), columnIndex, 1)                                                  ' Возвращаем один символ из нужной клетки карты.
-END FUNCTION                                                                                    ' Завершаем чтение клетки.
+    Return Mid(maze(rowIndex), columnIndex, 1)                                                  ' Возвращаем один символ из нужной клетки карты.
+End Function                                                                                    ' Завершаем чтение клетки.
 
-FUNCTION ReplaceCell(lineText AS STRING, position AS INTEGER, replacement AS STRING) AS STRING  ' Функция заменяет один символ в строке карты.
-    DIM leftPart AS STRING = ""                                                                 ' Левая часть строки до изменяемой позиции.
-    DIM rightPart AS STRING = ""                                                                ' Правая часть строки после изменяемой позиции.
+Function ReplaceCell(lineText As String, position As Integer, replacement As String) As String  ' Функция заменяет один символ в строке карты.
+    Dim leftPart As String = ""                                                                 ' Левая часть строки до изменяемой позиции.
+    Dim rightPart As String = ""                                                                ' Правая часть строки после изменяемой позиции.
 
-    IF position > 1 THEN                                                                        ' Если слева что-то есть...
-        leftPart = LEFT(lineText, position - 1)                                                 ' ...берём левую часть строки.
-    END IF                                                                                      ' Завершаем выделение левой части.
+    If position > 1 Then                                                                        ' Если слева что-то есть...
+        leftPart = Left(lineText, position - 1)                                                 ' ...берём левую часть строки.
+    End If                                                                                      ' Завершаем выделение левой части.
 
-    IF position < LEN(lineText) THEN                                                            ' Если справа что-то есть...
-        rightPart = MID(lineText, position + 1, LEN(lineText) - position)                       ' ...берём правую часть строки.
-    END IF                                                                                      ' Завершаем выделение правой части.
+    If position < Len(lineText) Then                                                            ' Если справа что-то есть...
+        rightPart = Mid(lineText, position + 1, Len(lineText) - position)                       ' ...берём правую часть строки.
+    End If                                                                                      ' Завершаем выделение правой части.
 
-    RETURN leftPart + replacement + rightPart                                                   ' Склеиваем обновлённую строку обратно.
-END FUNCTION                                                                                    ' Завершаем замену символа.
+    Return leftPart + replacement + rightPart                                                   ' Склеиваем обновлённую строку обратно.
+End Function                                                                                    ' Завершаем замену символа.
 
-FUNCTION DirX(dir AS INTEGER) AS INTEGER                                                        ' Функция возвращает горизонтальную составляющую направления.
-    SELECT CASE dir                                                                             ' Выбираем код направления.
-        CASE DIR_LEFT                                                                           ' Для движения влево...
-            RETURN - 1                                                                           ' ...смещение по X равно минус один столбец.
-        CASE DIR_RIGHT                                                                          ' Для движения вправо...
-            RETURN 1                                                                            ' ...смещение по X равно плюс один столбец.
-        CASE ELSE                                                                               ' Для вертикального движения или нулевого направления...
-            RETURN 0                                                                            ' ...горизонтального смещения нет.
-    END SELECT                                                                                  ' Завершаем выбор горизонтальной компоненты.
-END FUNCTION                                                                                    ' Завершаем вычисление DirX.
+Function DirX(dir As Integer) As Integer                                                        ' Функция возвращает горизонтальную составляющую направления.
+    Select Case dir                                                                             ' Выбираем код направления.
+        Case DIR_LEFT                                                                           ' Для движения влево...
+            Return - 1                                                                           ' ...смещение по X равно минус один столбец.
+        Case DIR_RIGHT                                                                          ' Для движения вправо...
+            Return 1                                                                            ' ...смещение по X равно плюс один столбец.
+        Case Else                                                                               ' Для вертикального движения или нулевого направления...
+            Return 0                                                                            ' ...горизонтального смещения нет.
+    End Select                                                                                  ' Завершаем выбор горизонтальной компоненты.
+End Function                                                                                    ' Завершаем вычисление DirX.
 
-FUNCTION DirY(dir AS INTEGER) AS INTEGER                                                        ' Функция возвращает вертикальную составляющую направления.
-    SELECT CASE dir                                                                             ' Выбираем код направления.
-        CASE DIR_UP                                                                             ' Для движения вверх...
-            RETURN - 1                                                                           ' ...смещение по Y равно минус одна строка.
-        CASE DIR_DOWN                                                                           ' Для движения вниз...
-            RETURN 1                                                                            ' ...смещение по Y равно плюс одна строка.
-        CASE ELSE                                                                               ' Для горизонтального движения или нулевого направления...
-            RETURN 0                                                                            ' ...вертикального смещения нет.
-    END SELECT                                                                                  ' Завершаем выбор вертикальной компоненты.
-END FUNCTION                                                                                    ' Завершаем вычисление DirY.
+Function DirY(dir As Integer) As Integer                                                        ' Функция возвращает вертикальную составляющую направления.
+    Select Case dir                                                                             ' Выбираем код направления.
+        Case DIR_UP                                                                             ' Для движения вверх...
+            Return - 1                                                                           ' ...смещение по Y равно минус одна строка.
+        Case DIR_DOWN                                                                           ' Для движения вниз...
+            Return 1                                                                            ' ...смещение по Y равно плюс одна строка.
+        Case Else                                                                               ' Для горизонтального движения или нулевого направления...
+            Return 0                                                                            ' ...вертикального смещения нет.
+    End Select                                                                                  ' Завершаем выбор вертикальной компоненты.
+End Function                                                                                    ' Завершаем вычисление DirY.
 
-FUNCTION OppositeDirection(dir AS INTEGER) AS INTEGER                                           ' Функция возвращает противоположное направление.
-    SELECT CASE dir                                                                             ' Разбираем текущее направление.
-        CASE DIR_LEFT                                                                           ' Если сейчас влево...
-            RETURN DIR_RIGHT                                                                    ' ...противоположное направление вправо.
-        CASE DIR_RIGHT                                                                          ' Если сейчас вправо...
-            RETURN DIR_LEFT                                                                     ' ...противоположное направление влево.
-        CASE DIR_UP                                                                             ' Если сейчас вверх...
-            RETURN DIR_DOWN                                                                     ' ...противоположное направление вниз.
-        CASE DIR_DOWN                                                                           ' Если сейчас вниз...
-            RETURN DIR_UP                                                                       ' ...противоположное направление вверх.
-        CASE ELSE                                                                               ' Если направление нулевое или неизвестное...
-            RETURN 0                                                                            ' ...возвращаем ноль.
-    END SELECT                                                                                  ' Завершаем выбор противоположного направления.
-END FUNCTION                                                                                    ' Завершаем вычисление OppositeDirection.
+Function OppositeDirection(dir As Integer) As Integer                                           ' Функция возвращает противоположное направление.
+    Select Case dir                                                                             ' Разбираем текущее направление.
+        Case DIR_LEFT                                                                           ' Если сейчас влево...
+            Return DIR_RIGHT                                                                    ' ...противоположное направление вправо.
+        Case DIR_RIGHT                                                                          ' Если сейчас вправо...
+            Return DIR_LEFT                                                                     ' ...противоположное направление влево.
+        Case DIR_UP                                                                             ' Если сейчас вверх...
+            Return DIR_DOWN                                                                     ' ...противоположное направление вниз.
+        Case DIR_DOWN                                                                           ' Если сейчас вниз...
+            Return DIR_UP                                                                       ' ...противоположное направление вверх.
+        Case Else                                                                               ' Если направление нулевое или неизвестное...
+            Return 0                                                                            ' ...возвращаем ноль.
+    End Select                                                                                  ' Завершаем выбор противоположного направления.
+End Function                                                                                    ' Завершаем вычисление OppositeDirection.
 
-FUNCTION MaxInt(leftValue AS INTEGER, rightValue AS INTEGER) AS INTEGER                         ' Функция возвращает максимум из двух целых чисел.
-    IF leftValue > rightValue THEN                                                              ' Если левое значение больше...
-        RETURN leftValue                                                                        ' ...возвращаем его.
-    END IF                                                                                      ' Завершаем сравнение на максимум.
+Function MaxInt(leftValue As Integer, rightValue As Integer) As Integer                         ' Функция возвращает максимум из двух целых чисел.
+    If leftValue > rightValue Then                                                              ' Если левое значение больше...
+        Return leftValue                                                                        ' ...возвращаем его.
+    End If                                                                                      ' Завершаем сравнение на максимум.
 
-    RETURN rightValue                                                                           ' Иначе возвращаем правое значение.
-END FUNCTION                                                                                    ' Завершаем вычисление максимума.
+    Return rightValue                                                                           ' Иначе возвращаем правое значение.
+End Function                                                                                    ' Завершаем вычисление максимума.
 
-FUNCTION MinInt(leftValue AS INTEGER, rightValue AS INTEGER) AS INTEGER                         ' Функция возвращает минимум из двух целых чисел.
-    IF leftValue < rightValue THEN                                                              ' Если левое значение меньше...
-        RETURN leftValue                                                                        ' ...возвращаем его.
-    END IF                                                                                      ' Завершаем сравнение на минимум.
+Function MinInt(leftValue As Integer, rightValue As Integer) As Integer                         ' Функция возвращает минимум из двух целых чисел.
+    If leftValue < rightValue Then                                                              ' Если левое значение меньше...
+        Return leftValue                                                                        ' ...возвращаем его.
+    End If                                                                                      ' Завершаем сравнение на минимум.
 
-    RETURN rightValue                                                                           ' Иначе возвращаем правое значение.
-END FUNCTION                                                                                    ' Завершаем вычисление минимума.
+    Return rightValue                                                                           ' Иначе возвращаем правое значение.
+End Function                                                                                    ' Завершаем вычисление минимума.
 
-FUNCTION AbsInt(value AS INTEGER) AS INTEGER                                                    ' Функция возвращает модуль целого числа.
-    IF value < 0 THEN                                                                           ' Если число отрицательное...
-        RETURN - value                                                                           ' ...меняем знак и возвращаем положительное значение.
-    END IF                                                                                      ' Завершаем проверку знака.
+Function AbsInt(value As Integer) As Integer                                                    ' Функция возвращает модуль целого числа.
+    If value < 0 Then                                                                           ' Если число отрицательное...
+        Return - value                                                                           ' ...меняем знак и возвращаем положительное значение.
+    End If                                                                                      ' Завершаем проверку знака.
 
-    RETURN value                                                                                ' Для неотрицательного числа возвращаем его как есть.
-END FUNCTION                                                                                    ' Завершаем вычисление модуля.
+    Return value                                                                                ' Для неотрицательного числа возвращаем его как есть.
+End Function                                                                                    ' Завершаем вычисление модуля.
 
-FUNCTION ClampInt(value AS INTEGER, lowValue AS INTEGER, highValue AS INTEGER) AS INTEGER      ' Функция ограничивает число диапазоном.
-    IF value < lowValue THEN                                                                    ' Если число меньше нижней границы...
-        RETURN lowValue                                                                         ' ...возвращаем нижнюю границу.
-    END IF                                                                                      ' Завершаем проверку нижней границы.
+Function ClampInt(value As Integer, lowValue As Integer, highValue As Integer) As Integer      ' Функция ограничивает число диапазоном.
+    If value < lowValue Then                                                                    ' Если число меньше нижней границы...
+        Return lowValue                                                                         ' ...возвращаем нижнюю границу.
+    End If                                                                                      ' Завершаем проверку нижней границы.
 
-    IF value > highValue THEN                                                                   ' Если число больше верхней границы...
-        RETURN highValue                                                                        ' ...возвращаем верхнюю границу.
-    END IF                                                                                      ' Завершаем проверку верхней границы.
+    If value > highValue Then                                                                   ' Если число больше верхней границы...
+        Return highValue                                                                        ' ...возвращаем верхнюю границу.
+    End If                                                                                      ' Завершаем проверку верхней границы.
 
-    RETURN value                                                                                ' Если число внутри диапазона, возвращаем его без изменений.
-END FUNCTION                                                                                    ' Завершаем ограничение диапазоном.
+    Return value                                                                                ' Если число внутри диапазона, возвращаем его без изменений.
+End Function                                                                                    ' Завершаем ограничение диапазоном.
 
-FUNCTION WorldViewportLeft() AS INTEGER                                                         ' Функция вычисляет левую экранную границу viewport мира.
-    RETURN MaxInt(0, (VIEW_WIDTH - worldWidthPixels) \ 2)                                       ' Центрируем лабиринт по ширине окна, если свободное место есть.
-END FUNCTION                                                                                    ' Завершаем вычисление левой границы viewport.
+Function WorldViewportLeft() As Integer                                                         ' Функция вычисляет левую экранную границу viewport мира.
+    Return MaxInt(0, (VIEW_WIDTH - worldWidthPixels) \ 2)                                       ' Центрируем лабиринт по ширине окна, если свободное место есть.
+End Function                                                                                    ' Завершаем вычисление левой границы viewport.
 
-FUNCTION WorldViewportTop() AS INTEGER                                                          ' Функция вычисляет верхнюю экранную границу viewport мира.
-    RETURN HUD_HEIGHT                                                                           ' Мир начинается сразу под HUD без дополнительного ручного сдвига.
-END FUNCTION                                                                                    ' Завершаем вычисление верхней границы viewport.
+Function WorldViewportTop() As Integer                                                          ' Функция вычисляет верхнюю экранную границу viewport мира.
+    Return HUD_HEIGHT                                                                           ' Мир начинается сразу под HUD без дополнительного ручного сдвига.
+End Function                                                                                    ' Завершаем вычисление верхней границы viewport.
 
-FUNCTION WorldViewportRight() AS INTEGER                                                        ' Функция вычисляет правую исключающую границу viewport мира.
-    RETURN WorldViewportLeft() + worldWidthPixels                                               ' Правая граница равна левой плюс полная ширина мира.
-END FUNCTION                                                                                    ' Завершаем вычисление правой границы viewport.
+Function WorldViewportRight() As Integer                                                        ' Функция вычисляет правую исключающую границу viewport мира.
+    Return WorldViewportLeft() + worldWidthPixels                                               ' Правая граница равна левой плюс полная ширина мира.
+End Function                                                                                    ' Завершаем вычисление правой границы viewport.
 
-FUNCTION WorldViewportBottom() AS INTEGER                                                       ' Функция вычисляет нижнюю исключающую границу viewport мира.
-    RETURN WorldViewportTop() + worldHeightPixels                                               ' Нижняя граница равна верху плюс полная высота мира.
-END FUNCTION                                                                                    ' Завершаем вычисление нижней границы viewport.
+Function WorldViewportBottom() As Integer                                                       ' Функция вычисляет нижнюю исключающую границу viewport мира.
+    Return WorldViewportTop() + worldHeightPixels                                               ' Нижняя граница равна верху плюс полная высота мира.
+End Function                                                                                    ' Завершаем вычисление нижней границы viewport.
 
-FUNCTION IsTunnelPassageRow(rowIndex AS INTEGER) AS BOOLEAN                                     ' Функция проверяет, является ли строка сквозным туннелем.
-    IF rowIndex < 1 OR rowIndex > mazeRows THEN                                                 ' Если строка вне карты...
-        RETURN FALSE                                                                            ' ...туннелем она быть не может.
-    END IF                                                                                      ' Завершаем проверку диапазона строки.
+Function IsTunnelPassageRow(rowIndex As Integer) As Boolean                                     ' Функция проверяет, является ли строка сквозным туннелем.
+    If rowIndex < 1 Or rowIndex > mazeRows Then                                                 ' Если строка вне карты...
+        Return False                                                                            ' ...туннелем она быть не может.
+    End If                                                                                      ' Завершаем проверку диапазона строки.
 
-    RETURN CellAt(rowIndex, 1) <> "#" AND CellAt(rowIndex, mazeCols) <> "#"                    ' Туннельная строка открыта и слева, и справа.
-END FUNCTION                                                                                    ' Завершаем проверку туннельной строки.
+    Return CellAt(rowIndex, 1) <> "#" And CellAt(rowIndex, mazeCols) <> "#"                    ' Туннельная строка открыта и слева, и справа.
+End Function                                                                                    ' Завершаем проверку туннельной строки.
 
-FUNCTION WrapTunnelColumn(tileCol AS INTEGER, tileRow AS INTEGER) AS INTEGER                    ' Функция переносит актёра через боковой туннель.
-    IF NOT IsTunnelPassageRow(tileRow) THEN                                                     ' Если строка не является туннелем...
-        RETURN tileCol                                                                          ' ...ничего не переносим и оставляем столбец как есть.
-    END IF                                                                                      ' Завершаем проверку туннеля.
+Function WrapTunnelColumn(tileCol As Integer, tileRow As Integer) As Integer                    ' Функция переносит актёра через боковой туннель.
+    If Not IsTunnelPassageRow(tileRow) Then                                                     ' Если строка не является туннелем...
+        Return tileCol                                                                          ' ...ничего не переносим и оставляем столбец как есть.
+    End If                                                                                      ' Завершаем проверку туннеля.
 
-    IF tileCol < 1 THEN                                                                         ' Если актёр вышел левее карты...
-        RETURN mazeCols                                                                         ' ...переносим его на правый край.
-    END IF                                                                                      ' Завершаем обработку выхода слева.
+    If tileCol < 1 Then                                                                         ' Если актёр вышел левее карты...
+        Return mazeCols                                                                         ' ...переносим его на правый край.
+    End If                                                                                      ' Завершаем обработку выхода слева.
 
-    IF tileCol > mazeCols THEN                                                                  ' Если актёр вышел правее карты...
-        RETURN 1                                                                                ' ...переносим его на левый край.
-    END IF                                                                                      ' Завершаем обработку выхода справа.
+    If tileCol > mazeCols Then                                                                  ' Если актёр вышел правее карты...
+        Return 1                                                                                ' ...переносим его на левый край.
+    End If                                                                                      ' Завершаем обработку выхода справа.
 
-    RETURN tileCol                                                                              ' Если столбец в норме, возвращаем его без изменений.
-END FUNCTION                                                                                    ' Завершаем перенос через туннель.
+    Return tileCol                                                                              ' Если столбец в норме, возвращаем его без изменений.
+End Function                                                                                    ' Завершаем перенос через туннель.
