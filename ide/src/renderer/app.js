@@ -67,6 +67,10 @@ class AxiomIDE {
       await this.loadLanguageMetadata();
       this.setupLanguage();
       this.createEditor();
+      // При первом создании эта служба Monaco задаёт собственное значение
+      // озвучивания продолжений. После её создания восстанавливаем профиль.
+      this.editor.getContribution('editor.contrib.inlineCompletionsController');
+      this.editor.updateOptions(window.EditorPreferences.options(this.settings.editorPreferences || {}, {}, window.EditorPreferences.defaults(this.monaco)));
       this.setupEditorContextMenu();
       this.setupMenubar();
       this.setupToolbar();
@@ -115,6 +119,34 @@ class AxiomIDE {
   saveSettings(patch) {
     Object.assign(this.settings, patch);
     API.saveSettings(patch).catch(() => {});
+  }
+
+  applyModelPreferences(model) {
+    if (!model) return;
+    const values = {...window.EditorPreferences.defaults(this.monaco), ...window.EditorPreferences.normalize(this.settings.editorPreferences)};
+    if (values.detectIndentation) model.detectIndentation(values.insertSpaces, values.tabSize);
+    else model.updateOptions({tabSize:values.tabSize, insertSpaces:values.insertSpaces});
+    model.updateOptions({trimAutoWhitespace:values.trimAutoWhitespace});
+  }
+
+  async applyEditorPreferences(preferences, theme, language) {
+    const P=window.EditorPreferences;
+    const normalized=P.normalize(preferences);
+    const oldPreferences=this.settings.editorPreferences || {};
+    const patch={editorPreferences:normalized, theme, language};
+    const saved=await API.saveSettings(patch);
+    if(saved?.ok === false) throw new Error('settings-write-failed');
+    const changedLanguage=this.settings.language !== language;
+    Object.assign(this.settings,patch);
+    this.editor.updateOptions(P.options(normalized,oldPreferences,P.defaults(this.monaco)));
+    for(const model of this.monaco.editor.getModels()) this.applyModelPreferences(model);
+    document.documentElement.setAttribute('data-theme',theme);
+    this.monaco.editor.setTheme('axiom-'+theme);
+    if(this.term) this.term.options.theme=this.consoleTheme();
+    this.updateThemeMenuChecks();
+    I18N.setLocale(language);this.applyLocale();
+    if(changedLanguage) { if(this._lastDiagnostics)this.applyDiagnostics(this._lastDiagnostics,this._lastDiagnosticsOnlyActive);this.scheduleLiveCheck(); }
+    this.log('settings.editor.applied',{count:Object.keys(normalized).length,theme,language});
   }
 
   loadMonaco() {
@@ -242,9 +274,11 @@ class AxiomIDE {
       releaseDocumentSemanticTokens() {},
     });
 
-    // No bracketed blocks in BASIC: only quotes auto-close.
+    // Круглые скобки выражений участвуют в сопоставлении и раскраске вложенности.
     monaco.languages.setLanguageConfiguration('axiom', {
       comments: { lineComment: "'" },
+      brackets: [['(', ')']],
+      colorizedBracketPairs: [['(', ')']],
       autoClosingPairs: [
         { open: '(', close: ')' },
         { open: '"', close: '"' },
@@ -374,6 +408,7 @@ class AxiomIDE {
       tabSize: 4,
       insertSpaces: true,
       acceptSuggestionOnEnter: 'off',
+      ...window.EditorPreferences.options(this.settings.editorPreferences || {}, {}, window.EditorPreferences.defaults(this.monaco)),
     });
 
     this.trace = new window.TraceController(this);
@@ -576,6 +611,8 @@ class AxiomIDE {
     // bubble-phase listeners once xterm has focus, so F5 / Ctrl chords would never reach
     // the IDE while the console is focused.
     window.addEventListener('keydown', (e) => {
+      if (document.querySelector('.editor-settings-overlay')) return;
+      if ((e.ctrlKey || e.metaKey) && e.code === 'Comma') { e.preventDefault(); e.stopPropagation(); this.handleAction('editor-settings'); return; }
       const mod = e.ctrlKey || e.metaKey;
       const k = e.key.toLowerCase();
       // `event.key` follows the active keyboard layout, while `event.code` identifies the
@@ -697,6 +734,9 @@ class AxiomIDE {
       case 'lang-en': this.setLanguage('en'); break;
       case 'open-log-folder': this.openLogFolder(); break;
       case 'about': this.showAbout(); break;
+      case 'editor-settings':
+        this.editorSettingsDialog ||= new window.EditorSettingsDialog(this);
+        this.editorSettingsDialog.open(); break;
     }
   }
 
@@ -930,6 +970,7 @@ class AxiomIDE {
       if (cur) cur.viewState = this.editor.saveViewState();
     }
     this.editor.setModel(f.model);
+    this.applyModelPreferences(f.model);
     if (f.viewState) this.editor.restoreViewState(f.viewState);
     this.activeFile = p;
     this.trace?.update();

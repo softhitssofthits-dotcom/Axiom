@@ -1,12 +1,7 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 122,
+  "count": 139,
   "scenarios": [
-    {
-      "id": "graphics-open-foreground",
-      "spec": "graphics-foreground.spec.js",
-      "name": "SCREEN и CANVAS сразу выходят на передний план при запуске"
-    },
     {
       "id": "backend-maze-chase-controls",
       "spec": "backend.spec.js",
@@ -168,6 +163,91 @@
       "name": "Тема QuickBASIC окрашивает оболочку, код и консоль и сохраняется после запуска"
     },
     {
+      "id": "editor-settings-all-appearance",
+      "spec": "editor-settings-all.spec.js",
+      "name": "Все параметры вкладки appearance: ввод, Monaco, профиль и перезапуск"
+    },
+    {
+      "id": "editor-settings-all-font",
+      "spec": "editor-settings-all.spec.js",
+      "name": "Все параметры вкладки font: ввод, Monaco, профиль и перезапуск"
+    },
+    {
+      "id": "editor-settings-all-typing",
+      "spec": "editor-settings-all.spec.js",
+      "name": "Все параметры вкладки typing: ввод, Monaco, профиль и перезапуск"
+    },
+    {
+      "id": "editor-settings-all-suggestions",
+      "spec": "editor-settings-all.spec.js",
+      "name": "Все параметры вкладки suggestions: ввод, Monaco, профиль и перезапуск"
+    },
+    {
+      "id": "editor-settings-all-scroll",
+      "spec": "editor-settings-all.spec.js",
+      "name": "Все параметры вкладки scroll: ввод, Monaco, профиль и перезапуск"
+    },
+    {
+      "id": "editor-settings-all-selection",
+      "spec": "editor-settings-all.spec.js",
+      "name": "Все параметры вкладки selection: ввод, Monaco, профиль и перезапуск"
+    },
+    {
+      "id": "editor-settings-all-structure",
+      "spec": "editor-settings-all.spec.js",
+      "name": "Все параметры вкладки structure: ввод, Monaco, профиль и перезапуск"
+    },
+    {
+      "id": "editor-settings-all-advanced",
+      "spec": "editor-settings-all.spec.js",
+      "name": "Все параметры вкладки advanced: ввод, Monaco, профиль и перезапуск"
+    },
+    {
+      "id": "editor-settings-rendered-font-layout",
+      "spec": "editor-settings-behavior.spec.js",
+      "name": "Шрифты, колонки, поля, номера, миникарта и перенос действуют в представлении"
+    },
+    {
+      "id": "editor-settings-typing-actions",
+      "spec": "editor-settings-behavior.spec.js",
+      "name": "Скобки, кавычки, обрамление, отступы, копирование и несколько курсоров"
+    },
+    {
+      "id": "editor-settings-completion-kinds",
+      "spec": "editor-settings-behavior.spec.js",
+      "name": "Категории дополнений реально фильтруют список предложений Monaco"
+    },
+    {
+      "id": "editor-settings-provider-rendering",
+      "spec": "editor-settings-behavior.spec.js",
+      "name": "CodeLens, встроенные пояснения и продолжения проверены с временными языковыми провайдерами"
+    },
+    {
+      "id": "editor-settings-diagnostic-decorations",
+      "spec": "editor-settings-behavior.spec.js",
+      "name": "Видимые обозначения неиспользуемых и устаревших сущностей и диагностик"
+    },
+    {
+      "id": "editor-settings-brackets-scroll",
+      "spec": "editor-settings-brackets-scroll.spec.js",
+      "name": "Цвета вложенных скобок и видимый без наведения ползунок во всех темах"
+    },
+    {
+      "id": "editor-settings-apply-persistence",
+      "spec": "editor-settings.spec.js",
+      "name": "Диалог: отмена, применение, модели и сохранение после перезапуска"
+    },
+    {
+      "id": "editor-settings-language-keyboard-validation",
+      "spec": "editor-settings.spec.js",
+      "name": "Вкладки, обе локали, все поля, три темы, поиск и ошибочный ввод"
+    },
+    {
+      "id": "editor-settings-save-failure",
+      "spec": "editor-settings.spec.js",
+      "name": "Ошибка записи профиля не применяется и не теряет черновик"
+    },
+    {
       "id": "enter-declaration-with-suggestions",
       "spec": "enter-declaration.spec.js",
       "name": "Один Enter после набранного DIM с открытым дополнением"
@@ -286,6 +366,11 @@
       "id": "graphics-renderer-bounded-stall",
       "spec": "graphics-crash.spec.js",
       "name": "После ограниченного зависания интерфейса запрос закрытия завершает собственную VM"
+    },
+    {
+      "id": "graphics-open-foreground",
+      "spec": "graphics-foreground.spec.js",
+      "name": "SCREEN и CANVAS сразу выходят на передний план при запуске"
     },
     {
       "id": "graphics-smooth-screen-frame-filter",

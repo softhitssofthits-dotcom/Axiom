@@ -275,7 +275,8 @@ function saveSettings() {
     const p = path.join(app.getPath('userData'), 'settings.json');
     fs.mkdirSync(path.dirname(p), { recursive: true });
     fs.writeFileSync(p, JSON.stringify(settingsCache, null, 2), 'utf-8');
-  } catch {}
+    return true;
+  } catch { return false; }
 }
 
 // ---------- IPC ----------
@@ -505,8 +506,11 @@ function setupIpc(logger) {
   });
   ipcMain.handle('get-settings', async () => loadSettings());
   ipcMain.handle('save-settings', async (_e, patch) => {
+    const previous={...loadSettings()};
     Object.assign(loadSettings(), patch);
-    saveSettings();
+    const ok=saveSettings();
+    if(!ok) settingsCache=previous;
+    return {ok};
   });
   // Synchronous variant for window teardown: beforeunload cannot await
   // an async invoke, so the final openTabs snapshot travels over sendSync.

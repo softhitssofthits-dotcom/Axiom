@@ -2,6 +2,8 @@
 const I18N = (() => {
   const STRINGS = {
     ru: {
+      'menu.settings': 'Настройки',
+      'menu.settings.editor': 'Параметры редактора…',
       'tb.undo': 'Отменить (Ctrl+Z)',
       'tb.redo': 'Повторить (Ctrl+Y)',
       'problems.all': 'Все',
@@ -159,6 +161,8 @@ const I18N = (() => {
       'fmt.off': 'выкл',
     },
     en: {
+      'menu.settings': 'Settings',
+      'menu.settings.editor': 'Editor Settings…',
       'tb.undo': 'Undo (Ctrl+Z)',
       'tb.redo': 'Redo (Ctrl+Y)',
       'problems.all': 'All',

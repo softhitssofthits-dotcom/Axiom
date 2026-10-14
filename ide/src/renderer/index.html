@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="design-system.css">
   <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="editor-settings.css">
 </head>
 <body>
   <div id="app">
@@ -100,6 +101,12 @@
               <div class="menu-dropdown-item" data-action="lang-en"><span class="menu-icon codicon codicon-globe"></span><span class="menu-text" data-i18n="menu.view.lang.en">English</span></div>
             </div>
           </div>
+        </div>
+      </div>
+      <div class="menu-item" data-menu="settings">
+        <span class="menu-label" data-i18n="menu.settings">Настройки</span>
+        <div class="menu-dropdown">
+          <div class="menu-dropdown-item" data-action="editor-settings"><span class="menu-icon codicon codicon-settings-gear"></span><span class="menu-text" data-i18n="menu.settings.editor">Параметры редактора…</span><span class="menu-shortcut">Ctrl+,</span></div>
         </div>
       </div>
       <div class="menu-item" data-menu="help">
@@ -213,6 +220,9 @@
   <script src="semantic-colors.js"></script>
   <script src="panel-splitter.js"></script>
   <script src="shell.js"></script>
+  <script src="editor-settings-catalog.js"></script>
+  <script src="editor-preferences.js"></script>
+  <script src="editor-settings-dialog.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

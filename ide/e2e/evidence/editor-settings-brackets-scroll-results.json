@@ -1,0 +1,16 @@
+[
+  {
+    "id": "editor-settings-brackets-scroll",
+    "spec": "editor-settings-brackets-scroll.spec.js",
+    "name": "Цвета вложенных скобок и видимый без наведения ползунок во всех темах",
+    "ms": 4520,
+    "passed": 10,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58623/474ce320-863f-4388-883e-ccd564b36c40\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

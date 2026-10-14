@@ -1,0 +1,74 @@
+[
+  {
+    "id": "editor-settings-rendered-font-layout",
+    "spec": "editor-settings-behavior.spec.js",
+    "name": "Шрифты, колонки, поля, номера, миникарта и перенос действуют в представлении",
+    "ms": 4275,
+    "passed": 15,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58444/d05e79bb-aeb6-4117-9644-6ad8dae175fc\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "editor-settings-typing-actions",
+    "spec": "editor-settings-behavior.spec.js",
+    "name": "Скобки, кавычки, обрамление, отступы, копирование и несколько курсоров",
+    "ms": 4366,
+    "passed": 10,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58448/2567d9de-8bfe-4a56-aa74-9a5e7a7982ef\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "editor-settings-completion-kinds",
+    "spec": "editor-settings-behavior.spec.js",
+    "name": "Категории дополнений реально фильтруют список предложений Monaco",
+    "ms": 14765,
+    "passed": 56,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58452/aab19426-8515-406c-8910-f54c0cddca59\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "editor-settings-provider-rendering",
+    "spec": "editor-settings-behavior.spec.js",
+    "name": "CodeLens, встроенные пояснения и продолжения проверены с временными языковыми провайдерами",
+    "ms": 4889,
+    "passed": 9,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [
+      "Canceled: Canceled\n    at si.value (file:///C:/Axiom/ide/src/renderer/vs/editorWorkerHost-fVE1cjcC.js:7:169504)\n    at ie._deliver (file:///C:/Axiom/ide/src/renderer/vs/editorWorkerHost-fVE1cjcC.js:7:3042)\n    at ie.fire (file:///C:/Axiom/ide/src/renderer/vs/editorWorkerHost-fVE1cjcC.js:7:3362)\n    at gn.cancel (file:///C:/Axiom/ide/src/renderer/vs/editorWorkerHost-fVE1cjcC.js:7:8599)\n    at ct.cancel (file:///C:/Axiom/ide/src/renderer/vs/editorWorkerHost-fVE1cjcC.js:7:9137)\n    at Object.dispose (file:///C:/Axiom/ide/src/renderer/vs/editorWorkerHost-fVE1cjcC.js:7:9406)\n    at lt (file:///C:/Axiom/ide/src/renderer/vs/editorWorkerHost-fVE1cjcC.js:5:9515)\n    at Dn.clear (file:///C:/Axiom/ide/src/renderer/vs/editorWorkerHost-fVE1cjcC.js:5:10250)\n    at file:///C:/Axiom/ide/src/renderer/vs/editor-KLE6jdfb.js:5:22827\n    at file:///C:/Axiom/ide/src/renderer/vs/editor-KLE6jdfb.js:5:22728"
+    ],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58457/f298c18d-534d-4a48-b7fd-de3e4dc770a2\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "editor-settings-diagnostic-decorations",
+    "spec": "editor-settings-behavior.spec.js",
+    "name": "Видимые обозначения неиспользуемых и устаревших сущностей и диагностик",
+    "ms": 3376,
+    "passed": 6,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58461/b5c3ee23-9d0c-4aeb-b445-e53fe4b7974d\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]
