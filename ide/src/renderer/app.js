@@ -127,6 +127,11 @@ class AxiomIDE {
     if (values.detectIndentation) model.detectIndentation(values.insertSpaces, values.tabSize);
     else model.updateOptions({tabSize:values.tabSize, insertSpaces:values.insertSpaces});
     model.updateOptions({trimAutoWhitespace:values.trimAutoWhitespace});
+    // Monaco renders bracket colors from model options, independently of editor options.
+    model.updateOptions({bracketColorizationOptions:{
+      enabled:values['bracketPairColorization.enabled'],
+      independentColorPoolPerBracketType:values['bracketPairColorization.independentColorPoolPerBracketType'],
+    }});
   }
 
   async applyEditorPreferences(preferences, theme, language) {
