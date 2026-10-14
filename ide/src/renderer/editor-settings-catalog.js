@@ -2940,6 +2940,8 @@
     "choices": []
   }
 ];
+  const support = root.EditorSettingsSupport || (typeof require === 'function' ? require('./editor-settings-support') : null);
+  if (support) support.apply(entries);
   root.EditorSettingsEntries = entries;
   if (typeof module !== "undefined") module.exports = entries;
 })(typeof window === "undefined" ? globalThis : window);

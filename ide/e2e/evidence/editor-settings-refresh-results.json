@@ -1,0 +1,16 @@
+[
+  {
+    "id": "editor-settings-refresh-history",
+    "spec": "editor-settings-refresh.spec.js",
+    "name": "Применение параметров сохраняет модель, выделение, прокрутку и отмену",
+    "ms": 12734,
+    "passed": 61,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:60629/c88860dd-661b-4adb-92f5-1dd4c3f82109\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

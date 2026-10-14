@@ -156,6 +156,7 @@ const LangFeatures = (() => {
 
     const completionProvider = {
       provideCompletionItems(model, position) {
+        if(model.getLanguageId()!=='axiom')return {suggestions:[]};
         const word = model.getWordUntilPosition(position);
         const range = { startLineNumber: position.lineNumber, endLineNumber: position.lineNumber, startColumn: word.startColumn, endColumn: word.endColumn };
         const meta = getMeta();
@@ -190,7 +191,9 @@ const LangFeatures = (() => {
         return { suggestions: items.map((i) => ({ ...i, range })) };
       },
     };
-    monaco.languages.registerCompletionItemProvider('axiom', completionProvider);
+    // Общий уровень регистрации позволяет Monaco объединить подсказки языка
+    // с собственным провайдером слов. Выше явно проверяется язык модели.
+    monaco.languages.registerCompletionItemProvider('*', completionProvider);
     LangFeatures._completionProvider = completionProvider; // exposed for diagnostics
 
     const signatureProvider = {

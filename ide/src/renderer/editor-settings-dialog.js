@@ -76,8 +76,8 @@
     render() {
       this.dialog.replaceChildren();
       const head=this.element('header','settings-header'); const title=this.element('h2','',this.text('title'));title.id='editor-settings-title';
-      const close=this.button('×',()=>this.close(),'settings-close');close.title=this.text('cancel');close.setAttribute('aria-label',this.text('cancel'));head.append(title,close);
-      this.search=this.element('input','settings-search');this.search.type='search';this.search.placeholder=this.text('search');this.search.setAttribute('aria-label',this.text('search'));this.search.value=this.query;
+      const close=this.button('×',()=>this.close(),'settings-close');close.title=this.text('cancel');UIControls.setLabel(close,this.text('cancel'));head.append(title,close);
+      this.search=this.element('input','settings-search');this.search.type='search';this.search.placeholder=this.text('search');UIControls.setLabel(this.search,this.text('search'),{tooltip:false});this.search.value=this.query;
       this.search.oninput=()=>{this.query=this.search.value;this.renderContent();};
       this.tabbar=this.element('div','settings-tabs');this.tabbar.setAttribute('role','tablist');
       for(const [id,label] of Object.entries(tabs)) {
@@ -100,7 +100,7 @@
     renderContent() {
       const query=this.query.trim().toLocaleLowerCase();this.content.replaceChildren();
       this.tabbar.querySelectorAll('button').forEach(b=>{const active=b.dataset.group===this.group&&!query;b.setAttribute('aria-selected',String(active));b.tabIndex=active?0:-1;});
-      this.content.setAttribute('role',query?'region':'tabpanel');this.content.setAttribute('aria-label',query?this.text('search'):this.pair(tabs[this.group]));
+      this.content.setAttribute('role',query?'region':'tabpanel');UIControls.setLabel(this.content,query?this.text('search'):this.pair(tabs[this.group]),{tooltip:false});
       if(!query)this.content.setAttribute('aria-labelledby','settings-tab-'+this.group);else this.content.removeAttribute('aria-labelledby');
       this.controls=new Map();
       if(!query&&(this.group==='appearance'||this.group==='font')) {
@@ -123,7 +123,7 @@
       if(!matches.length)this.content.append(this.element('p','',this.text('none')));
       if(!query&&this.group==='font')this.createPreview();
       this.syncDependencies();
-      this.resetButton.disabled=!!query;
+      UIControls.setEnabled(this.resetButton,!query);
     }
     sectionName(prefix) {
       const named={suggest:['Список дополнений','Completion list'],quickSuggestions:['Автоматические подсказки','Quick suggestions'],hover:['Подсказки при наведении','Hover'],
@@ -145,7 +145,7 @@
         for(const [value,label] of [['false',['Выключено','Disabled']],['true',['Включено','Enabled']],['custom',['Свои параметры…','Custom settings…']]]){const opt=this.element('option','',this.pair(label));opt.value=value;control.append(opt);}
         control.value=typeof this.draft[entry.key]==='string'?'custom':JSON.stringify(this.draft[entry.key]);
         control.detail=this.element('input');control.detail.type='text';control.detail.maxLength=2000;control.detail.value=typeof this.draft[entry.key]==='string'?this.draft[entry.key]:'';
-        control.detail.disabled=control.value!=='custom';control.detail.setAttribute('aria-label',(this.ide.settings.language==='en'?entry.en:entry.ru)+' — OpenType');
+        UIControls.setEnabled(control.detail,control.value==='custom');UIControls.setLabel(control.detail,(this.ide.settings.language==='en'?entry.en:entry.ru)+' — OpenType',{tooltip:false});
         control.detail.oninput=()=>control.oninput();compound.append(control,control.detail);
       } else if(entry.kind==='select') {
         control=this.element('select');for(const value of entry.choices){const opt=this.element('option','',this.valueText(value,entry));opt.value=JSON.stringify(value);control.append(opt);}control.value=JSON.stringify(this.draft[entry.key]);
@@ -179,7 +179,7 @@
     description(entry) {
       let text=this.ide.settings.language==='en'?entry.helpEn:entry.helpRu;
       if(entry.available===false)text+=' '+(this.ide.settings.language==='en'?entry.unavailableEn:entry.unavailableRu);
-      if(/^(codeLens|lightbulb|inlayHints|inlineSuggest|linkedEditing|renameOnType|formatOn|colorDecorators|occurrencesHighlight)/.test(entry.key))text+=this.text('provider');
+      if(entry.available!==false&&/^(codeLens|lightbulb|inlayHints|inlineSuggest|linkedEditing|renameOnType|formatOn|colorDecorators|occurrencesHighlight)/.test(entry.key))text+=this.text('provider');
       if(entry.kind==='number')text+=this.text('numbers')+(P.limits[entry.key]||[0,1000000]).join(' … ')+'.';
       if(entry.kind==='json'&&!['fontLigatures','fontVariations'].includes(entry.key))text+=this.text('json');return text;
     }
@@ -199,13 +199,13 @@
       const parents={'minimap':'minimap.enabled','stickyScroll':'stickyScroll.enabled','parameterHints':'parameterHints.enabled','inlineSuggest':'inlineSuggest.enabled','inlayHints':'inlayHints.enabled','hover':'hover.enabled','bracketPairColorization':'bracketPairColorization.enabled'};
       for(const {entry,control} of this.controls.values()) {
         const parent=parents[entry.key.split('.')[0]];
-        control.disabled=entry.available===false||!!parent&&entry.key!==parent&&(this.draft[parent]===false||this.draft[parent]==='off');
-        if(control.detail){control.detail.disabled=control.value!=='custom';if(control.fontChoice)control.detail.hidden=control.value!=='custom';}
+        UIControls.setEnabled(control,!(entry.available===false||!!parent&&entry.key!==parent&&(this.draft[parent]===false||this.draft[parent]==='off')));
+        if(control.detail){UIControls.setEnabled(control.detail,!control.disabled&&control.value==='custom');if(control.fontChoice)control.detail.hidden=control.value!=='custom';}
       }
     }
     createPreview() {
       this.content.append(this.element('h3','settings-subheading',this.text('preview')));
-      this.preview=this.element('pre','settings-preview');this.preview.setAttribute('aria-label',this.text('preview'));
+      this.preview=this.element('pre','settings-preview');UIControls.setLabel(this.preview,this.text('preview'),{tooltip:false});
       this.preview.innerHTML='<span class="preview-comment">\' Axiom</span>\n<span class="preview-keyword">Dim</span> score <span class="preview-keyword">As</span> <span class="preview-type">Integer</span> = <span class="preview-number">42</span>\n<span class="preview-keyword">If</span> score &gt; <span class="preview-number">0</span> <span class="preview-keyword">Then</span>\n    <span class="preview-keyword">Print</span> <span class="preview-string">"Очки / Score: "</span>; score\n<span class="preview-keyword">End If</span>';
       this.content.append(this.preview);this.updatePreview();
     }
@@ -215,12 +215,12 @@
       if(this.busy)return;
       for(const {entry,control} of this.controls.values())this.readControl(entry,control);
       if(this.invalid.size){const key=this.invalid.keys().next().value;const entry=P.entries.find(e=>e.key===key);this.selectTab(entry.group);this.status.textContent=this.text('error')+(this.ide.settings.language==='en'?entry.en:entry.ru);this.controls.get(key).control.focus();return;}
-      this.busy=true;this.dialog.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=true);
+      this.busy=true;this.dialog.querySelectorAll('button,input,select,textarea').forEach(el=>UIControls.setEnabled(el,false));
       try {
         await this.ide.applyEditorPreferences(P.overrides(this.draft,this.defaults),this.theme,this.language);
         if(close){this.busy=false;this.close();return;}
         this.busy=false;this.render();this.status.textContent=this.text('saved');this.applyButton.focus();
-      }catch(error){this.busy=false;this.dialog.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=false);this.syncDependencies();this.resetButton.disabled=!!this.query;this.status.textContent=this.text('saveError');this.ide.log('settings.save.failed',{message:String(error.message)},'error');}
+      }catch(error){this.busy=false;this.dialog.querySelectorAll('button,input,select,textarea').forEach(el=>UIControls.setEnabled(el,true));this.syncDependencies();UIControls.setEnabled(this.resetButton,!this.query);this.status.textContent=this.text('saveError');this.ide.log('settings.save.failed',{message:String(error.message)},'error');}
     }
     keydown(e) {
       if(e.key==='Escape'){e.preventDefault();e.stopPropagation();this.close();return;}

@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 139,
+  "count": 401,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -231,6 +231,1316 @@
       "id": "editor-settings-brackets-scroll",
       "spec": "editor-settings-brackets-scroll.spec.js",
       "name": "Цвета вложенных скобок и видимый без наведения ползунок во всех темах"
+    },
+    {
+      "id": "editor-settings-live-lineNumbers",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Номера строк — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-lineNumbersMinChars",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Ширина области номеров — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-selectOnLineNumbers",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Выделять строку нажатием на номер — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-glyphMargin",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Поле значков слева — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-lineDecorationsWidth",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Ширина поля обозначений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-renderWhitespace",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Показывать пробелы и табуляцию — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-renderControlCharacters",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Показывать управляющие символы — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-renderFinalNewline",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Номер последней пустой строки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-renderLineHighlight",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Подсветка текущей строки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-renderLineHighlightOnlyWhenFocus",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Подсвечивать строку только при фокусе — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-renderValidationDecorations",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Обозначения ошибок и предупреждений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-showUnused",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Приглушать неиспользуемые имена — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-showDeprecated",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Зачёркивать устаревшие сущности — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-rulers",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Вертикальные линии колонок — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-overviewRulerLanes",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Число дорожек обзорной полосы — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-overviewRulerBorder",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Граница обзорной полосы — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-hideCursorInOverviewRuler",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Скрывать курсор в обзорной полосе — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-padding.top",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Поле сверху — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-padding.bottom",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Поле снизу — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-colorDecorators",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Показывать образцы цветов — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-colorDecoratorsActivatedOn",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Открытие выбора цвета — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-colorDecoratorsLimit",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Предел числа образцов цвета — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-defaultColorDecorators",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Стандартное распознавание цветов — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-semanticHighlighting.enabled",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Семантическая подсветка — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-autoDetectHighContrast",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Учитывать высокий контраст системы — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-fontFamily",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Шрифт редактора — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-fontSize",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Размер шрифта — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-fontWeight",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Толщина шрифта — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-fontLigatures",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Лигатуры — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-fontVariations",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Вариативный шрифт — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-lineHeight",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Высота строки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-letterSpacing",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Межбуквенный интервал — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-tabSize",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Ширина табуляции — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-insertSpaces",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Вставлять пробелы вместо табуляции — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-detectIndentation",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Определять отступы по файлу — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-trimAutoWhitespace",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Удалять лишние автоматические отступы — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-autoIndent",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Автоматические отступы — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-autoIndentOnPaste",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Выравнивать отступы при вставке — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-autoIndentOnPasteWithinString",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Выравнивать вставку внутри строки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-autoClosingBrackets",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Закрывать скобки автоматически — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-autoClosingQuotes",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Закрывать кавычки автоматически — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-autoClosingComments",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Закрывать комментарии автоматически — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-autoClosingDelete",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Удалять автоматически вставленную пару — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-autoClosingOvertype",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Проходить через закрывающий знак — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-autoSurround",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Обрамлять выделение — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-stickyTabStops",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Перемещаться по ступеням отступа — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-useTabStops",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Учитывать границы табуляции — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-trimWhitespaceOnDelete",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Удалять пробелы при удалении — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-formatOnType",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Форматировать при вводе — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-formatOnPaste",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Форматировать при вставке — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-overtypeOnPaste",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Замещать текст при вставке — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-comments.insertSpace",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Пробел после знака комментария — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-comments.ignoreEmptyLines",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Пропускать пустые строки при комментировании — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-emptySelectionClipboard",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Копировать строку без выделения — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-copyWithSyntaxHighlighting",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Копировать с подсветкой — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-dragAndDrop",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Перетаскивать выделенный текст — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-dropIntoEditor.enabled",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Вставка перетаскиванием — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-dropIntoEditor.showDropSelector",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Выбор способа после перетаскивания — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-pasteAs.enabled",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Выбор способа вставки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-pasteAs.showPasteSelector",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Показывать способы после вставки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-linkedEditing",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Связанное редактирование — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-renameOnType",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Переименование при вводе — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-quickSuggestions.other",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Автоматические подсказки в коде — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-quickSuggestions.comments",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Автоматические подсказки в комментариях — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-quickSuggestions.strings",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Автоматические подсказки в строках — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-quickSuggestionsDelay",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Задержка автоматических подсказок — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggestOnTriggerCharacters",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Подсказки после специальных символов — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-acceptSuggestionOnEnter",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Принимать дополнение клавишей Enter — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-acceptSuggestionOnCommitCharacter",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Принимать дополнение завершающим символом — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-tabCompletion",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Дополнение клавишей Tab — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-snippetSuggestions",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Место заготовок в списке — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggestSelection",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Запоминание выбранных дополнений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggestFontSize",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Размер шрифта списка дополнений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggestLineHeight",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Высота строки списка дополнений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-matchOnWordStartOnly",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Совпадение только с начала слова — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.insertMode",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Вставка или замещение дополнением — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.filterGraceful",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Мягкая фильтрация дополнений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.snippetsPreventQuickSuggestions",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Не показывать подсказки внутри заготовки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.localityBonus",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Предпочитать ближайшие имена — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.shareSuggestSelections",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Общее запоминание выбора — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.selectionMode",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Предварительный выбор дополнения — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showIcons",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Значки в списке дополнений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showStatusBar",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Нижняя строка списка дополнений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.preview",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Предпросмотр дополнения — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.previewMode",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Способ предпросмотра дополнения — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showInlineDetails",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Краткое описание рядом с дополнением — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.matchOnWordStartOnly",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Фильтрация списка с начала слова — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-hover.enabled",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Подсказки при наведении — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-hover.delay",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Задержка подсказки при наведении — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-hover.sticky",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Удерживать подсказку под мышью — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-hover.hidingDelay",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Задержка скрытия подсказки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-hover.above",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Предпочитать подсказку над строкой — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-hover.showLongLineWarning",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Предупреждение о длинной строке — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-parameterHints.enabled",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Подсказки параметров — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-parameterHints.cycle",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Циклический перебор сигнатур — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-wordBasedSuggestions",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Дополнения из текста документов — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-wordBasedSuggestionsOnlySameLanguage",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Слова только из документов того же языка — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-stickyScroll.enabled",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Закреплять заголовки блоков при прокрутке — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-stickyScroll.maxLineCount",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Максимум закреплённых строк — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-stickyScroll.defaultModel",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Источник закреплённых заголовков — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-stickyScroll.scrollWithEditor",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Горизонтальная прокрутка закреплённых строк — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-minimap.enabled",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Показывать миникарту — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-minimap.autohide",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Автоматически скрывать миникарту — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-minimap.side",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Сторона миникарты — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-minimap.size",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Высота миникарты — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-minimap.showSlider",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Ползунок миникарты — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-minimap.renderCharacters",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Символы на миникарте — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-minimap.maxColumn",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Предел колонок миникарты — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-minimap.scale",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Масштаб миникарты — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-minimap.showRegionSectionHeaders",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Заголовки областей на миникарте — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-minimap.showMarkSectionHeaders",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Заголовки отметок на миникарте — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-minimap.sectionHeaderFontSize",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Размер заголовков миникарты — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-minimap.sectionHeaderLetterSpacing",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Интервал букв заголовков миникарты — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-minimap.markSectionHeaderRegex",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Шаблон заголовков миникарты — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-smoothScrolling",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Плавная прокрутка — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-scrollBeyondLastLine",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Прокрутка ниже последней строки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-scrollBeyondLastColumn",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Запас справа от текста — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-revealHorizontalRightPadding",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Запас справа при переходе к курсору — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-scrollOnMiddleClick",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Прокрутка средней кнопкой мыши — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-scrollPredominantAxis",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Прокрутка по основной оси — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-inertialScroll",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Инерционная прокрутка — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-mouseWheelScrollSensitivity",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Чувствительность колеса — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-fastScrollSensitivity",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Ускоренная прокрутка — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-mouseWheelZoom",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Изменять шрифт с помощью Ctrl и колеса — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-scrollbar.vertical",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Вертикальная полоса прокрутки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-scrollbar.horizontal",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Горизонтальная полоса прокрутки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-scrollbar.verticalScrollbarSize",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Ширина вертикальной полосы — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-scrollbar.horizontalScrollbarSize",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Высота горизонтальной полосы — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-scrollbar.handleMouseWheel",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Обрабатывать колесо мыши — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-scrollbar.alwaysConsumeMouseWheel",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Всегда удерживать колесо в редакторе — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-scrollbar.scrollByPage",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Прокручивать страницами при нажатии на полосу — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-scrollbar.ignoreHorizontalScrollbarInContentHeight",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Не учитывать горизонтальную полосу в высоте текста — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-wordWrap",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Перенос длинных строк — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-wordWrapColumn",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Колонка переноса — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-wrappingIndent",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Отступ перенесённых частей — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-wrappingStrategy",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Способ расчёта переноса — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-wrapOnEscapedLineFeeds",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Перенос на записи обратная косая черта и n — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-wordBreak",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Разбиение слов при переносе — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-wordWrapBreakBeforeCharacters",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Перенос перед символами — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-wordWrapBreakAfterCharacters",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Перенос после символов — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-cursorStyle",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Вид курсора — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-cursorBlinking",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Мигание курсора — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-cursorSmoothCaretAnimation",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Плавное перемещение курсора — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-cursorWidth",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Толщина курсора — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-cursorHeight",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Высота курсора — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-overtypeCursorStyle",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Курсор режима замещения — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-cursorSurroundingLines",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Запас строк вокруг курсора — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-cursorSurroundingLinesStyle",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Когда сохранять запас строк — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-roundedSelection",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Скруглённое выделение — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-columnSelection",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Прямоугольное выделение — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-multiCursorModifier",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Клавиша нескольких курсоров — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-multiCursorMergeOverlapping",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Объединять пересекающиеся курсоры — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-multiCursorPaste",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Вставка при нескольких курсорах — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-multiCursorLimit",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Предел числа курсоров — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-selectionHighlight",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Подсвечивать совпадения выделенного текста — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-selectionHighlightMultiline",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Совпадения многострочного выделения — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-selectionHighlightMaxLength",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Предел длины для подсветки совпадений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-occurrencesHighlight",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Подсвечивать использования имени — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-occurrencesHighlightDelay",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Задержка подсветки использований — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-doubleClickSelectsBlock",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Выделять содержимое пары двойным щелчком — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-smartSelect.selectLeadingAndTrailingWhitespace",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Включать крайние пробелы в умное выделение — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-smartSelect.selectSubwords",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Выделять части составных имён — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-wordSeparators",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Разделители слов — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-wordSegmenterLocales",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Языки разделения на слова — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-mouseStyle",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Указатель мыши над кодом — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-mouseMiddleClickAction",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Действие средней кнопки мыши — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-folding",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Сворачивать блоки кода — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-foldingStrategy",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Определение сворачиваемых блоков — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-foldingHighlight",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Подсвечивать свёрнутые блоки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-foldingImportsByDefault",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Сворачивать импорты по умолчанию — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-foldingMaximumRegions",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Предел сворачиваемых областей — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-showFoldingControls",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Показывать кнопки сворачивания — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-unfoldOnClickAfterEndOfLine",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Раскрывать нажатием после конца строки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-matchBrackets",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Подсвечивать парные скобки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-bracketPairColorization.enabled",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Разные цвета вложенных скобок — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-bracketPairColorization.independentColorPoolPerBracketType",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Отдельные цвета для каждого вида скобок — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-guides.indentation",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Направляющие отступов — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-guides.highlightActiveIndentation",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Выделять текущий отступ — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-guides.bracketPairs",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Направляющие пар скобок — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-guides.bracketPairsHorizontal",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Горизонтальные направляющие скобок — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-guides.highlightActiveBracketPair",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Выделять текущую пару скобок — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-links",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Открываемые ссылки в тексте — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-definitionLinkOpensInPeek",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Определение во встроенной карточке — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-peekWidgetDefaultFocus",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Фокус карточки определения — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-stablePeek",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Не закрывать карточку определений автоматически — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-codeLens",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Показывать команды над кодом — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-codeLensFontFamily",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Шрифт команд над кодом — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-codeLensFontSize",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Размер команд над кодом — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-lightbulb.enabled",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Значок исправлений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-inlayHints.enabled",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Встроенные пояснения в коде — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-inlayHints.fontSize",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Размер встроенных пояснений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-inlayHints.fontFamily",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Шрифт встроенных пояснений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-inlayHints.padding",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Поля встроенных пояснений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-inlayHints.maximumLength",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Предел длины встроенных пояснений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-inlineSuggest.enabled",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Продолжения внутри строки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-inlineSuggest.mode",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Сопоставление продолжений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-inlineSuggest.showToolbar",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Панель продолжений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-inlineSuggest.syntaxHighlightingEnabled",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Подсветка предварительного продолжения — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-inlineSuggest.suppressSuggestions",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Скрывать список при продолжении — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-inlineSuggest.minShowDelay",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Задержка продолжений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-inlineSuggest.suppressInSnippetMode",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Скрывать продолжения внутри заготовки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-inlineSuggest.keepOnBlur",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Сохранять продолжение без фокуса — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-inlineSuggest.fontFamily",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Шрифт продолжений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-find.cursorMoveOnType",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Переход к результату во время поиска — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-find.findOnType",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Поиск по мере ввода — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-find.seedSearchStringFromSelection",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Брать запрос из выделения — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-find.autoFindInSelection",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Автоматический поиск в выделении — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-find.addExtraSpaceOnTop",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Место для строки поиска сверху — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-find.loop",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Циклический поиск — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-find.closeOnResult",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Закрывать поиск после перехода — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-unicodeHighlight.nonBasicASCII",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Выделять символы вне ASCII — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-unicodeHighlight.invisibleCharacters",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Выделять невидимые символы — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-unicodeHighlight.ambiguousCharacters",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Выделять похожие символы — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-unicodeHighlight.includeComments",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Проверять символы в комментариях — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-unicodeHighlight.includeStrings",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Проверять символы в строках — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-unicodeHighlight.allowedCharacters",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Разрешённые символы — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-unicodeHighlight.allowedLocales",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Разрешённые языки символов — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-accessibilitySupport",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Поддержка чтения с экрана — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-accessibilityPageSize",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Строк для чтения с экрана — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-screenReaderAnnounceInlineSuggestion",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Озвучивать предварительное продолжение — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-inlineCompletionsAccessibilityVerbose",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Подробные сообщения о продолжениях — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-tabFocusMode",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Tab переводит фокус вместо отступа — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-largeFileOptimizations",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Оптимизация больших файлов — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-maxTokenizationLineLength",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Предел длины строки для подсветки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-stopRenderingLineAfter",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Предел отображения длинной строки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-unusualLineTerminators",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Необычные разделители строк — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-gotoLocation.multiple",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Общее действие при нескольких целях перехода — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-gotoLocation.multipleDefinitions",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Несколько определений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-gotoLocation.multipleTypeDefinitions",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Несколько определений типа — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-gotoLocation.multipleDeclarations",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Несколько объявлений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-gotoLocation.multipleImplementations",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Несколько реализаций — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-gotoLocation.multipleReferences",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Несколько использований — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-gotoLocation.multipleTests",
+      "spec": "editor-settings-live.spec.js",
+      "name": "Несколько связанных проверок — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showMethods",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: методы — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showFunctions",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: функции — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showConstructors",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: конструкторы — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showDeprecated",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: устаревшие сущности — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showFields",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: поля — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showVariables",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: переменные — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showClasses",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: классы — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showStructs",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: структуры — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showInterfaces",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: интерфейсы — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showModules",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: модули — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showProperties",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: свойства — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showEvents",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: события — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showOperators",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: операторы — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showUnits",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: единицы — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showValues",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: значения — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showConstants",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: константы — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showEnums",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: перечисления — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showEnumMembers",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: элементы перечислений — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showKeywords",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: ключевые слова — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showWords",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: слова документа — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showColors",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: цвета — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showFiles",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: файлы — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showReferences",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: ссылки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showFolders",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: папки — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showTypeParameters",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: параметры типов — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showIssues",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: задачи — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showUsers",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: пользователи — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-live-suggest.showSnippets",
+      "spec": "editor-settings-live.spec.js",
+      "name": "В списке: заготовки кода — отдельный сценарий штатной IDE"
+    },
+    {
+      "id": "editor-settings-refresh-history",
+      "spec": "editor-settings-refresh.spec.js",
+      "name": "Применение параметров сохраняет модель, выделение, прокрутку и отмену"
     },
     {
       "id": "editor-settings-apply-persistence",

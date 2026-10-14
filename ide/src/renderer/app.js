@@ -65,8 +65,11 @@ class AxiomIDE {
       I18N.setLocale(this.settings.language);
       await this.loadMonaco();
       await this.loadLanguageMetadata();
-      this.setupLanguage();
+      // Подключаем службы до регистрации языка: первый вызов Monaco фиксирует их.
       this.createEditor();
+      this.setupLanguage();
+      this.monaco.editor.setModelLanguage(this.editor.getModel(),'axiom');
+      this.monaco.editor.setTheme('axiom-'+this.settings.theme);
       // При первом создании эта служба Monaco задаёт собственное значение
       // озвучивания продолжений. После её создания восстанавливаем профиль.
       this.editor.getContribution('editor.contrib.inlineCompletionsController');
@@ -143,8 +146,24 @@ class AxiomIDE {
     if(saved?.ok === false) throw new Error('settings-write-failed');
     const changedLanguage=this.settings.language !== language;
     Object.assign(this.settings,patch);
-    this.editor.updateOptions(P.options(normalized,oldPreferences,P.defaults(this.monaco)));
+    const defaults=P.defaults(this.monaco);
+    this.editor.updateOptions(P.options(normalized,oldPreferences,defaults));
     for(const model of this.monaco.editor.getModels()) this.applyModelPreferences(model);
+    // Порог Monarch меняется, но уже рассчитанные токены сам Monaco не сбрасывает.
+    if((oldPreferences.maxTokenizationLineLength??defaults.maxTokenizationLineLength)!==(normalized.maxTokenizationLineLength??defaults.maxTokenizationLineLength)){
+      for(const model of this.monaco.editor.getModels())model.tokenization?.resetTokenization();
+    }
+    // Эти параметры Monaco считывает при создании представления, но не обновляет
+    // соответствующие расчёты при updateOptions. Модель и её история сохраняются.
+    const rebuildKeys=['autoIndent','stickyTabStops','wordWrapBreakBeforeCharacters','wordWrapBreakAfterCharacters','wrapOnEscapedLineFeeds','scrollBeyondLastColumn','scrollPredominantAxis','scrollbar.alwaysConsumeMouseWheel','inertialScroll'];
+    if(rebuildKeys.some(key=>(oldPreferences[key]??defaults[key])!==(normalized[key]??defaults[key]))){
+      const model=this.editor.getModel(),state=this.editor.saveViewState(),wasFormatting=this._autoFormatting;
+      if(model){
+        this._autoFormatting=true;
+        try {this.editor.setModel(null);this.editor.setModel(model);if(state)this.editor.restoreViewState(state);}
+        finally {this._autoFormatting=wasFormatting;}
+      }
+    }
     document.documentElement.setAttribute('data-theme',theme);
     this.monaco.editor.setTheme('axiom-'+theme);
     if(this.term) this.term.options.theme=this.consoleTheme();
@@ -284,6 +303,10 @@ class AxiomIDE {
       comments: { lineComment: "'" },
       brackets: [['(', ')']],
       colorizedBracketPairs: [['(', ')']],
+      indentationRules: {
+        increaseIndentPattern: /^\s*(?:(?:If|ElseIf)\b.*\bThen|Else|For\b.*|While\b.*|Do(?:\s+(?:While|Until)\b.*)?|(?:Sub|Function|Type)\b.*|Select\s+Case\b.*|Case\b.*|Try|Catch\b.*|Finally)\s*(?:'.*)?$/i,
+        decreaseIndentPattern: /^\s*(?:End\s+(?:If|While|Sub|Function|Type|Select|Try)\b|Next\b|Loop\b|Else(?:If)?\b|Case\b|Catch\b|Finally\b)/i,
+      },
       autoClosingPairs: [
         { open: '(', close: ')' },
         { open: '"', close: '"' },
@@ -397,8 +420,8 @@ class AxiomIDE {
   createEditor() {
     this.editor = this.monaco.editor.create(document.getElementById('editor'), {
       value: '',
-      language: 'axiom',
-      theme: 'axiom-' + this.settings.theme,
+      language: 'plaintext',
+      theme: this.settings.theme==='light'?'vs':'vs-dark',
       automaticLayout: true,
       'semanticHighlighting.enabled': true,
       fontSize: 14,
@@ -414,7 +437,7 @@ class AxiomIDE {
       insertSpaces: true,
       acceptSuggestionOnEnter: 'off',
       ...window.EditorPreferences.options(this.settings.editorPreferences || {}, {}, window.EditorPreferences.defaults(this.monaco)),
-    });
+    }, {IWorkspaceEditService: window.EditorWorkspaceEdits.create(this)});
 
     this.trace = new window.TraceController(this);
     this.editor.onDidChangeCursorPosition((e) => {
@@ -1686,17 +1709,21 @@ class AxiomIDE {
   }
 
   async editLineTransition(model, previousLineNumber, position) {
+    if(this.editor.getContribution('snippetController2')?.isInSnippet())return;
     if (this.running && this.openFiles.get(this._runFile)?.model === model) return;
     if (this._autoFormatting || this._formatBusy || !this.activeFile || model !== this.editor.getModel()) return;
     const document = this.openFiles.get(this.activeFile);
     if (!document || document.readonly || model.getLanguageId() !== 'axiom') return;
     const caretOffset = model.getOffsetAt(position);
     const smartIdentifierEnabled = !!this.settings.smartIdentifierEnabled;
+    const indentMode=this.settings.editorPreferences?.autoIndent || window.EditorPreferences.defaults(this.monaco).autoIndent;
+    const nativeIndent=/^[ \t]*/.exec(model.getLineContent(position.lineNumber))[0];
     try {
       const result = await this.documentServices.request(this.activeFile, 'document.editTransition', {
         previousLineNumber, currentLineNumber: position.lineNumber, caretOffset,
         formattingStyle: this.settings.formattingStyle || 'Classic', smartIdentifierEnabled });
       if (smartIdentifierEnabled !== !!this.settings.smartIdentifierEnabled || !result || this.editor.getModel() !== model ||
+          this.editor.getContribution('snippetController2')?.isInSnippet() ||
           (this.running && this.openFiles.get(this._runFile)?.model === model) ||
           model.getOffsetAt(this.editor.getPosition()) !== caretOffset) return;
       this.editedLines.consume(model,previousLineNumber);
@@ -1708,7 +1735,20 @@ class AxiomIDE {
         return {range:new this.monaco.Range(start.lineNumber,start.column,end.lineNumber,end.column),text:e.newText};
       });
       this.editor.pushUndoStop();this._autoFormatting=true;
-      try {this.editor.executeEdits('axiom-block-edit',edits);this.editor.setPosition(model.getPositionAt(result.newCaretOffset));}
+      try {
+        this.editor.executeEdits('axiom-block-edit',edits);
+        let caret=model.getPositionAt(result.newCaretOffset);
+        // Простые режимы сохраняют отступ, который уже выбрал Monaco.
+        // Структурный алгоритм Axiom задаёт отступы только в расширенных режимах.
+        if(['none','keep','brackets'].includes(indentMode)){
+          const actualIndent=/^[ \t]*/.exec(model.getLineContent(caret.lineNumber))[0];
+          if(actualIndent!==nativeIndent){
+            this.editor.executeEdits('axiom-native-indent',[{range:new this.monaco.Range(caret.lineNumber,1,caret.lineNumber,actualIndent.length+1),text:nativeIndent}]);
+            caret={lineNumber:caret.lineNumber,column:Math.max(1,caret.column-actualIndent.length+nativeIndent.length)};
+          }
+        }
+        this.editor.setPosition(caret);
+      }
       finally {this._autoFormatting=false;}
       this.editor.pushUndoStop();
     } catch(e) {this.showIdeProblem('status.fmtFailed',e.message);}

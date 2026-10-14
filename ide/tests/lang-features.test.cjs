@@ -28,7 +28,7 @@ test('Тип переменной DECIMAL сохраняется в разбор
 function providers(source, hovers = []) {
   let version = 1, requests = 0, markers = [];
   const model = {
-    uri: 'test', getValue: () => source, getVersionId: () => version,
+    getLanguageId: () => 'axiom', uri: 'test', getValue: () => source, getVersionId: () => version,
     getLineContent: n => source.split('\n')[n - 1],
     getOffsetAt: p => source.split('\n').slice(0, p.lineNumber - 1).reduce((n, line) => n + line.length + 1, 0) + p.column - 1,
     getWordAtPosition(p) {
@@ -156,4 +156,10 @@ test('Переменная CATCH только для чтения отличае
   assert.match(await hover(7), /error variable, read-only/);
   assert.match(await hover(7), /Type: `ERROR`/);
   assert.match(await hover(16), /constant/);
+});
+
+test('Общий уровень дополнений не выдаёт слова Axiom для другого языка', async () => {
+  const p=providers('PRINT');p.model.getLanguageId=()=> 'plaintext';
+  const result=await p.features._completionProvider.provideCompletionItems(p.model,{lineNumber:1,column:6});
+  assert.equal(result.suggestions.length,0);
 });

@@ -22,6 +22,7 @@
 .settings-row { display:grid; grid-template-columns:minmax(220px,1fr) minmax(140px,310px); align-items:center; gap:12px; min-height:33px; padding:3px 6px; }
 .settings-row label { cursor:default; line-height:1.35; }
 .settings-row[data-unavailable="true"] label { color:var(--text-secondary); }
+.settings-row[data-unavailable="true"] input,.settings-row[data-unavailable="true"] select,.settings-row[data-unavailable="true"] textarea { opacity:.45; cursor:not-allowed; }
 .settings-row input[type="checkbox"] { justify-self:start; width:16px; height:16px; accent-color:var(--accent-color); }
 .settings-row input:not([type="checkbox"]),.settings-row select,.settings-row textarea { width:100%; box-sizing:border-box; min-width:0; }
 .settings-row textarea { min-height:42px; resize:vertical; font-family:Consolas,monospace; }
