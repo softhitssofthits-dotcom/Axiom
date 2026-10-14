@@ -1,5 +1,5 @@
 const { ROOT } = require('../helpers');
-const interpolationColors = [['dark', 'rgb(215, 186, 125)'], ['light', 'rgb(238, 0, 0)'], ['basic', 'rgb(85, 255, 255)']];
+const interpolationColors = [['dark', 'rgb(215, 186, 125)'], ['light', 'rgb(238, 0, 0)'], ['basic', 'rgb(85, 255, 255)'], ['borland', 'rgb(255, 255, 255)']];
 module.exports = [{ id: 'highlight-punctuation-and-maze', name: 'Пунктуация не обрывает подсветку операторов, типов и комментариев', async fn({ S, C }) {
   await S.launch();
   const sample = require('fs').readFileSync(require('path').join(ROOT, 'samples/graphics/game/maze_chase.axm'), 'utf8');
@@ -28,9 +28,13 @@ module.exports = [{ id: 'highlight-punctuation-and-maze', name: 'Пунктуа�
     ['dark', 'rgb(78, 201, 176)', 'rgb(197, 134, 192)', 'rgb(220, 220, 170)', 'rgb(206, 145, 120)', 'rgb(106, 153, 85)', 'rgb(230, 155, 200)'],
     ['light', 'rgb(38, 127, 153)', 'rgb(0, 0, 255)', 'rgb(121, 94, 38)', 'rgb(163, 21, 21)', 'rgb(106, 153, 85)', 'rgb(175, 25, 112)'],
     ['basic', 'rgb(255, 255, 255)', 'rgb(255, 255, 85)', 'rgb(85, 255, 255)', 'rgb(170, 255, 170)', 'rgb(184, 199, 232)', 'rgb(255, 255, 85)'],
+    ['borland', 'rgb(255, 255, 85)', 'rgb(255, 255, 255)', 'rgb(255, 255, 85)', 'rgb(255, 255, 85)', 'rgb(170, 170, 170)', 'rgb(255, 255, 255)'],
   ]) {
     await S.page.evaluate(t => window.__ide.setTheme(t), theme);
-    await S.page.waitForFunction(expected => [...document.querySelectorAll('.view-lines span')].some(s => s.textContent.trim() === 'INTEGER' && getComputedStyle(s).color === expected), typeColor);
+    await S.page.waitForFunction(({typeColor,keywordColor}) => {
+      const spans=[...document.querySelectorAll('.view-lines span')];
+      return [['INTEGER',typeColor],['DIM',keywordColor],['SMOOTH',keywordColor]].every(([word,color])=>spans.some(s=>s.textContent.trim()===word&&getComputedStyle(s).color===color));
+    }, {typeColor,keywordColor});
     C.ok(await S.page.evaluate(expected => [...document.querySelectorAll('.view-lines span')].some(s => s.textContent.trim() === 'SMOOTH' && getComputedStyle(s).color === expected), keywordColor), 'SMOOTH сохраняет цвет ключевого слова в теме ' + theme);
     C.ok(await S.page.evaluate(expected => [...document.querySelectorAll('.view-lines span')].some(s => s.textContent.trim() === 'DIM' && getComputedStyle(s).color === expected), keywordColor), 'Операторы имеют свой цвет в теме ' + theme);
     C.ok(await S.page.evaluate(expected => [...document.querySelectorAll('.view-lines span')].some(s => s.textContent.trim() === 'RGB' && getComputedStyle(s).color === expected), functionColor), 'Встроенная функция имеет свой цвет в теме ' + theme);
@@ -40,13 +44,14 @@ module.exports = [{ id: 'highlight-punctuation-and-maze', name: 'Пунктуа�
   }
   await S.page.evaluate(() => window.__ide.setTheme('dark'));
   await S.screenshot('highlighting-fixed');
-} }, { id: 'highlight-user-symbols', name: 'Пользовательские имена и операции имеют отдельные цвета', async fn({S,C}) {
+} }, { id: 'highlight-user-symbols', name: 'Пользовательские имена и операции получают цвета выбранной темы', async fn({S,C}) {
   await S.launch();
   await S.page.evaluate(() => { const i=window.__ide; i.settings.formatOnBlur=false; i.settings.checkOnChange=false; i.editor.getModel().setValue('CONST limit = 2\nDIM items(3) AS INTEGER\nSUB PaintWorld(value AS INTEGER)\nvalue = items(0) + limit\nEND SUB\nPaintWorld(1)'); });
   for (const [theme, variable, constant, array, procedure, operator] of [
     ['dark','rgb(156, 220, 254)','rgb(240, 185, 117)','rgb(185, 163, 227)','rgb(220, 220, 170)','rgb(230, 155, 200)'],
     ['light','rgb(33, 94, 156)','rgb(143, 68, 0)','rgb(117, 82, 165)','rgb(121, 94, 38)','rgb(175, 25, 112)'],
-    ['basic','rgb(255, 255, 255)','rgb(255, 255, 170)','rgb(170, 255, 170)','rgb(85, 255, 255)','rgb(255, 255, 85)']]) {
+    ['basic','rgb(255, 255, 255)','rgb(255, 255, 170)','rgb(170, 255, 170)','rgb(85, 255, 255)','rgb(255, 255, 85)'],
+    ['borland','rgb(255, 255, 85)','rgb(255, 255, 85)','rgb(255, 255, 85)','rgb(255, 255, 85)','rgb(255, 255, 255)']]) {
     await S.page.evaluate(t=>window.__ide.setTheme(t),theme);
     for(const [word,color] of [['value',variable],['limit',constant],['items',array],['PaintWorld',procedure],['=',operator]]) {
       await S.page.waitForFunction(({word,color})=>[...document.querySelectorAll('.view-lines span')].some(s=>s.textContent.trim()===word&&getComputedStyle(s).color===color),{word,color}, {timeout:7000});

@@ -35,7 +35,7 @@ module.exports=[
  C.eq(await S.page.evaluate(()=>window.__ide.editor.getOption(monaco.editor.EditorOption.fontSize)),20,'Шрифт восстановлен после перезапуска');
  C.eq(JSON.parse(fs.readFileSync(path.join(profile,'settings.json'),'utf8')).editorPreferences.tabSize,2,'Профиль содержит сохранённый отступ');
 }},
-{id:'editor-settings-language-keyboard-validation',name:'Вкладки, обе локали, все поля, три темы, поиск и ошибочный ввод',async fn({S,C}){
+{id:'editor-settings-language-keyboard-validation',name:'Вкладки, обе локали, все поля, четыре темы, поиск и ошибочный ввод',async fn({S,C}){
  await S.launch();await S.page.keyboard.press('Control+,');await S.page.locator('.editor-settings-dialog').waitFor();
  C.eq(await S.page.locator('#app').evaluate(el=>el.inert),true,'Фон диалога недоступен для ввода');
  for(const group of ['appearance','font','typing','suggestions','scroll','selection','structure','advanced']){
@@ -76,6 +76,11 @@ module.exports=[
  C.eq(await S.page.locator('#settings-tab-scroll').innerText(),'Scrolling & Overview','Вкладка локализована');
  await tab(S,'font');await S.page.selectOption('#settings-theme','basic');await apply(S);
  C.eq(await S.page.locator('html').getAttribute('data-theme'),'basic','Тема QuickBASIC применена');
+ await tab(S,'font');await S.page.selectOption('#settings-theme','borland');
+ C.eq(await S.page.locator('.settings-preview').getAttribute('data-preview-theme'),'borland','Предпросмотр показывает Borland Pascal до применения');
+ C.eq(await S.page.locator('.settings-preview').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(0, 0, 170)','Предпросмотр использует ярко-синий фон Borland Pascal');
+ await apply(S);
+ C.eq(await S.page.locator('html').getAttribute('data-theme'),'borland','Тема Borland Pascal применяется к IDE');
  await S.page.click('.settings-footer button:first-child');await apply(S);
  C.eq(await S.page.evaluate(()=>window.__ide.editor.getOption(monaco.editor.EditorOption.fontSize)),14,'Сброс вкладки возвращает шрифт Axiom');
  C.eq(await S.page.locator('html').getAttribute('data-theme'),'dark','Сброс возвращает тёмную тему');

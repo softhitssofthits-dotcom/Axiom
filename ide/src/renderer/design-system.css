@@ -33,6 +33,15 @@
   --xs-console-bg: #151820;
   --xs-console-scrollbar: #465064;
   --xs-status-bg: #242d3a;
+  --xs-select-bg: var(--xs-surface-raised);
+  --xs-select-text: var(--xs-text);
+  --xs-select-highlight-bg: var(--xs-surface-active);
+  --xs-select-highlight-text: var(--xs-text);
+  --xs-select-border: var(--xs-border);
+  --xs-toolbar-active-text: var(--xs-accent);
+  --xs-toolbar-toggle-text: var(--xs-text-faint);
+  --xs-filter-active-bg: var(--xs-surface-raised);
+  --xs-filter-active-text: var(--xs-accent);
 
   --bg-primary: var(--xs-editor);
   --bg-secondary: var(--xs-surface);
@@ -78,6 +87,11 @@
 }
 
 html[data-theme="basic"] {
+  --xs-select-bg: #c0c0c0;
+  --xs-select-text: #000000;
+  --xs-select-highlight-bg: #000000;
+  --xs-select-highlight-text: #ffffff;
+  --xs-select-border: #000000;
   --xs-canvas: #050548;
   --xs-surface: #08085f;
   --xs-surface-raised: #151575;
@@ -100,6 +114,57 @@ html[data-theme="basic"] {
   --xs-editor-cursor: #ffff55;
   --xs-chrome-bg: #c0c0c0;
   --xs-chrome-text: var(--xs-editor);
+  --xs-status-bg: #008080;
+  --xs-menu-bg: #c0c0c0;
+  --xs-menu-text: #000000;
+  --xs-menu-muted: #555555;
+  --xs-menu-border: #000000;
+  --xs-menu-hover-bg: #000000;
+  --xs-menu-hover-text: #ffffff;
+  --xs-menu-shadow: inset 0 0 0 1px #ffffff, 7px 7px 0 #000000;
+}
+
+html[data-theme="borland"] {
+  --xs-select-bg: #00aaaa;
+  --xs-select-text: #000000;
+  --xs-select-highlight-bg: #00aa00;
+  --xs-select-highlight-text: #ffffff;
+  --xs-select-border: #000000;
+  --xs-toolbar-active-text: #000000;
+  --xs-filter-active-bg: #000000;
+  --xs-filter-active-text: #ffffff;
+  --xs-canvas: #000055;
+  --xs-surface: #000080;
+  --xs-surface-raised: #0000aa;
+  --xs-surface-hover: #000000;
+  --xs-surface-active: #000000;
+  --xs-editor: #0000aa;
+  --xs-border: #5555ff;
+  --xs-border-subtle: #000055;
+  --xs-text: #ffffff;
+  --xs-text-muted: #c0c0c0;
+  --xs-text-faint: #aaaaaa;
+  --xs-accent: #ffff55;
+  --xs-accent-strong: #ffffff;
+  --xs-accent-wash: #000080;
+  --xs-danger: #ff5555;
+  --xs-warning: #ffff55;
+  --xs-success: #55ff55;
+  --xs-editor-selection: #008080;
+  --xs-editor-cursor: #ffffff;
+  --xs-console-bg: #005555;
+  --xs-console-scrollbar: #00aaaa;
+  --xs-status-bg: #00aaaa;
+  --xs-chrome-bg: #00aaaa;
+  --xs-toolbar-bg: #009999;
+  --xs-chrome-text: #000000;
+  --xs-menu-bg: #00aaaa;
+  --xs-menu-text: #000000;
+  --xs-menu-muted: #005555;
+  --xs-menu-border: #000000;
+  --xs-menu-hover-bg: #000000;
+  --xs-menu-hover-text: #ffffff;
+  --xs-menu-shadow: inset 0 0 0 3px #00aaaa, inset 0 0 0 4px #000000, 7px 7px 0 #000000;
 }
 
 body {
@@ -203,7 +268,7 @@ button:focus-visible, .menu-dropdown-item:focus-visible, .recent-item:focus-visi
 }
 
 .toolbar-btn:hover {
-  background: var(--xs-surface-hover);
+  background: color-mix(in srgb, currentColor 12%, transparent);
   border-color: transparent;
   color: var(--xs-text);
 }
@@ -211,12 +276,23 @@ button:focus-visible, .menu-dropdown-item:focus-visible, .recent-item:focus-visi
 .toolbar-btn:active { background: var(--xs-surface-active); }
 .toolbar-btn .codicon { font-size: var(--xs-icon-size); line-height: 1; }
 button[aria-pressed="true"] { background: var(--xs-surface-raised); color: var(--xs-accent); }
+.toolbar-btn[aria-pressed] { background:transparent; border-color:transparent; color:var(--xs-toolbar-toggle-text); box-shadow:none; }
+.toolbar-btn[aria-pressed="true"] { color:var(--xs-toolbar-active-text); }
 button:disabled, [aria-disabled="true"] { opacity: var(--xs-disabled-opacity); cursor: default; }
 .toolbar-btn:disabled { background: none; border-color: transparent; }
 .toolbar-btn.tb-run { color: var(--xs-success); }
 .toolbar-btn.tb-stop { color: var(--xs-danger); }
 .toolbar-btn.tb-run:hover { color: var(--xs-success); background: color-mix(in srgb, var(--xs-success) 13%, transparent); }
 .toolbar-btn.tb-stop:hover { color: var(--xs-danger); background: color-mix(in srgb, var(--xs-danger) 13%, transparent); }
+
+/* Общие раскрывающиеся списки: геометрия и поведение едины, цвета задаёт палитра. */
+select, select::picker(select) { appearance:base-select; }
+select::picker(select) {
+  color:var(--xs-select-text); background:var(--xs-select-bg); border:1px solid var(--xs-select-border);
+  border-radius:var(--xs-radius-sm); box-shadow:var(--xs-shadow-menu); padding:2px; font:inherit;
+}
+select option { color:var(--xs-select-text); background:var(--xs-select-bg); border:0; border-radius:0; padding:5px 8px; }
+select option:is(:checked,:hover,:focus) { color:var(--xs-select-highlight-text); background:var(--xs-select-highlight-bg); outline:none; }
 .toolbar-sep { height: 19px; margin: 0 5px; background: var(--xs-border); }
 
 /* Project explorer */
@@ -345,6 +421,7 @@ button:disabled, [aria-disabled="true"] { opacity: var(--xs-disabled-opacity); c
 }
 .panel-tab.active { color: var(--xs-text); border-bottom-color: var(--xs-accent); }
 .panel-tab:hover { color: var(--xs-text); background: var(--xs-surface-hover); }
+#diagnostic-filters button:is([aria-pressed="true"],:hover,:focus-visible) { background:var(--xs-filter-active-bg); color:var(--xs-filter-active-text); box-shadow:none; }
 .tab-content { color: var(--xs-text-muted); }
 #console-content, #terminal { background: var(--xs-console-bg); }
 /* Незанятые строками пиксели терминала должны иметь фон текущей темы. */

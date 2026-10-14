@@ -84,11 +84,51 @@ module.exports.push({ id: 'document-basic-theme-persistence', name: 'Тема Qu
     return items.map(item => { const text = item.querySelector('.menu-text'); const style = getComputedStyle(text); return { name: text.textContent, icons: item.querySelectorAll('.codicon').length, font: style.fontSize + '/' + style.fontWeight }; });
   });
   C.eq(menu.find(item => item.name.includes('QuickBASIC'))?.name, 'Тема QuickBASIC', 'Название темы согласовано с меню');
-  C.ok(menu.length === 3 && menu.every(item => item.icons === 0 && item.font === menu[0].font), 'Все три пункта без пиктограмм с одинаковым шрифтом');
+  C.ok(menu.length === 4 && menu.every(item => item.icons === 0 && item.font === menu[0].font), 'Все четыре пункта без пиктограмм с одинаковым шрифтом');
   await S.screenshot('quickbasic-theme');
   await S.page.locator('[data-menu="view"] .menu-label').click();
   await S.screenshot('quickbasic-theme-menu');
   await S.page.keyboard.press('Escape');
   await S.close(); await S.launch();
   C.eq(await S.page.evaluate(() => document.documentElement.dataset.theme), 'basic', 'Тема восстановлена после запуска');
+} });
+module.exports.push({ id: 'document-borland-theme-persistence', name: 'Borland Pascal оформляет оболочку, редактор и консоль и сохраняется после запуска', async fn({ S, C }) {
+  await S.launch();
+  await S.page.evaluate(() => {
+    const i = window.__ide;
+    i.editor.getModel().setValue("' Проверка цветов Borland Pascal\nDIM value AS INTEGER = 42\nPRINT LEN(\"Строка\") + value\n");
+    i.ensureConsole();
+  });
+  await S.page.locator('[data-menu="view"] .menu-label').click();
+  await S.page.locator('[data-action="theme-borland"]').click();
+  await S.page.waitForFunction(() => getComputedStyle(document.querySelector('.monaco-editor')).backgroundColor === 'rgb(0, 0, 170)');
+  await S.page.waitForFunction(() => [...document.querySelectorAll('.view-lines span')].some(el => el.textContent.trim() === 'DIM' && getComputedStyle(el).color === 'rgb(255, 255, 255)'));
+  const colors = await S.page.evaluate(() => ({
+    theme: document.documentElement.dataset.theme,
+    frame: getComputedStyle(document.getElementById('document-tab-bar')).borderBottomColor,
+    menu: getComputedStyle(document.getElementById('menubar')).backgroundColor,
+    status: getComputedStyle(document.getElementById('status-bar')).backgroundColor,
+    console: window.__ide.term.options.theme.background,
+    viewport: getComputedStyle(document.querySelector('.xterm-viewport')).backgroundColor,
+    checked: document.querySelector('.menu-check[data-check="theme-borland"]').parentElement.getAttribute('aria-checked'),
+    tokens: [...document.querySelectorAll('.view-line span')].map(el => ({ text: el.textContent, color: getComputedStyle(el).color })),
+  }));
+  C.eq(colors.theme, 'borland', 'Тема выбрана из общего меню «Вид»');
+  C.eq(colors.frame, 'rgb(85, 255, 255)', 'Вкладки используют циановый разделитель палитры');
+  C.eq(colors.menu, 'rgb(0, 170, 170)', 'Строка меню бирюзовая по референсу Borland');
+  C.eq(colors.status, 'rgb(0, 170, 170)', 'Строка состояния бирюзовая');
+  C.eq(colors.console, '#0000aa', 'Консоль использует фон Borland Pascal');
+  C.eq(colors.viewport, 'rgb(0, 0, 170)', 'Область прокрутки консоли совпадает с её фоном');
+  C.eq(colors.checked, 'true', 'Пункт темы отмечен в меню');
+  C.ok(colors.tokens.some(t => t.text.trim() === 'DIM' && t.color === 'rgb(255, 255, 255)'), 'Операторы светлые');
+  C.ok(colors.tokens.some(t => t.text.trim() === 'INTEGER' && t.color === 'rgb(85, 255, 255)'), 'Типы циановые');
+  C.ok(colors.tokens.some(t => t.text.trim() === 'LEN' && t.color === 'rgb(255, 255, 85)'), 'Встроенные функции жёлтые');
+  C.ok(colors.tokens.some(t => t.text.includes('Строка') && t.color === 'rgb(255, 255, 85)'), 'Строки жёлтые');
+  const menu = await S.page.evaluate(() => [...document.querySelectorAll('[data-action^="theme-"]')].map(item => item.querySelector('.menu-text').textContent));
+  C.ok(menu.some(text => text.includes('Borland Pascal')) && menu.length === 4, 'Тема есть среди четырёх пунктов меню');
+  await S.screenshot('borland-pascal-theme');
+  const profile = S.userData;
+  await S.close(); await S.launch({ userData: profile });
+  C.eq(await S.page.evaluate(() => document.documentElement.dataset.theme), 'borland', 'Глобальная тема восстановлена после запуска');
+  C.eq(await S.electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].getBackgroundColor().toLowerCase()), '#0000aa', 'Окно запуска сразу использует фон темы');
 } });

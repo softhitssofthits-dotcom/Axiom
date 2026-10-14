@@ -73,6 +73,16 @@
     }
     element(tag,className,text) {const el=document.createElement(tag);if(className)el.className=className;if(text!==undefined)el.textContent=text;return el;}
     button(text,action,className='') {const b=this.element('button',className,text);b.type='button';b.onclick=action;return b;}
+    decorateButtonHotkey(button,index,defaultText=false) {
+      const chars=Array.from(button.textContent||'');if(!chars.length)return;
+      const hotkeyIndex=Math.max(0,Math.min(index,chars.length-1));
+      const fragment=document.createDocumentFragment();
+      if(defaultText&&hotkeyIndex>0)fragment.append(this.element('span','settings-button-default-text',chars.slice(0,hotkeyIndex).join('')));
+      else if(hotkeyIndex>0)fragment.append(document.createTextNode(chars.slice(0,hotkeyIndex).join('')));
+      fragment.append(this.element('span','settings-button-hotkey',chars[hotkeyIndex]));
+      if(hotkeyIndex+1<chars.length)fragment.append(document.createTextNode(chars.slice(hotkeyIndex+1).join('')));
+      button.replaceChildren(fragment);
+    }
     render() {
       this.dialog.replaceChildren();
       const head=this.element('header','settings-header'); const title=this.element('h2','',this.text('title'));title.id='editor-settings-title';
@@ -94,6 +104,10 @@
       this.okButton=this.button(this.text('ok'),()=>this.apply(true),'settings-primary');this.okButton.dataset.settingsAction='ok';
       this.applyButton=this.button(this.text('apply'),()=>this.apply(false));this.applyButton.dataset.settingsAction='apply';
       this.cancelButton=this.button(this.text('cancel'),()=>this.close());this.cancelButton.dataset.settingsAction='cancel';footer.append(this.okButton,this.applyButton,this.cancelButton);
+      this.decorateButtonHotkey(this.resetButton,this.ide.settings.language==='en'?0:3);
+      this.decorateButtonHotkey(this.okButton,1,true);
+      this.decorateButtonHotkey(this.applyButton,0);
+      this.decorateButtonHotkey(this.cancelButton,0);
       this.dialog.append(head,this.search,this.tabbar,this.content,this.help,this.status,footer);this.renderContent();
     }
     selectTab(group) {this.group=group;this.query='';this.search.value='';this.renderContent();this.content.scrollTop=0;}
@@ -104,8 +118,8 @@
       if(!query)this.content.setAttribute('aria-labelledby','settings-tab-'+this.group);else this.content.removeAttribute('aria-labelledby');
       this.controls=new Map();
       if(!query&&(this.group==='appearance'||this.group==='font')) {
-        const field=this.group==='font'?'theme':'language';const choices=field==='theme'?['dark','light','basic']:['ru','en'];
-        const labels=field==='theme'?[['Тёмная','Dark'],['Светлая','Light'],['QuickBASIC','QuickBASIC']]:[['Русский','Russian'],['Английский','English']];
+        const field=this.group==='font'?'theme':'language';const choices=field==='theme'?['dark','light','basic','borland']:['ru','en'];
+        const labels=field==='theme'?[['Тёмная','Dark'],['Светлая','Light'],['QuickBASIC','QuickBASIC'],['Borland Pascal','Borland Pascal']]:[['Русский','Russian'],['Английский','English']];
         const row=this.element('div','settings-row');const label=this.element('label','',this.text(field));label.htmlFor='settings-'+field;
         const select=this.element('select');select.id='settings-'+field;
         const help=this.text(field+'Help');row.title=help;label.title=help;select.title=help;select.setAttribute('aria-describedby','settings-help');

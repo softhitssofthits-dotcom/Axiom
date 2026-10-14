@@ -2,7 +2,7 @@ const {testWorkspace,writeAxm}=require('../helpers');
 module.exports=[{id:'shell-responsive-commands',name:'Утверждённая оболочка: темы, меню, размеры и команды',async fn({S,C}){
 const file=writeAxm(testWorkspace('shell'),'расчёт.axm','PRINT 42\n');await S.launch();await S.stubOpenDialog([file]);await S.page.evaluate(()=>window.__ide.handleAction('open'));await S.page.waitForFunction(p=>window.__ide.activeFile===p,file);
 C.eq(await S.page.locator('#shell-sidebar #outline-list').count(),1,'Структура расположена слева');
-for(const width of [320,520,800,1280]){await S.electronApp.evaluate(({BrowserWindow},w)=>{const b=BrowserWindow.getAllWindows()[0];b.setMinimumSize(0,0);b.setSize(w,800);},width);await S.page.waitForTimeout(150);for(const theme of ['light','dark']){await S.page.evaluate(t=>window.__ide.handleAction('theme-'+t),theme);const layout=await S.page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth,clipped:[...document.querySelectorAll('#toolbar button,#menubar > .menu-item')].filter(b=>b.getBoundingClientRect().width).some(b=>b.getBoundingClientRect().right>innerWidth),labels:[...document.querySelectorAll('#toolbar button')].every(b=>!b.textContent.trim()&&b.getAttribute('aria-label'))}));C.ok(!layout.overflow&&!layout.clipped&&layout.labels,theme+' '+width+' без обрезания и подписей',layout);}}
+for(const width of [320,520,800,1280]){await S.electronApp.evaluate(({BrowserWindow},w)=>{const b=BrowserWindow.getAllWindows()[0];b.setMinimumSize(0,0);b.setSize(w,800);},width);await S.page.waitForTimeout(150);for(const theme of ['light','dark','basic','borland']){await S.page.evaluate(t=>window.__ide.handleAction('theme-'+t),theme);const layout=await S.page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth,clipped:[...document.querySelectorAll('#toolbar button,#menubar > .menu-item')].filter(b=>b.getBoundingClientRect().width).some(b=>b.getBoundingClientRect().right>innerWidth),labels:[...document.querySelectorAll('#toolbar button')].every(b=>!b.textContent.trim()&&b.getAttribute('aria-label'))}));C.ok(!layout.overflow&&!layout.clipped&&layout.labels,theme+' '+width+' без обрезания и подписей',layout);}}
 await S.page.locator('#menu-overflow').isVisible().then(async visible=>{if(visible){await S.page.locator('#menu-overflow').click();C.ok(await S.page.locator('#menu-overflow-content .menu-item').count()>0,'Лишние меню доступны');}});
 await S.electronApp.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(1280,900));await S.page.locator('#tb-run').click();await S.waitIdle();await S.waitConsole('42');C.ok(true,'Пиктограмма запуска исполняет VM');C.eq(S.pageErrors.length,0,'Ошибки страницы отсутствуют');await S.screenshot('shell-approved');
 }},
@@ -22,17 +22,50 @@ await S.electronApp.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0]
  await S.page.evaluate(()=>window.__ide.handleAction('new'));C.ok(await S.page.locator('#tb-undo').isDisabled()&&await S.page.locator('#tb-redo').isDisabled(),'Новая вкладка не наследует историю');
  await S.page.evaluate(p=>window.__ide.switchToFile(p),file);C.ok(!await S.page.locator('#tb-undo').isDisabled(),'Возврат на вкладку восстанавливает историю');
  const settlePanelColors=()=>S.page.evaluate(async()=>{const buttons=[document.getElementById('tb-toggle-output'),document.getElementById('tb-toggle-sidebar')];buttons.forEach(b=>getComputedStyle(b).color);await Promise.all(buttons.flatMap(b=>b.getAnimations()).map(a=>a.finished.catch(()=>{})));});
- for(const theme of ['light','dark','basic']){
+ for(const theme of ['light','dark','basic','borland']){
    await S.page.evaluate(t=>{window.__ide.setTheme(t);window.__ide.setSidebarVisible(true);window.__ide.showPanel();},theme);
    await settlePanelColors();
+   const commandColors=await S.page.evaluate(()=>['tb-run','tb-stop'].map(id=>getComputedStyle(document.getElementById(id)).color.match(/\d+/g).map(Number)));
+   C.ok(commandColors[0][1]>commandColors[0][0]&&commandColors[0][1]>commandColors[0][2],theme+': значок запуска остаётся зелёным');
+   C.ok(commandColors[1][0]>commandColors[1][1]&&commandColors[1][0]>commandColors[1][2],theme+': значок остановки остаётся красным');
    const enabled=await S.page.locator('#tb-toggle-output').evaluate(b=>({pressed:b.getAttribute('aria-pressed'),color:getComputedStyle(b).color,bg:getComputedStyle(b).backgroundColor}));
    const side=await S.page.locator('#tb-toggle-sidebar').evaluate(b=>({color:getComputedStyle(b).color,bg:getComputedStyle(b).backgroundColor}));
    C.ok(enabled.pressed==='true'&&enabled.color===side.color&&enabled.bg===side.bg,theme+': активные панели выделены одинаково',JSON.stringify({enabled,side}));
+   if(theme==='borland'){
+     C.eq(enabled.color,'rgb(0, 0, 0)','Borland Pascal: включённая панель использует чёрный значок');
+     C.eq(enabled.bg,'rgba(0, 0, 0, 0)','Borland Pascal: включённая панель без отдельной заливки');
+     await S.page.keyboard.press('Tab');
+     await S.page.locator('#tb-toggle-sidebar').focus();
+     const focus=await S.page.locator('#tb-toggle-sidebar').evaluate(b=>getComputedStyle(b).outlineColor);
+     C.eq(focus,'rgb(85, 255, 255)','Borland Pascal: фокус панели обведён бирюзовым, не жёлтым');
+     await S.page.evaluate(()=>window.__ide.editor.focus());
+     const surfaces=await S.page.evaluate(()=>Object.fromEntries([
+       ['sidebar','#shell-sidebar'],['sidebar-divider','#sidebar-resizer'],['document-tabs','#document-tab-bar'],
+       ['toolbar','#toolbar'],['bottom-panel','#bottom-panel'],['panel-tabs','#panel-tabs'],['console','#console-content'],
+     ].map(([key,selector])=>[key,getComputedStyle(document.querySelector(selector)).backgroundColor])));
+     C.eq(surfaces.sidebar,'rgb(0, 0, 128)','Borland Pascal: боковая колонка темнее рабочего поля');
+     C.eq(surfaces['sidebar-divider'],'rgb(0, 0, 85)','Borland Pascal: разделитель колонки создаёт глубину');
+     C.eq(surfaces['document-tabs'],'rgb(0, 153, 153)','Borland Pascal: подложка вкладок совпадает с панелью инструментов');
+     C.eq(surfaces.toolbar,'rgb(0, 153, 153)','Borland Pascal: панель инструментов сохраняет тёмную бирюзу');
+     C.eq(surfaces['bottom-panel'],'rgb(0, 85, 85)','Borland Pascal: нижняя панель тёмно-бирюзовая');
+     C.eq(surfaces['panel-tabs'],'rgb(0, 153, 153)','Borland Pascal: полоса вкладок нижней панели совпадает с панелью инструментов');
+     C.eq(surfaces.console,'rgb(0, 85, 85)','Borland Pascal: консоль согласована с бирюзовой шапкой');
+     C.eq(await S.page.locator('.panel-tab.active').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(0, 0, 0)','Borland Pascal: активная вкладка консоли имеет чёрную инверсию');
+     await S.page.locator('.panel-tab[data-tab="diagnostics"]').click();
+     for(const filter of ['all','error','warning','advice']){
+       const button=S.page.locator(`[data-diagnostic-filter="${filter}"]`);
+       await button.click();
+       await S.page.waitForFunction(filter=>getComputedStyle(document.querySelector(`[data-diagnostic-filter="${filter}"]`)).backgroundColor==='rgb(0, 0, 0)',filter);
+       C.eq(await button.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(0, 0, 0)','Borland Pascal: чёрное выделение фильтра '+filter);
+     }
+     await S.page.locator('.panel-tab[data-tab="console"]').click();
+   }
    await S.screenshot('toolbar-'+theme);
    await S.page.evaluate(()=>window.__ide.setBottomPanelVisible(false));
    await settlePanelColors();
    const disabled=await S.page.locator('#tb-toggle-output').evaluate(b=>({pressed:b.getAttribute('aria-pressed'),color:getComputedStyle(b).color,bg:getComputedStyle(b).backgroundColor}));
    C.ok(disabled.pressed==='false'&&(disabled.color!==enabled.color||disabled.bg!==enabled.bg),theme+': скрытая панель не выделена');
+   if(theme==='borland') C.eq(disabled.color,'rgb(170, 170, 170)','Borland Pascal: выключенная панель серая как неактивная вкладка');
  }
  await S.page.locator('#tb-toggle-output').click();C.eq(await S.page.locator('#tb-toggle-output').getAttribute('aria-pressed'),'true','Кнопка включает индикатор');
  await S.page.keyboard.press('Control+Shift+o');C.eq(await S.page.locator('#tb-toggle-output').getAttribute('aria-pressed'),'false','Клавиатура выключает индикатор');

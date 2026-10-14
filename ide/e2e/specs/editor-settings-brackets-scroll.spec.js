@@ -1,6 +1,6 @@
 module.exports=[{id:'editor-settings-brackets-scroll',name:'Цвета вложенных скобок и видимый без наведения ползунок во всех темах',async fn({S,C}){
  await S.launch({settings:{}});
- for(const theme of ['dark','light','basic']){
+ for(const theme of ['dark','light','basic','borland']){
   await S.page.evaluate(async theme=>{
    const i=window.__ide;await i.applyEditorPreferences({'bracketPairColorization.enabled':true},theme,'ru');
    i.editor.getModel().setValue('Return Abs(PlayerPixelX() - GhostPixelX()) < 12 And Abs(PlayerPixelY() - GhostPixelY())');i.editor.render(true);

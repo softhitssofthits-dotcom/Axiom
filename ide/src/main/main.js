@@ -78,7 +78,9 @@ function loadBackgroundColor() {
     const p = path.join(app.getPath('userData'), 'settings.json');
     if (fs.existsSync(p)) {
       const s = JSON.parse(fs.readFileSync(p, 'utf-8'));
-      return s.theme === 'light' ? '#ffffff' : '#1e1e1e';
+      if (s.theme === 'light') return '#ffffff';
+      if (s.theme === 'borland') return '#0000aa';
+      return '#1e1e1e';
     }
   } catch {}
   return '#1e1e1e';

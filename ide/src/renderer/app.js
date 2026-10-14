@@ -60,7 +60,7 @@ class AxiomIDE {
     window.addEventListener('unhandledrejection', (e) => this.log('window.unhandledrejection', { reason: String(e.reason?.stack || e.reason || '') }, 'error'));
     try {
       await this.loadSettings();
-      if (!['dark', 'light', 'basic'].includes(this.settings.theme)) this.settings.theme = 'dark';
+      if (!['dark', 'light', 'basic', 'borland'].includes(this.settings.theme)) this.settings.theme = 'dark';
       document.documentElement.setAttribute('data-theme', this.settings.theme);
       I18N.setLocale(this.settings.language);
       await this.loadMonaco();
@@ -409,6 +409,45 @@ class AxiomIDE {
         'editorLineNumber.foreground': '#B8C7E8',
         'editorLineNumber.activeForeground': '#FFFFFF', 'editorIndentGuide.background1': '#3030A0',
         'editorIndentGuide.activeBackground1': '#B8C7E8', 'editorError.foreground': '#FFAAAA', 'editorWarning.foreground': '#FFFF55',
+      },
+    });
+
+    monaco.editor.defineTheme('axiom-borland', {
+      base: 'vs-dark', inherit: true, semanticHighlighting: true,
+      semanticTokenColors: {
+        keyword: '#FFFFFF', type: '#FFFF55', function: '#FFFF55',
+        variable: '#FFFF55', array: '#FFFF55', 'variable.readonly': '#FFFF55',
+      },
+      rules: [
+        { token: 'comment', foreground: 'AAAAAA', fontStyle: 'italic' },
+        { token: 'keyword', foreground: 'FFFFFF' },
+        { token: 'type', foreground: 'FFFF55' },
+        { token: 'support.function', foreground: 'FFFF55' },
+        { token: 'function', foreground: 'FFFF55' },
+        { token: 'identifier', foreground: 'FFFF55' },
+        { token: 'variable', foreground: 'FFFF55' },
+        { token: 'variable.readonly', foreground: 'FFFF55' },
+        { token: 'array', foreground: 'FFFF55' },
+        { token: 'string', foreground: 'FFFF55' },
+        { token: 'string.escape', foreground: 'FFFFFF' },
+        { token: 'delimiter.interpolation', foreground: 'FFFFFF' },
+        { token: 'number', foreground: 'FFFF55' },
+        { token: 'number.hex', foreground: 'FFFF55' },
+        { token: 'number.binary', foreground: 'FFFF55' },
+        { token: 'operator', foreground: 'FFFFFF' },
+        { token: 'delimiter', foreground: 'FFFFFF' },
+        { token: 'invalid', foreground: 'FF5555' },
+      ],
+      colors: {
+        ...AxiomIDE.monacoSurface('borland'),
+        'editor.foreground': '#FFFFFF',
+        'editor.selectionForeground': '#FFFFFF',
+        'editorLineNumber.foreground': '#8080FF',
+        'editorLineNumber.activeForeground': '#FFFFFF',
+        'editorIndentGuide.background1': '#5555FF',
+        'editorIndentGuide.activeBackground1': '#C0C0C0',
+        'editorError.foreground': '#FF5555',
+        'editorWarning.foreground': '#FFFF55',
       },
     });
 
@@ -761,6 +800,7 @@ class AxiomIDE {
       case 'theme-light': this.setTheme('light'); break;
       case 'theme-dark': this.setTheme('dark'); break;
       case 'theme-basic': this.setTheme('basic'); break;
+      case 'theme-borland': this.setTheme('borland'); break;
       case 'lang-ru': this.setLanguage('ru'); break;
       case 'lang-en': this.setLanguage('en'); break;
       case 'open-log-folder': this.openLogFolder(); break;
@@ -1445,6 +1485,13 @@ class AxiomIDE {
   // its familiar contrast; in the light theme, a light terminal avoids making the bottom
   // panel look like a separate embedded application.
   static CONSOLE_THEMES = {
+    borland: {
+      background: '#005555', foreground: '#FFFFFF', cursor: '#FFFFFF',
+      selectionBackground: '#008080', black: '#000000', red: '#AA0000', green: '#00AA00',
+      yellow: '#AAAA00', blue: '#0000AA', magenta: '#AA00AA', cyan: '#00AAAA', white: '#C0C0C0',
+      brightBlack: '#555555', brightRed: '#FF5555', brightGreen: '#55FF55', brightYellow: '#FFFF55',
+      brightBlue: '#5555FF', brightMagenta: '#FF55FF', brightCyan: '#55FFFF', brightWhite: '#FFFFFF',
+    },
     basic: {
       background: '#000080', foreground: '#FFFFFF', cursor: '#FFFF55',
       selectionBackground: '#5050B0', black: '#000000', red: '#AA0000', green: '#00AA00',
@@ -1483,10 +1530,22 @@ class AxiomIDE {
       'editor.lineHighlightBackground': editor,
       'editor.selectionBackground': read('--xs-editor-selection'),
       'editorCursor.foreground': read('--xs-editor-cursor'),
-      'editorWidget.background': read('--xs-surface-raised'), 'editorWidget.border': read('--xs-border'),
-      'editorSuggestWidget.background': read('--xs-surface-raised'), 'editorSuggestWidget.foreground': read('--xs-text'),
-      'editorSuggestWidget.selectedBackground': read('--xs-surface-active'),
+      'editorWidget.background': read('--xs-menu-bg') || read('--xs-surface-raised'),
+      'editorWidget.foreground': read('--xs-menu-text') || read('--xs-text'),
+      'editorWidget.border': read('--xs-menu-border') || read('--xs-border'),
+      'editorSuggestWidget.background': read('--xs-menu-bg') || read('--xs-surface-raised'),
+      'editorSuggestWidget.foreground': read('--xs-menu-text') || read('--xs-text'),
+      'editorSuggestWidget.border': read('--xs-menu-border') || read('--xs-border'),
+      'editorSuggestWidget.selectedBackground': read('--xs-menu-hover-bg') || read('--xs-surface-active'),
+      'editorSuggestWidget.selectedForeground': read('--xs-menu-hover-text') || read('--xs-text'),
     };
+    if (read('--xs-menu-bg')) Object.assign(colors, {
+      'editorHoverWidget.background': read('--xs-menu-bg'), 'editorHoverWidget.foreground': read('--xs-menu-text'),
+      'editorHoverWidget.border': read('--xs-menu-border'),
+      'quickInput.background': read('--xs-menu-bg'), 'quickInput.foreground': read('--xs-menu-text'),
+      'list.focusBackground': read('--xs-menu-hover-bg'), 'list.focusForeground': read('--xs-menu-hover-text'),
+      'list.activeSelectionBackground': read('--xs-menu-hover-bg'), 'list.activeSelectionForeground': read('--xs-menu-hover-text'),
+    });
     if (previous === undefined) delete root.dataset.theme; else root.dataset.theme = previous;
     return colors;
   }
@@ -2073,13 +2132,13 @@ class AxiomIDE {
   // ================= theme / language =================
 
   updateThemeMenuChecks() {
-    for (const theme of ['light', 'dark', 'basic']) {
+    for (const theme of ['light', 'dark', 'basic', 'borland']) {
       UIControls.setMenuChecked(document.querySelector(`.menu-check[data-check="theme-${theme}"]`), this.settings.theme === theme);
     }
   }
 
   setTheme(theme) {
-    if (!['dark', 'light', 'basic'].includes(theme)) return;
+    if (!['dark', 'light', 'basic', 'borland'].includes(theme)) return;
     this.saveSettings({ theme });
     document.documentElement.setAttribute('data-theme', theme);
     this.monaco?.editor.setTheme('axiom-' + theme);
@@ -2101,6 +2160,7 @@ class AxiomIDE {
   applyLocale() {
     I18N.apply();
     UIControls.setLabel(document.getElementById('menu-settings'), I18N.t('menu.settings'));
+    this.applyMenuMnemonics();
     document.querySelectorAll('.xs-context-menu [data-translation]').forEach(row => {
       UIControls.setLabel(row, I18N.t(row.dataset.translation), { tooltip: false });
     });
@@ -2123,6 +2183,18 @@ class AxiomIDE {
   }
 
   // ================= recent files / about =================
+
+  applyMenuMnemonics() {
+    document.querySelectorAll('.menu-label, .menu-dropdown-item .menu-text, .recent-item .recent-name').forEach(element => {
+      if (element.querySelector('.menu-mnemonic')) return;
+      const text = element.textContent;
+      if (!text) return;
+      const letter = document.createElement('span');
+      letter.className = 'menu-mnemonic';
+      letter.textContent = Array.from(text)[0];
+      element.replaceChildren(letter, document.createTextNode(text.slice(letter.textContent.length)));
+    });
+  }
 
   renderRecentFiles() {
     const container = document.getElementById('recent-files-list');
@@ -2154,6 +2226,7 @@ class AxiomIDE {
       item.addEventListener('click', () => this.openFile(p));
       container.appendChild(item);
     }
+    this.applyMenuMnemonics();
   }
 
   async showAbout() {
@@ -2162,7 +2235,7 @@ class AxiomIDE {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.innerHTML = `
-      <div class="modal">
+      <div class="modal about-dialog">
         <div class="about-head">
           <img class="brand-logo-lg logo-dark" src="assets/logo-dark.png" alt="Axiom" draggable="false">
           <img class="brand-logo-lg logo-light" src="assets/logo-light.png" alt="Axiom" draggable="false">
@@ -2174,7 +2247,18 @@ class AxiomIDE {
         <button id="about-close">${I18N.t('about.ok')}</button>
       </div>`;
     document.body.appendChild(overlay);
-    overlay.querySelector('#about-close').onclick = () => overlay.remove();
+    const closeButton = overlay.querySelector('#about-close');
+    if (document.documentElement.dataset.theme === 'borland') {
+      const chars = Array.from(closeButton.textContent || '');
+      if (chars.length > 1) {
+        closeButton.replaceChildren(
+          Object.assign(document.createElement('span'), { className: 'about-button-default-text', textContent: chars[0] }),
+          Object.assign(document.createElement('span'), { className: 'about-button-hotkey', textContent: chars[1] }),
+          document.createTextNode(chars.slice(2).join('')),
+        );
+      }
+    }
+    closeButton.onclick = () => overlay.remove();
     overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
   }
 

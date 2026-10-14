@@ -1,0 +1,149 @@
+[
+  {
+    "id": "document-borland-theme-persistence",
+    "spec": "documents.spec.js",
+    "name": "Borland Pascal оформляет оболочку, редактор и консоль и сохраняется после запуска",
+    "ms": 7264,
+    "passed": 14,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:61260/b9e04ae0-c60f-4cbc-8de3-81be25cd30a9\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:61264/5897851c-0172-42d9-aae3-16ca4a0d92fa\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "highlight-user-symbols",
+    "spec": "highlighting.spec.js",
+    "name": "Пользовательские имена и операции получают цвета выбранной темы",
+    "ms": 7427,
+    "passed": 21,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:61272/f8e56a3b-6572-4d2e-81cd-85faa1f13feb\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "highlight-interpolation-dollar",
+    "spec": "highlighting.spec.js",
+    "name": "Знак доллара интерполяции совпадает по цвету с фигурными скобками",
+    "ms": 4582,
+    "passed": 5,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:61277/e0f97a73-b9d0-4f3d-b3f0-f7443fb90e46\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "highlight-punctuation-and-maze",
+    "spec": "highlighting.spec.js",
+    "name": "Пунктуация не обрывает подсветку операторов, типов и комментариев",
+    "ms": 4610,
+    "passed": 31,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:61283/a5032f97-6ea2-4c84-a86c-6283cfbcc533\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "console-context-menu-themes",
+    "spec": "console-background.spec.js",
+    "name": "Меню консоли совпадает с меню редактора во всех четырёх темах",
+    "ms": 5203,
+    "passed": 33,
+    "failures": [],
+    "notes": [
+      "Снимки четырёх тем: C:\\Axiom\\.artifacts\\ide-shell\\e2e\\8684\\console-context-menu-themes"
+    ],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:61287/231c00c1-4d9e-42f0-bafe-47f59cc07aee\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "editor-settings-language-keyboard-validation",
+    "spec": "editor-settings.spec.js",
+    "name": "Вкладки, обе локали, все поля, четыре темы, поиск и ошибочный ввод",
+    "ms": 8639,
+    "passed": 46,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:61291/e69f4b96-506b-4e5e-be7f-f5ff089f1c3d\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "shell-responsive-commands",
+    "spec": "shell.spec.js",
+    "name": "Утверждённая оболочка: темы, меню, размеры и команды",
+    "ms": 6892,
+    "passed": 19,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:61296/055365c0-1edc-49ba-8bec-445fc01665c0\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "shell-toolbar-history-and-panel-state",
+    "spec": "shell.spec.js",
+    "name": "Индикатор нижней панели, отмена и повтор на панели инструментов",
+    "ms": 9635,
+    "passed": 22,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:61302/d2145647-e2ab-4249-ba32-22e9fc5ee935\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:61306/6e3a6620-feb7-4ee4-ad34-d4b31d43debc\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "language-binary-hex",
+    "spec": "language-format.spec.js",
+    "name": "Двоичные и шестнадцатеричные литералы: типы, подсветка, форматирование и выполнение",
+    "ms": 5054,
+    "passed": 11,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:61311/8038aa19-42d8-4202-b425-67b66b778392\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": [
+      {
+        "type": "confirm",
+        "message": "Перед запуском нужно сохранить документ. Сохранить и запустить?"
+      }
+    ]
+  },
+  {
+    "id": "retro-menu-palettes",
+    "spec": "retro-menu-palettes.spec.js",
+    "name": "Borland и QuickBASIC: общая палитра выпадающих меню, подменю и контекстных меню",
+    "ms": 7368,
+    "passed": 25,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:61333/b7224dc3-1640-4b5e-ba7b-bc60f2fcecb5\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

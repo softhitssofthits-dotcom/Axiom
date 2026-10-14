@@ -3,7 +3,7 @@ const path = require('node:path');
 
 module.exports = [{
   id: 'console-context-menu-themes',
-  name: 'Меню консоли совпадает с меню редактора во всех трёх темах',
+  name: 'Меню консоли совпадает с меню редактора во всех четырёх темах',
   async fn({ S, C }) {
     const screenshotDir = testWorkspace('console-context-menu-themes');
     await S.launch();
@@ -15,7 +15,7 @@ module.exports = [{
           style.boxShadow, style.fontFamily, row.fontSize, row.minHeight, row.padding, row.gap];
       });
     }
-    for (const theme of ['light', 'dark', 'basic']) {
+    for (const theme of ['light', 'dark', 'basic', 'borland']) {
       await S.page.evaluate(theme => window.__ide.setTheme(theme), theme);
       await S.page.locator('.monaco-editor .view-line').first().click({button: 'right'});
       const editorSkin = await skin('#ax-context-menu');
@@ -52,7 +52,7 @@ module.exports = [{
     await S.page.keyboard.press('ArrowDown');
     C.eq(await S.page.evaluate(() => document.activeElement.dataset.action), 'clear', 'Стрелка переводит фокус к очистке');
     await S.page.keyboard.press('Escape');
-    C.note('Снимки трёх тем: ' + screenshotDir);
+    C.note('Снимки четырёх тем: ' + screenshotDir);
   },
 }, {
   id: 'console-context-menu-input-actions',
@@ -114,7 +114,7 @@ module.exports = [{
     await S.page.evaluate(() => window.__ide.setTheme('light'));
     C.eq(await background(), 'rgb(255, 255, 255)', 'Повторная смена темы не возвращает чёрный фон');
     const geometry = [];
-    for (const theme of ['light', 'dark', 'basic']) {
+    for (const theme of ['light', 'dark', 'basic', 'borland']) {
       const skin = await S.page.evaluate(theme => {
         const ide = window.__ide; ide.setTheme(theme);
         const tab = document.querySelector('.editor-tab.active');
@@ -136,9 +136,11 @@ module.exports = [{
       C.eq(skin.border === skin.stripe, false, `${theme}: верхняя рамка не дублирует акцентную полосу`);
       if (theme === 'light') C.eq(skin.editor, 'rgb(255, 255, 255)', 'Светлый редактор белый');
       if (theme === 'basic') C.eq(skin.sidebar === skin.editor, false, 'QuickBasic отделяет боковую панель от поля кода');
+      if (theme === 'borland') C.eq(skin.editor, 'rgb(0, 0, 170)', 'Borland Pascal использует ярко-синее поле кода');
       await S.screenshot(`global-theme-${theme}`);
     }
     C.eq(JSON.stringify(geometry[1]), JSON.stringify(geometry[0]), 'Геометрия вкладки одинакова в светлой и тёмной темах');
     C.eq(JSON.stringify(geometry[2]), JSON.stringify(geometry[0]), 'Геометрия вкладки одинакова в QuickBasic');
+    C.eq(JSON.stringify(geometry[3]), JSON.stringify(geometry[0]), 'Геометрия вкладки одинакова в Borland Pascal');
   },
 }];
