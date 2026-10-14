@@ -38,10 +38,20 @@
   --xs-select-highlight-bg: var(--xs-surface-active);
   --xs-select-highlight-text: var(--xs-text);
   --xs-select-border: var(--xs-border);
+  --xs-select-field-bg: var(--xs-select-bg);
+  --xs-select-field-text: var(--xs-select-text);
   --xs-toolbar-active-text: var(--xs-accent);
   --xs-toolbar-toggle-text: var(--xs-text-faint);
   --xs-filter-active-bg: var(--xs-surface-raised);
   --xs-filter-active-text: var(--xs-accent);
+  --xs-tab-hover-bg: var(--xs-surface-hover);
+  --xs-tab-hover-text: var(--xs-text-muted);
+  --xs-tab-text: var(--xs-text-faint);
+  --xs-tab-strip-bg: var(--xs-surface);
+  --xs-hover-text: var(--xs-text);
+  --xs-diagnostic-hover-bg: var(--xs-surface-hover);
+  --xs-diagnostic-hover-text: var(--xs-text-muted);
+  --xs-diagnostic-hover-location: var(--xs-text-faint);
 
   --bg-primary: var(--xs-editor);
   --bg-secondary: var(--xs-surface);
@@ -125,46 +135,70 @@ html[data-theme="basic"] {
 }
 
 html[data-theme="borland"] {
+  /* Стандартная палитра VGA Borland; дополнительные поверхности используют те же роли. */
+  --xs-dialog-bg: #aaaaaa;
+  --xs-dialog-text: #000000;
+  --xs-dialog-label: #ffffff;
+  --xs-dialog-field-bg: #aaaaaa;
+  --xs-dialog-field-text: #000000;
+  --xs-dialog-group-bg: #00aaaa;
+  --xs-dialog-button-bg: #00aa00;
+  --xs-dialog-hotkey: #ffff55;
+  --xs-dialog-default: #55ffff;
+  --xs-diagnostic-hover-bg: #00aa00;
+  --xs-diagnostic-hover-text: #000000;
+  --xs-diagnostic-hover-location: #000000;
+  --xs-diagnostic-hover-icon: #000000;
   --xs-select-bg: #00aaaa;
   --xs-select-text: #000000;
   --xs-select-highlight-bg: #00aa00;
   --xs-select-highlight-text: #ffffff;
   --xs-select-border: #000000;
   --xs-toolbar-active-text: #000000;
-  --xs-filter-active-bg: #000000;
-  --xs-filter-active-text: #ffffff;
+  --xs-select-field-bg: var(--xs-dialog-field-bg);
+  --xs-select-field-text: var(--xs-dialog-field-text);
+  --xs-toolbar-toggle-text: #333333;
+  --xs-tab-text: #333333;
+  --xs-tab-strip-bg: #888888;
+  --xs-tab-hover-bg: #00aaaa;
+  --xs-tab-hover-text: #0000aa;
+  --xs-hover-text: #0000aa;
+  --xs-filter-active-bg: #00aa00;
+  --xs-filter-active-text: #000000;
   --xs-canvas: #000055;
   --xs-surface: #000080;
-  --xs-surface-raised: #0000aa;
-  --xs-surface-hover: #000000;
-  --xs-surface-active: #000000;
+  --xs-surface-raised: #aaaaaa;
+  --xs-surface-hover: #00aaaa;
+  --xs-surface-active: #00aa00;
   --xs-editor: #0000aa;
-  --xs-border: #5555ff;
+  --xs-border: #ffffff;
   --xs-border-subtle: #000055;
   --xs-text: #ffffff;
-  --xs-text-muted: #c0c0c0;
+  --xs-text-muted: #aaaaaa;
   --xs-text-faint: #aaaaaa;
   --xs-accent: #ffff55;
   --xs-accent-strong: #ffffff;
-  --xs-accent-wash: #000080;
-  --xs-danger: #ff5555;
+  --xs-accent-wash: #00aaaa;
+  --xs-danger: #aa0000;
   --xs-warning: #ffff55;
-  --xs-success: #55ff55;
-  --xs-editor-selection: #008080;
+  --xs-success: #00aa00;
+  --xs-editor-selection: #00aaaa;
   --xs-editor-cursor: #ffffff;
-  --xs-console-bg: #005555;
+  --xs-console-bg: #000000;
   --xs-console-scrollbar: #00aaaa;
-  --xs-status-bg: #00aaaa;
-  --xs-chrome-bg: #00aaaa;
-  --xs-toolbar-bg: #009999;
+  --xs-status-bg: #aaaaaa;
+  --xs-chrome-bg: #aaaaaa;
+  --xs-toolbar-bg: #999999;
+  --xs-output-header-bg: #111111;
   --xs-chrome-text: #000000;
-  --xs-menu-bg: #00aaaa;
+  --xs-menu-bg: #aaaaaa;
   --xs-menu-text: #000000;
-  --xs-menu-muted: #005555;
+  --xs-menu-muted: #555555;
   --xs-menu-border: #000000;
-  --xs-menu-hover-bg: #000000;
-  --xs-menu-hover-text: #ffffff;
-  --xs-menu-shadow: inset 0 0 0 3px #00aaaa, inset 0 0 0 4px #000000, 7px 7px 0 #000000;
+  --xs-menu-hover-bg: #00aa00;
+  --xs-menu-hover-text: #000000;
+  --xs-menu-shadow: inset 0 0 0 3px #aaaaaa, inset 0 0 0 4px #000000, 7px 7px 0 #000000;
+  --xs-shadow-menu: var(--xs-menu-shadow);
 }
 
 body {
@@ -346,10 +380,10 @@ select option:is(:checked,:hover,:focus) { color:var(--xs-select-highlight-text)
   transform: translateY(-50%);
   opacity: .8;
 }
-.project-file:hover { background: var(--xs-surface-hover); color: var(--xs-text); }
+.project-file:hover { background: var(--xs-surface-hover); color: var(--xs-hover-text); }
 #external-files { border-top-color: var(--xs-border-subtle); }
 #external-files-header { padding: 13px 12px 5px; color: var(--xs-text-faint); }
-#external-files-list .project-file.active { background: var(--xs-accent-wash); color: var(--xs-text); }
+#external-files-list .project-file.active { background: var(--xs-accent-wash); color: var(--xs-hover-text); }
 #external-files-list .project-file.active::before { border-color: var(--xs-accent); }
 
 /* Editors and tabs */
@@ -370,7 +404,7 @@ select option:is(:checked,:hover,:focus) { color:var(--xs-select-highlight-text)
   border-bottom: none;
   border-radius: var(--xs-radius-md) var(--xs-radius-md) 0 0;
   background: transparent;
-  color: var(--xs-text-faint);
+  color: var(--xs-tab-text);
   font-size: 12px;
 }
 
@@ -399,7 +433,7 @@ select option:is(:checked,:hover,:focus) { color:var(--xs-select-highlight-text)
   background: var(--xs-accent);
   border-radius: 0 0 2px 2px;
 }
-.editor-tab:hover:not(.active) { background: var(--xs-surface-hover); color: var(--xs-text-muted); }
+.editor-tab:hover:not(.active) { background: var(--xs-tab-hover-bg); color: var(--xs-tab-hover-text); }
 .tab-close { width: 18px; height: 18px; border-radius: 3px; color: var(--xs-text-faint); }
 .tab-close:hover { color: var(--xs-text); background: var(--xs-surface-active); }
 .dirty-indicator { color: var(--xs-accent); }
@@ -427,11 +461,15 @@ select option:is(:checked,:hover,:focus) { color:var(--xs-select-highlight-text)
 /* Незанятые строками пиксели терминала должны иметь фон текущей темы. */
 #terminal .xterm-viewport { background-color: var(--xs-console-bg); }
 .diagnostic-item { min-height: 32px; padding: 6px 12px; border-bottom-color: var(--xs-border-subtle); color: var(--xs-text-muted); }
-.diagnostic-item:hover { background: var(--xs-surface-hover); }
+.diagnostic-item:is(:hover,:focus-visible) { background:var(--xs-diagnostic-hover-bg); color:var(--xs-diagnostic-hover-text); }
+.diagnostic-item:is(:hover,:focus-visible) .diagnostic-location { color:var(--xs-diagnostic-hover-location); }
+.diagnostic-item:is(:hover,:focus-visible) .diagnostic-icon.error { color:var(--xs-diagnostic-hover-icon,var(--xs-danger)); }
+.diagnostic-item:is(:hover,:focus-visible) .diagnostic-icon.warning { color:var(--xs-diagnostic-hover-icon,var(--xs-warning)); }
+.diagnostic-item:is(:hover,:focus-visible) .diagnostic-icon.advice { color:var(--xs-diagnostic-hover-icon,var(--text-secondary)); }
 .diagnostic-location { color: var(--xs-text-faint); }
 #outline-list { padding: 5px; }
 .outline-item { min-height: 28px; padding: 5px 8px; border-radius: var(--xs-radius-sm); color: var(--xs-text-muted); }
-.outline-item:hover { background: var(--xs-surface-hover); color: var(--xs-text); }
+.outline-item:hover { background: var(--xs-surface-hover); color: var(--xs-hover-text); }
 .outline-icon { color: var(--xs-accent); }
 .outline-line { color: var(--xs-text-faint); }
 

@@ -28,7 +28,7 @@ module.exports = [{ id: 'highlight-punctuation-and-maze', name: 'Пунктуа�
     ['dark', 'rgb(78, 201, 176)', 'rgb(197, 134, 192)', 'rgb(220, 220, 170)', 'rgb(206, 145, 120)', 'rgb(106, 153, 85)', 'rgb(230, 155, 200)'],
     ['light', 'rgb(38, 127, 153)', 'rgb(0, 0, 255)', 'rgb(121, 94, 38)', 'rgb(163, 21, 21)', 'rgb(106, 153, 85)', 'rgb(175, 25, 112)'],
     ['basic', 'rgb(255, 255, 255)', 'rgb(255, 255, 85)', 'rgb(85, 255, 255)', 'rgb(170, 255, 170)', 'rgb(184, 199, 232)', 'rgb(255, 255, 85)'],
-    ['borland', 'rgb(255, 255, 85)', 'rgb(255, 255, 255)', 'rgb(255, 255, 85)', 'rgb(255, 255, 85)', 'rgb(170, 170, 170)', 'rgb(255, 255, 255)'],
+    ['borland', 'rgb(255, 255, 85)', 'rgb(255, 255, 255)', 'rgb(255, 255, 85)', 'rgb(255, 255, 85)', 'rgb(255, 255, 85)', 'rgb(255, 255, 255)'],
   ]) {
     await S.page.evaluate(t => window.__ide.setTheme(t), theme);
     await S.page.waitForFunction(({typeColor,keywordColor}) => {

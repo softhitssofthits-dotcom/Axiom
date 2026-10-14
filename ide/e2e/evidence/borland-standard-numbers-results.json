@@ -1,0 +1,21 @@
+[
+  {
+    "id": "language-binary-hex",
+    "spec": "language-format.spec.js",
+    "name": "Двоичные и шестнадцатеричные литералы: типы, подсветка, форматирование и выполнение",
+    "ms": 5603,
+    "passed": 11,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:63269/8924c875-ad27-4070-87b3-3588c121fc5c\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": [
+      {
+        "type": "confirm",
+        "message": "Перед запуском нужно сохранить документ. Сохранить и запустить?"
+      }
+    ]
+  }
+]

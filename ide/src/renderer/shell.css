@@ -12,17 +12,18 @@
 [data-theme=borland] #menubar .menu-label,[data-theme=borland] #menu-overflow{color:var(--xs-chrome-text)}
 [data-theme=borland] #toolbar .toolbar-btn:not(.tb-run):not(.tb-stop):not([aria-pressed]){color:var(--xs-chrome-text)}
 [data-theme=borland] #toolbar .toolbar-btn:focus-visible{outline:2px solid #55ffff!important;outline-offset:1px}
-[data-theme=borland] #menubar .menu-label:hover,[data-theme=borland] #menubar .menu-item.open>.menu-label{background:var(--xs-surface-active);color:#fff}
+[data-theme=borland] #menubar .menu-label:hover,[data-theme=borland] #menubar .menu-item.open>.menu-label{background:var(--xs-menu-hover-bg);color:var(--xs-menu-hover-text)}
 [data-theme=borland] #status-bar span{color:var(--xs-chrome-text)}
 [data-theme=borland] #editor-tabs,[data-theme=borland] #document-tab-bar{border-color:var(--xs-border)}
 [data-theme=borland] .logo-light{display:none}
-[data-theme=borland] #document-tab-bar,[data-theme=borland] #editor-tabs,[data-theme=borland] #panel-tabs{background:var(--xs-toolbar-bg)}
-[data-theme=borland] #sidebar-resizer,[data-theme=borland] #panel-resizer{background:#000055}
-[data-theme=borland] #sidebar-resizer::before{left:3px;width:3px;background:#000080}
-[data-theme=borland] #panel-resizer::before{top:3px;height:3px;background:#000080}
+[data-theme=borland] #document-tab-bar,[data-theme=borland] #editor-tabs{background:var(--xs-tab-strip-bg)}
+[data-theme=borland] #panel-tabs{background:var(--xs-output-header-bg)}
+[data-theme=borland] #sidebar-resizer,[data-theme=borland] #panel-resizer{background:var(--xs-border-subtle)}
+[data-theme=borland] #sidebar-resizer::before{left:3px;width:3px;background:var(--xs-surface)}
+[data-theme=borland] #panel-resizer::before{top:3px;height:3px;background:var(--xs-surface)}
 [data-theme=borland] #bottom-panel{background:var(--xs-console-bg)}
-[data-theme=borland] .panel-tab{color:#000000}
-[data-theme=borland] .panel-tab:is(.active,:hover){background:#000000;color:#ffffff;border-bottom-color:#ffffff}
+[data-theme=borland] .panel-tab{color:var(--xs-text-muted)}
+[data-theme=borland] .panel-tab:is(.active,:hover){background:var(--xs-menu-hover-bg);color:var(--xs-menu-hover-text);border-bottom-color:var(--xs-border)}
 [hidden]{display:none!important}#menubar{height:36px;min-width:0;gap:2px;padding:0 8px}.shell-brand{flex-shrink:0;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--xs-accent);padding-right:12px}.menu-item{flex-shrink:0}.menu-label{margin:0;padding:0 8px;height:30px}.menu-dropdown{min-width:min(240px,calc(100vw - 16px));max-width:calc(100vw - 16px)}#menu-overflow{border:0;background:none;color:var(--xs-text);padding:6px 10px;cursor:pointer;margin-left:auto}#menu-overflow-content{position:absolute;right:8px;top:36px;z-index:2100;min-width:150px;padding:5px;background:var(--xs-surface-raised);border:1px solid var(--xs-border);border-radius:var(--xs-radius-sm);box-shadow:var(--xs-shadow-menu)}#menu-overflow-content .menu-item{height:32px;display:block}#menu-overflow-content .menu-label{width:100%}#menu-overflow-content .menu-dropdown{position:fixed;top:72px;left:auto;right:165px}
 #toolbar{height:auto;min-height:44px;flex-wrap:wrap;padding:5px 8px;gap:5px;flex-shrink:0}.command-group{display:flex;gap:3px;border-right:1px solid var(--xs-border);padding-right:7px}.command-group:last-child{border-right:0}.toolbar-btn svg{width:var(--xs-icon-size);height:var(--xs-icon-size);fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}#tb-debug{color:var(--xs-accent)}#tb-run{color:var(--xs-success)}#tb-stop{color:var(--xs-danger)}#workspace,#main-content,#editor-container{min-width:0;min-height:0}#project-explorer{width:208px}#status-bar{min-width:0;overflow:hidden}#status-file-path{min-width:0;overflow:hidden;text-overflow:ellipsis}#panel-tabs{overflow-x:auto;white-space:nowrap}
 @media(max-width:650px){#project-explorer{display:none!important}#status-execution-time{display:none}.shell-brand{padding-right:4px}#menu-overflow-content .menu-dropdown{right:8px;top:calc(36px + 32px * 4)}}
@@ -72,14 +73,14 @@ html:is([data-theme="basic"],[data-theme="borland"]) .monaco-menu :is(.action-la
 html:is([data-theme="basic"],[data-theme="borland"]) .monaco-menu :is(.action-item.focused,.action-item:hover) { background:var(--xs-menu-hover-bg)!important; }
 html:is([data-theme="basic"],[data-theme="borland"]) .monaco-menu :is(.action-item.focused,.action-item:hover) :is(.action-label,.keybinding,.xs-context-icon) { color:var(--xs-menu-hover-text)!important; }
 
-/* Горячие буквы используют красный цвет меню Turbo Vision; на выделенной строке оттенок светлее. */
+/* Горячие буквы меню Turbo Vision остаются красными на обычном и выбранном пункте. */
 html[data-theme="borland"] .menu-mnemonic { color:#aa0000; }
-html[data-theme="borland"] :is(.menu-label:hover,.menu-item.open>.menu-label,.menu-dropdown-item:hover,.menu-dropdown-item:focus-visible,.recent-item:hover) .menu-mnemonic { color:#ff5555; }
+html[data-theme="borland"] :is(.menu-label:hover,.menu-item.open>.menu-label,.menu-dropdown-item:hover,.menu-dropdown-item:focus-visible,.recent-item:hover) .menu-mnemonic { color:#aa0000; }
 
 /* Окно «О программе» повторяет серый диалог Turbo Vision с зелёной кнопкой. */
 html[data-theme="borland"] .modal-overlay { background:rgba(0,0,0,.58); backdrop-filter:none; }
 html[data-theme="borland"] .modal.about-dialog {
-  color:#000; background:#c0c0c0; border:3px solid #fff; border-radius:0;
+  color:var(--xs-dialog-text); background:var(--xs-dialog-bg); border:3px solid #fff; border-radius:0;
   box-shadow:inset 0 0 0 1px #000, inset 0 0 0 3px #fff, 7px 7px 0 #000;
 }
 html[data-theme="borland"] .about-dialog h3,

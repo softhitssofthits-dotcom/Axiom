@@ -43,29 +43,47 @@ await S.electronApp.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0]
        ['sidebar','#shell-sidebar'],['sidebar-divider','#sidebar-resizer'],['document-tabs','#document-tab-bar'],
        ['toolbar','#toolbar'],['bottom-panel','#bottom-panel'],['panel-tabs','#panel-tabs'],['console','#console-content'],
      ].map(([key,selector])=>[key,getComputedStyle(document.querySelector(selector)).backgroundColor])));
-     C.eq(surfaces.sidebar,'rgb(0, 0, 128)','Borland Pascal: боковая колонка темнее рабочего поля');
-     C.eq(surfaces['sidebar-divider'],'rgb(0, 0, 85)','Borland Pascal: разделитель колонки создаёт глубину');
-     C.eq(surfaces['document-tabs'],'rgb(0, 153, 153)','Borland Pascal: подложка вкладок совпадает с панелью инструментов');
-     C.eq(surfaces.toolbar,'rgb(0, 153, 153)','Borland Pascal: панель инструментов сохраняет тёмную бирюзу');
-     C.eq(surfaces['bottom-panel'],'rgb(0, 85, 85)','Borland Pascal: нижняя панель тёмно-бирюзовая');
-     C.eq(surfaces['panel-tabs'],'rgb(0, 153, 153)','Borland Pascal: полоса вкладок нижней панели совпадает с панелью инструментов');
-     C.eq(surfaces.console,'rgb(0, 85, 85)','Borland Pascal: консоль согласована с бирюзовой шапкой');
-     C.eq(await S.page.locator('.panel-tab.active').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(0, 0, 0)','Borland Pascal: активная вкладка консоли имеет чёрную инверсию');
+     C.eq(surfaces.sidebar,'rgb(0, 0, 128)','Borland Pascal: боковая колонка сохраняет глубину синего');
+     C.eq(surfaces['sidebar-divider'],'rgb(0, 0, 85)','Borland Pascal: разделитель темнее боковой колонки');
+     C.eq(surfaces['document-tabs'],'rgb(136, 136, 136)','Borland Pascal: подложка вкладок ещё темнее панели инструментов');
+     const inactiveTab=S.page.locator('.editor-tab:not(.active)').first();
+     await inactiveTab.hover();
+     await S.page.waitForFunction(()=>{const el=document.querySelector('.editor-tab:not(.active)');return el&&getComputedStyle(el).backgroundColor==='rgb(0, 170, 170)';});
+     C.eq(await inactiveTab.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(0, 170, 170)','Borland Pascal: наведение на неактивную вкладку использует циановую роль');
+     C.eq(surfaces.toolbar,'rgb(153, 153, 153)','Borland Pascal: панель инструментов немного темнее серой шапки');
+     C.eq(surfaces['bottom-panel'],'rgb(0, 0, 0)','Borland Pascal: нижняя панель использует чёрный фон Output');
+     C.eq(surfaces['panel-tabs'],'rgb(17, 17, 17)','Borland Pascal: шапка вывода отделена от чёрного Output близким тёмным оттенком');
+     C.eq(surfaces.console,'rgb(0, 0, 0)','Borland Pascal: консоль чёрная по оригинальному Output');
+     C.eq(await S.page.locator('.panel-tab.active').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(0, 170, 0)','Borland Pascal: активная вкладка использует зелёную роль выбора');
      await S.page.locator('.panel-tab[data-tab="diagnostics"]').click();
      for(const filter of ['all','error','warning','advice']){
        const button=S.page.locator(`[data-diagnostic-filter="${filter}"]`);
        await button.click();
-       await S.page.waitForFunction(filter=>getComputedStyle(document.querySelector(`[data-diagnostic-filter="${filter}"]`)).backgroundColor==='rgb(0, 0, 0)',filter);
-       C.eq(await button.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(0, 0, 0)','Borland Pascal: чёрное выделение фильтра '+filter);
+       await S.page.waitForFunction(filter=>getComputedStyle(document.querySelector(`[data-diagnostic-filter="${filter}"]`)).backgroundColor==='rgb(0, 170, 0)',filter);
+       C.eq(await button.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(0, 170, 0)','Borland Pascal: зелёное выделение фильтра '+filter);
      }
+     await S.page.evaluate(()=>window.__ide.applyDiagnostics([
+       {file:window.__ide.activeFile,line:1,col:1,severity:'error',code:'MB0001',message:'Ошибка для проверки контраста'},
+       {file:window.__ide.activeFile,line:1,col:1,severity:'warning',code:'MB2046',message:'Предупреждение для проверки контраста'},
+       {file:window.__ide.activeFile,line:1,col:1,severity:'warning',code:'MB2047',message:'Совет для проверки контраста'}
+     ]));
+     for(const category of ['error','warning','advice']){
+       const row=S.page.locator(`.diagnostic-item[data-category="${category}"]`);
+       await row.hover();
+       await S.page.waitForFunction(category=>{const el=document.querySelector(`.diagnostic-item[data-category="${category}"]`);return getComputedStyle(el).backgroundColor==='rgb(0, 170, 0)'&&getComputedStyle(el).color==='rgb(0, 0, 0)';},category);
+       C.ok(await row.evaluate(el=>[el,...el.querySelectorAll('span')].every(node=>getComputedStyle(node).color==='rgb(0, 0, 0)')),'Borland Pascal: текст, значок и координаты '+category+' чёрные на зелёном выделении');
+     }
+     await S.screenshot('borland-diagnostic-hover');
+     await S.page.evaluate(()=>window.__ide.applyDiagnostics([]));
      await S.page.locator('.panel-tab[data-tab="console"]').click();
+     await S.page.mouse.move(0,0);
    }
    await S.screenshot('toolbar-'+theme);
    await S.page.evaluate(()=>window.__ide.setBottomPanelVisible(false));
    await settlePanelColors();
    const disabled=await S.page.locator('#tb-toggle-output').evaluate(b=>({pressed:b.getAttribute('aria-pressed'),color:getComputedStyle(b).color,bg:getComputedStyle(b).backgroundColor}));
    C.ok(disabled.pressed==='false'&&(disabled.color!==enabled.color||disabled.bg!==enabled.bg),theme+': скрытая панель не выделена');
-   if(theme==='borland') C.eq(disabled.color,'rgb(170, 170, 170)','Borland Pascal: выключенная панель серая как неактивная вкладка');
+   if(theme==='borland') C.eq(disabled.color,'rgb(51, 51, 51)','Borland Pascal: выключенная панель тёмно-серая как неактивная вкладка');
  }
  await S.page.locator('#tb-toggle-output').click();C.eq(await S.page.locator('#tb-toggle-output').getAttribute('aria-pressed'),'true','Кнопка включает индикатор');
  await S.page.keyboard.press('Control+Shift+o');C.eq(await S.page.locator('#tb-toggle-output').getAttribute('aria-pressed'),'false','Клавиатура выключает индикатор');

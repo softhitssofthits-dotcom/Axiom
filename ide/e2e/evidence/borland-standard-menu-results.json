@@ -1,0 +1,16 @@
+[
+  {
+    "id": "retro-menu-palettes",
+    "spec": "retro-menu-palettes.spec.js",
+    "name": "Borland и QuickBASIC: общая палитра выпадающих меню, подменю и контекстных меню",
+    "ms": 11004,
+    "passed": 82,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:63252/70b0de2c-ff8b-46de-b64b-fac015261032\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

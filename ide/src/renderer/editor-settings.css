@@ -38,7 +38,7 @@
 .settings-preview .preview-keyword { color:#ca8bd8; }.settings-preview .preview-type { color:#70cdb5; }.settings-preview .preview-string { color:#df9270; }.settings-preview .preview-number { color:#b7cea8; }.settings-preview .preview-comment { color:#72955a; }
 .settings-preview[data-preview-theme="light"] { background:white; color:#233247; }.settings-preview[data-preview-theme="light"] .preview-keyword { color:#713f9e; }.settings-preview[data-preview-theme="light"] .preview-type { color:#087a61; }.settings-preview[data-preview-theme="light"] .preview-string { color:#a23f25; }.settings-preview[data-preview-theme="light"] .preview-number { color:#245ac7; }.settings-preview[data-preview-theme="light"] .preview-comment { color:#587147; }
 .settings-preview[data-preview-theme="basic"] { background:#000080; color:#fff; }.settings-preview[data-preview-theme="basic"] .preview-keyword { color:#fff; }.settings-preview[data-preview-theme="basic"] .preview-type { color:#00ffff; }.settings-preview[data-preview-theme="basic"] .preview-string { color:#ffff00; }.settings-preview[data-preview-theme="basic"] .preview-number { color:#ffff00; }.settings-preview[data-preview-theme="basic"] .preview-comment { color:#aaa; }
-.settings-preview[data-preview-theme="borland"] { background:#0000aa; color:#fff; }.settings-preview[data-preview-theme="borland"] .preview-keyword { color:#fff; }.settings-preview[data-preview-theme="borland"] .preview-type { color:#ffff55; }.settings-preview[data-preview-theme="borland"] .preview-string { color:#ffff55; }.settings-preview[data-preview-theme="borland"] .preview-number { color:#ffff55; }.settings-preview[data-preview-theme="borland"] .preview-comment { color:#aaa; }
+.settings-preview[data-preview-theme="borland"] { background:#0000aa; color:#ffff55; }.settings-preview[data-preview-theme="borland"] .preview-keyword { color:#fff; }.settings-preview[data-preview-theme="borland"] .preview-type { color:#ffff55; }.settings-preview[data-preview-theme="borland"] .preview-string { color:#ffff55; }.settings-preview[data-preview-theme="borland"] .preview-number { color:#ffff55; }.settings-preview[data-preview-theme="borland"] .preview-comment { color:#ffff55; }
 @media (max-width:700px) { .editor-settings-dialog { width:calc(100vw - 20px); height:calc(100vh - 20px); padding:10px; }.settings-row { grid-template-columns:minmax(0,1fr) minmax(100px,40%); }.settings-footer button { min-width:0; }.settings-help { min-height:70px; } }
 
 .settings-font-choice { display:flex; flex-direction:column; min-width:0; gap:4px; }
@@ -69,26 +69,29 @@ html[data-theme="basic"] .editor-settings-dialog .settings-primary { border-colo
 
 /* Turbo Pascal: серый диалог, бирюзовые группы, зелёные кнопки. */
 html[data-theme="borland"] .editor-settings-dialog {
-  color:#000000; background:#c0c0c0; border:3px solid #ffffff; border-radius:0;
+  color:var(--xs-dialog-text); background:var(--xs-dialog-bg); border:3px solid #ffffff; border-radius:0;
   box-shadow:inset 0 0 0 1px #000000, inset 0 0 0 3px #ffffff, 7px 7px 0 #000000;
-  --bg-primary:#c0c0c0; --bg-secondary:#c0c0c0; --bg-tertiary:#c0c0c0; --bg-hover:#00aaaa;
-  --text-primary:#000000; --text-secondary:#333333; --border-color:#000000;
-  --accent-color:#00aaaa; --accent-hover:#00aa00; --warning-color:#800000; --error-color:#800000;
+  --bg-primary:var(--xs-dialog-bg); --bg-secondary:var(--xs-dialog-bg); --bg-tertiary:var(--xs-dialog-bg); --bg-hover:var(--xs-dialog-group-bg);
+  --text-primary:var(--xs-dialog-text); --text-secondary:#555555; --border-color:#000000;
+  --accent-color:var(--xs-dialog-group-bg); --accent-hover:var(--xs-dialog-button-bg); --warning-color:#aa0000; --error-color:#aa0000;
 }
 html[data-theme="borland"] .editor-settings-dialog :is(button,input,select,textarea) { border-radius:0; }
 html[data-theme="borland"] .editor-settings-dialog button { border-style:outset; }
 html[data-theme="borland"] .editor-settings-dialog button:active { border-style:inset; }
-html[data-theme="borland"] .editor-settings-dialog .settings-content { background:#c0c0c0; border:1px solid #000000; }
+html[data-theme="borland"] .editor-settings-dialog .settings-content { background:var(--xs-dialog-bg); border:1px solid #000000; }
 html[data-theme="borland"] .editor-settings-dialog :is(.settings-search,.settings-row input:not([type="checkbox"]),.settings-row textarea) {
-  color:#000000; background:#c0c0c0; border:1px solid #000000; border-style:inset; border-radius:0;
+  color:var(--xs-dialog-field-text); background:var(--xs-dialog-field-bg); border:1px solid #000000; border-style:inset; border-radius:0;
 }
 html[data-theme="borland"] .editor-settings-dialog .settings-row select {
-  color:#000000; background:#00aaaa; border:1px solid #000000; border-style:inset;
+  color:var(--xs-select-field-text); background:var(--xs-select-field-bg); border:1px solid #000000; border-style:inset;
 }
-html[data-theme="borland"] .editor-settings-dialog .settings-tab { color:#000000; background:#c0c0c0; border-color:#000000; border-radius:0!important; }
-html[data-theme="borland"] .editor-settings-dialog .settings-tab[aria-selected="true"] { color:#000000; background:#00aaaa; border-color:#000000; }
-html[data-theme="borland"] .editor-settings-dialog .settings-subheading { color:#000000; background:#00aaaa; border:1px solid #000000; padding:4px 7px; }
-html[data-theme="borland"] .editor-settings-dialog .settings-row input[type="checkbox"] { accent-color:#00aaaa; }
+html[data-theme="borland"] .editor-settings-dialog .settings-tab { color:var(--xs-dialog-text); background:var(--xs-dialog-bg); border-color:#000000; border-radius:0!important; }
+html[data-theme="borland"] .editor-settings-dialog .settings-tab[aria-selected="true"] { color:#000000; background:var(--xs-dialog-button-bg); border-color:#000000; }
+html[data-theme="borland"] .editor-settings-dialog .settings-subheading { color:var(--xs-dialog-label); background:transparent; border:1px solid transparent; padding:4px 7px; }
+html[data-theme="borland"] .editor-settings-dialog h2 { color:var(--xs-dialog-label); }
+html[data-theme="borland"] .editor-settings-dialog .settings-search::placeholder { color:var(--text-secondary); opacity:1; }
+html[data-theme="borland"] .editor-settings-dialog :is(input:not([type="checkbox"]),textarea):focus { color:#ffffff; background:var(--xs-dialog-button-bg); }
+html[data-theme="borland"] .editor-settings-dialog .settings-row input[type="checkbox"] { accent-color:var(--xs-dialog-button-bg); }
 html[data-theme="borland"] .editor-settings-dialog .settings-footer button {
   color:#000000; background:#00aa00; border:1px solid #000000; border-style:outset; border-radius:0;
 }
@@ -100,4 +103,4 @@ html[data-theme="borland"] .editor-settings-dialog .settings-button-default-text
 html[data-theme="borland"] .editor-settings-dialog .settings-footer .settings-primary { border-color:#000000!important; }
 html[data-theme="borland"] .editor-settings-dialog ::selection { background:#00aa00; color:#ffffff; }
 
-.editor-settings-dialog select { color:var(--xs-select-text); background:var(--xs-select-bg); border-color:var(--xs-select-border); }
+.editor-settings-dialog select { color:var(--xs-select-field-text); background:var(--xs-select-field-bg); border-color:var(--xs-select-border); }

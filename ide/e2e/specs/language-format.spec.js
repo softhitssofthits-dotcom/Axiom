@@ -63,9 +63,9 @@ module.exports = [
     C.ok(tokens[0].some(item => item.type === 'number.binary.axiom'), 'Префикс &b имеет числовую категорию');
     C.ok(tokens[6].some(item => item.type === 'number.binary.axiom'), 'Двоичный литерал выделен внутри интерполяции');
     C.ok(tokens[5].some(item => item.offset === 10 && item.type === 'operator.axiom'), 'Амперсанд после HEX является отдельным оператором');
-    for (const [theme, color] of [['light','rgb(9, 134, 88)'], ['dark','rgb(181, 206, 168)'], ['basic','rgb(255, 255, 170)'], ['borland','rgb(85, 255, 255)']]) {
+    for (const [theme, color] of [['light','rgb(9, 134, 88)'], ['dark','rgb(181, 206, 168)'], ['basic','rgb(255, 255, 170)'], ['borland','rgb(255, 255, 85)']]) {
       await S.page.evaluate(theme => window.__ide.setTheme(theme), theme);
-      await S.page.waitForFunction(color => [...document.querySelectorAll('.view-lines span')].some(item => item.textContent === '&b1010' && getComputedStyle(item).color === color), color);
+      await S.page.waitForFunction(color => [...document.querySelectorAll('.view-lines span')].some(item => item.textContent.trim() === '&b1010' && getComputedStyle(item).color === color), color);
       C.ok(true, 'Двоичный литерал имеет цвет числа в теме ' + theme);
     }
     await S.page.evaluate(async () => { const i = window.__ide; i.settings.formattingStyle = 'Classic'; await i.formatWholeDocument('binary-e2e'); });
