@@ -160,8 +160,8 @@ html[data-theme="borland"] {
   --xs-toolbar-toggle-text: #333333;
   --xs-tab-text: #333333;
   --xs-tab-strip-bg: #888888;
-  --xs-tab-hover-bg: #00aaaa;
-  --xs-tab-hover-text: #0000aa;
+  --xs-tab-hover-bg: #aaaaaa;
+  --xs-tab-hover-text: #000000;
   --xs-hover-text: #0000aa;
   --xs-filter-active-bg: #00aa00;
   --xs-filter-active-text: #000000;
