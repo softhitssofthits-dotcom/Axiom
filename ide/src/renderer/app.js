@@ -520,6 +520,9 @@ class AxiomIDE {
       openMenu = null;
     };
     const openMenuFor = item => { closeAll(); item.classList.add('open'); openMenu = item; };
+    document.getElementById('menu-settings').addEventListener('click', () => {
+      closeAll(); this.handleAction('editor-settings');
+    });
     document.querySelectorAll('.menu-item').forEach(item => {
       const label = item.querySelector('.menu-label'); if (!label) return;
       label.addEventListener('mousedown', e => { e.preventDefault(); item === openMenu ? closeAll() : openMenuFor(item); });
@@ -2057,6 +2060,7 @@ class AxiomIDE {
 
   applyLocale() {
     I18N.apply();
+    UIControls.setLabel(document.getElementById('menu-settings'), I18N.t('menu.settings'));
     document.querySelectorAll('.xs-context-menu [data-translation]').forEach(row => {
       UIControls.setLabel(row, I18N.t(row.dataset.translation), { tooltip: false });
     });

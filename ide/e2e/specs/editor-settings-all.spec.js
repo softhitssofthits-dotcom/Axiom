@@ -36,7 +36,9 @@ async function setField(S,entry,value) {
   if(await master.getAttribute('type')==='checkbox')await master.check();else await master.selectOption(JSON.stringify('on'));
   await S.page.fill('.settings-search',entry.key);
  }
- if(entry.kind==='boolean') await input.setChecked(value);
+ if(['fontFamily','fontWeight'].includes(entry.key)) {
+  await input.selectOption('custom');await input.locator('..').locator('input').fill(String(value));
+ }else if(entry.kind==='boolean') await input.setChecked(value);
  else if(entry.kind==='select') await input.selectOption(JSON.stringify(value));
  else if(['fontLigatures','fontVariations'].includes(entry.key)) {
   await input.selectOption(typeof value==='string'?'custom':JSON.stringify(value));

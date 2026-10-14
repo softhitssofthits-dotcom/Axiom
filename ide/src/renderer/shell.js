@@ -45,14 +45,15 @@ const groups=[['tb-new','tb-open','tb-save','tb-save-all'],['tb-undo','tb-redo']
 toolbar.querySelectorAll('.toolbar-sep').forEach(s=>s.remove());groups.forEach(ids=>{const group=document.createElement('div');group.className='command-group';ids.forEach(id=>group.append(document.getElementById(id)));toolbar.append(group);});
 toolbar.querySelectorAll('button').forEach(b=>UIControls.setLabel(b,b.title));
 const bar=document.getElementById('menubar'),menus=[...bar.querySelectorAll(':scope > .menu-item')];
-const more=document.createElement('button');more.id='menu-overflow';more.textContent='•••';UIControls.setLabel(more,'Остальные меню');UIControls.setExpanded(more,false);bar.append(more);
+const settings=document.getElementById('menu-settings');
+const more=document.createElement('button');more.id='menu-overflow';more.textContent='•••';UIControls.setLabel(more,'Остальные меню');UIControls.setExpanded(more,false);bar.insertBefore(more,settings);
 const overflow=document.createElement('div');overflow.id='menu-overflow-content';overflow.hidden=true;bar.append(overflow);
 more.onclick=()=>{overflow.hidden=!overflow.hidden;UIControls.setExpanded(more,!overflow.hidden);};
 function fit(){overflow.hidden=true;UIControls.setExpanded(more,false);menus.forEach(m=>bar.insertBefore(m,more));more.hidden=true;
-const available=bar.clientWidth-16;let used=menus.reduce((n,m)=>n+m.offsetWidth,0);
+const available=bar.clientWidth-16-settings.offsetWidth-(menus.length+1)*2;let used=menus.reduce((n,m)=>n+m.offsetWidth,0);
 if(used>available){more.hidden=false;for(let i=menus.length-1;i>=0&&used>available-more.offsetWidth;i--){used-=menus[i].offsetWidth;overflow.prepend(menus[i]);}}
 }
-new ResizeObserver(fit).observe(bar);
+const menuResize=new ResizeObserver(fit);menuResize.observe(bar);menuResize.observe(settings);
 document.addEventListener('mousedown',e=>{if(!bar.contains(e.target)){overflow.hidden=true;UIControls.setExpanded(more,false);}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){overflow.hidden=true;UIControls.setExpanded(more,false);}});
 // Клавиши с модификаторами проверяются до прежнего обработчика F5.

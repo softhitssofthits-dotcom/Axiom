@@ -155,15 +155,24 @@
         else if(entry.kind==='number'){control.type='number';const bounds=P.limits[entry.key]||[0,1000000];control.min=bounds[0];control.max=bounds[1];control.step=P.fractional.has(entry.key)?'0.1':'1';control.value=this.draft[entry.key];}
         else {if(entry.kind==='text')control.type='text';control.value=entry.kind==='json'?JSON.stringify(this.draft[entry.key]):this.draft[entry.key];}
       }
-      control.id=id;control.dataset.settingInput=entry.key;control.setAttribute('aria-describedby','settings-help');
-      if(entry.key==='fontFamily'){
-        control.setAttribute('list','settings-font-list');const list=this.element('datalist');list.id='settings-font-list';
-        for(const font of ['Cascadia Code','Consolas','Courier New','Lucida Console','monospace']){const opt=this.element('option');opt.value=font;list.append(opt);}row.append(list);
+      if(entry.key==='fontFamily'||entry.key==='fontWeight'){
+        compound=this.element('div','settings-font-choice');control=this.element('select');control.fontChoice=true;
+        const choices=entry.key==='fontFamily'
+          ? [[this.defaults.fontFamily,this.pair(['По умолчанию','Default'])],...['Cascadia Code','Consolas','Courier New','Lucida Console','monospace'].map(font=>[font,font])]
+          : [['normal',this.pair(['Обычный','Regular'])],['bold',this.pair(['Полужирный','Bold'])],...['100','200','300','400','500','600','700','800','900'].map(weight=>[weight,weight])];
+        for(const [value,label] of choices){const opt=this.element('option','',label);opt.value=value;control.append(opt);}
+        const custom=this.element('option','',this.pair(['Свой вариант…','Custom…']));custom.value='custom';control.append(custom);
+        const known=choices.some(([value])=>value===this.draft[entry.key]);
+        control.value=known?this.draft[entry.key]:'custom';
+        control.detail=this.element('input');control.detail.type='text';control.detail.maxLength=2000;control.detail.value=this.draft[entry.key];
+        UIControls.setLabel(control.detail,this.pair(entry.key==='fontFamily'?['Свой шрифт или список запасных шрифтов','Custom font or fallback list']:['Своя толщина шрифта','Custom font weight']));
+        control.detail.oninput=()=>control.oninput();compound.append(control,control.detail);
       }
+      control.id=id;control.dataset.settingInput=entry.key;control.setAttribute('aria-describedby','settings-help');
       const help=this.description(entry);row.title=help;label.title=help;control.title=help;
       if(control.detail){control.detail.title=help;control.detail.setAttribute('aria-describedby','settings-help');control.detail.onfocus=()=>{this.help.textContent=help;};}
       control.onfocus=()=>{this.help.textContent=help;};row.onmouseenter=()=>{this.help.textContent=help;};
-      if(this.invalid.has(entry.key)){control.value=this.invalid.get(entry.key);control.setAttribute('aria-invalid','true');}
+      if(this.invalid.has(entry.key)){if(control.fontChoice){control.value='custom';control.detail.value=this.invalid.get(entry.key);}else control.value=this.invalid.get(entry.key);control.setAttribute('aria-invalid','true');}
       control.oninput=()=>{this.readControl(entry,control);this.updatePreview();this.syncDependencies();};control.onchange=control.oninput;
       row.append(label,compound||control);this.controls.set(entry.key,{entry,control});this.content.append(row);
     }
@@ -181,17 +190,17 @@
     readControl(entry,control) {
       if(entry.available===false)return true;
       let value;
-      try {value=control.detail?(control.value==='custom'?control.detail.value:JSON.parse(control.value)):entry.kind==='boolean'?control.checked:entry.kind==='select'?JSON.parse(control.value):entry.kind==='number'?(control.value.trim()===''?NaN:Number(control.value)):entry.kind==='json'?JSON.parse(control.value):control.value;
+      try {value=control.detail?(control.value==='custom'?control.detail.value:control.fontChoice?control.value:JSON.parse(control.value)):entry.kind==='boolean'?control.checked:entry.kind==='select'?JSON.parse(control.value):entry.kind==='number'?(control.value.trim()===''?NaN:Number(control.value)):entry.kind==='json'?JSON.parse(control.value):control.value;
         if(!P.valid(entry,value))throw new Error();
         this.draft[entry.key]=value;this.invalid.delete(entry.key);control.setAttribute('aria-invalid','false');return true;
-      }catch{this.invalid.set(entry.key,control.value);control.setAttribute('aria-invalid','true');return false;}
+      }catch{this.invalid.set(entry.key,control.detail&&control.value==='custom'?control.detail.value:control.value);control.setAttribute('aria-invalid','true');return false;}
     }
     syncDependencies() {
       const parents={'minimap':'minimap.enabled','stickyScroll':'stickyScroll.enabled','parameterHints':'parameterHints.enabled','inlineSuggest':'inlineSuggest.enabled','inlayHints':'inlayHints.enabled','hover':'hover.enabled','bracketPairColorization':'bracketPairColorization.enabled'};
       for(const {entry,control} of this.controls.values()) {
         const parent=parents[entry.key.split('.')[0]];
         control.disabled=entry.available===false||!!parent&&entry.key!==parent&&(this.draft[parent]===false||this.draft[parent]==='off');
-        if(control.detail)control.detail.disabled=control.value!=='custom';
+        if(control.detail){control.detail.disabled=control.value!=='custom';if(control.fontChoice)control.detail.hidden=control.value!=='custom';}
       }
     }
     createPreview() {

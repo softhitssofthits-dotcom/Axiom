@@ -1,10 +1,24 @@
 const fs=require('fs');const path=require('path');
-const open=async S=>{await S.page.click('[data-menu="settings"]');await S.page.click('[data-action="editor-settings"]');await S.page.locator('.editor-settings-dialog').waitFor();};
+const open=async S=>{await S.page.click('#menu-settings');await S.page.locator('.editor-settings-dialog').waitFor();};
 const tab=async(S,name)=>S.page.click('#settings-tab-'+name);
 const apply=async S=>{await S.page.click('[data-settings-action="apply"]');await S.page.waitForFunction(()=>!window.__ide.editorSettingsDialog.busy);};
 module.exports=[
 {id:'editor-settings-apply-persistence',name:'Диалог: отмена, применение, модели и сохранение после перезапуска',async fn({S,C}){
- await S.launch();await open(S);await tab(S,'scroll');await S.page.uncheck('#setting-stickyScroll-enabled');
+ await S.launch();
+ C.eq(await S.page.locator('[data-menu="settings"]').count(),0,'Настройки не входят в выпадающие меню');
+ for(const width of ['','300px']){
+  await S.page.evaluate(width=>document.getElementById('menubar').style.width=width,width);
+  await S.page.waitForTimeout(150);
+  const layout=await S.page.evaluate(()=>{const bar=document.getElementById('menubar').getBoundingClientRect(),button=document.getElementById('menu-settings').getBoundingClientRect();return {gap:bar.right-button.right,left:button.left,barLeft:bar.left,parent:document.getElementById('menu-settings').parentElement.id};});
+  C.ok(layout.gap>=0&&layout.gap<=10&&layout.left>=layout.barLeft&&layout.parent==='menubar','Настройки закреплены справа: '+(width||'обычная ширина'),JSON.stringify(layout));
+  await open(S);await S.page.click('[data-settings-action="cancel"]');
+ }
+ await S.page.evaluate(()=>document.getElementById('menubar').style.width='');
+ await S.page.locator('#menu-settings').focus();await S.page.keyboard.press('Enter');
+ await S.page.locator('.editor-settings-dialog').waitFor();
+ C.eq(await S.page.locator('.editor-settings-dialog').count(),1,'Enter сразу открывает диалог');
+ await S.page.click('[data-settings-action="cancel"]');
+ await open(S);await tab(S,'scroll');await S.page.uncheck('#setting-stickyScroll-enabled');
  C.eq(await S.page.evaluate(()=>window.__ide.editor.getOption(monaco.editor.EditorOption.stickyScroll).enabled),true,'Черновик не меняет редактор');
  await S.page.click('[data-settings-action="cancel"]');
  C.eq(await S.page.evaluate(()=>window.__ide.editor.getOption(monaco.editor.EditorOption.stickyScroll).enabled),true,'Отмена сохраняет прежнее закрепление');
@@ -32,7 +46,27 @@ module.exports=[
  }
  await S.page.fill('.settings-search','stickyScroll');C.eq(await S.page.locator('[data-setting-input]').count(),4,'Поиск находит параметры из другой вкладки');
  C.contains(await S.page.locator('#setting-stickyScroll-enabled').getAttribute('title'),'закреплённую область','Пояснение описывает назначение закрепления');
- await tab(S,'font');await S.page.fill('#setting-fontSize','999');await tab(S,'scroll');await S.page.click('[data-settings-action="apply"]');
+ await tab(S,'font');
+ C.eq(await S.page.locator('#setting-fontFamily').getAttribute('list'),null,'Поле шрифта не использует фильтруемый datalist');
+ C.eq(await S.page.locator('#setting-fontFamily').evaluate(el=>el.tagName),'SELECT','Шрифт выбирается цельным выпадающим полем');
+ const sizes=await S.page.evaluate(()=>['settings-theme','setting-fontFamily','setting-fontWeight'].map(id=>{const r=document.getElementById(id).getBoundingClientRect();return {left:r.left,width:r.width,height:r.height};}));
+ C.ok(sizes.every(r=>Math.abs(r.left-sizes[0].left)<1&&Math.abs(r.width-sizes[0].width)<1&&Math.abs(r.height-sizes[0].height)<1),'Шрифт и толщина совпадают с полем темы по размерам',JSON.stringify(sizes));
+ await S.page.selectOption('#setting-fontFamily','custom');await S.page.locator('#setting-fontFamily').locator('..').locator('input').fill("'My Custom Font', Consolas, monospace");
+ C.ok(await S.page.locator('#setting-fontFamily option').count()>=6,'Список шрифтов доступен при собственной строке');
+ await S.page.selectOption('#setting-fontFamily','Consolas');
+ C.eq(await S.page.locator('#setting-fontFamily').inputValue(),'Consolas','Выбор шрифта обновляет поле');
+ C.eq(await S.page.locator('.settings-preview').evaluate(el=>el.style.fontFamily),'Consolas','Предпросмотр сразу меняет шрифт');
+ await S.page.locator('#setting-fontWeight').focus();await S.page.keyboard.press('Home');
+ C.eq(await S.page.locator('#setting-fontWeight').inputValue(),'normal','Толщина выбирается клавиатурой');
+ await S.page.selectOption('#setting-fontWeight','bold');
+ C.eq(await S.page.locator('.settings-preview').evaluate(el=>el.style.fontWeight),'bold','Предпросмотр меняет толщину');
+ await apply(S);
+ C.eq(await S.page.evaluate(()=>window.__ide.editor.getOption(monaco.editor.EditorOption.fontFamily)),'Consolas','Выбранный шрифт применяется к Monaco');
+ C.eq(await S.page.evaluate(()=>window.__ide.editor.getOption(monaco.editor.EditorOption.fontWeight)),'bold','Выбранная толщина применяется к Monaco');
+ await S.page.screenshot({path:path.resolve(__dirname,'../../../.artifacts/font-dropdown.png')});
+ await S.page.selectOption('#setting-fontFamily','custom');await S.page.locator('#setting-fontFamily').locator('..').locator('input').fill("'Custom Font', monospace");await apply(S);
+ C.eq(await S.page.evaluate(()=>window.__ide.editor.getOption(monaco.editor.EditorOption.fontFamily)),"'Custom Font', monospace",'Собственный список запасных шрифтов сохраняется');
+ await S.page.fill('#setting-fontSize','999');await tab(S,'scroll');await S.page.click('[data-settings-action="apply"]');
  C.contains(await S.page.locator('.settings-status').innerText(),'Размер шрифта','Ошибка сохранена при переходе между вкладками');
  C.eq(await S.page.locator('#setting-fontSize').getAttribute('aria-invalid'),'true','Неверное поле доступно для исправления');
  await S.page.fill('#setting-fontSize','16');await S.page.selectOption('#settings-theme','light');await apply(S);
