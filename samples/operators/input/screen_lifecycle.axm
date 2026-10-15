@@ -1,0 +1,21 @@
+' Ввод остаётся в окне SCREEN. Программа повторяет запрос при ошибке числа.
+' Для автоматической проверки используются число 42 и имя Тест.
+SCREEN 1
+DIM number AS INTEGER, name AS STRING
+DIM accepted AS BOOLEAN
+DO
+    TRY
+        INPUT "Число", number
+        accepted = TRUE
+    CATCH err
+        PRINT "Введите целое число"
+    END TRY
+LOOP UNTIL accepted
+PRINT "Число принято: "; number
+SLEEP 4000
+INPUT "Имя", name
+IF number = 42 AND name = "Тест" THEN
+    PSET (100, 100), 14
+END IF
+PRINT "Имя принято: "; name
+SLEEP

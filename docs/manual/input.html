@@ -8,7 +8,7 @@
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор INPUT</span></nav>
 <p class="eyebrow">Справочная статья</p><h1 class="page-title">Оператор INPUT</h1><p class="lead">INPUT — оператор языка Axiom, который ожидает подтверждённую строку пользовательского ввода и записывает полученные значения в объявленные переменные.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-<section class="article-section"><h2>Назначение и место ввода</h2><p>Программа приостанавливается на время ожидания ответа. Без оператора <code>SCREEN</code> пользователь вводит ответ в консоли IDE. В активном <code>SCREEN</code> приглашение и ввод отображаются в его окне; консоль IDE этот ответ не принимает.</p></section>
+<section class="article-section"><h2>Назначение и место ввода</h2><p>Программа приостанавливается на время ожидания ответа. Без оператора <code>SCREEN</code> пользователь вводит ответ в консоли IDE. В активном <code>SCREEN</code>, включая текстовый режим <code>SCREEN 0</code>, приглашение и ввод отображаются в его окне. IDE не переводит фокус в свою консоль при таком запросе. После Enter программа продолжает работу, а прежний запрос в интерфейсе закрывается. Оператор <code>CANVAS</code> сам по себе не меняет консольное место ввода оператора <code>INPUT</code>.</p></section>
 <section class="article-section" id="syntax"><h2>Синтаксис</h2><pre><code class="language-axiom">INPUT &lt;переменная&gt;</code></pre>
 <pre><code class="language-axiom">INPUT &lt;переменная1&gt;, &lt;переменная2&gt;[, &lt;переменнаяN&gt;]</code></pre>
 <pre><code class="language-axiom">INPUT &lt;приглашение&gt; ; &lt;переменная&gt;[, &lt;переменнаяN&gt;]</code></pre>
@@ -40,6 +40,7 @@ PRINT name, age</code></pre><p>Результат:</p>
                 <li><a href="../../samples/operators/input/prompt_semicolon.axm">INPUT: приглашение через ;</a></li>
                 <li><a href="../../samples/operators/input/prompt_comma.axm">INPUT: приглашение через ,</a></li>
                 <li><a href="../../samples/graphics/input/text_screen_input.axm">INPUT: ввод в окне SCREEN 0</a></li>
+                <li><a href="../../samples/operators/input/screen_lifecycle.axm">INPUT: последовательные запросы и повтор после ошибки в SCREEN</a></li>
             </ul></section>
 <section class="article-section"><h2>См. также</h2><div class="link-list"><a href="data-and-input.html">Консольный ввод и вывод</a><a href="print.html">PRINT</a><a href="error-handling.html">Обработка ошибок</a><a href="screen.html">SCREEN</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
 <script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

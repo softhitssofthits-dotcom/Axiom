@@ -19,10 +19,10 @@
 | Какие условия Electron ещё не приняты? | [Матрица](plans/IDE_SHELL_FEATURE_MATRIX.csv) |
 | Где справочник? | [manual/index.html](manual/index.html), [правила сопровождения](manual/README.md) |
 | Где договор тайлов? | [TILEMAP.md](contracts/TILEMAP.md) |
-| Где результаты последнего этапа? | [Сохранность документов](reports/electron/ELECTRON_LOCKED_SAVE_RECOVERY_RESULT.md) |
+| Где результаты последних этапов? | [SCREEN на DirectX](reports/graphics/SCREEN_DIRECTX_MIGRATION.md), [ревизия документов и нативный INPUT](reports/DOCUMENTATION_REVIEW_20261015.md) |
 | Где результат действующей очереди Electron? | [Зависание, документы и поставка](reports/electron/ELECTRON_ACTIVE_QUEUE_RESULT.md) |
 | Как проверить аппаратуру Electron? | [Мышь, системный DPI и мониторы](plans/ELECTRON_HARDWARE_ACCEPTANCE.md) |
-| Что проверено при ревизии документов? | [Отчёт](reports/DOCUMENTATION_REVIEW_20261011.md) |
+| Что проверено при ревизии документов? | [Текущая ревизия 15 октября](reports/DOCUMENTATION_REVIEW_20261015.md), [предыдущая ревизия 11 октября](reports/DOCUMENTATION_REVIEW_20261011.md) |
 | Где история и карта переносов? | [archive/README.md](archive/README.md), [реестр документов](registries/DOCUMENTS.csv) |
 
 Папки: `contracts/` — действующие тематические договоры; `plans/` — очередь и приёмка; `reports/` — результаты; `registries/` — реестры; `agent/` — краткий вход; `manual/` — пользовательские статьи; `audit/bytecode-only/` — текущий экспорт проверок; `archive/` — исторические материалы.

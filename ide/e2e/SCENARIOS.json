@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 418,
+  "count": 419,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -1686,6 +1686,11 @@
       "id": "graphics-open-foreground",
       "spec": "graphics-foreground.spec.js",
       "name": "SCREEN и CANVAS сразу выходят на передний план при запуске"
+    },
+    {
+      "id": "graphics-input-native-lifecycle",
+      "spec": "graphics-input.spec.js",
+      "name": "SCREEN: нативный INPUT сохраняет фокус, закрывает запрос и повторяет неверное число"
     },
     {
       "id": "graphics-screen-directx-pages-input",

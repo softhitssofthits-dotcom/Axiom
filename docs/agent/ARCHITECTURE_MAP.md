@@ -16,7 +16,8 @@
 | Связь и восстановление | `ide/src/main/backend-client.js`, `backend-ipc.js`, `recovery-store.js` |
 | Редактор и документы | `ide/src/renderer/app.js`, `documents.js`, `document-save.js` |
 | Вывод и ввод | `ide/src/renderer/execution-controller.js`, `program-keys.js` |
-| Графика и трассировка | `ide/src/renderer/canvas.js`, `trace-controller.js` |
+| Нативная графика | `src/Axiom.Ide.Backend/Graphics/`, `Services/Graphics/`, `src/Axiom.DesktopHost/` |
+| Трассировка и состояние графики | `ide/src/renderer/trace-controller.js`, `execution-controller.js` |
 | Элементы управления | `ide/src/renderer/ui-controls.js`, `design-system.css` |
 | Electron-приёмка | `ide/e2e/specs/`, `SCENARIOS.json` |
 | Проверки служебных модулей | `ide/tests/`, `tests/` |

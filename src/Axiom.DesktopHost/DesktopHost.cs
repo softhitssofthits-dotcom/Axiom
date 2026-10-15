@@ -81,9 +81,16 @@ internal sealed class DesktopHost : IDisposable
             {
                 _inputRequestId = (++_inputCounter).ToString();
                 Event("execution.state", new { state = "WaitingForInput" });
-                Event("input.request", new { inputRequestId = _inputRequestId, prompt = _console.CurrentPromptText, outputText = _console.OutputText });
+                Event("input.request", new { inputRequestId = _inputRequestId, prompt = _console.CurrentPromptText,
+                    outputText = _console.OutputText, target = _console.IsScreenOutputActive ? "screen" : "console" });
             }
-            else _inputRequestId = null;
+            else
+            {
+                var completedRequestId = _inputRequestId;
+                _inputRequestId = null;
+                if (completedRequestId is not null)
+                    Event("input.completed", new { inputRequestId = completedRequestId });
+            }
         };
     }
 
@@ -194,7 +201,6 @@ internal sealed class DesktopHost : IDisposable
                     RequireSession(request);
                     if (_inputRequestId is null || String(payload, "inputRequestId") != _inputRequestId || !_console.IsWaitingForInput)
                         throw new HostError("INVALID_INPUT", "Запрос ввода уже завершён.");
-                    _inputRequestId = null;
                     _console.CurrentInputText = String(payload, "text") ?? throw new HostError("INVALID_REQUEST", "Отсутствует текст ввода.");
                     _console.SubmitInput(); Respond(id, new { accepted = true }); break;
                 case "debug.continue": case "debug.stepOver": case "debug.stepInto": case "debug.stepOut": case "debug.stepBack":
@@ -349,8 +355,8 @@ internal sealed class DesktopHost : IDisposable
     private void Cancel()
     {
         _cancel?.Cancel();
-        _inputRequestId = null;
         if (_console.IsWaitingForInput) _console.CancelPendingInput();
+        _inputRequestId = null;
         if (_console.IsCanvasActive) _console.DeactivateScreen();
         if (_debugger is not null && !_working)
         {

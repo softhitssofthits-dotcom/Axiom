@@ -16,3 +16,7 @@
 - [x] Обновить архитектуру, спецификацию, справочник, реестры и журнал; повысить только фактически затронутые компоненты, зафиксировать результаты.
 
 Основные файлы: src/Axiom.Ide.Backend/Graphics/CanvasGpuSurface*.cs, CanvasGpuShaders.cs, CanvasRenderSession.cs; Services/Graphics/GraphicsHostService*.cs; DesktopHost.cs; tests/Axiom.Ide.Tests/ScreenGpuSurfaceTests.cs; ide/e2e/specs/graphics-lifecycle.spec.js. Все MSBuild-команды выполняются последовательно.
+
+## Публикация
+
+Перенос опубликован в origin/master коммитом 719d35a91250246a48499fda86d1d94f72779fc0. Последующее исправление жизненного цикла нативного INPUT и ревизия документов выполняются отдельно в IDE 0.6.1; этот завершённый план не требует повторной реализации переноса.

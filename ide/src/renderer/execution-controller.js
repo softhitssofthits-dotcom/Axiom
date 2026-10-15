@@ -1,13 +1,13 @@
 class ExecutionController {
   constructor(ide, api) {
     this.ide = ide; this.api = api; this.sessionId = null; this.stopId = null;
-    this.inputRequestId = null; this.inputText = ''; this.inputPrompt = ''; this.outputText = ''; this.streamedOutputText = ''; this.pendingEvents = [];
+    this.inputRequestId = null; this.inputTarget = null; this.inputText = ''; this.inputPrompt = ''; this.outputText = ''; this.streamedOutputText = ''; this.pendingEvents = [];
     this.disposers = [api.onBackendEvent(message => this.event(message)),
       api.onBackendFault(fault => this.fault(fault.message))];
   }
   async start(file, launchKind = 'run', breakpoints = [], stopFirst = true) {
     const ide = this.ide;
-    ide.running = true; this.starting = true; this.pendingStop = false; this.pendingEvents = []; this.outputText = ''; this.streamedOutputText = ''; this.clearedOutputPrefix = ''; this.inputPrompt = ''; this.inputText = ''; this.inputRequestId = null; this.stopId = null;
+    ide.running = true; this.starting = true; this.pendingStop = false; this.pendingEvents = []; this.outputText = ''; this.streamedOutputText = ''; this.clearedOutputPrefix = ''; this.inputPrompt = ''; this.inputText = ''; this.inputRequestId = null; this.inputTarget = null; this.stopId = null;
     this.canStepBack=false;this.callDepth=0;this.line=null;this.debugBusy=false;ide.trace?.clearMarker();ide.trace?.update();
     ide._stopRequested = false; ide.clearDiagnostics(); ide.showPanel(); ide.switchPanel('console');
     ide.setStatus(I18N.t('trace.preparing'));
@@ -23,7 +23,7 @@ class ExecutionController {
     for (const event of this.pendingEvents) this.event(event);
     this.pendingEvents = [];
     if (this.pendingStop && this.sessionId) await this.stop();
-    if(this.stopId) ide.editor.focus(); else ide.term.focus();
+    if(this.stopId) ide.editor.focus(); else if (this.inputTarget !== 'screen') ide.term.focus();
   }
   event(message) {
     if (this.starting) { this.pendingEvents.push(message); return; }
@@ -42,8 +42,15 @@ class ExecutionController {
         this.renderOutput(); this.api.acknowledgeOutput(this.sessionId, payload.outputVersion); break;
       case 'input.request':
         this.inputRequestId = payload.inputRequestId; this.inputText = ''; this.inputPrompt = payload.prompt;
+        this.inputTarget = payload.target || 'console';
         this.outputText = payload.outputText; this.renderOutput();
-        this.ide.term.focus(); break;
+        if (this.inputTarget !== 'screen') this.ide.term.focus();
+        break;
+      case 'input.completed':
+        if (payload.inputRequestId !== this.inputRequestId) break;
+        this.inputRequestId = null; this.inputPrompt = ''; this.inputText = ''; this.inputTarget = null;
+        this.renderOutput(); this.ide.setStatus(I18N.t('status.running'));
+        break;
       case 'debug.paused':
         this.callDepth=payload.callDepth;this.line=payload.line;this.ide.trace?.mark(payload);
         this.stopId = payload.stopId; this.canStepBack = payload.canStepBack;
@@ -57,7 +64,7 @@ class ExecutionController {
         break;
       case 'graphics.error': this.fault(payload.message); break;
       case 'execution.finished':
-        this.inputRequestId = null; this.inputPrompt = ''; this.inputText = '';
+        this.inputRequestId = null; this.inputTarget = null; this.inputPrompt = ''; this.inputText = '';
         this.outputText = payload.outputText; this.renderOutput();
         this.ide.running = false; this.inputRequestId = null; this.stopId = null; this.sessionId = null;
         this.ide.setStatus(I18N.t(({Succeeded:'status.finished',Cancelled:'status.stopped',CompilationFailed:'trace.compileFailed',RuntimeFailed:'trace.runtimeFailed'})[payload.status] || 'trace.failed'));
