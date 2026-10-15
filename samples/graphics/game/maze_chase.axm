@@ -1,19 +1,22 @@
-' maze_chase — живой пример современного графического слоя Axiom.                              ' Этот пример показывает камеру, спрайты, HUD и игровой цикл.
-' В одном файле собраны CANVAS, кадровый цикл, камера, спрайты, примитивы и HUD.              ' Так удобнее видеть всю игровую механику целиком.
+' maze_chase — живой пример современного графического слоя Axiom.                              ' Пример показывает карту, актёров, поиск пути и игровой цикл.
+' CANVAS выводит фон и спрайты, а симуляция работает с клеточной картой.                        ' Калибровка точек хранится в отдельном текстовом файле.
 ' Управление: стрелки ведут героя, SPACE ставит паузу, ESC завершает пример.                  ' Подсказка сразу объясняет, как запускать и проверять программу.
 
-Dim TILE As Integer = 16                                                                        ' Размер одной логической клетки лабиринта в пикселях.
-Dim VIEW_WIDTH As Integer = 1024                                                                ' Широкий холст даёт нормальное окно без ощущения вытянутого поля.
-Dim VIEW_HEIGHT As Integer = 660                                                                ' Высота холста вмещает весь лабиринт и HUD без ручного сдвига подложки.
-Dim HUD_HEIGHT As Integer = 30 ' Высота верхней панели со счётом и подсказкой.
+Const TILE As Integer = 16                                                                      ' Размер одной логической клетки лабиринта в пикселях.
+Const VIEW_WIDTH As Integer = 1024                                                              ' Широкий холст даёт нормальное окно без ощущения вытянутого поля.
+Const VIEW_HEIGHT As Integer = 660                                                              ' Высота холста вмещает весь лабиринт и HUD без ручного сдвига подложки.
+Const HUD_HEIGHT As Integer = 30                                                                ' Высота верхней панели со счётом и подсказкой.
 
-Dim PLAYER_SPEED As Integer = 4                                                                 ' Скорость героя в пикселях за кадр.
-Dim GHOST_SPEED As Integer = 3                                                                  ' Скорость призрака в пикселях за кадр.
+Const PLAYER_SPEED As Integer = 4                                                               ' Скорость героя в пикселях за фиксированный шаг симуляции.
+Const GHOST_SPEED As Integer = 3                                                                ' Скорость призрака в пикселях за фиксированный шаг симуляции.
+Const FIXED_STEP_SECONDS As Double = 0.0166666667                                               ' Частота симуляции близка к 60 шагам в секунду.
+Const MAX_FRAME_DELTA_SECONDS As Double = 0.1                                                   ' Ограничиваем догоняющие шаги после долгой паузы окна.
+Const MAX_CATCH_UP_STEPS As Integer = 6                                                         ' Не выполняем больше шести шагов за один показ кадра.
 
-Dim DIR_LEFT As Integer = 1                                                                     ' Код направления влево.
-Dim DIR_RIGHT As Integer = 2                                                                    ' Код направления вправо.
-Dim DIR_UP As Integer = 3                                                                       ' Код направления вверх.
-Dim DIR_DOWN As Integer = 4                                                                     ' Код направления вниз.
+Const DIR_LEFT As Integer = 1                                                                   ' Код направления влево.
+Const DIR_RIGHT As Integer = 2                                                                  ' Код направления вправо.
+Const DIR_UP As Integer = 3                                                                     ' Код направления вверх.
+Const DIR_DOWN As Integer = 4                                                                   ' Код направления вниз.
 
 Dim WALL_FILL_COLOR As Integer = Rgb(12, 40, 118)                                              ' Цвет заливки стен, оставлен как часть палитры примера.
 Dim WALL_LIGHT_COLOR As Integer = Rgb(90, 214, 255)                                            ' Светлая голубая линия для HUD и декоративных контуров.
@@ -30,40 +33,39 @@ Dim CALIBRATION_PANEL_X As Integer = 8                                          
 Dim CALIBRATION_PANEL_Y As Integer = 88                                                        ' Верхняя координата боковой панели, чтобы она не закрывала верх поля.
 Dim CALIBRATION_PANEL_WIDTH As Integer = 264                                                    ' Ширина боковой панели с подсказками.
 Dim CALIBRATION_PANEL_HEIGHT As Integer = 172                                                   ' Высота боковой панели увеличена, чтобы длинный статус помещался в две строки.
-Dim CALIBRATION_GRID_STEP As Integer = 8                                                        ' Шаг мелкой сетки в пикселях, как в тетрадке по математике.
+Const CALIBRATION_GRID_STEP As Integer = 8                                                      ' Шаг мелкой сетки в пикселях, как в тетрадке по математике.
 
-Dim CALIBRATION_ROW_MODE As Integer = 1                                                        ' Код режима, в котором двигаем вертикальное положение выбранной строки.
-Dim CALIBRATION_COL_MODE As Integer = 2                                                        ' Код режима, в котором двигаем горизонтальное положение выбранного столбца.
+Const CALIBRATION_ROW_MODE As Integer = 1                                                      ' Код режима, в котором двигаем вертикальное положение выбранной строки.
+Const CALIBRATION_COL_MODE As Integer = 2                                                      ' Код режима, в котором двигаем горизонтальное положение выбранного столбца.
 
-Dim maze(1 To 36) As String                                                                     ' Массив строк, в котором хранится логическая карта лабиринта.
-Dim mazeRows As Integer = 36                                                                    ' Количество строк логической карты.
+Const MAZE_ROWS As Integer = 36                                                                 ' Число строк логической карты.
+Const MAZE_COLUMNS As Integer = 28                                                              ' Число столбцов логической карты.
+Dim maze(1 To MAZE_ROWS) As String                                                              ' Массив строк, в котором хранится логическая карта лабиринта.
 Dim mazeCols As Integer = 0                                                                     ' Количество столбцов логической карты, вычисляется после загрузки.
 
 Dim mazeBackground As Image                                                                     ' Фоновая картинка лабиринта, которую мы рисуем как эталонный контур.
 Dim playerFrames(1 To 12) As Sprite                                                            ' Набор кадров героя: 4 направления по 3 кадра.
 Dim ghostSprite As Sprite                                                                       ' Спрайт призрака, который гонится за героем.
 
-Dim pelletCenterRows(1 To 36) As Integer                                                        ' Таблица вертикальных центров проходов по строкам лабиринта.
-Dim pelletCenterCols(1 To 28) As Integer                                                        ' Таблица горизонтальных центров проходов по столбцам лабиринта.
+Dim pelletRowOffset(1 To MAZE_ROWS) As Integer                                                  ' Вертикальная поправка к началу клетки для выравнивания с картинкой.
+Dim pelletColOffset(1 To MAZE_COLUMNS) As Integer                                               ' Горизонтальная поправка к началу клетки для выравнивания с картинкой.
 
 Dim playerStartCol As Integer                                                                   ' Стартовый столбец героя на логической сетке.
 Dim playerStartRow As Integer                                                                   ' Стартовая строка героя на логической сетке.
 Dim ghostStartCol As Integer                                                                    ' Стартовый столбец призрака на логической сетке.
 Dim ghostStartRow As Integer                                                                    ' Стартовая строка призрака на логической сетке.
 
-Dim playerCol As Integer                                                                        ' Текущий столбец героя.
-Dim playerRow As Integer                                                                        ' Текущая строка героя.
-Dim playerDir As Integer                                                                        ' Текущее фактическое направление героя.
-Dim playerWantDir As Integer                                                                    ' Желаемое направление героя, выбранное клавишами.
-Dim playerFacing As Integer                                                                     ' Направление, куда герой смотрит спрайтом.
-Dim playerTravel As Integer                                                                     ' Сколько пикселей герой уже прошёл внутри текущей клетки.
-Dim playerAnimStep As Integer                                                                   ' Текущий шаг анимации рта героя.
-
-Dim ghostCol As Integer                                                                         ' Текущий столбец призрака.
-Dim ghostRow As Integer                                                                         ' Текущая строка призрака.
-Dim ghostDir As Integer                                                                         ' Текущее фактическое направление призрака.
-Dim ghostWantDir As Integer                                                                     ' Желаемое направление призрака, которое выбирает простая логика погони.
-Dim ghostTravel As Integer                                                                      ' Сколько пикселей призрак уже прошёл внутри текущей клетки.
+Type Walker                                                                                     ' Общие клеточные координаты и направление любого движущегося персонажа.
+    tileCol As Integer
+    tileRow As Integer
+    dir As Integer
+    wantedDir As Integer
+    facing As Integer
+    travel As Integer
+    animationStep As Integer
+End Type
+Dim player As Walker                                                                            ' Состояние героя меняется общей процедурой движения.
+Dim ghost As Walker                                                                             ' Состояние призрака использует ту же модель перемещения.
 
 Dim pelletsLeft As Integer                                                                      ' Сколько точек осталось на карте.
 Dim score As Integer                                                                            ' Сколько очков уже набрал игрок.
@@ -73,6 +75,19 @@ Dim worldHeightPixels As Integer                                                
 Dim exitRequested As Boolean = False                                                            ' Флаг ручного выхода из программы по ESC.
 Dim finished As Boolean = False                                                                 ' Флаг завершения партии по победе или проигрышу.
 Dim paused As Boolean = False                                                                   ' Флаг паузы: TRUE означает, что игра временно остановлена.
+Dim mazeErrorMessage As String = ""                                                            ' Ошибка структуры карты не допускает запуск игровой логики.
+Dim calibrationErrorMessage As String = ""                                                     ' Ошибка калибровки оставляет встроенные значения по умолчанию.
+Dim previousFrameTime As Double = 0                                                             ' Предыдущее показание часов для ограниченного шага симуляции.
+Dim frameDeltaSeconds As Double = 0                                                            ' Время между показами кадра после проверки скачков часов.
+Dim simulationAccumulator As Double = 0                                                        ' Накопленное время для независимых от отрисовки шагов игры.
+Dim currentFrameTime As Double = 0                                                             ' Текущее показание TIMER для расчёта прошедшего времени.
+Dim parsedRowValues(1 TO MAZE_ROWS) As Integer                                                 ' Проверенные значения смещения строк из внешнего файла.
+Dim parsedColValues(1 TO MAZE_COLUMNS) As Integer                                              ' Проверенные значения смещения столбцов из внешнего файла.
+Dim parsedRowSeen(1 TO MAZE_ROWS) As Integer                                                   ' Флаги найденных строк таблицы калибровки.
+Dim parsedColSeen(1 TO MAZE_COLUMNS) As Integer                                                ' Флаги найденных столбцов таблицы калибровки.
+Dim calibrationText As String = ""                                                            ' Текст внешнего снимка калибровки.
+Dim calibrationLines() As String                                                               ' Строки внешнего снимка калибровки.
+Dim calibrationParseError As String = ""                                                      ' Ошибка разбора внешней таблицы калибровки.
 Dim statusText As String = "Стрелки ведут героя. SPACE пауза. ESC выход."                      ' Текст подсказки и игровых сообщений в HUD.
 Dim calibrationMode As Boolean = False                                                         ' Флаг ручной калибровки: TRUE означает, что стрелки двигают точки, а не героя.
 Dim calibrationTarget As Integer = CALIBRATION_ROW_MODE                                        ' Что сейчас калибруем: строку точек или столбец точек.
@@ -85,11 +100,21 @@ Dim calibrationStatusTextLine2 As String = "r линия. t вся таблиц�
 LoadResources()                                                                                 ' Загружаем фон лабиринта и спрайты персонажей.
 InitPelletAlignment()                                                                           ' Настраиваем реальные центры проходов, чтобы точки легли в тоннели картинки.
 InitCalibrationFile()                                                                           ' Готовим путь к файлу рядом с игрой, куда будем складывать ручные значения калибровки.
+LoadPelletAlignment()                                                                           ' При наличии полного снимка используем его вместо встроенных значений.
 InitMaze()                                                                                      ' Загружаем текстовую схему карты и считаем стартовые точки.
-ResetActors()                                                                                   ' Ставим героя и призрака в их начальные позиции.
+If mazeErrorMessage = "" Then                                                                  ' Стартовые координаты безопасны только после проверки карты.
+    ResetActors()                                                                               ' Ставим героя и призрака в их начальные позиции.
+Else                                                                                            ' При неверной карте пропускаем игровой цикл.
+    exitRequested = True                                                                        ' Не запускаем перемещение по некорректной схеме.
+End If                                                                                          ' Завершаем обработку результата проверки карты.
+If calibrationParseError <> "" Then
+    statusText = "Калибровка не загружена: " + calibrationParseError ' Ошибка файла оставляет встроенные значения по умолчанию.
+End If
 
 worldWidthPixels = mazeCols * TILE                                                              ' Переводим ширину карты из клеток в пиксели.
-worldHeightPixels = mazeRows * TILE                                                             ' Переводим высоту карты из клеток в пиксели.
+worldHeightPixels = MAZE_ROWS * TILE                                                             ' Переводим высоту карты из клеток в пиксели.
+previousFrameTime = TIMER()                                                                     ' Запоминаем начало измерения игрового времени.
+simulationAccumulator = FIXED_STEP_SECONDS                                                     ' Первый шаг симуляции доступен сразу.
 
 Smooth On
 
@@ -98,6 +123,16 @@ Canvas VIEW_WIDTH, VIEW_HEIGHT                                                  
 Do While Not exitRequested                                                                      ' Главный игровой цикл продолжается, пока игрок не попросит выход.
     Beginframe                                                                                  ' Начинаем новый кадр современного графического холста.
     Cls BACKGROUND_COLOR                                                                        ' Очищаем фон кадра перед рисованием.
+
+    currentFrameTime = TIMER()                                                                  ' Берём показание часов один раз на кадр.
+    frameDeltaSeconds = currentFrameTime - previousFrameTime                                    ' Считаем время, прошедшее с предыдущего кадра.
+    previousFrameTime = currentFrameTime                                                        ' Сохраняем показание для следующего кадра.
+    If frameDeltaSeconds < 0 Then
+        frameDeltaSeconds = 0                                                                  ' TIMER сбрасывается в полночь, поэтому отрицательное время игнорируем.
+    End If
+    If frameDeltaSeconds > MAX_FRAME_DELTA_SECONDS Then
+        frameDeltaSeconds = MAX_FRAME_DELTA_SECONDS                                             ' Ограничиваем скачки часов и возврат после блокировки окна.
+    End If
 
     If CalibrationHotKeyPressed("K") Then                                                       ' Если нажали K или k...
         calibrationMode = Not calibrationMode                                                   ' ...включаем или выключаем режим ручной калибровки точек.
@@ -117,37 +152,22 @@ Do While Not exitRequested                                                      
         paused = Not paused                                                                     ' ...переключаем паузу туда или обратно.
     End If                                                                                      ' Завершаем обработку клавиши паузы.
 
-    If Not finished And Not paused And Not calibrationMode Then                                  ' Пока игра не закончилась, не стоит на паузе и не калибруется, обновляем механику.
-        UpdatePlayerInput()                                                                     ' Считываем клавиши и записываем желаемое направление героя.
-        StepWalker(playerCol, playerRow, playerDir, playerWantDir, playerTravel, PLAYER_SPEED) ' Двигаем героя по сетке с учётом стены и пиксельного остатка.
-
-        If playerDir <> 0 Then                                                                  ' Если герой реально движется...
-            playerFacing = playerDir                                                            ' ...поворачиваем его спрайт в это направление.
-        End If                                                                                  ' Завершаем обновление направления взгляда.
-
-        UpdatePlayerAnimation()                                                                 ' Обновляем фазу анимации рта героя.
-        EatPelletIfNeeded()                                                                     ' Проверяем, стоит ли герой на точке, и съедаем её.
-
-        UpdateGhostDecision()                                                                   ' В узлах карты выбираем новое направление для призрака.
-        StepWalker(ghostCol, ghostRow, ghostDir, ghostWantDir, ghostTravel, GHOST_SPEED)       ' Двигаем призрака той же общей процедурой.
-
-        If EntitiesOverlap() Then                                                               ' Если герой и призрак подошли слишком близко...
-            lives = lives - 1                                                                   ' ...уменьшаем число жизней.
-            If lives <= 0 Then                                                                  ' Если жизней больше не осталось...
-                finished = True                                                                 ' ...завершаем партию поражением.
-                statusText = "Жизни закончились. Нажмите ESC."                                 ' Показываем сообщение о проигрыше.
-            Else                                                                                ' Иначе у игрока ещё есть шанс продолжить.
-                statusText = "Призрак догнал героя. Позиции сброшены."                         ' Сообщаем о столкновении и новом старте.
-                ResetActors()                                                                   ' Возвращаем обоих персонажей на стартовые позиции.
-            End If                                                                              ' Завершаем обработку потери жизни.
-        End If                                                                                  ' Завершаем проверку столкновения.
-
-        If pelletsLeft = 0 Then                                                                 ' Если на карте не осталось точек...
-            finished = True                                                                     ' ...завершаем партию победой.
-            statusText = "Все точки собраны. Нажмите ESC."                                     ' Показываем сообщение о победе.
-        End If                                                                                  ' Завершаем проверку победы.
+    If Not finished And Not paused And Not calibrationMode Then                                 ' Пока игра активна, накапливаем время независимой симуляции.
+        simulationAccumulator = simulationAccumulator + frameDeltaSeconds                      ' Время отрисовки не меняет скорость персонажей.
+        For catchUpSteps = 1 To MAX_CATCH_UP_STEPS                                               ' Проверяем не больше шести возможных шагов.
+            If simulationAccumulator >= FIXED_STEP_SECONDS Then                                 ' Работаем только если накопилось полное время.
+                If Not finished Then                                                            ' После победы или поражения мир замораживается.
+                    UpdateGameStep()                                                            ' Выполняем один полный шаг игровой логики.
+                    simulationAccumulator = simulationAccumulator - FIXED_STEP_SECONDS          ' Списываем обработанный интервал.
+                End If                                                                          ' Завершаем проверку состояния партии.
+            End If                                                                              ' Завершаем проверку накопленного времени.
+        Next                                                                                    ' Переходим к следующей попытке догнать симуляцию.
+        If simulationAccumulator >= FIXED_STEP_SECONDS Then
+            simulationAccumulator = 0                                                           ' Сбрасываем лишнее время после достижения лимита.
+        End If
     Else                                                                                        ' Если партия завершена или стоит на паузе...
-        playerAnimStep = 0                                                                      ' ...останавливаем анимацию героя, чтобы он не жевал в паузе.
+        simulationAccumulator = 0                                                               ' После паузы не пытаемся ускоренно догонять игровое время.
+        player.animationStep = 0                                                                ' ...останавливаем анимацию героя, чтобы он не жевал в паузе.
     End If                                                                                      ' Завершаем обновление логики кадра.
 
     DrawMazeWorld()                                                                             ' Рисуем лабиринт, точки и персонажей в мировых координатах.
@@ -156,7 +176,7 @@ Do While Not exitRequested                                                      
     End If                                                                                      ' Завершаем рисование калибровочного слоя.
     DrawHud()                                                                                   ' Рисуем верхнюю информационную панель в экранных координатах.
     Present                                                                                     ' Показываем собранный кадр на экране.
-    Sleep 16                                                                                    ' Делаем короткую паузу, чтобы цикл шёл спокойно и предсказуемо.
+    Sleep 1                                                                                     ' Отдаём процессор ОС; скорость игры задаёт фиксированный шаг выше.
 
     If Keypress("ESC") Then                                                                     ' Если в этом кадре нажали ESC...
         exitRequested = True                                                                    ' ...запрашиваем выход из главного цикла.
@@ -164,6 +184,38 @@ Do While Not exitRequested                                                      
 Loop                                                                                            ' Возвращаемся к следующему кадру.
 
 Screen 0                                                                                        ' Возвращаем обычный текстовый экран после выхода из игры.
+If mazeErrorMessage <> "" Then
+    PRINT "Ошибка карты Maze Chase: " + mazeErrorMessage                                         ' Показываем проверочную ошибку после закрытия графического режима.
+End If
+
+Sub UpdateGameStep()                                                                            ' Процедура выполняет один фиксированный шаг игровой логики.
+    UpdatePlayerInput()                                                                         ' Считываем клавиши и записываем желаемое направление героя.
+    StepWalker(player, PLAYER_SPEED, False)                                                     ' Двигаем героя по сетке с учётом стен и пиксельного остатка.
+
+    If player.dir <> 0 Then                                                                     ' Если герой реально движется...
+        player.facing = player.dir                                                              ' ...поворачиваем его спрайт в это направление.
+    End If                                                                                      ' Завершаем обновление направления взгляда.
+
+    UpdatePlayerAnimation()                                                                     ' Обновляем фазу анимации рта героя.
+    EatPelletIfNeeded()                                                                         ' Проверяем, стоит ли герой на точке, и съедаем её.
+    StepWalker(ghost, GHOST_SPEED, True)                                                        ' Двигаем призрака и выбираем путь в каждом центре клетки.
+
+    If EntitiesOverlap() Then                                                                   ' Если герой и призрак подошли слишком близко...
+        lives = lives - 1                                                                       ' ...уменьшаем число жизней.
+        If lives <= 0 Then                                                                      ' Если жизней больше не осталось...
+            finished = True                                                                     ' ...завершаем партию поражением.
+            statusText = "Жизни закончились. Нажмите ESC."                                     ' Показываем сообщение о проигрыше.
+        Else                                                                                    ' Иначе у игрока ещё есть шанс продолжить.
+            statusText = "Призрак догнал героя. Позиции сброшены."                             ' Сообщаем о столкновении и новом старте.
+            ResetActors()                                                                       ' Возвращаем обоих персонажей на стартовые позиции.
+        End If                                                                                  ' Завершаем обработку потери жизни.
+    End If                                                                                      ' Завершаем проверку столкновения.
+
+    If pelletsLeft = 0 Then                                                                     ' Если на карте не осталось точек...
+        finished = True                                                                         ' ...завершаем партию победой.
+        statusText = "Все точки собраны. Нажмите ESC."                                         ' Показываем сообщение о победе.
+    End If                                                                                      ' Завершаем проверку победы.
+End Sub                                                                                         ' Завершаем один шаг симуляции.
 
 Sub LoadResources()                                                                             ' Процедура загружает все графические ресурсы игры.
     mazeBackground = Loadimage("art/Background.gif")                                            ' Загружаем эталонный фон лабиринта из GIF-файла.
@@ -191,78 +243,252 @@ Sub InitCalibrationFile()                                                       
     calibrationFilePath = Combinepath(Currentdir(), "maze_chase_pellet_calibration.txt")       ' Запоминаем файл рядом с `maze_chase.axm`, куда R дописывает значения.
 End Sub                                                                                         ' Завершаем подготовку файла калибровки.
 
+Sub LoadPelletAlignment()                                                                       ' Процедура загружает только полный и проверенный снимок калибровки.
+    If Not FileExists(calibrationFilePath) Then
+        Return                                                                                  ' При отсутствии файла остаются встроенные значения.
+    End If
+
+    calibrationText = ReadFile(calibrationFilePath)                                             ' Читаем внешний файл, не изменяя исходник игры.
+    ParseCalibrationText(calibrationText)                                                        ' Проверяем структуру, диапазоны и полноту таблиц.
+    If calibrationParseError <> "" Then
+        Return                                                                                  ' Частичная или повреждённая таблица не применяется.
+    End If
+
+    For rowIndex = 1 To MAZE_ROWS                                                               ' Применяем только прошедшие полную проверку смещения.
+        pelletRowOffset(rowIndex) = parsedRowValues(rowIndex)
+    Next
+    For colIndex = 1 To MAZE_COLUMNS
+        pelletColOffset(colIndex) = parsedColValues(colIndex)
+    Next
+End Sub                                                                                         ' Завершаем чтение внешней калибровки.
+
+Sub ResetParsedCalibration()                                                                    ' Процедура очищает таблицы перед новым разбором файла.
+    calibrationParseError = ""                                                                  ' Сбрасываем прежнюю ошибку.
+    For rowIndex = 1 To MAZE_ROWS                                                               ' Очищаем значения и признаки строк.
+        parsedRowValues(rowIndex) = 0
+        parsedRowSeen(rowIndex) = 0
+    Next
+    For colIndex = 1 To MAZE_COLUMNS                                                            ' Очищаем значения и признаки столбцов.
+        parsedColValues(colIndex) = 0
+        parsedColSeen(colIndex) = 0
+    Next
+End Sub                                                                                         ' Завершаем очистку служебных таблиц.
+
+Sub ParseCalibrationText(sourceText As String)                                                  ' Процедура разбирает снимок построчно и отвергает неизвестные записи.
+    Dim currentCalibrationLine As String = ""
+    calibrationLines = Split(sourceText, Chr(10))                                               ' Поддерживаем обычные файлы с переводом строк LF или CRLF.
+    ResetParsedCalibration()                                                                    ' Каждое чтение начинает проверку с чистого состояния.
+
+    For lineIndex = 1 To ArrayLength(calibrationLines)                                          ' Идём по всем строкам файла.
+        currentCalibrationLine = Trim(TrimTrailingCr(calibrationLines(lineIndex)))             ' Убираем пробелы и CR в конце CRLF.
+        If currentCalibrationLine <> "" And Left(currentCalibrationLine, 1) <> "'" Then       ' Пропускаем пустые строки и комментарии.
+            If StartsWith(currentCalibrationLine, "pelletRowOffset(") Then                    ' Разбираем смещение каждой строки карты.
+                ApplyCalibrationLine(currentCalibrationLine, MAZE_ROWS, True)
+            ElseIf StartsWith(currentCalibrationLine, "pelletColOffset(") Then                ' Разбираем смещение каждого столбца карты.
+                ApplyCalibrationLine(currentCalibrationLine, MAZE_COLUMNS, False)
+            Else                                                                                ' Любая другая запись может скрывать опечатку.
+                calibrationParseError = "неизвестная строка: " + currentCalibrationLine
+            End If
+        End If
+        If calibrationParseError <> "" Then
+            Return                                                                              ' После первой ошибки дальнейший разбор не нужен.
+        End If
+    Next
+
+    For rowIndex = 1 To MAZE_ROWS                                                               ' Полный файл обязан содержать каждую строку ровно один раз.
+        If parsedRowSeen(rowIndex) = 0 Then
+            calibrationParseError = "нет pelletRowOffset(" + Trim(Str(rowIndex)) + ")."
+            Return
+        End If
+    Next
+    For colIndex = 1 To MAZE_COLUMNS                                                            ' Полный файл обязан содержать каждый столбец ровно один раз.
+        If parsedColSeen(colIndex) = 0 Then
+            calibrationParseError = "нет pelletColOffset(" + Trim(Str(colIndex)) + ")."
+            Return
+        End If
+    Next
+End Sub                                                                                         ' Завершаем строгий разбор файла.
+
+Sub ApplyCalibrationLine(lineText As String, maxIndex As Integer, isRowLine As Boolean)
+    Dim openPos As Integer = InStr(lineText, "(")
+    Dim closePos As Integer = InStr(lineText, ")")
+    Dim equalPos As Integer = InStr(lineText, "=")
+    Dim indexText As String = ""
+    Dim valueText As String = ""
+    Dim indexNumber As Double = 0
+    Dim valueNumber As Double = 0
+    Dim parsedIndex As Integer = 0
+
+    If openPos = 0 Or closePos <= openPos Or equalPos <= closePos Then
+        calibrationParseError = "повреждённая строка: " + lineText
+        Return
+    End If
+    indexText = Trim(Mid(lineText, openPos + 1, closePos - openPos - 1))
+    valueText = Trim(Mid(lineText, equalPos + 1, Len(lineText) - equalPos))
+    If Not IsNumeric(indexText) Or Not IsNumeric(valueText) Then
+        calibrationParseError = "ожидались целые числа: " + lineText
+        Return
+    End If
+
+    indexNumber = Val(indexText)
+    valueNumber = Val(valueText)
+    If indexNumber < 1 Or indexNumber > maxIndex Then
+        calibrationParseError = "индекс вне диапазона: " + lineText
+        Return
+    End If
+    If valueNumber < -2147483647 Or valueNumber > 2147483647 Then
+        calibrationParseError = "смещение слишком велико: " + lineText
+        Return
+    End If
+    If indexNumber <> Int(indexNumber) Or valueNumber <> Int(valueNumber) Then
+        calibrationParseError = "ожидались целые числа: " + lineText
+        Return
+    End If
+
+    parsedIndex = Int(indexNumber)
+    If isRowLine Then
+        If parsedRowSeen(parsedIndex) <> 0 Then
+            calibrationParseError = "повтор pelletRowOffset(" + Trim(Str(parsedIndex)) + ")."
+            Return
+        End If
+        parsedRowSeen(parsedIndex) = 1
+        parsedRowValues(parsedIndex) = Int(valueNumber)
+    Else
+        If parsedColSeen(parsedIndex) <> 0 Then
+            calibrationParseError = "повтор pelletColOffset(" + Trim(Str(parsedIndex)) + ")."
+            Return
+        End If
+        parsedColSeen(parsedIndex) = 1
+        parsedColValues(parsedIndex) = Int(valueNumber)
+    End If
+End Sub                                                                                         ' Завершаем проверку одной строки.
+
+Function TrimTrailingCr(inputText As String) As String                                         ' Функция убирает CR после разбиения CRLF по LF.
+    If Len(inputText) > 0 Then
+        If Asc(Right(inputText, 1)) = 13 Then
+            Return Left(inputText, Len(inputText) - 1)
+        End If
+    End If
+    Return inputText
+End Function                                                                                    ' Завершаем удаление хвостового CR.
+
 Sub InitPelletAlignment()                                                                       ' Процедура задаёт реальные центры тоннелей на фоне лабиринта.
     ' Здесь мы задаём высоту точек по строкам карты.                                            ' Больше число = точка ниже. Меньше число = точка выше.
     ' Эти числа удобно крутить вручную и сразу смотреть результат в IDE.                        ' Так проще попасть в центр тоннеля по картинке.
-    pelletCenterRows(1) = -37                                                                   ' Значение строки 1 полностью перенесено из файла калибровки.
-    pelletCenterRows(2) = -37                                                                   ' Значение строки 2 полностью перенесено из файла калибровки.
-    pelletCenterRows(3) = -37                                                                   ' Значение строки 3 полностью перенесено из файла калибровки.
-    pelletCenterRows(4) = -34                                                                   ' Значение строки 4 полностью перенесено из файла калибровки.
-    pelletCenterRows(5) = -33                                                                   ' Значение строки 5 полностью перенесено из файла калибровки.
-    pelletCenterRows(6) = -23                                                                   ' Значение строки 6 полностью перенесено из файла калибровки.
-    pelletCenterRows(7) = -19                                                                   ' Значение строки 7 полностью перенесено из файла калибровки.
-    pelletCenterRows(8) = -16                                                                   ' Значение строки 8 полностью перенесено из файла калибровки.
-    pelletCenterRows(9) = -15                                                                   ' Значение строки 9 полностью перенесено из файла калибровки.
-    pelletCenterRows(10) = -8                                                                   ' Значение строки 10 полностью перенесено из файла калибровки.
-    pelletCenterRows(11) = -3                                                                   ' Значение строки 11 полностью перенесено из файла калибровки.
-    pelletCenterRows(12) = 1                                                                   ' Значение строки 12 полностью перенесено из файла калибровки.
-    pelletCenterRows(13) = 2                                                                   ' Значение строки 13 полностью перенесено из файла калибровки.
-    pelletCenterRows(14) = 1                                                                   ' Значение строки 14 полностью перенесено из файла калибровки.
-    pelletCenterRows(15) = 2                                                                   ' Значение строки 15 полностью перенесено из файла калибровки.
-    pelletCenterRows(16) = 7                                                                   ' Значение строки 16 полностью перенесено из файла калибровки.
-    pelletCenterRows(17) = 10                                                                   ' Значение строки 17 полностью перенесено из файла калибровки.
-    pelletCenterRows(18) = 15                                                                   ' Значение строки 18 полностью перенесено из файла калибровки.
-    pelletCenterRows(19) = 14                                                                   ' Значение строки 19 полностью перенесено из файла калибровки.
-    pelletCenterRows(20) = 14                                                                   ' Значение строки 20 полностью перенесено из файла калибровки.
-    pelletCenterRows(21) = 13                                                                   ' Значение строки 21 полностью перенесено из файла калибровки.
-    pelletCenterRows(22) = 20                                                                   ' Значение строки 22 полностью перенесено из файла калибровки.
-    pelletCenterRows(23) = 21                                                                   ' Значение строки 23 полностью перенесено из файла калибровки.
-    pelletCenterRows(24) = 26                                                                   ' Значение строки 24 полностью перенесено из файла калибровки.
-    pelletCenterRows(25) = 26                                                                   ' Значение строки 25 полностью перенесено из файла калибровки.
-    pelletCenterRows(26) = 24                                                                   ' Значение строки 26 полностью перенесено из файла калибровки.
-    pelletCenterRows(27) = 27                                                                   ' Значение строки 27 полностью перенесено из файла калибровки.
-    pelletCenterRows(28) = 33                                                                   ' Значение строки 28 полностью перенесено из файла калибровки.
-    pelletCenterRows(29) = 40                                                                   ' Значение строки 29 полностью перенесено из файла калибровки.
-    pelletCenterRows(30) = 42                                                                   ' Значение строки 30 полностью перенесено из файла калибровки.
-    pelletCenterRows(31) = 42                                                                   ' Значение строки 31 полностью перенесено из файла калибровки.
-    pelletCenterRows(32) = 40                                                                   ' Значение строки 32 полностью перенесено из файла калибровки.
-    pelletCenterRows(33) = 38                                                                   ' Значение строки 33 полностью перенесено из файла калибровки.
-    pelletCenterRows(34) = -37                                                                   ' Значение строки 34 полностью перенесено из файла калибровки.
-    pelletCenterRows(35) = -37                                                                   ' Значение строки 35 полностью перенесено из файла калибровки.
-    pelletCenterRows(36) = -37                                                                   ' Значение строки 36 полностью перенесено из файла калибровки.
+    pelletRowOffset(1) = -37                                                                   ' Значение строки 1 полностью перенесено из файла калибровки.
+    pelletRowOffset(2) = -37                                                                   ' Значение строки 2 полностью перенесено из файла калибровки.
+    pelletRowOffset(3) = -37                                                                   ' Значение строки 3 полностью перенесено из файла калибровки.
+    pelletRowOffset(4) = -34                                                                   ' Значение строки 4 полностью перенесено из файла калибровки.
+    pelletRowOffset(5) = -33                                                                   ' Значение строки 5 полностью перенесено из файла калибровки.
+    pelletRowOffset(6) = -23                                                                   ' Значение строки 6 полностью перенесено из файла калибровки.
+    pelletRowOffset(7) = -19                                                                   ' Значение строки 7 полностью перенесено из файла калибровки.
+    pelletRowOffset(8) = -16                                                                   ' Значение строки 8 полностью перенесено из файла калибровки.
+    pelletRowOffset(9) = -15                                                                   ' Значение строки 9 полностью перенесено из файла калибровки.
+    pelletRowOffset(10) = -8                                                                   ' Значение строки 10 полностью перенесено из файла калибровки.
+    pelletRowOffset(11) = -3                                                                   ' Значение строки 11 полностью перенесено из файла калибровки.
+    pelletRowOffset(12) = 1                                                                   ' Значение строки 12 полностью перенесено из файла калибровки.
+    pelletRowOffset(13) = 2                                                                   ' Значение строки 13 полностью перенесено из файла калибровки.
+    pelletRowOffset(14) = 1                                                                   ' Значение строки 14 полностью перенесено из файла калибровки.
+    pelletRowOffset(15) = 2                                                                   ' Значение строки 15 полностью перенесено из файла калибровки.
+    pelletRowOffset(16) = 7                                                                   ' Значение строки 16 полностью перенесено из файла калибровки.
+    pelletRowOffset(17) = 10                                                                   ' Значение строки 17 полностью перенесено из файла калибровки.
+    pelletRowOffset(18) = 15                                                                   ' Значение строки 18 полностью перенесено из файла калибровки.
+    pelletRowOffset(19) = 14                                                                   ' Значение строки 19 полностью перенесено из файла калибровки.
+    pelletRowOffset(20) = 14                                                                   ' Значение строки 20 полностью перенесено из файла калибровки.
+    pelletRowOffset(21) = 13                                                                   ' Значение строки 21 полностью перенесено из файла калибровки.
+    pelletRowOffset(22) = 20                                                                   ' Значение строки 22 полностью перенесено из файла калибровки.
+    pelletRowOffset(23) = 21                                                                   ' Значение строки 23 полностью перенесено из файла калибровки.
+    pelletRowOffset(24) = 26                                                                   ' Значение строки 24 полностью перенесено из файла калибровки.
+    pelletRowOffset(25) = 26                                                                   ' Значение строки 25 полностью перенесено из файла калибровки.
+    pelletRowOffset(26) = 24                                                                   ' Значение строки 26 полностью перенесено из файла калибровки.
+    pelletRowOffset(27) = 27                                                                   ' Значение строки 27 полностью перенесено из файла калибровки.
+    pelletRowOffset(28) = 33                                                                   ' Значение строки 28 полностью перенесено из файла калибровки.
+    pelletRowOffset(29) = 40                                                                   ' Значение строки 29 полностью перенесено из файла калибровки.
+    pelletRowOffset(30) = 42                                                                   ' Значение строки 30 полностью перенесено из файла калибровки.
+    pelletRowOffset(31) = 42                                                                   ' Значение строки 31 полностью перенесено из файла калибровки.
+    pelletRowOffset(32) = 40                                                                   ' Значение строки 32 полностью перенесено из файла калибровки.
+    pelletRowOffset(33) = 38                                                                   ' Значение строки 33 полностью перенесено из файла калибровки.
+    pelletRowOffset(34) = -37                                                                   ' Значение строки 34 полностью перенесено из файла калибровки.
+    pelletRowOffset(35) = -37                                                                   ' Значение строки 35 полностью перенесено из файла калибровки.
+    pelletRowOffset(36) = -37                                                                   ' Значение строки 36 полностью перенесено из файла калибровки.
 
     ' Здесь мы задаём положение точек по столбцам карты.                                        ' Больше число = точка правее. Меньше число = точка левее.
-    pelletCenterCols(1) = 11                                                                    ' Значение столбца 1 полностью перенесено из файла калибровки.
-    pelletCenterCols(2) = 11                                                                    ' Значение столбца 2 полностью перенесено из файла калибровки.
-    pelletCenterCols(3) = 13                                                                    ' Значение столбца 3 полностью перенесено из файла калибровки.
-    pelletCenterCols(4) = 18                                                                    ' Значение столбца 4 полностью перенесено из файла калибровки.
-    pelletCenterCols(5) = 15                                                                    ' Значение столбца 5 полностью перенесено из файла калибровки.
-    pelletCenterCols(6) = 14                                                                    ' Значение столбца 6 полностью перенесено из файла калибровки.
-    pelletCenterCols(7) = 16                                                                    ' Значение столбца 7 полностью перенесено из файла калибровки.
-    pelletCenterCols(8) = 14                                                                    ' Значение столбца 8 полностью перенесено из файла калибровки.
-    pelletCenterCols(9) = 11                                                                    ' Значение столбца 9 полностью перенесено из файла калибровки.
-    pelletCenterCols(10) = 12                                                                    ' Значение столбца 10 полностью перенесено из файла калибровки.
-    pelletCenterCols(11) = 11                                                                    ' Значение столбца 11 полностью перенесено из файла калибровки.
-    pelletCenterCols(12) = 12                                                                    ' Значение столбца 12 полностью перенесено из файла калибровки.
-    pelletCenterCols(13) = 11                                                                    ' Значение столбца 13 полностью перенесено из файла калибровки.
-    pelletCenterCols(14) = 11                                                                    ' Значение столбца 14 полностью перенесено из файла калибровки.
-    pelletCenterCols(15) = 7                                                                    ' Значение столбца 15 полностью перенесено из файла калибровки.
-    pelletCenterCols(16) = 6                                                                    ' Значение столбца 16 полностью перенесено из файла калибровки.
-    pelletCenterCols(17) = 6                                                                    ' Значение столбца 17 полностью перенесено из файла калибровки.
-    pelletCenterCols(18) = 3                                                                    ' Значение столбца 18 полностью перенесено из файла калибровки.
-    pelletCenterCols(19) = 4                                                                    ' Значение столбца 19 полностью перенесено из файла калибровки.
-    pelletCenterCols(20) = 3                                                                    ' Значение столбца 20 полностью перенесено из файла калибровки.
-    pelletCenterCols(21) = 2                                                                    ' Значение столбца 21 полностью перенесено из файла калибровки.
-    pelletCenterCols(22) = -1                                                                    ' Значение столбца 22 полностью перенесено из файла калибровки.
-    pelletCenterCols(23) = 0                                                                    ' Значение столбца 23 полностью перенесено из файла калибровки.
-    pelletCenterCols(24) = -2                                                                    ' Значение столбца 24 полностью перенесено из файла калибровки.
-    pelletCenterCols(25) = -3                                                                    ' Значение столбца 25 полностью перенесено из файла калибровки.
-    pelletCenterCols(26) = 0                                                                    ' Значение столбца 26 полностью перенесено из файла калибровки.
-    pelletCenterCols(27) = 5                                                                    ' Значение столбца 27 полностью перенесено из файла калибровки.
-    pelletCenterCols(28) = 6                                                                    ' Значение столбца 28 полностью перенесено из файла калибровки.
+    pelletColOffset(1) = 11                                                                    ' Значение столбца 1 полностью перенесено из файла калибровки.
+    pelletColOffset(2) = 11                                                                    ' Значение столбца 2 полностью перенесено из файла калибровки.
+    pelletColOffset(3) = 13                                                                    ' Значение столбца 3 полностью перенесено из файла калибровки.
+    pelletColOffset(4) = 18                                                                    ' Значение столбца 4 полностью перенесено из файла калибровки.
+    pelletColOffset(5) = 15                                                                    ' Значение столбца 5 полностью перенесено из файла калибровки.
+    pelletColOffset(6) = 14                                                                    ' Значение столбца 6 полностью перенесено из файла калибровки.
+    pelletColOffset(7) = 16                                                                    ' Значение столбца 7 полностью перенесено из файла калибровки.
+    pelletColOffset(8) = 14                                                                    ' Значение столбца 8 полностью перенесено из файла калибровки.
+    pelletColOffset(9) = 11                                                                    ' Значение столбца 9 полностью перенесено из файла калибровки.
+    pelletColOffset(10) = 12                                                                    ' Значение столбца 10 полностью перенесено из файла калибровки.
+    pelletColOffset(11) = 11                                                                    ' Значение столбца 11 полностью перенесено из файла калибровки.
+    pelletColOffset(12) = 12                                                                    ' Значение столбца 12 полностью перенесено из файла калибровки.
+    pelletColOffset(13) = 11                                                                    ' Значение столбца 13 полностью перенесено из файла калибровки.
+    pelletColOffset(14) = 11                                                                    ' Значение столбца 14 полностью перенесено из файла калибровки.
+    pelletColOffset(15) = 7                                                                    ' Значение столбца 15 полностью перенесено из файла калибровки.
+    pelletColOffset(16) = 6                                                                    ' Значение столбца 16 полностью перенесено из файла калибровки.
+    pelletColOffset(17) = 6                                                                    ' Значение столбца 17 полностью перенесено из файла калибровки.
+    pelletColOffset(18) = 3                                                                    ' Значение столбца 18 полностью перенесено из файла калибровки.
+    pelletColOffset(19) = 4                                                                    ' Значение столбца 19 полностью перенесено из файла калибровки.
+    pelletColOffset(20) = 3                                                                    ' Значение столбца 20 полностью перенесено из файла калибровки.
+    pelletColOffset(21) = 2                                                                    ' Значение столбца 21 полностью перенесено из файла калибровки.
+    pelletColOffset(22) = -1                                                                    ' Значение столбца 22 полностью перенесено из файла калибровки.
+    pelletColOffset(23) = 0                                                                    ' Значение столбца 23 полностью перенесено из файла калибровки.
+    pelletColOffset(24) = -2                                                                    ' Значение столбца 24 полностью перенесено из файла калибровки.
+    pelletColOffset(25) = -3                                                                    ' Значение столбца 25 полностью перенесено из файла калибровки.
+    pelletColOffset(26) = 0                                                                    ' Значение столбца 26 полностью перенесено из файла калибровки.
+    pelletColOffset(27) = 5                                                                    ' Значение столбца 27 полностью перенесено из файла калибровки.
+    pelletColOffset(28) = 6                                                                    ' Значение столбца 28 полностью перенесено из файла калибровки.
 End Sub                                                                                         ' Завершаем настройку центров точек.
-                                                                                         ' Завершаем настройку центров точек.
-                                                                                         ' Завершаем настройку центров точек.
+
+Function ValidateMaze() As Boolean                                                             ' Функция проверяет размеры, символы и стартовые метки карты.
+    Dim rowLength As Integer                                                                    ' Фактическая ширина текущей строки.
+    Dim playerCount As Integer = 0                                                              ' Число меток старта героя.
+    Dim ghostCount As Integer = 0                                                               ' Число меток старта призрака.
+    Dim tileText As String                                                                      ' Символ текущей клетки.
+
+    mazeErrorMessage = ""                                                                      ' Перед проверкой убираем возможную старую ошибку.
+    mazeCols = Len(maze(1))                                                                     ' Фиксируем ширину первой строки.
+    If mazeCols <> MAZE_COLUMNS Then                                                            ' Константа размеров должна совпадать с картой.
+        mazeErrorMessage = "ожидалось " + STR(MAZE_COLUMNS) + " столбцов, найдено " + STR(mazeCols) + "."
+        Return False                                                                            ' Не запускаем логику на карте неверной ширины.
+    End If                                                                                      ' Завершаем проверку ширины первой строки.
+
+    For rowIndex = 1 To MAZE_ROWS                                                               ' Проверяем все строки до обхода клеток.
+        rowLength = Len(maze(rowIndex))                                                         ' Получаем фактическую длину строки.
+        If rowLength <> MAZE_COLUMNS Then                                                       ' Все строки должны иметь одну ширину.
+            mazeErrorMessage = "строка " + STR(rowIndex) + " имеет ширину " + STR(rowLength) + "."
+            Return False                                                                        ' Возвращаем ошибку до индексирования клетки.
+        End If                                                                                  ' Завершаем проверку длины строки.
+
+        For columnIndex = 1 To MAZE_COLUMNS                                                     ' Проверяем каждый символ строки.
+            tileText = Mid(maze(rowIndex), columnIndex, 1)                                      ' Читаем одну клетку карты.
+            If tileText = "P" Then
+                playerCount = playerCount + 1                                                   ' Считаем старт героя.
+            End If
+            If tileText = "G" Then
+                ghostCount = ghostCount + 1                                                     ' Считаем старт призрака.
+            End If
+            If tileText <> "#" And tileText <> "." And tileText <> "o" And tileText <> "P" And tileText <> "G" And tileText <> " " Then
+                mazeErrorMessage = "неизвестный символ в строке " + STR(rowIndex) + ", столбце " + STR(columnIndex) + "."
+                Return False                                                                    ' Неизвестные знаки нельзя считать проходимыми клетками.
+            End If                                                                              ' Завершаем проверку допустимого символа.
+        Next                                                                                    ' Переходим к следующему столбцу.
+    Next                                                                                        ' Переходим к следующей строке.
+
+    If playerCount <> 1 Then                                                                    ' Для запуска нужна ровно одна метка игрока.
+        mazeErrorMessage = "карта должна содержать ровно одну метку P; найдено " + STR(playerCount) + "."
+        Return False                                                                            ' Не выбираем произвольную стартовую клетку.
+    End If                                                                                      ' Завершаем проверку старта героя.
+    If ghostCount <> 1 Then                                                                     ' Для запуска нужна ровно одна метка призрака.
+        mazeErrorMessage = "карта должна содержать ровно одну метку G; найдено " + STR(ghostCount) + "."
+        Return False                                                                            ' Не выбираем произвольную стартовую клетку.
+    End If                                                                                      ' Завершаем проверку старта призрака.
+
+    Return True                                                                                 ' Карта имеет ожидаемую форму и символы.
+End Function                                                                                    ' Завершаем проверку карты.
 
 Sub InitMaze()                                                                                  ' Процедура загружает текстовую карту и стартовые метки.
     maze(1) = "############################"                                                    ' Верхняя рамка лабиринта.
@@ -302,13 +528,15 @@ Sub InitMaze()                                                                  
     maze(35) = "############################"                                                   ' Предпоследняя строка нижней рамки.
     maze(36) = "############################"                                                   ' Последняя строка нижней рамки.
 
-    mazeCols = Len(maze(1))                                                                     ' Вычисляем число столбцов по длине первой строки.
+    If Not ValidateMaze() Then                                                                  ' Проверяем строки до подсчёта точек и чтения маркеров.
+        Return                                                                                  ' Не индексируем карту, если проверка завершилась ошибкой.
+    End If                                                                                      ' Продолжаем только с корректной схемой.
     pelletsLeft = 0                                                                             ' Перед пересчётом начинаем с нуля точек.
 
     Dim tileText As String                                                                      ' Символ текущей клетки карты.
 
-    For rowIndex = 1 To mazeRows                                                                ' Проходим все строки карты.
-        For columnIndex = 1 To mazeCols                                                         ' Проходим все столбцы в текущей строке.
+    For rowIndex = 1 To MAZE_ROWS                                                               ' Проходим все строки карты.
+        For columnIndex = 1 To MAZE_COLUMNS                                                     ' Проходим все столбцы в текущей строке.
             tileText = Mid(maze(rowIndex), columnIndex, 1)                                      ' Берём один символ из текущей клетки карты.
 
             If tileText = "." Or tileText = "o" Then                                            ' Если клетка содержит обычную или крупную точку...
@@ -331,96 +559,94 @@ Sub InitMaze()                                                                  
 End Sub                                                                                         ' Завершаем инициализацию карты.
 
 Sub ResetActors()                                                                               ' Процедура возвращает героя и призрака в стартовые точки.
-    playerCol = playerStartCol                                                                  ' Возвращаем героя в стартовый столбец.
-    playerRow = playerStartRow                                                                  ' Возвращаем героя в стартовую строку.
-    playerDir = 0                                                                               ' Герой сразу после сброса ещё не движется.
-    playerWantDir = 0                                                                           ' Желаемое направление тоже очищаем.
-    playerFacing = DIR_RIGHT                                                                    ' По умолчанию герой смотрит вправо.
-    playerTravel = 0                                                                            ' Внутриклеточный пройденный путь обнуляем.
-    playerAnimStep = 0                                                                          ' Анимацию рта начинаем с закрытого состояния.
+    player.tileCol = playerStartCol                                                                  ' Возвращаем героя в стартовый столбец.
+    player.tileRow = playerStartRow                                                                  ' Возвращаем героя в стартовую строку.
+    player.dir = 0                                                                               ' Герой сразу после сброса ещё не движется.
+    player.wantedDir = 0                                                                           ' Желаемое направление тоже очищаем.
+    player.facing = DIR_RIGHT                                                                    ' По умолчанию герой смотрит вправо.
+    player.travel = 0                                                                            ' Внутриклеточный пройденный путь обнуляем.
+    player.animationStep = 0                                                                          ' Анимацию рта начинаем с закрытого состояния.
 
-    ghostCol = ghostStartCol                                                                    ' Возвращаем призрака в стартовый столбец.
-    ghostRow = ghostStartRow                                                                    ' Возвращаем призрака в стартовую строку.
-    ghostDir = DIR_LEFT                                                                         ' По умолчанию призрак стартует движением влево.
-    ghostWantDir = DIR_LEFT                                                                     ' И желаемое направление у него тоже влево.
-    ghostTravel = 0                                                                             ' Внутриклеточный путь призрака также обнуляем.
+    ghost.tileCol = ghostStartCol                                                                    ' Возвращаем призрака в стартовый столбец.
+    ghost.tileRow = ghostStartRow                                                                    ' Возвращаем призрака в стартовую строку.
+    ghost.dir = DIR_LEFT                                                                         ' По умолчанию призрак стартует движением влево.
+    ghost.wantedDir = DIR_LEFT                                                                     ' И желаемое направление у него тоже влево.
+    ghost.travel = 0                                                                             ' Внутриклеточный путь призрака также обнуляем.
 End Sub                                                                                         ' Завершаем сброс актёров.
 
 Sub UpdatePlayerInput()                                                                         ' Процедура читает клавиши и выбирает желаемое направление.
     If Keydown("LEFT") Then                                                                     ' Если зажата стрелка влево...
-        playerWantDir = DIR_LEFT                                                                ' ...просим героя повернуть влево.
+        player.wantedDir = DIR_LEFT                                                                ' ...просим героя повернуть влево.
     End If                                                                                      ' Завершаем проверку удержания влево.
 
     If Keydown("RIGHT") Then                                                                    ' Если зажата стрелка вправо...
-        playerWantDir = DIR_RIGHT                                                               ' ...просим героя повернуть вправо.
+        player.wantedDir = DIR_RIGHT                                                               ' ...просим героя повернуть вправо.
     End If                                                                                      ' Завершаем проверку удержания вправо.
 
     If Keydown("UP") Then                                                                       ' Если зажата стрелка вверх...
-        playerWantDir = DIR_UP                                                                  ' ...просим героя повернуть вверх.
+        player.wantedDir = DIR_UP                                                                  ' ...просим героя повернуть вверх.
     End If                                                                                      ' Завершаем проверку удержания вверх.
 
     If Keydown("DOWN") Then                                                                     ' Если зажата стрелка вниз...
-        playerWantDir = DIR_DOWN                                                                ' ...просим героя повернуть вниз.
+        player.wantedDir = DIR_DOWN                                                                ' ...просим героя повернуть вниз.
     End If                                                                                      ' Завершаем проверку удержания вниз.
     ' Для живого управления игрой намеренно не используем KEYPRESS для стрелок.                ' Иначе в очереди могут догонять старые повороты и герой будет слушаться с опозданием.
     ' Здесь важнее текущее удержание клавиши, поэтому обычная игра читает только KEYDOWN.      ' KEYPRESS оставляем для калибровки, где нужны одиночные щелчки по одному пикселю.
 End Sub                                                                                         ' Завершаем чтение управления игрока.
 
 Sub UpdatePlayerAnimation()                                                                     ' Процедура обновляет шаг анимации героя.
-    If playerDir = 0 Then                                                                       ' Если герой стоит на месте...
-        playerAnimStep = 0                                                                      ' ...держим рот в спокойном состоянии.
+    If player.dir = 0 Then                                                                       ' Если герой стоит на месте...
+        player.animationStep = 0                                                                      ' ...держим рот в спокойном состоянии.
         Return                                                                                  ' И выходим из процедуры сразу.
     End If                                                                                      ' Завершаем обработку неподвижного героя.
 
-    playerAnimStep = playerAnimStep + 1                                                         ' Переходим к следующему шагу анимации.
-    If playerAnimStep > 4 Then                                                                  ' Если вышли за число шагов цикла...
-        playerAnimStep = 1                                                                      ' ...возвращаемся в начало цикла.
+    player.animationStep = player.animationStep + 1                                                         ' Переходим к следующему шагу анимации.
+    If player.animationStep > 4 Then                                                                  ' Если вышли за число шагов цикла...
+        player.animationStep = 1                                                                      ' ...возвращаемся в начало цикла.
     End If                                                                                      ' Завершаем циклическую анимацию.
 End Sub                                                                                         ' Завершаем обновление анимации героя.
 
-Sub UpdateGhostDecision()                                                                       ' Процедура выбирает новое направление призрака только в узлах.
-    If ghostTravel <> 0 Then                                                                    ' Если призрак ещё не дошёл до центра следующей клетки...
-        Return                                                                                  ' ...не меняем его решение на полпути.
-    End If                                                                                      ' Завершаем защиту от поворота посреди коридора.
-
-    ghostWantDir = ChooseGhostDirection()                                                       ' Вычисляем новое желаемое направление погони.
-End Sub                                                                                         ' Завершаем обновление решения призрака.
-
-Sub StepWalker(Byref tileCol As Integer, Byref tileRow As Integer, Byref dir As Integer, Byref wantedDir As Integer, Byref travel As Integer, speed As Integer)
+Sub StepWalker(Byref walker As Walker, speed As Integer, chasePlayer As Boolean)               ' Общая процедура двигает персонажа и при необходимости выбирает путь.
     Dim remaining As Integer = speed                                                            ' Сколько пикселей ещё нужно пройти в этом кадре.
     Dim chunk As Integer                                                                        ' Размер текущего куска движения внутри одной клетки.
 
     Do While remaining > 0                                                                      ' Пока в кадре ещё остались пиксели движения...
-        If travel = 0 Then                                                                      ' ...и мы находимся ровно в центре клетки...
-            If wantedDir <> 0 Then                                                              ' ...сначала пробуем повернуть в желаемую сторону.
-                If CanMove(tileCol, tileRow, wantedDir) Then                                    ' Если поворот возможен по карте...
-                    dir = wantedDir                                                             ' ...принимаем новое направление.
+        If walker.travel = 0 Then                                                               ' ...и мы находимся ровно в центре клетки...
+            If chasePlayer Then                                                                 ' Для призрака пересчитываем маршрут в каждом узле.
+                walker.wantedDir = ChooseGhostDirection()                                       ' Выбор происходит и при переносе остатка скорости через границу.
+                If walker.wantedDir = 0 Then
+                    walker.dir = 0                                                              ' Без пути призрак останавливается.
+                End If
+            End If                                                                              ' Завершаем выбор поведения персонажа.
+            If walker.wantedDir <> 0 Then                                                      ' ...сначала пробуем повернуть в желаемую сторону.
+                If CanMove(walker.tileCol, walker.tileRow, walker.wantedDir) Then              ' Если поворот возможен по карте...
+                    walker.dir = walker.wantedDir                                               ' ...принимаем новое направление.
                 End If                                                                          ' Завершаем проверку поворота.
             End If                                                                              ' Завершаем обработку желаемого направления.
 
-            If dir <> 0 Then                                                                    ' Если у шага есть текущее направление...
-                If Not CanMove(tileCol, tileRow, dir) Then                                      ' ...но впереди неожиданно стена...
-                    dir = 0                                                                     ' ...останавливаем движение в этом кадре.
+            If walker.dir <> 0 Then                                                             ' Если у шага есть текущее направление...
+                If Not CanMove(walker.tileCol, walker.tileRow, walker.dir) Then                ' ...но впереди неожиданно стена...
+                    walker.dir = 0                                                              ' ...останавливаем движение в этом шаге.
                 End If                                                                          ' Завершаем проверку стены.
             End If                                                                              ' Завершаем проверку текущего направления.
         End If                                                                                  ' Завершаем блок работы в узле сетки.
 
-        If dir = 0 Then                                                                         ' Если направление всё ещё равно нулю...
+        If walker.dir = 0 Then                                                                  ' Если направление всё ещё равно нулю...
             remaining = 0                                                                       ' ...прекращаем остаток движения в кадре.
         Else                                                                                    ' Иначе можно продвигаться дальше по коридору.
-            chunk = TILE - travel                                                               ' Считаем, сколько пикселей осталось до следующего узла.
+            chunk = TILE - walker.travel                                                        ' Считаем, сколько пикселей осталось до следующей клетки.
             If chunk > remaining Then                                                           ' Если до узла дальше, чем осталось шагов в кадре...
                 chunk = remaining                                                               ' ...ограничиваем шаг остатком этого кадра.
             End If                                                                              ' Завершаем ограничение размера шага.
 
-            travel = travel + chunk                                                             ' Увеличиваем внутриклеточный пройденный путь.
+            walker.travel = walker.travel + chunk                                               ' Увеличиваем внутриклеточный пройденный путь.
             remaining = remaining - chunk                                                       ' Уменьшаем остаток шагов в текущем кадре.
 
-            If travel >= TILE Then                                                              ' Если дошли до следующей клетки...
-                tileCol = tileCol + DirX(dir)                                                   ' ...смещаем столбец по направлению движения.
-                tileRow = tileRow + DirY(dir)                                                   ' ...смещаем строку по направлению движения.
-                tileCol = WrapTunnelColumn(tileCol, tileRow)                                    ' ...обрабатываем телепорт в боковом туннеле.
-                travel = 0                                                                      ' ...и начинаем следующий отрезок с нулевого смещения.
+            If walker.travel >= TILE Then                                                       ' Если дошли до следующей клетки...
+                walker.tileCol = walker.tileCol + DirX(walker.dir)                              ' ...смещаем столбец по направлению движения.
+                walker.tileRow = walker.tileRow + DirY(walker.dir)                              ' ...смещаем строку по направлению движения.
+                walker.tileCol = WrapTunnelColumn(walker.tileCol, walker.tileRow)               ' ...обрабатываем телепорт в боковом туннеле.
+                walker.travel = 0                                                               ' ...и начинаем следующий отрезок с нулевого смещения.
             End If                                                                              ' Завершаем переход между клетками.
         End If                                                                                  ' Завершаем движение в пределах текущего кадра.
     Loop                                                                                        ' Продолжаем, пока не израсходуем скорость кадра.
@@ -429,53 +655,46 @@ End Sub                                                                         
 Sub EatPelletIfNeeded()                                                                         ' Процедура проверяет, стоит ли герой на точке.
     Dim tileText As String                                                                      ' В этой переменной читаем символ клетки под героем.
 
-    If playerTravel <> 0 Then                                                                   ' Если герой ещё идёт внутри клетки...
+    If player.travel <> 0 Then                                                                   ' Если герой ещё идёт внутри клетки...
         Return                                                                                  ' ...не едим точку, пока не дойдём до центра клетки.
     End If                                                                                      ' Завершаем защиту от преждевременного съедания.
 
-    tileText = CellAt(playerRow, playerCol)                                                     ' Читаем символ клетки, на которой сейчас стоит герой.
+    tileText = CellAt(player.tileRow, player.tileCol)                                                     ' Читаем символ клетки, на которой сейчас стоит герой.
 
     If tileText = "." Then                                                                      ' Если это обычная маленькая точка...
         score = score + 10                                                                      ' ...добавляем десять очков.
         pelletsLeft = pelletsLeft - 1                                                           ' ...уменьшаем число оставшихся точек.
-        maze(playerRow) = ReplaceCell(maze(playerRow), playerCol, " ")                          ' ...и очищаем клетку карты от точки.
+        maze(player.tileRow) = ReplaceCell(maze(player.tileRow), player.tileCol, " ")                          ' ...и очищаем клетку карты от точки.
     End If                                                                                      ' Завершаем съедание обычной точки.
 
     If tileText = "o" Then                                                                      ' Если это крупная точка...
         score = score + 50                                                                      ' ...даём больше очков.
         pelletsLeft = pelletsLeft - 1                                                           ' ...уменьшаем число оставшихся точек.
-        maze(playerRow) = ReplaceCell(maze(playerRow), playerCol, " ")                          ' ...очищаем клетку карты.
+        maze(player.tileRow) = ReplaceCell(maze(player.tileRow), player.tileCol, " ")                          ' ...очищаем клетку карты.
         statusText = "Крупная точка принесла больше очков."                                    ' ...и выводим поясняющее сообщение в HUD.
     End If                                                                                      ' Завершаем съедание крупной точки.
 End Sub                                                                                         ' Завершаем проверку съедания точки.
 
 Sub DrawMazeWorld()                                                                             ' Процедура рисует весь мир внутри viewport без ручных экранных смещений.
-    Dim cameraX As Integer = 0                                                                   ' По X больше не прокручиваем карту: весь лабиринт уже помещается целиком.
-    Dim cameraY As Integer = 0                                                                   ' По Y тоже не прокручиваем карту: весь лабиринт виден сразу.
-    Dim firstCol As Integer = 1                                                                  ' Рисуем карту с самого первого столбца.
-    Dim lastCol As Integer = mazeCols                                                            ' Рисуем карту до последнего столбца.
-    Dim firstRow As Integer = 1                                                                  ' Рисуем карту с самой первой строки.
-    Dim lastRow As Integer = mazeRows                                                            ' Рисуем карту до самой последней строки.
-
     Viewport (WorldViewportLeft(), WorldViewportTop()) - (WorldViewportRight(), WorldViewportBottom()) ' Отдаём отдельный прямоугольник под мир и оставляем HUD вне него.
-    Camera cameraX, cameraY                                                                     ' Включаем камеру мира для последующего рисования.
+    Camera 0, 0                                                                                  ' Начало координат мира совпадает с началом карты.
 
-    DrawVisibleWalls(firstRow, lastRow, firstCol, lastCol)                                      ' Рисуем фон лабиринта.
-    DrawVisiblePellets(firstRow, lastRow, firstCol, lastCol)                                    ' Рисуем оставшиеся точки.
+    DrawMazeBackground()                                                                         ' Рисуем фон лабиринта.
+    DrawVisiblePellets()                                                                         ' Рисуем оставшиеся точки на полной карте.
 
     Drawsprite playerFrames(CurrentPlayerSpriteSlot()), 0, PlayerPixelX() - (TILE \ 2), PlayerPixelY() - (TILE \ 2) ' Рисуем героя по его пиксельным координатам.
     Drawsprite ghostSprite, 0, GhostPixelX() - (TILE \ 2), GhostPixelY() - (TILE \ 2)          ' Рисуем призрака по его пиксельным координатам.
 End Sub                                                                                         ' Завершаем рисование мира.
 
-Sub DrawVisibleWalls(firstRow As Integer, lastRow As Integer, firstCol As Integer, lastCol As Integer)
-    Drawimage mazeBackground, 0, 0, mazeCols * TILE, mazeRows * TILE                            ' Рисуем эталонную картинку лабиринта от начала мировых координат viewport.
+Sub DrawMazeBackground()                                                                        ' Процедура рисует эталонную подложку всей карты.
+    Drawimage mazeBackground, 0, 0, mazeCols * TILE, MAZE_ROWS * TILE                            ' Рисуем эталонную картинку лабиринта от начала мировых координат viewport.
 End Sub                                                                                         ' Завершаем рисование стен.
 
-Sub DrawVisiblePellets(firstRow As Integer, lastRow As Integer, firstCol As Integer, lastCol As Integer)
+Sub DrawVisiblePellets()                                                                        ' Процедура рисует все оставшиеся точки полной карты.
     Dim tileText As String                                                                      ' Символ клетки, чтобы понять, есть ли здесь точка.
 
-    For rowIndex = firstRow To lastRow                                                          ' Проходим все видимые строки.
-        For columnIndex = firstCol To lastCol                                                   ' Проходим все видимые столбцы.
+    For rowIndex = 1 To MAZE_ROWS                                                               ' Проходим строки карты.
+        For columnIndex = 1 To MAZE_COLUMNS                                                     ' Проходим столбцы карты.
             tileText = CellAt(rowIndex, columnIndex)                                            ' Считываем символ текущей клетки.
 
             If tileText = "." Then                                                              ' Если клетка содержит обычную точку...
@@ -516,7 +735,7 @@ Sub HandleCalibrationInput()                                                    
 
     If CalibrationHotKeyPressed("W") Then                                                       ' Если нажали W или w...
         If calibrationTarget = CALIBRATION_ROW_MODE Then                                        ' Если калибруем строки...
-            calibrationRow = ClampInt(calibrationRow - 1, 1, mazeRows)                          ' ...выбираем строку выше.
+            calibrationRow = ClampInt(calibrationRow - 1, 1, MAZE_ROWS)                          ' ...выбираем строку выше.
         Else                                                                                    ' Иначе калибруем столбцы.
             calibrationCol = ClampInt(calibrationCol - 1, 1, mazeCols)                          ' ...выбираем столбец левее по номеру.
         End If                                                                                  ' Завершаем выбор предыдущего номера.
@@ -525,7 +744,7 @@ Sub HandleCalibrationInput()                                                    
 
     If CalibrationHotKeyPressed("S") Then                                                       ' Если нажали S или s...
         If calibrationTarget = CALIBRATION_ROW_MODE Then                                        ' Если калибруем строки...
-            calibrationRow = ClampInt(calibrationRow + 1, 1, mazeRows)                          ' ...выбираем строку ниже.
+            calibrationRow = ClampInt(calibrationRow + 1, 1, MAZE_ROWS)                          ' ...выбираем строку ниже.
         Else                                                                                    ' Иначе калибруем столбцы.
             calibrationCol = ClampInt(calibrationCol + 1, 1, mazeCols)                          ' ...выбираем столбец правее по номеру.
         End If                                                                                  ' Завершаем выбор следующего номера.
@@ -534,22 +753,22 @@ Sub HandleCalibrationInput()                                                    
 
     If calibrationTarget = CALIBRATION_ROW_MODE Then                                            ' Если сейчас двигаем строку точек...
         If Keypress("UP") Then                                                                  ' Если нажали стрелку вверх...
-            pelletCenterRows(calibrationRow) = pelletCenterRows(calibrationRow) - 1              ' ...поднимаем выбранную строку на один пиксель.
+            pelletRowOffset(calibrationRow) = pelletRowOffset(calibrationRow) - 1              ' ...поднимаем выбранную строку на один пиксель.
             SetCalibrationStatusText("Строка поднята.", CalibrationAssignmentText())            ' Показываем новое значение в две строки.
         End If                                                                                  ' Завершаем обработку стрелки вверх.
 
         If Keypress("DOWN") Then                                                                ' Если нажали стрелку вниз...
-            pelletCenterRows(calibrationRow) = pelletCenterRows(calibrationRow) + 1              ' ...опускаем выбранную строку на один пиксель.
+            pelletRowOffset(calibrationRow) = pelletRowOffset(calibrationRow) + 1              ' ...опускаем выбранную строку на один пиксель.
             SetCalibrationStatusText("Строка опущена.", CalibrationAssignmentText())            ' Показываем новое значение в две строки.
         End If                                                                                  ' Завершаем обработку стрелки вниз.
     Else                                                                                        ' Иначе сейчас двигаем столбец точек.
         If Keypress("LEFT") Then                                                                ' Если нажали стрелку влево...
-            pelletCenterCols(calibrationCol) = pelletCenterCols(calibrationCol) - 1              ' ...сдвигаем выбранный столбец на один пиксель влево.
+            pelletColOffset(calibrationCol) = pelletColOffset(calibrationCol) - 1              ' ...сдвигаем выбранный столбец на один пиксель влево.
             SetCalibrationStatusText("Столбец влево.", CalibrationAssignmentText())             ' Показываем новое значение и сохраняем короткий статус.
         End If                                                                                  ' Завершаем обработку стрелки влево.
 
         If Keypress("RIGHT") Then                                                               ' Если нажали стрелку вправо...
-            pelletCenterCols(calibrationCol) = pelletCenterCols(calibrationCol) + 1              ' ...сдвигаем выбранный столбец на один пиксель вправо.
+            pelletColOffset(calibrationCol) = pelletColOffset(calibrationCol) + 1              ' ...сдвигаем выбранный столбец на один пиксель вправо.
             SetCalibrationStatusText("Столбец вправо.", CalibrationAssignmentText())            ' Показываем новое значение и сохраняем короткий статус.
         End If                                                                                  ' Завершаем обработку стрелки вправо.
     End If                                                                                      ' Завершаем обработку сдвига выбранной линии.
@@ -623,12 +842,12 @@ Sub SaveAllCalibrationValues()                                                  
     Dim ok As Boolean = True                                                                    ' Общий флаг успеха полной записи.
     Dim snapshotText As String = "' Полный снимок текущей калибровки maze_chase" + Chr(13) + Chr(10) ' Начинаем текст файла с понятного заголовка снимка.
 
-    For rowIndex = 1 To mazeRows                                                                ' Проходим все строки таблицы центров.
-        snapshotText = snapshotText + CalibrationRowAssignmentText(rowIndex) + Chr(13) + Chr(10) ' Добавляем в снимок одну строку `pelletCenterRows`.
+    For rowIndex = 1 To MAZE_ROWS                                                                ' Проходим все строки таблицы центров.
+        snapshotText = snapshotText + CalibrationRowAssignmentText(rowIndex) + Chr(13) + Chr(10) ' Добавляем в снимок одну строку `pelletRowOffset`.
     Next                                                                                        ' Переходим к следующей строке.
 
     For colIndex = 1 To mazeCols                                                                ' Проходим все столбцы таблицы центров.
-        snapshotText = snapshotText + CalibrationColAssignmentText(colIndex) + Chr(13) + Chr(10) ' Добавляем в снимок одну строку `pelletCenterCols`.
+        snapshotText = snapshotText + CalibrationColAssignmentText(colIndex) + Chr(13) + Chr(10) ' Добавляем в снимок одну строку `pelletColOffset`.
     Next                                                                                        ' Переходим к следующему столбцу.
 
     ok = Writefile(calibrationFilePath, snapshotText)                                            ' Полностью заменяем старый журнал новым чистым снимком таблицы.
@@ -647,10 +866,10 @@ End Sub                                                                         
 
 Function CalibrationSelectionText() As String                                                   ' Функция возвращает человекочитаемое описание текущего выбора.
     If calibrationTarget = CALIBRATION_ROW_MODE Then                                            ' Если выбрана строка...
-        Return "строка " + Trim(Str(calibrationRow)) + ", значение " + Trim(Str(pelletCenterRows(calibrationRow))) ' Возвращаем номер строки и её Y-сдвиг.
+        Return "строка " + Trim(Str(calibrationRow)) + ", значение " + Trim(Str(pelletRowOffset(calibrationRow))) ' Возвращаем номер строки и её Y-сдвиг.
     End If                                                                                      ' Завершаем строковый режим.
 
-    Return "столбец " + Trim(Str(calibrationCol)) + ", значение " + Trim(Str(pelletCenterCols(calibrationCol))) ' Возвращаем номер столбца и его X-сдвиг.
+    Return "столбец " + Trim(Str(calibrationCol)) + ", значение " + Trim(Str(pelletColOffset(calibrationCol))) ' Возвращаем номер столбца и его X-сдвиг.
 End Function                                                                                    ' Завершаем описание текущего выбора.
 
 Function CalibrationAssignmentText() As String                                                  ' Функция собирает точную строку присваивания для файла калибровки.
@@ -662,11 +881,11 @@ Function CalibrationAssignmentText() As String                                  
 End Function                                                                                    ' Завершаем сборку строки присваивания.
 
 Function CalibrationRowAssignmentText(rowIndex As Integer) As String                            ' Функция собирает строку присваивания для одной строки точек.
-    Return "pelletCenterRows(" + Trim(Str(rowIndex)) + ") = " + Trim(Str(pelletCenterRows(rowIndex))) ' Возвращаем готовую строку `pelletCenterRows`.
+    Return "pelletRowOffset(" + Trim(Str(rowIndex)) + ") = " + Trim(Str(pelletRowOffset(rowIndex))) ' Возвращаем готовую строку `pelletRowOffset`.
 End Function                                                                                    ' Завершаем сборку строки для вертикального центра.
 
 Function CalibrationColAssignmentText(colIndex As Integer) As String                            ' Функция собирает строку присваивания для одного столбца точек.
-    Return "pelletCenterCols(" + Trim(Str(colIndex)) + ") = " + Trim(Str(pelletCenterCols(colIndex))) ' Возвращаем готовую строку `pelletCenterCols`.
+    Return "pelletColOffset(" + Trim(Str(colIndex)) + ") = " + Trim(Str(pelletColOffset(colIndex))) ' Возвращаем готовую строку `pelletColOffset`.
 End Function                                                                                    ' Завершаем сборку строки для горизонтального центра.
 
 Function CalibrationHotKeyPressed(keyName As String) As Boolean                                 ' Функция проверяет буквенную клавишу калибровки в обоих регистрах.
@@ -770,86 +989,94 @@ End Function                                                                    
 Function CurrentPlayerSpriteSlot() As Integer                                                   ' Функция выбирает индекс текущего спрайта героя.
     Dim animationFrame As Integer = 3                                                           ' По умолчанию берём кадр с самым открытым ртом.
 
-    If playerAnimStep = 1 Then                                                                  ' Если сейчас первый шаг анимации...
+    If player.animationStep = 1 Then                                                                  ' Если сейчас первый шаг анимации...
         animationFrame = 1                                                                      ' ...берём первый кадр.
     End If                                                                                      ' Завершаем выбор первого кадра.
 
-    If playerAnimStep = 2 Or playerAnimStep = 4 Then                                            ' Если сейчас средняя фаза открытия или закрытия рта...
+    If player.animationStep = 2 Or player.animationStep = 4 Then                                            ' Если сейчас средняя фаза открытия или закрытия рта...
         animationFrame = 2                                                                      ' ...берём промежуточный кадр.
     End If                                                                                      ' Завершаем выбор промежуточного кадра.
 
-    Return SpriteSlot(playerFacing, animationFrame)                                             ' Возвращаем общий индекс кадра по направлению и фазе анимации.
+    Return SpriteSlot(player.facing, animationFrame)                                             ' Возвращаем общий индекс кадра по направлению и фазе анимации.
 End Function                                                                                    ' Завершаем выбор текущего кадра героя.
 
 Function SpriteSlot(dir As Integer, frameNumber As Integer) As Integer                          ' Функция переводит направление и номер кадра в индекс массива спрайтов.
     Return ((dir - 1) * 3) + frameNumber                                                        ' Считаем смещение по три кадра на каждое направление.
 End Function                                                                                    ' Завершаем вычисление индекса спрайта.
 
-Function ChooseGhostDirection() As Integer                                                      ' Функция выбирает, куда призраку идти дальше.
-    Dim bestDirection As Integer = 0                                                            ' Лучшее найденное направление.
-    Dim bestScore As Integer = 1000000                                                          ' Лучшая оценка расстояния до героя.
-    Dim availableMoves As Integer = CountAvailableMoves(ghostCol, ghostRow)                     ' Сколько путей доступно призраку в текущем узле.
-    Dim nextCol As Integer                                                                      ' Временный столбец для оценки следующей клетки.
-    Dim nextRow As Integer                                                                      ' Временная строка для оценки следующей клетки.
-    Dim distance As Integer                                                                     ' Манхэттенское расстояние от следующей клетки до героя.
+Function ChooseGhostDirection() As Integer                                                     ' Функция ищет кратчайший проходимый путь к клетке героя.
+    Dim visited(1 TO MAZE_ROWS, 1 TO MAZE_COLUMNS) As Boolean                                  ' Отмечает клетки, уже добавленные в очередь поиска.
+    Dim firstDirection(1 TO MAZE_ROWS, 1 TO MAZE_COLUMNS) As Integer                            ' Хранит первый ход кратчайшего пути до каждой клетки.
+    Dim queueRows(1 TO MAZE_ROWS * MAZE_COLUMNS) As Integer                                    ' Очередь строк для обхода карты в ширину.
+    Dim queueCols(1 TO MAZE_ROWS * MAZE_COLUMNS) As Integer                                    ' Очередь столбцов для обхода карты в ширину.
+    Dim head As Integer = 1                                                                     ' Индекс следующей клетки для обработки.
+    Dim tail As Integer = 1                                                                     ' Индекс последней добавленной клетки.
+    Dim currentRow As Integer                                                                   ' Строка клетки, которую сейчас обрабатываем.
+    Dim currentCol As Integer                                                                   ' Столбец клетки, которую сейчас обрабатываем.
+    Dim nextRow As Integer                                                                      ' Строка проверяемого соседнего узла.
+    Dim nextCol As Integer                                                                      ' Столбец проверяемого соседнего узла с учётом туннеля.
 
-    For candidate = 1 To 4                                                                     ' Пробуем все четыре направления.
-        If CanMove(ghostCol, ghostRow, candidate) Then                                          ' Сначала фильтруем только реально проходимые направления.
-            If availableMoves = 1 Or candidate <> OppositeDirection(ghostDir) Then              ' На развилке стараемся не разворачиваться без необходимости.
-                nextCol = ghostCol + DirX(candidate)                                            ' Считаем столбец следующей клетки.
-                nextRow = ghostRow + DirY(candidate)                                            ' Считаем строку следующей клетки.
-                nextCol = WrapTunnelColumn(nextCol, nextRow)                                    ' Учитываем телепорт через боковой туннель.
-                distance = AbsInt(nextCol - playerCol) + AbsInt(nextRow - playerRow)            ' Оцениваем, приблизит ли ход призрака к герою.
+    queueRows(1) = ghost.tileRow                                                                ' Поиск начинается с текущей клетки призрака.
+    queueCols(1) = ghost.tileCol
+    visited(ghost.tileRow, ghost.tileCol) = True
 
-                If distance < bestScore Then                                                    ' Если это направление лучше предыдущих...
-                    bestScore = distance                                                        ' ...сохраняем новую лучшую оценку.
-                    bestDirection = candidate                                                   ' ...и запоминаем это направление.
-                End If                                                                          ' Завершаем сравнение качества хода.
-            End If                                                                              ' Завершаем защиту от лишнего разворота.
-        End If                                                                                  ' Завершаем проверку проходимости кандидата.
-    Next                                                                                        ' Переходим к следующему направлению.
+    Do While head <= tail                                                                       ' Очередь обходит клетки по возрастанию расстояния.
+        currentRow = queueRows(head)                                                            ' Берём следующую клетку из очереди.
+        currentCol = queueCols(head)
+        If currentRow = player.tileRow And currentCol = player.tileCol Then                    ' Цель найдена кратчайшим обходом.
+            Return firstDirection(currentRow, currentCol)                                      ' Возвращаем направление первого шага из старта.
+        End If
 
-    If bestDirection = 0 Then                                                                   ' Если подходящее направление так и не нашли...
-        For candidate = 1 To 4                                                                  ' ...делаем запасной проход по всем направлениям.
-            If CanMove(ghostCol, ghostRow, candidate) Then                                      ' Берём первое доступное направление...
-                Return candidate                                                                ' ...и сразу возвращаем его.
-            End If                                                                              ' Завершаем запасную проверку проходимости.
-        Next                                                                                    ' Переходим к следующему кандидату в запасном цикле.
-    End If                                                                                      ' Завершаем обработку запасного случая.
+        For candidate = DIR_LEFT To DIR_DOWN                                                    ' Проверяем соседей в стабильном порядке.
+            If CanMove(currentCol, currentRow, candidate) Then                                 ' В очередь попадают только проходимые клетки.
+                nextRow = currentRow + DirY(candidate)                                         ' Считаем соседнюю строку.
+                nextCol = WrapTunnelColumn(currentCol + DirX(candidate), nextRow)              ' Переход через тоннель считается обычным ребром графа.
+                If Not visited(nextRow, nextCol) Then                                          ' Повторно клетки не посещаем.
+                    visited(nextRow, nextCol) = True                                           ' Отмечаем клетку до добавления в очередь.
+                    If currentRow = ghost.tileRow And currentCol = ghost.tileCol Then          ' Для соседей старта первым ходом будет текущий кандидат.
+                        firstDirection(nextRow, nextCol) = candidate
+                    Else                                                                        ' Остальные клетки наследуют первый ход пути.
+                        firstDirection(nextRow, nextCol) = firstDirection(currentRow, currentCol)
+                    End If
+                    tail = tail + 1                                                            ' Добавляем соседа в конец очереди.
+                    queueRows(tail) = nextRow
+                    queueCols(tail) = nextCol
+                End If
+            End If
+        Next
+        head = head + 1                                                                         ' Переходим к следующей клетке того же расстояния.
+    Loop
 
-    Return bestDirection                                                                        ' Возвращаем лучшее найденное направление.
-End Function                                                                                    ' Завершаем выбор направления призрака.
+    Return 0                                                                                    ' Если пути нет, призрак остаётся на месте до следующей проверки.
+End Function                                                                                    ' Завершаем поиск направления призрака.
 
-Function CountAvailableMoves(tileCol As Integer, tileRow As Integer) As Integer                 ' Функция считает, сколько ходов доступно из текущей клетки.
-    Dim total As Integer = 0                                                                    ' Счётчик доступных направлений.
+Function EntitiesOverlap() As Boolean                                                           ' Функция проверяет близость героев с учётом перехода через туннель.
+    Dim horizontalDistance As Integer = Abs(PlayerPixelX() - GhostPixelX())                     ' Сначала сравниваем обычное расстояние центров.
+    Dim verticalDistance As Integer = Abs(PlayerPixelY() - GhostPixelY())                       ' Вертикальная координата не заворачивается.
 
-    For candidate = 1 To 4                                                                     ' Проверяем все четыре стороны.
-        If CanMove(tileCol, tileRow, candidate) Then                                            ' Если в эту сторону можно идти...
-            total = total + 1                                                                   ' ...увеличиваем счётчик.
-        End If                                                                                  ' Завершаем проверку одного направления.
-    Next                                                                                        ' Переходим к следующему направлению.
-
-    Return total                                                                                ' Возвращаем число доступных ходов.
-End Function                                                                                    ' Завершаем подсчёт доступных ходов.
-
-Function EntitiesOverlap() As Boolean                                                           ' Функция проверяет близость героя и призрака.
-    Return Abs(PlayerPixelX() - GhostPixelX()) < 12 And Abs(PlayerPixelY() - GhostPixelY()) < 12 ' Столкновение считаем по близости центров спрайтов.
+    If horizontalDistance >= worldWidthPixels Then
+        horizontalDistance = horizontalDistance - worldWidthPixels                             ' Нормализуем координаты, вышедшие за боковой край.
+    End If
+    If horizontalDistance > worldWidthPixels \ 2 Then
+        horizontalDistance = worldWidthPixels - horizontalDistance                             ' Берём короткую дугу между сторонами туннеля.
+    End If
+    Return horizontalDistance < 12 And verticalDistance < 12                                    ' Столкновение определяется расстоянием по обеим осям.
 End Function                                                                                    ' Завершаем проверку столкновения.
 
 Function PlayerPixelX() As Integer                                                              ' Функция возвращает текущую X-координату героя в пикселях.
-    Return EntityPixelX(playerCol, playerRow, playerDir, playerTravel)                          ' Считаем её по тем же реальным центрам тоннелей, что и точки.
+    Return EntityPixelX(player.tileCol, player.tileRow, player.dir, player.travel)                          ' Считаем её по тем же реальным центрам тоннелей, что и точки.
 End Function                                                                                    ' Завершаем вычисление X героя.
 
 Function PlayerPixelY() As Integer                                                              ' Функция возвращает текущую Y-координату героя в пикселях.
-    Return EntityPixelY(playerCol, playerRow, playerDir, playerTravel)                          ' Считаем её по тем же реальным центрам тоннелей, что и точки.
+    Return EntityPixelY(player.tileCol, player.tileRow, player.dir, player.travel)                          ' Считаем её по тем же реальным центрам тоннелей, что и точки.
 End Function                                                                                    ' Завершаем вычисление Y героя.
 
 Function GhostPixelX() As Integer                                                               ' Функция возвращает текущую X-координату призрака в пикселях.
-    Return EntityPixelX(ghostCol, ghostRow, ghostDir, ghostTravel)                              ' Используем ту же общую формулу реальных центров.
+    Return EntityPixelX(ghost.tileCol, ghost.tileRow, ghost.dir, ghost.travel)                              ' Используем ту же общую формулу реальных центров.
 End Function                                                                                    ' Завершаем вычисление X призрака.
 
 Function GhostPixelY() As Integer                                                               ' Функция возвращает текущую Y-координату призрака в пикселях.
-    Return EntityPixelY(ghostCol, ghostRow, ghostDir, ghostTravel)                              ' Используем ту же общую формулу реальных центров.
+    Return EntityPixelY(ghost.tileCol, ghost.tileRow, ghost.dir, ghost.travel)                              ' Используем ту же общую формулу реальных центров.
 End Function                                                                                    ' Завершаем вычисление Y призрака.
 
 Function EntityPixelX(tileCol As Integer, tileRow As Integer, dir As Integer, travel As Integer) As Integer ' Функция переводит положение актёра в реальную X-координату тоннеля.
@@ -874,7 +1101,7 @@ End Function                                                                    
 
 Function EntityPixelY(tileCol As Integer, tileRow As Integer, dir As Integer, travel As Integer) As Integer ' Функция переводит положение актёра в реальную Y-координату тоннеля.
     Dim startY As Integer = PelletPixelY(tileRow)                                               ' Начинаем из реального центра точки в текущей строке.
-    Dim nextRow As Integer = ClampInt(tileRow + DirY(dir), 1, mazeRows)                         ' Считаем следующую строку и не выпускаем её за карту.
+    Dim nextRow As Integer = ClampInt(tileRow + DirY(dir), 1, MAZE_ROWS)                         ' Считаем следующую строку и не выпускаем её за карту.
     Dim targetY As Integer = PelletPixelY(nextRow)                                              ' Берём реальный центр следующей строки.
 
     If dir = 0 Or travel = 0 Then                                                               ' Если актёр стоит или шаг ещё не начат...
@@ -885,11 +1112,11 @@ Function EntityPixelY(tileCol As Integer, tileRow As Integer, dir As Integer, tr
 End Function                                                                                    ' Завершаем вычисление мировой Y-координаты.
 
 Function PelletPixelX(tileCol As Integer) As Integer                                            ' Функция возвращает реальную X-координату точки внутри клетки.
-    Return (tileCol - 1) * TILE + pelletCenterCols(tileCol)                                    ' Добавляем к клетке не математический центр, а измеренный центр тоннеля.
+    Return (tileCol - 1) * TILE + pelletColOffset(tileCol)                                    ' Добавляем к клетке не математический центр, а измеренный центр тоннеля.
 End Function                                                                                    ' Завершаем вычисление X точки.
 
 Function PelletPixelY(tileRow As Integer) As Integer                                            ' Функция возвращает реальную Y-координату точки внутри клетки.
-    Return (tileRow - 1) * TILE + pelletCenterRows(tileRow)                                    ' Берём верх мира и добавляем к строке измеренный центр прохода.
+    Return (tileRow - 1) * TILE + pelletRowOffset(tileRow)                                    ' Берём верх мира и добавляем к строке измеренный центр прохода.
 End Function                                                                                    ' Завершаем вычисление Y точки.
 
 Function CanMove(tileCol As Integer, tileRow As Integer, dir As Integer) As Boolean            ' Функция проверяет, можно ли сделать шаг из клетки в данном направлении.
@@ -908,7 +1135,7 @@ Function CanMove(tileCol As Integer, tileRow As Integer, dir As Integer) As Bool
 End Function                                                                                    ' Завершаем проверку возможности движения.
 
 Function CellAt(rowIndex As Integer, columnIndex As Integer) As String                          ' Функция безопасно читает символ клетки карты.
-    If rowIndex < 1 Or rowIndex > mazeRows Then                                                 ' Если строка вышла за карту...
+    If rowIndex < 1 Or rowIndex > MAZE_ROWS Then                                                 ' Если строка вышла за карту...
         Return "#"                                                                              ' ...возвращаем стену как безопасный барьер.
     End If                                                                                      ' Завершаем проверку строки.
 
@@ -956,21 +1183,6 @@ Function DirY(dir As Integer) As Integer                                        
     End Select                                                                                  ' Завершаем выбор вертикальной компоненты.
 End Function                                                                                    ' Завершаем вычисление DirY.
 
-Function OppositeDirection(dir As Integer) As Integer                                           ' Функция возвращает противоположное направление.
-    Select Case dir                                                                             ' Разбираем текущее направление.
-        Case DIR_LEFT                                                                           ' Если сейчас влево...
-            Return DIR_RIGHT                                                                    ' ...противоположное направление вправо.
-        Case DIR_RIGHT                                                                          ' Если сейчас вправо...
-            Return DIR_LEFT                                                                     ' ...противоположное направление влево.
-        Case DIR_UP                                                                             ' Если сейчас вверх...
-            Return DIR_DOWN                                                                     ' ...противоположное направление вниз.
-        Case DIR_DOWN                                                                           ' Если сейчас вниз...
-            Return DIR_UP                                                                       ' ...противоположное направление вверх.
-        Case Else                                                                               ' Если направление нулевое или неизвестное...
-            Return 0                                                                            ' ...возвращаем ноль.
-    End Select                                                                                  ' Завершаем выбор противоположного направления.
-End Function                                                                                    ' Завершаем вычисление OppositeDirection.
-
 Function MaxInt(leftValue As Integer, rightValue As Integer) As Integer                         ' Функция возвращает максимум из двух целых чисел.
     If leftValue > rightValue Then                                                              ' Если левое значение больше...
         Return leftValue                                                                        ' ...возвращаем его.
@@ -987,13 +1199,7 @@ Function MinInt(leftValue As Integer, rightValue As Integer) As Integer         
     Return rightValue                                                                           ' Иначе возвращаем правое значение.
 End Function                                                                                    ' Завершаем вычисление минимума.
 
-Function AbsInt(value As Integer) As Integer                                                    ' Функция возвращает модуль целого числа.
-    If value < 0 Then                                                                           ' Если число отрицательное...
-        Return - value                                                                           ' ...меняем знак и возвращаем положительное значение.
-    End If                                                                                      ' Завершаем проверку знака.
-
-    Return value                                                                                ' Для неотрицательного числа возвращаем его как есть.
-End Function                                                                                    ' Завершаем вычисление модуля.
+' Завершаем вычисление модуля.
 
 Function ClampInt(value As Integer, lowValue As Integer, highValue As Integer) As Integer      ' Функция ограничивает число диапазоном.
     If value < lowValue Then                                                                    ' Если число меньше нижней границы...
@@ -1024,7 +1230,7 @@ Function WorldViewportBottom() As Integer                                       
 End Function                                                                                    ' Завершаем вычисление нижней границы viewport.
 
 Function IsTunnelPassageRow(rowIndex As Integer) As Boolean                                     ' Функция проверяет, является ли строка сквозным туннелем.
-    If rowIndex < 1 Or rowIndex > mazeRows Then                                                 ' Если строка вне карты...
+    If rowIndex < 1 Or rowIndex > MAZE_ROWS Then                                                 ' Если строка вне карты...
         Return False                                                                            ' ...туннелем она быть не может.
     End If                                                                                      ' Завершаем проверку диапазона строки.
 

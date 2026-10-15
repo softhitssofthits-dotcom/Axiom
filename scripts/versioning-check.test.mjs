@@ -41,6 +41,15 @@ test('Правки справочника и сопровождающих зап
   assert.equal(result.status, 0, result.stderr);
 });
 
+test('Изменение runnable-примера без изменений реализации не требует повышения', () => {
+  const f = fixture();
+  f.write('samples/graphics/game/maze_chase.axm', 'Изменение игрового примера\n');
+  f.write('samples/graphics/game/maze_chase_pellet_calibration.txt', 'Изменение настроек примера\n');
+  f.git('add', '.');
+  const result = f.check('--base', 'HEAD');
+  assert.equal(result.status, 0, result.stderr);
+});
+
 test('Обработчик проверяет подготовленный справочник, а не более новые исходники', () => {
   const f = fixture();
   f.write('docs/manual/isnumeric.html', 'Правка\n');
@@ -70,12 +79,24 @@ test('Совмещённые правки реализации IDE по-преж
   assert.match(result.stderr, /Изменён ide/);
 });
 
-test('Посторонние инструменты не подпадают под исключение справочника', () => {
+test('Документация и инструменты сопровождения не требуют продуктовой версии', () => {
   const f = fixture();
-  f.write('docs/manual/isnumeric.html', 'Правка\n');
-  f.write('scripts/package-ide.mjs', 'Изменение инструмента\n');
+  f.write('AGENTS.md', 'Уточнение правил разработки\n');
+  f.write('docs/PLANS4.md', 'Запись в план\n');
+  f.write('docs/VERSIONING.md', 'Уточнение правил версий\n');
+  const versioningScript = fs.readFileSync(path.join(root, 'scripts/versioning.mjs'), 'utf8');
+  f.write('scripts/versioning.mjs', `${versioningScript}\n// Изменение проверки версий\n`);
+  f.write('scripts/versioning-check.test.mjs', 'Изменение проверки правил\n');
+  f.git('add', '.');
+  const result = f.check('--base', 'HEAD');
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test('Изменение упаковки IDE требует повышения только IDE', () => {
+  const f = fixture();
+  f.write('scripts/package-ide.mjs', 'Изменение упаковки приложения\n');
   f.git('add', '.');
   const result = f.check('--base', 'HEAD');
   assert.equal(result.status, 1);
-  assert.match(result.stderr, /Изменены действующие документы\/инструменты/);
+  assert.match(result.stderr, /Изменён ide/);
 });
