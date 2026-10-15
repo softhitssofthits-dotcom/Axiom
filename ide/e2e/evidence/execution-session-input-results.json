@@ -1,0 +1,74 @@
+[
+  {
+    "id": "input-sequential-prompts",
+    "spec": "input-prompts.spec.js",
+    "name": "Два последовательных INPUT: приглашение и введённое имя не повторяются",
+    "ms": 10724,
+    "passed": 19,
+    "failures": [],
+    "notes": [
+      "Консоль во время второго INPUT: Введите ваше имя: Анна\nВведите ваш возраст?\n\n"
+    ],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58811/e82af096-86c0-48e7-b338-7d7d137ac15d\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "input-snapshot-stream-order",
+    "spec": "input-prompts.spec.js",
+    "name": "Снимок INPUT и запоздалый поток вывода: согласование и сохранность набора",
+    "ms": 9469,
+    "passed": 6,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58818/45d614fb-2309-4e4a-a5ff-bfdd01ca4917\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "input-name-age-sample",
+    "spec": "input-prompts.spec.js",
+    "name": "Учебный пример имени и возраста запускается в Electron",
+    "ms": 4827,
+    "passed": 3,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58830/48bc87ed-8806-453c-9fe5-67f5f156729a\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "input-live-check-keeps-terminal-focus",
+    "spec": "input-prompts.spec.js",
+    "name": "Фоновая диагностика во время INPUT не переводит фокус из консоли в редактор",
+    "ms": 4521,
+    "passed": 2,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58835/a1300816-8f5f-4911-b69b-1a3585b56786\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "input-prompt-separators",
+    "spec": "input-prompts.spec.js",
+    "name": "INPUT: разделители приглашения, пустая строка и пунктуация",
+    "ms": 8634,
+    "passed": 7,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58839/a787f9aa-f3bf-464b-a690-1224f5ea36a0\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

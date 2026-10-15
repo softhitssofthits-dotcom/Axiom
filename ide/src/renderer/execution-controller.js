@@ -1,7 +1,7 @@
 class ExecutionController {
   constructor(ide, api) {
     this.ide = ide; this.api = api; this.sessionId = null; this.stopId = null;
-    this.inputRequestId = null; this.inputTarget = null; this.inputText = ''; this.inputPrompt = ''; this.outputText = ''; this.streamedOutputText = ''; this.pendingEvents = [];
+    this.inputRequestId = null; this.inputTarget = null; this.inputRevision = 0; this.inputText = ''; this.inputPrompt = ''; this.outputText = ''; this.streamedOutputText = ''; this.pendingEvents = [];
     this.disposers = [api.onBackendEvent(message => this.event(message)),
       api.onBackendFault(fault => this.fault(fault.message))];
   }
@@ -41,6 +41,7 @@ class ExecutionController {
         if (message.event === 'output.replace' || !this.outputText.startsWith(this.streamedOutputText)) this.outputText = this.streamedOutputText;
         this.renderOutput(); this.api.acknowledgeOutput(this.sessionId, payload.outputVersion); break;
       case 'input.request':
+        this.inputRevision++;
         this.inputRequestId = payload.inputRequestId; this.inputText = ''; this.inputPrompt = payload.prompt;
         this.inputTarget = payload.target || 'console';
         this.outputText = payload.outputText; this.renderOutput();
@@ -103,8 +104,10 @@ class ExecutionController {
     for (const character of data) {
       if (character === '\r' || character === '\n') {
         const id = this.inputRequestId; const text = this.inputText;
+        const sessionId = this.sessionId, revision = this.inputRevision;
         this.inputRequestId = null; this.inputText = ''; this.inputPrompt = ''; this.ide.term.write('\r\n');
-        const result = await this.api.submitInput(this.sessionId, id, text);
+        const result = await this.api.submitInput(sessionId, id, text);
+        if (this.sessionId !== sessionId || this.inputRevision !== revision || (this.inputRequestId && this.inputRequestId !== id)) return;
         if (!result.ok) this.fault(result.error.message);
         break;
       } else if (character === '\x7f' || character === '\b') {
@@ -115,16 +118,21 @@ class ExecutionController {
   async stop() {
     if (this.starting) { this.pendingStop = true; return; }
     if (!this.sessionId) return;
-    const result = await this.api.stopExecution(this.sessionId);
+    const sessionId = this.sessionId;
+    const result = await this.api.stopExecution(sessionId);
+    if (this.sessionId !== sessionId) return;
     if (!result.ok) this.fault(result.error.message);
   }
   async debug(command) {
     if (!this.stopId || !this.sessionId) return;
     const stopId = this.stopId;
+    const sessionId = this.sessionId, request = {};
+    this.debugRequest = request;
     this.stopId = null;
     this.debugBusy=true;this.ide.trace?.clearMarker();this.ide.trace?.update();
     this.ide.setStatus(I18N.t('trace.running'));
-    const result = await this.api.debugCommand(this.sessionId, command, stopId);
+    const result = await this.api.debugCommand(sessionId, command, stopId);
+    if (this.sessionId !== sessionId || this.debugRequest !== request) return;
     if (!result.ok) {
       if (this.sessionId && !this.stopId) this.stopId = stopId;
       this.ide.setStatus(result.error.message);

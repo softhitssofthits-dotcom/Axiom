@@ -25,7 +25,7 @@ dotnet build src/Axiom.DesktopHost -c Debug
 ## Проверки
 
 
-Каталог Electron содержит 419 сценариев по `ide/e2e/SCENARIOS.json` на 15 октября 2026 года. Просмотр каталога не запускает приложение:
+Каталог Electron содержит 420 сценариев по `ide/e2e/SCENARIOS.json` на 15 октября 2026 года. Просмотр каталога не запускает приложение:
 
 ```powershell
 node ide/e2e/runner.js --list

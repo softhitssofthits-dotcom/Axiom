@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 419,
+  "count": 420,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -1566,6 +1566,11 @@
       "id": "enter-declaration-with-suggestions",
       "spec": "enter-declaration.spec.js",
       "name": "Один Enter после набранного DIM с открытым дополнением"
+    },
+    {
+      "id": "execution-late-command-response",
+      "spec": "execution-session.spec.js",
+      "name": "Поздние ответы INPUT, Stop и отладки не повреждают следующий настоящий запуск"
     },
     {
       "id": "files-create-without-overwrite",
