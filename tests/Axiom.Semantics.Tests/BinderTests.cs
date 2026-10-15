@@ -6,6 +6,16 @@ namespace Axiom.Semantics.Tests;
 
 public sealed class BinderTests
 {
+    [Theory]
+    [InlineData("IF 1 THEN PRINT 1", "MB2008")]
+    [InlineData("IF TRUE THEN DIM local AS INTEGER = 1\nPRINT local", "MB2001")]
+    [InlineData("IF FALSE THEN DIM local AS INTEGER = 1 ELSE PRINT local", "MB2001")]
+    public void Bind_SingleLineIfRetainsConditionAndScopeRules(string source, string code)
+    {
+        BindProgram(source, out var diagnostics);
+        Assert.Contains(diagnostics, d => d.Code == code);
+    }
+
     [Fact]
     public void Bind_VariableDeclaration()
     {

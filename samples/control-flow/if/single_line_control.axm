@@ -1,0 +1,12 @@
+' Ожидаемый вывод: 1, 3, 7, 8.
+FOR i = 1 TO 4
+    IF i = 2 THEN CONTINUE FOR
+    IF i = 4 THEN EXIT FOR
+    PRINT i
+NEXT
+PRINT Choose(TRUE)
+PRINT Choose(FALSE)
+
+FUNCTION Choose(flag AS BOOLEAN) AS INTEGER
+    IF flag THEN RETURN 7 ELSE RETURN 8
+END FUNCTION

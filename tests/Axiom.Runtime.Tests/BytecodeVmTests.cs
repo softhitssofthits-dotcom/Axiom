@@ -8,6 +8,96 @@ namespace Axiom.Runtime.Tests;
 
 public sealed class BytecodeVmTests
 {
+    [Theory]
+    [InlineData("{body}")]
+    [InlineData("IF TRUE THEN\n{body}\nEND IF")]
+    [InlineData("IF FALSE THEN\nPRINT \"bad\"\nELSEIF TRUE THEN\n{body}\nEND IF")]
+    [InlineData("IF FALSE THEN\nPRINT \"bad\"\nELSE\n{body}\nEND IF")]
+    [InlineData("FOR i = 1 TO 1\n{body}\nNEXT")]
+    [InlineData("DIM i = 0\nWHILE i < 1\n{body}\ni = i + 1\nEND WHILE")]
+    [InlineData("DIM i = 0\nDO WHILE i < 1\n{body}\ni = i + 1\nLOOP")]
+    [InlineData("DIM i = 0\nDO UNTIL i = 1\n{body}\ni = i + 1\nLOOP")]
+    [InlineData("DIM i = 0\nDO\n{body}\ni = i + 1\nLOOP WHILE i < 1")]
+    [InlineData("DIM i = 0\nDO\n{body}\ni = i + 1\nLOOP UNTIL i = 1")]
+    [InlineData("DO\n{body}\nEXIT DO\nLOOP")]
+    [InlineData("SELECT CASE 1\nCASE 1\n{body}\nCASE ELSE\nPRINT \"bad\"\nEND SELECT")]
+    [InlineData("SELECT CASE 2\nCASE 1\nPRINT \"bad\"\nCASE ELSE\n{body}\nEND SELECT")]
+    [InlineData("TRY\n{body}\nCATCH problem\nPRINT \"bad\"\nEND TRY")]
+    [InlineData("TRY\nERROR \"DEMO\"\nCATCH problem\n{body}\nEND TRY")]
+    [InlineData("TRY\nDIM n = 1\nFINALLY\n{body}\nEND TRY")]
+    [InlineData("Show()\nSUB Show()\n{body}\nEND SUB")]
+    [InlineData("DIM n = Show()\nFUNCTION Show() AS INTEGER\n{body}\nRETURN 1\nEND FUNCTION")]
+    [InlineData("TYPE Worker\nSUB Show()\n{body}\nEND SUB\nEND TYPE\nDIM item AS Worker\nitem.Show()")]
+    [InlineData("Outer()\nSUB Outer()\nInner()\nSUB Inner()\n{body}\nEND SUB\nEND SUB")]
+    public void Execute_SingleLineIfInsideEveryStatementContainer(string wrapper)
+    {
+        foreach (var condition in new[] { "TRUE", "FALSE" })
+        {
+            var source = wrapper.Replace("{body}", $"IF {condition} THEN PRINT \"chosen\" ELSE PRINT \"other\"");
+            var (_, host, result) = ExecuteProgram(source);
+            Assert.True(result.Succeeded);
+            Assert.Equal([condition == "TRUE" ? "chosen" : "other"], host.Output);
+        }
+    }
+
+    [Theory]
+    [InlineData("WHILE i < 4", "END WHILE", "CONTINUE WHILE")]
+    [InlineData("DO WHILE i < 4", "LOOP", "CONTINUE DO")]
+    public void Execute_SingleLineIfContinueInWhileAndDo(string header, string closing, string skip)
+    {
+        var source = $"DIM i = 0\n{header}\ni = i + 1\nIF i = 2 THEN {skip}\nPRINT i\n{closing}\n";
+        var (_, host, result) = ExecuteProgram(source);
+        Assert.True(result.Succeeded);
+        Assert.Equal(["1", "3", "4"], host.Output);
+    }
+
+    [Theory]
+    [InlineData("TRUE", "inner", "after")]
+    [InlineData("FALSE", "outer", "after")]
+    public void Execute_SingleLineIfKeepsOuterElseAndEvaluatesConditionOnce(string condition, string branch, string after)
+    {
+        var source = $"""
+IF {condition} THEN
+    IF Check() THEN PRINT "inner" ELSE PRINT "bad"
+ELSE
+    PRINT "outer"
+END IF
+PRINT "after"
+FUNCTION Check() AS BOOLEAN
+    PRINT "condition"
+    RETURN TRUE
+END FUNCTION
+""";
+        var (_, host, result) = ExecuteProgram(source);
+        Assert.True(result.Succeeded);
+        Assert.Equal(condition == "TRUE" ? new[] { "condition", branch, after } : new[] { branch, after }, host.Output);
+    }
+
+    [Fact]
+    public void Execute_SingleLineIfPreservesBranchesReturnAndLoopControl()
+    {
+        const string text = """
+DIM value AS INTEGER = 0
+IF FALSE THEN value = 100
+IF TRUE THEN value = 3 ELSE value = 200
+IF FALSE THEN PRINT "bad" ELSE PRINT value
+IF TRUE THEN PRINT "yes" ELSE PRINT 1 / 0
+FOR i = 1 TO 4
+    IF i = 2 THEN CONTINUE FOR
+    IF i = 4 THEN EXIT FOR
+    PRINT i
+NEXT
+PRINT Choose(TRUE)
+PRINT Choose(FALSE)
+FUNCTION Choose(flag AS BOOLEAN) AS INTEGER
+    IF flag THEN RETURN 7 ELSE RETURN 8
+END FUNCTION
+""";
+        var (_, host, result) = ExecuteProgram(text);
+        Assert.True(result.Succeeded);
+        Assert.Equal(["3", "yes", "1", "3", "7", "8"], host.Output);
+    }
+
     [Fact]
     public void Execute_CompiledAmpersandConcatenatesMixedScalarValues()
     {

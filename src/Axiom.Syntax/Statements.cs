@@ -518,7 +518,8 @@ public sealed class IfStatementSyntax : StatementSyntax
         IReadOnlyList<ElseIfClauseSyntax> elseIfClauses,
         ElseClauseSyntax? elseClause,
         SyntaxToken endKeyword,
-        SyntaxToken endIfKeyword)
+        SyntaxToken endIfKeyword,
+        bool isSingleLine = false)
     {
         ArgumentNullException.ThrowIfNull(ifKeyword);
         ArgumentNullException.ThrowIfNull(condition);
@@ -536,6 +537,7 @@ public sealed class IfStatementSyntax : StatementSyntax
         ElseClause = elseClause;
         EndKeyword = endKeyword;
         EndIfKeyword = endIfKeyword;
+        IsSingleLine = isSingleLine;
     }
 
     public override SyntaxKind Kind => SyntaxKind.IfStatement;
@@ -555,6 +557,8 @@ public sealed class IfStatementSyntax : StatementSyntax
     public SyntaxToken EndKeyword { get; }
 
     public SyntaxToken EndIfKeyword { get; }
+
+    public bool IsSingleLine { get; }
 }
 
 public sealed class ForStatementSyntax : StatementSyntax

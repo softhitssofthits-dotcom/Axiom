@@ -7,6 +7,15 @@ const context = { window: {} };
 vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/renderer/lang-features.js'), 'utf8'), context);
 const signature = context.window.LangFeatures.builtinSignature;
 
+test('Заготовка однострочного IF не добавляет END IF и переводится', () => {
+  const p=providers('');
+  const suggestion=()=>p.features._completionProvider.provideCompletionItems(p.model,{lineNumber:1,column:1}).suggestions.find(s=>s.insertText.startsWith('IF ')&&!s.insertText.includes('\n'));
+  assert.equal(suggestion().insertText,'IF ${1:condition} THEN ${2:PRINT "yes"}$0');
+  assert.equal(suggestion().label,'IF — однострочный');
+  p.language('en');
+  assert.equal(suggestion().label,'IF — single line');
+});
+
 test('Области TYPE и вложенной функции включают тела и имеют различимые пути', () => {
   const doc=context.window.LangFeatures.scanDoc({getValue:()=>
     'TYPE Counter\nvalue AS INTEGER\nFUNCTION Read() AS INTEGER\nRETURN SELF.value\nEND FUNCTION\nEND TYPE\nFUNCTION Outer() AS INTEGER\nFUNCTION Read() AS INTEGER\nRETURN 2\nEND FUNCTION\nRETURN Read()\nEND FUNCTION\n'});

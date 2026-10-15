@@ -4,6 +4,17 @@ namespace Axiom.Ide.Tests;
 
 public sealed class SharedStructuralEditingTests
 {
+    [Theory]
+    [InlineData("IF TRUE THEN PRINT 1")]
+    [InlineData("IF TRUE THEN PRINT 1 ELSE PRINT 2 ' конец")]
+    public void EnterAfterSingleLineIfDoesNotInsertEndIf(string line)
+    {
+        var source = line + "\n";
+        var planner = new BlockEditPlanner(new AxiomCodeFormattingService());
+        var plan = planner.Plan(source, 1, 2, source.Length, CodeFormattingStyle.Classic);
+        Assert.Equal(source, source.Remove(plan.Start, plan.Length).Insert(plan.Start, plan.NewText));
+    }
+
     [Fact]
     public void StructuralPlannerIsIndependentOfAvalonEdit()
     {

@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 414,
+  "count": 416,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -2031,6 +2031,16 @@
       "id": "shell-trace-startup-readiness",
       "spec": "shell.spec.js",
       "name": "Команды трассировки недоступны до создания контроллера и работают после запуска"
+    },
+    {
+      "id": "language-single-line-if",
+      "spec": "single-line-if.spec.js",
+      "name": "Однострочный IF: исполнение, подсветка, форматирование, заготовка и Enter"
+    },
+    {
+      "id": "language-catch-hover-line-endings",
+      "spec": "single-line-if.spec.js",
+      "name": "Подсказка переменной CATCH: объявление и использование с LF и CRLF"
     },
     {
       "id": "smart-identifier-legacy",

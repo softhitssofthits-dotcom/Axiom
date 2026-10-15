@@ -1,0 +1,13 @@
+' Однострочный IF: один оператор в каждой ветви, без END IF.
+' Ожидаемый вывод: 0, Ноль, ELSE внутри строки, Готово.
+DIM value AS INTEGER = -3
+IF value < 0 THEN value = 0
+PRINT value
+IF value = 0 THEN PRINT "Ноль" ELSE PRINT "Не ноль"
+IF FALSE THEN PRINT "Эта ветвь не выполняется"
+IF TRUE THEN PRINT "ELSE внутри строки" ELSE PRINT "Ошибка"
+IF TRUE THEN ShowReady() ' Комментарий не меняет границы ветви.
+
+SUB ShowReady()
+    PRINT "Готово"
+END SUB

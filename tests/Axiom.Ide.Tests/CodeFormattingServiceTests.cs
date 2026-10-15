@@ -4,6 +4,15 @@ namespace Axiom.Ide.Tests;
 
 public sealed class CodeFormattingServiceTests
 {
+    [Theory]
+    [InlineData(CodeFormattingStyle.Classic, "IF value > 0 THEN PRINT value ELSE PRINT 0")]
+    [InlineData(CodeFormattingStyle.Modern, "If value > 0 Then Print value Else Print 0")]
+    public void SingleLineIfRemainsOneLine(CodeFormattingStyle style, string expected)
+    {
+        Assert.Equal(expected + "\nPRINT 7\n".Replace("PRINT", style == CodeFormattingStyle.Classic ? "PRINT" : "Print"),
+            _service.FormatDocument("if value>0 then print value else print 0\nprint 7\n", style));
+    }
+
     private readonly AxiomCodeFormattingService _service = new();
 
     [Theory]

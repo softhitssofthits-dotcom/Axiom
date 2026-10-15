@@ -187,6 +187,7 @@ const LangFeatures = (() => {
     return [
       { label: '#region', insert: "' #region ${1:" + I18N.t('outline.regionName') + "}\n$0\n' #endregion", detail: I18N.t('outline.regionSnippet') },
       { label: I18N.t('snippet.if'), insert: 'IF ${1:condition} THEN\n\t$0\nEND IF', detail: I18N.t('snippet.if.d') },
+      { label: I18N.t('snippet.ifsingle'), insert: 'IF ${1:condition} THEN ${2:PRINT "yes"}$0', detail: I18N.t('snippet.ifsingle.d') },
       { label: I18N.t('snippet.ifelse'), insert: 'IF ${1:condition} THEN\n\t$2\nELSE\n\t$0\nEND IF', detail: I18N.t('snippet.ifelse.d') },
       { label: I18N.t('snippet.while'), insert: 'WHILE ${1:condition}\n\t$0\nEND WHILE', detail: I18N.t('snippet.while.d') },
       { label: I18N.t('snippet.for'), insert: 'FOR ${1:i} = ${2:1} TO ${3:10}\n\t$0\nNEXT ${1:i}', detail: I18N.t('snippet.for.d') },

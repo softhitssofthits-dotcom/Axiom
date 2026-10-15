@@ -59,8 +59,10 @@ public sealed class EditorHoverTests
         Assert.Contains(items, h => h.Name == "Show" && h.Signature == "SUB Show(BYREF value AS DECIMAL, values AS INTEGER())");
     }
 
-    [Fact]
-    public void ScopeFieldsInterpolationAndForUseBoundSymbols()
+    [Theory]
+    [InlineData("\n")]
+    [InlineData("\r\n")]
+    public void ScopeFieldsInterpolationAndForUseBoundSymbols(string newline)
     {
         var source = """
             TYPE Product
@@ -77,15 +79,18 @@ public sealed class EditorHoverTests
                 PRINT counter
             NEXT
             """;
+        source = source.Replace("\r\n", "\n").Replace("\n", newline);
         var items = Hovers(source);
         Assert.Contains(items, h => h.Start == source.IndexOf("value, item", StringComparison.Ordinal) && h.Type == "STRING");
-        Assert.Contains(items, h => h.Start == source.IndexOf("value\nEND SUB", StringComparison.Ordinal) && h.Type == "INTEGER");
+        Assert.Contains(items, h => h.Start == source.IndexOf("PRINT value", StringComparison.Ordinal) + "PRINT ".Length && h.Type == "INTEGER");
         Assert.Equal(3, items.Count(h => h.Kind == "field" && h.Name == "Price" && h.Type == "DECIMAL"));
         Assert.Equal(2, items.Count(h => h.Name == "counter" && h.Type == "INTEGER"));
     }
 
-    [Fact]
-    public void InputFilesCatchAndNextHaveExactIdentifierLocations()
+    [Theory]
+    [InlineData("\n")]
+    [InlineData("\r\n")]
+    public void InputFilesCatchAndNextHaveExactIdentifierLocations(string newline)
     {
         var source = """
             DIM answer AS STRING
@@ -94,7 +99,7 @@ public sealed class EditorHoverTests
             OPEN "stream" FOR OUTPUT AS stream
             CLOSE stream
             TRY
-                ERROR 1
+                ERROR "DEMO"
             CATCH problem
                 PRINT problem.Message
             END TRY
@@ -102,10 +107,12 @@ public sealed class EditorHoverTests
                 PRINT counter
             NEXT counter
             """;
+        source = source.Replace("\r\n", "\n").Replace("\n", newline);
         var items = Hovers(source);
         Assert.Equal(2, items.Count(h => h.Name == "answer" && h.Type == "STRING"));
         Assert.Equal(3, items.Count(h => h.Name == "stream" && h.Type == "FILE"));
-        Assert.Contains(items, h => h.Name == "problem" && h.Start == source.IndexOf("problem\n", StringComparison.Ordinal));
+        var catchStart = source.IndexOf("CATCH problem", StringComparison.Ordinal) + "CATCH ".Length;
+        Assert.Contains(items, h => h.Name == "problem" && h.Kind == "errorVariable" && h.Type == "ERROR" && h.Start == catchStart && h.Length == "problem".Length);
         Assert.Equal(3, items.Count(h => h.Name == "counter" && h.Type == "INTEGER"));
     }
 
@@ -133,8 +140,10 @@ public sealed class EditorHoverTests
             Assert.Contains(items, h => h.Name == name && h.Kind == "field" && h.Type == type);
     }
 
-    [Fact]
-    public void BlockShadowingAndArbitraryTypeInferenceComeFromBinder()
+    [Theory]
+    [InlineData("\n")]
+    [InlineData("\r\n")]
+    public void BlockShadowingAndArbitraryTypeInferenceComeFromBinder(string newline)
     {
         var source = """
             DIM result = CDEC(2) + CDEC(3)
@@ -145,9 +154,10 @@ public sealed class EditorHoverTests
             END IF
             PRINT value, result
             """;
+        source = source.Replace("\r\n", "\n").Replace("\n", newline);
         var items = Hovers(source);
         Assert.Contains(items, h => h.Name == "result" && h.Type == "DECIMAL");
-        Assert.Contains(items, h => h.Start == source.IndexOf("value\nEND IF", StringComparison.Ordinal) && h.Type == "BOOLEAN");
+        Assert.Contains(items, h => h.Start == source.IndexOf("PRINT value", StringComparison.Ordinal) + "PRINT ".Length && h.Type == "BOOLEAN");
         Assert.Contains(items, h => h.Start == source.IndexOf("value, result", StringComparison.Ordinal) && h.Type == "STRING");
     }
 

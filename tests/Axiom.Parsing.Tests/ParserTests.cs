@@ -6,6 +6,58 @@ namespace Axiom.Parsing.Tests;
 
 public sealed class ParserTests
 {
+    [Theory]
+    [InlineData("IF TRUE THEN PRINT 1", false)]
+    [InlineData("IF TRUE THEN PRINT 1 ELSE PRINT 2", true)]
+    [InlineData("IF TRUE THEN PRINT ELSE PRINT", true)]
+    [InlineData("IF TRUE THEN PRINT 1; ELSE PRINT 2; ' конец", true)]
+    public void Parse_SingleLineIf(string text, bool hasElse)
+    {
+        var program = ParseProgram(text, out var diagnostics);
+        Assert.Empty(diagnostics);
+        var statement = AssertGlobalStatement<IfStatementSyntax>(program);
+        Assert.True(statement.IsSingleLine);
+        Assert.Single(statement.Statements);
+        Assert.Equal(hasElse, statement.ElseClause is not null);
+    }
+
+    [Theory]
+    [InlineData("IF TRUE THEN PRINT 1 ELSE")]
+    [InlineData("IF TRUE THEN ELSE PRINT 2")]
+    [InlineData("IF TRUE THEN PRINT 1 PRINT 2")]
+    [InlineData("IF TRUE THEN PRINT 1 : PRINT 2")]
+    [InlineData("IF TRUE THEN PRINT 1 ELSE PRINT 2 ELSE PRINT 3")]
+    [InlineData("IF TRUE THEN PRINT 1 ELSEIF FALSE THEN PRINT 2")]
+    [InlineData("IF TRUE THEN IF FALSE THEN PRINT 1 ELSE PRINT 2")]
+    [InlineData("IF TRUE THEN FOR i = 1 TO 2")]
+    [InlineData("IF TRUE THEN PRINT 1 END IF")]
+    public void Parse_SingleLineIfRejectsUnsupportedForms(string text)
+    {
+        ParseProgram(text, out var diagnostics);
+        Assert.NotEmpty(diagnostics);
+    }
+
+    [Theory]
+    [InlineData("\n")]
+    [InlineData("\r\n")]
+    public void Parse_SingleLineIfStopsAtNewlineInsideBlock(string newline)
+    {
+        var text = string.Join(newline, "IF TRUE THEN ' блочная форма", "IF FALSE THEN PRINT 1 ELSE PRINT 2", "PRINT 3", "END IF");
+        var program = ParseProgram(text, out var diagnostics);
+        Assert.Empty(diagnostics);
+        var outer = AssertGlobalStatement<IfStatementSyntax>(program);
+        Assert.Equal(2, outer.Statements.Count);
+        Assert.False(outer.IsSingleLine);
+    }
+
+    [Fact]
+    public void Parse_SingleLineIfErrorDoesNotConsumeFollowingLine()
+    {
+        var program = ParseProgram("IF TRUE THEN PRINT 1 PRINT 2\nPRINT 3\n", out var diagnostics);
+        Assert.NotEmpty(diagnostics);
+        Assert.Equal(2, program.Members.Count);
+    }
+
     [Fact]
     public void Parse_LiteralExpression()
     {

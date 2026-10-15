@@ -7,20 +7,22 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор IF</span></nav>
-<p class="eyebrow">Справочная статья</p><h1 class="page-title">Оператор IF</h1><p class="lead">IF — оператор языка Axiom, который выбирает блок инструкций по логическому условию. Ветви ELSEIF задают дополнительные проверки, а ELSE — действие при отсутствии истинного условия.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<p class="eyebrow">Справочная статья</p><h1 class="page-title">Оператор IF</h1><p class="lead">IF — оператор языка Axiom, который выбирает действие по логическому условию. Для одного действия в каждой ветви подходит однострочная форма, для нескольких действий — блочная. В блочной форме ветви ELSEIF задают дополнительные проверки, а ELSE — действие при отсутствии истинного условия.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 <section class="article-section"><h2>Назначение и контекст</h2><p>Оператор работает на верхнем уровне программы и внутри подпрограмм и блоков, в консольной и графической программе. Специальный графический режим не требуется.</p><p>Используйте оператор для проверки данных перед действием или выбора между несколькими условиями. Условие должно иметь тип <code>BOOLEAN</code>; число само по себе не служит логическим условием.</p></section>
-<section class="article-section" id="syntax"><h2>Синтаксис</h2><pre><code class="language-axiom">IF &lt;логическое выражение&gt; THEN
+<section class="article-section" id="syntax"><h2>Синтаксис</h2><h3>Блочная форма</h3><pre><code class="language-axiom">IF &lt;логическое выражение&gt; THEN
     [&lt;операторы&gt;]
 [ELSEIF &lt;логическое выражение&gt; THEN
     [&lt;операторы&gt;]]
 [ELSE
     [&lt;операторы&gt;]]
-END IF</code></pre></section>
-<section class="article-section"><h2>Части конструкции</h2><p><code>THEN</code> завершает запись условия. Логическое выражение задаёт проверяемое условие и должно вернуть BOOLEAN. Операторы обозначают ноль или несколько инструкций выбранной ветви. Далее на отдельных строках расположен блок инструкций. Можно добавить несколько ветвей <code>ELSEIF</code> и одну завершающую ветвь <code>ELSE</code>. Блочная конструкция заканчивается <code>END IF</code>.</p></section>
-<section class="article-section"><h2>Выбор ветви</h2><p>Условия проверяются сверху вниз. Первое значение <code>TRUE</code> выбирает соответствующий блок; остальные условия и блоки пропускаются. Если все условия ложны, выполняется <code>ELSE</code>. Без <code>ELSE</code> программа продолжает работу после <code>END IF</code>.</p><p>Каждая ветвь образует собственную область видимости. Объявленные в ней имена недоступны после завершения ветви. Внутри ветви допускается другой блок <code>IF</code>.</p></section>
+END IF</code></pre><h3>Однострочная форма без ELSE</h3><pre><code class="language-axiom">IF &lt;логическое выражение&gt; THEN &lt;оператор&gt;</code></pre><h3>Однострочная форма с ELSE</h3><pre><code class="language-axiom">IF &lt;логическое выражение&gt; THEN &lt;оператор при TRUE&gt; ELSE &lt;оператор при FALSE&gt;</code></pre></section>
+<section class="article-section"><h2>Части конструкции</h2><p><code>THEN</code> отделяет условие от действий. Логическое выражение должно вернуть BOOLEAN. В блочной форме операторы обозначают ноль или несколько инструкций выбранной ветви на отдельных строках. Можно добавить несколько ветвей <code>ELSEIF</code> и одну завершающую ветвь <code>ELSE</code>. Блочная конструкция заканчивается <code>END IF</code>.</p><p>В однострочной форме после THEN и, если он указан, после ELSE требуется ровно один оператор. Например, это может быть присваивание, PRINT, вызов процедуры или RETURN. Условия допустимости самого оператора сохраняются: RETURN работает в подпрограмме, EXIT FOR и CONTINUE FOR — внутри цикла FOR. Обе ветви короткой формы располагаются на одной строке, а END IF не пишется.</p></section>
+<section class="article-section"><h2>Выбор ветви</h2><p>В однострочной форме условие вычисляется один раз: TRUE выбирает оператор после THEN, FALSE — оператор после ELSE. Невыбранная ветвь не выполняется. Если ELSE отсутствует и условие ложно, программа переходит к следующей строке.</p><p>В блочной форме условия проверяются сверху вниз. Первое значение <code>TRUE</code> выбирает соответствующий блок; остальные условия и блоки пропускаются. Если все условия ложны, выполняется <code>ELSE</code>. Без <code>ELSE</code> программа продолжает работу после <code>END IF</code>.</p><p>В обеих формах каждая ветвь образует собственную область видимости. Объявленные в ней имена недоступны в другой ветви и после завершения конструкции. Внутри ветви блочного IF допускается другой IF, включая однострочный.</p></section>
+<section class="article-section" id="single-line"><h2>Правила однострочной формы</h2><p>Если после THEN на той же строке находится оператор, начинается однострочный IF. Если после THEN строка заканчивается или содержит только комментарий, начинается блочный IF с обязательным END IF. Комментарий после оператора короткой формы допускается; слова ELSE и THEN внутри строки или комментария не образуют ветвь.</p><p>Перевод строки завершает однострочную конструкцию. Переносить её ELSE на следующую строку нельзя. ELSEIF, вложенный IF и операторы, открывающие блоки FOR, WHILE, DO, SELECT CASE, TRY, SUB, FUNCTION или TYPE, в короткой ветви не допускаются. Для них используйте блочный IF. Несколько операторов через двоеточие также не поддерживаются.</p><p>Форматирование сохраняет короткую форму на одной строке. Enter в конце завершённого однострочного IF переводит курсор на следующую строку без вставки END IF. В дополнениях редактора доступна отдельная заготовка однострочного IF.</p></section>
 <section class="article-section">
             <h2>Диагностика</h2>
             <ul>
+                <li><code>MB1004</code> — в однострочной форме отсутствует оператор ветви, указан лишний оператор или END IF, либо ветвь начинается с неподдерживаемого вложенного блока.</li>
                 <li><code>MB2008</code> — условие после <code>IF</code> или <code>ELSEIF</code> не имеет тип <code>BOOLEAN</code>.</li>
                 <li><code>MB2001</code> — имя, объявленное внутри ветви, используется после выхода из области видимости.</li>
                 <li><code>MB1005</code> — в конструкции <code>IF</code> допускается только один блок <code>ELSE</code>.</li>
@@ -36,8 +38,16 @@ ELSE
     PRINT "Малое"
 END IF</code></pre><p>Результат:</p>
 <pre><code>Среднее</code></pre></section>
+<section class="article-section"><h2>Пример однострочной формы</h2><p>Один PRINT в каждой ветви позволяет записать выбор сообщения на одной строке:</p><pre><code class="language-axiom">DIM value AS INTEGER = 7
+IF value &gt; 0 THEN PRINT "Положительное" ELSE PRINT "Неположительное"
+IF value &lt; 0 THEN value = 0
+PRINT value</code></pre><p>Программа выводит:</p><pre><code>Положительное
+7</code></pre><p>Первый IF выбирает сообщение, второй меняет значение только при отрицательном числе. Ни одна из этих конструкций не требует END IF.</p></section>
 <section class="article-section"><h2>Запускаемые примеры</h2><p>Откройте нужный файл в IDE и запустите его. Примеры с ошибкой предназначены для проверки сообщения компилятора или выполнения.</p><ul class="resource-list">
                 <li><a href="../../samples/control-flow/if/basic_if_else.axm">IF: базовая ветвь ELSE</a></li>
+                <li><a href="../../samples/control-flow/if/single_line.axm">Однострочный IF: присваивание, вывод и вызов процедуры</a></li>
+                <li><a href="../../samples/control-flow/if/single_line_control.axm">Однострочный IF: RETURN, EXIT FOR и CONTINUE FOR</a></li>
+                <li><a href="../../samples/control-flow/if/single_line_contexts.axm">Однострочный IF внутри WHILE, DO, SELECT CASE и TRY</a></li>
                 <li><a href="../../samples/control-flow/if/elseif_chain.axm">IF: цепочка ELSEIF</a></li>
                 <li><a href="../../samples/smoke/block_scope_semantics.axm">Блочная область видимости</a></li>
                 <li><a href="../../samples/acceptance/negative/if_requires_boolean.axm">Ошибка: условие не BOOLEAN</a></li>

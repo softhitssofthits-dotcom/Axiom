@@ -1,0 +1,25 @@
+' Однострочный IF внутри циклов, SELECT CASE и обработки ошибок.
+' Ожидаемый вывод: WHILE, DO, SELECT CASE, CATCH, FINALLY.
+DIM iteration AS INTEGER = 0
+WHILE iteration < 1
+    IF TRUE THEN PRINT "WHILE"
+    iteration = iteration + 1
+END WHILE
+
+DO
+    IF TRUE THEN PRINT "DO"
+    IF TRUE THEN EXIT DO
+LOOP
+
+SELECT CASE 1
+    CASE 1
+        IF TRUE THEN PRINT "SELECT CASE" ELSE PRINT "Ошибка"
+END SELECT
+
+TRY
+    IF TRUE THEN ERROR "DEMO"
+CATCH problem
+    IF problem.Code = "DEMO" THEN PRINT "CATCH" ELSE PRINT "Ошибка"
+FINALLY
+    IF TRUE THEN PRINT "FINALLY"
+END TRY

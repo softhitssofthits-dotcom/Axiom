@@ -1293,6 +1293,10 @@ public sealed partial class Parser
         var ifKeyword = Match(SyntaxKind.IfKeyword, "IF");
         var condition = ParseExpression();
         var thenKeyword = Match(SyntaxKind.ThenKeyword, "THEN");
+        if (Current.Kind is not SyntaxKind.NewLineToken and not SyntaxKind.EndOfFileToken)
+        {
+            return ParseSingleLineIf(ifKeyword, condition, thenKeyword);
+        }
         SkipNewLines();
 
         var statements = ParseStatementsUntil(static parser =>
@@ -1332,6 +1336,55 @@ public sealed partial class Parser
 
         var (endKeyword, endIfKeyword) = MatchEndPair(SyntaxKind.IfKeyword, "END IF");
         return new IfStatementSyntax(ifKeyword, condition, thenKeyword, statements, elseIfClauses, elseClause, endKeyword, endIfKeyword);
+    }
+
+    private IfStatementSyntax ParseSingleLineIf(SyntaxToken ifKeyword, ExpressionSyntax condition, SyntaxToken thenKeyword)
+    {
+        var statements = ParseSingleLineIfBranch();
+        ElseClauseSyntax? elseClause = null;
+        if (Current.Kind == SyntaxKind.ElseKeyword)
+        {
+            var elseKeyword = NextToken();
+            elseClause = new ElseClauseSyntax(elseKeyword, ParseSingleLineIfBranch());
+        }
+
+        if (Current.Kind is not SyntaxKind.NewLineToken and not SyntaxKind.EndOfFileToken)
+        {
+            ReportUnexpectedToken(Current, "После ветви однострочного IF ожидается конец строки; допускается один оператор в каждой ветви");
+            SkipSingleLineIfRemainder();
+        }
+
+        // Короткая форма использует те же ветви и области видимости, но не имеет END IF в исходнике.
+        return new IfStatementSyntax(ifKeyword, condition, thenKeyword, statements, [], elseClause,
+            CreateMissingToken(SyntaxKind.EndKeyword), CreateMissingToken(SyntaxKind.IfKeyword), isSingleLine: true);
+    }
+
+    private IReadOnlyList<StatementSyntax> ParseSingleLineIfBranch()
+    {
+        if (IsStatementTerminator(Current.Kind))
+        {
+            ReportUnexpectedToken(Current, "В ветви однострочного IF ожидается оператор");
+            return [];
+        }
+
+        if (Current.Kind is SyntaxKind.IfKeyword or SyntaxKind.SelectKeyword or SyntaxKind.ForKeyword
+            or SyntaxKind.WhileKeyword or SyntaxKind.DoKeyword or SyntaxKind.TryKeyword
+            or SyntaxKind.SubKeyword or SyntaxKind.FunctionKeyword or SyntaxKind.TypeKeyword)
+        {
+            ReportUnexpectedToken(Current, "В ветви однострочного IF нельзя открывать вложенный блок; используйте блочную форму IF");
+            SkipSingleLineIfRemainder();
+            return [];
+        }
+
+        return [ParseStatement()];
+    }
+
+    private void SkipSingleLineIfRemainder()
+    {
+        while (Current.Kind is not SyntaxKind.NewLineToken and not SyntaxKind.EndOfFileToken)
+        {
+            NextToken();
+        }
     }
 
     private ForStatementSyntax ParseForStatement()
