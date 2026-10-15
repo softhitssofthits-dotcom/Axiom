@@ -68,6 +68,7 @@ class AxiomIDE {
       // Подключаем службы до регистрации языка: первый вызов Monaco фиксирует их.
       this.createEditor();
       this.setupLanguage();
+      this.assistant = new window.ProgramAssistant(this);
       this.monaco.editor.setModelLanguage(this.editor.getModel(),'axiom');
       this.monaco.editor.setTheme('axiom-'+this.settings.theme);
       // При первом создании эта служба Monaco задаёт собственное значение
@@ -573,9 +574,14 @@ class AxiomIDE {
       { id: 'trace-breakpoint', translation: 'trace.breakpoint', key: 'F9', icon: 'codicon-debug-breakpoint', trace: 'breakpoint' },
       { id: 'trace-clear', translation: 'trace.clear', key: 'Ctrl+Shift+F9', icon: 'codicon-clear-all', trace: 'clear' },
       { separator: true },
+      { id: 'assistant-incoming', translation: 'assistant.incoming', icon: 'codicon-references' },
+      { id: 'assistant-outgoing', translation: 'assistant.outgoing', icon: 'codicon-call-outgoing' },
+      { id: 'assistant-preview', translation: 'assistant.preview', icon: 'codicon-preview' },
+      { id: 'assistant-createRegion', translation: 'assistant.createRegion', icon: 'codicon-group-by-ref-type' },
+      { separator: true },
       { id: 'command-palette', translation: 'menu.editor.commandPalette', key: 'F1', icon: 'codicon-symbol-misc' },
     ];
-    let contextLine;
+    let contextLine, contextItem, contextVersion;
     const popup = UIControls.createContextMenu(menu, {translate: I18N.t,
       onClose: () => this.editor?.focus(), onAction: id => run(id)});
     const run = (id) => {
@@ -585,15 +591,23 @@ class AxiomIDE {
       else if (id === 'trace-clear') this.trace.command('clear');
       else if (id === 'change-all') this.editor?.trigger('ax-context', 'editor.action.changeAllOccurrences');
       else if (id === 'command-palette') this.editor?.trigger('ax-context', 'editor.action.quickCommand');
+      else if (id.startsWith('assistant-')) {
+        if(this.editor.getModel().getVersionId()!==contextVersion)return;
+        const action=id.slice('assistant-'.length);
+        if(action==='createRegion')this.assistant.regionDialog(contextItem);
+        else this.assistant.show(action,contextItem);
+      }
       else this.handleAction(id);
     };
     document.addEventListener('contextmenu', (event) => {
-      if (!event.target.closest?.('.monaco-editor')) return;
+      if (!document.getElementById('editor').contains(event.target)) return;
       event.preventDefault();
       event.stopPropagation();
       contextLine = this.editor.getTargetAtClientPoint(event.clientX, event.clientY)?.position?.lineNumber;
+      contextVersion = this.editor.getModel().getVersionId();
+      contextItem = this.outlinePanel?.items.findLast(item=>contextLine>=item.lineNo&&contextLine<=item.endLineNo)||null;
       popup.show(items.map(item => ({...item,
-        enabled: !item.trace || (this.trace.allowed(item.trace) && (item.trace !== 'breakpoint' || !!contextLine))
+        enabled: item.id==='assistant-createRegion' ? !this.editor.getRawOptions().readOnly : item.id==='assistant-preview' ? !!contextItem : !item.trace || (this.trace.allowed(item.trace) && (item.trace !== 'breakpoint' || !!contextLine))
       })), event.clientX, event.clientY);
     }, true);
   }
@@ -1258,6 +1272,9 @@ class AxiomIDE {
     document.querySelectorAll('.editor-tab').forEach((t) => t.classList.toggle('active', t.dataset.path === this.activeFile));
     this.renderMiscellaneousFiles();
     this.updateSaveButton();
+    this.rebuildOutline();
+    this.assistant?.invalidate();
+    this.assistant?.updateHistory();
     API.addRecentFile(newPath).then((recent) => { this.settings.recentFiles = recent; this.renderRecentFiles(); }).catch(() => {});
     if (this.projectDir && (this.isProjectFile(old) || this.isProjectFile(newPath))) await this.refreshProjectFiles();
   }
@@ -1936,6 +1953,7 @@ class AxiomIDE {
       for (const { model } of this.openFiles.values()) byModel.set(model, []);
     }
 
+    this.assistant?.acceptDiagnostics(byModel.keys());
     const el = document.getElementById('diagnostics-content');
     el.innerHTML = '';
     this._lastDiagnostics = diags;
@@ -2001,6 +2019,12 @@ class AxiomIDE {
   }
 
   jumpTo(file, line, col) {
+    if(this.assistant){
+      const target=this.findModelForFile(file);
+      const entry=[...this.openFiles].find(([,doc])=>doc.model===target);
+      if(entry)this.assistant.navigate(entry[0],line,col);
+      return;
+    }
     const model = this.findModelForFile(file);
     if (!model) return; // the file's editor is gone — do NOT move the caret of whatever is active
     for (const [p, f] of this.openFiles) {
@@ -2157,6 +2181,7 @@ class AxiomIDE {
 
   applyLocale() {
     I18N.apply();
+    this.assistant?.localize();
     UIControls.setLabel(document.getElementById('menu-settings'), I18N.t('menu.settings'));
     this.applyMenuMnemonics();
     document.querySelectorAll('.xs-context-menu [data-translation]').forEach(row => {

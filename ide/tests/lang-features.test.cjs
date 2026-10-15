@@ -7,6 +7,15 @@ const context = { window: {} };
 vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/renderer/lang-features.js'), 'utf8'), context);
 const signature = context.window.LangFeatures.builtinSignature;
 
+test('Области TYPE и вложенной функции включают тела и имеют различимые пути', () => {
+  const doc=context.window.LangFeatures.scanDoc({getValue:()=>
+    'TYPE Counter\nvalue AS INTEGER\nFUNCTION Read() AS INTEGER\nRETURN SELF.value\nEND FUNCTION\nEND TYPE\nFUNCTION Outer() AS INTEGER\nFUNCTION Read() AS INTEGER\nRETURN 2\nEND FUNCTION\nRETURN Read()\nEND FUNCTION\n'});
+  assert.equal(doc.types[0].endLineNo,6);
+  assert.equal(doc.functions.find(f=>f.name==='Outer').endLineNo,12);
+  assert.equal(doc.functions[0].scope.join('.'),'Counter');
+  assert.equal(doc.functions.find(f=>f.lineNo===8).scope.join('.'),'Outer');
+});
+
 test('Разделы: вложенность, одинаковые названия, CRLF и игнорирование меток в строках и подпрограммах', () => {
   const source = ["PRINT \"' #region Ложный\"", "' #ReGiOn Игра", "SUB Move()", "' #region Внутренний", 'END SUB',
     "' #region Вложенный", 'FUNCTION Read() AS INTEGER', 'RETURN 1', 'END FUNCTION', "' #endregion", "' #endregion",

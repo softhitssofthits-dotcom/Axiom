@@ -15,7 +15,9 @@
       handle.addEventListener('pointermove', e => this.move(e));
       handle.addEventListener('pointerup', e => this.finish(e));
       handle.addEventListener('pointercancel', e => { if (this.drag?.id === e.pointerId) this.cancel(); });
-      handle.addEventListener('lostpointercapture', e => { if (this.drag?.id === e.pointerId) this.cancel(); });
+      handle.addEventListener('lostpointercapture', e => {
+        if (this.drag?.id === e.pointerId && !handle.hasPointerCapture(e.pointerId)) this.cancel();
+      });
       handle.addEventListener('dblclick', e => { e.preventDefault(); this.reset(); });
       handle.addEventListener('keydown', e => this.key(e));
       window.addEventListener('blur', () => this.cancel());

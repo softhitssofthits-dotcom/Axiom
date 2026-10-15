@@ -7,8 +7,8 @@ module.exports = [
       await S.launch();
       await S.page.evaluate(() => window.__ide.editor.getModel().setValue('DIM price AS DECIMAL = 1\nPRINT price'));
       const expected = {
-        ru: ['Изменить все вхождения', 'Вырезать', 'Копировать', 'Вставить', 'Установить / снять точку остановки', 'Очистить все точки остановки', 'Палитра команд'],
-        en: ['Change All Occurrences', 'Cut', 'Copy', 'Paste', 'Toggle Breakpoint', 'Clear All Breakpoints', 'Command Palette'],
+        ru: ['Изменить все вхождения', 'Вырезать', 'Копировать', 'Вставить', 'Установить / снять точку остановки', 'Очистить все точки остановки', 'Кто вызывает', 'Что вызывает', 'Быстрый просмотр', 'Объединить в раздел…', 'Палитра команд'],
+        en: ['Change All Occurrences', 'Cut', 'Copy', 'Paste', 'Toggle Breakpoint', 'Clear All Breakpoints', 'Callers', 'Callees', 'Quick preview', 'Group into region…', 'Command Palette'],
       };
       await S.page.locator('.monaco-editor .view-line').first().click({button: 'right'});
       const menu = S.page.locator('#ax-context-menu');
@@ -22,7 +22,7 @@ module.exports = [
         C.eq(rows.map(row => row.label).join('|'), expected[lang].join('|'), 'Все подписи меню: ' + lang);
         C.ok(rows.every(row => row.aria === row.label), 'Доступные имена совпадают с подписями: ' + lang);
         C.ok(rows.every(row => row.icon), 'Пиктограммы сохранены: ' + lang);
-        C.eq(rows.map(row => row.action).join(','), 'change-all,cut,copy,paste,trace-breakpoint,trace-clear,command-palette', 'Состав команд сохранён: ' + lang);
+        C.eq(rows.map(row => row.action).join(','), 'change-all,cut,copy,paste,trace-breakpoint,trace-clear,assistant-incoming,assistant-outgoing,assistant-preview,assistant-createRegion,command-palette', 'Состав команд сохранён: ' + lang);
       }
       C.contains(await menu.innerText(), 'Ctrl+F2', 'Сочетание изменения всех вхождений сохранено');
       C.contains(await menu.innerText(), 'F1', 'Сочетание палитры команд сохранено');

@@ -83,15 +83,26 @@ const LangFeatures = (() => {
       }
     }
     const declarations = [...res.subs.map(item => ({item, kind:'SUB'})), ...res.functions.map(item => ({item, kind:'FUNCTION'})), ...res.types.map(item => ({item, kind:'TYPE'}))].sort((a,b) => a.item.lineNo-b.item.lineNo);
+    const codeLines=lines.map(raw=>codeOf(raw).trim());
     for (let index=0; index<declarations.length; index++) {
       const {item,kind}=declarations[index];
       const limit=(declarations[index+1]?.item.lineNo || lines.length+1)-1;
       item.endLineNo=limit;
-      for(let row=item.lineNo; row<limit; row++) {
-        if(new RegExp('^END\\s+'+kind+'\\b','i').test(codeOf(lines[row]).trim())) { item.endLineNo=row+1; break; }
+      const nested=[kind];
+      for(let row=item.lineNo; row<lines.length; row++) {
+        const start=codeLines[row].match(/^(SUB|FUNCTION|TYPE)\s+[A-Za-z_]\w*/i);
+        if(start)nested.push(start[1].toUpperCase());
+        const end=codeLines[row].match(/^END\s+(SUB|FUNCTION|TYPE)\b/i);
+        if(end&&end[1].toUpperCase()===nested.at(-1)){
+          nested.pop();
+          if(!nested.length){item.endLineNo=row+1;break;}
+        }
       }
       const raw=lines[item.lineNo-1], comment=lexicalCode(raw).commentStart;
       item.description=raw.slice(comment).replace(/^(?:'|REM\s*)/i,'').trim();
+    }
+    for(const {item} of declarations){
+      item.scope=declarations.filter(d=>d.item.lineNo<item.lineNo&&d.item.endLineNo>=item.endLineNo).map(d=>d.item.name);
     }
     // Разделы панели содержат целые объявления; внутренние метки остаются
     // комментариями и могут отдельно сворачиваться средствами редактора.

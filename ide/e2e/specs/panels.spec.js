@@ -25,6 +25,10 @@ module.exports=[
  await S.page.locator('#sidebar-resizer').focus();await S.page.keyboard.press('ArrowRight');C.eq(Math.round(await size(S,'shell-sidebar','width')),saved.w+10,'Стрелка увеличивает ширину');await S.page.keyboard.press('Enter');C.eq(Math.round(await size(S,'shell-sidebar','width')),208,'Enter сбрасывает ширину');
  await S.page.locator('#panel-resizer').dblclick();C.eq(Math.round(await size(S,'bottom-panel','height')),200,'Двойной щелчок сбрасывает высоту');
  await drag(S,'sidebar-resizer',20,0);await drag(S,'sidebar-resizer',20,0);C.eq(Math.round(await size(S,'shell-sidebar','width')),248,'Два быстрых перетягивания не вызывают ложный сброс');
+ await drag(S,'sidebar-resizer',10,0,false);
+ await S.page.evaluate(()=>{const i=window.__ide;document.getElementById('sidebar-resizer').dispatchEvent(new PointerEvent('lostpointercapture',{pointerId:i.sidebarSplitter.drag.id}));});
+ C.ok(await S.page.evaluate(()=>!!window.__ide.sidebarSplitter.drag),'Поздняя потеря захвата прежнего жеста не отменяет новый захват');
+ await S.page.mouse.up();C.eq(Math.round(await size(S,'shell-sidebar','width')),258,'Новый жест завершается после позднего события');
  C.eq(await S.page.locator('#sidebar-resizer').getAttribute('aria-orientation'),'vertical','Боковой разделитель доступен');C.eq(await S.page.locator('#panel-resizer').getAttribute('aria-orientation'),'horizontal','Нижний разделитель доступен');await S.screenshot('resizable-panels');
 }},
 {id:'panels-window-size-bounds',name:'Размеры ограничены окном и возвращаются при его расширении',async fn({S,C}){

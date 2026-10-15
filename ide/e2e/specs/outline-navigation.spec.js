@@ -224,7 +224,7 @@ module.exports = [{
         buttons:[...document.querySelectorAll('.outline-group-tools .toolbar-btn')].map(e=>({width:e.getBoundingClientRect().width,bg:getComputedStyle(e).backgroundColor,label:e.getAttribute('aria-label')})),
         groupBg:getComputedStyle(document.querySelector('.outline-group-toggle')).backgroundColor,
       }));
-      C.ok(state.buttons.length===3&&state.buttons.every(b=>b.width<=28&&b.width>=24),'Три компактные кнопки: '+theme);
+      C.ok(state.buttons.length===4&&state.buttons.every(b=>b.width<=28&&b.width>=24),'Четыре компактные кнопки: '+theme);
       C.ok(await S.page.locator('.outline-group-tools').evaluate(e=>Math.abs(e.getBoundingClientRect().right-e.lastElementChild.getBoundingClientRect().right)<1),'Значки выровнены справа: '+theme);
       C.ok(state.buttons.every(b=>b.bg==='rgba(0, 0, 0, 0)'&&b.label),'Прозрачные кнопки с подписями: '+theme);
       if(theme==='borland')C.eq(state.groupBg,'rgba(0, 0, 0, 0)','Группы Pascal без серых плашек');

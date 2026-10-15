@@ -20,6 +20,11 @@ internal static class DocumentCommands
         if (string.IsNullOrWhiteSpace(snapshot.DocumentId) || snapshot.DocumentId.Length > 128 ||
             snapshot.DocumentRevision < 0 || snapshot.SourceText is null)
             throw new ArgumentException("Некорректный снимок документа.");
+        if (method == "document.navigation")
+        {
+            var graph = EditorCallGraph.Analyse(snapshot.SourceText);
+            return new { snapshot.DocumentId, snapshot.DocumentRevision, graph.Routines, graph.Calls, graph.IndirectCalls, graph.Complete };
+        }
         if (method == "document.hover")
         {
             var syntax = Parser.Parse(snapshot.SourceText, out _);

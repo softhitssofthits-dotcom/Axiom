@@ -1,0 +1,72 @@
+[
+  {
+    "id": "assistant-semantic-calls",
+    "spec": "program-assistant.spec.js",
+    "name": "Связи компилятора: рекурсия, вложенные функции, перегрузки методов и неполный текст",
+    "ms": 3298,
+    "passed": 20,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:60665/6f01d967-0038-4fa6-849a-4362c6762a56\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "assistant-workflow-navigation-preview",
+    "spec": "program-assistant.spec.js",
+    "name": "Дерево вызовов, возврат с выделением и прокруткой, просмотр и устаревшие ответы",
+    "ms": 3415,
+    "passed": 20,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:61079/4e7e8c53-3741-4fe1-a8e5-2facbc6954b0\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "assistant-regions-and-problems",
+    "spec": "program-assistant.spec.js",
+    "name": "Создание и переименование раздела с отменой; отметки проблем и фильтр",
+    "ms": 4100,
+    "passed": 9,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:60673/178870be-08d8-4788-8566-e939af675894\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "assistant-maze-real-workflow",
+    "spec": "program-assistant.spec.js",
+    "name": "Связи и просмотр настоящего Maze Chase во всех темах",
+    "ms": 6985,
+    "passed": 8,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:60679/1842d943-295a-4179-84eb-08c698f78f3f\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "assistant-guards-and-tracked-history",
+    "spec": "program-assistant.spec.js",
+    "name": "Защита от пересечения разделов, только чтение, актуальная диагностика и возврат после правки",
+    "ms": 4031,
+    "passed": 11,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:60993/dc67756e-ae47-4a99-9b10-f51836625a7e\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

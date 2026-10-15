@@ -1,0 +1,18 @@
+[
+  {
+    "id": "documents-outline-crlf-string-comments",
+    "spec": "document-acceptance.spec.js",
+    "name": "Структура SUB/FUNCTION/TYPE не принимает объявления в строках и комментариях",
+    "ms": 2456,
+    "passed": 4,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [
+      "TypeError: Cannot read properties of undefined (reading 'command')\n    at traceCommand (file:///C:/Axiom/ide/src/renderer/shell.js:11:48)\n    at HTMLButtonElement.<anonymous> (file:///C:/Axiom/ide/src/renderer/shell.js:21:81)"
+    ],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:61009/5908bddc-544c-4d3f-a0a7-29903a3161f0\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

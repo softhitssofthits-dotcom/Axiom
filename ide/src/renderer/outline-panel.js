@@ -39,7 +39,8 @@ class OutlinePanel {
     }});
     const groupTools = document.createElement('div'); groupTools.className = 'outline-group-tools';
     this.groupAll = UIControls.createIconButton({id:'outline-group-all',label:this.t('collapseAll'),markup:window.ShellIcons.markup('fold'),onClick:()=>this.setAllCollapsed(!this.shouldExpandGroups)});
-    groupTools.append(this.groups, this.follow, this.groupAll);
+    this.assistantButton = UIControls.createIconButton({id:'outline-assistant',label:'',markup:window.ShellIcons.markup('call-outgoing'),onClick:()=>this.ide.assistant.show('outgoing',this.ide.assistant.currentItem())});
+    groupTools.append(this.groups, this.follow, this.groupAll, this.assistantButton);
     this.warnings = document.createElement('div'); this.warnings.id = 'outline-region-warnings'; this.warnings.setAttribute('role','status');
     const options = document.createElement('div'); options.className = 'outline-options';
     options.append(this.filter, this.sort);
@@ -68,7 +69,7 @@ class OutlinePanel {
   localize() {
     this.search.placeholder = this.t('search'); UIControls.setLabel(this.search,this.t('search'),{tooltip:false});
     for (const [select, entries, value, label] of [
-      [this.filter, [['all', 'all'], ['sub', 'subs'], ['function', 'functions'], ['type', 'types']], this.ide.settings.outlineFilter || 'all', 'filter'],
+      [this.filter, [['all', 'all'], ['sub', 'subs'], ['function', 'functions'], ['type', 'types'], ['problems','problems']], this.ide.settings.outlineFilter || 'all', 'filter'],
       [this.sort, [['source', 'source'], ['name', 'alphabet']], this.ide.settings.outlineSort || 'source', 'sort'],
     ]) {
       select.replaceChildren(...entries.map(([v, k]) => { const o = document.createElement('option'); o.value = v; o.textContent = this.t(k); return o; }));
@@ -81,6 +82,7 @@ class OutlinePanel {
     UIControls.setPressed(this.follow,!!this.ide.settings.outlineFollow);
     UIControls.setLabel(this.groups,this.t('groupsHint'));
     UIControls.setPressed(this.groups,this.ide.settings.outlineGrouped !== false);
+    UIControls.setLabel(this.assistantButton,I18N.t('assistant.open'));
   }
 
   rebuild() {
@@ -94,7 +96,9 @@ class OutlinePanel {
     this.regions = doc.regions || [];
     this.regionWarnings = doc.regionWarnings || [];
     this.items = [['sub', doc.subs], ['function', doc.functions], ['type', doc.types]]
-      .flatMap(([kind, items]) => items.map(item => ({ ...item, kind, id: kind + ':' + item.name.toUpperCase() })))
+      .flatMap(([kind, items]) => items.map(item => ({ ...item, kind,
+        displayName:[...(item.scope||[]),item.name].join('.'),
+        id: kind + ':' + item.name.toUpperCase() + (item.scope?.length?':'+item.scope.join('.').toUpperCase()+':'+(item.signature||'').toUpperCase().replace(/\s+/g,' ').replace(/\s*([(),])\s*/g,'$1'):'') })))
       .sort((a, b) => a.lineNo - b.lineNo);
     this.render();
   }
@@ -119,15 +123,21 @@ class OutlinePanel {
 
   render() {
     const scroll = this.state.scroll;
+    const focused=this.root.contains(document.activeElement)?document.activeElement:null;
+    const focusedRow=focused?.closest('.outline-item'),focusedGroup=focused?.closest('.outline-group');
+    const focusState=focusedRow?{symbol:focusedRow.dataset.symbol,selector:focused.classList.contains('outline-pin')?'.outline-pin':focused.classList.contains('outline-problem')?'.outline-problem':'.outline-jump'}:
+      focusedGroup?{region:focusedGroup.dataset.region,selector:'.outline-group-toggle'}:null;
     const pins = this.pins(), query = this.state.query.trim().toLowerCase();
     const grouped = this.ide.settings.outlineGrouped !== false && this.regions.length > 0;
     const regionsById = new Map(this.regions.map(r=>[r.id,r]));
+    const markers = this.ide.assistant?.problemMarkers() || [];
+    const problemsFor = item => markers.filter(marker=>marker.startLineNumber>=item.lineNo&&marker.startLineNumber<=item.endLineNo);
     const matches = item => {
-      if (item.name.toLowerCase().includes(query)) return true;
+      if (item.displayName.toLowerCase().includes(query)) return true;
       for(let r=regionsById.get(item.regionId); r; r=regionsById.get(r.parentId)) if(r.name.toLowerCase().includes(query))return true;
       return false;
     };
-    let visible = this.items.filter(item => (!this.filter.value || this.filter.value === 'all' || item.kind === this.filter.value) && matches(item));
+    let visible = this.items.filter(item => (!this.filter.value || this.filter.value === 'all' || item.kind === this.filter.value || (this.filter.value==='problems'&&problemsFor(item).length>0)) && matches(item));
     this.visibleIds = new Set(visible.map(item=>item.id));
     visible.sort((a, b) => Number(pins.has(b.id)) - Number(pins.has(a.id)) || (this.sort.value === 'name' ? a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }) : a.lineNo - b.lineNo));
     this.root.replaceChildren();
@@ -146,18 +156,19 @@ class OutlinePanel {
       jump.title = (item.signature || 'TYPE ' + item.name) + '\n' + this.t('range').replace('{start}', item.lineNo).replace('{end}', item.endLineNo) + (item.description ? '\n\n' + item.description : '');
       const icon = document.createElement('span'); icon.className = 'outline-icon'; icon.textContent = {sub:'S', function:'ƒ', type:'T'}[item.kind]; icon.setAttribute('aria-hidden', 'true');
       const name = document.createElement('span'); name.className = 'outline-name';
-      const start = item.name.toLowerCase().indexOf(query);
+      const label = item.displayName;
+      const start = label.toLowerCase().indexOf(query);
       if (query && start >= 0) {
-        const mark = document.createElement('mark'); mark.textContent = item.name.slice(start, start + query.length);
-        name.append(item.name.slice(0, start), mark, item.name.slice(start + query.length));
-      } else name.textContent = item.name;
+        const mark = document.createElement('mark'); mark.textContent = label.slice(start, start + query.length);
+        name.append(label.slice(0, start), mark, label.slice(start + query.length));
+      } else name.textContent = label;
       const line = document.createElement('span'); line.className = 'outline-line'; line.textContent = item.lineNo;
       jump.append(icon, name, line);
       UIControls.setLabel(jump,(item.signature || 'TYPE ' + item.name) + ', ' + this.t('ln') + ' ' + item.lineNo,{tooltip:false});
       jump.addEventListener('click', () => {
-        this.ide.editor.setPosition({ lineNumber: item.lineNo, column: 1 });
-        this.ide.editor.revealLineInCenter(item.lineNo); this.ide.editor.focus();
+        this.ide.assistant.navigate(this.ide.activeFile,item.lineNo);
       });
+      this.attachContext(jump,item);
       const pin = document.createElement('button'); pin.type = 'button'; pin.className = 'outline-pin';
       pin.textContent = pins.has(item.id) ? '★' : '☆'; UIControls.setPressed(pin,pins.has(item.id));
       UIControls.setLabel(pin,this.t(pins.has(item.id) ? 'unpin' : 'pin') + ': ' + item.name);
@@ -167,7 +178,9 @@ class OutlinePanel {
         this.render();
         [...this.root.querySelectorAll('.outline-item')].find(r => r.dataset.symbol === item.id)?.querySelector('.outline-pin').focus();
       });
-      row.append(jump, pin); return row;
+      row.append(jump);
+      const badge=this.ide.assistant?.problemBadge(problemsFor(item));if(badge)row.append(badge);
+      row.append(pin); return row;
     };
     if (!grouped) {
       for(const item of visible) this.root.append(makeRow(item));
@@ -192,6 +205,7 @@ class OutlinePanel {
           const label=document.createElement('span');label.className='outline-group-name';label.textContent=entry.name;
           toggle.append(arrow,label);
           toggle.title=entry.name+'\n'+this.t('range').replace('{start}',entry.lineNo).replace('{end}',entry.endLineNo);
+          this.attachContext(toggle,entry,true);
           toggle.addEventListener('click',()=>{
             if(query)return;
             const state=this.collapsed();if(state.has(entry.id))state.delete(entry.id);else state.add(entry.id);
@@ -199,7 +213,9 @@ class OutlinePanel {
             [...this.root.querySelectorAll('.outline-group')].find(e=>e.dataset.region===entry.id)?.querySelector('.outline-group-toggle').focus();
           });
           if(query)UIControls.setEnabled(toggle,false);
-          section.append(toggle);
+          const header=document.createElement('div');header.className='outline-group-heading';header.append(toggle);
+          const badge=this.ide.assistant?.problemBadge(problemsFor(entry));if(badge)header.append(badge);
+          section.append(header);
           if(expanded){const contents=document.createElement('div');contents.className='outline-group-contents';append(entry.id,contents);section.append(contents);}
           target.append(section);
         }
@@ -213,11 +229,15 @@ class OutlinePanel {
     UIControls.setEnabled(this.groupAll,grouped && !query && groupHeaders.length>0);
     this.root.scrollTop = scroll;
     this.updateCurrent(false);
+    if(focusState){
+      const target=focusState.symbol?[...this.root.querySelectorAll('.outline-item')].find(row=>row.dataset.symbol===focusState.symbol):[...this.root.querySelectorAll('.outline-group')].find(group=>group.dataset.region===focusState.region);
+      (target?.querySelector(focusState.selector)||this.search).focus({preventScroll:true});
+    }
   }
 
   updateCurrent(follow = true) {
     const line = this.ide.editor.getPosition()?.lineNumber;
-    const current = this.items.find(item => line >= item.lineNo && line <= item.endLineNo);
+    const current = this.items.findLast(item => line >= item.lineNo && line <= item.endLineNo);
     const changed = this.currentId !== current?.id;
     this.currentId = current?.id;
     if(current && this.visibleIds?.has(current.id) && !this.pins().has(current.id) && follow && (changed || follow==='force') && this.ide.settings.outlineFollow && this.ide.settings.outlineGrouped!==false) {
@@ -233,6 +253,15 @@ class OutlinePanel {
       if (active) jump.setAttribute('aria-current', 'location'); else jump.removeAttribute('aria-current');
       if (active && follow && (changed || follow === 'force') && this.ide.settings.outlineFollow) row.scrollIntoView({ block: 'nearest' });
     }
+  }
+  attachContext(button,item,region=false) {
+    const open=(x,y)=>this.ide.assistant?.showContext(item,button,x,y,region);
+    button.addEventListener('contextmenu',event=>{event.preventDefault();event.stopPropagation();open(event.clientX,event.clientY);});
+    button.addEventListener('keydown',event=>{
+      if((event.shiftKey&&event.key==='F10')||event.key==='ContextMenu'){
+        event.preventDefault();event.stopPropagation();const rect=button.getBoundingClientRect();open(rect.left,rect.bottom);
+      }
+    });
   }
 }
 window.OutlinePanel = OutlinePanel;
