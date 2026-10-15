@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 401,
+  "count": 408,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -45,7 +45,7 @@
     {
       "id": "console-context-menu-themes",
       "spec": "console-background.spec.js",
-      "name": "Меню консоли совпадает с меню редактора во всех трёх темах"
+      "name": "Меню консоли совпадает с меню редактора во всех четырёх темах"
     },
     {
       "id": "console-context-menu-input-actions",
@@ -161,6 +161,11 @@
       "id": "document-basic-theme-persistence",
       "spec": "documents.spec.js",
       "name": "Тема QuickBASIC окрашивает оболочку, код и консоль и сохраняется после запуска"
+    },
+    {
+      "id": "document-borland-theme-persistence",
+      "spec": "documents.spec.js",
+      "name": "Borland Pascal оформляет оболочку, редактор и консоль и сохраняется после запуска"
     },
     {
       "id": "editor-settings-all-appearance",
@@ -1550,7 +1555,7 @@
     {
       "id": "editor-settings-language-keyboard-validation",
       "spec": "editor-settings.spec.js",
-      "name": "Вкладки, обе локали, все поля, три темы, поиск и ошибочный ввод"
+      "name": "Вкладки, обе локали, все поля, четыре темы, поиск и ошибочный ввод"
     },
     {
       "id": "editor-settings-save-failure",
@@ -1725,7 +1730,7 @@
     {
       "id": "highlight-user-symbols",
       "spec": "highlighting.spec.js",
-      "name": "Пользовательские имена и операции имеют отдельные цвета"
+      "name": "Пользовательские имена и операции получают цвета выбранной темы"
     },
     {
       "id": "highlight-interpolation-dollar",
@@ -1848,6 +1853,31 @@
       "name": "Щелчки по строкам не форматируют неизменённый файл и не требуют сохранения"
     },
     {
+      "id": "outline-maze-navigation",
+      "spec": "outline-navigation.spec.js",
+      "name": "Навигатор Maze Chase: поиск, клавиатура, фильтры, закрепления, текущая процедура и профиль"
+    },
+    {
+      "id": "outline-document-state-and-edits",
+      "spec": "outline-navigation.spec.js",
+      "name": "Поиск и прокрутка принадлежат вкладке; текущая процедура учитывает границы и изменения"
+    },
+    {
+      "id": "outline-regions-state-search-folding",
+      "spec": "outline-navigation.spec.js",
+      "name": "Вложенные разделы: поиск, состояние групп, плоский список, клавиатура и сворачивание редактора"
+    },
+    {
+      "id": "outline-maze-regions",
+      "spec": "outline-navigation.spec.js",
+      "name": "Разделы реального Maze Chase: группировка, фильтр и поиск калибровки"
+    },
+    {
+      "id": "outline-sidebar-theme-and-icons",
+      "spec": "outline-navigation.spec.js",
+      "name": "Компактные общие значки навигатора и спокойная палитра групп в Pascal"
+    },
+    {
       "id": "panels-visibility-persistence",
       "spec": "panels.spec.js",
       "name": "Боковая панель закрывается и восстанавливается через меню, кнопку и профиль"
@@ -1886,6 +1916,11 @@
       "id": "circle-text-mode-check-run-diagnostic",
       "spec": "problems.spec.js",
       "name": "Check находит графику в SCREEN 0 и блокирует Run; сообщение сохраняется при смене языка"
+    },
+    {
+      "id": "retro-menu-palettes",
+      "spec": "retro-menu-palettes.spec.js",
+      "name": "Borland и QuickBASIC: общая палитра выпадающих меню, подменю и контекстных меню"
     },
     {
       "id": "run-prints-output-and-finishes",

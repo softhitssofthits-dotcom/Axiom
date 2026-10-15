@@ -49,6 +49,13 @@
   --xs-tab-text: var(--xs-text-faint);
   --xs-tab-strip-bg: var(--xs-surface);
   --xs-hover-text: var(--xs-text);
+  --xs-outline-group-bg: var(--xs-surface-raised);
+  --xs-outline-group-hover-bg: var(--xs-surface-hover);
+  --xs-outline-group-hover-text: var(--xs-hover-text);
+  --xs-sidebar-action-text: var(--xs-text-muted);
+  --xs-sidebar-action-active-text: var(--xs-accent);
+  --xs-sidebar-action-hover-bg: var(--xs-surface-hover);
+  --xs-sidebar-action-hover-text: var(--xs-hover-text);
   --xs-diagnostic-hover-bg: var(--xs-surface-hover);
   --xs-diagnostic-hover-text: var(--xs-text-muted);
   --xs-diagnostic-hover-location: var(--xs-text-faint);
@@ -168,6 +175,11 @@ html[data-theme="borland"] {
   --xs-canvas: #000055;
   --xs-surface: #000080;
   --xs-surface-raised: #aaaaaa;
+  --xs-outline-group-bg: transparent;
+  --xs-outline-group-hover-bg: #0000aa;
+  --xs-outline-group-hover-text: #ffffff;
+  --xs-sidebar-action-hover-bg: #0000aa;
+  --xs-sidebar-action-hover-text: #ffffff;
   --xs-surface-hover: #00aaaa;
   --xs-surface-active: #00aa00;
   --xs-editor: #0000aa;

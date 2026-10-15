@@ -303,6 +303,7 @@ class AxiomIDE {
       comments: { lineComment: "'" },
       brackets: [['(', ')']],
       colorizedBracketPairs: [['(', ')']],
+      folding: { markers: { start: /^\s*'\s*#region\s+\S.*$/i, end: /^\s*'\s*#endregion\s*$/i } },
       indentationRules: {
         increaseIndentPattern: /^\s*(?:(?:If|ElseIf)\b.*\bThen|Else|For\b.*|While\b.*|Do(?:\s+(?:While|Until)\b.*)?|(?:Sub|Function|Type)\b.*|Select\s+Case\b.*|Case\b.*|Try|Catch\b.*|Finally)\s*(?:'.*)?$/i,
         decreaseIndentPattern: /^\s*(?:End\s+(?:If|While|Sub|Function|Type|Select|Try)\b|Next\b|Loop\b|Else(?:If)?\b|Case\b|Catch\b|Finally\b)/i,
@@ -509,6 +510,7 @@ class AxiomIDE {
     this.trace = new window.TraceController(this);
     this.editor.onDidChangeCursorPosition((e) => {
       document.getElementById('status-line-col').textContent = `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
+      this.outlinePanel?.updateCurrent();
       this.log('editor.cursor', { line: e.position.lineNumber, col: e.position.column, reason: e.reason });
       const model=this.editor.getModel(),previous=this._structuralLine;
       const sameModel=this._structuralModel===model;
@@ -1398,40 +1400,8 @@ class AxiomIDE {
   // its line. The panel is rebuilt on content change (debounced) and when switching tabs.
   rebuildOutline() {
     if (this._formatBusy) { this.log('outline.skipped-format', { busy: this._formatBusy }); return; }
-    const el = document.getElementById('outline-list');
-    if (!el) return;
-    el.innerHTML = '';
-    const model = this.editor.getModel();
-    if (!model || !window.LangFeatures) return;
-    const doc = window.LangFeatures.scanDoc(model);
-    const items = [];
-    for (const f of doc.functions) items.push({ type: 'ƒ', name: f.name, line: f.lineNo });
-    for (const s of doc.subs) items.push({ type: 'S', name: s.name, line: s.lineNo });
-    for (const t of doc.types) items.push({ type: 'T', name: t.name, line: t.lineNo });
-    items.sort((a, b) => a.line - b.line);
-    if (!items.length) {
-      const empty = document.createElement('div');
-      empty.className = 'recent-empty'; empty.textContent = I18N.t('outline.empty');
-      el.appendChild(empty);
-      return;
-    }
-    for (const it of items) {
-      const row = document.createElement('div');
-      row.className = 'outline-item';
-      const icon = document.createElement('span'); icon.className = 'outline-icon';
-      icon.textContent = it.type;
-      const name = document.createElement('span');
-      name.className = 'outline-name'; name.textContent = it.name;
-      const line = document.createElement('span');
-      line.className = 'outline-line'; line.textContent = I18N.t('outline.ln') + ' ' + it.line;
-      row.appendChild(icon); row.appendChild(name); row.appendChild(line);
-      row.addEventListener('click', () => {
-        this.editor.setPosition({ lineNumber: it.line, column: 1 });
-        this.editor.revealLineInCenter(it.line);
-        this.editor.focus();
-      });
-      el.appendChild(row);
-    }
+    if (!this.outlinePanel) this.outlinePanel = new window.OutlinePanel(this);
+    this.outlinePanel.rebuild();
   }
 
   scheduleOutlineRebuild() {

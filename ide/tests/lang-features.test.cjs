@@ -7,6 +7,55 @@ const context = { window: {} };
 vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/renderer/lang-features.js'), 'utf8'), context);
 const signature = context.window.LangFeatures.builtinSignature;
 
+test('Разделы: вложенность, одинаковые названия, CRLF и игнорирование меток в строках и подпрограммах', () => {
+  const source = ["PRINT \"' #region Ложный\"", "' #ReGiOn Игра", "SUB Move()", "' #region Внутренний", 'END SUB',
+    "' #region Вложенный", 'FUNCTION Read() AS INTEGER', 'RETURN 1', 'END FUNCTION', "' #endregion", "' #endregion",
+    "' #region Игра", 'TYPE Item', 'x AS INTEGER', 'END TYPE', "' #endregion"].join('\r\n');
+  const doc = context.window.LangFeatures.scanDoc({getValue:()=>source});
+  assert.equal(doc.regions.length,3);
+  assert.equal(doc.regions[1].parentId,doc.regions[0].id);
+  assert.notEqual(doc.regions[0].id,doc.regions[2].id);
+  assert.equal(doc.subs[0].regionId,doc.regions[0].id);
+  assert.equal(doc.functions[0].regionId,doc.regions[1].id);
+  assert.equal(doc.types[0].regionId,doc.regions[2].id);
+  assert.equal(doc.regions[0].endLineNo,11);
+  assert.equal(doc.regionWarnings.length,0);
+  const shifted = context.window.LangFeatures.scanDoc({getValue:()=>"' Начало\r\n"+source});
+  assert.equal(shifted.regions[0].id,doc.regions[0].id,'Правка строк не меняет ключ состояния');
+});
+
+test('Неверные границы разделов не скрывают объявления и дают отдельные предупреждения панели', () => {
+  const doc=context.window.LangFeatures.scanDoc({getValue:()=>"' #endregion\n' #region\n' #region Открытый\nSUB Work()\nEND SUB\n"});
+  assert.equal(doc.regions[0].closed,false);
+  assert.equal(doc.regions[0].endLineNo,6);
+  assert.equal(doc.subs[0].regionId,doc.regions[0].id);
+  assert.equal(doc.regionWarnings.map(w=>w.kind).join(','),'orphan,unnamed,unclosed');
+});
+
+test('Заготовка раздела вставляет пару комментариев с локализованным названием', () => {
+  const p=providers('');
+  const suggestion=()=>p.features._completionProvider.provideCompletionItems(p.model,{lineNumber:1,column:1}).suggestions.find(s=>s.label==='#region');
+  assert.equal(suggestion().insertText,"' #region ${1:Раздел}\n$0\n' #endregion");
+  p.language('en');
+  assert.equal(suggestion().insertText,"' #region ${1:Section}\n$0\n' #endregion");
+});
+
+test('Границы объявлений исключают промежутки, строки и комментарии; сохраняется пояснение BYREF', () => {
+  const doc = context.window.LangFeatures.scanDoc({getValue: () =>
+    "SUB Move(BYREF value AS INTEGER) ' Двигает героя\r\nPRINT \"END SUB\"\r\n' END SUB\r\nEND SUB\r\n\r\nFUNCTION Read() AS INTEGER\r\nRETURN 1\r\nEND FUNCTION\r\n\r\n"});
+  assert.equal(doc.subs[0].endLineNo, 4);
+  assert.equal(doc.subs[0].description, 'Двигает героя');
+  assert.equal(doc.subs[0].signature, 'SUB Move(BYREF value AS INTEGER)');
+  assert.equal(doc.functions[0].lineNo, 6);
+  assert.equal(doc.functions[0].endLineNo, 8);
+});
+
+test('Незавершённое объявление ограничивается следующим объявлением или концом документа', () => {
+  const doc = context.window.LangFeatures.scanDoc({getValue: () => 'SUB First()\nPRINT 1\nFUNCTION Last() AS INTEGER\nRETURN 2'});
+  assert.equal(doc.subs[0].endLineNo, 2);
+  assert.equal(doc.functions[0].endLineNo, 4);
+});
+
 test('Полиморфная сумма отображается как скаляр типа элементов', () => {
   assert.equal(signature({name: 'ARRAYSUM', params: [{name: 'array', type: 'INTEGER()', displayType: 'T()'}],
     returnType: 'INTEGER', displayReturnType: 'T'}), 'ARRAYSUM(array AS T()) AS T');

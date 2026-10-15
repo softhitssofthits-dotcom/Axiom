@@ -82,6 +82,47 @@ const LangFeatures = (() => {
         res.vars.push({ name: m[1], type: m[2] || null, lineNo: lineIndex + 1 });
       }
     }
+    const declarations = [...res.subs.map(item => ({item, kind:'SUB'})), ...res.functions.map(item => ({item, kind:'FUNCTION'})), ...res.types.map(item => ({item, kind:'TYPE'}))].sort((a,b) => a.item.lineNo-b.item.lineNo);
+    for (let index=0; index<declarations.length; index++) {
+      const {item,kind}=declarations[index];
+      const limit=(declarations[index+1]?.item.lineNo || lines.length+1)-1;
+      item.endLineNo=limit;
+      for(let row=item.lineNo; row<limit; row++) {
+        if(new RegExp('^END\\s+'+kind+'\\b','i').test(codeOf(lines[row]).trim())) { item.endLineNo=row+1; break; }
+      }
+      const raw=lines[item.lineNo-1], comment=lexicalCode(raw).commentStart;
+      item.description=raw.slice(comment).replace(/^(?:'|REM\s*)/i,'').trim();
+    }
+    // Разделы панели содержат целые объявления; внутренние метки остаются
+    // комментариями и могут отдельно сворачиваться средствами редактора.
+    res.regions = []; res.regionWarnings = [];
+    const stack = [], occurrences = new Map();
+    let declarationIndex = 0;
+    for (let row = 0; row < lines.length; row++) {
+      const lineNo = row + 1;
+      while (declarationIndex < declarations.length && declarations[declarationIndex].item.endLineNo < lineNo) declarationIndex++;
+      const declaration = declarations[declarationIndex]?.item;
+      if (declaration && lineNo >= declaration.lineNo && lineNo <= declaration.endLineNo) continue;
+      const open = lines[row].match(/^\s*'\s*#region(?:\s+(.*?))?\s*$/i);
+      if (open) {
+        const name = (open[1] || '').trim();
+        if (!name) { res.regionWarnings.push({kind:'unnamed',lineNo}); continue; }
+        const parentId = stack.at(-1)?.id || null;
+        const key = JSON.stringify([parentId, name.toLowerCase()]);
+        const ordinal = (occurrences.get(key) || 0) + 1; occurrences.set(key, ordinal);
+        const path = [...(stack.at(-1)?.path || []), [name.toLowerCase(),ordinal]];
+        const region = {id:JSON.stringify(path), path, parentId, name, lineNo, endLineNo:lines.length, closed:false};
+        res.regions.push(region); stack.push(region);
+      } else if (/^\s*'\s*#endregion\s*$/i.test(lines[row])) {
+        const region = stack.pop();
+        if (region) { region.endLineNo = lineNo; region.closed = true; }
+        else res.regionWarnings.push({kind:'orphan',lineNo});
+      }
+    }
+    for (const region of stack) res.regionWarnings.push({kind:'unclosed',lineNo:region.lineNo});
+    for (const {item} of declarations) {
+      item.regionId = res.regions.filter(r => r.lineNo < item.lineNo && r.endLineNo >= item.endLineNo).at(-1)?.id || null;
+    }
     return res;
   }
 
@@ -133,6 +174,7 @@ const LangFeatures = (() => {
   // Structural templates in the BASIC block style. Labels/details go through I18N.
   function snippets() {
     return [
+      { label: '#region', insert: "' #region ${1:" + I18N.t('outline.regionName') + "}\n$0\n' #endregion", detail: I18N.t('outline.regionSnippet') },
       { label: I18N.t('snippet.if'), insert: 'IF ${1:condition} THEN\n\t$0\nEND IF', detail: I18N.t('snippet.if.d') },
       { label: I18N.t('snippet.ifelse'), insert: 'IF ${1:condition} THEN\n\t$2\nELSE\n\t$0\nEND IF', detail: I18N.t('snippet.ifelse.d') },
       { label: I18N.t('snippet.while'), insert: 'WHILE ${1:condition}\n\t$0\nEND WHILE', detail: I18N.t('snippet.while.d') },

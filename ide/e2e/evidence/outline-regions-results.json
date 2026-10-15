@@ -1,0 +1,58 @@
+[
+  {
+    "id": "outline-maze-navigation",
+    "spec": "outline-navigation.spec.js",
+    "name": "Навигатор Maze Chase: поиск, клавиатура, фильтры, закрепления, текущая процедура и профиль",
+    "ms": 8006,
+    "passed": 36,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:59437/122988e1-bc3e-4ae3-a8e8-35bad53b7f01\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:59442/14a47f03-80c4-456e-b87e-b5823fb76505\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "outline-document-state-and-edits",
+    "spec": "outline-navigation.spec.js",
+    "name": "Поиск и прокрутка принадлежат вкладке; текущая процедура учитывает границы и изменения",
+    "ms": 3698,
+    "passed": 10,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:59446/35a617ca-7b8f-40f8-b180-b13aca016a4c\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "outline-regions-state-search-folding",
+    "spec": "outline-navigation.spec.js",
+    "name": "Вложенные разделы: поиск, состояние групп, плоский список, клавиатура и сворачивание редактора",
+    "ms": 5922,
+    "passed": 27,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:59452/1af1662a-5a08-496f-8dce-dac106fa322a\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:59456/ed7b101c-f2c7-43b9-90f0-6a7d6f452f09\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "outline-maze-regions",
+    "spec": "outline-navigation.spec.js",
+    "name": "Разделы реального Maze Chase: группировка, фильтр и поиск калибровки",
+    "ms": 3292,
+    "passed": 6,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:59460/60d7a866-7e99-4ae1-b3a1-abefe757fc12\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

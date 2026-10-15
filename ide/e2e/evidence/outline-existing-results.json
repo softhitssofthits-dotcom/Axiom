@@ -1,0 +1,16 @@
+[
+  {
+    "id": "documents-outline-crlf-string-comments",
+    "spec": "document-acceptance.spec.js",
+    "name": "Структура SUB/FUNCTION/TYPE не принимает объявления в строках и комментариях",
+    "ms": 3117,
+    "passed": 4,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58910/6e8605be-f121-4390-ac40-760d5bd614dd\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

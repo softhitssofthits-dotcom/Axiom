@@ -94,3 +94,34 @@ html[data-theme="borland"] .about-dialog #about-close:hover { color:#fff; backgr
 html[data-theme="borland"] .about-dialog #about-close:focus-visible { outline:2px solid #55ffff; outline-offset:1px; }
 html[data-theme="borland"] .about-dialog .about-button-default-text { color:#55ffff; }
 html[data-theme="borland"] .about-dialog .about-button-hotkey { color:#ffff55; }
+#shell-sidebar #structure-content{display:flex!important;flex-direction:column;overflow:hidden;min-height:160px}
+#shell-sidebar #outline-list{flex:1;min-height:0;overflow:auto}
+.outline-controls{flex:none;padding:4px;white-space:normal}
+.outline-controls input{width:100%;box-sizing:border-box;min-width:0;background:var(--xs-surface);color:var(--xs-text);border:1px solid var(--xs-border);padding:5px}
+.outline-options{display:flex;gap:3px;margin-top:4px}
+.outline-options select{min-width:0;flex:1;width:0;display:flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px 3px 7px;white-space:nowrap}
+.outline-options select>button{min-width:0;flex:1;display:block;border:0;padding:0;background:transparent;color:inherit;font:inherit;text-align:left;overflow:hidden}
+.outline-options selectedcontent{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.outline-options select::picker-icon{flex:none;margin:0}
+.outline-options button{flex:none;width:26px}
+#outline-count{font-size:11px;color:var(--xs-text-muted);padding:5px 0 1px}
+#outline-list .outline-item{padding:0;gap:0;border-radius:0;min-height:28px}
+.outline-jump{display:flex;align-items:center;gap:4px;min-width:0;flex:1;border:0;background:transparent;color:inherit;text-align:left;padding:5px 3px;font:inherit;cursor:pointer}
+.outline-pin{flex:none;border:0;background:transparent;color:inherit;padding:4px;cursor:pointer}
+.outline-pin[aria-pressed=true]{color:var(--xs-accent)}
+.outline-current{background:var(--xs-surface-hover);color:var(--xs-hover-text)!important;box-shadow:inset 3px 0 var(--xs-accent)}
+.outline-current .outline-line{color:inherit}
+.outline-name mark{background:transparent;color:inherit;font-weight:bold;text-decoration:underline}
+.outline-group-tools{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:4px}
+.outline-controls .toolbar-btn{width:26px;height:26px;min-width:26px;flex:none;background:transparent;border-color:transparent;box-shadow:none;color:var(--xs-sidebar-action-text)}
+.outline-controls .toolbar-btn[aria-pressed=true]{background:transparent;border-color:transparent;box-shadow:none;color:var(--xs-sidebar-action-active-text)}
+.outline-controls .toolbar-btn:hover,.outline-controls .toolbar-btn:active{background:var(--xs-sidebar-action-hover-bg);color:var(--xs-sidebar-action-hover-text)}
+.outline-controls .toolbar-btn[aria-pressed=true]:hover{color:var(--xs-sidebar-action-active-text)}
+.outline-group-tools .codicon,.outline-group-arrow .codicon{font-size:16px}
+.outline-group-arrow{display:flex;flex:none}
+.outline-group-toggle{display:flex;align-items:center;gap:5px;width:100%;box-sizing:border-box;text-align:left;background:var(--xs-outline-group-bg);color:var(--xs-text);border:0;padding:6px 4px;font:inherit;cursor:pointer}
+.outline-group-toggle:hover{background:var(--xs-outline-group-hover-bg);color:var(--xs-outline-group-hover-text)}
+.outline-group-toggle:disabled{opacity:1;cursor:default}
+.outline-group-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.outline-group-contents{margin-left:9px;border-left:1px solid var(--xs-border-subtle);padding-left:2px}
+#outline-region-warnings{font-size:11px;color:var(--xs-warning);white-space:pre-wrap;max-height:70px;overflow:auto}
