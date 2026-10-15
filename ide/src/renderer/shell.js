@@ -8,7 +8,7 @@ const toolbar=document.getElementById('toolbar');
 const buttons=[['tb-new','new'],['tb-open','open'],['tb-save','save'],['tb-check','check'],['tb-run','run'],['tb-stop','stop'],['tb-format','format'],['tb-find','search'],['tb-toggle-output','output']];
 buttons.forEach(([id,key])=>{const b=document.getElementById(id);if(id==='tb-save'){b.querySelectorAll('span').forEach(s=>{s.className='tb-save-icon';s.innerHTML=iconMarkup(s.id==='tb-save-as'?'save-as':key);});}else b.innerHTML=iconMarkup(key);});
 function add(id,key,label,action){const b=UIControls.createIconButton({id,label,markup:iconMarkup(key),onClick:action});toolbar.append(b);return b;}
-const traceCommand=command=>window.__ide.trace.command(command);
+const traceCommand=command=>window.__ide?.trace?.command(command);
 add('tb-save-all','all',I18N.t('menu.file.saveAll'),()=>window.__ide.saveAll()).setAttribute('data-i18n-title','menu.file.saveAll');
 for(const [command,key] of [['undo','discard'],['redo','redo']])
   add('tb-'+command,key,I18N.t('tb.'+command),()=>window.__ide.handleAction(command)).setAttribute('data-i18n-title','tb.'+command);
@@ -20,6 +20,7 @@ for(const [command,key] of Object.entries(traceIcons)) {
  const label=I18N.t(command==='stop'?'menu.run.stop':'trace.'+command);
  const button=command==='stop'?document.getElementById(id):add(id,key,label,()=>traceCommand(command));
  button.innerHTML=iconMarkup(key);button.dataset.traceCommand=command;
+ UIControls.setEnabled(button,false);
 }
 // Одинаковые команды меню и панели используют единственное описание значка.
 const menuIcons={new:'new',open:'open','open-project':'folder-opened',save:'save','save-all':'all','save-as':'save-as',undo:'discard',redo:'redo',check:'check',run:'run',stop:'stop',format:'format',find:'search'};
@@ -33,6 +34,7 @@ for(const command of Object.keys(traceIcons)) {
  const item=document.createElement('div');item.className='menu-dropdown-item';item.dataset.action='trace-'+command;item.dataset.traceCommand=command;
  const key=command==='stop'?'menu.run.stop':'trace.'+command;
  item.innerHTML='<span class="menu-icon" aria-hidden="true">'+iconMarkup(traceIcons[command])+'</span><span class="menu-text" data-i18n="'+key+'">'+I18N.t(key)+'</span><span class="menu-shortcut">'+shortcuts[command]+'</span>';
+ UIControls.setEnabled(item,false);
  traceMenu.lastElementChild.append(item);
 }
 document.querySelector('[data-i18n="menu.view"]').parentElement.before(traceMenu);

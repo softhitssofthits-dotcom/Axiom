@@ -1,0 +1,49 @@
+[
+  {
+    "id": "shell-responsive-commands",
+    "spec": "shell.spec.js",
+    "name": "Утверждённая оболочка: темы, меню, размеры и команды",
+    "ms": 10648,
+    "passed": 19,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:55818/318d4e73-b064-4069-8dd8-6afabe9c4f80\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "shell-toolbar-history-and-panel-state",
+    "spec": "shell.spec.js",
+    "name": "Индикатор нижней панели, отмена и повтор на панели инструментов",
+    "ms": 37052,
+    "passed": 29,
+    "failures": [
+      {
+        "msg": "TEST THREW: page.waitForFunction: Timeout 30000ms exceeded.",
+        "detail": "page.waitForFunction: Timeout 30000ms exceeded.\n    at Object.fn (C:\\Axiom\\ide\\e2e\\specs\\shell.spec.js:51:19)\n    at async C:\\Axiom\\ide\\e2e\\runner.js:48:7"
+      }
+    ],
+    "notes": [],
+    "crashed": true,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:55825/85df38e8-3686-403b-8dec-5c164bad82f7\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "shell-trace-startup-readiness",
+    "spec": "shell.spec.js",
+    "name": "Команды трассировки недоступны до создания контроллера и работают после запуска",
+    "ms": 6557,
+    "passed": 6,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:55834/ccd300d9-bd19-4b7b-bf42-05137bde09f9\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

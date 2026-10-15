@@ -90,3 +90,35 @@ await S.electronApp.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0]
  await S.page.evaluate(()=>window.__ide.setLanguage('en'));C.eq(await S.page.locator('#tb-undo').getAttribute('aria-label'),'Undo (Ctrl+Z)','Подсказка отмены переводится');C.eq(await S.page.locator('#tb-redo').getAttribute('title'),'Redo (Ctrl+Y)','Подсказка повтора переводится');
  await S.close();await S.launch();C.eq(await S.page.locator('#tb-toggle-output').getAttribute('aria-pressed'),'false','Индикатор восстанавливается из профиля');
 }}];
+
+module.exports.push({
+ id:'shell-trace-startup-readiness',
+ name:'Команды трассировки недоступны до создания контроллера и работают после запуска',
+ async fn({S,C}) {
+  await S.launch();
+  await S.page.addInitScript(() => {
+   let ide;
+   Object.defineProperty(window,'__ide',{configurable:true,get:()=>ide,set:value=>{
+    ide=value;
+    if(!value || value.trace) return;
+    const buttons=[...document.querySelectorAll('#toolbar [data-trace-command]')];
+    window.__traceStartup={count:buttons.length,disabled:buttons.every(b=>b.disabled)};
+    // Воспроизводим событие в промежутке между созданием оболочки и контроллера.
+    for(const button of buttons) button.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+   }});
+  });
+  await S.page.reload();
+  await S.page.waitForSelector('#app.ready');
+  const startup=await S.page.evaluate(()=>window.__traceStartup);
+  C.eq(startup.count,9,'Проверены все девять команд панели до готовности');
+  C.ok(startup.disabled,'До готовности контроллера кнопки отключены');
+  C.eq(S.pageErrors.length,0,'Ранние события не вызывают ошибок страницы');
+  const file=writeAxm(testWorkspace('trace-startup'),'ready.axm','PRINT 1\n');
+  await S.page.evaluate(p=>window.__ide.openFile(p),file);
+  await S.page.locator('#tb-breakpoint').click();
+  C.eq(await S.page.evaluate(()=>window.__ide.trace.lines(window.__ide.editor.getModel()).length),1,'После готовности команда ставит точку останова');
+  await S.page.locator('#tb-clear').click();
+  C.eq(await S.page.evaluate(()=>window.__ide.trace.lines(window.__ide.editor.getModel()).length),0,'Команда удаления точек также работает');
+  C.eq(S.pageErrors.length,0,'Работа команд после запуска не вызывает ошибок страницы');
+ }
+});

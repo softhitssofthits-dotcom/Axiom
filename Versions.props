@@ -3,8 +3,8 @@
   <PropertyGroup>
     <AxiomLanguageVersion>0.1.13</AxiomLanguageVersion>
     <AxiomCompilerVersion>0.1.13</AxiomCompilerVersion>
-    <AxiomIdeVersion>0.5.0</AxiomIdeVersion>
+    <AxiomIdeVersion>0.5.1</AxiomIdeVersion>
     <Version Condition="'$(MSBuildProjectName)' != 'Axiom.DesktopHost'">0.1.13</Version>
-    <Version Condition="'$(MSBuildProjectName)' == 'Axiom.DesktopHost'">0.5.0</Version>
+    <Version Condition="'$(MSBuildProjectName)' == 'Axiom.DesktopHost'">0.5.1</Version>
   </PropertyGroup>
 </Project>

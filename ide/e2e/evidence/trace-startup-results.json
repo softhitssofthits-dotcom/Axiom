@@ -1,0 +1,16 @@
+[
+  {
+    "id": "shell-trace-startup-readiness",
+    "spec": "shell.spec.js",
+    "name": "Команды трассировки недоступны до создания контроллера и работают после запуска",
+    "ms": 4589,
+    "passed": 6,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:55794/5a90c7fc-e66b-4c66-b908-433e7e2d4c09\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

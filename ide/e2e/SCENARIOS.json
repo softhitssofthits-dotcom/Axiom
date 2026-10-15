@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 408,
+  "count": 414,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -1918,6 +1918,31 @@
       "name": "Check находит графику в SCREEN 0 и блокирует Run; сообщение сохраняется при смене языка"
     },
     {
+      "id": "assistant-semantic-calls",
+      "spec": "program-assistant.spec.js",
+      "name": "Связи компилятора: рекурсия, вложенные функции, перегрузки методов и неполный текст"
+    },
+    {
+      "id": "assistant-workflow-navigation-preview",
+      "spec": "program-assistant.spec.js",
+      "name": "Дерево вызовов, возврат с выделением и прокруткой, просмотр и устаревшие ответы"
+    },
+    {
+      "id": "assistant-regions-and-problems",
+      "spec": "program-assistant.spec.js",
+      "name": "Создание и переименование раздела с отменой; отметки проблем и фильтр"
+    },
+    {
+      "id": "assistant-maze-real-workflow",
+      "spec": "program-assistant.spec.js",
+      "name": "Связи и просмотр настоящего Maze Chase во всех темах"
+    },
+    {
+      "id": "assistant-guards-and-tracked-history",
+      "spec": "program-assistant.spec.js",
+      "name": "Защита от пересечения разделов, только чтение, актуальная диагностика и возврат после правки"
+    },
+    {
       "id": "retro-menu-palettes",
       "spec": "retro-menu-palettes.spec.js",
       "name": "Borland и QuickBASIC: общая палитра выпадающих меню, подменю и контекстных меню"
@@ -2001,6 +2026,11 @@
       "id": "shell-toolbar-history-and-panel-state",
       "spec": "shell.spec.js",
       "name": "Индикатор нижней панели, отмена и повтор на панели инструментов"
+    },
+    {
+      "id": "shell-trace-startup-readiness",
+      "spec": "shell.spec.js",
+      "name": "Команды трассировки недоступны до создания контроллера и работают после запуска"
     },
     {
       "id": "smart-identifier-legacy",
