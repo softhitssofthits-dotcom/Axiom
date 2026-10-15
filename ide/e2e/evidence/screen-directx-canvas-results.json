@@ -1,0 +1,58 @@
+[
+  {
+    "id": "gpu-canvas-queue-without-present",
+    "spec": "gpu-canvas.spec.js",
+    "name": "CANVAS: очередь без PRESENT сохраняет отзывчивость окна и остановку",
+    "ms": 10626,
+    "passed": 4,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58365/a752dc0b-f98b-4aab-abbc-0c59751a4506\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "gpu-canvas-native-tile-layers",
+    "spec": "gpu-canvas.spec.js",
+    "name": "CANVAS: Tiled рисует видимый слой и явно выбранный скрытый слой в нативном окне",
+    "ms": 12667,
+    "passed": 3,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58373/88fba236-d45d-443a-a8a6-158e8ad3affa\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "gpu-canvas-native-game-frame",
+    "spec": "gpu-canvas.spec.js",
+    "name": "CANVAS: сто движущихся кругов, нативный кадр, фильтр и выход по ESC",
+    "ms": 12995,
+    "passed": 4,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58389/1c08c356-0bbe-461b-9ed6-089aba1c2e4d\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "gpu-canvas-get-put-camera",
+    "spec": "gpu-canvas.spec.js",
+    "name": "CANVAS: GET и PUT сохраняют индексы и координаты камеры в настоящем запуске",
+    "ms": 8810,
+    "passed": 6,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:58393/4eda9959-e524-401b-a497-7cb278fb42ef\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

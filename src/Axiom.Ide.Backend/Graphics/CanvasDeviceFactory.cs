@@ -38,7 +38,7 @@ internal static class CanvasDeviceFactory
         {
             attempt.Context?.Dispose(); attempt.Device?.Dispose();
             attempt.Result.CheckError();
-            throw new InvalidOperationException("Не удалось создать устройство CANVAS.");
+            throw new InvalidOperationException("Не удалось создать графическое устройство DirectX.");
         }
         return (attempt.Device, attempt.Context, driver == DriverType.Hardware ? "Hardware" : "WARP");
     }

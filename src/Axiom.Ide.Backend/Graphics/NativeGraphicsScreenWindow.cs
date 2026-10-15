@@ -59,7 +59,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     private readonly GraphicsHostService _graphicsHost;
     private readonly IGraphicsWindowInputSink _inputSink;
     private Direct3D11SwapChainRenderer? _renderer;
-    private readonly CanvasRenderSession? _canvasRenderer;
+    private readonly CanvasRenderSession? _gpuRenderer;
     private ScreenFramebufferSnapshot? _lastFrame;
     private bool _isVerticalScrollBarVisible;
     private int _clientWidth;
@@ -77,23 +77,23 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
         _graphicsHost = graphicsHost;
         _inputSink = inputSink;
-        _canvasRenderer = graphicsHost.CanvasRenderer;
+        _gpuRenderer = graphicsHost.GpuRenderer;
         RegisterWindowClass();
 
         var windowRect = new Rect
         {
             Left = 0,
             Top = 0,
-            Right = _canvasRenderer is null ? Math.Max(1, width) : Math.Clamp(width, 800, 1600),
-            Bottom = _canvasRenderer is null ? Math.Max(1, height) : Math.Clamp(height, 600, 900)
+            Right = graphicsHost.IsCanvasActive ? Math.Clamp(width, 800, 1600) : Math.Max(1, width),
+            Bottom = graphicsHost.IsCanvasActive ? Math.Clamp(height, 600, 900) : Math.Max(1, height)
         };
-        var windowStyle = WsOverlappedWindow | (_canvasRenderer is null ? WsVScroll : 0);
+        var windowStyle = WsOverlappedWindow | (_gpuRenderer is null ? WsVScroll : 0);
         AdjustWindowRectEx(ref windowRect, windowStyle, false, 0);
 
         Hwnd = CreateWindowEx(
             0,
             WindowClassName,
-            _canvasRenderer is null ? "Axiom SCREEN" : "Axiom CANVAS",
+            graphicsHost.IsCanvasActive ? "Axiom CANVAS" : "Axiom SCREEN",
             windowStyle,
             CwUseDefault,
             CwUseDefault,
@@ -115,7 +115,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
             SetWindowLongPtr(Hwnd, -21, GCHandle.ToIntPtr(_windowGcHandle));
             ShowScrollBar(Hwnd, SbVert, false);
             (_clientWidth, _clientHeight) = GetClientSize(Hwnd);
-            if (_canvasRenderer is not null) _canvasRenderer.AttachWindow(Hwnd, _clientWidth, _clientHeight);
+            if (_gpuRenderer is not null) _gpuRenderer.AttachWindow(Hwnd, _clientWidth, _clientHeight);
             else _renderer = new Direct3D11SwapChainRenderer(Hwnd, _clientWidth, _clientHeight);
         }
         catch
@@ -567,7 +567,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
         _clientWidth = width;
         _clientHeight = height;
-        _canvasRenderer?.Resize(width, height);
+        _gpuRenderer?.Resize(width, height);
         _renderer?.Resize(width, height);
     }
 
@@ -580,7 +580,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
         _clientWidth = width;
         _clientHeight = height;
-        _canvasRenderer?.Resize(width, height);
+        _gpuRenderer?.Resize(width, height);
         _renderer?.Resize(width, height);
         if (_lastFrame is not null)
         {
@@ -591,7 +591,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     private void HandlePaint()
     {
         ValidateRect(Hwnd, IntPtr.Zero);
-        _canvasRenderer?.Repaint();
+        _gpuRenderer?.Repaint();
         if (_lastFrame is not null)
         {
             _renderer?.PresentFrame(_lastFrame);
@@ -615,7 +615,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
             }
 
             _capturedMouseButtons = 0;
-            _canvasRenderer?.DetachWindow();
+            _gpuRenderer?.DetachWindow();
             _renderer?.Dispose();
             _renderer = null;
         }

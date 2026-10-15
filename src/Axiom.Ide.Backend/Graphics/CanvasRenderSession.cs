@@ -11,6 +11,7 @@ internal sealed class CanvasRenderSession : IDisposable
     private readonly BlockingCollection<Work> _commands = new(new ConcurrentQueue<Work>(), MaxQueuedCommands);
     private readonly int _dispatcherThreadId = Environment.CurrentManagedThreadId;
     private readonly Thread _thread;
+    private readonly bool _screen;
     private readonly TaskCompletionSource _ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private volatile ExceptionDispatchInfo? _failure;
     private volatile bool _disposed;
@@ -24,8 +25,9 @@ internal sealed class CanvasRenderSession : IDisposable
     public int Height { get; }
     public event Action<Exception>? Faulted;
 
-    public CanvasRenderSession(int width, int height)
+    public CanvasRenderSession(int width, int height, bool screen = false)
     {
+        _screen = screen;
         Width = width; Height = height;
         _thread = new Thread(Run) { IsBackground = true, Name = "Axiom CANVAS DirectX" };
         _thread.Start();
@@ -38,6 +40,7 @@ internal sealed class CanvasRenderSession : IDisposable
         try
         {
             using var surface = new CanvasGpuSurface(Width, Height);
+            if (_screen) surface.EnableScreenPages();
             DriverName = surface.DriverName;
             _ready.SetResult();
             foreach (var work in _commands.GetConsumingEnumerable())
@@ -100,6 +103,13 @@ internal sealed class CanvasRenderSession : IDisposable
         _commands.Add(new Work(surface => { _smooth = smooth; surface.Publish(); surface.Render(smooth); }, completion));
     }
     public void WaitForPreviousPresentation() => _lastPresentation.GetAwaiter().GetResult();
+    public void PublishScreen(IReadOnlyList<ScreenGpuTextCell> text, bool smooth)
+    {
+        _failure?.Throw();
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _lastPresentation = completion.Task;
+        _commands.Add(new Work(surface => { _smooth = smooth; surface.PublishScreen(text); surface.Render(smooth); }, completion));
+    }
     public void SetSmoothing(bool smooth) => Enqueue(surface => { _smooth = smooth; surface.Render(smooth); });
     public void AttachWindow(IntPtr hwnd, int width, int height) =>
         Invoke(surface => { surface.AttachWindow(hwnd, width, height); surface.Render(_smooth); return true; });

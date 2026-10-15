@@ -9,6 +9,43 @@ async function canvasPage(S) {
 
 module.exports = [
   {
+    id: 'graphics-screen-directx-pages-input',
+    name: 'DirectX SCREEN сохраняет палитру, страницы, GET/PUT и нативный INPUT',
+    async fn({ S, C }) {
+      await S.launch();
+      const file = path.resolve(__dirname, '../../../samples/operators/screen/directx_pages_input.axm');
+      await S.page.evaluate(async p => { await window.__ide.openFile(p); await window.__ide.run(); }, file);
+      await S.page.waitForFunction(() => window.__ide.execution.inputRequestId !== null &&
+        window.__ide.execution.surface?.kind === 'screen' && window.__ide.execution.surface.windowVisible === true);
+      const surface = await S.page.evaluate(() => window.__ide.execution.surface);
+      C.ok(['Hardware', 'WARP'].includes(surface.graphicsDriver), 'SCREEN использует DirectX-устройство', surface.graphicsDriver);
+      C.note(`SCREEN graphicsDriver=${surface.graphicsDriver}`);
+      const hwnd = surface.windowHandle;
+      for (const character of 'Тест') probe(hwnd, 'char', { Key:character.charCodeAt(0) });
+      probe(hwnd, 'down', { Key:13 }); probe(hwnd, 'char', { Key:13 }); probe(hwnd, 'up', { Key:13 });
+      let frame, data;
+      function pixel(x, y) {
+        const scale = Math.min(frame.width / 320, frame.height / 200);
+        const width = Math.floor(320 * scale), height = Math.floor(200 * scale);
+        const px = Math.floor((frame.width - width) / 2) + Math.floor((x + .5) * width / 320);
+        const py = Math.floor((frame.height - height) / 2) + Math.floor((y + .5) * height / 200);
+        const offset = (py * frame.width + px) * 4;
+        return [data[offset + 2], data[offset + 1], data[offset]].join();
+      }
+      for (let i = 0; i < 15; i++) {
+        frame = probe(hwnd, 'capture'); data = Buffer.from(frame.bgra, 'base64');
+        if (pixel(100, 80) === '255,255,85') break;
+        await S.page.waitForTimeout(100);
+      }
+      C.eq(pixel(20, 60), '0,255,0', 'PCOPY сохранил переназначенную палитру');
+      C.eq(pixel(30, 60), '0,255,0', 'GET/PUT сохранили палитровый индекс');
+      C.eq(pixel(100, 80), '255,255,85', 'Нативный INPUT получил русский текст, последующие рисование и PCOPY работают');
+      C.eq(await S.page.locator('#diagnostics-content .diagnostic-icon.error').count(), 0, 'Диагностики отсутствуют');
+      await S.page.evaluate(() => window.__ide.stop()); await S.waitIdle();
+      C.eq(probe(hwnd, 'exists').exists, false, 'Остановка закрыла GPU SCREEN');
+    },
+  },
+  {
     id: 'graphics-screen-regression-boundaries',
     name: 'SCREEN: повтор узора PAINT, короткая дуга и отсечение больших линий',
     async fn({ S, C }) {

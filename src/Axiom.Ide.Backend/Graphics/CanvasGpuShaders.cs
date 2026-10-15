@@ -42,6 +42,7 @@ internal static class CanvasGpuShaders
     private const string Source = """
         RWTexture2D<uint2> Target : register(u0);
         Texture2D<uint> Image : register(t0);
+        Texture2D<uint2> Overlay : register(t1);
         cbuffer Parameters : register(b0)
         {
             int4 Rect;
@@ -65,6 +66,13 @@ internal static class CanvasGpuShaders
         [numthreads(8, 8, 1)]
         void CSMain(uint3 id : SV_DispatchThreadID)
         {
+            if (Options.x == 9)
+            {
+                if (id.x >= (uint)Rect.z || id.y >= (uint)Rect.w || id.y * (uint)Rect.z + id.x >= (uint)Origin.x) return;
+                uint packedPoint = Image.Load(int3(id.xy, 0));
+                Target[int2(packedPoint & 65535, packedPoint >> 16)] = uint2(Values.z, Values.w);
+                return;
+            }
             if (Options.x == 3)
             {
                 if (any(id != 0)) return;
@@ -114,6 +122,19 @@ internal static class CanvasGpuShaders
             }
             if (id.x >= (uint)Rect.z || id.y >= (uint)Rect.w) return;
             int2 p = Rect.xy + int2(id.xy);
+            if (Options.x == 10) { Target[p] = uint2(0, 0xffffffff); return; }
+            if (Options.x == 11)
+            {
+                uint source = Overlay.Load(int3(p, 0)).x;
+                if ((source >> 24) != 0) Target[p] = uint2(blend(source, Target[p].x), 0xffffffff);
+                return;
+            }
+            if (Options.x == 8)
+            {
+                uint2 pixel = Target[p];
+                if (pixel.y != 0xffffffff) Target[p] = uint2(Image.Load(int3(pixel.y, 0, 0)), pixel.y);
+                return;
+            }
             if (Options.x == 7) { Target[p] = uint2(Target[p].x, 0xffffffff); return; }
             if (Options.x == 2)
             {

@@ -46,6 +46,7 @@ internal sealed class DesktopHost : IDisposable
         _console = new ProgramConsoleService(dispatcher: application.Dispatcher);
         _console.GraphicsHost.UseNativeCanvasWindow = true;
         _console.GraphicsHost.UseGpuCanvas = true;
+        _console.GraphicsHost.UseGpuScreen = true;
         _console.GraphicsHost.GraphicsError += message =>
         {
             Event("graphics.error", new { code = "GRAPHICS_DEVICE_ERROR", message });

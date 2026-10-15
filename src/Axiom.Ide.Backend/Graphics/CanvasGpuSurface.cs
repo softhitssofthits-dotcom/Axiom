@@ -8,13 +8,13 @@ namespace Axiom.Ide.Graphics;
 
 // Все методы вызываются владельцем одного графического контекста.
 // Рабочая и опубликованная поверхности никогда не разделяют CPU-буфер кадра.
-internal sealed class CanvasGpuSurface : IDisposable
+internal sealed partial class CanvasGpuSurface : IDisposable
 {
     private readonly ID3D11Device _device;
     private readonly ID3D11DeviceContext _context;
-    private readonly ID3D11Texture2D _working = null!;
+    private ID3D11Texture2D _working = null!;
     private readonly ID3D11Texture2D _published = null!;
-    private readonly ID3D11UnorderedAccessView _target = null!;
+    private ID3D11UnorderedAccessView _target = null!;
     private readonly ID3D11ComputeShader _compute = null!;
     private readonly ID3D11Buffer _parameters = null!;
     private readonly Dictionary<RuntimeImageValue, ImageTexture> _images = new(ReferenceEqualityComparer.Instance);
@@ -80,7 +80,8 @@ internal sealed class CanvasGpuSurface : IDisposable
     private void DrawLongLine(long x1, long y1, long x2, long y2, int color,
         long left, long top, long right, long bottom, uint paletteIndex)
     {
-        Int128 dx = Int128.Abs((Int128)x2 - x1), dy = Int128.Abs((Int128)y2 - y1);
+        var dx = (UInt128)Int128.Abs((Int128)x2 - x1);
+        var dy = (UInt128)Int128.Abs((Int128)y2 - y1);
         var sx = x1 < x2 ? 1 : -1; var sy = y1 < y2 ? 1 : -1;
         // Геометрия ограничена видимой осью; полный внеэкранный отрезок не обходится.
         if (dx >= dy)
@@ -88,8 +89,8 @@ internal sealed class CanvasGpuSurface : IDisposable
             for (var x = Math.Max(0, left); x <= Math.Min(Width - 1L, right); x++)
             {
                 var k = ((Int128)x - x1) * sx;
-                if (k < 0 || k > dx) continue;
-                var y = (Int128)y1 + sy * (dx == 0 ? 0 : (k * dy + dx / 2) / dx);
+                if (k < 0 || (UInt128)k > dx) continue;
+                var y = (Int128)y1 + sy * (dx == 0 ? 0 : (Int128)(((UInt128)k * dy + dx / 2) / dx));
                 if (y >= top && y <= bottom) Fill(x, (long)y, x, (long)y, color, paletteIndex);
             }
         }
@@ -98,22 +99,22 @@ internal sealed class CanvasGpuSurface : IDisposable
             for (var y = Math.Max(0, top); y <= Math.Min(Height - 1L, bottom); y++)
             {
                 var k = ((Int128)y - y1) * sy;
-                if (k < 0 || k > dy) continue;
-                var x = (Int128)x1 + sx * ((k * dx + dy / 2) / dy);
+                if (k < 0 || (UInt128)k > dy) continue;
+                var x = (Int128)x1 + sx * (Int128)(((UInt128)k * dx + dy / 2) / dy);
                 if (x >= left && x <= right) Fill((long)x, y, (long)x, y, color, paletteIndex);
             }
         }
     }
 
     public void DrawCircle(long x, long y, long radius, int color, bool filled,
-        long left, long top, long right, long bottom)
+        long left, long top, long right, long bottom, uint paletteIndex = uint.MaxValue)
     {
         if (radius < 0) return;
         if (radius <= 1024 && Math.Abs((double)x) <= 32768 && Math.Abs((double)y) <= 32768)
         {
-            if (radius == 0) { if (x >= left && x <= right && y >= top && y <= bottom) Fill(x, y, x, y, color); return; }
+            if (radius == 0) { if (x >= left && x <= right && y >= top && y <= bottom) Fill(x, y, x, y, color, paletteIndex); return; }
             var parameters = ShapeParameters(color, Math.Max(left, x - radius), Math.Max(top, y - radius),
-                Math.Min(right, x + radius), Math.Min(bottom, y + radius), uint.MaxValue);
+                Math.Min(right, x + radius), Math.Min(bottom, y + radius), paletteIndex);
             parameters[4] = unchecked((uint)(int)x); parameters[5] = unchecked((uint)(int)y);
             parameters[6] = (uint)radius; parameters[12] = filled ? 2u : 4u;
             Dispatch(parameters, null, singleGroup: !filled);
@@ -122,7 +123,7 @@ internal sealed class CanvasGpuSurface : IDisposable
         if (!filled)
         {
             GraphicsEllipseRasterizer.Rasterize(x, y, radius, radius, true, 0, Math.Tau, Width, Height,
-                (px, py) => { if (px >= left && px <= right && py >= top && py <= bottom) Fill(px, py, px, py, color); });
+                (px, py) => { if (px >= left && px <= right && py >= top && py <= bottom) Fill(px, py, px, py, color, paletteIndex); });
             return;
         }
         for (var row = Math.Max(0, top); row <= Math.Min(Height - 1L, bottom); row++)
@@ -231,7 +232,7 @@ internal sealed class CanvasGpuSurface : IDisposable
         finally { if (temporary) texture.Dispose(); }
     }
 
-    private void Dispatch(ReadOnlySpan<uint> parameters, ID3D11ShaderResourceView? image, bool singleGroup = false)
+    private void Dispatch(ReadOnlySpan<uint> parameters, ID3D11ShaderResourceView? image, bool singleGroup = false, ID3D11ShaderResourceView? overlay = null)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (parameters[2] == 0 || parameters[3] == 0) return;
@@ -240,9 +241,11 @@ internal sealed class CanvasGpuSurface : IDisposable
         _context.CSSetConstantBuffer(0, _parameters);
         _context.CSSetUnorderedAccessView(0, _target);
         _context.CSSetShaderResource(0, image!);
+        _context.CSSetShaderResource(1, overlay!);
         _context.Dispatch(singleGroup ? 1u : (parameters[2] + 7) / 8, singleGroup ? 1u : (parameters[3] + 7) / 8, 1);
         _context.CSSetUnorderedAccessView(0, null!);
         _context.CSSetShaderResource(0, null!);
+        _context.CSSetShaderResource(1, null!);
     }
 
     public void Publish() => _context.CopyResource(_published, _working);
@@ -368,6 +371,7 @@ internal sealed class CanvasGpuSurface : IDisposable
         try { _context.ClearState(); } catch { }
         foreach (var image in _images.Values) image.Dispose();
         _images.Clear();
+        DisposeScreenPages();
         _parameters?.Dispose(); _compute?.Dispose(); _target?.Dispose();
         _published?.Dispose(); _working?.Dispose(); _context.Dispose(); _device.Dispose();
     }
