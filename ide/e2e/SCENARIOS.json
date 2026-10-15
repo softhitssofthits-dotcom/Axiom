@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 416,
+  "count": 417,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -1686,6 +1686,11 @@
       "id": "graphics-open-foreground",
       "spec": "graphics-foreground.spec.js",
       "name": "SCREEN и CANVAS сразу выходят на передний план при запуске"
+    },
+    {
+      "id": "graphics-screen-regression-boundaries",
+      "spec": "graphics-lifecycle.spec.js",
+      "name": "SCREEN: повтор узора PAINT, короткая дуга и отсечение больших линий"
     },
     {
       "id": "graphics-smooth-screen-frame-filter",

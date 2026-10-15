@@ -1315,14 +1315,14 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
-    public void DrawCircle_IterationLimitTracksArcCoverageAndRadius()
+    public void DrawCircle_IterationLimitAllowsWholeEllipseTraversalForShortArcs()
     {
         var fullLimit = GraphicsEllipseRasterizer.ComputeMaxIterations(10_000, 10_000, fullEllipse: true, sweep: Math.Tau, screenWidth: 320, screenHeight: 200);
         var arcLimit = GraphicsEllipseRasterizer.ComputeMaxIterations(10_000, 10_000, fullEllipse: false, sweep: Math.PI / 2, screenWidth: 320, screenHeight: 200);
         var smallArcLimit = GraphicsEllipseRasterizer.ComputeMaxIterations(4, 4, fullEllipse: false, sweep: Math.PI / 8, screenWidth: 320, screenHeight: 200);
 
         Assert.Equal(16_640, fullLimit);
-        Assert.Equal(10_000, arcLimit);
+        Assert.Equal(fullLimit, arcLimit);
         Assert.Equal(8, smallArcLimit);
     }
 
@@ -1455,7 +1455,7 @@ public sealed class ProgramConsoleServiceTests
     }
 
     [Fact]
-    public void Paint_StartOutsideScreenLeavesFramebufferAndPositionUnchanged()
+    public void Paint_StartOutsideScreenLeavesFramebufferAndUpdatesPosition()
     {
         var service = new ProgramConsoleService();
 
@@ -1544,6 +1544,22 @@ public sealed class ProgramConsoleServiceTests
         Assert.Equal(40, service.CurrentGraphicsY);
         Assert.Equal(6, service.GetPixel(10, 20));
         Assert.Equal(6, service.GetPixel(15, 24));
+    }
+
+    [Theory]
+    [InlineData(-1, 0, 10, 10)]
+    [InlineData(0, -1, 10, 10)]
+    [InlineData(10, 10, 320, 20)]
+    [InlineData(10, 10, 20, 200)]
+    public void Viewport_RejectsPartialScreenIntersectionWithoutChangingState(long left, long top, long right, long bottom)
+    {
+        var service = new ProgramConsoleService();
+        service.ActivateScreen(1);
+        service.SetGraphicsCurrentPosition(12, 13);
+        Assert.False(service.SetViewport(left, top, right, bottom, null, null, true));
+        Assert.False(service.ViewportEnabled);
+        Assert.Equal(12, service.CurrentGraphicsX);
+        Assert.Equal(13, service.CurrentGraphicsY);
     }
 
     [Fact]

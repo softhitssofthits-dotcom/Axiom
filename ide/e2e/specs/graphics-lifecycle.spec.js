@@ -9,6 +9,43 @@ async function canvasPage(S) {
 
 module.exports = [
   {
+    id: 'graphics-screen-regression-boundaries',
+    name: 'SCREEN: повтор узора PAINT, короткая дуга и отсечение больших линий',
+    async fn({ S, C }) {
+      await S.launch();
+      const cases = [
+        ['paint/background_repeat.axm', 30, 70, [170, 85, 0]],
+        ['circle/short_arc.axm', 220, 100, [255, 85, 85]],
+        ['line/clipped_bounds.axm', 60, 80, [255, 255, 85]],
+      ];
+      for (const [sample, x, y, expected] of cases) {
+        const file = path.resolve(__dirname, '../../../samples/operators', sample);
+        await S.page.evaluate(async p => { await window.__ide.openFile(p); await window.__ide.run(); }, file);
+        await S.page.waitForFunction(() => window.__ide.execution.surface?.kind === 'screen' &&
+          window.__ide.execution.surface.windowVisible === true);
+        const hwnd = await S.page.evaluate(() => window.__ide.execution.surface.windowHandle);
+        let actual;
+        for (let attempt = 0; attempt < 15; attempt++) {
+          const frame = probe(hwnd, 'capture');
+          const data = Buffer.from(frame.bgra, 'base64');
+          const scale = Math.min(frame.width / 320, frame.height / 200);
+          const width = Math.floor(320 * scale), height = Math.floor(200 * scale);
+          const px = Math.floor((frame.width - width) / 2) + Math.floor((x + 0.5) * width / 320);
+          const py = Math.floor((frame.height - height) / 2) + Math.floor((y + 0.5) * height / 200);
+          const offset = (py * frame.width + px) * 4;
+          actual = [data[offset + 2], data[offset + 1], data[offset]];
+          if (actual.join() === expected.join()) break;
+          await S.page.waitForTimeout(100);
+        }
+        C.eq(actual.join(), expected.join(), `Нативный пиксель примера ${sample}`);
+        C.eq(await S.page.locator('#diagnostics-content .diagnostic-icon.error').count(), 0,
+          `Пример ${sample} исполняется без ошибок`);
+        await S.page.evaluate(() => window.__ide.stop()); await S.waitIdle();
+        C.eq(probe(hwnd, 'exists').exists, false, `Остановка закрывает SCREEN после ${sample}`);
+      }
+    },
+  },
+  {
     id: 'graphics-smooth-screen-frame-filter',
     name: 'SMOOTH работает с готовым кадром SCREEN',
     async fn({ S, C }) {

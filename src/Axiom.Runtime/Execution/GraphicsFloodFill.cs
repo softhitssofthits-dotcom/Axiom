@@ -122,7 +122,8 @@ public static class GraphicsFloodFill
                 var backgroundColor = GetPatternColor(request.BackgroundPatternRows, x, y, fillOneColor, fillZeroColor);
                 return currentColor == startColor || currentColor == backgroundColor;
             },
-            (x, y) => GetPatternColor(fillPatternRows, x, y, fillOneColor, fillZeroColor));
+            (x, y) => GetPatternColor(fillPatternRows, x, y, fillOneColor, fillZeroColor),
+            trackVisited: request.BackgroundPatternRows is not null);
     }
 
     private static void Flood(
@@ -134,8 +135,12 @@ public static class GraphicsFloodFill
         int screenWidth,
         int screenHeight,
         Func<long, long, int, bool> canPaint,
-        Func<long, long, int> getFillColor)
+        Func<long, long, int> getFillColor,
+        bool trackVisited = false)
     {
+        // Фоновый узор может сохранить исходный цвет: одной проверки цвета
+        // недостаточно, чтобы отличить уже обработанный пиксель.
+        Dictionary<long, System.Collections.BitArray>? visitedRows = trackVisited ? [] : null;
         var pending = new Stack<(long X, long Y)>();
         pending.Push((startX, startY));
 
@@ -161,6 +166,12 @@ public static class GraphicsFloodFill
 
             for (var x = left; x <= right; x++)
             {
+                if (visitedRows is not null)
+                {
+                    if (!visitedRows.TryGetValue(seedY, out var row))
+                        visitedRows[seedY] = row = new System.Collections.BitArray(screenWidth);
+                    row[(int)x] = true;
+                }
                 setPixel(x, seedY, getFillColor(x, seedY));
             }
 
@@ -174,6 +185,9 @@ public static class GraphicsFloodFill
             {
                 return false;
             }
+
+            if (visitedRows is not null && visitedRows.TryGetValue(y, out var row) && row[(int)x])
+                return false;
 
             var currentColor = GraphicsColorNormalization.Normalize(getPixel(x, y));
             return canPaint(x, y, currentColor);

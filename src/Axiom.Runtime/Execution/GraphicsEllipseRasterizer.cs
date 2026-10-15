@@ -118,10 +118,10 @@ public static class GraphicsEllipseRasterizer
     {
         var safeWidth = Math.Max(1L, screenWidth);
         var safeHeight = Math.Max(1L, screenHeight);
-        var sweepFraction = fullEllipse ? 1d : Math.Clamp(sweep / FullTurn, 0d, 1d);
-        var coverageFactor = ComputeCoverageFactor(fullEllipse, sweepFraction);
         var fullEllipseBudget = Math.Max(1d, Math.Abs((double)radiusX) + Math.Abs((double)radiusY));
-        var requestedBudget = Math.Max(8d, Math.Ceiling(fullEllipseBudget * coverageFactor));
+        // Обход начинается с верхней точки независимо от угла дуги.
+        // Для короткой дуги тоже нужно дойти до конца четверти эллипса.
+        var requestedBudget = Math.Max(8d, Math.Ceiling(fullEllipseBudget));
 
         // Keep the guard proportional to the visible screen size so pathological radii do not
         // turn a defensive limit into a near-infinite loop on a small surface.
@@ -215,16 +215,6 @@ public static class GraphicsEllipseRasterizer
 
         var h = Math.Pow(a - b, 2d) / Math.Pow(a + b, 2d);
         return Math.PI * (a + b) * (1d + (3d * h) / (10d + Math.Sqrt(4d - 3d * h)));
-    }
-
-    private static double ComputeCoverageFactor(bool fullEllipse, double sweepFraction)
-    {
-        if (fullEllipse)
-        {
-            return 1d;
-        }
-
-        return Math.Max(0.5d, sweepFraction);
     }
 
     private static int ClampIterationBudget(double budget)

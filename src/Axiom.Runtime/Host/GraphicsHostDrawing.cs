@@ -174,31 +174,46 @@ public static class GraphicsHostDrawing
 
     private static void DrawAbsoluteLine(IGraphicsHost host, GraphicsViewport viewport, long x1, long y1, long x2, long y2, int color)
     {
-        var dx = Math.Abs(x2 - x1);
-        var sx = x1 < x2 ? 1 : -1;
-        var dy = -Math.Abs(y2 - y1);
-        var sy = y1 < y2 ? 1 : -1;
-        var error = dx + dy;
+        var left = Math.Max(0, viewport.Left);
+        var right = Math.Min(host.ScreenWidth - 1L, viewport.Right);
+        var top = Math.Max(0, viewport.Top);
+        var bottom = Math.Min(host.ScreenHeight - 1L, viewport.Bottom);
+        if (left > right || top > bottom || Math.Max(x1, x2) < left || Math.Min(x1, x2) > right ||
+            Math.Max(y1, y2) < top || Math.Min(y1, y2) > bottom)
+            return;
 
-        while (true)
+        // Вычисляем точки исходной линии, а не строим новую линию между
+        // отсечёнными концами: иначе меняется фаза округления Брезенхема.
+        // UInt128 сохраняет точность и после преобразования WINDOW в LONG.
+        var dx = (UInt128)Int128.Abs((Int128)x2 - x1);
+        var dy = (UInt128)Int128.Abs((Int128)y2 - y1);
+        var sx = x1 < x2 ? 1 : -1;
+        var sy = y1 < y2 ? 1 : -1;
+        if (dx == 0 && dy == 0)
         {
             PlotAbsolutePixel(host, viewport, x1, y1, color);
-            if (x1 == x2 && y1 == y2)
+            return;
+        }
+        if (dx >= dy)
+        {
+            var first = Math.Max(left, Math.Min(x1, x2));
+            var last = Math.Min(right, Math.Max(x1, x2));
+            for (var x = first; x <= last; x++)
             {
-                break;
+                var step = (UInt128)Int128.Abs((Int128)x - x1);
+                var y = (long)((Int128)y1 + sy * (Int128)((step * dy + dx / 2) / dx));
+                PlotAbsolutePixel(host, viewport, x, y, color);
             }
-
-            var doubledError = GraphicsLineMath.SaturatingDouble(error);
-            if (doubledError >= dy)
+        }
+        else
+        {
+            var first = Math.Max(top, Math.Min(y1, y2));
+            var last = Math.Min(bottom, Math.Max(y1, y2));
+            for (var y = first; y <= last; y++)
             {
-                error = GraphicsLineMath.SaturatingAdd(error, dy);
-                x1 += sx;
-            }
-
-            if (doubledError <= dx)
-            {
-                error = GraphicsLineMath.SaturatingAdd(error, dx);
-                y1 += sy;
+                var step = (UInt128)Int128.Abs((Int128)y - y1);
+                var x = (long)((Int128)x1 + sx * (Int128)((step * dx + dy / 2) / dy));
+                PlotAbsolutePixel(host, viewport, x, y, color);
             }
         }
     }
@@ -212,6 +227,11 @@ public static class GraphicsHostDrawing
 
         if (filled)
         {
+            left = Math.Max(left, Math.Max(0, viewport.Left));
+            right = Math.Min(right, Math.Min(host.ScreenWidth - 1L, viewport.Right));
+            top = Math.Max(top, Math.Max(0, viewport.Top));
+            bottom = Math.Min(bottom, Math.Min(host.ScreenHeight - 1L, viewport.Bottom));
+            if (left > right || top > bottom) return;
             for (var y = top; y <= bottom; y++)
             {
                 DrawAbsoluteLine(host, viewport, left, y, right, y, color);

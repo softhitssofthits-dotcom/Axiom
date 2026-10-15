@@ -1,0 +1,88 @@
+[
+  {
+    "id": "graphics-screen-regression-boundaries",
+    "spec": "graphics-lifecycle.spec.js",
+    "name": "SCREEN: повтор узора PAINT, короткая дуга и отсечение больших линий",
+    "ms": 12704,
+    "passed": 9,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57176/f461a27c-b7f8-40f3-97ac-0b6a22081421\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "graphics-smooth-screen-frame-filter",
+    "spec": "graphics-lifecycle.spec.js",
+    "name": "SMOOTH работает с готовым кадром SCREEN",
+    "ms": 7131,
+    "passed": 4,
+    "failures": [],
+    "notes": [
+      "SCREEN 8 move/resize/paint: median=33.96ms, max=67.67ms"
+    ],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57182/fa12c931-84dd-4253-98ff-db4e7c020568\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "graphics-smooth-canvas-frame-filter",
+    "spec": "graphics-lifecycle.spec.js",
+    "name": "SMOOTH немедленно переключает сглаживание всего кадра CANVAS",
+    "ms": 10368,
+    "passed": 4,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57187/ed9971d5-4e16-4290-8629-ff21dfdba267\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "graphics-canvas-input-close-repeat",
+    "spec": "graphics-lifecycle.spec.js",
+    "name": "Закрытие CANVAS при INPUT отменяет запрос и допускает новый ввод",
+    "ms": 6500,
+    "passed": 4,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57194/30a1af7f-8984-4fce-be67-f4cb75da821d\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "graphics-mouse-scale-buttons-wheel",
+    "spec": "graphics-lifecycle.spec.js",
+    "name": "CANVAS: размеры, масштаб, три кнопки, отпускание и колесо",
+    "ms": 49404,
+    "passed": 16,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57199/1a73628a-3652-4768-8e00-0224c5551338\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "graphics-surfaces-stop-repeat",
+    "spec": "graphics-lifecycle.spec.js",
+    "name": "Повтор SCREEN и CANVAS не наследует поверхность или удержанные клавиши",
+    "ms": 21014,
+    "passed": 10,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57215/f505d498-598f-43cc-bfa4-0fd3eb0cee93\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]
