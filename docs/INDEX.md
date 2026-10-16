@@ -63,3 +63,5 @@
 Актуальность отказов явной и фоновой диагностики: [исправление и приёмка](reports/electron/DOCUMENT_DIAGNOSTIC_DELIVERY_STABILITY.md).
 
 Редактирование Unicode, перенос строки, очистка и копирование консоли при INPUT: [исправление и приёмка](reports/electron/CONSOLE_EDITING_STABILITY.md).
+
+Точки останова, Save As на паузе и принадлежность исполняемой модели: [исправление и приёмка](reports/electron/TRACE_POINTS_SAVEAS_STABILITY.md).

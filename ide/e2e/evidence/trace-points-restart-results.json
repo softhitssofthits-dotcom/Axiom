@@ -1,0 +1,30 @@
+[
+  {
+    "id": "trace-restart-other-tab",
+    "spec": "trace-restart.spec.js",
+    "name": "Шаг и Restart из другой вкладки сохраняют исходную программу и её точки",
+    "ms": 4759,
+    "passed": 8,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:55629/f2c7cc1a-e0bf-4196-96ab-0600f9d5d713\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "trace-restart-late-stop-response",
+    "spec": "trace-restart.spec.js",
+    "name": "Запоздалый Stop не переносит Restart на новый запуск; явный Stop отменяет ожидающий Restart",
+    "ms": 11686,
+    "passed": 15,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:55633/cdc938fc-cd06-4cf7-a278-7d57c08e1b2b\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:55639/ab7be9f3-2d78-43b3-b7d4-f166103dba0d\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:55643/0a35c27e-2b66-4197-971e-630ac53c35a9\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

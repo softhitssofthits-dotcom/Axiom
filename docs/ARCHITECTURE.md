@@ -218,3 +218,7 @@ ExecutionController хранит inputSubmission отдельно от види�
 ## Перерисовка после удаления консольного символа — 16 октября 2026 года
 
 ExecutionController.input после изменения inputText при Backspace использует renderOutput вместо предположения об одной ячейке терминала. Существующий путь учитывает outputText, clearedOutputPrefix, приглашение/ответ и очередь xterm. Он восстанавливает согласованный курсор для широкого символа, комбинируемого знака и переноса. Нового обработчика ширины символов или изменения протокола нет. Отчёт: reports/electron/CONSOLE_EDITING_STABILITY.md.
+
+## Текущий путь исполняемой записи после Save As — 16 октября 2026 года
+
+AxiomIDE.renameActive синхронно переносит _runFile с прежнего пути на новый при переименовании выполняемой записи. Существующие TraceController, readOnly, closeFile и Restart получают ту же модель по актуальному пути. execution.sourceSnapshot остаётся неизменным описанием исходного запуска; перенос владельца интерфейса не подменяет его файл/текст. Изменение ограничено renderer. Отчёт: reports/electron/TRACE_POINTS_SAVEAS_STABILITY.md.

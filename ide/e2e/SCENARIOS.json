@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 453,
+  "count": 456,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -2236,6 +2236,21 @@
       "id": "trace-stepback-partial-copy-failure",
       "spec": "trace-partial-file.spec.js",
       "name": "Частичный отказ COPYDIR: CATCH и StepBack не повторяют внешний эффект"
+    },
+    {
+      "id": "trace-points-documents-edit-clear",
+      "spec": "trace-points.spec.js",
+      "name": "F9, перенос при правке и очистка точек в двух документах"
+    },
+    {
+      "id": "trace-points-saveas-reopen",
+      "spec": "trace-points.spec.js",
+      "name": "Save As сохраняет точки модели, повторное открытие не наследует закрытые точки"
+    },
+    {
+      "id": "trace-points-paused-saveas",
+      "spec": "trace-points.spec.js",
+      "name": "Save As на паузе сохраняет владельца снимка, точки и защиту исполняемой модели"
     },
     {
       "id": "trace-restart-other-tab",

@@ -1096,6 +1096,7 @@ class AxiomIDE {
     const f = this.openFiles.get(old) || this.openFiles.get(newPath);
     if (!f) return;
     if (this.openFiles.has(old)) this.openFiles.rename(old, newPath);
+    if (this._runFile === old) this._runFile = newPath;
     this.dirty.delete(old);
     this.dirty.delete(newPath);
     if (this.activeFile === old) this.activeFile = newPath;

@@ -1,0 +1,44 @@
+[
+  {
+    "id": "trace-points-documents-edit-clear",
+    "spec": "trace-points.spec.js",
+    "name": "F9, перенос при правке и очистка точек в двух документах",
+    "ms": 3770,
+    "passed": 8,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:55567/b5879c9f-8ad5-4126-a31f-f9e60a4b1709\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "trace-points-saveas-reopen",
+    "spec": "trace-points.spec.js",
+    "name": "Save As сохраняет точки модели, повторное открытие не наследует закрытые точки",
+    "ms": 3929,
+    "passed": 6,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:55572/5328348b-482c-4765-a697-b33b11afe3e7\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "trace-points-paused-saveas",
+    "spec": "trace-points.spec.js",
+    "name": "Save As на паузе сохраняет владельца снимка, точки и защиту исполняемой модели",
+    "ms": 4148,
+    "passed": 14,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:55577/9a1c6ea6-1065-4938-9510-48956abbf232\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]
