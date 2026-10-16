@@ -1,0 +1,16 @@
+[
+  {
+    "id": "highlight-user-symbols",
+    "spec": "highlighting.spec.js",
+    "name": "Пользовательские имена и операции получают цвета выбранной темы",
+    "ms": 5968,
+    "passed": 23,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:52277/3d94cb09-e0d3-4e98-8923-af3ae82c2146\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

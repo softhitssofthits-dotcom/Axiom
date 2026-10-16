@@ -60,7 +60,16 @@ module.exports = [{ id: 'highlight-punctuation-and-maze', name: 'Пунктуа�
   }
   await S.page.evaluate(()=>window.__ide.setTheme('dark')); await S.screenshot('symbol-colors');
   const sample=require('fs').readFileSync(require('path').join(ROOT,'samples/graphics/game/maze_chase.axm'),'utf8');
-  await S.page.evaluate(source=> {const i=window.__ide;i.editor.getModel().setValue(source);i.editor.revealLineInCenter(126);},sample);
+  const declarations = await S.page.evaluate(source=> {
+    const i=window.__ide, model=i.editor.getModel();model.setValue(source);
+    const matches=model.findMatches('^\\s*SUB\\s+UpdatePlayerAnimation\\s*\\(',false,true,false,null,false);
+    if(matches.length===1)i.editor.revealLineInCenter(matches[0].range.startLineNumber);
+    return matches.map(match=>match.range.startLineNumber);
+  },sample);
+  C.eq(declarations.length,1,'В Maze Chase найдено единственное объявление UpdatePlayerAnimation');
+  if(declarations.length!==1)throw new Error('Не найдено единственное объявление процедуры UpdatePlayerAnimation');
+  await S.page.waitForFunction(line=>window.__ide.editor.getVisibleRanges().some(range=>range.startLineNumber<=line&&range.endLineNumber>=line),declarations[0]);
+  C.ok(true,'Объявление процедуры находится в видимой области редактора');
   await S.page.waitForFunction(()=>[...document.querySelectorAll('.view-lines span')].some(s=>s.textContent==='UpdatePlayerAnimation'&&getComputedStyle(s).color==='rgb(220, 220, 170)'));
   C.ok(true,'Процедура из пользовательского maze_chase имеет отдельный цвет');
   await S.screenshot('maze-symbol-colors');
