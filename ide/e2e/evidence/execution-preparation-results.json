@@ -1,0 +1,53 @@
+[
+  {
+    "id": "execution-preparation-failure-recovery",
+    "spec": "execution-preparation.spec.js",
+    "name": "Ошибка подготовки после успешного запуска не исполняет старый код; исправление запускается",
+    "ms": 5120,
+    "passed": 5,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:64188/59c4be73-8180-4e7c-8321-b67c8698b678\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "execution-preparation-save-cancel",
+    "spec": "execution-preparation.spec.js",
+    "name": "Отмена сохранения перед запуском сохраняет правки и не запускает прежний файл",
+    "ms": 4112,
+    "passed": 5,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:64193/f73d1643-1466-4dd2-9a75-b559ff20f709\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": [
+      {
+        "type": "confirm",
+        "message": "Перед запуском нужно сохранить документ. Сохранить и запустить?"
+      },
+      {
+        "type": "confirm",
+        "message": "Перед запуском нужно сохранить документ. Сохранить и запустить?"
+      }
+    ]
+  },
+  {
+    "id": "execution-preparation-host-fault-late-response",
+    "spec": "execution-preparation.spec.js",
+    "name": "Авария DesktopHost при ожидании ответа запуска не позволяет позднему ответу заменить новую сессию",
+    "ms": 5571,
+    "passed": 6,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:64197/a82c1dad-c628-46bd-bbee-b33ffd814212\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

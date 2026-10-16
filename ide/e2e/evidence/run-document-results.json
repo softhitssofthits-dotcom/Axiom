@@ -1,0 +1,52 @@
+[
+  {
+    "id": "run-document-preserved-during-save",
+    "spec": "run-document.spec.js",
+    "name": "Run и отладка сохраняют исходный документ при смене вкладки; Сохранить как сохраняет принадлежность",
+    "ms": 4177,
+    "passed": 16,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:64430/317ba462-9356-410b-b755-a0fd1e65e150\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": [
+      {
+        "type": "confirm",
+        "message": "Перед запуском нужно сохранить документ. Сохранить и запустить?"
+      },
+      {
+        "type": "confirm",
+        "message": "Перед запуском нужно сохранить документ. Сохранить и запустить?"
+      },
+      {
+        "type": "confirm",
+        "message": "Перед запуском нужно сохранить документ. Сохранить и запустить?"
+      }
+    ]
+  },
+  {
+    "id": "run-document-invalidated-during-save",
+    "spec": "run-document.spec.js",
+    "name": "Правка или закрытие исходного документа во время сохранения отменяют запуск и не запускают соседнюю вкладку",
+    "ms": 3779,
+    "passed": 9,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:64435/23a4b58c-5ba0-4443-824d-6982d09d607d\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": [
+      {
+        "type": "confirm",
+        "message": "Перед запуском нужно сохранить документ. Сохранить и запустить?"
+      },
+      {
+        "type": "confirm",
+        "message": "Перед запуском нужно сохранить документ. Сохранить и запустить?"
+      }
+    ]
+  }
+]

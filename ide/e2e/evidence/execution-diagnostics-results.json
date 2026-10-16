@@ -1,0 +1,30 @@
+[
+  {
+    "id": "execution-diagnostics-background-document",
+    "spec": "execution-diagnostics.spec.js",
+    "name": "Ошибка исполнения выделяется в запущенном документе при другой активной вкладке",
+    "ms": 4490,
+    "passed": 4,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:64621/710da4cd-2c44-47ca-9230-067dfcfad47a\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "execution-diagnostics-edited-snapshot",
+    "spec": "execution-diagnostics.spec.js",
+    "name": "Ошибка прежнего снимка не выделяет документ, изменённый до или после завершения программы",
+    "ms": 6787,
+    "passed": 9,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:64625/5bb65b4a-cd4c-46de-bd7d-81282219c7bc\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:64629/d1931151-79df-4542-9077-81c5de1ec9f2\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

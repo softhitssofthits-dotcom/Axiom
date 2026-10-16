@@ -28,3 +28,15 @@
 Папки: `contracts/` — действующие тематические договоры; `plans/` — очередь и приёмка; `reports/` — результаты; `registries/` — реестры; `agent/` — краткий вход; `manual/` — пользовательские статьи; `audit/bytecode-only/` — текущий экспорт проверок; `archive/` — исторические материалы.
 
 Обязательное начало сессии остаётся по AGENTS.md. Краткий агентный слой помогает после чтения основных источников, не заменяет их.
+
+Устойчивость подготовки запуска после аварии служебного процесса: [результат 16 октября](reports/electron/EXECUTION_PREPARATION_STABILITY.md).
+
+Изоляция рабочих каталогов повторного запуска: [приёмка 16 октября](reports/electron/EXECUTION_DIRECTORY_ACCEPTANCE.md).
+
+Отказы подготовки, неполный байт-код и очистка кэша: [приёмка 16 октября](reports/electron/BACKEND_FAILURE_ACCEPTANCE.md).
+
+Принадлежность Run исходному документу при сохранении: [исправление 16 октября](reports/electron/RUN_DOCUMENT_STABILITY.md).
+
+Диапазоны диагностик UTF-16, CRLF и символы вне BMP: [приёмка 16 октября](reports/electron/DIAGNOSTIC_RANGE_ACCEPTANCE.md).
+
+Диагностика исполнявшегося снимка при смене вкладки/правке: [исправление 16 октября](reports/electron/EXECUTION_DIAGNOSTIC_STABILITY.md).

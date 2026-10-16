@@ -1,0 +1,30 @@
+[
+  {
+    "id": "execution-directories-identical-source",
+    "spec": "execution-directories.spec.js",
+    "name": "Одинаковый исходник в разных папках использует свои ресурсы и сбрасывает CHANGEDIR при повторе",
+    "ms": 5579,
+    "passed": 13,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:64289/89d83c47-0d53-48f3-9007-d4e064298be0\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "execution-directories-error-stop-reset",
+    "spec": "execution-directories.spec.js",
+    "name": "Ошибочный CHANGEDIR сохраняет каталог; ошибка и Stop не передают каталог следующему запуску",
+    "ms": 4961,
+    "passed": 8,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:64293/2a603c66-8da0-43f1-bc56-6ba8f3ee5e81\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

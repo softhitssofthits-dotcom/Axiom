@@ -299,6 +299,29 @@ test('Диагностика снимка сохраняет UTF-16 диапаз
  }finally{await host.close();}
 });
 
+test('Диагностика UTF-16 учитывает символы вне BMP на той же строке и оба перевода строк', async () => {
+  const host = new Host();
+  try {
+    await host.wait(message => message.event === 'host.ready');
+    let revision = 0;
+    for (const newline of ['\n', '\r\n']) {
+      const line = 'PRINT "е́😀"; missing';
+      const sourceText = ["' 😀", line, ''].join(newline);
+      const response = await host.request('document.analyse', { documentId: 'utf16-inline', documentRevision: ++revision, sourceText });
+      assert.equal(response.ok, true);
+      const diagnostic = response.payload.diagnostics.find(item => item.code === 'MB2001');
+      assert.ok(diagnostic);
+      assert.equal(diagnostic.documentRevision, revision);
+      assert.equal(diagnostic.line, 2);
+      assert.equal(diagnostic.column, 15);
+      assert.equal(diagnostic.length, 7);
+      assert.equal(diagnostic.spanStart, sourceText.indexOf('missing'));
+      assert.equal(diagnostic.spanLength, 7);
+      assert.equal(sourceText.slice(diagnostic.spanStart, diagnostic.spanStart + diagnostic.spanLength), 'missing');
+    }
+  } finally { await host.close(); }
+});
+
 test('Подсказки Host сохраняют редакцию документа, UTF-16 позиции и типы после изменения', async () => {
   await withHost(async host => {
     for (const [revision, type, initializer] of [[1, 'DECIMAL', '-10.5'], [2, 'STRING', '"Цена"']]) {

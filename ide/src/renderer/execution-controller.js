@@ -7,16 +7,26 @@ class ExecutionController {
   }
   async start(file, launchKind = 'run', breakpoints = [], stopFirst = true) {
     const ide = this.ide;
+    const request = this.startRequest = {};
     ide.running = true; this.starting = true; this.pendingStop = false; this.pendingEvents = []; this.outputText = ''; this.streamedOutputText = ''; this.clearedOutputPrefix = ''; this.inputPrompt = ''; this.inputText = ''; this.inputRequestId = null; this.inputTarget = null; this.stopId = null;
     this.canStepBack=false;this.callDepth=0;this.line=null;this.debugBusy=false;ide.trace?.clearMarker();ide.trace?.update();
     ide._stopRequested = false; ide.clearDiagnostics(); ide.showPanel(); ide.switchPanel('console');
     ide.setStatus(I18N.t('trace.preparing'));
-    if (!ide.ensureConsole()) { ide.running = false; this.starting = false; ide.trace?.finished(); return; }
+    if (!ide.ensureConsole()) { ide.running = false; this.starting = false; this.startRequest = null; ide.trace?.finished(); return; }
     ide.term.reset(); this.startedAt = performance.now();
     const document = ide.openFiles.get(file);
-    const response = await this.api.startExecution({ documentId: document.documentId,
-      documentRevision: document.revision, sourceText: document.model.getValue(), sourceFilePath: file,
-      launchKind, breakpointLines: breakpoints, stopBeforeFirstInstruction: launchKind === 'debug' && stopFirst });
+    const snapshot = this.sourceSnapshot = { documentId: document.documentId, sourceText: document.model.getValue(), file };
+    let response;
+    try {
+      response = await this.api.startExecution({ documentId: document.documentId,
+        documentRevision: document.revision, sourceText: snapshot.sourceText, sourceFilePath: file,
+        launchKind, breakpointLines: breakpoints, stopBeforeFirstInstruction: launchKind === 'debug' && stopFirst });
+    } catch (error) {
+      if (this.startRequest === request) this.fault(error?.message || 'Не удалось начать выполнение.');
+      return;
+    }
+    if (this.startRequest !== request) return;
+    this.startRequest = null;
     this.starting = false;
     if (!response.ok) { this.fault(response.error?.message || 'Не удалось начать выполнение.'); return; }
     this.sessionId = response.payload.sessionId;
@@ -70,7 +80,10 @@ class ExecutionController {
         this.ide.running = false; this.inputRequestId = null; this.stopId = null; this.sessionId = null;
         this.ide.setStatus(I18N.t(({Succeeded:'status.finished',Cancelled:'status.stopped',CompilationFailed:'trace.compileFailed',RuntimeFailed:'trace.runtimeFailed'})[payload.status] || 'trace.failed'));
         if (payload.diagnostics?.length) {
-          this.ide.applyDiagnostics(payload.diagnostics.map(d => ({ ...d, file: this.ide._runFile, col: d.column, severity: 'error' })), true);
+          const snapshot = this.sourceSnapshot;
+          const entry = snapshot && [...this.ide.openFiles.values()].find(entry => entry.documentId === snapshot.documentId);
+          const file = entry?.path || snapshot?.file || this.ide._runFile;
+          this.ide.applyDiagnostics(payload.diagnostics.map(d => ({ ...d, file, executionSnapshot: snapshot, col: d.column, severity: 'error' })), false, file);
           this.ide.switchPanel('diagnostics');
         }
         document.getElementById('status-execution-time').textContent = I18N.t('trace.elapsed',Math.round(performance.now() - this.startedAt));
@@ -140,6 +153,7 @@ class ExecutionController {
     this.debugBusy=false;this.ide.trace?.update();
   }
   fault(message) {
+    this.startRequest = null; this.starting = false; this.pendingStop = false; this.pendingEvents = [];
     this.ide.running = false; this.sessionId = null; this.stopId = null; this.inputRequestId = null;
     this.ide.showIdeProblem('status.runFailed', message); this.ide.setStatus(I18N.t('trace.failed'));
     this.ide.trace?.finished();

@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 420,
+  "count": 431,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -81,6 +81,16 @@
       "id": "console-key-keydown-canonical-aliases-axm",
       "spec": "console-keys.spec.js",
       "name": "Консоль Electron передаёт клавиши для keydown/canonical_aliases.axm"
+    },
+    {
+      "id": "diagnostic-ranges-unicode-line-endings",
+      "spec": "diagnostic-ranges.spec.js",
+      "name": "Диагностика Monaco точно выделяет UTF-16 после эмодзи при LF/CRLF и обоих языках"
+    },
+    {
+      "id": "diagnostic-ranges-eof-recovery",
+      "spec": "diagnostic-ranges.spec.js",
+      "name": "Нулевая диагностика конца файла остаётся на EOF и исчезает после исправления при LF/CRLF"
     },
     {
       "id": "documents-tab-selection-scroll-undo",
@@ -1568,6 +1578,41 @@
       "name": "Один Enter после набранного DIM с открытым дополнением"
     },
     {
+      "id": "execution-diagnostics-background-document",
+      "spec": "execution-diagnostics.spec.js",
+      "name": "Ошибка исполнения выделяется в запущенном документе при другой активной вкладке"
+    },
+    {
+      "id": "execution-diagnostics-edited-snapshot",
+      "spec": "execution-diagnostics.spec.js",
+      "name": "Ошибка прежнего снимка не выделяет документ, изменённый до или после завершения программы"
+    },
+    {
+      "id": "execution-directories-identical-source",
+      "spec": "execution-directories.spec.js",
+      "name": "Одинаковый исходник в разных папках использует свои ресурсы и сбрасывает CHANGEDIR при повторе"
+    },
+    {
+      "id": "execution-directories-error-stop-reset",
+      "spec": "execution-directories.spec.js",
+      "name": "Ошибочный CHANGEDIR сохраняет каталог; ошибка и Stop не передают каталог следующему запуску"
+    },
+    {
+      "id": "execution-preparation-failure-recovery",
+      "spec": "execution-preparation.spec.js",
+      "name": "Ошибка подготовки после успешного запуска не исполняет старый код; исправление запускается"
+    },
+    {
+      "id": "execution-preparation-save-cancel",
+      "spec": "execution-preparation.spec.js",
+      "name": "Отмена сохранения перед запуском сохраняет правки и не запускает прежний файл"
+    },
+    {
+      "id": "execution-preparation-host-fault-late-response",
+      "spec": "execution-preparation.spec.js",
+      "name": "Авария DesktopHost при ожидании ответа запуска не позволяет позднему ответу заменить новую сессию"
+    },
+    {
       "id": "execution-late-command-response",
       "spec": "execution-session.spec.js",
       "name": "Поздние ответы INPUT, Stop и отладки не повреждают следующий настоящий запуск"
@@ -1966,6 +2011,16 @@
       "id": "retro-menu-palettes",
       "spec": "retro-menu-palettes.spec.js",
       "name": "Borland и QuickBASIC: общая палитра выпадающих меню, подменю и контекстных меню"
+    },
+    {
+      "id": "run-document-preserved-during-save",
+      "spec": "run-document.spec.js",
+      "name": "Run и отладка сохраняют исходный документ при смене вкладки; Сохранить как сохраняет принадлежность"
+    },
+    {
+      "id": "run-document-invalidated-during-save",
+      "spec": "run-document.spec.js",
+      "name": "Правка или закрытие исходного документа во время сохранения отменяют запуск и не запускают соседнюю вкладку"
     },
     {
       "id": "run-prints-output-and-finishes",

@@ -170,7 +170,7 @@ class AxiomIDE {
     if(this.term) this.term.options.theme=this.consoleTheme();
     this.updateThemeMenuChecks();
     I18N.setLocale(language);this.applyLocale();
-    if(changedLanguage) { if(this._lastDiagnostics)this.applyDiagnostics(this._lastDiagnostics,this._lastDiagnosticsOnlyActive);this.scheduleLiveCheck(); }
+    if(changedLanguage) { if(this._lastDiagnostics)this.applyDiagnostics(this._lastDiagnostics,this._lastDiagnosticsOnlyActive,this._lastDiagnosticsTargetFile);this.scheduleLiveCheck(); }
     this.log('settings.editor.applied',{count:Object.keys(normalized).length,theme,language});
   }
 
@@ -528,6 +528,7 @@ class AxiomIDE {
     this.editor.onDidChangeModelContent((event) => {
       this.closeDiagnosticPeek();
       this.clearUsageAdvice();
+      this.refreshExecutionDiagnostics(this.editor.getModel());
       this.editedLines.record(this.editor.getModel(),event.changes,!this._autoFormatting);
       if (this.activeFile) this.markDirty(this.activeFile, true);
       if (this.activeFile && !this.openFiles.isDirty(this.activeFile)) this.editedLines.clear(this.editor.getModel());
@@ -1474,11 +1475,16 @@ class AxiomIDE {
     if (this.running) return;
     let target = this.runTarget();
     if (!target) return;
+    const entry = this.openFiles.get(target);
+    if (!entry) return;
     if (target.startsWith('untitled') || this.dirty.has(target)) {
       if (!confirm('Перед запуском нужно сохранить документ. Сохранить и запустить?')) return;
-      await this.save(); target = this.runTarget();
-      if (!target || target.startsWith('untitled') || this.dirty.has(target)) return;
+      if (!await this.save(target)) return;
+      target = entry.path;
     }
+    if (this.running || this.openFiles.get(target) !== entry || entry.model.isDisposed?.() ||
+        target.startsWith('untitled') || this.dirty.has(target)) return;
+    if (this.activeFile !== target) this.switchToFile(target);
     this._runFile = target;
     // The integrated ConPTY console is the only run path: output, stderr and interactive
     // input all live in the terminal.
@@ -1941,12 +1947,27 @@ class AxiomIDE {
     this.updateDiagnosticFilters();
   }
 
-  applyDiagnostics(diags, onlyActive = false) {
+  refreshExecutionDiagnostics(model) {
+    if (this._lastDiagnostics?.some(d => d.executionSnapshot && this.openFiles.get(d.file)?.model === model))
+      this.applyDiagnostics(this._lastDiagnostics, this._lastDiagnosticsOnlyActive, this._lastDiagnosticsTargetFile);
+  }
+
+  diagnosticMatchesSnapshot(d) {
+    if (!d.executionSnapshot) return true;
+    const entry = this.openFiles.get(d.file);
+    return !!entry && entry.documentId === d.executionSnapshot.documentId && !entry.model.isDisposed?.() &&
+      entry.model.getValue() === d.executionSnapshot.sourceText;
+  }
+
+  applyDiagnostics(diags, onlyActive = false, targetFile = null) {
     this.closeDiagnosticPeek();
     this.log('diagnostics.apply.start', { count: Array.isArray(diags) ? diags.length : 0, onlyActive, focus: this.focusState() });
     const monaco = this.monaco;
     const byModel = new Map();
-    if (onlyActive) {
+    if (targetFile) {
+      const target = this.openFiles.get(targetFile);
+      if (target) byModel.set(target.model, []);
+    } else if (onlyActive) {
       const active = this.activeFile ? this.openFiles.get(this.activeFile) : null;
       if (active) byModel.set(active.model, []);
     } else {
@@ -1958,6 +1979,7 @@ class AxiomIDE {
     el.innerHTML = '';
     this._lastDiagnostics = diags;
     this._lastDiagnosticsOnlyActive = onlyActive;
+    this._lastDiagnosticsTargetFile = targetFile;
 
     if (!diags.length) {
       for (const model of byModel.keys()) monaco.editor.setModelMarkers(model, 'axiom', []);
@@ -1974,7 +1996,7 @@ class AxiomIDE {
       const len = Math.max(1, d.length || 1);
 
       const model = this.findModelForFile(d.file);
-      if (model && byModel.has(model)) {
+      if (model && byModel.has(model) && this.diagnosticMatchesSnapshot(d)) {
         byModel.get(model).push({
           startLineNumber: line, startColumn: col,
           endLineNumber: line, endColumn: col + len,
@@ -2037,7 +2059,11 @@ class AxiomIDE {
   }
 
   localizedDiagText(d) {
-    return window.DiagnosticLanguage.text(d, this.settings.language);
+    const text = window.DiagnosticLanguage.text(d, this.settings.language);
+    if (this.diagnosticMatchesSnapshot(d)) return text;
+    return text + (this.settings.language === 'en'
+      ? ' [Error in the executed version; the current document has changed or was closed.]'
+      : ' [Ошибка запущенной версии; текущий документ изменён или был закрыт.]');
   }
 
   findMarkerAt(pos) {
@@ -2095,6 +2121,7 @@ class AxiomIDE {
 
   // Problems panel: a click navigates AND opens the extended error details in the editor.
   jumpToDiagnostic(d) {
+    if (!this.diagnosticMatchesSnapshot(d)) { this.setStatus(this.localizedDiagText(d)); return; }
     const line = Math.max(1, d.line || 1);
     const col = Math.max(1, d.col || 1);
     this.jumpTo(d.file, line, col);
@@ -2175,7 +2202,7 @@ class AxiomIDE {
     // Diagnostic texts (markers, Problems, error details) are re-inked immediately:
     // re-render the last diagnostics list and re-check the active buffer so the switch
     // is visible without any restart.
-    if (this._lastDiagnostics) this.applyDiagnostics(this._lastDiagnostics, this._lastDiagnosticsOnlyActive);
+    if (this._lastDiagnostics) this.applyDiagnostics(this._lastDiagnostics, this._lastDiagnosticsOnlyActive, this._lastDiagnosticsTargetFile);
     this.scheduleLiveCheck();
   }
 
