@@ -202,3 +202,7 @@ TraceController сохраняет restartRequest, ссылку на запис�
 ## Владение ответом команды отладки и причина отказа — 16 октября 2026 года
 
 ExecutionController аннулирует debugRequest при новой debug.paused, запуске, завершении и fault; новая пауза сразу снимает debugBusy. debug перехватывает исключение, затем проверяет sessionId/request. Текущая неуспешная попытка восстанавливает stopId и маркер сохранённой строки, сохраняет debugError. TraceController.update учитывает эту причину, чтобы обновление кнопок не подменяло её обычной паузой. Следующая команда и новые состояния очищают debugError. Изменение относится к renderer, VM и протокол сохранены. Отчёт: reports/electron/DEBUG_COMMAND_FAILURE_STABILITY.md.
+
+## Результат Stop и владение ответом — 16 октября 2026 года
+
+ExecutionController.stop использует stopRequest и захваченные sessionId/sourceSnapshot. Начало запуска и fault аннулируют прежний запрос. Событие execution.finished позволяет отличить подтверждённое завершение исходного запуска от отказа доставки. Явный отказ возвращает false, сохраняя рабочие состояния и debugError; более поздняя попытка защищена идентичностью запроса. TraceController проверяет этот результат перед ожиданием/продолжением Restart. AxiomIDE.stop возвращает ожидание контроллера и не подменяет событие завершения немедленным статусом. Изменение ограничено renderer; службы, VM и протокол сохранены. Отчёт: reports/electron/STOP_RESTART_FAILURE_STABILITY.md.

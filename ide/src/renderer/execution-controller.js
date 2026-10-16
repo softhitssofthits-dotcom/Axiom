@@ -9,7 +9,7 @@ class ExecutionController {
     const ide = this.ide;
     const request = this.startRequest = {};
     ide.running = true; this.starting = true; this.pendingStop = false; this.pendingEvents = []; this.outputText = ''; this.streamedOutputText = ''; this.clearedOutputPrefix = ''; this.inputPrompt = ''; this.inputText = ''; this.inputRequestId = null; this.inputTarget = null; this.stopId = null;
-    this.canStepBack=false;this.callDepth=0;this.line=null;this.debugBusy=false;this.debugRequest=null;this.debugError=null;ide.trace?.clearMarker();ide.trace?.update();
+    this.canStepBack=false;this.callDepth=0;this.line=null;this.debugBusy=false;this.debugRequest=null;this.stopRequest=null;this.debugError=null;ide.trace?.clearMarker();ide.trace?.update();
     ide._stopRequested = false; ide.clearDiagnostics(); ide.showPanel(); ide.switchPanel('console');
     ide.setStatus(I18N.t('trace.preparing'));
     if (!ide.ensureConsole()) { ide.running = false; this.starting = false; this.startRequest = null; ide.trace?.finished(); return; }
@@ -131,12 +131,23 @@ class ExecutionController {
     }
   }
   async stop() {
-    if (this.starting) { this.pendingStop = true; return; }
-    if (!this.sessionId) return;
-    const sessionId = this.sessionId;
-    const result = await this.api.stopExecution(sessionId);
-    if (this.sessionId !== sessionId) return;
-    if (!result.ok) this.fault(result.error.message);
+    if (this.starting) { this.pendingStop = true; return true; }
+    if (!this.sessionId) return !this.ide.running;
+    const sessionId = this.sessionId, snapshot = this.sourceSnapshot, request = {};
+    this.stopRequest=request;this.debugError=null;
+    let result;
+    try { result = await this.api.stopExecution(sessionId); }
+    catch (error) { result = { ok: false, error: { message: error?.message || 'Не удалось остановить выполнение.' } }; }
+    if (this.stopRequest !== request) return false;
+    this.stopRequest=null;
+    if (this.sessionId !== sessionId) return !this.ide.running && this.sourceSnapshot===snapshot;
+    if (!result.ok) {
+      this.ide._stopRequested=false;
+      this.debugError=result.error.message;
+      this.ide.trace?.update();this.ide.setStatus(this.debugError);
+      return false;
+    }
+    return true;
   }
   async debug(command) {
     if (!this.stopId || !this.sessionId) return;
@@ -159,7 +170,7 @@ class ExecutionController {
     this.debugBusy=false;this.ide.trace?.update();
   }
   fault(message) {
-    this.debugRequest=null;this.debugBusy=false;this.debugError=null;
+    this.debugRequest=null;this.stopRequest=null;this.debugBusy=false;this.debugError=null;
     this.startRequest = null; this.starting = false; this.pendingStop = false; this.pendingEvents = [];
     this.ide.running = false; this.sessionId = null; this.stopId = null; this.inputRequestId = null;
     this.ide.showIdeProblem('status.runFailed', message); this.ide.setStatus(I18N.t('trace.failed'));

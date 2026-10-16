@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 441,
+  "count": 444,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -2146,6 +2146,21 @@
       "id": "startup-russian-path-deduplicates",
       "spec": "startup.spec.js",
       "name": "Русский путь открывается один раз, даже при повторном выборе файла"
+    },
+    {
+      "id": "stop-failure-keeps-input",
+      "spec": "stop-failure.spec.js",
+      "name": "Отказ Stop сохраняет настоящий INPUT и возможность продолжить программу"
+    },
+    {
+      "id": "restart-stop-failure-retry",
+      "spec": "stop-failure.spec.js",
+      "name": "Отказ Stop отменяет только попытку Restart; следующий Restart успешно работает"
+    },
+    {
+      "id": "restart-late-stop-rejection",
+      "spec": "stop-failure.spec.js",
+      "name": "Поздний отказ доставки Stop после реального завершения не мешает новой программе или отмене Restart"
     },
     {
       "id": "theme-registry-consistency",

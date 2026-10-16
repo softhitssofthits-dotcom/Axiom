@@ -1,0 +1,58 @@
+[
+  {
+    "id": "trace-context-menu",
+    "spec": "trace.spec.js",
+    "name": "Прежние команды точек остановки в контекстном меню ru/en",
+    "ms": 5952,
+    "passed": 5,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:53764/c751cf3d-1d23-4afe-bce4-23bf423af654\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "trace-function-and-loop",
+    "spec": "trace.spec.js",
+    "name": "Функция, другая вкладка и повторная точка в цикле",
+    "ms": 5916,
+    "passed": 6,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:53770/7f010ab7-655b-4221-aae5-b1e51f9d0671\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "trace-all-steps",
+    "spec": "trace.spec.js",
+    "name": "Все шаги трассировки, откат и обход вызова",
+    "ms": 6207,
+    "passed": 7,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:53776/9155e9cd-9ba2-4de8-bb32-bae50012c133\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "trace-breakpoints-restart-language",
+    "spec": "trace.spec.js",
+    "name": "Точки остановки, продолжение, перезапуск и перевод",
+    "ms": 5615,
+    "passed": 13,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:53780/ddf8646f-0261-41e8-9690-c29ec27c76f4\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

@@ -1341,8 +1341,7 @@ class AxiomIDE {
     // Stop is silent when nothing is running — no misleading status.
     if (!this.running) return;
     this._stopRequested = true; // the pty exit event must not overwrite "Остановлено"
-    this.execution.stop();
-    this.setStatus(I18N.t('status.stopped'));
+    return this.execution.stop();
   }
 
   // ================= integrated console =================

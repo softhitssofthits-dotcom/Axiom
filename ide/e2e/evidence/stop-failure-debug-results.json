@@ -1,0 +1,30 @@
+[
+  {
+    "id": "debug-command-active-failure",
+    "spec": "debug-command-failure.spec.js",
+    "name": "Отказ шага и исключение доставки сохраняют остановку, указатель и дальнейшее управление",
+    "ms": 8165,
+    "passed": 16,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:53740/af0fd161-8b8c-4cdb-a0f1-70ae5bdf0837\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:53744/740b32fe-f31b-4e94-8b39-666679c79eda\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "debug-command-late-pause-failure",
+    "spec": "debug-command-failure.spec.js",
+    "name": "Поздний отказ прежнего шага не изменяет новую настоящую остановку той же сессии",
+    "ms": 9609,
+    "passed": 14,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:53748/89304303-1db7-4a1e-9531-dd607f1dc0b9\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:53754/7caf3db0-692f-4a69-bae8-598b68f87e8f\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

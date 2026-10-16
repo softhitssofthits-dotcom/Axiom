@@ -86,7 +86,7 @@ class TraceController {
       this.restartRequest=request;this.restarting=true;this.update();
       const current=()=>this.restartRequest===request && this.ide.execution.sourceSnapshot===snapshot && this.ide.openFiles.get(file)===entry;
       try {
-        await this.ide.execution.stop();
+        if(await this.ide.execution.stop()===false) return;
         if(!current()) return;
         if(this.ide.running) await new Promise(resolve=>{this.restartResolve=resolve;});
         if(!current() || this.ide.running) return;
