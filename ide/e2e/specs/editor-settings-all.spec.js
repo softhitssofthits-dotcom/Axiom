@@ -78,9 +78,21 @@ module.exports=Object.keys(Object.groupBy(entries,e=>e.group)).map(group=>({
     await S.page.evaluate(()=>window.__ide.handleAction('editor-settings'));
     row.invalid=[];
     const bounds=await S.page.evaluate(key=>EditorPreferences.limits[key]||[0,1000000],entry.key);
-    const invalid=entry.kind==='number'?[bounds[0]-1,bounds[1]+1]:entry.kind==='text'?[entry.key==='minimap.markSectionHeaderRegex'?'[':'x'.repeat(2001)]:entry.kind==='json'&&!['fontLigatures','fontVariations'].includes(entry.key)?['{broken']:[];
+    if(entry.key==='fontFamily') {
+     await setField(S,entry,value);
+     const detail=S.page.locator(`[data-setting-input="${entry.key}"]`).locator('..').locator('input');
+     await detail.fill('x'.repeat(2001));
+     const actual=await detail.inputValue(),maxLength=await detail.getAttribute('maxlength');
+     const dropped=await S.page.evaluate(()=>!Object.hasOwn(EditorPreferences.normalize({fontFamily:'x'.repeat(2001)}),'fontFamily'));
+     row.lengthLimit={requested:2001,actual:actual.length,maxLength,rejectedByProfile:dropped,
+      pass:actual==='x'.repeat(2000)&&maxLength==='2000'&&dropped&&same(JSON.parse(fs.readFileSync(path.join(S.userData,'settings.json'),'utf8')).editorPreferences,beforeProfile)};
+     if(!row.lengthLimit.pass)row.failures.push('Предельная длина имени шрифта или защита профиля не соблюдены');
+    }
+    const invalid=entry.kind==='number'?[bounds[0]-1,bounds[1]+1]:entry.key==='fontFamily'?[]:entry.key==='fontWeight'?['extra-bold']:entry.kind==='text'?[entry.key==='minimap.markSectionHeaderRegex'?'[':'x'.repeat(2001)]:entry.kind==='json'&&!['fontLigatures','fontVariations'].includes(entry.key)?['{broken']:[];
     for(const bad of invalid){
-     await setField(S,entry,value);await S.page.locator(`[data-setting-input="${entry.key}"]`).fill(String(bad));await apply(S);
+     await setField(S,entry,value);
+     const input=S.page.locator(`[data-setting-input="${entry.key}"]`);
+     await (entry.key==='fontWeight'?input.locator('..').locator('input'):input).fill(String(bad));await apply(S);
      const rejected=await S.page.locator(`[data-setting-input="${entry.key}"]`).getAttribute('aria-invalid')==='true'&&(await S.page.locator('.settings-status').innerText()).startsWith('Проверьте значение:')&&same(JSON.parse(fs.readFileSync(path.join(S.userData,'settings.json'),'utf8')).editorPreferences,beforeProfile);
      row.invalid.push({input:String(bad).slice(0,80),pass:rejected});if(!rejected)row.failures.push('Неверный ввод не отклонён');
     }

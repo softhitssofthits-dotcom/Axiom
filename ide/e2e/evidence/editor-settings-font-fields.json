@@ -1,0 +1,326 @@
+{
+  "monaco": "0.56.0",
+  "total": 261,
+  "checked": 7,
+  "rows": [
+    {
+      "key": "fontFamily",
+      "ru": "Шрифт редактора",
+      "group": "font",
+      "cases": [
+        {
+          "value": "Consolas",
+          "raw": "Consolas",
+          "effective": "Consolas",
+          "expected": "Consolas",
+          "kind": "editor",
+          "recognized": true,
+          "persisted": "Consolas",
+          "pass": true
+        }
+      ],
+      "failures": [],
+      "boundary": "native-setting",
+      "cancel": {
+        "pass": true
+      },
+      "invalid": [],
+      "lengthLimit": {
+        "requested": 2001,
+        "actual": 2000,
+        "maxLength": "2000",
+        "rejectedByProfile": true,
+        "pass": true
+      },
+      "reopen": {
+        "pass": true
+      },
+      "reset": {
+        "effective": "'Cascadia Code', Consolas, 'Courier New', monospace",
+        "before": "'Cascadia Code', Consolas, 'Courier New', monospace",
+        "pass": true
+      },
+      "restart": {
+        "raw": "Consolas",
+        "effective": "Consolas",
+        "expected": "Consolas",
+        "kind": "editor",
+        "recognized": true,
+        "value": "Consolas",
+        "pass": true
+      }
+    },
+    {
+      "key": "fontSize",
+      "ru": "Размер шрифта",
+      "group": "font",
+      "cases": [
+        {
+          "value": 20,
+          "raw": 20,
+          "effective": 20,
+          "expected": 20,
+          "kind": "editor",
+          "recognized": true,
+          "persisted": 20,
+          "pass": true
+        }
+      ],
+      "failures": [],
+      "boundary": "native-setting",
+      "cancel": {
+        "pass": true
+      },
+      "invalid": [
+        {
+          "input": "5",
+          "pass": true
+        },
+        {
+          "input": "101",
+          "pass": true
+        }
+      ],
+      "reopen": {
+        "pass": true
+      },
+      "reset": {
+        "effective": 14,
+        "before": 14,
+        "pass": true
+      },
+      "restart": {
+        "raw": 20,
+        "effective": 20,
+        "expected": 20,
+        "kind": "editor",
+        "recognized": true,
+        "value": 20,
+        "pass": true
+      }
+    },
+    {
+      "key": "fontWeight",
+      "ru": "Толщина шрифта",
+      "group": "font",
+      "cases": [
+        {
+          "value": "bold",
+          "raw": "bold",
+          "effective": "bold",
+          "expected": "bold",
+          "kind": "editor",
+          "recognized": true,
+          "persisted": "bold",
+          "pass": true
+        }
+      ],
+      "failures": [],
+      "boundary": "native-setting",
+      "cancel": {
+        "pass": true
+      },
+      "invalid": [
+        {
+          "input": "extra-bold",
+          "pass": true
+        }
+      ],
+      "reopen": {
+        "pass": true
+      },
+      "reset": {
+        "effective": "normal",
+        "before": "normal",
+        "pass": true
+      },
+      "restart": {
+        "raw": "bold",
+        "effective": "bold",
+        "expected": "bold",
+        "kind": "editor",
+        "recognized": true,
+        "value": "bold",
+        "pass": true
+      }
+    },
+    {
+      "key": "fontLigatures",
+      "ru": "Лигатуры",
+      "group": "font",
+      "cases": [
+        {
+          "value": true,
+          "raw": true,
+          "effective": "\"liga\" on, \"calt\" on",
+          "expected": "\"liga\" on, \"calt\" on",
+          "kind": "editor",
+          "recognized": true,
+          "persisted": true,
+          "pass": true
+        }
+      ],
+      "failures": [],
+      "boundary": "native-setting",
+      "cancel": {
+        "pass": true
+      },
+      "invalid": [],
+      "reopen": {
+        "pass": true
+      },
+      "reset": {
+        "effective": "\"liga\" off, \"calt\" off",
+        "before": "\"liga\" off, \"calt\" off",
+        "pass": true
+      },
+      "restart": {
+        "raw": true,
+        "effective": "\"liga\" on, \"calt\" on",
+        "expected": "\"liga\" on, \"calt\" on",
+        "kind": "editor",
+        "recognized": true,
+        "value": true,
+        "pass": true
+      }
+    },
+    {
+      "key": "fontVariations",
+      "ru": "Вариативный шрифт",
+      "group": "font",
+      "cases": [
+        {
+          "value": "'wght' 500",
+          "raw": "'wght' 500",
+          "effective": "'wght' 500",
+          "expected": "'wght' 500",
+          "kind": "editor",
+          "recognized": true,
+          "persisted": "'wght' 500",
+          "pass": true
+        }
+      ],
+      "failures": [],
+      "boundary": "native-setting",
+      "cancel": {
+        "pass": true
+      },
+      "invalid": [],
+      "reopen": {
+        "pass": true
+      },
+      "reset": {
+        "effective": "normal",
+        "before": "normal",
+        "pass": true
+      },
+      "restart": {
+        "raw": "'wght' 500",
+        "effective": "'wght' 500",
+        "expected": "'wght' 500",
+        "kind": "editor",
+        "recognized": true,
+        "value": "'wght' 500",
+        "pass": true
+      }
+    },
+    {
+      "key": "lineHeight",
+      "ru": "Высота строки",
+      "group": "font",
+      "cases": [
+        {
+          "value": 28,
+          "raw": 28,
+          "effective": 28,
+          "expected": 28,
+          "kind": "editor",
+          "recognized": true,
+          "persisted": 28,
+          "pass": true
+        }
+      ],
+      "failures": [],
+      "boundary": "native-setting",
+      "cancel": {
+        "pass": true
+      },
+      "invalid": [
+        {
+          "input": "-1",
+          "pass": true
+        },
+        {
+          "input": "151",
+          "pass": true
+        }
+      ],
+      "reopen": {
+        "pass": true
+      },
+      "reset": {
+        "effective": 19,
+        "before": 19,
+        "pass": true
+      },
+      "restart": {
+        "raw": 28,
+        "effective": 28,
+        "expected": 28,
+        "kind": "editor",
+        "recognized": true,
+        "value": 28,
+        "pass": true
+      }
+    },
+    {
+      "key": "letterSpacing",
+      "ru": "Межбуквенный интервал",
+      "group": "font",
+      "cases": [
+        {
+          "value": 1.5,
+          "raw": 1.5,
+          "effective": 1.5,
+          "expected": 1.5,
+          "kind": "editor",
+          "recognized": true,
+          "persisted": 1.5,
+          "pass": true
+        }
+      ],
+      "failures": [],
+      "boundary": "native-setting",
+      "cancel": {
+        "pass": true
+      },
+      "invalid": [
+        {
+          "input": "-6",
+          "pass": true
+        },
+        {
+          "input": "21",
+          "pass": true
+        }
+      ],
+      "reopen": {
+        "pass": true
+      },
+      "reset": {
+        "effective": 0,
+        "before": 0,
+        "pass": true
+      },
+      "restart": {
+        "raw": 1.5,
+        "effective": 1.5,
+        "expected": 1.5,
+        "kind": "editor",
+        "recognized": true,
+        "value": 1.5,
+        "pass": true
+      }
+    }
+  ]
+}

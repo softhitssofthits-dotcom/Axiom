@@ -1,0 +1,16 @@
+[
+  {
+    "id": "editor-settings-all-font",
+    "spec": "editor-settings-all.spec.js",
+    "name": "Все параметры вкладки font: ввод, Monaco, профиль и перезапуск",
+    "ms": 21963,
+    "passed": 15,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:52457/46f6c01e-0e24-4150-9cb3-770c1f45210a\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:52468/c43c8e53-d744-4f92-a652-c6b188266813\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]
