@@ -1,0 +1,44 @@
+[
+  {
+    "id": "input-submit-active-failure",
+    "spec": "input-submit-failure.spec.js",
+    "name": "Непринятый INPUT сохраняет приглашение и русский текст для редактирования и повтора",
+    "ms": 8163,
+    "passed": 18,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:55409/93249a27-c7ff-4aaa-9ef0-91c880d9a03b\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:55413/eee73d27-bcfd-4ae5-9b18-412508ccd8e9\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "input-submit-completed-failure",
+    "spec": "input-submit-failure.spec.js",
+    "name": "Подтверждённый ввод не восстанавливается после позднего отказа до следующего INPUT",
+    "ms": 8062,
+    "passed": 10,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:55420/f1cd2a1c-446f-49f6-841a-d90893e6e6ee\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:55427/7b88d711-6572-4b0e-99b6-f60d8b84a665\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "input-submit-late-request-failure",
+    "spec": "input-submit-failure.spec.js",
+    "name": "Поздний ответ INPUT сохраняет следующий запрос, частичный текст и новую сессию",
+    "ms": 16184,
+    "passed": 28,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:55431/902c383f-017c-4c66-8f71-b7b554a0cbee\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:55435/8f983000-f016-4fbd-b4a3-2855abc766d3\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:55439/19c19c57-1d0f-474d-8806-269744f41016\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:55443/799c9b5c-81a9-428e-bae7-9943097c6d06\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

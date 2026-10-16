@@ -61,3 +61,5 @@
 Отказы отправки INPUT, сохранность текста и принадлежность позднего ответа: [исправление и приёмка](reports/electron/INPUT_SUBMISSION_FAILURE_STABILITY.md).
 
 Актуальность отказов явной и фоновой диагностики: [исправление и приёмка](reports/electron/DOCUMENT_DIAGNOSTIC_DELIVERY_STABILITY.md).
+
+Редактирование Unicode, перенос строки, очистка и копирование консоли при INPUT: [исправление и приёмка](reports/electron/CONSOLE_EDITING_STABILITY.md).

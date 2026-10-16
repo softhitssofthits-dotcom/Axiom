@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 450,
+  "count": 453,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -56,6 +56,21 @@
       "id": "console-background-screen-light-theme",
       "spec": "console-background.spec.js",
       "name": "SCREEN не оставляет чёрную полосу в светлой консоли"
+    },
+    {
+      "id": "console-unicode-backspace",
+      "spec": "console-editing.spec.js",
+      "name": "Backspace сохраняет согласованность INPUT для широких, комбинируемых символов и переноса строки"
+    },
+    {
+      "id": "console-clear-copy-unicode-continuation",
+      "spec": "console-editing.spec.js",
+      "name": "Очистка и копирование Unicode при INPUT сохраняют продолжение вывода и ответ"
+    },
+    {
+      "id": "console-clear-pending-input",
+      "spec": "console-editing.spec.js",
+      "name": "Очистка во время отправки INPUT сохраняет повтор после отказа и скрытую историю"
     },
     {
       "id": "console-key-inkey-poll-keys-axm",

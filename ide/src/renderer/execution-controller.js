@@ -146,7 +146,12 @@ class ExecutionController {
         }
         break;
       } else if (character === '\x7f' || character === '\b') {
-        if (this.inputText.length) { this.inputText = [...this.inputText].slice(0, -1).join(''); this.ide.term.write('\b \b'); }
+        if (this.inputText.length) {
+          this.inputText = [...this.inputText].slice(0, -1).join('');
+          // Один символ может занимать две ячейки, объединяться с предыдущим
+          // или находиться за переносом строки. Восстанавливаем точный снимок.
+          this.renderOutput();
+        }
       } else if (!/[\u0000-\u001f]/.test(character)) { this.inputText += character; this.ide.term.write(character); }
     }
   }
