@@ -15,6 +15,10 @@ jobs:
         env:
           BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          if [ -n "$BASE_REVISION" ] && [ "$BASE_REVISION" != "0000000000000000000000000000000000000000" ]; then
+          if [ -z "$BASE_REVISION" ] || [ "$BASE_REVISION" = "0000000000000000000000000000000000000000" ]; then
+            echo "Исходная ревизия не задана, проверка повышения пропущена."
+          elif ! git cat-file -e "${BASE_REVISION}^{commit}" 2>/dev/null; then
+            echo "Исходная ревизия $BASE_REVISION недоступна (вероятно, история переписана); проверка повышения пропущена."
+          else
             node scripts/versioning.mjs check --base "$BASE_REVISION"
           fi
