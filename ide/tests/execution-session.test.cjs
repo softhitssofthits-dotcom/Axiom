@@ -57,8 +57,11 @@ test('Отказ действующего INPUT остаётся видимой 
   const { controller, ide, calls, fail } = setup('submitInput');
   const operation = controller.input('\r');
   fail(); await operation;
-  assert.equal(ide.running, false);
-  assert.equal(calls.problems.length, 1);
+  assert.equal(ide.running, true);
+  assert.equal(controller.inputRequestId, 'input-1');
+  assert.equal(controller.inputText, '42');
+  assert.equal(calls.status.at(-1), 'Старая команда уже недействительна');
+  assert.equal(calls.problems.length, 0);
 });
 
 test('Поздний отказ INPUT не изменяет программу после завершения следующего запроса', async () => {

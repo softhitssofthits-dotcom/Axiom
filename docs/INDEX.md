@@ -57,3 +57,5 @@
 Устойчивость отказов команд отладки: [исправление и приёмка](reports/electron/DEBUG_COMMAND_FAILURE_STABILITY.md).
 
 Отказы Stop и Restart: [исправление и приёмка](reports/electron/STOP_RESTART_FAILURE_STABILITY.md).
+
+Отказы отправки INPUT, сохранность текста и принадлежность позднего ответа: [исправление и приёмка](reports/electron/INPUT_SUBMISSION_FAILURE_STABILITY.md).

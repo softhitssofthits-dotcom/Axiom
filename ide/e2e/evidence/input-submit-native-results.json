@@ -1,0 +1,16 @@
+[
+  {
+    "id": "graphics-input-native-lifecycle",
+    "spec": "graphics-input.spec.js",
+    "name": "SCREEN: нативный INPUT сохраняет фокус, закрывает запрос и повторяет неверное число",
+    "ms": 43131,
+    "passed": 28,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:54637/3afa6845-07c9-417b-a171-a23666f3f16f\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

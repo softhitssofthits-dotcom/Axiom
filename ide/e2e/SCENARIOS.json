@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 444,
+  "count": 447,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -1856,6 +1856,21 @@
       "id": "input-prompt-separators",
       "spec": "input-prompts.spec.js",
       "name": "INPUT: разделители приглашения, пустая строка и пунктуация"
+    },
+    {
+      "id": "input-submit-active-failure",
+      "spec": "input-submit-failure.spec.js",
+      "name": "Непринятый INPUT сохраняет приглашение и русский текст для редактирования и повтора"
+    },
+    {
+      "id": "input-submit-completed-failure",
+      "spec": "input-submit-failure.spec.js",
+      "name": "Подтверждённый ввод не восстанавливается после позднего отказа до следующего INPUT"
+    },
+    {
+      "id": "input-submit-late-request-failure",
+      "spec": "input-submit-failure.spec.js",
+      "name": "Поздний ответ INPUT сохраняет следующий запрос, частичный текст и новую сессию"
     },
     {
       "id": "interpolation-print-typo-location",

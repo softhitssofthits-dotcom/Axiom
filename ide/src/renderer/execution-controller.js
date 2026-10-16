@@ -1,11 +1,13 @@
 class ExecutionController {
   constructor(ide, api) {
+    this.inputSubmission = null;
     this.ide = ide; this.api = api; this.sessionId = null; this.stopId = null;
     this.inputRequestId = null; this.inputTarget = null; this.inputRevision = 0; this.inputText = ''; this.inputPrompt = ''; this.outputText = ''; this.streamedOutputText = ''; this.pendingEvents = [];
     this.disposers = [api.onBackendEvent(message => this.event(message)),
       api.onBackendFault(fault => this.fault(fault.message))];
   }
   async start(file, launchKind = 'run', breakpoints = [], stopFirst = true) {
+    this.inputSubmission = null;
     const ide = this.ide;
     const request = this.startRequest = {};
     ide.running = true; this.starting = true; this.pendingStop = false; this.pendingEvents = []; this.outputText = ''; this.streamedOutputText = ''; this.clearedOutputPrefix = ''; this.inputPrompt = ''; this.inputText = ''; this.inputRequestId = null; this.inputTarget = null; this.stopId = null;
@@ -51,17 +53,24 @@ class ExecutionController {
         if (message.event === 'output.replace' || !this.outputText.startsWith(this.streamedOutputText)) this.outputText = this.streamedOutputText;
         this.renderOutput(); this.api.acknowledgeOutput(this.sessionId, payload.outputVersion); break;
       case 'input.request':
+        this.inputSubmission = null;
         this.inputRevision++;
         this.inputRequestId = payload.inputRequestId; this.inputText = ''; this.inputPrompt = payload.prompt;
         this.inputTarget = payload.target || 'console';
         this.outputText = payload.outputText; this.renderOutput();
         if (this.inputTarget !== 'screen') this.ide.term.focus();
         break;
-      case 'input.completed':
-        if (payload.inputRequestId !== this.inputRequestId) break;
+      case 'input.completed': {
+        const active = payload.inputRequestId === this.inputRequestId;
+        const submitted = this.inputSubmission?.id === payload.inputRequestId && this.inputSubmission.sessionId === this.sessionId;
+        if (!active && !submitted) break;
+        this.inputSubmission = null;
         this.inputRequestId = null; this.inputPrompt = ''; this.inputText = ''; this.inputTarget = null;
-        this.renderOutput(); this.ide.setStatus(I18N.t('status.running'));
+        // Отправленная строка уже показана в консоли; её заменит снимок службы.
+        if (active) this.renderOutput();
+        this.ide.setStatus(I18N.t('status.running'));
         break;
+      }
       case 'debug.paused':
         this.debugRequest=null;this.debugBusy=false;this.debugError=null;
         this.callDepth=payload.callDepth;this.line=payload.line;this.ide.trace?.mark(payload);
@@ -76,6 +85,7 @@ class ExecutionController {
         break;
       case 'graphics.error': this.fault(payload.message); break;
       case 'execution.finished':
+        this.inputSubmission = null;
         this.debugRequest=null;this.debugBusy=false;this.debugError=null;
         this.inputRequestId = null; this.inputTarget = null; this.inputPrompt = ''; this.inputText = '';
         this.outputText = payload.outputText; this.renderOutput();
@@ -120,10 +130,20 @@ class ExecutionController {
       if (character === '\r' || character === '\n') {
         const id = this.inputRequestId; const text = this.inputText;
         const sessionId = this.sessionId, revision = this.inputRevision;
-        this.inputRequestId = null; this.inputText = ''; this.inputPrompt = ''; this.ide.term.write('\r\n');
-        const result = await this.api.submitInput(sessionId, id, text);
-        if (this.sessionId !== sessionId || this.inputRevision !== revision || (this.inputRequestId && this.inputRequestId !== id)) return;
-        if (!result.ok) this.fault(result.error.message);
+        const submission = this.inputSubmission = { sessionId, id, text, prompt: this.inputPrompt, target: this.inputTarget };
+        this.inputRequestId = null; this.inputText = ''; this.inputPrompt = ''; this.inputTarget = null; this.ide.term.write('\r\n');
+        this.ide.setStatus(I18N.t('trace.waiting'));
+        let result;
+        try { result = await this.api.submitInput(sessionId, id, text); }
+        catch (error) { result = { ok: false, error: { message: error?.message || 'Не удалось отправить ввод.' } }; }
+        if (this.inputSubmission !== submission || this.sessionId !== sessionId || this.inputRevision !== revision || (this.inputRequestId && this.inputRequestId !== id)) return;
+        this.inputSubmission = null;
+        if (!result.ok) {
+          this.inputRequestId = id; this.inputText = text; this.inputPrompt = submission.prompt; this.inputTarget = submission.target;
+          this.renderOutput();
+          if (this.inputTarget !== 'screen') this.ide.term.focus();
+          this.ide.setStatus(result.error?.message || 'Не удалось отправить ввод.');
+        }
         break;
       } else if (character === '\x7f' || character === '\b') {
         if (this.inputText.length) { this.inputText = [...this.inputText].slice(0, -1).join(''); this.ide.term.write('\b \b'); }
@@ -170,6 +190,7 @@ class ExecutionController {
     this.debugBusy=false;this.ide.trace?.update();
   }
   fault(message) {
+    this.inputSubmission = null;
     this.debugRequest=null;this.stopRequest=null;this.debugBusy=false;this.debugError=null;
     this.startRequest = null; this.starting = false; this.pendingStop = false; this.pendingEvents = [];
     this.ide.running = false; this.sessionId = null; this.stopId = null; this.inputRequestId = null;
