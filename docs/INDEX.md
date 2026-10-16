@@ -5,7 +5,8 @@
 | Вопрос | Документ |
 |---|---|
 | Что за продукт и его границы? | [PROJECT.md](../PROJECT.md) |
-| Как подготовить и запустить? | [README.md](../README.md) |
+| Как представить проект на GitHub? | [README.md](../README.md) |
+| Как подготовить и запустить, как проверять? | [DEVELOPMENT.md](DEVELOPMENT.md) |
 | Как работать агенту? | [AGENTS.md](../AGENTS.md) |
 | Какие версии и как их повышать? | [VERSIONING.md](VERSIONING.md), [CHANGELOG.md](CHANGELOG.md), [versions.json](../versions.json) |
 | Какой договор реализован? | [SPECIFICATION3.md](SPECIFICATION3.md) |

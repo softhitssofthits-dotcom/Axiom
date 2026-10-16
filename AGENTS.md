@@ -106,11 +106,26 @@ Contains the product definition:
 - направление продукта.
 
 ### `README.md`
-Human-facing repository entry point:
+Human-facing repository entry point for the GitHub main page:
 - what the project is;
-- how to run it;
-- how to test it;
+- why it exists and for whom;
+- what the language already supports;
+- quick start;
 - repository layout.
+
+This file is written for outside readers, not for internal workflow. Keep it
+friendly and free of internal audit/plan links; deep internal documents stay in
+`docs/` and are linked only from the small documentation section.
+
+### `docs/DEVELOPMENT.md`
+Developer and maintenance guide:
+- how to build and run from sources;
+- how to run tests, checks and version tooling;
+- portable distribution and editor parameters;
+- anything that used to live in the technical README.
+
+When build, test or version commands change, update this file instead of
+returning that raw technical detail to `README.md`.
 
 ### `docs/SPECIFICATION3.md`
 Implementation source of truth.

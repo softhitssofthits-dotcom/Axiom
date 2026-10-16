@@ -1,0 +1,49 @@
+name: Публикация справочника
+
+# Публикация сайта справочника на GitHub Pages.
+# Запускается только вручную (workflow_dispatch), чтобы приватный репозиторий
+# не пытался публиковаться сам до отдельного решения автора.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Справочник лежит в docs/manual и ссылается на примеры как ../../samples/*.
+      # Поэтому собранный сайт кладёт справочник в корень, а samples/ — рядом,
+      # чтобы те же относительные ссылки работали и на статическом сайте.
+      - name: Собрать статический сайт справочника
+        run: |
+          mkdir -p site
+          cp -R docs/manual/. site/
+          rm -f site/AUTHORING.md site/README.md
+          cp -R samples site/samples
+          touch site/.nojekyll
+          printf 'User-agent: *\nDisallow: /\n' > site/robots.txt
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
