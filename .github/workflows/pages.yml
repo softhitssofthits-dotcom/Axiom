@@ -22,16 +22,19 @@ jobs:
       - uses: actions/checkout@v4
 
       # Справочник лежит в docs/manual и ссылается на примеры как ../../samples/*.
-      # Поэтому собранный сайт кладёт справочник в корень, а samples/ — рядом,
-      # чтобы те же относительные ссылки работали и на статическом сайте.
+      # Локально это ведёт в корень репозитория, но на сайте страницы находятся
+      # в корне /Axiom/, и такой путь уводит выше корня (404). Поэтому в собранной
+      # копии ссылки на примеры переписываются на страницы GitHub, где .axm
+      # открывается как исходный код с подсветкой.
       - name: Собрать статический сайт справочника
         run: |
           mkdir -p site
           cp -R docs/manual/. site/
           rm -f site/AUTHORING.md site/README.md
-          cp -R samples site/samples
+          find site -name '*.html' -print0 | xargs -0 sed -i 's#\.\./\.\./samples/#https://github.com/softhitssofthits-dotcom/Axiom/blob/HEAD/samples/#g'
           touch site/.nojekyll
           printf 'User-agent: *\nDisallow: /\n' > site/robots.txt
+          echo "Осталось ссылок ../../ в HTML: $(grep -rl '\.\./\.\./' site --include='*.html' | wc -l)"
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
