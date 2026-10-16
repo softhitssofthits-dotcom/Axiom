@@ -625,41 +625,15 @@
       "key": "showDeprecated",
       "ru": "Зачёркивать устаревшие сущности",
       "group": "appearance",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Отображает зачёркивание для сущностей, отмеченных как устаревшие. Пока не поддерживается: диагностики Axiom пока не помечают сущности как устаревшие.",
+        "expectedReason": "Пока не поддерживается: диагностики Axiom пока не помечают сущности как устаревшие.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "rulers",
@@ -1293,12 +1267,14 @@
       "cancel": {
         "pass": true
       },
-      "invalid": [
-        {
-          "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-          "pass": true
-        }
-      ],
+      "invalid": [],
+      "lengthLimit": {
+        "requested": 2001,
+        "actual": 2000,
+        "maxLength": "2000",
+        "rejectedByProfile": true,
+        "pass": true
+      },
       "reopen": {
         "pass": true
       },
@@ -1389,7 +1365,7 @@
       },
       "invalid": [
         {
-          "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "input": "extra-bold",
           "pass": true
         }
       ],
@@ -2028,61 +2004,15 @@
       "key": "autoClosingComments",
       "ru": "Закрывать комментарии автоматически",
       "group": "typing",
-      "cases": [
-        {
-          "value": "always",
-          "raw": "always",
-          "effective": "always",
-          "expected": "always",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "always",
-          "pass": true
-        },
-        {
-          "value": "beforeWhitespace",
-          "raw": "beforeWhitespace",
-          "effective": "beforeWhitespace",
-          "expected": "beforeWhitespace",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "beforeWhitespace",
-          "pass": true
-        },
-        {
-          "value": "never",
-          "raw": "never",
-          "effective": "never",
-          "expected": "never",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "never",
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Использует правила парных комментариев языка, если такие правила существуют. Пока не поддерживается: в Axiom нет парных блочных комментариев.",
+        "expectedReason": "Пока не поддерживается: в Axiom нет парных блочных комментариев.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": "languageDefined",
-        "before": "languageDefined",
-        "pass": true
-      },
-      "restart": {
-        "raw": "never",
-        "effective": "never",
-        "expected": "never",
-        "kind": "editor",
-        "recognized": true,
-        "value": "never",
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "autoClosingDelete",
@@ -2368,121 +2298,43 @@
       "key": "formatOnType",
       "ru": "Форматировать при вводе",
       "group": "typing",
-      "cases": [
-        {
-          "value": true,
-          "raw": true,
-          "effective": true,
-          "expected": true,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": true,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Вызывает провайдер форматирования при вводе предусмотренных им символов. Пока не поддерживается: не зарегистрирован провайдер форматирования Monaco. Команда форматирования Axiom работает отдельно.",
+        "expectedReason": "Пока не поддерживается: не зарегистрирован провайдер форматирования Monaco. Команда форматирования Axiom работает отдельно.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": false,
-        "before": false,
-        "pass": true
-      },
-      "restart": {
-        "raw": true,
-        "effective": true,
-        "expected": true,
-        "kind": "editor",
-        "recognized": true,
-        "value": true,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "formatOnPaste",
       "ru": "Форматировать при вставке",
       "group": "typing",
-      "cases": [
-        {
-          "value": true,
-          "raw": true,
-          "effective": true,
-          "expected": true,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": true,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Вызывает провайдер форматирования для вставленного фрагмента. Пока не поддерживается: не зарегистрирован провайдер форматирования Monaco. Команда форматирования Axiom работает отдельно.",
+        "expectedReason": "Пока не поддерживается: не зарегистрирован провайдер форматирования Monaco. Команда форматирования Axiom работает отдельно.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": false,
-        "before": false,
-        "pass": true
-      },
-      "restart": {
-        "raw": true,
-        "effective": true,
-        "expected": true,
-        "kind": "editor",
-        "recognized": true,
-        "value": true,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "overtypeOnPaste",
       "ru": "Замещать текст при вставке",
       "group": "typing",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "В режиме замещения вставка может заменять имеющиеся символы. Пока не поддерживается: в IDE не подключена команда переключения режима замещения.",
+        "expectedReason": "Пока не поддерживается: в IDE не подключена команда переключения режима замещения.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "comments.insertSpace",
@@ -2728,41 +2580,15 @@
       "key": "dropIntoEditor.showDropSelector",
       "ru": "Выбор способа после перетаскивания",
       "group": "typing",
-      "cases": [
-        {
-          "value": "never",
-          "raw": "never",
-          "effective": "never",
-          "expected": "never",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "never",
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Определяет, показывать ли выбор способа вставки после переноса содержимого. Пока не поддерживается: штатные провайдеры сейчас предлагают один способ вставки; связь Monaco с каталогом проекта для относительных путей пока не подключена.",
+        "expectedReason": "Пока не поддерживается: штатные провайдеры сейчас предлагают один способ вставки; связь Monaco с каталогом проекта для относительных путей пока не подключена.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": "afterDrop",
-        "before": "afterDrop",
-        "pass": true
-      },
-      "restart": {
-        "raw": "never",
-        "effective": "never",
-        "expected": "never",
-        "kind": "editor",
-        "recognized": true,
-        "value": "never",
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "pasteAs.enabled",
@@ -2808,121 +2634,43 @@
       "key": "pasteAs.showPasteSelector",
       "ru": "Показывать способы после вставки",
       "group": "typing",
-      "cases": [
-        {
-          "value": "never",
-          "raw": "never",
-          "effective": "never",
-          "expected": "never",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "never",
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Определяет, появляется ли выбор дополнительного способа вставки. Пока не поддерживается: нет нескольких способов автоматической вставки; команда Paste As в текущем режиме ввода IDE вставляет обычный текст.",
+        "expectedReason": "Пока не поддерживается: нет нескольких способов автоматической вставки; команда Paste As в текущем режиме ввода IDE вставляет обычный текст.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": "afterPaste",
-        "before": "afterPaste",
-        "pass": true
-      },
-      "restart": {
-        "raw": "never",
-        "effective": "never",
-        "expected": "never",
-        "kind": "editor",
-        "recognized": true,
-        "value": "never",
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "linkedEditing",
       "ru": "Связанное редактирование",
       "group": "typing",
-      "cases": [
-        {
-          "value": true,
-          "raw": true,
-          "effective": true,
-          "expected": true,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": true,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Согласованно меняет связанные диапазоны, если язык предоставляет их расположение. Пока не поддерживается: нет провайдера связанного редактирования.",
+        "expectedReason": "Пока не поддерживается: нет провайдера связанного редактирования.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": false,
-        "before": false,
-        "pass": true
-      },
-      "restart": {
-        "raw": true,
-        "effective": true,
-        "expected": true,
-        "kind": "editor",
-        "recognized": true,
-        "value": true,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "renameOnType",
       "ru": "Переименование при вводе",
       "group": "typing",
-      "cases": [
-        {
-          "value": true,
-          "raw": true,
-          "effective": true,
-          "expected": true,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": true,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Включает согласованное изменение связанных имён при поддержке языка. Пока не поддерживается: нет провайдера связанного редактирования.",
+        "expectedReason": "Пока не поддерживается: нет провайдера связанного редактирования.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": false,
-        "before": false,
-        "pass": true
-      },
-      "restart": {
-        "raw": true,
-        "effective": true,
-        "expected": true,
-        "kind": "editor",
-        "recognized": true,
-        "value": true,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "quickSuggestions.other",
@@ -3217,41 +2965,15 @@
       "key": "suggestOnTriggerCharacters",
       "ru": "Подсказки после специальных символов",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Запрашивает дополнения после символов, объявленных провайдером языка. Пока не поддерживается: провайдер дополнений Axiom не задаёт символы вызова.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom не задаёт символы вызова.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "acceptSuggestionOnEnter",
@@ -3307,41 +3029,15 @@
       "key": "acceptSuggestionOnCommitCharacter",
       "ru": "Принимать дополнение завершающим символом",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Разрешает принятие подсказки при вводе указанного провайдером завершающего символа. Пока не поддерживается: провайдер дополнений Axiom не задаёт символы принятия.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom не задаёт символы принятия.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "tabCompletion",
@@ -3610,6 +3306,7 @@
       "availability": {
         "disabled": true,
         "reason": "Фильтрует подсказки по началу слова вместо поиска совпадений внутри него. Устаревшее поле API не используется работающей Monaco. Используйте поле фильтрации списка с начала слова в группе списка дополнений.",
+        "expectedReason": "Устаревшее поле API не используется работающей Monaco. Используйте поле фильтрации списка с начала слова в группе списка дополнений.",
         "rejectedByProfile": true
       },
       "boundary": "unsupported-api"
@@ -3778,41 +3475,15 @@
       "key": "suggest.shareSuggestSelections",
       "ru": "Общее запоминание выбора",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": true,
-          "raw": true,
-          "effective": true,
-          "expected": true,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": true,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Разрешает совместное использование истории выбора дополнений между редакторами. Пока не поддерживается: в IDE пока не подключено постоянное хранилище общей истории дополнений Monaco.",
+        "expectedReason": "Пока не поддерживается: в IDE пока не подключено постоянное хранилище общей истории дополнений Monaco.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": false,
-        "before": false,
-        "pass": true
-      },
-      "restart": {
-        "raw": true,
-        "effective": true,
-        "expected": true,
-        "kind": "editor",
-        "recognized": true,
-        "value": true,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.selectionMode",
@@ -4542,6 +4213,7 @@
       "availability": {
         "disabled": true,
         "reason": "Ограничивает источники слов документами с тем же языком. Устаревшее поле API не используется работающей Monaco. Выбирайте документы того же языка в поле «Дополнения из текста документов».",
+        "expectedReason": "Устаревшее поле API не используется работающей Monaco. Выбирайте документы того же языка в поле «Дополнения из текста документов».",
         "rejectedByProfile": true
       },
       "boundary": "unsupported-api"
@@ -4550,41 +4222,15 @@
       "key": "suggest.showMethods",
       "ru": "В списке: методы",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Методы», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showFunctions",
@@ -4630,121 +4276,43 @@
       "key": "suggest.showConstructors",
       "ru": "В списке: конструкторы",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Конструкторы», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showDeprecated",
       "ru": "В списке: устаревшие сущности",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Устаревшие сущности», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showFields",
       "ru": "В списке: поля",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Поля», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showVariables",
@@ -4870,401 +4438,141 @@
       "key": "suggest.showInterfaces",
       "ru": "В списке: интерфейсы",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Интерфейсы», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showModules",
       "ru": "В списке: модули",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Модули», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showProperties",
       "ru": "В списке: свойства",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Свойства», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showEvents",
       "ru": "В списке: события",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «События», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showOperators",
       "ru": "В списке: операторы",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Операторы», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showUnits",
       "ru": "В списке: единицы",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Единицы», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showValues",
       "ru": "В списке: значения",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Значения», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showConstants",
       "ru": "В списке: константы",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Константы», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showEnums",
       "ru": "В списке: перечисления",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Перечисления», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showEnumMembers",
       "ru": "В списке: элементы перечислений",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Элементы перечислений», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showKeywords",
@@ -5350,281 +4658,99 @@
       "key": "suggest.showColors",
       "ru": "В списке: цвета",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Цвета», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showFiles",
       "ru": "В списке: файлы",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Файлы», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showReferences",
       "ru": "В списке: ссылки",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Ссылки», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showFolders",
       "ru": "В списке: папки",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Папки», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showTypeParameters",
       "ru": "В списке: параметры типов",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Параметры типов», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showIssues",
       "ru": "В списке: задачи",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Задачи», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showUsers",
       "ru": "В списке: пользователи",
       "group": "suggestions",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает дополнения категории «Пользователи», если провайдер языка их предоставляет. Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "expectedReason": "Пока не поддерживается: провайдер дополнений Axiom пока не выдаёт эту категорию.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "suggest.showSnippets",
@@ -6207,41 +5333,15 @@
       "key": "minimap.showRegionSectionHeaders",
       "ru": "Заголовки областей на миникарте",
       "group": "scroll",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает заголовки разделов, предоставленные сворачиванием областей. Пока не поддерживается: в конфигурации Axiom пока не заданы маркеры областей сворачивания.",
+        "expectedReason": "Пока не поддерживается: в конфигурации Axiom пока не заданы маркеры областей сворачивания.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "minimap.showMarkSectionHeaders",
@@ -7901,81 +7001,15 @@
       "key": "overtypeCursorStyle",
       "ru": "Курсор режима замещения",
       "group": "selection",
-      "cases": [
-        {
-          "value": "line",
-          "raw": "line",
-          "effective": 1,
-          "expected": 1,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "line",
-          "pass": true
-        },
-        {
-          "value": "underline",
-          "raw": "underline",
-          "effective": 3,
-          "expected": 3,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "underline",
-          "pass": true
-        },
-        {
-          "value": "line-thin",
-          "raw": "line-thin",
-          "effective": 4,
-          "expected": 4,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "line-thin",
-          "pass": true
-        },
-        {
-          "value": "block-outline",
-          "raw": "block-outline",
-          "effective": 5,
-          "expected": 5,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "block-outline",
-          "pass": true
-        },
-        {
-          "value": "underline-thin",
-          "raw": "underline-thin",
-          "effective": 6,
-          "expected": 6,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "underline-thin",
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Вид курсора при замене существующих символов вводимыми. Пока не поддерживается: в IDE не подключена команда переключения режима замещения.",
+        "expectedReason": "Пока не поддерживается: в IDE не подключена команда переключения режима замещения.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": 2,
-        "before": 2,
-        "pass": true
-      },
-      "restart": {
-        "raw": "underline-thin",
-        "effective": 6,
-        "expected": 6,
-        "kind": "editor",
-        "recognized": true,
-        "value": "underline-thin",
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "cursorSurroundingLines",
@@ -9004,41 +8038,15 @@
       "key": "foldingImportsByDefault",
       "ru": "Сворачивать импорты по умолчанию",
       "group": "structure",
-      "cases": [
-        {
-          "value": true,
-          "raw": true,
-          "effective": true,
-          "expected": true,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": true,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Автоматически скрывает области импортов, если язык их предоставляет. Пока не поддерживается: штатное сворачивание Axiom не выделяет группы импортов.",
+        "expectedReason": "Пока не поддерживается: штатное сворачивание Axiom не выделяет группы импортов.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": false,
-        "before": false,
-        "pass": true
-      },
-      "restart": {
-        "raw": true,
-        "effective": true,
-        "expected": true,
-        "kind": "editor",
-        "recognized": true,
-        "value": true,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "foldingMaximumRegions",
@@ -9273,41 +8281,15 @@
       "key": "bracketPairColorization.independentColorPoolPerBracketType",
       "ru": "Отдельные цвета для каждого вида скобок",
       "group": "structure",
-      "cases": [
-        {
-          "value": true,
-          "raw": true,
-          "effective": true,
-          "expected": true,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": true,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Использует независимую последовательность цветов для разных видов скобок. Пока не поддерживается: в Axiom зарегистрирован только один вид скобок: круглые.",
+        "expectedReason": "Пока не поддерживается: в Axiom зарегистрирован только один вид скобок: круглые.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": false,
-        "before": false,
-        "pass": true
-      },
-      "restart": {
-        "raw": true,
-        "effective": true,
-        "expected": true,
-        "kind": "editor",
-        "recognized": true,
-        "value": true,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "guides.indentation",
@@ -9583,545 +8565,169 @@
       "key": "definitionLinkOpensInPeek",
       "ru": "Определение во встроенной карточке",
       "group": "advanced",
-      "cases": [
-        {
-          "value": true,
-          "raw": true,
-          "effective": true,
-          "expected": true,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": true,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Открывает определение внутри редактора вместо прямого перехода. Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "expectedReason": "Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": false,
-        "before": false,
-        "pass": true
-      },
-      "restart": {
-        "raw": true,
-        "effective": true,
-        "expected": true,
-        "kind": "editor",
-        "recognized": true,
-        "value": true,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "peekWidgetDefaultFocus",
       "ru": "Фокус карточки определения",
       "group": "advanced",
-      "cases": [
-        {
-          "value": "editor",
-          "raw": "editor",
-          "effective": "editor",
-          "expected": "editor",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "editor",
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Выбирает первоначальный фокус: дерево результатов или редактор карточки. Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "expectedReason": "Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": "tree",
-        "before": "tree",
-        "pass": true
-      },
-      "restart": {
-        "raw": "editor",
-        "effective": "editor",
-        "expected": "editor",
-        "kind": "editor",
-        "recognized": true,
-        "value": "editor",
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "stablePeek",
       "ru": "Не закрывать карточку определений автоматически",
       "group": "advanced",
-      "cases": [
-        {
-          "value": true,
-          "effective": true,
-          "expected": true,
-          "kind": "global",
-          "persisted": true,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Сохраняет встроенную карточку при двойном щелчке или Escape. Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "expectedReason": "Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": false,
-        "before": false,
-        "pass": true
-      },
-      "restart": {
-        "raw": true,
-        "effective": true,
-        "expected": true,
-        "kind": "global",
-        "value": true,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "codeLens",
       "ru": "Показывать команды над кодом",
       "group": "advanced",
-      "cases": [
-        {
-          "value": false,
-          "raw": false,
-          "effective": false,
-          "expected": false,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": false,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Отображает команды и сведения над объявлениями при наличии провайдера CodeLens. Пока не поддерживается: нет провайдера CodeLens.",
+        "expectedReason": "Пока не поддерживается: нет провайдера CodeLens.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": true,
-        "before": true,
-        "pass": true
-      },
-      "restart": {
-        "raw": false,
-        "effective": false,
-        "expected": false,
-        "kind": "editor",
-        "recognized": true,
-        "value": false,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "codeLensFontFamily",
       "ru": "Шрифт команд над кодом",
       "group": "advanced",
-      "cases": [
-        {
-          "value": "Consolas",
-          "raw": "Consolas",
-          "effective": "Consolas",
-          "expected": "Consolas",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "Consolas",
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Шрифт строк CodeLens; пустое значение использует шрифт редактора. Пока не поддерживается: нет провайдера CodeLens.",
+        "expectedReason": "Пока не поддерживается: нет провайдера CodeLens.",
+        "rejectedByProfile": true
       },
-      "invalid": [
-        {
-          "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-          "pass": true
-        }
-      ],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": "",
-        "before": "",
-        "pass": true
-      },
-      "restart": {
-        "raw": "Consolas",
-        "effective": "Consolas",
-        "expected": "Consolas",
-        "kind": "editor",
-        "recognized": true,
-        "value": "Consolas",
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "codeLensFontSize",
       "ru": "Размер команд над кодом",
       "group": "advanced",
-      "cases": [
-        {
-          "value": 16,
-          "raw": 16,
-          "effective": 16,
-          "expected": 16,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": 16,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Размер шрифта CodeLens; 0 использует размер, выбранный Monaco. Пока не поддерживается: нет провайдера CodeLens. Допустимый диапазон: 0 … 100.",
+        "expectedReason": "Пока не поддерживается: нет провайдера CodeLens.",
+        "rejectedByProfile": true
       },
-      "invalid": [
-        {
-          "input": "-1",
-          "pass": true
-        },
-        {
-          "input": "101",
-          "pass": true
-        }
-      ],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": 0,
-        "before": 0,
-        "pass": true
-      },
-      "restart": {
-        "raw": 16,
-        "effective": 16,
-        "expected": 16,
-        "kind": "editor",
-        "recognized": true,
-        "value": 16,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "lightbulb.enabled",
       "ru": "Значок исправлений",
       "group": "advanced",
-      "cases": [
-        {
-          "value": "off",
-          "raw": "off",
-          "effective": "off",
-          "expected": "off",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "off",
-          "pass": true
-        },
-        {
-          "value": "on",
-          "raw": "on",
-          "effective": "on",
-          "expected": "on",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "on",
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Показывает доступные действия провайдера исправлений на строке кода. Пока не поддерживается: нет провайдера действий исправления.",
+        "expectedReason": "Пока не поддерживается: нет провайдера действий исправления.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": "onCode",
-        "before": "onCode",
-        "pass": true
-      },
-      "restart": {
-        "raw": "on",
-        "effective": "on",
-        "expected": "on",
-        "kind": "editor",
-        "recognized": true,
-        "value": "on",
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "inlayHints.enabled",
       "ru": "Встроенные пояснения в коде",
       "group": "advanced",
-      "cases": [
-        {
-          "value": "off",
-          "raw": "off",
-          "effective": "off",
-          "expected": "off",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "off",
-          "pass": true
-        },
-        {
-          "value": "offUnlessPressed",
-          "raw": "offUnlessPressed",
-          "effective": "offUnlessPressed",
-          "expected": "offUnlessPressed",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "offUnlessPressed",
-          "pass": true
-        },
-        {
-          "value": "onUnlessPressed",
-          "raw": "onUnlessPressed",
-          "effective": "onUnlessPressed",
-          "expected": "onUnlessPressed",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "onUnlessPressed",
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Определяет видимость коротких пояснений типов и параметров от языкового провайдера. Пока не поддерживается: нет провайдера встроенных пояснений.",
+        "expectedReason": "Пока не поддерживается: нет провайдера встроенных пояснений.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": "on",
-        "before": "on",
-        "pass": true
-      },
-      "restart": {
-        "raw": "onUnlessPressed",
-        "effective": "onUnlessPressed",
-        "expected": "onUnlessPressed",
-        "kind": "editor",
-        "recognized": true,
-        "value": "onUnlessPressed",
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "inlayHints.fontSize",
       "ru": "Размер встроенных пояснений",
       "group": "advanced",
-      "cases": [
-        {
-          "value": 15,
-          "raw": 15,
-          "effective": 15,
-          "expected": 15,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": 15,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Размер текста пояснений в пикселях; 0 использует автоматический размер. Пока не поддерживается: нет провайдера встроенных пояснений. Допустимый диапазон: 0 … 1000000.",
+        "expectedReason": "Пока не поддерживается: нет провайдера встроенных пояснений.",
+        "rejectedByProfile": true
       },
-      "invalid": [
-        {
-          "input": "-1",
-          "pass": true
-        },
-        {
-          "input": "1000001",
-          "pass": true
-        }
-      ],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": 0,
-        "before": 0,
-        "pass": true
-      },
-      "restart": {
-        "raw": 15,
-        "effective": 15,
-        "expected": 15,
-        "kind": "editor",
-        "recognized": true,
-        "value": 15,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "inlayHints.fontFamily",
       "ru": "Шрифт встроенных пояснений",
       "group": "advanced",
-      "cases": [
-        {
-          "value": "Consolas",
-          "raw": "Consolas",
-          "effective": "Consolas",
-          "expected": "Consolas",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "Consolas",
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Пустое значение использует основной шрифт редактора. Пока не поддерживается: нет провайдера встроенных пояснений.",
+        "expectedReason": "Пока не поддерживается: нет провайдера встроенных пояснений.",
+        "rejectedByProfile": true
       },
-      "invalid": [
-        {
-          "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-          "pass": true
-        }
-      ],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": "",
-        "before": "",
-        "pass": true
-      },
-      "restart": {
-        "raw": "Consolas",
-        "effective": "Consolas",
-        "expected": "Consolas",
-        "kind": "editor",
-        "recognized": true,
-        "value": "Consolas",
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "inlayHints.padding",
       "ru": "Поля встроенных пояснений",
       "group": "advanced",
-      "cases": [
-        {
-          "value": true,
-          "raw": true,
-          "effective": true,
-          "expected": true,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": true,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Добавляет свободное место вокруг встроенных пояснений. Пока не поддерживается: нет провайдера встроенных пояснений.",
+        "expectedReason": "Пока не поддерживается: нет провайдера встроенных пояснений.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": false,
-        "before": false,
-        "pass": true
-      },
-      "restart": {
-        "raw": true,
-        "effective": true,
-        "expected": true,
-        "kind": "editor",
-        "recognized": true,
-        "value": true,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "inlayHints.maximumLength",
       "ru": "Предел длины встроенных пояснений",
       "group": "advanced",
-      "cases": [
-        {
-          "value": 24,
-          "raw": 24,
-          "effective": 24,
-          "expected": 24,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": 24,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Ограничивает длину одного встроенного пояснения. Пока не поддерживается: нет провайдера встроенных пояснений. Допустимый диапазон: 0 … 1000000.",
+        "expectedReason": "Пока не поддерживается: нет провайдера встроенных пояснений.",
+        "rejectedByProfile": true
       },
-      "invalid": [
-        {
-          "input": "-1",
-          "pass": true
-        },
-        {
-          "input": "1000001",
-          "pass": true
-        }
-      ],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": 43,
-        "before": 43,
-        "pass": true
-      },
-      "restart": {
-        "raw": 24,
-        "effective": 24,
-        "expected": 24,
-        "kind": "editor",
-        "recognized": true,
-        "value": 24,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "inlineSuggest.enabled",
@@ -10307,41 +8913,15 @@
       "key": "inlineSuggest.suppressSuggestions",
       "ru": "Скрывать список при продолжении",
       "group": "advanced",
-      "cases": [
-        {
-          "value": true,
-          "raw": true,
-          "effective": true,
-          "expected": true,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": true,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Не показывает обычный список дополнений одновременно с продолжением внутри строки. Пока не поддерживается: независимый провайдер продолжений Axiom пока не подключён; штатные продолжения работают через режим Inline автоматических подсказок.",
+        "expectedReason": "Пока не поддерживается: независимый провайдер продолжений Axiom пока не подключён; штатные продолжения работают через режим Inline автоматических подсказок.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": false,
-        "before": false,
-        "pass": true
-      },
-      "restart": {
-        "raw": true,
-        "effective": true,
-        "expected": true,
-        "kind": "editor",
-        "recognized": true,
-        "value": true,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "inlineSuggest.minShowDelay",
@@ -11322,41 +9902,15 @@
       "key": "inlineCompletionsAccessibilityVerbose",
       "ru": "Подробные сообщения о продолжениях",
       "group": "advanced",
-      "cases": [
-        {
-          "value": true,
-          "raw": true,
-          "effective": true,
-          "expected": true,
-          "kind": "editor",
-          "recognized": true,
-          "persisted": true,
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Добавляет подсказки доступности при показе продолжения внутри строки. Пока не поддерживается: в IDE пока не подключена команда доступного просмотра продолжений.",
+        "expectedReason": "Пока не поддерживается: в IDE пока не подключена команда доступного просмотра продолжений.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": false,
-        "before": false,
-        "pass": true
-      },
-      "restart": {
-        "raw": true,
-        "effective": true,
-        "expected": true,
-        "kind": "editor",
-        "recognized": true,
-        "value": true,
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "tabFocusMode",
@@ -11584,351 +10138,99 @@
       "key": "gotoLocation.multiple",
       "ru": "Общее действие при нескольких целях перехода",
       "group": "advanced",
-      "cases": [
-        {
-          "value": "gotoAndPeek",
-          "raw": "gotoAndPeek",
-          "effective": "gotoAndPeek",
-          "expected": "gotoAndPeek",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "gotoAndPeek",
-          "pass": true
-        },
-        {
-          "value": "goto",
-          "raw": "goto",
-          "effective": "goto",
-          "expected": "goto",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "goto",
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Переходит к определению, открывает карточку или совмещает оба действия при нескольких результатах. Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "expectedReason": "Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": "peek",
-        "before": "peek",
-        "pass": true
-      },
-      "restart": {
-        "raw": "goto",
-        "effective": "goto",
-        "expected": "goto",
-        "kind": "editor",
-        "recognized": true,
-        "value": "goto",
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "gotoLocation.multipleDefinitions",
       "ru": "Несколько определений",
       "group": "advanced",
-      "cases": [
-        {
-          "value": "gotoAndPeek",
-          "raw": "gotoAndPeek",
-          "effective": "gotoAndPeek",
-          "expected": "gotoAndPeek",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "gotoAndPeek",
-          "pass": true
-        },
-        {
-          "value": "goto",
-          "raw": "goto",
-          "effective": "goto",
-          "expected": "goto",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "goto",
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Выбирает способ показа нескольких определений, полученных от провайдера языка. Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "expectedReason": "Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": "peek",
-        "before": "peek",
-        "pass": true
-      },
-      "restart": {
-        "raw": "goto",
-        "effective": "goto",
-        "expected": "goto",
-        "kind": "editor",
-        "recognized": true,
-        "value": "goto",
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "gotoLocation.multipleTypeDefinitions",
       "ru": "Несколько определений типа",
       "group": "advanced",
-      "cases": [
-        {
-          "value": "gotoAndPeek",
-          "raw": "gotoAndPeek",
-          "effective": "gotoAndPeek",
-          "expected": "gotoAndPeek",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "gotoAndPeek",
-          "pass": true
-        },
-        {
-          "value": "goto",
-          "raw": "goto",
-          "effective": "goto",
-          "expected": "goto",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "goto",
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Выбирает способ показа нескольких определений типа, полученных от провайдера языка. Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "expectedReason": "Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": "peek",
-        "before": "peek",
-        "pass": true
-      },
-      "restart": {
-        "raw": "goto",
-        "effective": "goto",
-        "expected": "goto",
-        "kind": "editor",
-        "recognized": true,
-        "value": "goto",
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "gotoLocation.multipleDeclarations",
       "ru": "Несколько объявлений",
       "group": "advanced",
-      "cases": [
-        {
-          "value": "gotoAndPeek",
-          "raw": "gotoAndPeek",
-          "effective": "gotoAndPeek",
-          "expected": "gotoAndPeek",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "gotoAndPeek",
-          "pass": true
-        },
-        {
-          "value": "goto",
-          "raw": "goto",
-          "effective": "goto",
-          "expected": "goto",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "goto",
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Выбирает способ показа нескольких объявлений сущности. Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "expectedReason": "Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": "peek",
-        "before": "peek",
-        "pass": true
-      },
-      "restart": {
-        "raw": "goto",
-        "effective": "goto",
-        "expected": "goto",
-        "kind": "editor",
-        "recognized": true,
-        "value": "goto",
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "gotoLocation.multipleImplementations",
       "ru": "Несколько реализаций",
       "group": "advanced",
-      "cases": [
-        {
-          "value": "gotoAndPeek",
-          "raw": "gotoAndPeek",
-          "effective": "gotoAndPeek",
-          "expected": "gotoAndPeek",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "gotoAndPeek",
-          "pass": true
-        },
-        {
-          "value": "goto",
-          "raw": "goto",
-          "effective": "goto",
-          "expected": "goto",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "goto",
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Выбирает способ показа нескольких реализаций сущности при поддержке языка. Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "expectedReason": "Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": "peek",
-        "before": "peek",
-        "pass": true
-      },
-      "restart": {
-        "raw": "goto",
-        "effective": "goto",
-        "expected": "goto",
-        "kind": "editor",
-        "recognized": true,
-        "value": "goto",
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "gotoLocation.multipleReferences",
       "ru": "Несколько использований",
       "group": "advanced",
-      "cases": [
-        {
-          "value": "gotoAndPeek",
-          "raw": "gotoAndPeek",
-          "effective": "gotoAndPeek",
-          "expected": "gotoAndPeek",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "gotoAndPeek",
-          "pass": true
-        },
-        {
-          "value": "goto",
-          "raw": "goto",
-          "effective": "goto",
-          "expected": "goto",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "goto",
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Выбирает способ показа нескольких найденных использований сущности. Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "expectedReason": "Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": "peek",
-        "before": "peek",
-        "pass": true
-      },
-      "restart": {
-        "raw": "goto",
-        "effective": "goto",
-        "expected": "goto",
-        "kind": "editor",
-        "recognized": true,
-        "value": "goto",
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     },
     {
       "key": "gotoLocation.multipleTests",
       "ru": "Несколько связанных проверок",
       "group": "advanced",
-      "cases": [
-        {
-          "value": "gotoAndPeek",
-          "raw": "gotoAndPeek",
-          "effective": "gotoAndPeek",
-          "expected": "gotoAndPeek",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "gotoAndPeek",
-          "pass": true
-        },
-        {
-          "value": "goto",
-          "raw": "goto",
-          "effective": "goto",
-          "expected": "goto",
-          "kind": "editor",
-          "recognized": true,
-          "persisted": "goto",
-          "pass": true
-        }
-      ],
+      "cases": [],
       "failures": [],
-      "boundary": "native-setting-requires-language-provider",
-      "cancel": {
-        "pass": true
+      "availability": {
+        "disabled": true,
+        "reason": "Выбирает способ показа связанных проверок, если провайдер языка их предоставляет. Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "expectedReason": "Пока не поддерживается: нет провайдера соответствующих переходов по символам.",
+        "rejectedByProfile": true
       },
-      "invalid": [],
-      "reopen": {
-        "pass": true
-      },
-      "reset": {
-        "effective": "peek",
-        "before": "peek",
-        "pass": true
-      },
-      "restart": {
-        "raw": "goto",
-        "effective": "goto",
-        "expected": "goto",
-        "kind": "editor",
-        "recognized": true,
-        "value": "goto",
-        "pass": true
-      }
+      "boundary": "unsupported-by-axiom"
     }
   ]
 }
