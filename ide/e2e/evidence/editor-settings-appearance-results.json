@@ -1,0 +1,16 @@
+[
+  {
+    "id": "editor-settings-all-appearance",
+    "spec": "editor-settings-all.spec.js",
+    "name": "Все параметры вкладки appearance: ввод, Monaco, профиль и перезапуск",
+    "ms": 38623,
+    "passed": 50,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:52377/56bd6bd7-a642-464d-a127-62e854e28200\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:52386/bd5e3926-19e3-4fd7-8bdd-44068e5cb6dc\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

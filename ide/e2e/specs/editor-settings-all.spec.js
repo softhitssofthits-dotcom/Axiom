@@ -57,9 +57,11 @@ module.exports=Object.keys(Object.groupBy(entries,e=>e.group)).map(group=>({
      await S.page.evaluate(()=>window.__ide.handleAction('editor-settings'));await S.page.fill('.settings-search',entry.key);
      const input=S.page.locator(`[data-setting-input="${entry.key}"]`);
      const dropped=await S.page.evaluate(key=>!Object.hasOwn(EditorPreferences.normalize({[key]:true}),key),entry.key);
-     row.availability={disabled:await input.isDisabled(),reason:await input.getAttribute('title'),rejectedByProfile:dropped};
-     if(!row.availability.disabled||!row.availability.reason.includes('Устаревшее')||!dropped)row.failures.push('Устаревшее поле не защищено от бессмысленной записи');
-     await S.page.keyboard.press('Escape');row.boundary='unsupported-api';
+     row.availability={disabled:await input.isDisabled(),reason:await input.getAttribute('title'),expectedReason:entry.unavailableRu,rejectedByProfile:dropped};
+     if(!row.availability.disabled)row.failures.push('Недоступное поле разрешено для изменения');
+     if(!entry.unavailableRu?.trim()||!row.availability.reason?.includes(entry.unavailableRu))row.failures.push('Пояснение не содержит причину недоступности из каталога');
+     if(!dropped)row.failures.push('Недоступное поле допускает запись в профиль');
+     await S.page.keyboard.press('Escape');row.boundary=entry.unsupportedByAxiom?'unsupported-by-axiom':'unsupported-api';
      C.ok(row.failures.length===0,entry.key+' явно недоступен',row.failures.join('\n'));continue;
     }
     row.boundary=/^(codeLens|lightbulb|inlayHints|inlineSuggest|linkedEditing|renameOnType|formatOn|gotoLocation|definitionLink|peekWidget|stablePeek|occurrencesHighlight|links)/.test(entry.key)?'native-setting-requires-language-provider':'native-setting';

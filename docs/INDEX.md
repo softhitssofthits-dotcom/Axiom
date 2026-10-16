@@ -50,3 +50,5 @@
 Графическая граница StepBack: [приёмка SCREEN и CANVAS](reports/electron/STEPBACK_GRAPHICS_ACCEPTANCE.md).
 
 Единый реестр четырёх тем и уточнения оформления: [аудит и приёмка](reports/electron/THEMES_AUDIT.md).
+
+Восстановление полной матрицы настроек: [группа appearance и дальнейшие проверки](reports/electron/EDITOR_SETTINGS_MATRIX_RECOVERY.md).
