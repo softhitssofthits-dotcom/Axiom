@@ -5,6 +5,51 @@ namespace Axiom.Execution.Tests;
 public sealed class StepBackFileBoundaryTests
 {
     [Theory]
+    [InlineData(false, 5)]
+    [InlineData(true, 5)]
+    [InlineData(false, 8)]
+    [InlineData(true, 8)]
+    public void CaughtPartialCopyFailureDoesNotAllowReplayingExternalEffect(bool overwrite, int breakpoint)
+    {
+        var directory = Path.Combine(AppContext.BaseDirectory, "stepback-partial-" + Guid.NewGuid().ToString("N"));
+        var sourceDirectory = Path.Combine(directory, "source");
+        Directory.CreateDirectory(sourceDirectory);
+        var sourceFile = Path.Combine(sourceDirectory, "locked.txt");
+        File.WriteAllText(sourceFile, "исходник");
+        try
+        {
+            var arguments = overwrite ? "\"source\", \"target\", TRUE" : "\"source\", \"target\"";
+            var text = $"DIM count AS INTEGER = 0\nTRY\n    DIM copied AS BOOLEAN = COPYDIR({arguments})\nCATCH err\n    count = 1\nEND TRY\ncount = count + 1\nPRINT count\n";
+            using var locked = new FileStream(sourceFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(text,
+                sourceBreakpointLines: [breakpoint], resourceBaseDirectory: directory));
+            Assert.True(result.Succeeded, string.Join(" | ", result.Diagnostics.Select(d => d.Code + ": " + d.Message)));
+            Assert.True(result.Stopped);
+            var target = Path.Combine(directory, "target");
+            Assert.True(Directory.Exists(target), "COPYDIR должен успеть создать каталог до отказа");
+            Assert.Empty(Directory.GetFiles(target));
+            Assert.False(result.CanStepBack);
+            var stop = result.StopState!;
+            var steps = 0;
+            while (stop.CanStepBack && steps++ < 20)
+            {
+                var backed = stop.StepBack();
+                Assert.True(backed.Stopped);
+                Assert.True(backed.StoppedAt!.SourceLocation.Line >= 4, "Откат пересёк частично выполненный COPYDIR");
+                stop = backed.StopState!;
+            }
+            Assert.True(steps < 20);
+            File.WriteAllText(Path.Combine(target, "external.txt"), "внешняя правка");
+            var completed = stop.Resume();
+            Assert.True(completed.Succeeded);
+            Assert.Empty(completed.Diagnostics);
+            Assert.Equal("внешняя правка", File.ReadAllText(Path.Combine(target, "external.txt")));
+            Assert.False(File.Exists(Path.Combine(target, "locked.txt")));
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
+
+    [Theory]
     [InlineData("WRITEFILE", false)]
     [InlineData("APPENDFILE", false)]
     [InlineData("WRITEFILE", true)]

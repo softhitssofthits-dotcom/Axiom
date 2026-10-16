@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 435,
+  "count": 436,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -2146,6 +2146,11 @@
       "id": "trace-stepback-open-file-boundary",
       "spec": "trace-file-boundary.spec.js",
       "name": "Открытый FILE запрещает StepBack; продолжение завершает запись через CLOSE"
+    },
+    {
+      "id": "trace-stepback-partial-copy-failure",
+      "spec": "trace-partial-file.spec.js",
+      "name": "Частичный отказ COPYDIR: CATCH и StepBack не повторяют внешний эффект"
     },
     {
       "id": "trace-restart-other-tab",

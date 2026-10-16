@@ -44,3 +44,5 @@
 Устойчивость Restart и его отмена через Stop: [исправление 16 октября](reports/electron/TRACE_RESTART_STABILITY.md).
 
 Граница файловых эффектов StepBack: [приёмка 16 октября](reports/electron/STEPBACK_FILE_BOUNDARY_ACCEPTANCE.md).
+
+Частичный отказ COPYDIR и StepBack: [приёмка](reports/electron/STEPBACK_PARTIAL_FILE_ACCEPTANCE.md).
