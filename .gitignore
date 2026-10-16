@@ -31,6 +31,10 @@ USER.md
 HEARTBEAT.md
 SOUL.md
 TOOLS.md
+# Local history and evidence, kept on disk but not published to the repository
+/docs/archive/
+/docs/reports/
+/docs/audit/
 # Electron IDE local dependencies and copied Monaco runtime
 ide/node_modules/
 ide/src/renderer/vs/

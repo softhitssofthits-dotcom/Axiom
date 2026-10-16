@@ -37,6 +37,8 @@ At the beginning of every session, do this in order:
    - `versions.json`, `docs/VERSIONING.md` и последнюю запись `docs/CHANGELOG.md`
    - `docs/archive/spec/SPECIFICATION2.md`, `docs/archive/plans/PLANS3.md`, `docs/archive/plans/PLANS2.md`, `docs/archive/worklog/WORKLOG3.md`, `docs/archive/spec/SPECIFICATION.md`, `docs/archive/plans/PLANS.md`, `docs/archive/worklog/WORKLOG2.md`, `docs/archive/worklog/WORKLOG.md` only when older historical context is needed
 
+Note: `docs/archive/`, `docs/reports/` and `docs/audit/` are kept only on the developer's disk and are not published to the repository (listed in `.gitignore`). They may be absent in a fresh clone; treat their absence as expected and do not recreate them from the repository alone.
+
 Then:
 1. briefly summarize what this project is;
 2. state current status;
@@ -633,13 +635,9 @@ Report:
 Запрещено оставлять в корне репозитория временные элементы вроде `axiom_sample_*`, отладочные файлы, промежуточные каталоги или данные ручных проверок. Если временный объект нужен для проверки примера, теста или ручного запуска, путь должен явно указывать на `.artifacts/`, чтобы весь каталог можно было удалить без риска снести исходники, документацию или постоянные проверочные примеры.
 
 
-## Передача текущего аудита — 2026-10-09
+## Проверки оболочки Electron
 
-Сводная таблица сделанного и оставшегося, границы доказательств и точный порядок продолжения на другом компьютере находятся в [AUDIT_HANDOFF.md](AUDIT_HANDOFF.md). Последний завершённый раздел — тайлы; следующий раздел до возобновления не начинать.
-
-## Готовые проверки новой оболочки — 11 октября 2026 года
-
-Для новой Electron IDE использовать существующий набор ide/e2e, инструкцию ide/e2e/README.md и полный каталог ide/e2e/SCENARIOS.json. На дату публикации это 85 сценариев в 27 файлах. Не пересоздавать уже имеющиеся сценарии и общую автоматизацию при продолжении на другом компьютере; сначала найти существующую проверку и дополнить её. Команда полного запуска: npm --prefix ide/e2e test. DesktopHost/CLI остаются служебными компонентами новой IDE и не исключаются из её проверок. После изменения состава обновить каталог командой node ide/e2e/runner.js --list > ide/e2e/SCENARIOS.json.
+Для Electron IDE использовать существующий набор `ide/e2e`, инструкцию `ide/e2e/README.md` и полный каталог `ide/e2e/SCENARIOS.json` (на 16 октября 2026 года — 456 сценариев). Не пересоздавать уже имеющиеся сценарии и общую автоматизацию при продолжении; сначала найти существующую проверку и дополнить её. Команда полного запуска: `npm --prefix ide/e2e test`. DesktopHost/CLI остаются служебными компонентами IDE и не исключаются из её проверок. После изменения состава обновить каталог командой `node ide/e2e/runner.js --list > ide/e2e/SCENARIOS.json`.
 
 ## Общие свойства интерфейса Electron
 
@@ -664,7 +662,7 @@ Report:
 
 ## Действующая карта документов — 11 октября 2026 года
 
-По прямому поручению автора завершена одноразовая ревизия и архивирование старого массива. Активные источники: PROJECT, README, SPECIFICATION3, ARCHITECTURE, PLANS4, WORKLOG5, BYTECODE_COVERAGE, BYTECODE_PERF_MATRIX. Работа выполняется в Electron через DesktopHost и BytecodeVm. Полный текущий остаток находится в docs/plans/UNFINISHED_WORK.md; навигация — docs/INDEX.md. Журнал продолжает нумерацию с Session 1364, прежние записи до 1363 сохранены в docs/archive/state-before-20261011/docs/WORKLOG5.md. Старые архивные планы не задают текущую очередь и не должны возвращаться в активные документы. Новые записи активных журналов снова добавляются только в конец.
+По прямому поручению автора завершена одноразовая ревизия и архивирование старого массива. Активные источники: PROJECT, README, SPECIFICATION3, ARCHITECTURE, PLANS4, WORKLOG5, BYTECODE_COVERAGE, BYTECODE_PERF_MATRIX. Работа выполняется в Electron через DesktopHost и BytecodeVm. Полный текущий остаток находится в docs/plans/UNFINISHED_WORK.md; навигация — docs/INDEX.md. Журнал продолжает нумерацию с Session 1364, прежние записи до 1363 сохранены в docs/archive/worklog/WORKLOG5_pre1364.md. Старые архивные планы не задают текущую очередь и не должны возвращаться в активные документы. Новые записи активных журналов снова добавляются только в конец.
 
 ## Уточнение сопровождения версий — 2026-10-13
 
