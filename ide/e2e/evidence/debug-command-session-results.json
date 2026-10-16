@@ -1,0 +1,16 @@
+[
+  {
+    "id": "execution-late-command-response",
+    "spec": "execution-session.spec.js",
+    "name": "Поздние ответы INPUT, Stop и отладки не повреждают следующий настоящий запуск",
+    "ms": 4373,
+    "passed": 18,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:52913/9fbd3e52-f41e-451c-a2c6-b44e399cda7b\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

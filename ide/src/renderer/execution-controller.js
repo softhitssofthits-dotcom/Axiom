@@ -9,7 +9,7 @@ class ExecutionController {
     const ide = this.ide;
     const request = this.startRequest = {};
     ide.running = true; this.starting = true; this.pendingStop = false; this.pendingEvents = []; this.outputText = ''; this.streamedOutputText = ''; this.clearedOutputPrefix = ''; this.inputPrompt = ''; this.inputText = ''; this.inputRequestId = null; this.inputTarget = null; this.stopId = null;
-    this.canStepBack=false;this.callDepth=0;this.line=null;this.debugBusy=false;ide.trace?.clearMarker();ide.trace?.update();
+    this.canStepBack=false;this.callDepth=0;this.line=null;this.debugBusy=false;this.debugRequest=null;this.debugError=null;ide.trace?.clearMarker();ide.trace?.update();
     ide._stopRequested = false; ide.clearDiagnostics(); ide.showPanel(); ide.switchPanel('console');
     ide.setStatus(I18N.t('trace.preparing'));
     if (!ide.ensureConsole()) { ide.running = false; this.starting = false; this.startRequest = null; ide.trace?.finished(); return; }
@@ -63,6 +63,7 @@ class ExecutionController {
         this.renderOutput(); this.ide.setStatus(I18N.t('status.running'));
         break;
       case 'debug.paused':
+        this.debugRequest=null;this.debugBusy=false;this.debugError=null;
         this.callDepth=payload.callDepth;this.line=payload.line;this.ide.trace?.mark(payload);
         this.stopId = payload.stopId; this.canStepBack = payload.canStepBack;
         this.outputText = payload.outputText; this.renderOutput();
@@ -75,6 +76,7 @@ class ExecutionController {
         break;
       case 'graphics.error': this.fault(payload.message); break;
       case 'execution.finished':
+        this.debugRequest=null;this.debugBusy=false;this.debugError=null;
         this.inputRequestId = null; this.inputTarget = null; this.inputPrompt = ''; this.inputText = '';
         this.outputText = payload.outputText; this.renderOutput();
         this.ide.running = false; this.inputRequestId = null; this.stopId = null; this.sessionId = null;
@@ -138,21 +140,26 @@ class ExecutionController {
   }
   async debug(command) {
     if (!this.stopId || !this.sessionId) return;
-    const stopId = this.stopId;
+    const stopId = this.stopId, line = this.line;
     const sessionId = this.sessionId, request = {};
-    this.debugRequest = request;
+    this.debugRequest = request;this.debugError=null;
     this.stopId = null;
     this.debugBusy=true;this.ide.trace?.clearMarker();this.ide.trace?.update();
     this.ide.setStatus(I18N.t('trace.running'));
-    const result = await this.api.debugCommand(sessionId, command, stopId);
+    let result;
+    try { result = await this.api.debugCommand(sessionId, command, stopId); }
+    catch (error) { result = { ok: false, error: { message: error?.message || 'Не удалось выполнить команду отладки.' } }; }
     if (this.sessionId !== sessionId || this.debugRequest !== request) return;
+    this.debugRequest=null;
     if (!result.ok) {
-      if (this.sessionId && !this.stopId) this.stopId = stopId;
-      this.ide.setStatus(result.error.message);
+      this.stopId = stopId;this.debugError=result.error.message;
+      this.ide.trace?.mark({line});
+      this.ide.setStatus(this.debugError);
     }
     this.debugBusy=false;this.ide.trace?.update();
   }
   fault(message) {
+    this.debugRequest=null;this.debugBusy=false;this.debugError=null;
     this.startRequest = null; this.starting = false; this.pendingStop = false; this.pendingEvents = [];
     this.ide.running = false; this.sessionId = null; this.stopId = null; this.inputRequestId = null;
     this.ide.showIdeProblem('status.runFailed', message); this.ide.setStatus(I18N.t('trace.failed'));

@@ -72,7 +72,7 @@ class TraceController {
     });
     const model=ide.editor.getModel(), runModel=ide.openFiles.get(ide._runFile)?.model;
     ide.editor.updateOptions({ readOnly:!!ide.openFiles.get(ide.activeFile)?.readonly || (!!ide.running && model===runModel) });
-    if(ide.execution.stopId && ide.execution.line) ide.setStatus(I18N.t('trace.paused',ide.execution.line));
+    if(ide.execution.stopId && ide.execution.line) ide.setStatus(ide.execution.debugError || I18N.t('trace.paused',ide.execution.line));
   }
   async command(command) {
     if(!this.allowed(command)) return;

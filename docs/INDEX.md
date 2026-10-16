@@ -52,3 +52,5 @@
 Единый реестр четырёх тем и уточнения оформления: [аудит и приёмка](reports/electron/THEMES_AUDIT.md).
 
 Восстановление полной матрицы настроек: [группа appearance и дальнейшие проверки](reports/electron/EDITOR_SETTINGS_MATRIX_RECOVERY.md).
+
+Устойчивость отказов команд отладки: [исправление и приёмка](reports/electron/DEBUG_COMMAND_FAILURE_STABILITY.md).

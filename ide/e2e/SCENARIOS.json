@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 439,
+  "count": 441,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -81,6 +81,16 @@
       "id": "console-key-keydown-canonical-aliases-axm",
       "spec": "console-keys.spec.js",
       "name": "Консоль Electron передаёт клавиши для keydown/canonical_aliases.axm"
+    },
+    {
+      "id": "debug-command-active-failure",
+      "spec": "debug-command-failure.spec.js",
+      "name": "Отказ шага и исключение доставки сохраняют остановку, указатель и дальнейшее управление"
+    },
+    {
+      "id": "debug-command-late-pause-failure",
+      "spec": "debug-command-failure.spec.js",
+      "name": "Поздний отказ прежнего шага не изменяет новую настоящую остановку той же сессии"
     },
     {
       "id": "diagnostic-ranges-unicode-line-endings",
