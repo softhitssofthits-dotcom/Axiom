@@ -1,0 +1,30 @@
+[
+  {
+    "id": "trace-stepback-screen-boundary",
+    "spec": "trace-graphics-boundary.spec.js",
+    "name": "SCREEN: StepBack сохраняет кадр и не пересекает графический эффект",
+    "ms": 8800,
+    "passed": 13,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:65289/e980fe34-167c-46e8-8cc3-e2242c92c7f5\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "trace-stepback-canvas-boundary",
+    "spec": "trace-graphics-boundary.spec.js",
+    "name": "CANVAS: StepBack сохраняет кадр и не пересекает графический эффект",
+    "ms": 11124,
+    "passed": 13,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:65294/8275f7ed-cbce-4485-9111-685894d07f0c\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

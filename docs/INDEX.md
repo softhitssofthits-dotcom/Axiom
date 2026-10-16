@@ -46,3 +46,5 @@
 Граница файловых эффектов StepBack: [приёмка 16 октября](reports/electron/STEPBACK_FILE_BOUNDARY_ACCEPTANCE.md).
 
 Частичный отказ COPYDIR и StepBack: [приёмка](reports/electron/STEPBACK_PARTIAL_FILE_ACCEPTANCE.md).
+
+Графическая граница StepBack: [приёмка SCREEN и CANVAS](reports/electron/STEPBACK_GRAPHICS_ACCEPTANCE.md).

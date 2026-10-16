@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 436,
+  "count": 438,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -2146,6 +2146,16 @@
       "id": "trace-stepback-open-file-boundary",
       "spec": "trace-file-boundary.spec.js",
       "name": "Открытый FILE запрещает StepBack; продолжение завершает запись через CLOSE"
+    },
+    {
+      "id": "trace-stepback-screen-boundary",
+      "spec": "trace-graphics-boundary.spec.js",
+      "name": "SCREEN: StepBack сохраняет кадр и не пересекает графический эффект"
+    },
+    {
+      "id": "trace-stepback-canvas-boundary",
+      "spec": "trace-graphics-boundary.spec.js",
+      "name": "CANVAS: StepBack сохраняет кадр и не пересекает графический эффект"
     },
     {
       "id": "trace-stepback-partial-copy-failure",
