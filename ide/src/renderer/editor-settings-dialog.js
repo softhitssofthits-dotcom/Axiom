@@ -118,8 +118,10 @@
       if(!query)this.content.setAttribute('aria-labelledby','settings-tab-'+this.group);else this.content.removeAttribute('aria-labelledby');
       this.controls=new Map();
       if(!query&&(this.group==='appearance'||this.group==='font')) {
-        const field=this.group==='font'?'theme':'language';const choices=field==='theme'?['dark','light','basic','borland']:['ru','en'];
-        const labels=field==='theme'?[['Тёмная','Dark'],['Светлая','Light'],['QuickBASIC','QuickBASIC'],['Borland Pascal','Borland Pascal']]:[['Русский','Russian'],['Английский','English']];
+        const field=this.group==='font'?'theme':'language';
+        const themes=window.AxiomThemes.list;
+        const choices=field==='theme'?themes.map(t=>t.id):['ru','en'];
+        const labels=field==='theme'?themes.map(t=>[t.label.ru,t.label.en]):[['Русский','Russian'],['Английский','English']];
         const row=this.element('div','settings-row');const label=this.element('label','',this.text(field));label.htmlFor='settings-'+field;
         const select=this.element('select');select.id='settings-'+field;
         const help=this.text(field+'Help');row.title=help;label.title=help;select.title=help;select.setAttribute('aria-describedby','settings-help');
@@ -221,9 +223,16 @@
       this.content.append(this.element('h3','settings-subheading',this.text('preview')));
       this.preview=this.element('pre','settings-preview');UIControls.setLabel(this.preview,this.text('preview'),{tooltip:false});
       this.preview.innerHTML='<span class="preview-comment">\' Axiom</span>\n<span class="preview-keyword">Dim</span> score <span class="preview-keyword">As</span> <span class="preview-type">Integer</span> = <span class="preview-number">42</span>\n<span class="preview-keyword">If</span> score &gt; <span class="preview-number">0</span> <span class="preview-keyword">Then</span>\n    <span class="preview-keyword">Print</span> <span class="preview-string">"Очки / Score: "</span>; score\n<span class="preview-keyword">End If</span>';
-      this.content.append(this.preview);this.updatePreview();
+      // Палитра применяется до вставки в DOM: иначе первый расчёт стиля берёт
+      // запасной цвет, и предпросмотр на один кадр показывается неверно.
+      this.updatePreview();this.content.append(this.preview);
     }
-    updatePreview() {if(!this.preview?.isConnected)return;this.preview.dataset.previewTheme=this.theme;this.preview.style.fontFamily=this.draft.fontFamily;this.preview.style.fontSize=this.draft.fontSize+'px';this.preview.style.fontWeight=this.draft.fontWeight;this.preview.style.lineHeight=this.draft.lineHeight?(this.draft.lineHeight<8?String(this.draft.lineHeight):this.draft.lineHeight+'px'):'1.5';this.preview.style.letterSpacing=this.draft.letterSpacing+'px';this.preview.style.fontFeatureSettings=typeof this.draft.fontLigatures==='string'?this.draft.fontLigatures:this.draft.fontLigatures?'normal':'"liga" off, "calt" off';this.preview.style.fontVariationSettings=typeof this.draft.fontVariations==='string'?this.draft.fontVariations:'normal';}
+    updatePreview() {if(!this.preview)return;this.preview.dataset.previewTheme=this.theme;
+      const palette=window.AxiomThemes.previewPalette(this.theme);
+      this.preview.style.backgroundColor=palette.background;this.preview.style.color=palette.foreground;
+      const roles={comment:'.preview-comment',keyword:'.preview-keyword',type:'.preview-type',string:'.preview-string',number:'.preview-number'};
+      for(const [role,selector] of Object.entries(roles))for(const span of this.preview.querySelectorAll(selector))span.style.color=palette[role];
+      this.preview.style.fontFamily=this.draft.fontFamily;this.preview.style.fontSize=this.draft.fontSize+'px';this.preview.style.fontWeight=this.draft.fontWeight;this.preview.style.lineHeight=this.draft.lineHeight?(this.draft.lineHeight<8?String(this.draft.lineHeight):this.draft.lineHeight+'px'):'1.5';this.preview.style.letterSpacing=this.draft.letterSpacing+'px';this.preview.style.fontFeatureSettings=typeof this.draft.fontLigatures==='string'?this.draft.fontLigatures:this.draft.fontLigatures?'normal':'"liga" off, "calt" off';this.preview.style.fontVariationSettings=typeof this.draft.fontVariations==='string'?this.draft.fontVariations:'normal';}
     reset() {for(const entry of P.entries.filter(e=>e.group===this.group)){this.draft[entry.key]=P.clone(this.defaults[entry.key]);this.invalid.delete(entry.key);}if(this.group==='font')this.theme='dark';if(this.group==='appearance')this.language='ru';this.renderContent();this.status.textContent='';}
     async apply(close) {
       if(this.busy)return;

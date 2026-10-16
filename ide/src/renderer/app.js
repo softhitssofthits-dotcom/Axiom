@@ -60,8 +60,8 @@ class AxiomIDE {
     window.addEventListener('unhandledrejection', (e) => this.log('window.unhandledrejection', { reason: String(e.reason?.stack || e.reason || '') }, 'error'));
     try {
       await this.loadSettings();
-      if (!['dark', 'light', 'basic', 'borland'].includes(this.settings.theme)) this.settings.theme = 'dark';
-      document.documentElement.setAttribute('data-theme', this.settings.theme);
+      if (!window.AxiomThemes.has(this.settings.theme)) this.settings.theme = window.AxiomThemes.defaultId;
+      this.applyDocumentTheme(this.settings.theme);
       I18N.setLocale(this.settings.language);
       await this.loadMonaco();
       await this.loadLanguageMetadata();
@@ -165,7 +165,7 @@ class AxiomIDE {
         finally {this._autoFormatting=wasFormatting;}
       }
     }
-    document.documentElement.setAttribute('data-theme',theme);
+    this.applyDocumentTheme(theme);
     this.monaco.editor.setTheme('axiom-'+theme);
     if(this.term) this.term.options.theme=this.consoleTheme();
     this.updateThemeMenuChecks();
@@ -319,167 +319,11 @@ class AxiomIDE {
       ],
     });
 
-    monaco.editor.defineTheme('axiom-light', {
-      base: 'vs', inherit: true, semanticHighlighting: true,
-      semanticTokenColors: { keyword: '#0000ff' },
-      rules: [
-        { token: 'comment', foreground: '6a9955', fontStyle: 'italic' },
-        { token: 'string', foreground: 'a31515' },
-        { token: 'string.escape', foreground: 'ee0000' },
-        { token: 'delimiter.interpolation', foreground: 'ee0000' },
-        { token: 'number', foreground: '098658' },
-        { token: 'number.hex', foreground: '098658' },
-        { token: 'number.binary', foreground: '098658' },
-        { token: 'keyword', foreground: '0000ff' },
-        { token: 'type', foreground: '267f99' },
-        { token: 'support.function', foreground: '795e26' },
-        { token: 'identifier', foreground: '215E9C' },
-        { token: 'invalid', foreground: 'C40000' },
-        { token: 'variable', foreground: '215E9C' },
-        { token: 'variable.readonly', foreground: '8F4400' },
-        { token: 'function', foreground: '795E26' },
-        { token: 'array', foreground: '7552A5' },
-        { token: 'operator', foreground: 'AF1970' },
-        { token: 'delimiter', foreground: '705A00' },
-      ],
-      colors: {
-        ...AxiomIDE.monacoSurface('light'),
-        'editorLineNumber.foreground': '#8a98ab',
-        'editorLineNumber.activeForeground': '#536174',
-        'editorIndentGuide.background1': '#e6ebf2',
-        'editorIndentGuide.activeBackground1': '#c4d1e1',
-      },
-    });
-
-    monaco.editor.defineTheme('axiom-dark', {
-      base: 'vs-dark', inherit: true, semanticHighlighting: true,
-      semanticTokenColors: { keyword: '#c586c0' },
-      rules: [
-        { token: 'comment', foreground: '6a9955', fontStyle: 'italic' },
-        { token: 'string', foreground: 'ce9178' },
-        { token: 'string.escape', foreground: 'd7ba7d' },
-        { token: 'delimiter.interpolation', foreground: 'd7ba7d' },
-        { token: 'number', foreground: 'b5cea8' },
-        { token: 'number.hex', foreground: 'b5cea8' },
-        { token: 'number.binary', foreground: 'b5cea8' },
-        { token: 'keyword', foreground: 'c586c0' },
-        { token: 'type', foreground: '4ec9b0' },
-        { token: 'support.function', foreground: 'dcdcaa' },
-        { token: 'identifier', foreground: '9CDCFE' },
-        { token: 'invalid', foreground: 'F44747' },
-        { token: 'variable', foreground: '9CDCFE' },
-        { token: 'variable.readonly', foreground: 'F0B975' },
-        { token: 'function', foreground: 'DCDCAA' },
-        { token: 'array', foreground: 'B9A3E3' },
-        { token: 'operator', foreground: 'E69BC8' },
-        { token: 'delimiter', foreground: 'D7BA7D' },
-      ],
-      colors: {
-        ...AxiomIDE.monacoSurface('dark'),
-        'editorLineNumber.foreground': '#5f6c80',
-        'editorLineNumber.activeForeground': '#a5afbf',
-        'editorIndentGuide.background1': '#2a3240',
-        'editorIndentGuide.activeBackground1': '#465064',
-      },
-    });
-
-    monaco.editor.defineTheme('axiom-basic', {
-      base: 'vs-dark', inherit: true, semanticHighlighting: true,
-      semanticTokenColors: { keyword: '#FFFF55' },
-      rules: [
-        { token: 'comment', foreground: 'B8C7E8', fontStyle: 'italic' },
-        { token: 'keyword', foreground: 'FFFF55' },
-        { token: 'type', foreground: 'FFFFFF' },
-        { token: 'support.function', foreground: '55FFFF' },
-        { token: 'function', foreground: '55FFFF' },
-        { token: 'identifier', foreground: 'FFFFFF' },
-        { token: 'variable', foreground: 'FFFFFF' },
-        { token: 'variable.readonly', foreground: 'FFFFAA' },
-        { token: 'array', foreground: 'AAFFAA' },
-        { token: 'string', foreground: 'AAFFAA' },
-        { token: 'string.escape', foreground: '55FFFF' },
-        { token: 'delimiter.interpolation', foreground: '55FFFF' },
-        { token: 'number', foreground: 'FFFFAA' },
-        { token: 'number.hex', foreground: 'FFFFAA' },
-        { token: 'number.binary', foreground: 'FFFFAA' },
-        { token: 'operator', foreground: 'FFFF55' },
-        { token: 'delimiter', foreground: 'FFFFFF' },
-        { token: 'invalid', foreground: 'FFAAAA' },
-      ],
-      colors: {
-        ...AxiomIDE.monacoSurface('basic'),
-        'editorLineNumber.foreground': '#B8C7E8',
-        'editorLineNumber.activeForeground': '#FFFFFF', 'editorIndentGuide.background1': '#3030A0',
-        'editorIndentGuide.activeBackground1': '#B8C7E8', 'editorError.foreground': '#FFAAAA', 'editorWarning.foreground': '#FFFF55',
-      },
-    });
-
-    monaco.editor.defineTheme('axiom-borland', {
-      base: 'vs-dark', inherit: true, semanticHighlighting: true,
-      semanticTokenColors: {
-        keyword: '#FFFFFF', type: '#FFFF55', function: '#FFFF55',
-        variable: '#FFFF55', array: '#FFFF55', 'variable.readonly': '#FFFF55',
-      },
-      rules: [
-        { token: 'comment', foreground: 'FFFF55', fontStyle: '' },
-        { token: 'keyword', foreground: 'FFFFFF' },
-        { token: 'type', foreground: 'FFFF55' },
-        { token: 'support.function', foreground: 'FFFF55' },
-        { token: 'function', foreground: 'FFFF55' },
-        { token: 'identifier', foreground: 'FFFF55' },
-        { token: 'variable', foreground: 'FFFF55' },
-        { token: 'variable.readonly', foreground: 'FFFF55' },
-        { token: 'array', foreground: 'FFFF55' },
-        { token: 'string', foreground: 'FFFF55' },
-        { token: 'string.escape', foreground: 'FFFFFF' },
-        { token: 'delimiter.interpolation', foreground: 'FFFFFF' },
-        { token: 'number', foreground: 'FFFF55' },
-        { token: 'number.hex', foreground: 'FFFF55' },
-        { token: 'number.binary', foreground: 'FFFF55' },
-        { token: 'operator', foreground: 'FFFFFF' },
-        { token: 'delimiter', foreground: 'FFFFFF' },
-        { token: 'invalid', foreground: 'FF5555' },
-      ],
-      colors: {
-        ...AxiomIDE.monacoSurface('borland'),
-        'editor.foreground': '#FFFF55',
-        'editor.selectionForeground': '#0000AA',
-        'editorLineNumber.foreground': '#AAAAAA',
-        'editorLineNumber.activeForeground': '#FFFFFF',
-        'editorIndentGuide.background1': '#00AAAA',
-        'editorIndentGuide.activeBackground1': '#AAAAAA',
-        'editorError.foreground': '#FF5555',
-        'editorWarning.foreground': '#FFFF55',
-        'editorGutter.background': '#0000AA',
-        'editor.inactiveSelectionBackground': '#00AAAA',
-        'editorBracketMatch.background': '#00AAAA',
-        'editorBracketMatch.border': '#FFFFFF',
-        'editorBracketHighlight.foreground1': '#FFFFFF',
-        'editorBracketHighlight.foreground2': '#FFFF55',
-        'editorBracketHighlight.foreground3': '#55FFFF',
-        'editorBracketHighlight.foreground4': '#55FF55',
-        'editorBracketHighlight.foreground5': '#FF55FF',
-        'editorBracketHighlight.foreground6': '#FF5555',
-        'editorBracketHighlight.unexpectedBracket.foreground': '#FF5555',
-        'editor.findMatchBackground': '#00AA00',
-        'editor.findMatchHighlightBackground': '#00AAAA',
-        'editor.wordHighlightBackground': '#00AAAA',
-        'editor.wordHighlightStrongBackground': '#00AA00',
-        'editorWhitespace.foreground': '#AAAAAA',
-        'scrollbarSlider.background': '#00AAAA80',
-        'scrollbarSlider.hoverBackground': '#00AAAA',
-        'scrollbarSlider.activeBackground': '#55FFFF',
-        'minimap.background': '#0000AA',
-        'input.background': '#0000AA',
-        'input.foreground': '#FFFFFF',
-        'input.border': '#AAAAAA',
-        'input.placeholderForeground': '#AAAAAA',
-        'focusBorder': '#FFFFFF',
-        'button.background': '#00AA00',
-        'button.foreground': '#000000',
-        'button.hoverBackground': '#00AA00',
-      },
-    });
+    // Themes are generated from the shared registry (themes.js): one description
+    // per theme instead of separate copies in Monaco, xterm and the CSS preview.
+    for (const def of window.AxiomThemes.list) {
+      monaco.editor.defineTheme('axiom-' + def.id, window.AxiomThemes.monacoTheme(def.id));
+    }
 
     // Completion + signature help + hover — builtins from the language registry
     // (ide.langMeta, loaded from `axiom metadata`), document locals from a light model scan.
@@ -490,7 +334,7 @@ class AxiomIDE {
     this.editor = this.monaco.editor.create(document.getElementById('editor'), {
       value: '',
       language: 'plaintext',
-      theme: this.settings.theme==='light'?'vs':'vs-dark',
+      theme: window.AxiomThemes.byId(this.settings.theme).monacoBase,
       automaticLayout: true,
       'semanticHighlighting.enabled': true,
       fontSize: 14,
@@ -1503,81 +1347,10 @@ class AxiomIDE {
 
   // ================= integrated console =================
 
-  // xterm.js follows the IDE theme. Keeping a terminal dark in a dark workbench preserves
-  // its familiar contrast; in the light theme, a light terminal avoids making the bottom
-  // panel look like a separate embedded application.
-  static CONSOLE_THEMES = {
-    borland: {
-      background: '#000000', foreground: '#FFFFFF', cursor: '#FFFFFF',
-      selectionBackground: '#00AAAA', selectionForeground: '#0000AA', black: '#000000', red: '#AA0000', green: '#00AA00',
-      yellow: '#AA5500', blue: '#0000AA', magenta: '#AA00AA', cyan: '#00AAAA', white: '#AAAAAA',
-      brightBlack: '#555555', brightRed: '#FF5555', brightGreen: '#55FF55', brightYellow: '#FFFF55',
-      brightBlue: '#5555FF', brightMagenta: '#FF55FF', brightCyan: '#55FFFF', brightWhite: '#FFFFFF',
-    },
-    basic: {
-      background: '#000080', foreground: '#FFFFFF', cursor: '#FFFF55',
-      selectionBackground: '#5050B0', black: '#000000', red: '#AA0000', green: '#00AA00',
-      yellow: '#AAAA00', blue: '#0000AA', magenta: '#AA00AA', cyan: '#00AAAA', white: '#AAAAAA',
-      brightBlack: '#555555', brightRed: '#FF5555', brightGreen: '#55FF55', brightYellow: '#FFFF55',
-      brightBlue: '#5555FF', brightMagenta: '#FF55FF', brightCyan: '#55FFFF', brightWhite: '#FFFFFF',
-    },
-    dark: {
-      // background matches the dark console surface in design-system.css (#151820):
-      // the terminal is created lazily on the first run, and a different xterm
-      // background visibly recolored the console at that moment.
-      background: '#151820', foreground: '#d4d4d4', cursor: '#aeafad',
-      black: '#000000', red: '#cd3131', green: '#0dbc79', yellow: '#e5e510',
-      blue: '#2472c8', magenta: '#bc3fbc', cyan: '#11a8cd', white: '#e5e5e5',
-      brightBlack: '#666666', brightRed: '#f14c4c', brightGreen: '#23d18b',
-      brightYellow: '#f5f543', brightBlue: '#3b8eea', brightMagenta: '#d670d6',
-      brightCyan: '#29b8db', brightWhite: '#e5e5e5',
-    },
-    light: {
-      background: '#ffffff', foreground: '#263241', cursor: '#0969da',
-      black: '#24292f', red: '#cf222e', green: '#1a7f37', yellow: '#9a6700',
-      blue: '#0969da', magenta: '#8250df', cyan: '#0550ae', white: '#f6f8fa',
-      brightBlack: '#57606a', brightRed: '#a40e26', brightGreen: '#116329',
-      brightYellow: '#7d4e00', brightBlue: '#0550ae', brightMagenta: '#6639ba',
-      brightCyan: '#0349a3', brightWhite: '#ffffff',
-    },
-  };
-
-  static monacoSurface(theme) {
-    const root = document.documentElement, previous = root.dataset.theme;
-    root.dataset.theme = theme;
-    const styles = getComputedStyle(root), read = name => styles.getPropertyValue(name).trim();
-    const editor = read('--xs-editor');
-    const colors = {
-      'editor.background': editor, 'editor.foreground': read('--xs-text'),
-      'editor.lineHighlightBackground': editor,
-      'editor.selectionBackground': read('--xs-editor-selection'),
-      'editorCursor.foreground': read('--xs-editor-cursor'),
-      'editorWidget.background': read('--xs-menu-bg') || read('--xs-surface-raised'),
-      'editorWidget.foreground': read('--xs-menu-text') || read('--xs-text'),
-      'editorWidget.border': read('--xs-menu-border') || read('--xs-border'),
-      'editorSuggestWidget.background': read('--xs-menu-bg') || read('--xs-surface-raised'),
-      'editorSuggestWidget.foreground': read('--xs-menu-text') || read('--xs-text'),
-      'editorSuggestWidget.border': read('--xs-menu-border') || read('--xs-border'),
-      'editorSuggestWidget.selectedBackground': read('--xs-menu-hover-bg') || read('--xs-surface-active'),
-      'editorSuggestWidget.selectedForeground': read('--xs-menu-hover-text') || read('--xs-text'),
-    };
-    if (read('--xs-menu-bg')) Object.assign(colors, {
-      'editorHoverWidget.background': read('--xs-menu-bg'), 'editorHoverWidget.foreground': read('--xs-menu-text'),
-      'editorHoverWidget.border': read('--xs-menu-border'),
-      'quickInput.background': read('--xs-menu-bg'), 'quickInput.foreground': read('--xs-menu-text'),
-      'list.focusBackground': read('--xs-menu-hover-bg'), 'list.focusForeground': read('--xs-menu-hover-text'),
-      'list.activeSelectionBackground': read('--xs-menu-hover-bg'), 'list.activeSelectionForeground': read('--xs-menu-hover-text'),
-    });
-    if (previous === undefined) delete root.dataset.theme; else root.dataset.theme = previous;
-    return colors;
-  }
-
+  // The xterm palette is described once in themes.js; surface colours (background,
+  // text, cursor, selection) still come from the shared CSS variables.
   consoleTheme() {
-    const styles = getComputedStyle(document.documentElement), read = name => styles.getPropertyValue(name).trim();
-    return { ...AxiomIDE.CONSOLE_THEMES[this.settings.theme],
-      background: read('--xs-console-bg'), foreground: read('--xs-text'),
-      cursor: read('--xs-editor-cursor'), selectionBackground: read('--xs-editor-selection'),
-    };
+    return window.AxiomThemes.consoleTheme(this.settings.theme);
   }
 
   // Lazy xterm.js setup: the Terminal exists only after the first console run (or tab
@@ -2181,16 +1954,23 @@ class AxiomIDE {
 
   // ================= theme / language =================
 
+  // Applies both the CSS theme attribute and the classic/modern chrome marker so the
+  // stylesheet can target a theme family instead of listing every theme id.
+  applyDocumentTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-chrome', window.AxiomThemes.kind(theme));
+  }
+
   updateThemeMenuChecks() {
-    for (const theme of ['light', 'dark', 'basic', 'borland']) {
-      UIControls.setMenuChecked(document.querySelector(`.menu-check[data-check="theme-${theme}"]`), this.settings.theme === theme);
+    for (const def of window.AxiomThemes.list) {
+      UIControls.setMenuChecked(document.querySelector(`.menu-check[data-check="theme-${def.id}"]`), this.settings.theme === def.id);
     }
   }
 
   setTheme(theme) {
-    if (!['dark', 'light', 'basic', 'borland'].includes(theme)) return;
+    if (!window.AxiomThemes.has(theme)) return;
     this.saveSettings({ theme });
-    document.documentElement.setAttribute('data-theme', theme);
+    this.applyDocumentTheme(theme);
     this.monaco?.editor.setTheme('axiom-' + theme);
     if (this.term) this.term.options.theme = this.consoleTheme();
     this.updateThemeMenuChecks();

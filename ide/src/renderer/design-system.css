@@ -12,6 +12,9 @@
   --xs-editor: #1a1e27;
   --xs-border: #354157;
   --xs-border-subtle: #293140;
+  /* Линия обеих полос изменения размера (консоль и боковая панель). По умолчанию
+     совпадает с тонкой границей; тема может задать свой, лучше различимый цвет. */
+  --xs-splitter: var(--xs-border-subtle);
   --xs-text: #e4ebf5;
   --xs-text-muted: #99a8bc;
   --xs-text-faint: #768296;
@@ -48,6 +51,9 @@
   --xs-tab-hover-text: var(--xs-text-muted);
   --xs-tab-text: var(--xs-text-faint);
   --xs-tab-strip-bg: var(--xs-surface);
+  /* Полоска активной вкладки. По умолчанию совпадает с акцентом темы; классические
+     темы задают свой цвет, чтобы вкладка читалась в их палитре. */
+  --xs-tab-active-stripe: var(--xs-accent);
   --xs-hover-text: var(--xs-text);
   --xs-outline-group-bg: var(--xs-surface-raised);
   --xs-outline-error: var(--xs-danger);
@@ -93,6 +99,7 @@
   --xs-accent: #235fa9;
   --xs-accent-strong: #0758ba;
   --xs-accent-wash: rgba(9, 105, 218, .12);
+  --xs-tab-active-stripe: var(--xs-accent);
   --xs-danger: #b72d2d;
   --xs-warning: #8a591a;
   --xs-success: #227453;
@@ -123,6 +130,7 @@ html[data-theme="basic"] {
   --xs-accent: #ffff55;
   --xs-accent-strong: #ffffaa;
   --xs-accent-wash: #303090;
+  --xs-tab-active-stripe: var(--xs-accent);
   --xs-editor: #000080;
   --xs-success: #aaffaa;
   --xs-danger: #ffaaaa;
@@ -140,6 +148,7 @@ html[data-theme="basic"] {
   --xs-menu-hover-bg: #000000;
   --xs-menu-hover-text: #ffffff;
   --xs-menu-shadow: inset 0 0 0 1px #ffffff, 7px 7px 0 #000000;
+  --xs-shadow-menu: var(--xs-menu-shadow);
 }
 
 html[data-theme="borland"] {
@@ -170,6 +179,8 @@ html[data-theme="borland"] {
   --xs-tab-strip-bg: #888888;
   --xs-tab-hover-bg: #aaaaaa;
   --xs-tab-hover-text: #000000;
+  /* Активная вкладка помечается паскалевским зелёным, а не жёлтым цветом. */
+  --xs-tab-active-stripe: #00aa00;
   --xs-hover-text: #0000aa;
   --xs-filter-active-bg: #00aa00;
   --xs-filter-active-text: #000000;
@@ -187,6 +198,8 @@ html[data-theme="borland"] {
   --xs-editor: #0000aa;
   --xs-border: #ffffff;
   --xs-border-subtle: #000055;
+  /* Бирюзовая линия видна на тёмно-синих поверхностях Pascal, где тёмная граница сливается. */
+  --xs-splitter: #00aaaa;
   --xs-text: #ffffff;
   --xs-text-muted: #aaaaaa;
   --xs-text-faint: #aaaaaa;
@@ -198,12 +211,14 @@ html[data-theme="borland"] {
   --xs-success: #00aa00;
   --xs-editor-selection: #00aaaa;
   --xs-editor-cursor: #ffffff;
-  --xs-console-bg: #000000;
+  /* Консоль, диагностика и помощник продолжают синюю гамму рабочего поля, а не
+     контрастируют с ним чёрным: у Pascal всё окно вывода было синим. */
+  --xs-console-bg: #000080;
   --xs-console-scrollbar: #00aaaa;
   --xs-status-bg: #aaaaaa;
   --xs-chrome-bg: #aaaaaa;
   --xs-toolbar-bg: #999999;
-  --xs-output-header-bg: #111111;
+  --xs-output-header-bg: #000055;
   --xs-chrome-text: #000000;
   --xs-menu-bg: #aaaaaa;
   --xs-menu-text: #000000;
@@ -444,7 +459,7 @@ select option:is(:checked,:hover,:focus) { color:var(--xs-select-highlight-text)
   left: 10px;
   right: 10px;
   height: 2px;
-  background: var(--xs-accent);
+  background: var(--xs-tab-active-stripe);
   border-radius: 0 0 2px 2px;
 }
 .editor-tab:hover:not(.active) { background: var(--xs-tab-hover-bg); color: var(--xs-tab-hover-text); }
@@ -452,10 +467,18 @@ select option:is(:checked,:hover,:focus) { color:var(--xs-select-highlight-text)
 .tab-close:hover { color: var(--xs-text); background: var(--xs-surface-active); }
 .dirty-indicator { color: var(--xs-accent); }
 
-/* Resizer and lower panel */
-#panel-resizer { height: 7px; }
-#panel-resizer::before { left: 20px; right: 20px; height: 1px; background: var(--xs-border-subtle); }
-#panel-resizer:hover::before, body.panel-resizing #panel-resizer::before { background: var(--xs-accent); }
+/* Resizer and lower panel. Обе линии изменения размера рисуются одинаково —
+   тонкая линия 1px из общей палитры; тема не добавляет собственных полос. */
+#panel-resizer::before, #sidebar-resizer::before {
+  content: "";
+  position: absolute;
+  background: var(--xs-splitter);
+}
+#panel-resizer::before { left: 0; right: 0; top: 4px; height: 1px; }
+#sidebar-resizer::before { top: 0; bottom: 0; left: 4px; width: 1px; }
+#panel-resizer:hover::before, #sidebar-resizer:hover::before,
+#panel-resizer:focus-visible::before, #sidebar-resizer:focus-visible::before,
+[role="separator"].dragging::before { background: var(--xs-accent); }
 #bottom-panel { background: var(--xs-surface); border-top-color: var(--xs-border-subtle); }
 #panel-tabs { min-height: 34px; padding: 0 8px; background: var(--xs-surface); border-bottom-color: var(--xs-border-subtle); gap: 2px; }
 .panel-tab {

@@ -48,3 +48,5 @@
 Частичный отказ COPYDIR и StepBack: [приёмка](reports/electron/STEPBACK_PARTIAL_FILE_ACCEPTANCE.md).
 
 Графическая граница StepBack: [приёмка SCREEN и CANVAS](reports/electron/STEPBACK_GRAPHICS_ACCEPTANCE.md).
+
+Единый реестр четырёх тем и уточнения оформления: [аудит и приёмка](reports/electron/THEMES_AUDIT.md).

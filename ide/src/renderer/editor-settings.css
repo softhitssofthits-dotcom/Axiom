@@ -34,11 +34,10 @@
 .settings-footer button { min-width:94px; }
 .settings-spacer { flex:1; }
 .settings-primary { border-color:var(--accent-color)!important; }
+/* Палитру предпросмотра задаёт реестр тем (themes.js) как обычные inline-стили;
+   здесь только запасной вид до применения и при отсутствии скрипта. */
 .settings-preview { margin:0 6px 10px; padding:14px; border:1px solid var(--border-color); overflow:auto; background:#1a1e27; color:#d9e2f1; }
 .settings-preview .preview-keyword { color:#ca8bd8; }.settings-preview .preview-type { color:#70cdb5; }.settings-preview .preview-string { color:#df9270; }.settings-preview .preview-number { color:#b7cea8; }.settings-preview .preview-comment { color:#72955a; }
-.settings-preview[data-preview-theme="light"] { background:white; color:#233247; }.settings-preview[data-preview-theme="light"] .preview-keyword { color:#713f9e; }.settings-preview[data-preview-theme="light"] .preview-type { color:#087a61; }.settings-preview[data-preview-theme="light"] .preview-string { color:#a23f25; }.settings-preview[data-preview-theme="light"] .preview-number { color:#245ac7; }.settings-preview[data-preview-theme="light"] .preview-comment { color:#587147; }
-.settings-preview[data-preview-theme="basic"] { background:#000080; color:#fff; }.settings-preview[data-preview-theme="basic"] .preview-keyword { color:#fff; }.settings-preview[data-preview-theme="basic"] .preview-type { color:#00ffff; }.settings-preview[data-preview-theme="basic"] .preview-string { color:#ffff00; }.settings-preview[data-preview-theme="basic"] .preview-number { color:#ffff00; }.settings-preview[data-preview-theme="basic"] .preview-comment { color:#aaa; }
-.settings-preview[data-preview-theme="borland"] { background:#0000aa; color:#ffff55; }.settings-preview[data-preview-theme="borland"] .preview-keyword { color:#fff; }.settings-preview[data-preview-theme="borland"] .preview-type { color:#ffff55; }.settings-preview[data-preview-theme="borland"] .preview-string { color:#ffff55; }.settings-preview[data-preview-theme="borland"] .preview-number { color:#ffff55; }.settings-preview[data-preview-theme="borland"] .preview-comment { color:#ffff55; }
 @media (max-width:700px) { .editor-settings-dialog { width:calc(100vw - 20px); height:calc(100vh - 20px); padding:10px; }.settings-row { grid-template-columns:minmax(0,1fr) minmax(100px,40%); }.settings-footer button { min-width:0; }.settings-help { min-height:70px; } }
 
 .settings-font-choice { display:flex; flex-direction:column; min-width:0; gap:4px; }

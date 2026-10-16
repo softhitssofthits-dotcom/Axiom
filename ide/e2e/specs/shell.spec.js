@@ -43,17 +43,22 @@ await S.electronApp.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0]
        ['sidebar','#shell-sidebar'],['sidebar-divider','#sidebar-resizer'],['document-tabs','#document-tab-bar'],
        ['toolbar','#toolbar'],['bottom-panel','#bottom-panel'],['panel-tabs','#panel-tabs'],['console','#console-content'],
      ].map(([key,selector])=>[key,getComputedStyle(document.querySelector(selector)).backgroundColor])));
-     C.eq(surfaces.sidebar,'rgb(0, 0, 128)','Borland Pascal: боковая колонка сохраняет глубину синего');
-     C.eq(surfaces['sidebar-divider'],'rgb(0, 0, 85)','Borland Pascal: разделитель темнее боковой колонки');
+      C.eq(surfaces.sidebar,'rgb(0, 0, 128)','Borland Pascal: боковая колонка сохраняет глубину синего');
+      const dividers=await S.page.evaluate(()=>['sidebar-resizer','panel-resizer'].map(id=>{const el=document.getElementById(id),line=getComputedStyle(el,'::before');return{background:getComputedStyle(el).backgroundColor,lineColor:line.backgroundColor,width:line.width,height:line.height};}));
+      C.eq(dividers[0].background,'rgba(0, 0, 0, 0)','Borland Pascal: полоса разделителя не заливается отдельным цветом');
+      C.eq(dividers[1].background,'rgba(0, 0, 0, 0)','Borland Pascal: полоса изменения высоты консоли не заливается отдельным цветом');
+      C.eq(dividers[0].lineColor,'rgb(0, 170, 170)','Borland Pascal: вертикальный разделитель рисуется видимой бирюзовой линией');
+      C.eq(dividers[0].width,'1px','Borland Pascal: вертикальный разделитель толщиной 1px');
+      C.eq(dividers[1].height,'1px','Borland Pascal: горизонтальный разделитель толщиной 1px');
      C.eq(surfaces['document-tabs'],'rgb(136, 136, 136)','Borland Pascal: подложка вкладок ещё темнее панели инструментов');
      const inactiveTab=S.page.locator('.editor-tab:not(.active)').first();
      await inactiveTab.hover();
-     await S.page.waitForFunction(()=>{const el=document.querySelector('.editor-tab:not(.active)');return el&&getComputedStyle(el).backgroundColor==='rgb(0, 170, 170)';});
-     C.eq(await inactiveTab.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(0, 170, 170)','Borland Pascal: наведение на неактивную вкладку использует циановую роль');
+     await S.page.waitForFunction(()=>{const el=document.querySelector('.editor-tab:not(.active)');return el&&getComputedStyle(el).backgroundColor==='rgb(170, 170, 170)';});
+     C.eq(await inactiveTab.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(170, 170, 170)','Borland Pascal: наведение на неактивную вкладку использует серый оттенок шапки');
      C.eq(surfaces.toolbar,'rgb(153, 153, 153)','Borland Pascal: панель инструментов немного темнее серой шапки');
-     C.eq(surfaces['bottom-panel'],'rgb(0, 0, 0)','Borland Pascal: нижняя панель использует чёрный фон Output');
-     C.eq(surfaces['panel-tabs'],'rgb(17, 17, 17)','Borland Pascal: шапка вывода отделена от чёрного Output близким тёмным оттенком');
-     C.eq(surfaces.console,'rgb(0, 0, 0)','Borland Pascal: консоль чёрная по оригинальному Output');
+     C.eq(surfaces['bottom-panel'],'rgb(0, 0, 128)','Borland Pascal: нижняя панель продолжает синюю гамму рабочего поля');
+     C.eq(surfaces['panel-tabs'],'rgb(0, 0, 85)','Borland Pascal: шапка вывода темнее консоли, но в той же синей гамме');
+     C.eq(surfaces.console,'rgb(0, 0, 128)','Borland Pascal: консоль синяя в тон рабочему полю, а не чёрная');
      C.eq(await S.page.locator('.panel-tab.active').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(0, 170, 0)','Borland Pascal: активная вкладка использует зелёную роль выбора');
      await S.page.locator('.panel-tab[data-tab="diagnostics"]').click();
      for(const filter of ['all','error','warning','advice']){

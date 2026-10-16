@@ -117,8 +117,8 @@ module.exports.push({ id: 'document-borland-theme-persistence', name: 'Borland P
   C.eq(colors.frame, 'rgb(255, 255, 255)', 'Вкладки используют белую рамку Borland');
   C.eq(colors.menu, 'rgb(170, 170, 170)', 'Строка меню светло-серая по стандарту Borland');
   C.eq(colors.status, 'rgb(170, 170, 170)', 'Строка состояния светло-серая');
-  C.eq(colors.console, '#000000', 'Консоль использует чёрный фон окна Output');
-  C.eq(colors.viewport, 'rgb(0, 0, 0)', 'Область прокрутки консоли совпадает с её фоном');
+  C.eq(colors.console, '#000080', 'Консоль продолжает синюю гамму рабочего поля');
+  C.eq(colors.viewport, 'rgb(0, 0, 128)', 'Область прокрутки консоли совпадает с её фоном');
   C.eq(colors.checked, 'true', 'Пункт темы отмечен в меню');
   C.ok(colors.tokens.some(t => t.text.trim() === 'DIM' && t.color === 'rgb(255, 255, 255)'), 'Операторы светлые');
   C.ok(colors.tokens.some(t => t.text.trim() === 'INTEGER' && t.color === 'rgb(255, 255, 85)'), 'Типы используют жёлтый обычный текст');

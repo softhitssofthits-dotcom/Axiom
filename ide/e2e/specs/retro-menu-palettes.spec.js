@@ -18,9 +18,9 @@ module.exports=[{id:'retro-menu-palettes',name:'Borland и QuickBASIC: обща�
   if(theme==='borland'){
    const invalidColors=await S.page.evaluate(()=>{
     const allowed=new Set(['#000000','#0000aa','#00aa00','#00aaaa','#aa0000','#aa00aa','#aa5500','#aaaaaa','#555555','#5555ff','#55ff55','#55ffff','#ff5555','#ff55ff','#ffff55','#ffffff']);
-    const roles=['canvas','surface','surface-raised','surface-hover','surface-active','editor','border','border-subtle','text','text-muted','text-faint','accent','accent-strong','accent-wash','danger','warning','success','editor-selection','editor-cursor','console-bg','console-scrollbar','status-bg','chrome-bg','toolbar-bg','chrome-text','menu-bg','menu-text','menu-muted','menu-border','menu-hover-bg','menu-hover-text','dialog-bg','dialog-text','dialog-label','dialog-field-bg','dialog-field-text','dialog-group-bg','dialog-button-bg','dialog-hotkey','dialog-default','select-bg','select-text','select-highlight-bg','select-highlight-text','select-border','toolbar-active-text','toolbar-toggle-text','tab-text','tab-hover-bg','tab-hover-text','filter-active-bg','filter-active-text'];
+    const roles=['canvas','surface','surface-raised','surface-hover','surface-active','editor','border','border-subtle','text','text-muted','text-faint','accent','accent-strong','accent-wash','danger','warning','success','editor-selection','editor-cursor','console-bg','console-scrollbar','output-header-bg','status-bg','chrome-bg','toolbar-bg','chrome-text','menu-bg','menu-text','menu-muted','menu-border','menu-hover-bg','menu-hover-text','dialog-bg','dialog-text','dialog-label','dialog-field-bg','dialog-field-text','dialog-group-bg','dialog-button-bg','dialog-hotkey','dialog-default','select-bg','select-text','select-highlight-bg','select-highlight-text','select-border','toolbar-active-text','toolbar-toggle-text','tab-text','tab-hover-bg','tab-hover-text','filter-active-bg','filter-active-text'];
     const styles=getComputedStyle(document.documentElement);
-    const depth={canvas:'#000055',surface:'#000080','border-subtle':'#000055','toolbar-bg':'#999999','toolbar-toggle-text':'#333333','tab-text':'#333333'};
+    const depth={canvas:'#000055',surface:'#000080','border-subtle':'#000055','toolbar-bg':'#999999','toolbar-toggle-text':'#333333','tab-text':'#333333','console-bg':'#000080','output-header-bg':'#000055'};
     return roles.map(role=>[role,styles.getPropertyValue('--xs-'+role).trim().toLowerCase()]).filter(([role,color])=>!allowed.has(color)&&depth[role]!==color);
    });
    C.eq(JSON.stringify(invalidColors),'[]','Borland: исходные роли используют VGA, дополнительные оттенки ограничены глубиной поверхностей');
@@ -107,7 +107,7 @@ module.exports=[{id:'retro-menu-palettes',name:'Borland и QuickBASIC: обща�
    await dialog.locator('#settings-tab-font').click();
    C.eq(await dialog.locator('.settings-footer .settings-primary .settings-button-default-text').evaluate(el=>getComputedStyle(el).color),'rgb(85, 255, 255)','Borland Pascal: основной текст кнопки бирюзовый');
    C.eq(await dialog.locator('.settings-footer .settings-primary .settings-button-hotkey').evaluate(el=>getComputedStyle(el).color),'rgb(255, 255, 85)','Borland Pascal: клавиша кнопки выделена жёлтым');
-  }
+   }
   C.eq(await dialog.locator('.settings-preview').evaluate(el=>getComputedStyle(el).backgroundColor),previewBg,theme+': предпросмотр сохраняет цвет редактора');
   const shadow=await dialog.evaluate(el=>getComputedStyle(el).boxShadow);
   C.ok(shadow.includes('7px 7px 0px')&&shadow.includes('inset'),theme+': рамка и чёткая тень окна');

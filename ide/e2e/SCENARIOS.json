@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 438,
+  "count": 439,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -2136,6 +2136,11 @@
       "id": "startup-russian-path-deduplicates",
       "spec": "startup.spec.js",
       "name": "Русский путь открывается один раз, даже при повторном выборе файла"
+    },
+    {
+      "id": "theme-registry-consistency",
+      "spec": "theme-registry.spec.js",
+      "name": "Реестр тем: меню «Вид», признак семейства оформления и предпросмотр настроек совпадают с themes.js"
     },
     {
       "id": "trace-stepback-file-write-boundary",

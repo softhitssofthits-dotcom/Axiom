@@ -365,11 +365,8 @@ html[data-theme="light"] .logo-dark { display: none; }
 #panel-resizer { height: 9px; flex: 0 0 9px; cursor: row-resize; }
 #sidebar-resizer { width: 9px; flex: 0 0 9px; cursor: col-resize; }
 #panel-resizer, #sidebar-resizer { position: relative; background: transparent; touch-action: none; user-select: none; z-index: 5; }
-#panel-resizer::before, #sidebar-resizer::before { content: ''; position: absolute; background: transparent; }
-#panel-resizer::before { left: 0; right: 0; top: 4px; height: 2px; }
-#sidebar-resizer::before { top: 0; bottom: 0; left: 4px; width: 2px; }
+/* Тонкая линия-маркер задаётся общими правилами в design-system.css для обеих полос. */
 #panel-resizer:focus, #sidebar-resizer:focus { outline: none; }
-#panel-resizer:hover::before, #sidebar-resizer:hover::before, [role="separator"].dragging::before, [role="separator"]:focus-visible::before { background: var(--accent-color); }
 body.splitter-dragging { user-select: none; }
 body.splitter-x { cursor: col-resize; }
 body.splitter-y { cursor: row-resize; }
