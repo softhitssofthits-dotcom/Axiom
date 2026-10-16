@@ -40,3 +40,7 @@
 Диапазоны диагностик UTF-16, CRLF и символы вне BMP: [приёмка 16 октября](reports/electron/DIAGNOSTIC_RANGE_ACCEPTANCE.md).
 
 Диагностика исполнявшегося снимка при смене вкладки/правке: [исправление 16 октября](reports/electron/EXECUTION_DIAGNOSTIC_STABILITY.md).
+
+Устойчивость Restart и его отмена через Stop: [исправление 16 октября](reports/electron/TRACE_RESTART_STABILITY.md).
+
+Граница файловых эффектов StepBack: [приёмка 16 октября](reports/electron/STEPBACK_FILE_BOUNDARY_ACCEPTANCE.md).

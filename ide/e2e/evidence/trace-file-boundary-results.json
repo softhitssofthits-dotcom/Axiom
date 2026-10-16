@@ -1,0 +1,30 @@
+[
+  {
+    "id": "trace-stepback-file-write-boundary",
+    "spec": "trace-file-boundary.spec.js",
+    "name": "StepBack не пересекает выполненную WRITEFILE/APPENDFILE и продолжение не повторяет запись",
+    "ms": 7902,
+    "passed": 28,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:64947/9e4ecd30-9b81-49af-aec9-c5904b48d3bf\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:64951/2482e2f8-0a30-44ff-b59b-f9c8c52a8e90\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "trace-stepback-open-file-boundary",
+    "spec": "trace-file-boundary.spec.js",
+    "name": "Открытый FILE запрещает StepBack; продолжение завершает запись через CLOSE",
+    "ms": 4801,
+    "passed": 6,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:64955/dc974726-e6ef-4b6c-af09-4faf13844dda\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

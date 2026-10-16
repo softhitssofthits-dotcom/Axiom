@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 431,
+  "count": 435,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -2136,6 +2136,26 @@
       "id": "startup-russian-path-deduplicates",
       "spec": "startup.spec.js",
       "name": "Русский путь открывается один раз, даже при повторном выборе файла"
+    },
+    {
+      "id": "trace-stepback-file-write-boundary",
+      "spec": "trace-file-boundary.spec.js",
+      "name": "StepBack не пересекает выполненную WRITEFILE/APPENDFILE и продолжение не повторяет запись"
+    },
+    {
+      "id": "trace-stepback-open-file-boundary",
+      "spec": "trace-file-boundary.spec.js",
+      "name": "Открытый FILE запрещает StepBack; продолжение завершает запись через CLOSE"
+    },
+    {
+      "id": "trace-restart-other-tab",
+      "spec": "trace-restart.spec.js",
+      "name": "Шаг и Restart из другой вкладки сохраняют исходную программу и её точки"
+    },
+    {
+      "id": "trace-restart-late-stop-response",
+      "spec": "trace-restart.spec.js",
+      "name": "Запоздалый Stop не переносит Restart на новый запуск; явный Stop отменяет ожидающий Restart"
     },
     {
       "id": "trace-context-menu",

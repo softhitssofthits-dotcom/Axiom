@@ -49,7 +49,7 @@ class TraceController {
     if(command==='start'||command==='stepInto'||command==='stepOver') return paused||idle;
     if(command==='stepBack') return paused && e.canStepBack;
     if(command==='stepOut') return paused && e.callDepth>0;
-    if(command==='stop') return this.ide.running;
+    if(command==='stop') return this.ide.running || !!this.restarting;
     if(command==='restart') return paused;
     if(command==='breakpoint'||command==='clear') return idle;
     return false;
@@ -80,18 +80,31 @@ class TraceController {
     if(command==='clear') return this.clear();
     if(command==='stop') return this.ide.stop();
     if(command==='restart') {
-      this.restarting=true;this.update();const file=this.ide._runFile;
+      const file=this.ide._runFile, entry=this.ide.openFiles.get(file);
+      if(!entry) return;
+      const snapshot=this.ide.execution.sourceSnapshot, request={};
+      this.restartRequest=request;this.restarting=true;this.update();
+      const current=()=>this.restartRequest===request && this.ide.execution.sourceSnapshot===snapshot && this.ide.openFiles.get(file)===entry;
       try {
         await this.ide.execution.stop();
+        if(!current()) return;
         if(this.ide.running) await new Promise(resolve=>{this.restartResolve=resolve;});
-        if(this.ide.openFiles.has(file)){this.ide.switchToFile(file);await this.ide.run('debug',false);}
-      } finally {this.restarting=false;this.update();}
+        if(!current() || this.ide.running) return;
+        this.ide.switchToFile(file);await this.ide.run('debug',false);
+      } finally {
+        if(this.restartRequest===request){this.restartRequest=null;this.restarting=false;this.update();}
+      }
       return;
     }
     if(this.ide.execution.stopId) return this.ide.execution.debug(command==='start'?'continue':command);
     this.launching=true;this.update();
     try { return await this.ide.run('debug',command!=='start'); }
     finally { this.launching=false;this.update(); }
+  }
+  cancelRestart() {
+    if(!this.restarting) return;
+    this.restartRequest=null;this.restarting=false;
+    this.restartResolve?.();this.restartResolve=null;this.update();
   }
   finished() { this.clearMarker();this.restartResolve?.();this.restartResolve=null;this.update(); }
 }

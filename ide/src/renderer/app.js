@@ -1493,6 +1493,7 @@ class AxiomIDE {
   }
 
   stop() {
+    this.trace?.cancelRestart();
     // Stop is silent when nothing is running — no misleading status.
     if (!this.running) return;
     this._stopRequested = true; // the pty exit event must not overwrite "Остановлено"

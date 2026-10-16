@@ -194,3 +194,7 @@ AxiomIDE.run удерживает запись DocumentStore до await save(tar
 ## Снимок диагностики исполнения — 16 октября 2026 года
 
 ExecutionController хранит sourceSnapshot с documentId/sourceText/file до startExecution и отправляет тот же исходный текст службе. execution.finished передаёт снимок вместе с диагностикой и текущим путём исходной записи. Необязательный targetFile в applyDiagnostics ограничивает обновление маркеров целевой моделью; параметр сохраняется при локализации. diagnosticMatchesSnapshot проверяет идентичность и точный текст перед маркером и переходом. Обработчик изменения модели вызывает refreshExecutionDiagnostics для немедленного снятия старых маркеров. Эти данные остаются в renderer; протокол и VM не менялись. Отчёт: reports/electron/EXECUTION_DIAGNOSTIC_STABILITY.md.
+
+## Принадлежность попытки Restart — 16 октября 2026 года
+
+TraceController сохраняет restartRequest, ссылку на запись DocumentStore и объект execution.sourceSnapshot перед ожиданием Stop. После ожиданий проверяет их идентичность и отсутствие работающей сессии. finally освобождает только собственную попытку. AxiomIDE.stop вызывает cancelRestart до проверки running; cancelRestart аннулирует попытку и освобождает restartResolve. Внутренний Stop самого Restart вызывает ExecutionController напрямую. Изменение находится в renderer; протокол и DesktopHost не менялись. Результат: reports/electron/TRACE_RESTART_STABILITY.md.
