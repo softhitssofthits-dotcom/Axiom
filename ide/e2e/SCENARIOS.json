@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 459,
+  "count": 462,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -1921,6 +1921,21 @@
       "id": "interpolation-print-typo-location",
       "spec": "interpolation-typo.spec.js",
       "name": "Опечатка PRIN перед интерполяцией: русская ошибка на строке 9"
+    },
+    {
+      "id": "language-delivery-cache-owner",
+      "spec": "language-delivery.spec.js",
+      "name": "Прежняя редакция не удаляет общий запрос актуальных подсказок"
+    },
+    {
+      "id": "language-delivery-failure-retry",
+      "spec": "language-delivery.spec.js",
+      "name": "Отказ без объекта ошибки не ломает hover и подпись, повтор использует компилятор"
+    },
+    {
+      "id": "language-delivery-cancel-close",
+      "spec": "language-delivery.spec.js",
+      "name": "Отмена и закрытие модели не показывают поздние hover и подпись"
     },
     {
       "id": "format-smooth-two-styles",

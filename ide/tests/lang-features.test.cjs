@@ -127,7 +127,7 @@ function providers(source, hovers = []) {
   features.register({languages: {CompletionItemKind: {}, CompletionItemInsertTextRule: {},
     registerCompletionItemProvider() {}, registerSignatureHelpProvider() {}, registerHoverProvider() {}},
     editor: {getModelMarkers: () => markers}, MarkerSeverity: {Error: 8}}, ide);
-  return {model, features, requests: () => requests, edit: value => {source = value; version++;},
+  return {model, features, ide, requests: () => requests, edit: value => {source = value; version++;},
     markers: value => {markers = value;}, language: locale => vm.runInNewContext(`I18N.setLocale('${locale}')`, runtime)};
 }
 
@@ -229,4 +229,34 @@ test('Общий уровень дополнений не выдаёт слов�
   const p=providers('PRINT');p.model.getLanguageId=()=> 'plaintext';
   const result=await p.features._completionProvider.provideCompletionItems(p.model,{lineNumber:1,column:6});
   assert.equal(result.suggestions.length,0);
+});
+
+for (const failure of ['empty', 'error']) {
+  test('Прежний ответ не удаляет новый запрос подсказок: ' + failure, async () => {
+    const p = providers('PRINT price');
+    const pending = [];
+    p.ide.documentServices.request = () => new Promise((resolve, reject) => pending.push({ resolve, reject }));
+    const hover = () => p.features._hoverProvider.provideHover(p.model, { lineNumber: 1, column: 7 });
+    const old = hover(); p.edit('PRINT price'); const current = hover();
+    if (failure === 'empty') pending[0].resolve(null);
+    else pending[0].reject(new Error('Прежний отказ'));
+    await old;
+    const shared = hover();
+    const count = pending.length;
+    for (const item of pending.slice(1)) item.resolve({ hovers: [{ start: 6, length: 5, name: 'price', kind: 'variable', type: 'STRING' }] });
+    assert.match((await current).contents[0].value, /STRING/);
+    assert.match((await shared).contents[0].value, /STRING/);
+    assert.equal(count, 2, 'Прежний ответ не должен запускать третью проверку');
+  });
+}
+
+test('Отказ без объекта ошибки не ломает подсказку и допускает повтор', async () => {
+  const p = providers('PRINT price');
+  const logs = []; p.ide.log = (...args) => logs.push(args);
+  let calls = 0;
+  p.ide.documentServices.request = async () => { if (++calls === 1) throw null; return { hovers: [{ start: 6, length: 5, name: 'price', kind: 'variable', type: 'STRING' }] }; };
+  const hover = () => p.features._hoverProvider.provideHover(p.model, { lineNumber: 1, column: 7 });
+  assert.equal(await hover(), null);
+  assert.match((await hover()).contents[0].value, /STRING/);
+  assert.equal(calls, 2); assert.equal(logs.length, 1);
 });

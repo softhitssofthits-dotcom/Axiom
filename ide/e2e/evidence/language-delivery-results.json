@@ -1,0 +1,44 @@
+[
+  {
+    "id": "language-delivery-cache-owner",
+    "spec": "language-delivery.spec.js",
+    "name": "Прежняя редакция не удаляет общий запрос актуальных подсказок",
+    "ms": 4877,
+    "passed": 8,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:56743/6def52c6-36ef-450f-bc94-c83e4b25677b\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "language-delivery-failure-retry",
+    "spec": "language-delivery.spec.js",
+    "name": "Отказ без объекта ошибки не ломает hover и подпись, повтор использует компилятор",
+    "ms": 4610,
+    "passed": 5,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:56748/ebc504db-2c29-47cb-8787-06c9ee64c5e6\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "language-delivery-cancel-close",
+    "spec": "language-delivery.spec.js",
+    "name": "Отмена и закрытие модели не показывают поздние hover и подпись",
+    "ms": 8237,
+    "passed": 4,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:56753/751cb61e-5e0e-446d-9a92-532961d07d4a\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:56757/26ad7162-26fe-40a4-a8d8-bd5f7384ae20\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

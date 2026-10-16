@@ -349,11 +349,11 @@ const LangFeatures = (() => {
       }
       try {
         const result = await cached.request;
-        if (!result) hoverCache.delete(model);
+        if (!result && hoverCache.get(model) === cached) hoverCache.delete(model);
         return result?.hovers || null;
       } catch (error) {
-        hoverCache.delete(model);
-        ide.log?.('hover.failed', { message: error.message });
+        if (hoverCache.get(model) === cached) hoverCache.delete(model);
+        ide.log?.('hover.failed', { message: error?.message || String(error) });
         return null;
       }
     }
