@@ -1155,7 +1155,14 @@ class AxiomIDE {
     this._formatBusy++;
     this.log('format.document.start', { owner, length: text.length, request });
     try {
-      const r = await this.documentServices.request(path, method, { formattingStyle: this.settings.formattingStyle || 'Classic', smartIdentifierEnabled });
+      let r;
+      try { r = await this.documentServices.request(path, method, { formattingStyle: this.settings.formattingStyle || 'Classic', smartIdentifierEnabled }); }
+      catch (error) {
+        if (request !== this._serviceSeq || this.openFiles.get(path) !== document || model.isDisposed?.() || model.getValue() !== text ||
+            smartIdentifierEnabled !== !!this.settings.smartIdentifierEnabled ||
+            (this.running && this.openFiles.get(this._runFile)?.model === model)) return;
+        throw error;
+      }
       if (!r || typeof r.sourceText !== 'string') { this.log('format.document.failed', { owner, request, reason: r?.reason }); return; }
       const m = this.openFiles.get(path)?.model;
       if (this.running && path === this._runFile) return;
@@ -1176,8 +1183,8 @@ class AxiomIDE {
       this.log('format.document.applied', { owner, request, edits: edits.length });
       return true;
     } catch (e) {
-      this.log('format.document.exception', { owner, request, message: e?.message || String(e) }, 'error');
-      this.showIdeProblem('status.fmtFailed', e.message);
+      this.log('format.document.exception', { owner, request, filePath: path, message: e?.message || String(e) }, 'error');
+      if (this.activeFile === path) this.showIdeProblem('status.fmtFailed', e?.message || String(e));
       return false;
     } finally {
       this._formatBusy = Math.max(0, this._formatBusy - 1);

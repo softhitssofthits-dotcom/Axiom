@@ -1,0 +1,16 @@
+[
+  {
+    "id": "format-menu-triggers",
+    "spec": "format-triggers.spec.js",
+    "name": "Проверка всегда включена, сохранение и смена фокуса не форматируют документ",
+    "ms": 6290,
+    "passed": 6,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:56654/18848197-bb50-4a8b-990f-0979156d7637\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]
