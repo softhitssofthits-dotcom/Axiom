@@ -1247,7 +1247,12 @@ class AxiomIDE {
     const text = model.getValue();
     const filePath = this.activeFile; // keep diagnostics tied to their file
     this.log('check.live.start', { seq, length: text.length, filePath });
-    const r = await this.documentServices.request(filePath, 'document.analyse');
+    let r;
+    try { r = await this.documentServices.request(filePath, 'document.analyse'); }
+    catch (error) {
+      if (seq !== this._liveCheckSeq || this.editor.getModel() !== model || model.isDisposed?.() || model.getValue() !== text) return;
+      throw error;
+    }
     if (!r || !Array.isArray(r.diagnostics)) { this.log('check.live.failed', { seq, reason: r?.reason }); return; }
     const m = this.editor.getModel();
     if (seq !== this._liveCheckSeq || this._formatBusy || !m || m !== model) { this.log('check.live.stale', { seq }); return; }
@@ -1302,6 +1307,7 @@ class AxiomIDE {
         if (failed) this.setStatus(I18N.t('status.error'));
       }
     } catch (e) {
+      if (target !== this.activeFile) return;
       this.showIdeProblem('status.checkFailed', e && e.message ? e.message : String(e));
       const elapsed = Math.round(performance.now() - startedAt);
       if (explicit) {

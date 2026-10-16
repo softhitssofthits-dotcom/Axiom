@@ -14,9 +14,12 @@
       const canonicalPath = document.path;
       const snapshot = { ...options, documentId: document.documentId, documentRevision: revision,
         sourceText: document.model.getValue(), sourceFilePath: document.path.startsWith('untitled') ? null : document.path };
-      const response = await this.api.documentCommand(method, snapshot);
-      if (methods.get(method) !== token || this.store.get(canonicalPath) !== document || document.path !== canonicalPath ||
-          document.documentId !== snapshot.documentId || document.revision !== revision || document.model.isDisposed?.()) return null;
+      const current = () => methods.get(method) === token && this.store.get(canonicalPath) === document && document.path === canonicalPath &&
+          document.documentId === snapshot.documentId && document.revision === revision && !document.model.isDisposed?.();
+      let response;
+      try { response = await this.api.documentCommand(method, snapshot); }
+      catch (error) { if (!current()) return null; throw error; }
+      if (!current()) return null;
       if (!response.ok) throw new Error(response.error?.message || 'Ошибка обработки документа.');
       if (response.payload.documentId !== snapshot.documentId || response.payload.documentRevision !== revision)
         throw new Error('Ответ относится к другому снимку документа.');

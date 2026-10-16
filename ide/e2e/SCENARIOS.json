@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 447,
+  "count": 450,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -151,6 +151,21 @@
       "id": "documents-find-replace-options-undo",
       "spec": "document-acceptance.spec.js",
       "name": "Регистр, целые слова, регулярные выражения и отмена пакетной замены"
+    },
+    {
+      "id": "document-delivery-stale-failures",
+      "spec": "document-delivery.spec.js",
+      "name": "Прежний отказ диагностики не меняет исправленный, другой или повторно открытый документ"
+    },
+    {
+      "id": "document-delivery-current-retry",
+      "spec": "document-delivery.spec.js",
+      "name": "Действующий отказ проверки виден, повтор получает настоящую диагностику"
+    },
+    {
+      "id": "document-live-delivery-order",
+      "spec": "document-delivery.spec.js",
+      "name": "Фоновая диагностика сохраняет текущий документ при позднем ответе и исключении"
     },
     {
       "id": "document-host-format-undo",

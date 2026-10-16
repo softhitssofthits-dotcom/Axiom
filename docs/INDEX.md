@@ -59,3 +59,5 @@
 Отказы Stop и Restart: [исправление и приёмка](reports/electron/STOP_RESTART_FAILURE_STABILITY.md).
 
 Отказы отправки INPUT, сохранность текста и принадлежность позднего ответа: [исправление и приёмка](reports/electron/INPUT_SUBMISSION_FAILURE_STABILITY.md).
+
+Актуальность отказов явной и фоновой диагностики: [исправление и приёмка](reports/electron/DOCUMENT_DIAGNOSTIC_DELIVERY_STABILITY.md).
