@@ -10,6 +10,10 @@ const gitRaw = (...args) => execFileSync('git', args, { cwd: root, encoding: 'ut
 const git = (...args) => gitRaw(...args).trim();
 const staged = args.includes('--staged');
 const read = file => staged ? gitRaw('show', ':' + file) : fs.readFileSync(path.join(root, file), 'utf8');
+const exists = file => {
+  if (!staged) return fs.existsSync(path.join(root, file));
+  try { gitRaw('cat-file', '-e', ':' + file); return true; } catch { return false; }
+};
 const write = (file, text) => fs.writeFileSync(path.join(root, file), text, 'utf8');
 const json = file => JSON.parse(read(file));
 const valid = value => typeof value === 'string' && /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(value);
@@ -20,6 +24,28 @@ const validate = versions => {
 const coreSource = v => `// Создан scripts/versioning.mjs из versions.json. Не редактировать вручную.\nnamespace Axiom.Core;\n\npublic static class AxiomVersionInfo\n{\n    public const string LanguageVersion = "${v.language}";\n    public const string CompilerVersion = "${v.compiler}";\n}\n`;
 const propsSource = v => `<Project>\n  <!-- Создан scripts/versioning.mjs из versions.json. -->\n  <PropertyGroup>\n    <AxiomLanguageVersion>${v.language}</AxiomLanguageVersion>\n    <AxiomCompilerVersion>${v.compiler}</AxiomCompilerVersion>\n    <AxiomIdeVersion>${v.ide}</AxiomIdeVersion>\n    <Version Condition="'$(MSBuildProjectName)' != 'Axiom.DesktopHost'">${v.compiler}</Version>\n    <Version Condition="'$(MSBuildProjectName)' == 'Axiom.DesktopHost'">${v.ide}</Version>\n  </PropertyGroup>\n</Project>\n`;
 const row = v => `Язык **${v.language}** · компилятор/CLI **${v.compiler}** · IDE **${v.ide}**`;
+const readmeBadges = v => [
+  ['version', `![version](https://img.shields.io/badge/version-${v.language}-blue)`],
+  ['IDE', `![IDE](https://img.shields.io/badge/IDE-${v.ide}-green)`],
+];
+const readmeSynced = (text, v, strict) => {
+  let out = text;
+  for (const [name, line] of readmeBadges(v)) {
+    const pattern = new RegExp(`!\\[${name}\\]\\(https://img\\.shields\\.io/badge/${name}-[^)]*\\)`);
+    if (strict && !pattern.test(out)) fail(`README.md: не найден бейдж ${name}.`);
+    out = out.replace(pattern, line);
+  }
+  const status = /(язык `)[^`]*(`, компилятор `)[^`]*(`, IDE `)[^`]*(`)/;
+  if (strict && !status.test(out)) fail('README.md: не найдена строка текущих версий.');
+  return out.replace(status, `$1${v.language}$2${v.compiler}$3${v.ide}$4`);
+};
+function syncReadme(v) {
+  const file = path.join(root, 'README.md');
+  if (!fs.existsSync(file)) return;
+  const text = fs.readFileSync(file, 'utf8');
+  const synced = readmeSynced(text, v);
+  if (synced !== text) write('README.md', synced);
+}
 function sync(v) {
   validate(v);
   write('src/Axiom.Core/AxiomVersionInfo.cs', coreSource(v));
@@ -30,6 +56,7 @@ function sync(v) {
     if (data.packages?.['']) data.packages[''].version = v.ide;
     write(file, JSON.stringify(data, null, 2) + '\n');
   }
+  syncReadme(v);
 }
 function check() {
   const v = json('versions.json'); validate(v);
@@ -40,6 +67,8 @@ function check() {
     fail('Версия пакета IDE не соответствует versions.json. Выполните sync.');
   const headings = [...read('docs/CHANGELOG.md').matchAll(/^Язык \*\*[^\n]+$/gm)];
   if (headings.at(-1)?.[0].trim() !== row(v)) fail('Последняя запись docs/CHANGELOG.md не соответствует текущим версиям.');
+  const readme = exists('README.md') ? read('README.md') : null;
+  if (readme !== null && readmeSynced(readme, v, true) !== readme) fail('README.md рассинхронизирован с versions.json. Выполните node scripts/versioning.mjs sync.');
   const baseIndex = args.indexOf('--base');
   const base = baseIndex >= 0 ? args[baseIndex + 1] : staged ? 'HEAD' : null;
   if (base) {

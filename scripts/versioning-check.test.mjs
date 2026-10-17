@@ -30,7 +30,7 @@ function fixture() {
   git('add', '.');
   git('commit', '-m', 'Исходное состояние проверки');
   const check = (...args) => spawnSync(process.execPath, ['scripts/versioning.mjs', 'check', ...args], { cwd: directory, encoding: 'utf8' });
-  return { write, git, check };
+  return { directory, write, git, check };
 }
 
 test('Правки справочника и сопровождающих записей не требуют повышения', () => {
@@ -99,4 +99,78 @@ test('Изменение упаковки IDE требует повышения 
   const result = f.check('--base', 'HEAD');
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Изменён ide/);
+});
+
+const readme = (language, compiler, ide) => [
+  '# Axiom',
+  '',
+  `![version](https://img.shields.io/badge/version-${language}-blue)`,
+  `![IDE](https://img.shields.io/badge/IDE-${ide}-green)`,
+  '![platform](https://img.shields.io/badge/platform-Windows-lightgrey)',
+  '',
+  `Текущие версии: язык \`${language}\`, компилятор \`${compiler}\`, IDE \`${ide}\`.`,
+  '',
+].join('\n');
+
+test('Устаревшие номера в README обнаруживаются проверкой', () => {
+  const f = fixture();
+  f.write('README.md', readme('0.1.0', '0.1.0', '0.1.0'));
+  f.git('add', 'README.md');
+  f.git('commit', '-m', 'README с текущими номерами');
+  assert.equal(f.check().status, 0);
+  f.write('versions.json', JSON.stringify({ language: '0.1.1', compiler: '0.1.1', ide: '0.1.0' }));
+  f.write('docs/CHANGELOG.md', 'Язык **0.1.0** · компилятор/CLI **0.1.0** · IDE **0.1.0**\n\n## Проверка\n\nЯзык **0.1.1** · компилятор/CLI **0.1.1** · IDE **0.1.0**\n');
+  execFileSync(process.execPath, ['scripts/versioning.mjs', 'sync'], { cwd: f.directory });
+  f.write('README.md', readme('0.1.0', '0.1.0', '0.1.0'));
+  f.git('add', '.');
+  const result = f.check();
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /README\.md рассинхронизирован/);
+});
+
+test('sync возвращает README к текущим номерам', () => {
+  const f = fixture();
+  f.write('README.md', readme('0.1.0', '0.1.0', '0.1.0'));
+  f.write('versions.json', JSON.stringify({ language: '0.2.0', compiler: '0.2.1', ide: '0.3.4' }));
+  execFileSync(process.execPath, ['scripts/versioning.mjs', 'sync'], { cwd: f.directory });
+  const text = fs.readFileSync(path.join(f.directory, 'README.md'), 'utf8');
+  assert.match(text, /version-0\.2\.0-blue/);
+  assert.match(text, /IDE-0\.3\.4-green/);
+  assert.match(text, /язык `0\.2\.0`, компилятор `0\.2\.1`, IDE `0\.3\.4`/);
+});
+
+test('bump обновляет README вместе с версиями', () => {
+  const f = fixture();
+  f.write('README.md', readme('0.1.0', '0.1.0', '0.1.0'));
+  f.git('add', '.');
+  f.git('commit', '-m', 'README перед повышением');
+  const bump = spawnSync(process.execPath, ['scripts/versioning.mjs', 'bump', 'language', 'patch', 'Проверка README'], { cwd: f.directory, encoding: 'utf8' });
+  assert.equal(bump.status, 0, bump.stderr);
+  const text = fs.readFileSync(path.join(f.directory, 'README.md'), 'utf8');
+  assert.match(text, /version-0\.1\.1-blue/);
+  assert.match(text, /язык `0\.1\.1`, компилятор `0\.1\.1`, IDE `0\.1\.0`/);
+});
+
+test('Проверка сообщает об отсутствии бейджа версии в README', () => {
+  const f = fixture();
+  f.write('README.md', '# Axiom\n\nТекущие версии: язык `0.1.0`, компилятор `0.1.0`, IDE `0.1.0`.\n');
+  f.git('add', 'README.md');
+  const result = f.check();
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /не найден бейдж version/);
+});
+
+test('Обработчик замечает устаревший README в подготовленном наборе', () => {
+  const f = fixture();
+  f.write('README.md', readme('0.1.0', '0.1.0', '0.1.0'));
+  f.git('add', '.');
+  f.git('commit', '-m', 'README с текущими номерами');
+  f.write('versions.json', JSON.stringify({ language: '0.1.1', compiler: '0.1.1', ide: '0.1.1' }));
+  execFileSync(process.execPath, ['scripts/versioning.mjs', 'sync'], { cwd: f.directory });
+  f.write('docs/CHANGELOG.md', 'Язык **0.1.0** · компилятор/CLI **0.1.0** · IDE **0.1.0**\n\n## Проверка\n\nЯзык **0.1.1** · компилятор/CLI **0.1.1** · IDE **0.1.1**\n');
+  f.write('README.md', readme('0.1.0', '0.1.0', '0.1.0'));
+  f.git('add', '.');
+  const result = f.check('--staged');
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /README\.md рассинхронизирован/);
 });
