@@ -40,7 +40,12 @@ public sealed partial class BytecodeVm
         }
 
         FlushPendingOutput(forceEmptyLine: false);
-        _host.ActivateScreen(mode, activePage, valueCount >= 3 ? visualPage : activePage);
+        try { _host.ActivateScreen(mode, activePage, valueCount >= 3 ? visualPage : activePage); }
+        catch (Exception error) when (error is GraphicsSurfaceException or OutOfMemoryException)
+        {
+            ReportInvalidRuntimeState("SCREEN: surface could not be created.", location);
+            throw new RuntimeFailureException();
+        }
     }
 
     private void ExecuteCanvasInstruction(BytecodeCallFrame frame, int instructionIndex)
@@ -48,13 +53,23 @@ public sealed partial class BytecodeVm
         var stack = frame.EvaluationStack;
         var height = GetWholeNumberUnchecked(stack.PopUnchecked());
         var width = GetWholeNumberUnchecked(stack.PopUnchecked());
-        if (width <= 0 || height <= 0 || width > int.MaxValue || height > int.MaxValue)
+        if (!GraphicsResourceLimits.IsSupported(width, height))
         {
             ValidateCanvasSize(width, height, ResolveLocation(frame.Routine.Id, instructionIndex));
         }
 
         FlushPendingOutput(forceEmptyLine: false);
-        _host.ActivateCanvas(width, height);
+        try { _host.ActivateCanvas(width, height); }
+        catch (GraphicsSurfaceException error)
+        {
+            ReportInvalidRuntimeState("CANVAS: " + error.Message, ResolveLocation(frame.Routine.Id, instructionIndex));
+            throw new RuntimeFailureException();
+        }
+        catch (OutOfMemoryException)
+        {
+            ReportBuiltInArgumentError("CANVAS", "width/height", "недостаточно памяти для графической поверхности.", ResolveLocation(frame.Routine.Id, instructionIndex));
+            throw new RuntimeFailureException();
+        }
     }
 
     private void ExecuteBeginFrameInstruction(BytecodeCallFrame frame, int instructionIndex)
@@ -261,6 +276,11 @@ public sealed partial class BytecodeVm
         RequireScreenActive("LOCATE", location);
         var column = PopValue(frame, instructionIndex).AsInteger();
         var row = PopValue(frame, instructionIndex).AsInteger();
+        if (row > GraphicsResourceLimits.MaximumTextRows || column > GraphicsResourceLimits.MaximumTextColumns)
+        {
+            ReportBuiltInArgumentError("LOCATE", "row/column", $"не должны превышать {GraphicsResourceLimits.MaximumTextRows}.", location);
+            throw new RuntimeFailureException();
+        }
         _host.LocateText(row, column);
     }
 
@@ -374,7 +394,8 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        GraphicsBufferTransfer.CaptureRectangle(_host, buffer, shape, rectangle);
+        try { GraphicsBufferTransfer.CaptureRectangle(_host, buffer, shape, rectangle); }
+        catch (OutOfMemoryException) { throw CreateGraphicsMemoryFailure("GET", location); }
     }
 
     private void ExecutePutInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
@@ -394,16 +415,28 @@ public sealed partial class BytecodeVm
                 y,
                 (flags & 1) != 0,
                 out var anchor)
-            || !GraphicsBufferTransfer.TryPutBuffer(
-                _host,
+            || !TryPutGraphicsBuffer(
                 buffer,
                 shape,
                 anchor,
-                (BoundPutActionKind)(flags >> 1)))
+                (BoundPutActionKind)(flags >> 1), location))
         {
             ReportInvalidGraphicsTransfer("PUT", location);
             throw new RuntimeFailureException();
         }
+    }
+
+    private bool TryPutGraphicsBuffer(RuntimeArrayValue buffer, GraphicsBufferShape shape,
+        GraphicsAnchorTransferArguments anchor, BoundPutActionKind action, TextLocation location)
+    {
+        try { return GraphicsBufferTransfer.TryPutBuffer(_host, buffer, shape, anchor, action); }
+        catch (OutOfMemoryException) { throw CreateGraphicsMemoryFailure("PUT", location); }
+    }
+
+    private RuntimeFailureException CreateGraphicsMemoryFailure(string operation, TextLocation location)
+    {
+        ReportInvalidRuntimeState(operation + ": insufficient memory for graphics operation.", location);
+        return new RuntimeFailureException();
     }
 
     private void ExecuteLineInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
@@ -500,7 +533,8 @@ public sealed partial class BytecodeVm
             y = GraphicsLineMath.SaturatingAdd(_host.CurrentGraphicsY, y);
         }
 
-        _host.Paint(CreatePaintRequest(x, y, fillValue, borderValue, backgroundValue, location));
+        try { _host.Paint(CreatePaintRequest(x, y, fillValue, borderValue, backgroundValue, location)); }
+        catch (OutOfMemoryException) { throw CreateGraphicsMemoryFailure("PAINT", location); }
         _host.SetGraphicsCurrentPosition(x, y);
     }
 
@@ -533,6 +567,7 @@ public sealed partial class BytecodeVm
         var width = GetWholeNumberUnchecked(stack.PopUnchecked());
         var y = GetWholeNumberUnchecked(stack.PopUnchecked());
         var x = GetWholeNumberUnchecked(stack.PopUnchecked());
+        ValidateCanvasPoint("DRAWRECT", x, y, ResolveLocation(frame.Routine.Id, instructionIndex));
         if (width <= 0 || height <= 0)
         {
             ValidateCanvasRectangle("DRAWRECT", width, height, ResolveLocation(frame.Routine.Id, instructionIndex));
@@ -555,6 +590,7 @@ public sealed partial class BytecodeVm
         var width = GetWholeNumberUnchecked(stack.PopUnchecked());
         var y = GetWholeNumberUnchecked(stack.PopUnchecked());
         var x = GetWholeNumberUnchecked(stack.PopUnchecked());
+        ValidateCanvasPoint("FILLRECT", x, y, ResolveLocation(frame.Routine.Id, instructionIndex));
         if (width <= 0 || height <= 0)
         {
             ValidateCanvasRectangle("FILLRECT", width, height, ResolveLocation(frame.Routine.Id, instructionIndex));
@@ -679,6 +715,7 @@ public sealed partial class BytecodeVm
         }
 
         var targetWidth = width ?? image.Width;
+        ValidateCanvasPoint("DRAWIMAGE", x, y, ResolveLocation(frame.Routine.Id, instructionIndex));
         var targetHeight = height ?? image.Height;
         if (targetWidth <= 0 || targetHeight <= 0 || targetWidth > int.MaxValue || targetHeight > int.MaxValue)
         {
@@ -729,6 +766,7 @@ public sealed partial class BytecodeVm
         }
 
         var targetWidth = width ?? sprite.FrameWidth;
+        ValidateCanvasPoint("DRAWSPRITE", x, y, ResolveLocation(frame.Routine.Id, instructionIndex));
         var targetHeight = height ?? sprite.FrameHeight;
         if (targetWidth <= 0
             || targetHeight <= 0
@@ -1200,12 +1238,12 @@ public sealed partial class BytecodeVm
 
     private void ValidateDrawImageSize(long width, long height, TextLocation location)
     {
-        if (width > 0 && height > 0)
+        if (width > 0 && height > 0 && width <= int.MaxValue && height <= int.MaxValue)
         {
             return;
         }
 
-        ReportBuiltInArgumentError("DRAWIMAGE", "width/height", "должны быть положительными целыми значениями.", location);
+        ReportBuiltInArgumentError("DRAWIMAGE", "width/height", $"должны быть целыми значениями от 1 до {int.MaxValue}.", location);
         throw new RuntimeFailureException();
     }
 
@@ -1222,12 +1260,12 @@ public sealed partial class BytecodeVm
 
     private void ValidateDrawSpriteSize(long width, long height, TextLocation location)
     {
-        if (width > 0 && height > 0)
+        if (width > 0 && height > 0 && width <= int.MaxValue && height <= int.MaxValue)
         {
             return;
         }
 
-        ReportBuiltInArgumentError("DRAWSPRITE", "width/height", "должны быть положительными целыми значениями.", location);
+        ReportBuiltInArgumentError("DRAWSPRITE", "width/height", $"должны быть целыми значениями от 1 до {int.MaxValue}.", location);
         throw new RuntimeFailureException();
     }
 
@@ -1250,12 +1288,12 @@ public sealed partial class BytecodeVm
 
     private void ValidateCanvasSize(long width, long height, TextLocation location)
     {
-        if (width > 0 && height > 0 && width <= int.MaxValue && height <= int.MaxValue)
+        if (GraphicsResourceLimits.IsSupported(width, height))
         {
             return;
         }
 
-        ReportBuiltInArgumentError("CANVAS", "width/height", $"должны быть положительными целыми значениями не больше {int.MaxValue}.", location);
+        ReportBuiltInArgumentError("CANVAS", "width/height", $"должны быть от 1 до {GraphicsResourceLimits.MaximumDimension}; площадь не должна превышать {GraphicsResourceLimits.MaximumPixels} пикселей.", location);
         throw new RuntimeFailureException();
     }
 
@@ -1633,10 +1671,10 @@ public sealed partial class BytecodeVm
     {
         return selector switch
         {
-            0 => checked((int)_host.CurrentViewportX),
-            1 => checked((int)_host.CurrentViewportY),
-            2 => checked((int)_host.CurrentGraphicsX),
-            3 => checked((int)_host.CurrentGraphicsY),
+            0 => ToInt32Checked(_host.CurrentViewportX, location, "POINT(0)"),
+            1 => ToInt32Checked(_host.CurrentViewportY, location, "POINT(1)"),
+            2 => ToInt32Checked(_host.CurrentGraphicsX, location, "POINT(2)"),
+            3 => ToInt32Checked(_host.CurrentGraphicsY, location, "POINT(3)"),
             _ =>
             throw CreatePointSelectorFailure(location)
         };

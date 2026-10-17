@@ -52,8 +52,8 @@ public sealed class TilemapLayerNumericTests
                 PRINT MAPWIDTH(m)
                 """, sourceFilePath: Path.Combine(root, "check.axm"));
             Assert.Equal(ProgramRunStatus.Success, result.Status);
-            var reason = index < 2 ? "LOADTILEMAP: Поле opacity слоя должно быть от 0 до 1."
-                : $"LOADTILEMAP: Поле {fields[index]} слоя должно быть конечным числом DOUBLE.";
+            var reason = index < 2 ? "LOADTILEMAP: Field opacity of layer must be between 0 and 1."
+                : $"LOADTILEMAP: Field {fields[index]} of layer must be a finite DOUBLE.";
             Assert.Equal(index < 8 ? string.Join(Environment.NewLine, "MB3005", reason, "1") : "1", result.OutputText);
         }
         finally

@@ -314,6 +314,8 @@ public sealed partial class ProgramConsoleService : ViewModelBase, IProgramConso
     public int GetAbsolutePixel(long x, long y) =>
         _graphicsHostService.GetAbsolutePixel(x, y);
 
+    public bool TryWriteAbsolutePixels(long x, long y, int width, int height, int[] pixels) => _graphicsHostService.TryWriteAbsolutePixels(x, y, width, height, pixels);
+
     public int[]? CaptureAbsolutePixels(long x, long y, int width, int height) =>
         _graphicsHostService.CaptureAbsolutePixels(x, y, width, height);
 

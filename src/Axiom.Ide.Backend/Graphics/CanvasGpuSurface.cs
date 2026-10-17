@@ -34,8 +34,7 @@ internal sealed partial class CanvasGpuSurface : IDisposable
 
     public CanvasGpuSurface(int width, int height, bool forceSoftware = false)
     {
-        if (width <= 0 || height <= 0 || width > 16384 || height > 16384)
-            throw new ArgumentOutOfRangeException(nameof(width), "Размер поверхности DirectX должен быть от 1 до 16384 пикселей.");
+        GraphicsResourceLimits.Validate(width, height);
         Width = width;
         Height = height;
         (_device, _context, DriverName) = CanvasDeviceFactory.Select(forceSoftware);

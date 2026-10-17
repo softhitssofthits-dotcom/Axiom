@@ -135,7 +135,7 @@ internal static class GraphicsBufferTransfer
     }
 
     public static bool BufferMatchesRectangle(GraphicsBufferShape shape, GraphicsRectangleTransferArguments rectangle) =>
-        shape.Width == rectangle.Width && shape.Height == rectangle.Height;
+        shape.Width == rectangle.Width && shape.Height == rectangle.Height && (long)shape.Width * shape.Height <= GraphicsResourceLimits.MaximumPixels;
 
     public static void CaptureRectangle(
         IGraphicsHost host,
@@ -148,17 +148,18 @@ internal static class GraphicsBufferTransfer
 
         var pixels = host.CaptureAbsolutePixels(rectangle.LeftAbsolute, rectangle.TopAbsolute, shape.Width, shape.Height);
         Span<int> indices = stackalloc int[2];
-        for (var xIndex = shape.XLowerBound; xIndex <= shape.XUpperBound; xIndex++)
+        for (var xOffset = 0; xOffset < shape.Width; xOffset++)
         {
-            indices[0] = xIndex;
-            var absoluteX = rectangle.LeftAbsolute + (xIndex - shape.XLowerBound);
+            if ((host as IRuntimeCancellationProvider)?.IsCancellationRequested == true) return;
+            indices[0] = shape.XLowerBound + xOffset;
+            var absoluteX = rectangle.LeftAbsolute + xOffset;
 
-            for (var yIndex = shape.YLowerBound; yIndex <= shape.YUpperBound; yIndex++)
+            for (var yOffset = 0; yOffset < shape.Height; yOffset++)
             {
-                indices[1] = yIndex;
-                var absoluteY = rectangle.TopAbsolute + (yIndex - shape.YLowerBound);
+                indices[1] = shape.YLowerBound + yOffset;
+                var absoluteY = rectangle.TopAbsolute + yOffset;
                 var color = GraphicsCoordinateSpaceMath.IsInsideClip(host, absoluteX, absoluteY)
-                    ? pixels is null ? host.GetAbsolutePixel(absoluteX, absoluteY) : pixels[(yIndex - shape.YLowerBound) * shape.Width + xIndex - shape.XLowerBound]
+                    ? pixels is null ? host.GetAbsolutePixel(absoluteX, absoluteY) : pixels[yOffset * shape.Width + xOffset]
                     : 0;
                 buffer.SetValue(indices, CreateBufferElementValue(buffer.ElementType, color));
             }
@@ -175,37 +176,47 @@ internal static class GraphicsBufferTransfer
         ArgumentNullException.ThrowIfNull(host);
         ArgumentNullException.ThrowIfNull(buffer);
 
-        var destinationPixels = host.CaptureAbsolutePixels(anchor.AbsoluteX, anchor.AbsoluteY, shape.Width, shape.Height);
+        var count = (long)shape.Width * shape.Height;
+        if (count > GraphicsResourceLimits.MaximumPixels) return false;
+        var colors = new int[(int)count];
         Span<int> indices = stackalloc int[2];
-        for (var xIndex = shape.XLowerBound; xIndex <= shape.XUpperBound; xIndex++)
+        // Проверяем весь источник до первой записи: ошибка не оставляет полукадр.
+        for (var x = 0; x < shape.Width; x++)
         {
-            indices[0] = xIndex;
-            var absoluteX = anchor.AbsoluteX + (xIndex - shape.XLowerBound);
-
-            for (var yIndex = shape.YLowerBound; yIndex <= shape.YUpperBound; yIndex++)
+            if ((host as IRuntimeCancellationProvider)?.IsCancellationRequested == true) return true;
+            indices[0] = shape.XLowerBound + x;
+            for (var y = 0; y < shape.Height; y++)
             {
-                indices[1] = yIndex;
-                if (!buffer.TryGetValue(indices, out var sourceValue)
-                    || !TryNormalizePutSourceColor(sourceValue, out var sourceColor))
-                {
-                    return false;
-                }
-
-                var absoluteY = anchor.AbsoluteY + (yIndex - shape.YLowerBound);
-                if (!GraphicsCoordinateSpaceMath.IsInsideClip(host, absoluteX, absoluteY))
-                {
-                    continue;
-                }
-
-                var destinationColor = destinationPixels is null ? host.GetAbsolutePixel(absoluteX, absoluteY)
-                    : destinationPixels[(yIndex - shape.YLowerBound) * shape.Width + xIndex - shape.XLowerBound];
-                host.SetAbsolutePixel(absoluteX, absoluteY, ApplyPutAction(destinationColor, sourceColor, action));
+                indices[1] = shape.YLowerBound + y;
+                if (!buffer.TryGetValue(indices, out var value) || !TryNormalizePutSourceColor(value, out var color)) return false;
+                colors[y * shape.Width + x] = color;
             }
         }
 
+        var needsDestination = action is BoundPutActionKind.And or BoundPutActionKind.Or or BoundPutActionKind.Xor;
+        var destination = needsDestination
+            ? host.CaptureAbsolutePixels(anchor.AbsoluteX, anchor.AbsoluteY, shape.Width, shape.Height) : null;
+        for (var y = 0; y < shape.Height; y++)
+            for (var x = 0; x < shape.Width; x++)
+            {
+                var offset = y * shape.Width + x;
+                var px = anchor.AbsoluteX + x;
+                var py = anchor.AbsoluteY + y;
+                if (!GraphicsCoordinateSpaceMath.IsInsideClip(host, px, py)) continue;
+                var oldColor = needsDestination ? destination is null ? host.GetAbsolutePixel(px, py) : destination[offset] : 0;
+                colors[offset] = ApplyPutAction(oldColor, colors[offset], action);
+            }
+        if (host.TryWriteAbsolutePixels(anchor.AbsoluteX, anchor.AbsoluteY, shape.Width, shape.Height, colors)) return true;
+        for (var y = 0; y < shape.Height; y++)
+            for (var x = 0; x < shape.Width; x++)
+            {
+                var px = anchor.AbsoluteX + x;
+                var py = anchor.AbsoluteY + y;
+                if (GraphicsCoordinateSpaceMath.IsInsideClip(host, px, py))
+                    host.SetAbsolutePixel(px, py, colors[y * shape.Width + x]);
+            }
         return true;
     }
-
     private static bool TryGetVisibleShape(RuntimeArrayValue buffer, out GraphicsBufferShape shape)
     {
         shape = default;

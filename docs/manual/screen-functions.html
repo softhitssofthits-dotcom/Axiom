@@ -89,7 +89,14 @@ SLEEP</code></pre>
                 <p>Для формы <code>POINT(selector)</code> действуют отдельные ошибки: <code>MB3007</code> при неверном селекторе и <code>MB3010</code> при отсутствии графического <code>SCREEN 1..10</code>.</p>
             </section>
 
-            <section class="article-section">
+            <section class="article-section"><h2>Переполнение координат POINT</h2><p>Одноаргументная встроенная функция <code>POINT(number)</code> возвращает <code>INTEGER</code>. Если текущая логическая или преобразованная координата не помещается в этот тип, функция вызывает <code>MB3008</code>. Ошибку можно перехватить через <code>TRY...CATCH</code>; выход за диапазон не аварийно завершает служебный процесс.</p><pre><code class="language-axiom">SCREEN 1
+PSET (2147483648, 0), 1
+TRY
+    PRINT POINT(2)
+CATCH err
+    PRINT err.Code
+END TRY</code></pre><p>Программа печатает <code>MB3008</code>. Двухаргументная функция <code>POINT(x, y)</code> по-прежнему читает цвет пикселя.</p></section>
+<section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="screen.html">Оператор SCREEN</a>

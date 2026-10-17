@@ -24,10 +24,11 @@ public sealed class ScreenFramebuffer
 
         Width = width;
         Height = height;
-        _colorIndices = new int[width * height];
+        var pixelCount = GraphicsResourceLimits.Validate(width, height);
+        _colorIndices = new int[pixelCount];
         _palette = CreateDefaultPalette();
-        _trueColorPixels = new uint[width * height];
-        _hasTrueColor = new bool[width * height];
+        _trueColorPixels = new uint[pixelCount];
+        _hasTrueColor = new bool[pixelCount];
     }
 
     public int Width { get; }

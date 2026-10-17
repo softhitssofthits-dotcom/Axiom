@@ -15,7 +15,8 @@ public sealed class CanvasGpuSurfaceTests
         try
         {
             console.ActivateCanvas(20, 20);
-            Assert.Throws<ArgumentOutOfRangeException>(() => console.ActivateCanvas(20000, 20));
+            var failure = Assert.Throws<GraphicsSurfaceException>(() => console.ActivateCanvas(20000, 20));
+            Assert.IsType<ArgumentOutOfRangeException>(failure.InnerException);
             Assert.False(console.IsCanvasActive);
             Assert.Equal(IntPtr.Zero, console.ScreenWindowHandle);
             Assert.Null(console.GraphicsHost.CanvasRenderer);

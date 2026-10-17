@@ -414,6 +414,8 @@ internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider,
     public int GetAbsolutePixel(long x, long y) =>
         _promptService is IGraphicsHost graphicsHost ? graphicsHost.GetAbsolutePixel(x, y) : 0;
 
+    public bool TryWriteAbsolutePixels(long x, long y, int width, int height, int[] pixels) => (_promptService as IGraphicsHost)?.TryWriteAbsolutePixels(x, y, width, height, pixels) ?? false;
+
     public int[]? CaptureAbsolutePixels(long x, long y, int width, int height) =>
         (_promptService as IGraphicsHost)?.CaptureAbsolutePixels(x, y, width, height);
 

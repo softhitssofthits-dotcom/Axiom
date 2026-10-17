@@ -444,6 +444,8 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
     public int GetAbsolutePixel(long x, long y) =>
         _inputProvider is IGraphicsHost graphicsHost ? graphicsHost.GetAbsolutePixel(x, y) : 0;
 
+    public bool TryWriteAbsolutePixels(long x, long y, int width, int height, int[] pixels) => (_inputProvider as IGraphicsHost)?.TryWriteAbsolutePixels(x, y, width, height, pixels) ?? false;
+
     public int[]? CaptureAbsolutePixels(long x, long y, int width, int height) =>
         (_inputProvider as IGraphicsHost)?.CaptureAbsolutePixels(x, y, width, height);
 

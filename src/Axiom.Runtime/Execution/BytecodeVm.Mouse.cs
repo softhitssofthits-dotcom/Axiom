@@ -43,9 +43,19 @@ public sealed partial class BytecodeVm
 
         var deferredEvents = new List<MouseInputEvent>();
         var processedEvents = 0;
+        // Повторно отложенные события не должны занимать весь бюджет опроса.
+        var bufferedBudget = Math.Min(_bufferedMouseEvents.Count, MaxMouseEventsPerDispatch / 2);
 
-        while (processedEvents < MaxMouseEventsPerDispatch && BuiltinMouseHelpers.TryReadMouseEvent(_bufferedMouseEvents, _host.ReadMouseEvent, out var mouseEvent))
+        while (processedEvents < MaxMouseEventsPerDispatch)
         {
+            MouseInputEvent mouseEvent;
+            if (processedEvents < bufferedBudget)
+                mouseEvent = _bufferedMouseEvents.Dequeue();
+            else
+            {
+                mouseEvent = _host.ReadMouseEvent();
+                if (!BuiltinMouseHelpers.IsSupportedMouseEvent(mouseEvent)) break;
+            }
             processedEvents++;
             var handlerKey = BuiltinMouseHelpers.GetMouseHandlerKey(mouseEvent);
             if (!_mouseHandlers.TryGetValue(handlerKey, out var registration) || !registration.IsEnabled)

@@ -107,7 +107,7 @@ public sealed class TilemapMetadataAccessTests
                 PRINT err.Code
                 PRINT err.Message
             END TRY
-            """, string.Join(Environment.NewLine, "MB3005", "LOADTILEMAP: Объекты ellipse пока не поддерживаются."));
+            """, string.Join(Environment.NewLine, "MB3005", "LOADTILEMAP: Objects ellipse are not supported."));
     }
 
     private static void Check(string source, string expected)

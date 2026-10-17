@@ -153,7 +153,8 @@ public sealed class InputPromptService : ViewModelBase
             return;
         }
 
-        CurrentInputText = CurrentInputText[..^1];
+        var elements = System.Globalization.StringInfo.ParseCombiningCharacters(CurrentInputText);
+        CurrentInputText = CurrentInputText[..elements[^1]];
     }
 
     public void ResetInputState()
