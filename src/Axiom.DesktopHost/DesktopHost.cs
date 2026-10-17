@@ -355,13 +355,13 @@ internal sealed class DesktopHost : IDisposable
         if (action == "wheel" && (!payload.TryGetProperty("delta", out var deltaValue) || !deltaValue.TryGetInt32(out delta)))
             throw new HostError("INVALID_REQUEST", "Недопустимое движение колеса мыши.");
         // Из окна приходят пиксели холста. Камеру и VIEWPORT применяет VM при чтении.
-        _console.SetMousePosition(x, y);
+        // Позиция, состояние кнопки и событие публикуются одной операцией.
         switch (action)
         {
-            case "move": _console.EnqueueMouseMove(); break;
-            case "down": _console.SetMouseButtonDown(button); _console.EnqueueMouseButtonPress(button); break;
-            case "up": _console.SetMouseButtonUp(button); _console.EnqueueMouseButtonRelease(button); break;
-            case "wheel": _console.EnqueueMouseWheel(delta); break;
+            case "move": _console.PublishMouseMove(x, y); break;
+            case "down": _console.PublishMouseButtonPress(button, x, y); break;
+            case "up": _console.PublishMouseButtonRelease(button, x, y); break;
+            case "wheel": _console.PublishMouseWheel(delta, x, y); break;
         }
     }
 

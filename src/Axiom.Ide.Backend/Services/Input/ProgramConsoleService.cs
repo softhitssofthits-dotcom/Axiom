@@ -403,40 +403,26 @@ public sealed partial class ProgramConsoleService : ViewModelBase, IProgramConso
         _inputPrompt.AppendInputCharacter(character);
     }
 
-    void IGraphicsWindowInputSink.EnqueueMouseButtonPress(int buttonNumber)
-    {
-        _inputState.EnqueueMouseButtonPress(buttonNumber);
-    }
-
-    void IGraphicsWindowInputSink.SetMouseButtonDown(int buttonNumber)
-    {
-        _inputState.SetMouseButtonDown(buttonNumber);
-    }
-
-    void IGraphicsWindowInputSink.EnqueueMouseButtonRelease(int buttonNumber)
-    {
-        _inputState.EnqueueMouseButtonRelease(buttonNumber);
-    }
-
-    void IGraphicsWindowInputSink.SetMouseButtonUp(int buttonNumber)
-    {
-        _inputState.SetMouseButtonUp(buttonNumber);
-    }
-
-    void IGraphicsWindowInputSink.EnqueueMouseMove()
-    {
-        _inputState.EnqueueMouseMove();
-    }
-
-    void IGraphicsWindowInputSink.EnqueueMouseWheel(int delta)
-    {
-        _inputState.EnqueueMouseWheel(delta);
-    }
-
     void IGraphicsWindowInputSink.SetMousePosition(long x, long y)
     {
         _inputState.SetMousePosition(x, y);
     }
+
+    void IGraphicsWindowInputSink.PublishMouseMove(long x, long y) => PublishMouseMove(x, y);
+
+    void IGraphicsWindowInputSink.PublishMouseButtonPress(int buttonNumber, long x, long y) =>
+        PublishMouseButtonPress(buttonNumber, x, y);
+
+    void IGraphicsWindowInputSink.PublishMouseButtonRelease(int buttonNumber, long x, long y) =>
+        PublishMouseButtonRelease(buttonNumber, x, y);
+
+    void IGraphicsWindowInputSink.PublishMouseWheel(int delta, long x, long y) =>
+        PublishMouseWheel(delta, x, y);
+
+    void IGraphicsWindowInputSink.PublishMouseButtonReleaseKeepPosition(int buttonNumber) =>
+        PublishMouseButtonReleaseKeepPosition(buttonNumber);
+
+    void IGraphicsWindowInputSink.ClearMouseState() => ClearMouseState();
 
     #endregion
 
@@ -531,6 +517,46 @@ public sealed partial class ProgramConsoleService : ViewModelBase, IProgramConso
     public long GetMouseY()
     {
         return _inputState.GetMouseY();
+    }
+
+    public void GetMousePosition(out long x, out long y)
+    {
+        _inputState.GetMousePosition(out x, out y);
+    }
+
+    public long GetMouseClearGeneration()
+    {
+        return _inputState.GetMouseClearGeneration();
+    }
+
+    public void PublishMouseMove(long x, long y)
+    {
+        _inputState.PublishMouseMove(x, y);
+        _graphicsHostService.RecordMouseEventEnqueued(MouseInputEventKind.Move);
+    }
+
+    public void PublishMouseButtonPress(int buttonNumber, long x, long y)
+    {
+        _inputState.PublishMouseButtonPress(buttonNumber, x, y);
+        _graphicsHostService.RecordMouseEventEnqueued(MouseInputEventKind.Press);
+    }
+
+    public void PublishMouseButtonRelease(int buttonNumber, long x, long y)
+    {
+        _inputState.PublishMouseButtonRelease(buttonNumber, x, y);
+        _graphicsHostService.RecordMouseEventEnqueued(MouseInputEventKind.Release);
+    }
+
+    public void PublishMouseWheel(int delta, long x, long y)
+    {
+        _inputState.PublishMouseWheel(delta, x, y);
+        _graphicsHostService.RecordMouseEventEnqueued(MouseInputEventKind.Wheel);
+    }
+
+    public void PublishMouseButtonReleaseKeepPosition(int buttonNumber)
+    {
+        _inputState.PublishMouseButtonReleaseKeepPosition(buttonNumber);
+        _graphicsHostService.RecordMouseEventEnqueued(MouseInputEventKind.Release);
     }
 
     public bool IsMouseButtonDown(int buttonNumber)

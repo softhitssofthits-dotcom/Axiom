@@ -1,0 +1,32 @@
+' Ручная проверка: колесо в окне CANVAS приходит в единицах Windows (ступень 120).
+' Прокрутите колесо вверх и вниз; для завершения нажмите ESC.
+' Один щелчок колёсной ступени должен дать +120 или -120, плавный трекпад
+' накапливает дробные значения до полной ступени.
+CANVAS 320, 180
+DIM wheelTotal AS INTEGER = 0
+DIM wheelSteps AS INTEGER = 0
+DIM wheelX AS LONG = 0
+DIM wheelY AS LONG = 0
+ON MOUSE("WHEEL"), HandleWheel
+
+DO WHILE NOT KEYPRESS("ESC")
+    BEGINFRAME
+    CLS RGB(12, 18, 28)
+    DRAWTEXT "Прокрутите колесо, затем нажмите ESC", 8, 8, RGB(240, 245, 255)
+    DRAWTEXT "Сумма: " + TRIM(STR(wheelTotal)), 8, 32, RGB(255, 242, 170)
+    DRAWTEXT "Ступеней: " + TRIM(STR(wheelSteps)), 8, 52, RGB(255, 242, 170)
+    PRESENT
+    SLEEP 10
+LOOP
+
+PRINT wheelTotal
+PRINT wheelSteps
+PRINT wheelX
+PRINT wheelY
+
+SUB HandleWheel(delta AS INTEGER, x AS LONG, y AS LONG)
+    wheelTotal = wheelTotal + delta
+    wheelSteps = wheelSteps + 1
+    wheelX = x
+    wheelY = y
+END SUB

@@ -200,7 +200,15 @@ module.exports = [
       }
       page.action('wheel', { Delta:-120, X:page.lastX, Y:page.lastY }); await S.waitConsole('Колесо=-120');
       page.action('wheel', { Delta:120, X:page.lastX, Y:page.lastY }); await S.waitConsole('Колесо=120');
-      C.ok(true, 'Оба направления колеса доставлены в VM');
+      // Высокоточное колесо сохраняет величину, а не превращается в одну ступень.
+      page.action('wheel', { Delta:240, X:page.lastX, Y:page.lastY }); await S.waitConsole('Колесо=240');
+      C.ok(true, 'Оба направления и величина колеса доставлены в VM');
+      // Колесо в чёрном поле letterbox не создаёт события.
+      const beforeLetterbox = await S.page.evaluate(() => window.__ide.execution.outputText.length);
+      page.action('wheel', { Delta:120, X:2, Y:2 });
+      await S.page.waitForTimeout(200);
+      C.eq((await S.page.evaluate(offset => window.__ide.execution.outputText.slice(offset), beforeLetterbox)).includes('Колесо='), false,
+        'Колесо вне видимого кадра не доставляется');
       C.eq(page.action('focus').focused, true, 'Нативное окно действительно получило системный фокус');
       const beforeBlur = await S.page.evaluate(() => window.__ide.execution.outputText.length);
       page.button('press');

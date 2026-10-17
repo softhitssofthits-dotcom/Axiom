@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('canvasHost', {
   onFrame: callback => ipcRenderer.on('canvas-frame', (_event, frame) => callback(frame)),
+  onMouseRejected: callback => ipcRenderer.on('canvas-mouse-rejected', (_event, data) => callback(data)),
   painted: frameId => ipcRenderer.send('canvas-painted', frameId),
   key: data => ipcRenderer.send('canvas-key', data),
   mouse: data => ipcRenderer.send('canvas-mouse', data),

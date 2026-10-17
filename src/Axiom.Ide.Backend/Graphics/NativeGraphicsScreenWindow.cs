@@ -35,6 +35,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     private const int WmMButtonDown = 0x0207;
     private const int WmMButtonUp = 0x0208;
     private const int WmMouseWheel = 0x020A;
+    private const int WmDpiChanged = 0x02E0;
     private const int MaActivate = 1;
     private const int SizeMinimized = 1;
     private const int ErrorClassAlreadyExists = 1410;
@@ -51,6 +52,8 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     private const int SifPage = 0x0002;
     private const int SifPos = 0x0004;
     private const int SifTrackPos = 0x0010;
+    private const int SwpNoZOrder = 0x0004;
+    private const int SwpNoActivate = 0x0010;
 
     private static readonly string WindowClassName = "AxiomNativeScreenWindow";
     private static readonly WndProc StaticWndProc = DispatchWindowMessage;
@@ -89,16 +92,19 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         };
         var windowStyle = WsOverlappedWindow | (_gpuRenderer is null ? WsVScroll : 0);
         AdjustWindowRectEx(ref windowRect, windowStyle, false, 0);
+        var windowWidth = Math.Max(1, windowRect.Right - windowRect.Left);
+        var windowHeight = Math.Max(1, windowRect.Bottom - windowRect.Top);
+        var position = ResolveWindowPosition(graphicsHost.ScreenMode, windowWidth, windowHeight);
 
         Hwnd = CreateWindowEx(
             0,
             WindowClassName,
             graphicsHost.IsCanvasActive ? "Axiom CANVAS" : "Axiom SCREEN",
             windowStyle,
-            CwUseDefault,
-            CwUseDefault,
-            Math.Max(1, windowRect.Right - windowRect.Left),
-            Math.Max(1, windowRect.Bottom - windowRect.Top),
+            position.X,
+            position.Y,
+            windowWidth,
+            windowHeight,
             IntPtr.Zero,
             IntPtr.Zero,
             IntPtr.Zero,
@@ -135,6 +141,21 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
     public IntPtr Hwnd { get; private set; }
     public bool IsVisible => Hwnd != IntPtr.Zero && IsWindowVisible(Hwnd);
+
+    private static (int X, int Y) ResolveWindowPosition(int screenMode, int windowWidth, int windowHeight)
+    {
+        // SCREEN 10 выбирает монитор по окну IDE; окно должно появиться
+        // на этом мониторе, а не на том, который выбрала бы система.
+        if (screenMode == 10 &&
+            ScreenModeSizeProvider.TryGetTargetWorkArea(out var left, out var top, out var workWidth, out var workHeight))
+        {
+            var x = left + Math.Max(0, (workWidth - windowWidth) / 2);
+            var y = top + Math.Max(0, (workHeight - windowHeight) / 2);
+            return (x, y);
+        }
+
+        return (CwUseDefault, CwUseDefault);
+    }
 
     public void Show()
     {
@@ -268,11 +289,16 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
                 if (_capturedMouseButtons != 0) ResetHeldInput();
                 return IntPtr.Zero;
 
+            case WmDpiChanged:
+                HandleDpiChanged(lParam);
+                return IntPtr.Zero;
+
             case WmMouseMove:
-                SetFocus(Hwnd);
-                if (TryUpdateMousePositionFromClientPoint(GetX(lParam), GetY(lParam)))
+                // Наведение не должно отбирать клавиатурный фокус у IDE.
+                // Фокус передаётся при открытии, клике и WM_MOUSEACTIVATE.
+                if (TryResolveMousePosition(GetX(lParam), GetY(lParam), out var moveX, out var moveY))
                 {
-                    _inputSink.EnqueueMouseMove();
+                    _inputSink.PublishMouseMove(moveX, moveY);
                 }
                 return IntPtr.Zero;
 
@@ -301,9 +327,12 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
                 return IntPtr.Zero;
 
             case WmMouseWheel:
-                SetFocus(Hwnd);
-                UpdateMousePositionFromScreenPoint(lParam);
-                _inputSink.EnqueueMouseWheel(GetWheelDelta(wParam));
+                // Колесо не активирует окно и не создаёт событие, если
+                // указатель находится в чёрном поле вне кадра.
+                if (TryResolveMousePositionFromScreenPoint(lParam, out var wheelX, out var wheelY))
+                {
+                    _inputSink.PublishMouseWheel(GetWheelDelta(wParam), wheelX, wheelY);
+                }
                 return IntPtr.Zero;
 
             default:
@@ -371,36 +400,59 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         _heldKeys.Clear();
         var buttons = _capturedMouseButtons;
         _capturedMouseButtons = 0;
+        // Потеря фокуса или захвата публикует синтетическое отпускание:
+        // обработчик ON MOUSE(..., "UP") не остаётся в ожидании события,
+        // которое уже не придёт.
         for (var button = 1; button <= 3; button++)
-            if ((buttons & GetMouseButtonMask(button)) != 0) _inputSink.SetMouseButtonUp(button);
+        {
+            if ((buttons & GetMouseButtonMask(button)) != 0)
+            {
+                _inputSink.PublishMouseButtonReleaseKeepPosition(button);
+            }
+        }
+
         if (buttons != 0) ReleaseCapture();
     }
 
     private void HandleMouseButton(IntPtr lParam, int button, bool down)
     {
+        // Явный клик может активировать окно; наведение и колесо — нет.
         SetFocus(Hwnd);
-        var hasMappedPosition = TryUpdateMousePositionFromClientPoint(GetX(lParam), GetY(lParam));
-        if (down && !hasMappedPosition)
-        {
-            return;
-        }
+        var hasMappedPosition = TryResolveMousePosition(GetX(lParam), GetY(lParam), out var mouseX, out var mouseY);
+        var buttonMask = GetMouseButtonMask(button);
 
         if (down)
         {
-            SetCapture(Hwnd);
-            _capturedMouseButtons |= GetMouseButtonMask(button);
-            _inputSink.EnqueueMouseButtonPress(button);
-            _inputSink.SetMouseButtonDown(button);
-        }
-        else
-        {
-            _capturedMouseButtons &= ~GetMouseButtonMask(button);
-            _inputSink.EnqueueMouseButtonRelease(button);
-            _inputSink.SetMouseButtonUp(button);
-            if (_capturedMouseButtons == 0)
+            if (!hasMappedPosition)
             {
-                ReleaseCapture();
+                return;
             }
+
+            SetCapture(Hwnd);
+            _capturedMouseButtons |= buttonMask;
+            _inputSink.PublishMouseButtonPress(button, mouseX, mouseY);
+            return;
+        }
+
+        var wasCaptured = (_capturedMouseButtons & buttonMask) != 0;
+        _capturedMouseButtons &= ~buttonMask;
+        // Поздний WM_*BUTTONUP после синтетического отпускания не создаёт
+        // второе событие.
+        if (wasCaptured)
+        {
+            if (hasMappedPosition)
+            {
+                _inputSink.PublishMouseButtonRelease(button, mouseX, mouseY);
+            }
+            else
+            {
+                _inputSink.PublishMouseButtonReleaseKeepPosition(button);
+            }
+        }
+
+        if (_capturedMouseButtons == 0)
+        {
+            ReleaseCapture();
         }
     }
 
@@ -412,7 +464,7 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         _ => 0
     };
 
-    private void UpdateMousePositionFromScreenPoint(IntPtr lParam)
+    private bool TryResolveMousePositionFromScreenPoint(IntPtr lParam, out int mouseX, out int mouseY)
     {
         var point = new Point
         {
@@ -422,11 +474,16 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
         if (ScreenToClient(Hwnd, ref point))
         {
-            TryUpdateMousePositionFromClientPoint(point.X, point.Y);
+            return TryResolveMousePosition(point.X, point.Y, out mouseX, out mouseY);
         }
+
+        mouseX = -1;
+        mouseY = -1;
+        _inputSink.SetMousePosition(-1, -1);
+        return false;
     }
 
-    private bool TryUpdateMousePositionFromClientPoint(int clientX, int clientY)
+    private bool TryResolveMousePosition(int clientX, int clientY, out int mouseX, out int mouseY)
     {
         var frameWidth = _lastFrame?.Width ?? _graphicsHost.ScreenWidth;
         var frameHeight = _lastFrame?.Height ?? _graphicsHost.ScreenHeight;
@@ -436,13 +493,14 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
             frameHeight = _clientHeight;
         }
 
-        if (!TryMapClientPointToFramebuffer(clientX, clientY, _clientWidth, _clientHeight, frameWidth, frameHeight, out var framebufferX, out var framebufferY))
+        if (!TryMapClientPointToFramebuffer(clientX, clientY, _clientWidth, _clientHeight, frameWidth, frameHeight, out mouseX, out mouseY))
         {
+            mouseX = -1;
+            mouseY = -1;
             _inputSink.SetMousePosition(-1, -1);
             return false;
         }
 
-        _inputSink.SetMousePosition(framebufferX, framebufferY);
         return true;
     }
 
@@ -569,6 +627,24 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
         _clientHeight = height;
         _gpuRenderer?.Resize(width, height);
         _renderer?.Resize(width, height);
+    }
+
+    private void HandleDpiChanged(IntPtr lParam)
+    {
+        // lParam указывает на RECT рекомендуемого размера в новых DPI-единицах.
+        // Размер окна и клиентской области пересчитываются, чтобы
+        // client-to-framebuffer продолжал работать в физических пикселях.
+        if (lParam == IntPtr.Zero)
+        {
+            return;
+        }
+
+        var suggested = Marshal.PtrToStructure<Rect>(lParam);
+        var width = Math.Max(1, suggested.Right - suggested.Left);
+        var height = Math.Max(1, suggested.Bottom - suggested.Top);
+        SetWindowPos(Hwnd, IntPtr.Zero, suggested.Left, suggested.Top, width, height,
+            SwpNoZOrder | SwpNoActivate);
+        ResizeRendererToCurrentClientSize();
     }
 
     private void HandleResize(int width, int height)
@@ -781,6 +857,9 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool AdjustWindowRectEx(ref Rect lpRect, int dwStyle, bool bMenu, int dwExStyle);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, int flags);
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool GetClientRect(IntPtr hWnd, out Rect lpRect);

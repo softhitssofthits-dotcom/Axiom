@@ -156,6 +156,26 @@ public sealed class ProgramKeyboardInputRouterTests
         {
         }
 
+        public void PublishMouseMove(long x, long y)
+        {
+        }
+
+        public void PublishMouseButtonPress(int buttonNumber, long x, long y)
+        {
+        }
+
+        public void PublishMouseButtonRelease(int buttonNumber, long x, long y)
+        {
+        }
+
+        public void PublishMouseWheel(int delta, long x, long y)
+        {
+        }
+
+        public void PublishMouseButtonReleaseKeepPosition(int buttonNumber)
+        {
+        }
+
         public void WriteOutput(string text)
         {
         }

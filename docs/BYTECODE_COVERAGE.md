@@ -152,3 +152,22 @@ IDE 0.6.1 согласует завершение запроса с Electron и 
 Проверки: Semantics 530/530 (включая `BinderTypeAuditTests`), Runtime 1183/1183 (включая дополнения `LanguageContractTests.TypeAudit.cs`), Bytecode 248/248, Execution 3257/3259 с двумя известными отказами Maze Chase. Примеры: `samples/operators/type/method_receiver_field_changes.axm`, `samples/operators/type/method_receiver_array_changes.axm`, `samples/operators/type/default_numeric_conversion.axm`, `samples/operators/type/large_fixed_field_allocation.axm`, `samples/acceptance/negative/type_cyclic_structural_comparison.axm`. Справочник: `type.html` (значения по умолчанию, методы и SELF, диагностика MB3013) и `calls.html` (неявный получатель метода).
 
 Путь фоновой диагностики DesktopHost проверен отдельным процессом через NDJSON: `document.analyse` для программы с циклическим TYPE вернул MB2022 и MB2003, служба продолжила работу, а следующий запрос для корректной программы прошёл без диагностик. Оконная проверка Electron не выполнялась и остаётся границей доказательств.
+
+## Аудит мыши и оконного ввода — 17 октября 2026 года
+
+Аудит подтвердил базовое покрытие `MOUSEX`, `MOUSEY`, `MOUSEBUTTON`, `MOUSEPRESS` и `ON MOUSE`, включая старую регрессию справедливого продвижения очереди после 64 отложенных событий. Новые пробелы относятся к границам исполнения и оконной приёмке, а не к отсутствию регистрации форм:
+
+- нет независимой проверки очистки внутреннего VM-буфера после `ClearMouseState`, закрытия поверхности и перехода `SCREEN`/`CANVAS`;
+- нет ограничения очереди `PRESS`/`RELEASE`/`WHEEL` и измерения её поведения при медленном потребителе;
+- нет атомарного ожидания для перехода кнопки, координат X/Y и записи события;
+- значение колеса CANVAS не согласовано с нативным SCREEN/WPF;
+- нет полного физического E2E для мыши SCREEN, focus-loss, mixed-DPI, `WM_DPICHANGED`, второго монитора, letterbox/VIEWPORT и device loss;
+- нет полного runtime-ожидания для смешанных последовательностей и режимов `ON/STOP/OFF`.
+
+До исправления этих условий покрытие мыши считается функционально подтверждённым на VM и частично подтверждённым на окне, но не полной аппаратной приёмкой. Реализация не менялась; подробный разбор и очередь MOUSE-001..016 находятся в `.artifacts/mouse-audit-20261017/MOUSE_SUBSYSTEM_AUDIT_2026-10-17.md` и в последней записи `PLANS4`.
+
+## Реализация аудита мыши — 17 октября 2026 года
+
+Очередь MOUSE-001..016 реализована в доступном объёме. Позиция, состояние кнопки и событие публикуются атомарно; `IMouseInputProvider.GetMousePosition` возвращает один снимок X/Y. Очистка состояния увеличивает поколение, и BytecodeVm сбрасывает собственный буфер отложенных событий. Очередь ограничена 8192 событиями: соседние `MOVE` схлопываются, `WHEEL` складывается, переходы кнопок сохраняют порядок. Колесо измеряется в единицах Windows (ступень 120), CANVAS учитывает `deltaMode` и дробный остаток. Потеря фокуса публикует синтетическое отпускание. Точки вне холста или `VIEWPORT` не образуют мировую координату.
+
+Регрессии: `tests/Axiom.Runtime.Tests/MouseInputSnapshotTests.cs`, `MouseCoordinateSpaceTests.cs`, `tests/Axiom.Execution.Tests/MouseQueueLifecycleTests.cs`, дополнения `NativeGraphicsScreenWindowTests` и `ProgramMouseInputRouterTests`, Node `canvas-window.test.cjs`, Electron `graphics-lifecycle` (величина колеса, letterbox). Примеры: `samples/operators/on-mouse/wheel_units.axm`, `focus_loss_release.axm`; справочник: `docs/manual/on-mouse.html`. Физическая приёмка SCREEN при разных DPI и втором мониторе остаётся аппаратной границей. Версии: язык/компилятор 0.1.19, IDE 0.6.21.

@@ -5,6 +5,9 @@
     <UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- Мышь и графика SCREEN/CANVAS должны получать физические пиксели
+         и корректные WM_DPICHANGED при переносе между мониторами. -->
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Axiom.Ide.Backend\Axiom.Ide.Backend.csproj" />

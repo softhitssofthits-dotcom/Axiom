@@ -7,20 +7,26 @@ namespace Axiom.Runtime;
 public sealed partial class BytecodeVm
 {
     private const int MaxMouseEventsPerDispatch = 64;
+    // Отложенные события VM тоже ограничены: очередь хоста может быть
+    // очищена, но собственный буфер живёт до следующего опроса.
+    private const int MaxBufferedMouseEvents = 4096;
     private readonly Dictionary<BuiltinMouseHelpers.MouseHandlerKey, MouseHandlerRegistration> _mouseHandlers = [];
     private readonly Queue<MouseInputEvent> _bufferedMouseEvents = [];
+    private long _observedMouseClearGeneration;
     private int _mouseHandlerDepth;
 
     private long ReadMouseX()
     {
         RequireDrawableSurfaceActive("MOUSEX", FallbackRuntimeLocation);
-        return BuiltinMouseHelpers.TranslateMouseXToRuntimeCoordinates(_host, _host.GetMouseX(), _host.GetMouseY());
+        _host.GetMousePosition(out var mouseX, out var mouseY);
+        return BuiltinMouseHelpers.TranslateMouseXToRuntimeCoordinates(_host, mouseX, mouseY);
     }
 
     private long ReadMouseY()
     {
         RequireDrawableSurfaceActive("MOUSEY", FallbackRuntimeLocation);
-        return BuiltinMouseHelpers.TranslateMouseYToRuntimeCoordinates(_host, _host.GetMouseX(), _host.GetMouseY());
+        _host.GetMousePosition(out var mouseX, out var mouseY);
+        return BuiltinMouseHelpers.TranslateMouseYToRuntimeCoordinates(_host, mouseX, mouseY);
     }
 
     private bool IsMouseButtonDown(int buttonNumber)
@@ -41,6 +47,7 @@ public sealed partial class BytecodeVm
             return;
         }
 
+        DiscardBufferedEventsAfterClear();
         var deferredEvents = new List<MouseInputEvent>();
         var processedEvents = 0;
         // Повторно отложенные события не должны занимать весь бюджет опроса.
@@ -69,8 +76,25 @@ public sealed partial class BytecodeVm
 
         foreach (var deferredEvent in deferredEvents)
         {
+            if (_bufferedMouseEvents.Count >= MaxBufferedMouseEvents)
+            {
+                break;
+            }
+
             _bufferedMouseEvents.Enqueue(deferredEvent);
         }
+    }
+
+    private void DiscardBufferedEventsAfterClear()
+    {
+        var generation = _host.GetMouseClearGeneration();
+        if (generation == _observedMouseClearGeneration)
+        {
+            return;
+        }
+
+        _observedMouseClearGeneration = generation;
+        _bufferedMouseEvents.Clear();
     }
 
     private void ExecuteRegisterMouseHandler(BytecodeCallFrame frame, int instructionIndex, BytecodeInstruction instruction)
@@ -115,6 +139,7 @@ public sealed partial class BytecodeVm
     private bool ConsumeMouseButtonPress(int buttonNumber)
     {
         RequireDrawableSurfaceActive("MOUSEPRESS", FallbackRuntimeLocation);
+        DiscardBufferedEventsAfterClear();
         return BuiltinMouseHelpers.ConsumeMouseButtonPress(buttonNumber, _bufferedMouseEvents, _host.ReadMouseEvent);
     }
 
@@ -124,8 +149,11 @@ public sealed partial class BytecodeVm
 
         try
         {
-            var mouseX = ReadMouseX();
-            var mouseY = ReadMouseY();
+            // Один снимок позиции на обработчик: X и Y не могут относиться
+            // к разным событиям ввода.
+            _host.GetMousePosition(out var absoluteMouseX, out var absoluteMouseY);
+            var mouseX = BuiltinMouseHelpers.TranslateMouseXToRuntimeCoordinates(_host, absoluteMouseX, absoluteMouseY);
+            var mouseY = BuiltinMouseHelpers.TranslateMouseYToRuntimeCoordinates(_host, absoluteMouseX, absoluteMouseY);
             var arguments = registration.PassEvent
                 ? new[]
                 {

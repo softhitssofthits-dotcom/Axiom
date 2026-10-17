@@ -20,7 +20,7 @@ public sealed class ProgramMouseInputRouterTests
     }
 
     [Fact]
-    public void HandlePreviewMouseDown_UpdatesPositionAndPressedButton()
+    public void HandlePreviewMouseDown_PublishesPositionAndPressedButtonAtomically()
     {
         var sink = new TestProgramInputSink();
 
@@ -29,7 +29,7 @@ public sealed class ProgramMouseInputRouterTests
         Assert.Equal(10, sink.MouseX);
         Assert.Equal(20, sink.MouseY);
         Assert.Contains(3, sink.PressedButtons);
-        Assert.Equal(3, sink.ReadMouseButtonPress());
+        Assert.Equal(new MouseInputEvent(MouseInputEventKind.Press, 3), sink.ReadMouseEvent());
     }
 
     [Fact]
@@ -47,19 +47,19 @@ public sealed class ProgramMouseInputRouterTests
     }
 
     [Fact]
-    public void HandlePreviewMouseWheel_QueuesWheelDelta()
+    public void HandlePreviewMouseWheel_PreservesOriginalWheelUnits()
     {
         var sink = new TestProgramInputSink();
 
-        ProgramMouseInputRouter.HandlePreviewMouseWheel(sink, new Point(7.2, 8.8), 120);
+        ProgramMouseInputRouter.HandlePreviewMouseWheel(sink, new Point(7.2, 8.8), 240);
 
         Assert.Equal(7, sink.MouseX);
         Assert.Equal(9, sink.MouseY);
-        Assert.Equal(new MouseInputEvent(MouseInputEventKind.Wheel, 120), sink.ReadMouseEvent());
+        Assert.Equal(new MouseInputEvent(MouseInputEventKind.Wheel, 240), sink.ReadMouseEvent());
     }
 
     [Fact]
-    public void HandleMouseLeave_ClearsMouseState()
+    public void HandleMouseLeave_ClearsMouseStateAndAdvancesGeneration()
     {
         var sink = new TestProgramInputSink
         {
@@ -73,6 +73,7 @@ public sealed class ProgramMouseInputRouterTests
         Assert.Equal(-1, sink.MouseX);
         Assert.Equal(-1, sink.MouseY);
         Assert.Empty(sink.PressedButtons);
+        Assert.Equal(1, sink.ClearGeneration);
     }
 
     private sealed class TestProgramInputSink : IProgramConsoleService
@@ -85,9 +86,9 @@ public sealed class ProgramMouseInputRouterTests
 
         public long MouseY { get; set; } = -1;
 
-        public HashSet<int> PressedButtons { get; } = [];
+        public int ClearGeneration { get; private set; }
 
-        public Queue<int> MousePresses { get; } = [];
+        public HashSet<int> PressedButtons { get; } = [];
 
         public Queue<MouseInputEvent> MouseEvents { get; } = [];
 
@@ -112,6 +113,7 @@ public sealed class ProgramMouseInputRouterTests
             MouseX = -1;
             MouseY = -1;
             PressedButtons.Clear();
+            ClearGeneration++;
         }
 
         public void ClearOutput()
@@ -124,7 +126,6 @@ public sealed class ProgramMouseInputRouterTests
 
         public void EnqueueMouseButtonPress(int buttonNumber)
         {
-            MousePresses.Enqueue(buttonNumber);
             MouseEvents.Enqueue(new MouseInputEvent(MouseInputEventKind.Press, buttonNumber));
         }
 
@@ -143,15 +144,59 @@ public sealed class ProgramMouseInputRouterTests
             MouseEvents.Enqueue(new MouseInputEvent(MouseInputEventKind.Wheel, delta));
         }
 
+        public void PublishMouseMove(long x, long y)
+        {
+            MouseX = x;
+            MouseY = y;
+            MouseEvents.Enqueue(new MouseInputEvent(MouseInputEventKind.Move, 0));
+        }
+
+        public void PublishMouseButtonPress(int buttonNumber, long x, long y)
+        {
+            MouseX = x;
+            MouseY = y;
+            PressedButtons.Add(buttonNumber);
+            MouseEvents.Enqueue(new MouseInputEvent(MouseInputEventKind.Press, buttonNumber));
+        }
+
+        public void PublishMouseButtonRelease(int buttonNumber, long x, long y)
+        {
+            MouseX = x;
+            MouseY = y;
+            PressedButtons.Remove(buttonNumber);
+            MouseEvents.Enqueue(new MouseInputEvent(MouseInputEventKind.Release, buttonNumber));
+        }
+
+        public void PublishMouseWheel(int delta, long x, long y)
+        {
+            MouseX = x;
+            MouseY = y;
+            MouseEvents.Enqueue(new MouseInputEvent(MouseInputEventKind.Wheel, delta));
+        }
+
+        public void PublishMouseButtonReleaseKeepPosition(int buttonNumber)
+        {
+            PressedButtons.Remove(buttonNumber);
+            MouseEvents.Enqueue(new MouseInputEvent(MouseInputEventKind.Release, buttonNumber));
+        }
+
         public long GetMouseX() => MouseX;
 
         public long GetMouseY() => MouseY;
+
+        public void GetMousePosition(out long x, out long y)
+        {
+            x = MouseX;
+            y = MouseY;
+        }
+
+        public long GetMouseClearGeneration() => ClearGeneration;
 
         public bool IsKeyDown(string keyText) => false;
 
         public bool IsMouseButtonDown(int buttonNumber) => PressedButtons.Contains(buttonNumber);
 
-        public int ReadMouseButtonPress() => MousePresses.Count > 0 ? MousePresses.Dequeue() : 0;
+        public int ReadMouseButtonPress() => 0;
 
         public MouseInputEvent ReadMouseEvent() => MouseEvents.Count > 0 ? MouseEvents.Dequeue() : default;
 

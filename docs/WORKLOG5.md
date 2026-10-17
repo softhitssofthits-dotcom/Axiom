@@ -1690,6 +1690,16 @@ UDT-005. Снимки состояния строит `src/Axiom.Runtime/Values/
 
 Следующий шаг — авторская оценка исправлений; отдельным остатком остаётся оконная проверка в Electron.
 
+## Session 1527 - 2026-10-17 20:19 - Полный аудит подсистемы мыши
+
+По поручению автора выполнен полный аналитический аудит работы мыши: встроенные функции `MOUSEX`, `MOUSEY`, `MOUSEBUTTON`, `MOUSEPRESS`, оператор `ON MOUSE`, VM-очередь, `RuntimeInputSnapshot`, WPF Output, нативное окно `SCREEN`, Electron `CANVAS`, IPC, координаты `VIEWPORT`/`CAMERA`, фокус, захват, DPI, мониторы, закрытие поверхностей и тестовое покрытие. Код не менялся; версии сохранены: язык/компилятор 0.1.18, IDE 0.6.20.
+
+Подтверждены дефекты и риски: внутренний буфер VM переживает `ClearMouseState`; публикация кнопки/координат неатомарна; очередь `PRESS`/`RELEASE`/`WHEEL` не ограничена; величина колеса CANVAS отличается от SCREEN/WPF; старые события могут пережить смену поверхности; GPU-SCREEN закрывается не сразу при отказе; колесо в letterbox всё равно доставляется; MOVE/WHEEL принудительно забирают фокус; отсутствуют mixed-DPI/`WM_DPICHANGED` и явное размещение HWND SCREEN 10; CANVAS не имеет единого договора для pointer/touch/pen и границ letterbox/VIEWPORT; при потере фокуса кнопка сбрасывается без синтетического `UP`.
+
+Пробелы приёмки: нет физического E2E мыши для SCREEN; нет полной матрицы смешанного порядка, `ON/STOP/OFF`, stale mouse-событий, focus-loss SCREEN, device loss, DPI/мониторов и границ вне изображения. Старый GFX-009 о голодании новых событий после 64 отложенных подтверждён как исправленный и повторно дефектом не объявляется.
+
+Подробный локальный отчёт: `.artifacts/mouse-audit-20261017/MOUSE_SUBSYSTEM_AUDIT_2026-10-17.md`. Очередь реализации MOUSE-001..016 добавлена в `docs/PLANS4.md`; реестр покрытия дополнен явными границами доказательств. Следующий шаг — отдельная реализация очереди после решения договоров единицы `WHEEL`, координат события и синтетического `UP`; в этой сессии исправления не начинались.
+
 ## Session 1528 - 2026-10-17 21:52 - Бейджи версий в README стали производными от versions.json
 
 Автор заметил, что на странице GitHub бейджи `version` и `IDE` оставались на 0.1.15/0.6.14, хотя `versions.json` уже содержал 0.1.18/0.6.20. Причина: `scripts/versioning.mjs` синхронизировал только `Versions.props`, `AxiomVersionInfo.cs` и npm-номера, а бейджи и строка текущих версий в `README.md` были вписаны вручную и никем не проверялись.
@@ -1701,4 +1711,21 @@ UDT-005. Снимки состояния строит `src/Axiom.Runtime/Values/
 Текущие номера после `sync`: язык/компилятор 0.1.18, IDE 0.6.20. Продуктовые версии не повышались: изменён служебный инструмент проверки версий и документация. Обновлены `docs/VERSIONING.md`, `docs/ARCHITECTURE.md`, `AGENTS.md` (раздел 0) и заголовок `docs/PLANS4.md`.
 
 Следующий шаг — закоммитить и отправить README и правило синхронизации вместе с текущим этапом, чтобы GitHub показал актуальные номера; дальнейшие `bump` больше не требуют ручной правки README.
+
 Публикация: коммит 7f0557a3 отправлен в `origin/master`; локальный `HEAD`, `origin/master` и удалённая ссылка совпали. README на удалённой ветке содержит 0.1.18 и 0.6.20. Незакоммиченная работа по подсистеме мыши и её документы в набор не включались.
+
+## Session 1528 - 2026-10-17 22:28 - Реализация исправлений аудита мыши
+
+По поручению автора реализована очередь MOUSE-001..016. Договорные решения: колесо измеряется в единицах Windows (обычная ступень 120, отрицательное значение — вниз); обработчик получает атомарный снимок текущей позиции (прежний договор сохранён); потеря фокуса порождает синтетическое `ON MOUSE(..., "UP")`.
+
+Runtime. `RuntimeInputSnapshot` публикует позицию, состояние кнопки и событие одной блокировкой (`PublishMouseMove/ButtonPress/ButtonRelease/Wheel`), добавлены `GetMousePosition` и `MouseClearGeneration`. Очередь переведена на `LinkedList`, ограничена 8192 событиями; соседние `MOVE` схлопываются, соседние `WHEEL` складываются, переходы кнопок сохраняют порядок, при переполнении первыми вытесняются схлопываемые события. `PublishMouseButtonReleaseKeepPosition` используется при потере фокуса. `IMouseInputProvider` получил пересылку через адаптеры Execution, ManualChecks и IdeInputProvider.
+
+VM. `BytecodeVm.Mouse` хранит наблюдённое поколение очистки, сбрасывает `_bufferedMouseEvents` при `ClearMouseState`, смене поверхности и новом запуске; буфер VM ограничен 4096. Обработчик читает X/Y одним снимком. `GraphicsHostService` очищает состояние мыши при активации/деактивации `SCREEN`/`CANVAS`; `OnGraphicsWindowClosed` деактивирует любую GPU-поверхность, переменная переименована в `hadSurface`. Проверено, что закрытие GPU-`SCREEN` уже вызывало `DeactivateScreen`; прежняя формулировка аудита об отсутствии пути уточнена.
+
+Нативное окно. `NativeGraphicsScreenWindow` использует атомарную публикацию, не вызывает `SetFocus` на `WM_MOUSEMOVE`/`WM_MOUSEWHEEL`, не доставляет колесо вне кадра, публикует синтетическое отпускание при `WM_KILLFOCUS`/`WM_ACTIVATE`/`WM_CAPTURECHANGED` и подавляет поздний дубль `WM_*BUTTONUP`. Добавлены `WM_DPICHANGED`, PerMonitorV2 через `src/Axiom.DesktopHost/app.manifest` и размещение `SCREEN 10` в рабочей области выбранного монитора (`ScreenModeSizeProvider.TryGetTargetWorkArea`).
+
+CANVAS/Electron. `canvas.js` фильтрует touch/pen, не отправляет точки вне видимого изображения, сохраняет последнюю точку для отпускания, переводит колесо в единицы Windows с учётом `deltaMode` и дробного остатка. `canvas-window.js` сообщает об отказе действующей сессии через `canvas-mouse-rejected`; preload и renderer сбрасывают локальное удержание. `GraphicsCoordinateSpace` не образует мировую координату для точки вне холста или `VIEWPORT`.
+
+Тесты. Новые `MouseInputSnapshotTests` (8), `MouseCoordinateSpaceTests` (3), `MouseQueueLifecycleTests` (4), дополнены `NativeGraphicsScreenWindowTests` и `ProgramMouseInputRouterTests`, обновлён `canvas-window.test.cjs`. Итоги: Runtime 1194/1194; Execution 3261/3263 (два известных отказа Maze Chase); Ide 1007/1009 (два предсуществующих отказа `Run_UsesPromptServiceForSingleStringInput` и `Run_UsesPromptServiceForPromptWithSemicolon` — ожидания старого приглашения INPUT, подтверждены вне мышиного diff); Node `ide-unit-renderer` 63/63, `canvas-window.test.cjs` 4/4; Electron `canvas-mouse.spec.js` 5/5 и `graphics-lifecycle.spec.js` 7/7 (54 утверждения), включая `Колесо=240` и отсутствие события в letterbox. CLI Release и DesktopHost Debug собраны без ошибок.
+
+Примеры и справочник: `samples/operators/on-mouse/wheel_units.axm`, `focus_loss_release.axm`; `docs/manual/on-mouse.html` (единица колеса, очистка, потеря фокуса, границы), `SPECIFICATION3.md`, `ARCHITECTURE.md`, `BYTECODE_COVERAGE.md`, `PLANS4.md`. `node scripts/check-manual.mjs` пройден: 122 страницы, 4894 ссылки. Версии: язык/компилятор 0.1.19, IDE 0.6.21; `versioning check` и `check --base HEAD` пройдены. Аппаратная приёмка разных DPI и второго монитора не выполнялась и не заявляется.

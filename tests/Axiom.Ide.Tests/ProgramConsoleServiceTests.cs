@@ -195,6 +195,9 @@ public sealed class ProgramConsoleServiceTests
         service.EnqueueMouseMove();
         service.EnqueueMouseButtonRelease(1);
 
+        // Порядок относительно нажатия и отпускания сохраняется:
+        // схлопываются только соседние перемещения.
+        Assert.Equal(new MouseInputEvent(MouseInputEventKind.Move, 0), service.ReadMouseEvent());
         Assert.Equal(new MouseInputEvent(MouseInputEventKind.Press, 1), service.ReadMouseEvent());
         Assert.Equal(new MouseInputEvent(MouseInputEventKind.Move, 0), service.ReadMouseEvent());
         Assert.Equal(new MouseInputEvent(MouseInputEventKind.Release, 1), service.ReadMouseEvent());

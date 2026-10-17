@@ -1,0 +1,30 @@
+' Ручная проверка: потеря фокуса окна SCREEN снимает удержание кнопки
+' и вызывает обработчик отпускания, а не оставляет программу в нажатом состоянии.
+' 1. Нажмите и удерживайте левую кнопку в окне SCREEN.
+' 2. Не отпуская кнопку, переключитесь в окно IDE (Alt+Tab).
+' 3. Вернитесь в окно SCREEN и нажмите ESC.
+SCREEN 1
+DIM downSeen AS BOOLEAN = FALSE
+DIM upSeen AS BOOLEAN = FALSE
+DIM heldAfterFocusLoss AS BOOLEAN = TRUE
+ON MOUSE(1), HandleDown
+ON MOUSE(1, "UP"), HandleUp
+DIM marker AS INTEGER = 0
+
+DO WHILE NOT KEYPRESS("ESC")
+    IF upSeen THEN heldAfterFocusLoss = MOUSEBUTTON(1)
+    marker = marker + 1
+LOOP
+
+SCREEN 0
+PRINT downSeen
+PRINT upSeen
+PRINT heldAfterFocusLoss
+
+SUB HandleDown(button AS INTEGER, x AS LONG, y AS LONG)
+    downSeen = TRUE
+END SUB
+
+SUB HandleUp(button AS INTEGER, x AS LONG, y AS LONG)
+    upSeen = TRUE
+END SUB

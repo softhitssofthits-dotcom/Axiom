@@ -13,11 +13,14 @@ public interface IGraphicsWindowInputSink
     void SubmitInput();
     void BackspaceInputCharacter();
     void AppendInputCharacter(char character);
-    void EnqueueMouseButtonPress(int buttonNumber);
-    void SetMouseButtonDown(int buttonNumber);
-    void EnqueueMouseButtonRelease(int buttonNumber);
-    void SetMouseButtonUp(int buttonNumber);
-    void EnqueueMouseMove();
-    void EnqueueMouseWheel(int delta);
     void SetMousePosition(long x, long y);
+
+    // Атомарная публикация: позиция, состояние кнопки и событие относятся
+    // к одному моменту и не могут быть прочитаны обработчиком порознь.
+    void PublishMouseMove(long x, long y);
+    void PublishMouseButtonPress(int buttonNumber, long x, long y);
+    void PublishMouseButtonRelease(int buttonNumber, long x, long y);
+    void PublishMouseWheel(int delta, long x, long y);
+    void PublishMouseButtonReleaseKeepPosition(int buttonNumber);
+    void ClearMouseState();
 }

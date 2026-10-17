@@ -36,5 +36,15 @@ public interface IProgramConsoleService : IProgramInputPromptService, IKeyboardI
 
     void EnqueueMouseWheel(int delta);
 
+    void PublishMouseMove(long x, long y);
+
+    void PublishMouseButtonPress(int buttonNumber, long x, long y);
+
+    void PublishMouseButtonRelease(int buttonNumber, long x, long y);
+
+    void PublishMouseWheel(int delta, long x, long y);
+
+    void PublishMouseButtonReleaseKeepPosition(int buttonNumber);
+
     void ClearMouseState();
 }

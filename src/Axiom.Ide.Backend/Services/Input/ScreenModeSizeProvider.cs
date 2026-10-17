@@ -47,6 +47,26 @@ internal sealed class ScreenModeSizeProvider : IScreenModeSizeProvider
         return (width, height);
     }
 
+    // Рабочая область целевого монитора нужна не только для размера SCREEN 10,
+    // но и для явного размещения HWND на этом мониторе.
+    internal static bool TryGetTargetWorkArea(out int left, out int top, out int width, out int height)
+    {
+        if (TryGetTargetMonitorArea(out var rect))
+        {
+            left = rect.Left;
+            top = rect.Top;
+            width = rect.Right - rect.Left;
+            height = rect.Bottom - rect.Top;
+            return width > 0 && height > 0;
+        }
+
+        left = 0;
+        top = 0;
+        width = 0;
+        height = 0;
+        return false;
+    }
+
     private static (int Width, int Height) ResolveScreen10Size()
     {
         return TryGetScreen10AvailableArea(out var area)
@@ -56,18 +76,30 @@ internal sealed class ScreenModeSizeProvider : IScreenModeSizeProvider
 
     private static bool TryGetScreen10AvailableArea(out ScreenArea area)
     {
-        var monitor = ResolveTargetMonitor();
-        if (monitor != IntPtr.Zero && TryGetMonitorArea(monitor, preferWorkArea: true, out area))
+        if (TryGetTargetMonitorArea(out var rect))
         {
-            return true;
-        }
-
-        if (monitor != IntPtr.Zero && TryGetMonitorArea(monitor, preferWorkArea: false, out area))
-        {
+            area = new ScreenArea(rect.Right - rect.Left, rect.Bottom - rect.Top);
             return true;
         }
 
         area = default;
+        return false;
+    }
+
+    private static bool TryGetTargetMonitorArea(out NativeRect rect)
+    {
+        var monitor = ResolveTargetMonitor();
+        if (monitor != IntPtr.Zero && TryGetMonitorRect(monitor, preferWorkArea: true, out rect))
+        {
+            return true;
+        }
+
+        if (monitor != IntPtr.Zero && TryGetMonitorRect(monitor, preferWorkArea: false, out rect))
+        {
+            return true;
+        }
+
+        rect = default;
         return false;
     }
 
@@ -131,7 +163,7 @@ internal sealed class ScreenModeSizeProvider : IScreenModeSizeProvider
         return true;
     }
 
-    private static bool TryGetMonitorArea(IntPtr monitor, bool preferWorkArea, out ScreenArea area)
+    private static bool TryGetMonitorRect(IntPtr monitor, bool preferWorkArea, out NativeRect rect)
     {
         var monitorInfo = new MonitorInfo
         {
@@ -140,7 +172,7 @@ internal sealed class ScreenModeSizeProvider : IScreenModeSizeProvider
 
         if (!GetMonitorInfo(monitor, ref monitorInfo))
         {
-            area = default;
+            rect = default;
             return false;
         }
 
@@ -150,11 +182,11 @@ internal sealed class ScreenModeSizeProvider : IScreenModeSizeProvider
 
         if (!HasPositiveArea(candidate))
         {
-            area = default;
+            rect = default;
             return false;
         }
 
-        area = new ScreenArea(candidate.Right - candidate.Left, candidate.Bottom - candidate.Top);
+        rect = candidate;
         return true;
     }
 

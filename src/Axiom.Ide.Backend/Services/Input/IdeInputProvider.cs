@@ -40,6 +40,23 @@ internal sealed class IdeInputProvider : IInputProvider, IKeyboardInputProvider,
             ? mouseInputProvider.GetMouseY()
             : -1;
 
+    public void GetMousePosition(out long x, out long y)
+    {
+        if (_promptService is IMouseInputProvider mouseInputProvider)
+        {
+            mouseInputProvider.GetMousePosition(out x, out y);
+            return;
+        }
+
+        x = -1;
+        y = -1;
+    }
+
+    public long GetMouseClearGeneration() =>
+        _promptService is IMouseInputProvider mouseInputProvider
+            ? mouseInputProvider.GetMouseClearGeneration()
+            : 0;
+
     public bool IsMouseButtonDown(int buttonNumber) =>
         _promptService is IMouseInputProvider mouseInputProvider &&
         mouseInputProvider.IsMouseButtonDown(buttonNumber);

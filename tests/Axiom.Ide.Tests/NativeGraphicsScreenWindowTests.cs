@@ -1,6 +1,7 @@
 using Axiom.Ide.Graphics;
 using Axiom.Ide.Services.Graphics;
 using Axiom.Ide.Services.Input;
+using Axiom.Runtime;
 using System.Runtime.InteropServices;
 
 namespace Axiom.Ide.Tests;
@@ -8,6 +9,7 @@ namespace Axiom.Ide.Tests;
 public sealed class NativeGraphicsScreenWindowTests
 {
     private const int WmPaint = 0x000F;
+    private const int WmKillFocus = 0x0008;
     private const int WmMouseMove = 0x0200;
     private const int WmLButtonDown = 0x0201;
     private const int WmLButtonUp = 0x0202;
@@ -92,6 +94,49 @@ public sealed class NativeGraphicsScreenWindowTests
 
         Assert.Equal(11, service.GetMouseX());
         Assert.Equal(22, service.GetMouseY());
+    }
+
+    [Fact]
+    public void MouseButtonDown_PublishesPressedStateBeforeHandlerCanReadEvent()
+    {
+        var service = new ProgramConsoleService();
+        using var window = new NativeGraphicsScreenWindow(service.GraphicsHost, service, 64, 48);
+
+        SendMessage(window.Hwnd, WmLButtonDown, IntPtr.Zero, MakeMouseLParam(11, 22));
+
+        Assert.True(service.IsMouseButtonDown(1));
+        Assert.Equal(new MouseInputEvent(MouseInputEventKind.Press, 1), service.ReadMouseEvent());
+    }
+
+    [Fact]
+    public void FocusLossPublishesSyntheticReleaseWithoutMovingPointer()
+    {
+        var service = new ProgramConsoleService();
+        using var window = new NativeGraphicsScreenWindow(service.GraphicsHost, service, 64, 48);
+        SendMessage(window.Hwnd, WmLButtonDown, IntPtr.Zero, MakeMouseLParam(11, 22));
+        _ = service.ReadMouseEvent();
+
+        SendMessage(window.Hwnd, WmKillFocus, IntPtr.Zero, IntPtr.Zero);
+
+        Assert.False(service.IsMouseButtonDown(1));
+        Assert.Equal(new MouseInputEvent(MouseInputEventKind.Release, 1), service.ReadMouseEvent());
+        Assert.Equal(11, service.GetMouseX());
+        Assert.Equal(22, service.GetMouseY());
+    }
+
+    [Fact]
+    public void LateButtonUpAfterSyntheticReleaseDoesNotPublishDuplicate()
+    {
+        var service = new ProgramConsoleService();
+        using var window = new NativeGraphicsScreenWindow(service.GraphicsHost, service, 64, 48);
+        SendMessage(window.Hwnd, WmLButtonDown, IntPtr.Zero, MakeMouseLParam(11, 22));
+        _ = service.ReadMouseEvent();
+        SendMessage(window.Hwnd, WmKillFocus, IntPtr.Zero, IntPtr.Zero);
+        _ = service.ReadMouseEvent();
+
+        SendMessage(window.Hwnd, WmLButtonUp, IntPtr.Zero, MakeMouseLParam(11, 22));
+
+        Assert.Equal(default, service.ReadMouseEvent());
     }
 
     [Fact]

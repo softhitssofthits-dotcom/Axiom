@@ -17,6 +17,17 @@ public interface IMouseInputProvider
 
     long GetMouseY();
 
+    // Атомарный снимок позиции: X и Y должны относиться к одному моменту.
+    void GetMousePosition(out long x, out long y)
+    {
+        x = GetMouseX();
+        y = GetMouseY();
+    }
+
+    // Поколение очистки позволяет VM сбросить собственный буфер отложенных
+    // событий, который не принадлежит снимку ввода.
+    long GetMouseClearGeneration() => 0;
+
     bool IsMouseButtonDown(int buttonNumber);
 
     int ReadMouseButtonPress();

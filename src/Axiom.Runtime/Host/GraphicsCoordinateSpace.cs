@@ -150,6 +150,17 @@ public static class GraphicsCoordinateSpaceMath
 
         if (host.IsCanvasActive)
         {
+            // Точка вне холста или вне активной области не образует мировую
+            // координату: иначе клик в поле окна попадал бы в сцену.
+            if (absoluteX < 0 || absoluteY < 0 ||
+                absoluteX >= host.ScreenWidth || absoluteY >= host.ScreenHeight ||
+                !viewport.IsInsideAbsolute(absoluteX, absoluteY))
+            {
+                logicalX = 0;
+                logicalY = 0;
+                return false;
+            }
+
             logicalX = host.CanvasCameraX + (absoluteX - viewport.Left);
             logicalY = host.CanvasCameraY + (absoluteY - viewport.Top);
             return true;

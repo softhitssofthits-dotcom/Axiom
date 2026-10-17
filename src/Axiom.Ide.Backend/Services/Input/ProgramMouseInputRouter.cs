@@ -8,19 +8,20 @@ internal static class ProgramMouseInputRouter
     public static void HandlePreviewMouseMove(IProgramConsoleService inputSink, Point position)
     {
         ArgumentNullException.ThrowIfNull(inputSink);
-        inputSink.SetMousePosition(ToCoordinate(position.X), ToCoordinate(position.Y));
-        inputSink.EnqueueMouseMove();
+        inputSink.PublishMouseMove(ToCoordinate(position.X), ToCoordinate(position.Y));
     }
 
     public static void HandlePreviewMouseDown(IProgramConsoleService inputSink, Point position, MouseButton button)
     {
         ArgumentNullException.ThrowIfNull(inputSink);
 
-        inputSink.SetMousePosition(ToCoordinate(position.X), ToCoordinate(position.Y));
         if (TryMapButton(button, out var buttonNumber))
         {
-            inputSink.EnqueueMouseButtonPress(buttonNumber);
-            inputSink.SetMouseButtonDown(buttonNumber);
+            inputSink.PublishMouseButtonPress(buttonNumber, ToCoordinate(position.X), ToCoordinate(position.Y));
+        }
+        else
+        {
+            inputSink.SetMousePosition(ToCoordinate(position.X), ToCoordinate(position.Y));
         }
     }
 
@@ -28,20 +29,20 @@ internal static class ProgramMouseInputRouter
     {
         ArgumentNullException.ThrowIfNull(inputSink);
 
-        inputSink.SetMousePosition(ToCoordinate(position.X), ToCoordinate(position.Y));
         if (TryMapButton(button, out var buttonNumber))
         {
-            inputSink.EnqueueMouseButtonRelease(buttonNumber);
-            inputSink.SetMouseButtonUp(buttonNumber);
+            inputSink.PublishMouseButtonRelease(buttonNumber, ToCoordinate(position.X), ToCoordinate(position.Y));
+        }
+        else
+        {
+            inputSink.SetMousePosition(ToCoordinate(position.X), ToCoordinate(position.Y));
         }
     }
 
     public static void HandlePreviewMouseWheel(IProgramConsoleService inputSink, Point position, int delta)
     {
         ArgumentNullException.ThrowIfNull(inputSink);
-
-        inputSink.SetMousePosition(ToCoordinate(position.X), ToCoordinate(position.Y));
-        inputSink.EnqueueMouseWheel(delta);
+        inputSink.PublishMouseWheel(delta, ToCoordinate(position.X), ToCoordinate(position.Y));
     }
 
     public static void HandleMouseLeave(IProgramConsoleService inputSink)

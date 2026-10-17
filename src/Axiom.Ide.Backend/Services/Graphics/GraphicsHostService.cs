@@ -262,6 +262,8 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
             _screenHeight = height;
             _activeScreenPage = _isScreenActive ? activePage : 0;
             _visualScreenPage = _isScreenActive ? visualPage : 0;
+            // События прежней поверхности не должны дойти до новой программы.
+            _inputState.ClearMouseState();
             _inputState.SetScreenState(_isScreenActive, _isScreenOutputActive, _screenMode, _screenWidth, _screenHeight);
             ResetViewportCore();
             ResetWindowCore();
@@ -359,6 +361,7 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
             _canvasCameraX = 0;
             _canvasCameraY = 0;
             _canvasFrameInProgress = false;
+            _inputState.ClearMouseState();
             _inputState.SetScreenState(isScreenActive: false, isScreenOutputActive: false, _screenMode, _screenWidth, _screenHeight);
             ResetViewportCore();
             ResetWindowCore();
@@ -439,6 +442,7 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
             _canvasCameraX = 0;
             _canvasCameraY = 0;
             _canvasFrameInProgress = false;
+            _inputState.ClearMouseState();
             _inputState.SetScreenState(_isScreenActive, _isScreenOutputActive, _screenMode, _screenWidth, _screenHeight);
             ResetViewportCore();
             ResetWindowCore();
@@ -2502,17 +2506,19 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
 
         _graphicsWindow.Closed -= OnGraphicsWindowClosed;
         _graphicsWindow = null;
-        var wasGpuCanvas = _gpuRenderer is not null;
+        var hadSurface = _gpuRenderer is not null || _isScreenActive || _isCanvasActive;
         if (!_sessionManager.IsSessionActive)
         {
-            if (wasGpuCanvas) DeactivateScreen();
+            if (hadSurface) DeactivateScreen();
             return;
         }
 
         _sessionManager.IsCancellationRequested = true;
         _inputPrompt.CancelPendingFrame();
         _inputPrompt.ResetInputState();
-        if (wasGpuCanvas) DeactivateScreen();
+        // Закрытие окна — конец поверхности для этой программы. Не ждём
+        // позднего завершения VM: иначе следующий запуск увидит активный SCREEN.
+        if (hadSurface) DeactivateScreen();
         WriteGraphicsEvent("screen.closed-by-user", "SCREEN window was closed by the user; run cancellation requested.");
     }
 

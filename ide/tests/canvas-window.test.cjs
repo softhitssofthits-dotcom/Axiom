@@ -65,10 +65,30 @@ test('CANVAS пересчитывает координаты мыши, разл�
     handlers.pointerup({ ...event, button });
     assert.deepEqual(events.at(-1), { action:'up', button:expected, x:60, y:40 });
   }
-  handlers.wheel({ ...event, deltaY:3 });
+  handlers.wheel({ ...event, deltaY:120 });
   assert.deepEqual(events.at(-1), { action:'wheel', delta:-120, x:60, y:40 });
-  handlers.wheel({ ...event, deltaY:-3 });
+  handlers.wheel({ ...event, deltaY:-120 });
   assert.equal(events.at(-1).delta, 120);
+  // Пиксельный режим трекпада накапливается до полной ступени Windows.
+  handlers.wheel({ ...event, deltaY:60 });
+  handlers.wheel({ ...event, deltaY:60 });
+  assert.deepEqual(events.at(-1), { action:'wheel', delta:-120, x:60, y:40 });
   handlers.pointercancel();
   assert.deepEqual(events.at(-1), { action:'clear' });
+});
+
+test('CANVAS не превращает касание, перо и точки вне изображения в мышь', () => {
+  const handlers = {}, events = [];
+  const canvas = { width:200, height:100, addEventListener: (name, fn) => { handlers[name] = fn; },
+    getBoundingClientRect: () => ({ left:10, top:20, width:400, height:200 }), setPointerCapture() {} };
+  const context = { document: { getElementById: () => canvas },
+    window: { canvasHost: { onFrame() {}, key() {}, mouse: data => events.push({ ...data }) }, addEventListener() {} } };
+  vm.runInNewContext(fs.readFileSync(path.resolve(__dirname, '../src/renderer/canvas.js'), 'utf8'), context);
+  const inside = { clientX:130, clientY:100, pointerId:1, button:0, preventDefault() {} };
+  const before = events.length;
+  handlers.pointerdown({ ...inside, pointerType:'touch' });
+  handlers.pointermove({ ...inside, pointerType:'pen' });
+  handlers.pointermove({ clientX:5, clientY:100, pointerId:1, preventDefault(){} });
+  handlers.pointerdown({ clientX:500, clientY:100, pointerId:1, button:0, preventDefault(){} });
+  assert.equal(events.length, before);
 });

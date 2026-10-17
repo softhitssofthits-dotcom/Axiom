@@ -151,6 +151,56 @@ public sealed class InputStateService
         return _inputSnapshot.GetMouseY();
     }
 
+    public void GetMousePosition(out long x, out long y)
+    {
+        _inputSnapshot.GetMousePosition(out x, out y);
+    }
+
+    public long GetMouseClearGeneration()
+    {
+        return _inputSnapshot.MouseClearGeneration;
+    }
+
+    public void PublishMouseMove(long x, long y)
+    {
+        _inputSnapshot.PublishMouseMove(x, y);
+    }
+
+    public void PublishMouseButtonPress(int buttonNumber, long x, long y)
+    {
+        if (!IsSupportedMouseButton(buttonNumber))
+        {
+            return;
+        }
+
+        _inputSnapshot.PublishMouseButtonPress(buttonNumber, x, y);
+    }
+
+    public void PublishMouseButtonRelease(int buttonNumber, long x, long y)
+    {
+        if (!IsSupportedMouseButton(buttonNumber))
+        {
+            return;
+        }
+
+        _inputSnapshot.PublishMouseButtonRelease(buttonNumber, x, y);
+    }
+
+    public void PublishMouseButtonReleaseKeepPosition(int buttonNumber)
+    {
+        if (!IsSupportedMouseButton(buttonNumber))
+        {
+            return;
+        }
+
+        _inputSnapshot.PublishMouseButtonReleaseKeepPosition(buttonNumber);
+    }
+
+    public void PublishMouseWheel(int delta, long x, long y)
+    {
+        _inputSnapshot.PublishMouseWheel(delta, x, y);
+    }
+
     public bool IsMouseButtonDown(int buttonNumber)
     {
         if (!IsSupportedMouseButton(buttonNumber))

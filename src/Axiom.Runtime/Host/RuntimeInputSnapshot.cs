@@ -2,13 +2,20 @@ namespace Axiom.Runtime;
 
 public sealed class RuntimeInputSnapshot
 {
+    // Предел защищает от роста памяти, когда программа долго не читает события.
+    // Сначала вытесняются схлопываемые перемещения и колесо; переходы кнопок
+    // сохраняются, пока очередь состоит только из них.
+    private const int MaximumPendingMouseEvents = 8192;
+
     private readonly object _gate = new();
     private readonly Queue<string> _pendingKeys = [];
-    private readonly Queue<MouseInputEvent> _pendingMouseEvents = [];
+    private readonly LinkedList<MouseInputEvent> _pendingMouseEvents = [];
     private readonly HashSet<string> _pressedKeys = new(StringComparer.Ordinal);
     private readonly HashSet<int> _pressedMouseButtons = [];
     private long _mouseX = -1;
     private long _mouseY = -1;
+    private long _mouseClearGeneration;
+    private long _droppedMouseEvents;
     private bool _isScreenActive;
     private bool _isScreenOutputActive;
     private int _screenMode;
@@ -29,6 +36,12 @@ public sealed class RuntimeInputSnapshot
 
     public int PendingMouseEventCount { get { lock (_gate) { return _pendingMouseEvents.Count; } } }
 
+    // Поколение меняется при каждой очистке. VM сравнивает его и сбрасывает
+    // собственный буфер отложенных событий, который живёт вне этого снимка.
+    public long MouseClearGeneration { get { lock (_gate) { return _mouseClearGeneration; } } }
+
+    public long DroppedMouseEventCount { get { lock (_gate) { return _droppedMouseEvents; } } }
+
     public void Reset()
     {
         lock (_gate)
@@ -37,6 +50,7 @@ public sealed class RuntimeInputSnapshot
             _pendingMouseEvents.Clear();
             _pressedKeys.Clear();
             _pressedMouseButtons.Clear();
+            _mouseClearGeneration++;
             _mouseX = -1;
             _mouseY = -1;
             _isScreenActive = false;
@@ -148,6 +162,75 @@ public sealed class RuntimeInputSnapshot
         }
     }
 
+    public void GetMousePosition(out long x, out long y)
+    {
+        lock (_gate)
+        {
+            x = _mouseX;
+            y = _mouseY;
+        }
+    }
+
+    // Позиция, состояние кнопки и событие публикуются одной блокировкой.
+    // Обработчик не может увидеть кнопку в состоянии соседнего события.
+    public void PublishMouseMove(long x, long y)
+    {
+        lock (_gate)
+        {
+            _mouseX = x;
+            _mouseY = y;
+            AppendMouseEventLocked(new MouseInputEvent(MouseInputEventKind.Move, 0));
+        }
+    }
+
+    public void PublishMouseButtonPress(int buttonNumber, long x, long y)
+    {
+        lock (_gate)
+        {
+            _mouseX = x;
+            _mouseY = y;
+            _pressedMouseButtons.Add(buttonNumber);
+            AppendMouseEventLocked(new MouseInputEvent(MouseInputEventKind.Press, buttonNumber));
+        }
+    }
+
+    public void PublishMouseButtonRelease(int buttonNumber, long x, long y)
+    {
+        lock (_gate)
+        {
+            _mouseX = x;
+            _mouseY = y;
+            _pressedMouseButtons.Remove(buttonNumber);
+            AppendMouseEventLocked(new MouseInputEvent(MouseInputEventKind.Release, buttonNumber));
+        }
+    }
+
+    // Синтетическое отпускание при потере фокуса сохраняет последнюю
+    // известную позицию: указатель не перемещался, меняется только кнопка.
+    public void PublishMouseButtonReleaseKeepPosition(int buttonNumber)
+    {
+        lock (_gate)
+        {
+            _pressedMouseButtons.Remove(buttonNumber);
+            AppendMouseEventLocked(new MouseInputEvent(MouseInputEventKind.Release, buttonNumber));
+        }
+    }
+
+    public void PublishMouseWheel(int delta, long x, long y)
+    {
+        if (delta == 0)
+        {
+            return;
+        }
+
+        lock (_gate)
+        {
+            _mouseX = x;
+            _mouseY = y;
+            AppendMouseEventLocked(new MouseInputEvent(MouseInputEventKind.Wheel, delta));
+        }
+    }
+
     public void SetMouseButtonDown(int buttonNumber)
     {
         lock (_gate)
@@ -181,12 +264,7 @@ public sealed class RuntimeInputSnapshot
 
         lock (_gate)
         {
-            if (mouseEvent.Kind == MouseInputEventKind.Move)
-            {
-                CoalescePendingMouseMoveEvents();
-            }
-
-            _pendingMouseEvents.Enqueue(mouseEvent);
+            AppendMouseEventLocked(mouseEvent);
         }
     }
 
@@ -194,9 +272,10 @@ public sealed class RuntimeInputSnapshot
     {
         lock (_gate)
         {
-            if (_pendingMouseEvents.Count > 0)
+            if (_pendingMouseEvents.First is { } first)
             {
-                mouseEvent = _pendingMouseEvents.Dequeue();
+                mouseEvent = first.Value;
+                _pendingMouseEvents.RemoveFirst();
                 return true;
             }
         }
@@ -210,23 +289,17 @@ public sealed class RuntimeInputSnapshot
         lock (_gate)
         {
             var buttonNumber = 0;
-            var deferredEvents = new List<MouseInputEvent>();
-
-            while (_pendingMouseEvents.Count > 0)
+            var node = _pendingMouseEvents.First;
+            while (node is not null)
             {
-                var candidate = _pendingMouseEvents.Dequeue();
-                if (buttonNumber == 0 && candidate.Kind == MouseInputEventKind.Press)
+                var next = node.Next;
+                if (buttonNumber == 0 && node.Value.Kind == MouseInputEventKind.Press)
                 {
-                    buttonNumber = candidate.ButtonNumber;
-                    continue;
+                    buttonNumber = node.Value.ButtonNumber;
+                    _pendingMouseEvents.Remove(node);
                 }
 
-                deferredEvents.Add(candidate);
-            }
-
-            foreach (var deferredEvent in deferredEvents)
-            {
-                _pendingMouseEvents.Enqueue(deferredEvent);
+                node = next;
             }
 
             return buttonNumber;
@@ -241,6 +314,7 @@ public sealed class RuntimeInputSnapshot
             _mouseY = -1;
             _pendingMouseEvents.Clear();
             _pressedMouseButtons.Clear();
+            _mouseClearGeneration++;
         }
     }
 
@@ -256,21 +330,66 @@ public sealed class RuntimeInputSnapshot
         }
     }
 
-    private void CoalescePendingMouseMoveEvents()
+    private void AppendMouseEventLocked(MouseInputEvent mouseEvent)
     {
-        if (_pendingMouseEvents.Count == 0)
+        if (mouseEvent.Kind == MouseInputEventKind.Move)
         {
-            return;
-        }
-
-        var eventCount = _pendingMouseEvents.Count;
-        for (var i = 0; i < eventCount; i++)
-        {
-            var pendingEvent = _pendingMouseEvents.Dequeue();
-            if (pendingEvent.Kind != MouseInputEventKind.Move)
+            // Соседние перемещения схлопываются: для позиции важно последнее.
+            // Порядок относительно нажатий и отпусканий сохраняется.
+            if (_pendingMouseEvents.Last is { } lastMove && lastMove.Value.Kind == MouseInputEventKind.Move)
             {
-                _pendingMouseEvents.Enqueue(pendingEvent);
+                lastMove.Value = mouseEvent;
+                return;
             }
         }
+        else if (mouseEvent.Kind == MouseInputEventKind.Wheel)
+        {
+            // Соседние ступени колеса складываются, чтобы быстрый трекпад
+            // не создавал тысячи отдельных событий.
+            if (_pendingMouseEvents.Last is { } lastWheel && lastWheel.Value.Kind == MouseInputEventKind.Wheel)
+            {
+                var combined = (long)lastWheel.Value.ButtonNumber + mouseEvent.ButtonNumber;
+                if (combined == 0)
+                {
+                    _pendingMouseEvents.RemoveLast();
+                    return;
+                }
+
+                lastWheel.Value = lastWheel.Value with
+                {
+                    ButtonNumber = (int)Math.Clamp(combined, int.MinValue, int.MaxValue)
+                };
+                return;
+            }
+        }
+
+        if (_pendingMouseEvents.Count >= MaximumPendingMouseEvents)
+        {
+            if (!TryRemoveOldestCoalescibleEventLocked())
+            {
+                _pendingMouseEvents.RemoveFirst();
+            }
+
+            _droppedMouseEvents++;
+        }
+
+        _pendingMouseEvents.AddLast(mouseEvent);
+    }
+
+    private bool TryRemoveOldestCoalescibleEventLocked()
+    {
+        var node = _pendingMouseEvents.First;
+        while (node is not null)
+        {
+            if (node.Value.Kind is MouseInputEventKind.Move or MouseInputEventKind.Wheel)
+            {
+                _pendingMouseEvents.Remove(node);
+                return true;
+            }
+
+            node = node.Next;
+        }
+
+        return false;
     }
 }

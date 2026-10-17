@@ -16,7 +16,12 @@ class CanvasWindow {
           (data.action !== 'clear' && (!Number.isSafeInteger(data.x) || !Number.isSafeInteger(data.y))) ||
           (['down','up'].includes(data.action) && ![1,2,3].includes(data.button)) ||
           (data.action === 'wheel' && !Number.isInteger(data.delta))) return;
-      mouse?.(this.sessionId, data).catch(() => {});
+      const id = this.sessionId;
+      Promise.resolve(mouse?.(id, data)).catch(() => {
+        // Отказ действующей сессии нельзя скрывать: иначе окно продолжает
+        // считать кнопку нажатой, хотя хост уже не принимает события.
+        if (id && id === this.sessionId) this.window?.webContents.send('canvas-mouse-rejected', { action: data.action });
+      });
     });
     ipcMain.on('canvas-key', (event, data) => {
       if (!this.window || event.sender !== this.window.webContents ||
