@@ -378,6 +378,16 @@ After code changes, run the most relevant checks available:
 
 If checks cannot be run yet, state that explicitly.
 
+### 5.0. Run the smallest relevant test group
+For this repository, checks are grouped by layer and area. The catalog and selection rules are in `docs/TESTING.md`; the unified entry point is `scripts/test.ps1 <group>`.
+
+Permanent requirements:
+- identify the affected layer first, then run the smallest matching group (for example `lexer` for tokenization, `ide-unit-renderer` for a renderer module, `e2e-editor` for editor behavior);
+- do not run the whole suite (`all`) for a local change unless the user explicitly asks for a full run or the change spans several layers;
+- do not run unrelated layers "just in case": lexer tests are not evidence for IDE behavior and IDE scenarios are not evidence for parser changes;
+- for a long Electron run use `-Out` and, when continuing an interrupted run, `--from <id>` so the result is not lost;
+- report which groups were run and which were skipped.
+
 ### 5.1. .NET checks must not share `obj` in parallel
 For this repository, do not run multiple `dotnet build`, `dotnet test`, `dotnet run` or other MSBuild-based commands in parallel when they can write to the same intermediate `obj` tree.
 

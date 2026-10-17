@@ -28,16 +28,17 @@ dotnet build src/Axiom.DesktopHost -c Debug
 
 ## Проверки
 
-
-Каталог Electron содержит 456 сценариев по `ide/e2e/SCENARIOS.json` на 16 октября 2026 года. Просмотр каталога не запускает приложение:
+Проверки разделены на логические группы; полный каталог и правила выбора — [TESTING.md](TESTING.md). Единая точка запуска:
 
 ```powershell
-node ide/e2e/runner.js --list
-npm --prefix ide/e2e test
-node ide/e2e/runner.js files.spec.js
+.\scripts\test.ps1 list
+.\scripts\test.ps1 lexer
+.\scripts\test.ps1 ide-unit-renderer
+.\scripts\test.ps1 e2e-editor
+.\scripts\test.ps1 all
 ```
 
-Подготовка, изоляция и ограничения: [инструкция набора](../ide/e2e/README.md). Последний сохранённый полный прогон — Session 1387: 102/102 сценария и 574 утверждения; после расширения каталога каждый этап закрывался адресной выборкой, полного прогона 456 сценариев не было. Это не аппаратная приёмка всех DPI и мониторов.
+На 17 октября 2026 года: 10 проектов .NET, 41 файл Node-тестов (270 тестов), 63 файла Electron-сценариев (471 сценарий) и 799 приёмочных программ `.axm`. Просмотр каталога без запуска приложения: `node ide/e2e/runner.js --list`, список групп — `node ide/e2e/runner.js --groups`. Подготовка, изоляция и ограничения: [инструкция набора](../ide/e2e/README.md).
 
 Проверка документации и действующего реестра:
 
@@ -47,7 +48,7 @@ node scripts/check-manual.mjs --inventory .artifacts/language-inventory-current/
 powershell -NoProfile -File scripts/ai-context.ps1 -StdoutOnly
 ```
 
-Проверки языка и служебных компонентов: `dotnet test Axiom.sln` (последовательный запуск). Проверка CLI без исполнения: `dotnet run --project src/Axiom.Cli -- check samples/smoke/bytecode-only/compiler_execution.axm --json`.
+Проверки языка и служебных компонентов запускаются по группам (`lexer`, `parser`, `semantics`, `bytecode`, `execution`, `runtime`, `cli`, `ide-backend`, `ide-dotnet`) или целиком через `dotnet test Axiom.sln` последовательно. Проверка CLI без исполнения: `dotnet run --project src/Axiom.Cli -- check samples/smoke/bytecode-only/compiler_execution.axm --json`.
 
 ## Версии
 

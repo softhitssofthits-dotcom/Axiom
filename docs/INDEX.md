@@ -9,6 +9,7 @@
 | Что за продукт и его границы? | [PROJECT.md](../PROJECT.md) |
 | Как представить проект на GitHub? | [README.md](../README.md) |
 | Как подготовить, запустить и проверять? | [DEVELOPMENT.md](DEVELOPMENT.md) |
+| Какие проверки есть и какую группу запускать? | [TESTING.md](TESTING.md) |
 | Как работать агенту? | [AGENTS.md](../AGENTS.md) |
 | Какие версии и как их повышать? | [VERSIONING.md](VERSIONING.md), [CHANGELOG.md](CHANGELOG.md), [versions.json](../versions.json) |
 | Какой договор реализован? | [SPECIFICATION3.md](SPECIFICATION3.md) |

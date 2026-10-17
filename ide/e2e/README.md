@@ -55,6 +55,15 @@ node ide/e2e/runner.js input-prompts.spec.js
 node ide/e2e/runner.js graphics-renderer-crash
 ```
 
+Логические группы сценариев заданы в `groups.json`; список групп и запуск одной группы:
+
+```powershell
+node ide/e2e/runner.js --groups
+node ide/e2e/runner.js --group e2e-editor
+```
+
+Полный каталог групп и правила выбора — [docs/TESTING.md](../../docs/TESTING.md).
+
 Код выхода 0 означает успешное завершение выбранного прогона; ненулевой код означает провал. Результат записывается в `ide/e2e/evidence/results.json`; при провале создаётся снимок в evidence/shots. Исходники проверочных программ создаются в .artifacts, настройки тестовой IDE изолированы от пользовательского профиля. Не запускайте несколько экземпляров этого runner параллельно: общий файл результата будет перезаписан.
 
 ## Как следующий агент должен продолжать
