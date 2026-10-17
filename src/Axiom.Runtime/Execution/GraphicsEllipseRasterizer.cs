@@ -34,6 +34,11 @@ public static class GraphicsEllipseRasterizer
         var rxSq = (double)rx * rx;
         var rySq = (double)ry * ry;
         var maxIterations = ComputeMaxIterations(rx, ry, fullEllipse, sweep, screenWidth, screenHeight);
+        if ((double)rx + ry > maxIterations)
+        {
+            RasterizeVisibleBoundary();
+            return;
+        }
         var iterationCount = 0;
 
         long x = 0;
@@ -65,6 +70,41 @@ public static class GraphicsEllipseRasterizer
             }
 
             PlotSymmetricPoints(centerX, centerY, x, y, rx, ry, fullEllipse, arcStart, sweep, screenWidth, screenHeight, plotPixel);
+        }
+
+        void RasterizeVisibleBoundary()
+        {
+            // На каждой половине четверти перебираем ведущую видимую ось.
+            // Работа зависит от поверхности, а не от удалённого центра и радиуса.
+            for (var column = 0; column < screenWidth; column++)
+            {
+                var distance = Math.Abs((double)((Int128)column - centerX));
+                if (distance > rx) continue;
+                var offset = ry * Math.Sqrt(Math.Max(0, ((rx - distance) / rx) * (1 + distance / rx)));
+                if (distance * rySq > offset * rxSq) continue;
+                var rounded = RoundRadius(offset);
+                Plot(column, (Int128)centerY - rounded);
+                Plot(column, (Int128)centerY + rounded);
+            }
+            for (var row = 0; row < screenHeight; row++)
+            {
+                var distance = Math.Abs((double)((Int128)row - centerY));
+                if (distance > ry) continue;
+                var offset = rx * Math.Sqrt(Math.Max(0, ((ry - distance) / ry) * (1 + distance / ry)));
+                if (offset * rySq < distance * rxSq) continue;
+                var rounded = RoundRadius(offset);
+                Plot((Int128)centerX - rounded, row);
+                Plot((Int128)centerX + rounded, row);
+            }
+
+            void Plot(Int128 px, Int128 py)
+            {
+                if (px < 0 || py < 0 || px >= screenWidth || py >= screenHeight) return;
+                var pointX = (long)px;
+                var pointY = (long)py;
+                if (fullEllipse || IsAngleInSweep(centerX, centerY, pointX, pointY, rx, ry, arcStart, sweep))
+                    plotPixel(pointX, pointY);
+            }
         }
 
         var decisionRegion2 =
@@ -176,8 +216,8 @@ public static class GraphicsEllipseRasterizer
             return true;
         }
 
-        var normalizedX = (pointX - centerX) / (double)radiusX;
-        var normalizedY = (centerY - pointY) / (double)radiusY;
+        var normalizedX = (double)((Int128)pointX - centerX) / radiusX;
+        var normalizedY = (double)((Int128)centerY - pointY) / radiusY;
         var angle = NormalizeAngle(Math.Atan2(normalizedY, normalizedX));
         var delta = angle - arcStart;
         if (delta < 0d)

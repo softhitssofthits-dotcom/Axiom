@@ -249,6 +249,9 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
             var preservePages = _screenMode == mode && _screenWidth == width && _screenHeight == height && _screenPages.Length == 4;
             var keepGpuPages = preservePages && _isScreenActive && UseGpuScreen && _gpuRenderer is not null;
             if (_gpuRenderer is not null && !keepGpuPages) ReleaseGpuRenderer();
+            // Окно хранит исполнителя с момента создания; текстовое окно SCREEN 0
+            // должно быть заменено перед подключением нового исполнителя DirectX.
+            if (mode != 0 && UseGpuScreen && _gpuRenderer is null) CloseGraphicsWindow();
             _isScreenActive = mode != 0;
             _isCanvasActive = false;
             _isScreenOutputActive = true;
@@ -270,7 +273,8 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
             if (_isScreenActive && UseGpuScreen)
             {
                 try { _gpuRenderer ??= CreateScreenRenderer(width, height); }
-                catch { DeactivateScreen(); throw; }
+                catch (OutOfMemoryException) { DeactivateScreen(); throw; }
+                catch (Exception error) { DeactivateScreen(); throw new GraphicsSurfaceException("SCREEN surface could not be created.", error); }
                 _gpuRenderer.Enqueue(surface => surface.SelectScreenPages(activePage, visualPage));
                 _framebuffer = null;
             }
@@ -328,7 +332,8 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
             _gpuRenderer?.Dispose();
             _gpuRenderer = null;
             try { if (UseGpuCanvas) _gpuRenderer = new CanvasRenderSession((int)width, (int)height); }
-            catch { DeactivateScreen(); throw; }
+            catch (OutOfMemoryException) { DeactivateScreen(); throw; }
+            catch (Exception error) { DeactivateScreen(); throw new GraphicsSurfaceException("CANVAS surface could not be created.", error); }
             if (_gpuRenderer is not null)
             {
                 var ownerDispatcher = Dispatcher.CurrentDispatcher;
@@ -737,7 +742,7 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
         {
             RunBatchedGraphicsUpdate(() =>
             {
-                if (_gpuRenderer is null) { GraphicsHostDrawing.Paint(this, request); return; }
+                if (_gpuRenderer is null) { GraphicsHostDrawing.Paint(this, request, IsGraphicsOperationCancelled); return; }
                 var viewport = GetEffectiveViewportCore();
                 if (viewport.IsEmpty) return;
                 var left = (int)Math.Max(0, viewport.Left); var top = (int)Math.Max(0, viewport.Top);
@@ -746,11 +751,11 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
                 var pairs = _gpuRenderer.Invoke(surface => surface.ReadWorkingRegion(left, top, width, height));
                 var region = new CanvasPaintRegion(left, top, width, height, pairs);
                 _canvasPaintRegion = region;
-                try { GraphicsHostDrawing.Paint(this, request); }
+                try { GraphicsHostDrawing.Paint(this, request, IsGraphicsOperationCancelled); }
                 finally
                 {
                     _canvasPaintRegion = null;
-                    if (region.Changed)
+                    if (region.Changed && !IsGraphicsOperationCancelled())
                         _gpuRenderer.Enqueue(surface => { surface.UploadWorkingRegion(left, top, width, height, pairs); if (surface.AllocatedScreenPages > 0) surface.RemapScreenPalette(); });
                 }
             });
@@ -762,6 +767,11 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
     {
         Paint(GraphicsPaintRequest.CreateSolid(x, y, fillColor, borderColor));
     }
+
+    public Func<bool>? GraphicsCancellationRequested { get; set; }
+
+    private bool IsGraphicsOperationCancelled() =>
+        _sessionManager.IsCancellationRequested || GraphicsCancellationRequested?.Invoke() == true;
 
     #endregion
 
@@ -782,6 +792,46 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
         var color = 0;
         InvokeOnDispatcher(() => color = GetLogicalPixelCore(x, y), DispatcherPriority.Background);
         return color;
+    }
+
+    public bool TryWriteAbsolutePixels(long x, long y, int width, int height, int[] pixels)
+    {
+        if (width <= 0 || height <= 0 || (long)width * height != pixels.Length || pixels.Length > GraphicsResourceLimits.MaximumPixels)
+            return false;
+        InvokeOnDispatcher(() =>
+        {
+            if (x >= _screenWidth || y >= _screenHeight || x <= -(long)width || y <= -(long)height) return;
+            var clip = GetEffectiveViewportCore();
+            if (clip.IsEmpty) return;
+            var left = (int)Math.Max(0, Math.Max(x, clip.Left));
+            var top = (int)Math.Max(0, Math.Max(y, clip.Top));
+            var right = (int)Math.Min(_screenWidth - 1L, Math.Min(x + width - 1L, clip.Right));
+            var bottom = (int)Math.Min(_screenHeight - 1L, Math.Min(y + height - 1L, clip.Bottom));
+            if (right < left || bottom < top) return;
+            var regionWidth = right - left + 1;
+            var regionHeight = bottom - top + 1;
+            var pairs = _gpuRenderer is null ? null : new uint[checked(regionWidth * regionHeight * 2)];
+            for (var row = top; row <= bottom; row++)
+                for (var column = left; column <= right; column++)
+                {
+                    var index = ScreenFramebuffer.NormalizeColorIndex(pixels[(int)(row - y) * width + (int)(column - x)]);
+                    if (pairs is null) _framebuffer?.SetPixel(column, row, index);
+                    else
+                    {
+                        var offset = ((row - top) * regionWidth + column - left) * 2;
+                        pairs[offset] = ScreenFramebuffer.MapColorToBgra(index);
+                        pairs[offset + 1] = (uint)index;
+                    }
+                }
+            if (pairs is not null) _gpuRenderer!.Enqueue(surface =>
+            {
+                surface.UploadWorkingRegion(left, top, regionWidth, regionHeight, pairs);
+                if (surface.AllocatedScreenPages > 0) surface.RemapScreenPalette();
+            });
+            _graphicsBatchHasChanges = true;
+            ScheduleGraphicsVisualRefresh();
+        });
+        return true;
     }
 
     public int[]? CaptureAbsolutePixels(long x, long y, int width, int height)
@@ -913,8 +963,8 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
     {
         InvokeOnDispatcher(() =>
         {
-            _graphicsRow = Math.Max(1, row);
-            _graphicsColumn = Math.Max(1, column);
+            _graphicsRow = Math.Clamp(row, 1, GraphicsResourceLimits.MaximumTextRows);
+            _graphicsColumn = Math.Clamp(column, 1, GraphicsResourceLimits.MaximumTextColumns);
             _pendingGraphicsViewportScroll = false;
         });
     }
@@ -984,52 +1034,11 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
 
     public RuntimeImageValue? LoadImage(string path)
     {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return null;
-        }
-
-        try
-        {
-            var resolvedPath = ResolveResourcePath(path);
-            if (!File.Exists(resolvedPath))
-            {
-                return null;
-            }
-
-            using var stream = File.OpenRead(resolvedPath);
-            var decoder = BitmapDecoder.Create(
-                stream,
-                BitmapCreateOptions.PreservePixelFormat,
-                BitmapCacheOption.OnLoad);
-            if (decoder.Frames.Count == 0)
-            {
-                return null;
-            }
-
-            BitmapSource source = decoder.Frames[0];
-            if (source.Format != PixelFormats.Bgra32)
-            {
-                source = new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0d);
-            }
-
-            var width = source.PixelWidth;
-            var height = source.PixelHeight;
-            if (width <= 0 || height <= 0)
-            {
-                return null;
-            }
-
-            var pixels = new uint[checked(width * height)];
-            source.CopyPixels(pixels, width * sizeof(uint), offset: 0);
-            return new RuntimeImageValue(width, height, pixels);
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException or OverflowException or ArgumentException)
-        {
-            return null;
-        }
+        if (string.IsNullOrWhiteSpace(path)) return null;
+        try { return LoadImageFromResolvedPath(ResolveResourcePath(path)); }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        { return null; }
     }
-
     public RuntimeSpriteValue? LoadSprite(string path, int frameWidth, int frameHeight)
     {
         if (frameWidth <= 0 || frameHeight <= 0)
@@ -1085,7 +1094,11 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
 
             return RuntimeTilemapValue.LoadFromTiledJson(
                 resolvedPath,
-                staticResolvedPath => LoadImageFromResolvedPath(staticResolvedPath));
+                staticResolvedPath => LoadImageFromResolvedPath(staticResolvedPath), IsGraphicsOperationCancelled);
+        }
+        catch (OutOfMemoryException exception)
+        {
+            throw new InvalidDataException("LOADTILEMAP: insufficient memory for graphics resource.", exception);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException or InvalidDataException or JsonException or OverflowException or ArgumentException or KeyNotFoundException or FormatException)
         {
@@ -1493,33 +1506,34 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
             }
 
             using var stream = File.OpenRead(resolvedPath);
+            if (stream.Length > GraphicsResourceLimits.MaximumResourceFileBytes) return null;
             var decoder = BitmapDecoder.Create(
                 stream,
                 BitmapCreateOptions.PreservePixelFormat,
-                BitmapCacheOption.OnLoad);
+                BitmapCacheOption.OnDemand);
             if (decoder.Frames.Count == 0)
             {
                 return null;
             }
 
             BitmapSource source = decoder.Frames[0];
+            var width = source.PixelWidth;
+            var height = source.PixelHeight;
+            if (!GraphicsResourceLimits.IsSupported(width, height))
+            {
+                return null;
+            }
+
             if (source.Format != PixelFormats.Bgra32)
             {
                 source = new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0d);
-            }
-
-            var width = source.PixelWidth;
-            var height = source.PixelHeight;
-            if (width <= 0 || height <= 0)
-            {
-                return null;
             }
 
             var pixels = new uint[checked(width * height)];
             source.CopyPixels(pixels, width * sizeof(uint), offset: 0);
             return new RuntimeImageValue(width, height, pixels);
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException or OverflowException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException or OverflowException or ArgumentException or OutOfMemoryException)
         {
             return null;
         }
@@ -1573,7 +1587,7 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
             else
             {
                 _graphicsRow++;
-                _graphicsTextBuffer.EnsureRow(_graphicsRow);
+                EnsureGraphicsTextRow(_graphicsRow);
                 _pendingGraphicsViewportScroll = false;
             }
 
@@ -1586,10 +1600,22 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
 
     }
 
+    private void EnsureGraphicsTextRow(int row)
+    {
+        if (row > GraphicsResourceLimits.MaximumTextRows)
+        {
+            var excess = row - GraphicsResourceLimits.MaximumTextRows;
+            _graphicsTextBuffer.TrimTopRows(Math.Max(0, GraphicsResourceLimits.MaximumTextRows - excess));
+            if (!IsScreenZeroMode) _graphicsRow = Math.Max(1, _graphicsRow - excess);
+            _screenTextFirstVisibleRow = Math.Max(1, _screenTextFirstVisibleRow - excess);
+            row = GraphicsResourceLimits.MaximumTextRows;
+        }
+        _graphicsTextBuffer.EnsureRow(row);
+    }
     private void AdvanceScreenZeroCursorAfterNewLine(int targetRow, bool followScreenZeroBottom)
     {
         var nextRow = targetRow + 1;
-        _graphicsTextBuffer.EnsureRow(nextRow);
+        EnsureGraphicsTextRow(nextRow);
         if (_graphicsRow < ScreenTextCellRows)
         {
             _graphicsRow++;
@@ -1606,7 +1632,7 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
         if (!_textViewportExplicit)
         {
             _graphicsRow++;
-            _graphicsTextBuffer.EnsureRow(_graphicsRow);
+            EnsureGraphicsTextRow(_graphicsRow);
             _pendingGraphicsViewportScroll = false;
             return;
         }
@@ -1616,19 +1642,19 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
             if (_graphicsRow < _textViewportBottom)
             {
                 _graphicsRow++;
-                _graphicsTextBuffer.EnsureRow(_graphicsRow);
+                EnsureGraphicsTextRow(_graphicsRow);
                 _pendingGraphicsViewportScroll = false;
                 return;
             }
 
             _graphicsRow = _textViewportBottom + 1;
-            _graphicsTextBuffer.EnsureRow(_graphicsRow);
+            EnsureGraphicsTextRow(_graphicsRow);
             _pendingGraphicsViewportScroll = true;
             return;
         }
 
         _graphicsRow++;
-        _graphicsTextBuffer.EnsureRow(_graphicsRow);
+        EnsureGraphicsTextRow(_graphicsRow);
         _pendingGraphicsViewportScroll = false;
     }
 
@@ -1640,7 +1666,7 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
         }
 
         _graphicsTextBuffer.ScrollRowsUp(_textViewportTop, _textViewportBottom);
-        _graphicsTextBuffer.EnsureRow(_textViewportBottom);
+        EnsureGraphicsTextRow(_textViewportBottom);
         _graphicsRow = _textViewportBottom;
         _graphicsColumn = 1;
         _pendingGraphicsViewportScroll = false;

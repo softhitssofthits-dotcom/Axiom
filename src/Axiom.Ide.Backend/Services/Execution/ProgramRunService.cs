@@ -248,6 +248,13 @@ public sealed class ProgramRunService : IProgramRunService
                 usedBytecodeCache: executionResult.UsedBytecodeCache,
                 debuggerState: debuggerState);
         }
+        catch (OperationCanceledException) when (cancellationProvider?.IsCancellationRequested == true || (_consoleService as IRuntimeCancellationProvider)?.IsCancellationRequested == true)
+        {
+            _consoleService.DeactivateScreen();
+            _consoleService.EndSession();
+            return new ProgramRunResult(ProgramRunStatus.Cancelled, [], GetConsoleOutputText(),
+                actualEngine: ExecutionEngineKind.BytecodeVm);
+        }
         catch (Exception exception)
         {
             if (_consoleService.IsScreenActive)

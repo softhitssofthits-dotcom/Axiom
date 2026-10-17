@@ -15,7 +15,8 @@ public sealed class RuntimeImageValue
         }
 
         ArgumentNullException.ThrowIfNull(bgraPixels);
-        if (bgraPixels.Count != width * height)
+        var pixelCount = GraphicsResourceLimits.Validate(width, height);
+        if (bgraPixels.Count != pixelCount)
         {
             throw new ArgumentException("Image pixel count must match width * height.", nameof(bgraPixels));
         }

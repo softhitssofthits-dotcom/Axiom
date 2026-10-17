@@ -8,7 +8,8 @@ public static class GraphicsFloodFill
         Action<long, long, int> setPixel,
         Func<long, long, int, int, bool> isInsideScreen,
         int screenWidth,
-        int screenHeight)
+        int screenHeight,
+        Func<bool>? isCancellationRequested = null)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(getPixel);
@@ -32,7 +33,8 @@ public static class GraphicsFloodFill
                 setPixel,
                 isInsideScreen,
                 screenWidth,
-                screenHeight);
+                screenHeight,
+                isCancellationRequested);
             return;
         }
 
@@ -44,7 +46,8 @@ public static class GraphicsFloodFill
             setPixel,
             isInsideScreen,
             screenWidth,
-            screenHeight);
+            screenHeight,
+            isCancellationRequested);
     }
 
     private static void PaintSolid(
@@ -55,7 +58,8 @@ public static class GraphicsFloodFill
         Action<long, long, int> setPixel,
         Func<long, long, int, int, bool> isInsideScreen,
         int screenWidth,
-        int screenHeight)
+        int screenHeight,
+        Func<bool>? isCancellationRequested)
     {
         var fillColor = GraphicsColorNormalization.Normalize(request.SolidFillColor ?? 0);
         if (startColor == fillColor || startColor == borderColor)
@@ -72,7 +76,8 @@ public static class GraphicsFloodFill
             screenWidth,
             screenHeight,
             (_, _, currentColor) => currentColor != borderColor && currentColor != fillColor,
-            (_, _) => fillColor);
+            (_, _) => fillColor,
+            isCancellationRequested: isCancellationRequested);
     }
 
     private static void PaintPattern(
@@ -83,18 +88,13 @@ public static class GraphicsFloodFill
         Action<long, long, int> setPixel,
         Func<long, long, int, int, bool> isInsideScreen,
         int screenWidth,
-        int screenHeight)
+        int screenHeight,
+        Func<bool>? isCancellationRequested)
     {
         var fillPatternRows = request.FillPatternRows!;
         var fillOneColor = GraphicsColorNormalization.Normalize(request.PatternForegroundColor);
         var fillZeroColor = GraphicsColorNormalization.Normalize(request.PatternBackgroundColor);
-        var startTargetColor = GetPatternColor(fillPatternRows, request.X, request.Y, fillOneColor, fillZeroColor);
         if (startColor == borderColor)
-        {
-            return;
-        }
-
-        if (request.BackgroundPatternRows is null && startColor == startTargetColor)
         {
             return;
         }
@@ -116,14 +116,15 @@ public static class GraphicsFloodFill
 
                 if (request.BackgroundPatternRows is null)
                 {
-                    return currentColor != GetPatternColor(fillPatternRows, x, y, fillOneColor, fillZeroColor);
+                    return true;
                 }
 
                 var backgroundColor = GetPatternColor(request.BackgroundPatternRows, x, y, fillOneColor, fillZeroColor);
                 return currentColor == startColor || currentColor == backgroundColor;
             },
             (x, y) => GetPatternColor(fillPatternRows, x, y, fillOneColor, fillZeroColor),
-            trackVisited: request.BackgroundPatternRows is not null);
+            trackVisited: true,
+            isCancellationRequested: isCancellationRequested);
     }
 
     private static void Flood(
@@ -136,7 +137,8 @@ public static class GraphicsFloodFill
         int screenHeight,
         Func<long, long, int, bool> canPaint,
         Func<long, long, int> getFillColor,
-        bool trackVisited = false)
+        bool trackVisited = false,
+        Func<bool>? isCancellationRequested = null)
     {
         // Фоновый узор может сохранить исходный цвет: одной проверки цвета
         // недостаточно, чтобы отличить уже обработанный пиксель.
@@ -144,7 +146,7 @@ public static class GraphicsFloodFill
         var pending = new Stack<(long X, long Y)>();
         pending.Push((startX, startY));
 
-        while (pending.Count > 0)
+        while (pending.Count > 0 && isCancellationRequested?.Invoke() != true)
         {
             var (seedX, seedY) = pending.Pop();
             if (!CanPaint(seedX, seedY))
@@ -181,6 +183,7 @@ public static class GraphicsFloodFill
 
         bool CanPaint(long x, long y)
         {
+            if (isCancellationRequested?.Invoke() == true) return false;
             if (!isInsideScreen(x, y, screenWidth, screenHeight))
             {
                 return false;

@@ -5,6 +5,16 @@ namespace Axiom.Ide.Tests;
 public sealed class ScreenModeSizeProviderTests
 {
     [Theory]
+    [InlineData(7680, 4320)]
+    [InlineData(int.MaxValue, int.MaxValue)]
+    public void LargeMonitorSizeStaysWithinTheSurfaceBudget(int width, int height)
+    {
+        var size = ScreenModeSizeProvider.ComputeScreen10BestFitSize(width, height);
+        Assert.True(Axiom.Runtime.GraphicsResourceLimits.IsSupported(size.Width, size.Height));
+        Assert.InRange(size.Width, 1, width);
+        Assert.InRange(size.Height, 1, height);
+    }
+    [Theory]
     [InlineData(1920, 1080, 1920, 1080)]
     [InlineData(1920, 1000, 1777, 1000)]
     [InlineData(1400, 1200, 1400, 787)]

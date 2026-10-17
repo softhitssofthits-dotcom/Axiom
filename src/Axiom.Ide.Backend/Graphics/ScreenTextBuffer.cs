@@ -1,3 +1,5 @@
+using Axiom.Runtime;
+
 namespace Axiom.Ide.Graphics;
 
 public sealed class ScreenTextBuffer
@@ -14,6 +16,7 @@ public sealed class ScreenTextBuffer
     public void Write(int row, int column, string text, int foreground, int? background, int? maxColumns = null)
     {
         ArgumentNullException.ThrowIfNull(text);
+        maxColumns = Math.Min(maxColumns ?? GraphicsResourceLimits.MaximumTextColumns, GraphicsResourceLimits.MaximumTextColumns);
 
         var line = GetOrCreateLine(Math.Max(1, row));
         var columnIndex = Math.Max(0, column - 1);
@@ -122,6 +125,8 @@ public sealed class ScreenTextBuffer
 
     private List<ScreenTextCell> GetOrCreateLine(int row)
     {
+        if (row > GraphicsResourceLimits.MaximumTextRows)
+            throw new ArgumentOutOfRangeException(nameof(row), "Text row exceeds the graphics history limit.");
         while (_lines.Count < row)
         {
             _lines.Add([]);

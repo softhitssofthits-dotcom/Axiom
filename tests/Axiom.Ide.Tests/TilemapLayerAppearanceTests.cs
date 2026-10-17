@@ -51,8 +51,8 @@ public sealed class TilemapLayerAppearanceTests
                 PRINT MAPWIDTH(m)
                 """, sourceFilePath: Path.Combine(root, "check.axm"));
             Assert.Equal(ProgramRunStatus.Success, result.Status);
-            var reason = fields[index] == "tintcolor" ? "LOADTILEMAP: Поле tintcolor слоя поддерживает только непрозрачный белый цвет."
-                : "LOADTILEMAP: Поле mode слоя поддерживает только строку normal.";
+            var reason = fields[index] == "tintcolor" ? "LOADTILEMAP: Field tintcolor of layer only supports opaque white."
+                : "LOADTILEMAP: Field mode of layer only supports the string normal.";
             Assert.Equal(index is 0 or 5 or 8 ? "1" : string.Join(Environment.NewLine, "MB3005", reason, "1"), result.OutputText);
         }
         finally

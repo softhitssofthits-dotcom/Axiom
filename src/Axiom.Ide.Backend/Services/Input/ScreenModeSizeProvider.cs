@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using Axiom.Ide.Graphics;
+using Axiom.Runtime;
 
 namespace Axiom.Ide.Services.Input;
 
@@ -39,6 +40,8 @@ internal sealed class ScreenModeSizeProvider : IScreenModeSizeProvider
         }
 
         var scale = Math.Min(availableWidth / 16d, availableHeight / 9d);
+        scale = Math.Min(scale, Math.Min(GraphicsResourceLimits.MaximumDimension / 16d,
+            Math.Min(GraphicsResourceLimits.MaximumDimension / 9d, Math.Sqrt(GraphicsResourceLimits.MaximumPixels / 144d))));
         var width = Math.Max(1, (int)Math.Floor(16d * scale));
         var height = Math.Max(1, (int)Math.Floor(9d * scale));
         return (width, height);
@@ -70,6 +73,17 @@ internal sealed class ScreenModeSizeProvider : IScreenModeSizeProvider
 
     private static IntPtr ResolveTargetMonitor()
     {
+        // DesktopHost не имеет WPF MainWindow. HWND передаётся самим Electron;
+        // монитор определяется при каждом SCREEN 10, включая перенос окна IDE.
+        if (long.TryParse(Environment.GetEnvironmentVariable("AXIOM_IDE_OWNER_HWND"), out var owner) && owner > 0 &&
+            GetWindowRect((IntPtr)owner, out var rect))
+        {
+            return MonitorFromPoint(new NativePoint
+            {
+                X = (int)(((long)rect.Left + rect.Right) / 2),
+                Y = (int)(((long)rect.Top + rect.Bottom) / 2)
+            }, MonitorDefaultToPrimary);
+        }
         if (TryGetMainWindowCenter(out var center))
         {
             return MonitorFromPoint(center, MonitorDefaultToPrimary);

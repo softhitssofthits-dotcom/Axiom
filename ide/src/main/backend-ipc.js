@@ -9,6 +9,7 @@ const { resolveHostPath } = require('./host-ensure');
 const { CanvasWindow } = require('./canvas-window');
 const { sameSourceText } = require('./file-service');
 const { portableRuntime } = require('./portable-runtime');
+const { graphicsOwnerEnvironment } = require('./graphics-owner');
 
 let client;
 let owner;
@@ -35,7 +36,8 @@ function send(channel, payload) { if (owner && !owner.isDestroyed()) owner.send(
 function getClient() {
   if (client && !client.failure && !client.closed) return client;
   const executable = resolveHostPath(process.env, root).exe;
-  client = new BackendClient({ executable, expectedFingerprint: portableRuntime(root)?.sourceFingerprint || sourceFingerprint(root) });
+  client = new BackendClient({ executable, env: graphicsOwnerEnvironment(owner && BrowserWindow.fromWebContents(owner)),
+    expectedFingerprint: portableRuntime(root)?.sourceFingerprint || sourceFingerprint(root) });
   client.on('event', message => {
     if (message.sessionId && message.sessionId !== sessionId) return;
     send('backend-event', message);

@@ -1,0 +1,22 @@
+' Проверка исправленных границ графики. Запустите в IDE.
+SCREEN 1
+COLOR 6, 0
+LINE (20, 60)-(29, 69), 9, B
+PAINT (22, 62), CHR(170) & CHR(85), 9
+CIRCLE (-1000000, 100), 1000000, 12
+DIM pixel(2147483647 TO 2147483647, 0 TO 0) AS INTEGER
+GET (21, 61)-(21, 61), pixel
+PUT (40, 60), pixel, PSET
+TRY
+    CANVAS 16385, 1
+CATCH err
+    PRINT err.Code
+END TRY
+SCREEN 1
+PSET (2147483648, 0), 1
+TRY
+    PRINT POINT(2)
+CATCH err
+    PRINT err.Code
+END TRY
+SLEEP

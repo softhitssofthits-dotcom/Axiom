@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 471,
+  "count": 477,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -1781,6 +1781,36 @@
       "id": "gpu-canvas-get-put-camera",
       "spec": "gpu-canvas.spec.js",
       "name": "CANVAS: GET и PUT сохраняют индексы и координаты камеры в настоящем запуске"
+    },
+    {
+      "id": "graphics-repair-all-screen-modes",
+      "spec": "graphics-audit-repairs.spec.js",
+      "name": "Проверка пикселей всех графических режимов SCREEN 1..10"
+    },
+    {
+      "id": "graphics-repair-screen-zero-to-graphics",
+      "spec": "graphics-audit-repairs.spec.js",
+      "name": "Проверка исправления перехода SCREEN 0 в SCREEN 1"
+    },
+    {
+      "id": "graphics-repair-paint-checker-black",
+      "spec": "graphics-audit-repairs.spec.js",
+      "name": "Проверка исправления узорной PAINT на чёрном фоне"
+    },
+    {
+      "id": "graphics-repair-screen-input-surrogate-backspace",
+      "spec": "graphics-audit-repairs.spec.js",
+      "name": "Проверка исправления Backspace для emoji в SCREEN INPUT"
+    },
+    {
+      "id": "graphics-repair-bulk-put",
+      "spec": "graphics-audit-repairs.spec.js",
+      "name": "Пакетная запись PUT на настоящем CANVAS"
+    },
+    {
+      "id": "graphics-repair-stop-paint",
+      "spec": "graphics-audit-repairs.spec.js",
+      "name": "Остановка большой заливки без зависания DesktopHost"
     },
     {
       "id": "graphics-shell-hard-crash",

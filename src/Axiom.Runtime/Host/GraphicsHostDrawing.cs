@@ -2,7 +2,7 @@ namespace Axiom.Runtime;
 
 public static class GraphicsHostDrawing
 {
-    public static void Paint(IGraphicsHost host, GraphicsPaintRequest request)
+    public static void Paint(IGraphicsHost host, GraphicsPaintRequest request, Func<bool>? isCancellationRequested = null)
     {
         ArgumentNullException.ThrowIfNull(host);
         ArgumentNullException.ThrowIfNull(request);
@@ -44,7 +44,8 @@ public static class GraphicsHostDrawing
                 y < height &&
                 viewport.IsInsideAbsolute(x, y),
             host.ScreenWidth,
-            host.ScreenHeight);
+            host.ScreenHeight,
+            isCancellationRequested);
     }
 
     public static void DrawLine(IGraphicsHost host, long x1, long y1, long x2, long y2, int color, GraphicsLineKind kind)

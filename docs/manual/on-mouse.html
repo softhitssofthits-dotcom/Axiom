@@ -126,7 +126,8 @@ END SUB</code></pre>
             <ul class="resource-list"><li><a href="../../samples/operators/on-mouse/left_button_handler.axm">ON MOUSE: обработчик левой кнопки мыши в SCREEN</a></li><li><a href="../../samples/operators/on-mouse/canvas_world_handler.axm">ON MOUSE: мировые координаты в CANVAS</a></li><li><a href="../../samples/operators/on-mouse/release_move_handler.axm">ON MOUSE: отпускание и перемещение</a></li><li><a href="../../samples/operators/on-mouse/wheel_handler.axm">ON MOUSE: колесо мыши</a></li></ul>
         </section>
 
-        <section class="article-section">
+        <section class="article-section"><h2>Продвижение очереди событий</h2><p>Обработка <code>ON MOUSE</code> ограничена числом событий между инструкциями программы. События без включённого обработчика сохраняются для последующего чтения, но не занимают весь опрос: новые события от окна продолжают поступать даже после 64 и более отложенных событий. Сохранённое нажатие можно получить через <code>MOUSEPRESS</code>.</p></section>
+<section class="article-section">
             <h2>См. также</h2>
             <div class="link-list"><a href="keyboard-mouse-events.html">Клавиатура, мышь и события</a><a href="mousepress.html">Функция MOUSEPRESS</a><a href="mousebutton.html">Функция MOUSEBUTTON</a><a href="mousex.html">Функция MOUSEX</a><a href="mousey.html">Функция MOUSEY</a><a href="on-key.html">Оператор ON KEY</a><a href="screen.html">Оператор SCREEN</a></div>
         </section>

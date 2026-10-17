@@ -32,6 +32,8 @@ internal sealed class DesktopHost : IDisposable
     private string? _inputRequestId;
     private IProgramDebuggerState? _debugger;
     private ManualCancellationProvider? _cancel;
+    private sealed record CancellationRegistration(string SessionId, ManualCancellationProvider Provider);
+    private CancellationRegistration? _cancellationRegistration;
     private bool _working;
     private volatile bool _shutdown;
     private Task? _worker;
@@ -47,6 +49,7 @@ internal sealed class DesktopHost : IDisposable
         _console.GraphicsHost.UseNativeCanvasWindow = true;
         _console.GraphicsHost.UseGpuCanvas = true;
         _console.GraphicsHost.UseGpuScreen = true;
+        _console.GraphicsHost.GraphicsCancellationRequested = () => Volatile.Read(ref _cancellationRegistration)?.Provider.IsCancellationRequested == true;
         _console.GraphicsHost.GraphicsError += message =>
         {
             Event("graphics.error", new { code = "GRAPHICS_DEVICE_ERROR", message });
@@ -129,6 +132,10 @@ internal sealed class DesktopHost : IDisposable
                             {
                                 using var document = JsonDocument.Parse(line.ToArray());
                                 var request = document.RootElement.Clone();
+                                var registration = Volatile.Read(ref _cancellationRegistration);
+                                if (registration is not null && String(request, "method") == "execution.stop" &&
+                                    String(request, "sessionId") == registration.SessionId)
+                                    registration.Provider.Cancel();
                                 _ = _application.Dispatcher.BeginInvoke(() => Handle(request));
                             }
                             catch (JsonException e) { Console.Error.WriteLine("Некорректный JSON: " + e.Message); }
@@ -144,7 +151,11 @@ internal sealed class DesktopHost : IDisposable
             }
         }
         catch (Exception e) { Console.Error.WriteLine(e); }
-        finally { _ = _application.Dispatcher.BeginInvoke(Shutdown); }
+        finally
+        {
+            Volatile.Read(ref _cancellationRegistration)?.Provider.Cancel();
+            _ = _application.Dispatcher.BeginInvoke(Shutdown);
+        }
     }
 
     private void Handle(JsonElement request)
@@ -259,6 +270,7 @@ internal sealed class DesktopHost : IDisposable
         _frames?.Reset();
         _publishedOutput = ""; _pendingOutputVersion = null;
         _sessionId = session; _graphicsSessionId = session; _sequence = 0; _cancel = new ManualCancellationProvider(); _working = true;
+        Volatile.Write(ref _cancellationRegistration, new CancellationRegistration(session, _cancel));
         Respond(id, new { accepted = true }); Event("execution.state", new { state = "Compiling" });
         Work(() => _runner.Run(source, launch == "debug" ? breakpoints : [], stopFirst, file, cancellationProvider: _cancel));
     }
@@ -305,6 +317,7 @@ internal sealed class DesktopHost : IDisposable
 
     private void Finish()
     {
+        Volatile.Write(ref _cancellationRegistration, null);
         _sessionId = null; _debugger = null; _stopId = null; _inputRequestId = null; _working = false;
         if (_shutdown) _application.Shutdown();
     }

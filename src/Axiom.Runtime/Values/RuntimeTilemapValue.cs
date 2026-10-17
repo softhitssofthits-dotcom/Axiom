@@ -233,12 +233,14 @@ public sealed class RuntimeTilemapValue
         return Tilesets[tilesetIndex - 1];
     }
 
-    public static RuntimeTilemapValue LoadFromTiledJson(string mapPath, Func<string, RuntimeImageValue?> loadResolvedImage)
+    public static RuntimeTilemapValue LoadFromTiledJson(string mapPath, Func<string, RuntimeImageValue?> loadResolvedImage,
+        Func<bool>? isCancellationRequested = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(mapPath);
         ArgumentNullException.ThrowIfNull(loadResolvedImage);
 
-        using var document = JsonDocument.Parse(File.ReadAllText(mapPath));
+        CheckCancellation(isCancellationRequested);
+        using var document = ReadBoundedJsonFile(mapPath);
         var root = document.RootElement;
         ValidateMapRoot(root, mapPath);
 
@@ -249,11 +251,23 @@ public sealed class RuntimeTilemapValue
         var renderOrder = ParseRenderOrder(root.TryGetProperty("renderorder", out var renderOrderElement) ? renderOrderElement.GetString() : null);
 
         var baseDirectory = Path.GetDirectoryName(mapPath) ?? Environment.CurrentDirectory;
-        var tilesets = LoadTilesets(baseDirectory, ReadMapArray(root, "tilesets"), loadResolvedImage);
-        var layers = LoadLayers(ReadMapArray(root, "layers"), width, height, tilesets);
+        var tilesets = LoadTilesets(baseDirectory, ReadMapArray(root, "tilesets"), loadResolvedImage, isCancellationRequested);
+        var layers = LoadLayers(ReadMapArray(root, "layers"), width, height, tilesets, isCancellationRequested);
         return new RuntimeTilemapValue(width, height, tileWidth, tileHeight, renderOrder, tilesets, layers, RuntimeTilemapMetadata.ReadProperties(root));
     }
 
+    private static void CheckCancellation(Func<bool>? isCancellationRequested)
+    {
+        if (isCancellationRequested?.Invoke() == true) throw new OperationCanceledException();
+    }
+
+    private static JsonDocument ReadBoundedJsonFile(string path)
+    {
+        using var stream = File.OpenRead(path);
+        if (stream.Length > GraphicsResourceLimits.MaximumResourceFileBytes)
+            throw RuntimeTilemapMetadata.Invalid("JSON resource exceeds 64 MiB.");
+        return JsonDocument.Parse(stream);
+    }
     private static void ValidateMapRoot(JsonElement root, string mapPath)
     {
         if (!root.TryGetProperty("orientation", out var orientationElement) ||
@@ -298,11 +312,13 @@ public sealed class RuntimeTilemapValue
     private static IReadOnlyList<RuntimeTilemapTilesetReference> LoadTilesets(
         string baseDirectory,
         JsonElement tilesetsElement,
-        Func<string, RuntimeImageValue?> loadResolvedImage)
+        Func<string, RuntimeImageValue?> loadResolvedImage,
+        Func<bool>? isCancellationRequested)
     {
         var tilesets = new List<RuntimeTilemapTilesetReference>();
         foreach (var tilesetEntry in tilesetsElement.EnumerateArray())
         {
+            CheckCancellation(isCancellationRequested);
             var firstGlobalId = ReadMapInteger(tilesetEntry, "firstgid", positive: true);
             if (firstGlobalId > 0x0fffffff) throw RuntimeTilemapMetadata.Invalid("firstgid содержит зарезервированные биты Tiled.");
             var resolvedTileset = ResolveTileset(baseDirectory, tilesetEntry);
@@ -346,11 +362,14 @@ public sealed class RuntimeTilemapValue
         JsonElement layersElement,
         int mapWidth,
         int mapHeight,
-        IReadOnlyList<RuntimeTilemapTilesetReference> tilesets)
+        IReadOnlyList<RuntimeTilemapTilesetReference> tilesets,
+        Func<bool>? isCancellationRequested)
     {
         var layers = new List<RuntimeTilemapLayer>();
+        long totalCells = 0;
         foreach (var layerElement in layersElement.EnumerateArray())
         {
+            CheckCancellation(isCancellationRequested);
             var type = layerElement.GetProperty("type").GetString();
             if (string.Equals(type, "group", StringComparison.OrdinalIgnoreCase))
             {
@@ -371,7 +390,11 @@ public sealed class RuntimeTilemapValue
             {
                 var width = layerElement.TryGetProperty("width", out var widthElement) ? widthElement.GetInt32() : mapWidth;
                 var height = layerElement.TryGetProperty("height", out var heightElement) ? heightElement.GetInt32() : mapHeight;
-                var cells = ParseLayerCells(layerElement, width, height, tilesets);
+                var count = (long)width * height;
+                if (width < 0 || height < 0 || count > GraphicsResourceLimits.MaximumPixels - totalCells)
+                    throw RuntimeTilemapMetadata.Invalid("Tile layer cell budget exceeded.");
+                totalCells += count;
+                var cells = ParseLayerCells(layerElement, width, height, tilesets, isCancellationRequested);
                 layers.Add(new RuntimeTilemapLayer(name, RuntimeTilemapLayerKind.Tile, width, height, visible, opacity, offsetX, offsetY, parallaxX, parallaxY, cells, RuntimeTilemapMetadata.ReadProperties(layerElement)));
                 continue;
             }
@@ -410,7 +433,7 @@ public sealed class RuntimeTilemapValue
         return number;
     }
 
-    private static RuntimeTilemapCell[] ParseLayerCells(JsonElement layerElement, int width, int height, IReadOnlyList<RuntimeTilemapTilesetReference> tilesets)
+    private static RuntimeTilemapCell[] ParseLayerCells(JsonElement layerElement, int width, int height, IReadOnlyList<RuntimeTilemapTilesetReference> tilesets, Func<bool>? isCancellationRequested)
     {
         if (layerElement.TryGetProperty("chunks", out _)) throw RuntimeTilemapMetadata.Invalid("Слои chunks пока не поддерживаются.");
         if (layerElement.TryGetProperty("encoding", out var encoding)
@@ -428,6 +451,7 @@ public sealed class RuntimeTilemapValue
         var index = 0;
         foreach (var rawValue in dataElement.EnumerateArray())
         {
+            if ((index & 4095) == 0) CheckCancellation(isCancellationRequested);
             if (index >= cells.Length)
             {
                 throw new InvalidDataException("LOADTILEMAP: размер data не совпадает с размерами тайлового слоя.");
@@ -539,7 +563,7 @@ public sealed class RuntimeTilemapValue
         if (tilesetEntry.TryGetProperty("source", out var sourceElement))
         {
             var sourcePath = ResolveRelativePath(baseDirectory, sourceElement.GetString() ?? string.Empty);
-            using var tilesetDocument = JsonDocument.Parse(File.ReadAllText(sourcePath));
+            using var tilesetDocument = ReadBoundedJsonFile(sourcePath);
             definition = tilesetDocument.RootElement.Clone();
             definitionBaseDirectory = Path.GetDirectoryName(sourcePath) ?? baseDirectory;
         }
