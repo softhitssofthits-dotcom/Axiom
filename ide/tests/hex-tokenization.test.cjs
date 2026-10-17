@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const path = require('node:path');
 
 function language() {
-  const runtime = {window: {}};
+  const runtime = {window: { AxiomThemes: require('../src/renderer/themes') }};
   const source = fs.readFileSync(path.join(__dirname, '../src/renderer/app.js'), 'utf8')
     .replace('window.__ide = new AxiomIDE();', 'window.TestIDE = AxiomIDE;');
   vm.runInNewContext(source, runtime);

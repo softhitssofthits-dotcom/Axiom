@@ -1,10 +1,24 @@
 // E2E runner for the Axiom IDE.
 // Usage: node runner.js [filter-substring]
+//        node runner.js --from <id-substring>   (запуск от первого совпадения до конца)
+//        node runner.js --out <file>            (свой файл результата вместо evidence/results.json)
 const fs = require('fs');
 const path = require('path');
 const { Checks, Session, EVIDENCE, killStrayAxiom, TMP, resolveGuardAxiom } = require('./helpers');
 
-const FILTER = process.argv[2] || '';
+const rawArgs = process.argv.slice(2);
+let FILTER = '';
+let FROM = '';
+let OUT = path.join(EVIDENCE, 'results.json');
+for (let i = 0; i < rawArgs.length; i++) {
+  const a = rawArgs[i];
+  if (a === '--from') { FROM = rawArgs[++i] || ''; }
+  else if (a.startsWith('--from=')) { FROM = a.slice('--from='.length); }
+  else if (a === '--out') { OUT = path.resolve(rawArgs[++i] || OUT); }
+  else if (a.startsWith('--out=')) { OUT = path.resolve(a.slice('--out='.length)); }
+  else if (a === '--list') { FILTER = a; }
+  else if (!FILTER) { FILTER = a; }
+}
 const SPEC_DIR = path.join(__dirname, 'specs');
 
 const specFiles = fs.readdirSync(SPEC_DIR).filter((f) => f.endsWith('.spec.js')).sort();
@@ -28,17 +42,25 @@ if (FILTER === '--list') {
 
 (async () => {
   const results = [];
+  const matches = (t) => !FILTER || `${t.spec}/${t.id}`.toLowerCase().includes(FILTER.toLowerCase());
+  let startIndex = 0;
+  if (FROM) {
+    startIndex = tests.findIndex((t) => `${t.spec}/${t.id}`.toLowerCase().includes(FROM.toLowerCase()));
+    if (startIndex < 0) { console.error(`--from не найден: ${FROM}`); process.exit(2); }
+    console.log(`--from: продолжаю с №${startIndex + 1} ${tests[startIndex].spec} :: ${tests[startIndex].id}`);
+  }
   // Refuse to run against a missing/self-reported-broken CLI. Specs that deliberately
   // point AXIOM_EXE at a broken binary are exempt via their file name.
-  const selected = tests.filter((t) => !FILTER || `${t.spec}/${t.id}`.toLowerCase().includes(FILTER.toLowerCase()));
+  const selected = tests.filter((t, i) => i >= startIndex && matches(t));
   if (selected.length && selected.some((t) => t.spec !== 'errors.spec.js')) {
     console.log(`axiom guard: ${resolveGuardAxiom()}`);
   }
-  console.log(`Axiom IDE E2E: ${tests.length} tests\n`);
+  console.log(`Axiom IDE E2E: ${tests.length} tests, will run ${selected.length}\n`);
   let idx = 0;
   for (const t of tests) {
     idx++;
-    if (FILTER && !`${t.spec}/${t.id}`.toLowerCase().includes(FILTER.toLowerCase())) continue;
+    if (idx - 1 < startIndex) continue;
+    if (!matches(t)) continue;
     const S = new Session(t.id);
     const C = new Checks(t.id);
     const started = Date.now();
@@ -72,6 +94,8 @@ if (FILTER === '--list') {
       rendererDialogs: S.rendererDialogs,
     };
     results.push(res);
+    // Сохраняю после каждого сценария, чтобы длинный прогон не терял результат при прерывании.
+    try { fs.mkdirSync(path.dirname(OUT), { recursive: true }); fs.writeFileSync(OUT, JSON.stringify(results, null, 2), 'utf-8'); } catch {}
     if (C.failures.length) {
       console.log(`FAIL (${C.failures.length})`);
       for (const f of C.failures) console.log(`    ✗ ${f.msg}${f.detail ? `\n      ${String(f.detail).slice(0, 300)}` : ''}`);
@@ -80,7 +104,7 @@ if (FILTER === '--list') {
     }
   }
 
-  fs.writeFileSync(path.join(EVIDENCE, 'results.json'), JSON.stringify(results, null, 2), 'utf-8');
+  fs.writeFileSync(OUT, JSON.stringify(results, null, 2), 'utf-8');
   const failed = results.filter((r) => r.failures.length);
   console.log(`\n==== ${results.length} executed, ${failed.length} failed ====${failed.length ? '' : ' 🎉'}`);
   for (const f of failed) console.log(`  FAIL ${f.spec} :: ${f.id}`);

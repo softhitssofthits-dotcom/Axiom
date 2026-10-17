@@ -1,16 +1,18 @@
 [
   {
-    "id": "shell-toolbar-history-and-panel-state",
-    "spec": "shell.spec.js",
-    "name": "Индикатор нижней панели, отмена и повтор на панели инструментов",
-    "ms": 8780,
-    "passed": 45,
+    "id": "editor-settings-live-parameterHints.cycle",
+    "spec": "editor-settings-live.spec.js",
+    "name": "Циклический перебор сигнатур — отдельный сценарий штатной IDE",
+    "ms": 7149,
+    "passed": 2,
     "failures": [],
-    "notes": [],
+    "notes": [
+      "{\"source\":{\"head\":\"57489a562e758d3486983dfa83c5d61f128d8c25\",\"app\":\"9916643f9c2e4c4b0c00ccb1e97ea4533c8a434aecfeb1a96dc709631058685d\",\"dialog\":\"0b041535d35a57e417395a5d3aedbe5f4e00d33417d75334f31e659545228896\"},\"key\":\"parameterHints.cycle\",\"ru\":\"Циклический перебор сигнатур\",\"group\":\"suggestions\",\"scenario\":\"live-parameterHints.cycle\",\"status\":\"observed-change\",\"cases\":[{\"value\":false,\"observed\":[{\"text\":\"2/2APPENDFILE(path AS STRING, text AS STRING, encoding AS STRING) AS BOOLEAN\",\"style\":{\"font\":\"-apple-system, BlinkMacSystemFont, \\\"Segoe WPC\\\", \\\"Segoe UI\\\", HelveticaNeue-Light, system-ui, Ubuntu, \\\"Droid Sans\\\", sans-serif\",\"size\":\"14px\",\"weight\":\"400\",\"height\":\"19px\",\"spacing\":\"normal\",\"features\":\"normal\",\"variations\":\"normal\",\"cursor\":\"default\",\"animation\":\"none\",\"visibility\":\"hidden\",\"display\":\"none\",\"color\":\"rgb(228, 235, 245)\",\"border\":\"0px\",\"background\":\"rgb(37, 46, 62)\",\"opacity\":\"1\",\"decoration\":\"none\",\"shadow\":\"none\",\"borderLeft\":\"rgb(53, 65, 87)\",\"borderTop\":\"rgb(53, 65, 87)\"}}],\"diagnostic\":{\"saved\":false,\"parent\":{\"enabled\":true,\"cycle\":false}},\"screenshot\":\"C:\\\\Axiom\\\\.artifacts\\\\editor-settings\\\\live-shots\\\\parameterHints-cycle-0.png\",\"screenshotHash\":\"b7a373a2917631723dba1cf0c4d5426caa1931922e1252f17a093f359ae2f2ad\"},{\"value\":true,\"observed\":[{\"text\":\"2/2APPENDFILE(path AS STRING, text AS STRING, encoding AS STRING) AS BOOLEAN\",\"style\":{\"font\":\"-apple-system, BlinkMacSystemFont, \\\"Segoe WPC\\\", \\\"Segoe UI\\\", HelveticaNeue-Light, system-ui, Ubuntu, \\\"Droid Sans\\\", sans-serif\",\"size\":\"14px\",\"weight\":\"400\",\"height\":\"19px\",\"spacing\":\"normal\",\"features\":\"normal\",\"variations\":\"normal\",\"cursor\":\"default\",\"animation\":\"none\",\"visibility\":\"visible\",\"display\":\"block\",\"color\":\"rgb(228, 235, 245)\",\"border\":\"0px\",\"background\":\"rgb(37, 46, 62)\",\"opacity\":\"1\",\"decoration\":\"none\",\"shadow\":\"none\",\"borderLeft\":\"rgb(53, 65, 87)\",\"borderTop\":\"rgb(53, 65, 87)\"}}],\"diagnostic\":{\"parent\":{\"enabled\":true,\"cycle\":true}},\"screenshot\":\"C:\\\\Axiom\\\\.artifacts\\\\editor-settings\\\\live-shots\\\\parameterHints-cycle-1.png\",\"screenshotHash\":\"b3829d33fe681255fb9f2e6891e6fe33521bdfee6a17b56cef5c604012cde413\"}],\"errors\":[],\"plan\":{\"values\":[false,true],\"mode\":\"signature-cycle\",\"observation\":\"Перебор перегрузок штатной функции\"},\"criterion\":\"Перебор перегрузок штатной функции\",\"expectationErrors\":[]}"
+    ],
     "crashed": false,
     "consoleTail": [],
     "pageErrors": [],
-    "mainStderrTail": "Debugger ending on ws://127.0.0.1:62934/c8609cce-7291-4eb3-8eab-db033d022abc\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:62938/3b0762f7-cd46-4a15-a12d-eca6a9d2214a\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:63961/dcf9bc81-bf58-4ed8-940d-75c23276532c\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
     "rendererDialogs": []
   }
 ]

@@ -686,6 +686,7 @@ class AxiomIDE {
       case 'toggle-toolbar': this.setToolbarVisible(this.settings.toolbarVisible === false); break;
       case 'toggle-sidebar': this.setSidebarVisible(this.settings.sidebarVisible === false); break;
       case 'toggle-project-explorer': this.toggleProjectExplorer(); break;
+      case 'toggle-statusbar': this.setStatusBarVisible(this.settings.statusBarVisible === false); break;
       case 'theme-light': this.setTheme('light'); break;
       case 'theme-dark': this.setTheme('dark'); break;
       case 'theme-basic': this.setTheme('basic'); break;
@@ -693,6 +694,8 @@ class AxiomIDE {
       case 'lang-ru': this.setLanguage('ru'); break;
       case 'lang-en': this.setLanguage('en'); break;
       case 'open-log-folder': this.openLogFolder(); break;
+      case 'manual': API.openManual(); break;
+      case 'event-log': this.openEventLog(); break;
       case 'about': this.showAbout(); break;
       case 'editor-settings':
         this.editorSettingsDialog ||= new window.EditorSettingsDialog(this);
@@ -856,6 +859,14 @@ class AxiomIDE {
     document.getElementById('project-explorer').classList.toggle('hidden', !visible);
     this.saveSettings({ projectExplorer: visible });
     const check = document.querySelector('.menu-check[data-check="projectExplorer"]');
+    UIControls.setMenuChecked(check, visible);
+    setTimeout(() => this.editor?.layout(), 0);
+  }
+
+  setStatusBarVisible(visible) {
+    document.getElementById('status-bar').style.display = visible ? '' : 'none';
+    this.saveSettings({ statusBarVisible: visible });
+    const check = document.querySelector('.menu-check[data-check="statusBarVisible"]');
     UIControls.setMenuChecked(check, visible);
     setTimeout(() => this.editor?.layout(), 0);
   }
@@ -1585,14 +1596,25 @@ class AxiomIDE {
     const smartIdentifierEnabled = !!this.settings.smartIdentifierEnabled;
     const indentMode=this.settings.editorPreferences?.autoIndent || window.EditorPreferences.defaults(this.monaco).autoIndent;
     const nativeIndent=/^[ \t]*/.exec(model.getLineContent(position.lineNumber))[0];
+    const path = this.activeFile, text = model.getValue();
+    const formattingStyle = this.settings.formattingStyle || 'Classic';
+    const token = {};
+    this._structuralRequests ||= new WeakMap();
+    this._structuralRequests.set(model, token);
+    const current = () => this._structuralRequests.get(model) === token && this.activeFile === path &&
+      this.openFiles.get(path) === document && !model.isDisposed?.() && this.editor.getModel() === model &&
+      model.getValue() === text && smartIdentifierEnabled === !!this.settings.smartIdentifierEnabled &&
+      formattingStyle === (this.settings.formattingStyle || 'Classic') &&
+      indentMode === (this.settings.editorPreferences?.autoIndent || window.EditorPreferences.defaults(this.monaco).autoIndent) &&
+      !this.editor.getContribution('snippetController2')?.isInSnippet() &&
+      !(this.running && this.openFiles.get(this._runFile)?.model === model) &&
+      model.getOffsetAt(this.editor.getPosition()) === caretOffset;
+    let applying = false;
     try {
       const result = await this.documentServices.request(this.activeFile, 'document.editTransition', {
         previousLineNumber, currentLineNumber: position.lineNumber, caretOffset,
-        formattingStyle: this.settings.formattingStyle || 'Classic', smartIdentifierEnabled });
-      if (smartIdentifierEnabled !== !!this.settings.smartIdentifierEnabled || !result || this.editor.getModel() !== model ||
-          this.editor.getContribution('snippetController2')?.isInSnippet() ||
-          (this.running && this.openFiles.get(this._runFile)?.model === model) ||
-          model.getOffsetAt(this.editor.getPosition()) !== caretOffset) return;
+        formattingStyle, smartIdentifierEnabled });
+      if (!result || !current()) return;
       this.editedLines.consume(model,previousLineNumber);
       if (!result.edits.length) return;
       const edits = result.edits.map(e => {
@@ -1601,6 +1623,7 @@ class AxiomIDE {
         const start=model.getPositionAt(e.start),end=model.getPositionAt(e.start+e.length);
         return {range:new this.monaco.Range(start.lineNumber,start.column,end.lineNumber,end.column),text:e.newText};
       });
+      applying = true;
       this.editor.pushUndoStop();this._autoFormatting=true;
       try {
         this.editor.executeEdits('axiom-block-edit',edits);
@@ -1618,7 +1641,9 @@ class AxiomIDE {
       }
       finally {this._autoFormatting=false;}
       this.editor.pushUndoStop();
-    } catch(e) {this.showIdeProblem('status.fmtFailed',e.message);}
+    } catch(e) {
+      if (applying || current()) this.showIdeProblem('status.fmtFailed', e?.message || String(e));
+    }
   }
 
   // ================= external file changes (watcher) =================
@@ -2017,6 +2042,7 @@ class AxiomIDE {
     }
     this.rebuildOutline();
     this.setProjectExplorerVisible(this.settings.projectExplorer !== false);
+    this.setStatusBarVisible(this.settings.statusBarVisible !== false);
     this.renderMiscellaneousFiles();
   }
 
@@ -2088,6 +2114,7 @@ class AxiomIDE {
         <div class="about-row"><span>${I18N.t('about.ide')}</span><code>${info.ide || I18N.t('about.notFound')}</code></div>
         <div class="about-row"><span>${I18N.t('about.lang')}</span><code>${info.language || I18N.t('about.notFound')}</code></div>
         <div class="about-row"><span>${I18N.t('about.cli')}</span><code>${info.compiler || I18N.t('about.notFound')}</code></div>
+        <div class="about-row"><span>${I18N.t('about.vm')}</span><code>BytecodeVm</code></div>
         <button id="about-close">${I18N.t('about.ok')}</button>
       </div>`;
     document.body.appendChild(overlay);
@@ -2104,6 +2131,11 @@ class AxiomIDE {
     }
     closeButton.onclick = () => overlay.remove();
     overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  }
+
+  openEventLog() {
+    this.eventLogDialog ||= new window.EventLogDialog(this);
+    this.eventLogDialog.show();
   }
 
   async openLogFolder() {

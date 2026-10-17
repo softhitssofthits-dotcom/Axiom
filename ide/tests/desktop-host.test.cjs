@@ -127,7 +127,7 @@ test('DesktopHost исполняет точный пример одной VM', (
   assert.equal(finished.payload.actualEngine, 'BytecodeVm');
   assert.equal(finished.payload.status, 'Succeeded');
   assert.deepEqual(finished.payload.outputText.replace(/\r\n/g, '\n').trimEnd().split('\n'),
-    ['Сумма: 3', '', 'Шаг: 1', 'Шаг: 2', 'MB3007', 'Завершено']);
+    ['Сумма: 3', '', 'Шаг: 1', 'Шаг: 2', 'MB3007', "Function POW: argument 'value' cannot be used with the specified exponent.", 'Завершено']);
 }));
 
 test('INPUT принимает значение один раз; отмена следующего запроса освобождает сессию', () => withHost(async h => {
@@ -189,7 +189,7 @@ test('SCREEN открывает настоящее нативное окно и 
   assert.equal(closed.payload.windowHandle, '0');
 }));
 
-test('CANVAS передаёт BGRA по отдельному каналу и ждёт подтверждения кадра', async () => {
+test('CANVAS использует нативное GPU-окно без обычных кадров в FramePipe', async () => {
   const pipe = 'axiom-ide-' + randomUUID();
   const h = new Host(pipe);
   let socket;
@@ -210,24 +210,18 @@ test('CANVAS передаёт BGRA по отдельному каналу и ж�
         pending = pending.subarray(4 + headerLength + header.byteLength);
       }
     });
-    await h.start('CANVAS 4, 3\nBEGINFRAME\nCLS RGB(255, 0, 0)\nPRESENT\nDO\nLOOP\n');
-    const until = Date.now() + 12000;
-    while (!frames.length && Date.now() < until) await new Promise(r => setTimeout(r, 10));
-    assert.ok(frames.length);
-    const first = frames.shift();
-    assert.equal(first.header.format, 'BGRA8');
-    assert.equal(first.header.sessionId, 's1');
-    assert.equal(first.pixels.length, first.header.width * first.header.height * 4);
-    await new Promise(r => setTimeout(r, 100));
-    assert.equal(frames.length, 0, 'Без ACK второй кадр не передаётся');
-    await h.request('graphics.ack', { frameId: first.header.frameId }, 's1');
-    while (!frames.length && Date.now() < until) await new Promise(r => setTimeout(r, 10));
-    assert.ok(frames.length);
-    const red = frames.shift();
-    assert.deepEqual([...red.pixels.subarray(0, 4)], [0, 0, 255, 255]);
-    await h.request('graphics.ack', { frameId: red.header.frameId }, 's1');
+    assert.equal((await h.start('CANVAS 64, 48\nBEGINFRAME\nCLS RGB(255, 0, 0)\nPRESENT\nPRINT "Кадр опубликован"\nDO\nLOOP\n')).ok, true);
+    const opened = await h.wait(m => m.event === 'graphics.surface' && m.payload.kind === 'canvas' && m.payload.windowHandle !== '0');
+    assert.ok(BigInt(opened.payload.windowHandle) > 0n);
+    assert.ok(['Hardware', 'WARP'].includes(opened.payload.graphicsDriver));
+    await h.wait(m => ['output.append', 'output.replace'].includes(m.event) && m.payload.text.includes('Кадр опубликован'));
+    await new Promise(r => setTimeout(r, 150));
+    assert.equal(frames.length, 0, 'GPU-кадр не передаётся в прежний канал');
+    assert.equal(pending.length, 0, 'Нет частичного заголовка или пиксельных данных');
     await h.request('execution.stop', {}, 's1');
     assert.equal((await h.event('execution.finished', 's1')).payload.status, 'Cancelled');
+    const closed = await h.wait(m => m.event === 'graphics.surface' && m.payload.kind === 'canvas' && m.payload.state === 'closed');
+    assert.equal(closed.payload.windowHandle, '0');
   } finally { socket?.destroy(); await h.close(); }
 });
 

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, screen, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, screen, ipcMain, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { setupIpc, killActivePty } = require('./ipc');
@@ -6,6 +6,7 @@ const { ensureFreshAxiom } = require('./axiom-ensure');
 const { IdeLogger } = require('./ide-logger');
 const { setupBackendIpc, closeBackend, recoverBackend } = require('./backend-ipc');
 const { attachWindowRecovery } = require('./window-recovery');
+const { ManualWindow } = require('./manual-window');
 
 // Explicit profile injection keeps UI checks away from the user's real settings.
 if (process.env.AXIOM_IDE_USER_DATA_DIR) {
@@ -197,7 +198,9 @@ if (!gotLock) {
     // synchronously before the window opens (incremental no-op build is a few seconds).
     ensureAxiomAtStartup();
 
-    setupIpc(getLogger());
+    setupIpc(getLogger(), {
+      manualWindow: new ManualWindow({ root: path.join(__dirname, '..', '..', '..'), BrowserWindow, openExternal: (url) => shell.openExternal(url) }),
+    });
     setupBackendIpc();
     Menu.setApplicationMenu(null);
     createWindow();

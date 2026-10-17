@@ -132,3 +132,68 @@ module.exports.push({ id: 'document-borland-theme-persistence', name: 'Borland P
   C.eq(await S.page.evaluate(() => document.documentElement.dataset.theme), 'borland', 'Глобальная тема восстановлена после запуска');
   C.eq(await S.electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].getBackgroundColor().toLowerCase()), '#0000aa', 'Окно запуска сразу использует фон темы');
 } });
+
+module.exports.push({ id: 'document-structural-delivery', name: 'Поздние ответы структурной правки сохраняют вкладку, каретку, настройки и исполнение', async fn({ S, C }) {
+  for (const mode of ['switch', 'caret', 'style', 'indent', 'run', 'edit', 'close', 'success-switch', 'success-style']) {
+    await document(S, mode === 'run' ? 'print 1\n' : 'if 1 = 1 then\n', 'structural-' + mode);
+    await S.page.evaluate(() => {
+      const i = window.__ide, model = i.editor.getModel();
+      i.editor.setPosition({ lineNumber: 2, column: 1 }); clearTimeout(i._liveCheckTimer);
+      const original = i.documentServices.api;
+      const state = window.__structuralDelivery = { original, path: i.activeFile };
+      i.documentServices.api = { ...original, documentCommand: async (...args) => {
+        const response = await original.documentCommand(...args);
+        if (args[0] !== 'document.editTransition') return response;
+        state.edits = response.payload.edits;
+        return new Promise((resolve, reject) => { state.resolve = () => resolve(response); state.reject = () => reject(new Error('Отказ структурной правки')); });
+      } };
+      state.operation = i.editLineTransition(model, 1, { lineNumber: 2, column: 1 });
+    });
+    await S.page.waitForFunction(() => !!window.__structuralDelivery.reject);
+    C.ok(await S.page.evaluate(() => window.__structuralDelivery.edits.length > 0), mode + ': удержан настоящий план правок DesktopHost');
+    await S.page.evaluate(async mode => {
+      const i = window.__ide, state = window.__structuralDelivery;
+      i.documentServices.api = state.original;
+      if (mode.endsWith('switch')) i.newFile();
+      if (mode === 'caret') i.editor.setPosition({ lineNumber: 1, column: 1 });
+      if (mode.endsWith('style')) i.settings.formattingStyle = 'Modern';
+      if (mode === 'indent') i.settings.editorPreferences = { ...i.settings.editorPreferences, autoIndent: 'none' };
+      if (mode === 'run') await i.trace.command('stepOver');
+      if (mode === 'edit') i.editor.getModel().setValue('PRINT 42\n');
+      if (mode === 'close') await i.closeFile(state.path, true);
+      clearTimeout(i._liveCheckTimer);
+    }, mode);
+    if (mode === 'run') await S.page.waitForFunction(() => !!window.__ide.execution.stopId);
+    const before = await S.page.evaluate(() => JSON.stringify({ text: window.__ide.editor.getValue(), position: window.__ide.editor.getPosition(), diagnostics: window.__ide._lastDiagnostics }));
+    await S.page.evaluate(async success => {
+      const state = window.__structuralDelivery;
+      if (success) state.resolve(); else state.reject();
+      await state.operation;
+    }, mode.startsWith('success'));
+    C.eq(await S.page.evaluate(() => JSON.stringify({ text: window.__ide.editor.getValue(), position: window.__ide.editor.getPosition(), diagnostics: window.__ide._lastDiagnostics })), before, mode + ': текст, каретка и сообщения сохранены');
+    if (mode === 'run') { await S.page.evaluate(() => window.__ide.stop()); await S.waitIdle(); }
+    await S.close();
+  }
+} });
+
+module.exports.push({ id: 'document-structural-delivery-retry', name: 'Текущий отказ структурной правки виден, повтор вставляет блок и сохраняет Undo', async fn({ S, C }) {
+  await document(S, 'if 1 = 1 then\n', 'structural-retry');
+  await S.page.evaluate(async () => {
+    const i = window.__ide, original = i.documentServices.api;
+    i.editor.setPosition({ lineNumber: 2, column: 1 });
+    i.documentServices.api = { ...original, documentCommand: async (...args) => {
+      const response = await original.documentCommand(...args);
+      if (args[0] === 'document.editTransition') throw null;
+      return response;
+    } };
+    await i.editLineTransition(i.editor.getModel(), 1, { lineNumber: 2, column: 1 });
+    i.documentServices.api = original; clearTimeout(i._liveCheckTimer);
+  });
+  C.ok(await S.page.evaluate(() => window.__ide._lastDiagnostics.some(d => d.message.includes('null'))), 'Отказ без объекта показан без вторичного исключения');
+  const before = await S.page.evaluate(() => window.__ide.editor.getValue());
+  await S.page.evaluate(() => window.__ide.editLineTransition(window.__ide.editor.getModel(), 1, { lineNumber: 2, column: 1 }));
+  C.contains(await S.page.evaluate(() => window.__ide.editor.getValue()), 'END IF', 'Повтор применил настоящий план блока');
+  C.eq(await S.page.evaluate(() => window.__ide.editor.getPosition().column), 5, 'Каретка внутри блока');
+  await S.page.evaluate(() => window.__ide.editor.trigger('test', 'undo', null));
+  C.eq(await S.page.evaluate(() => window.__ide.editor.getValue()), before, 'Undo отменяет структурную правку');
+} });

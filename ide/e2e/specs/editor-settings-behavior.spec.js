@@ -49,6 +49,8 @@ module.exports=[
 {id:'editor-settings-completion-kinds',name:'Категории дополнений реально фильтруют список предложений Monaco',async fn({S,C}){
  await S.launch({settings:{}});
  const kinds={Methods:'Method',Functions:'Function',Constructors:'Constructor',Fields:'Field',Variables:'Variable',Classes:'Class',Structs:'Struct',Interfaces:'Interface',Modules:'Module',Properties:'Property',Events:'Event',Operators:'Operator',Units:'Unit',Values:'Value',Constants:'Constant',Enums:'Enum',EnumMembers:'EnumMember',Keywords:'Keyword',Words:'Text',Colors:'Color',Files:'File',References:'Reference',Folders:'Folder',TypeParameters:'TypeParameter',Issues:'Issue',Users:'User',Snippets:'Snippet'};
+ const entries=require('../../src/renderer/editor-settings-catalog');
+ for(const name of Object.keys(kinds))if(entries.find(entry=>entry.key==='suggest.show'+name)?.available===false)delete kinds[name];
  await S.page.evaluate(kinds=>{window.__completionFixture=monaco.languages.registerCompletionItemProvider('axiom',{provideCompletionItems(model,pos){const range={startLineNumber:pos.lineNumber,startColumn:1,endLineNumber:pos.lineNumber,endColumn:pos.column};return {suggestions:[...Object.entries(kinds).map(([name,kind])=>({label:'zz_'+name,kind:monaco.languages.CompletionItemKind[kind],insertText:'zz_'+name,range})),{label:'zz_Deprecated',kind:monaco.languages.CompletionItemKind.Function,tags:[monaco.languages.CompletionItemTag.Deprecated],insertText:'zz_Deprecated',range}]};}});},kinds);
  const base=Object.fromEntries(Object.keys(kinds).map(k=>['suggest.show'+k,false]));
  for(const name of Object.keys(kinds)){
@@ -60,29 +62,20 @@ module.exports=[
   await S.page.evaluate(()=>window.__ide.editor.trigger('test','editor.action.triggerSuggest',{}));await S.page.waitForTimeout(150);
   C.eq(await S.page.locator('.suggest-widget.visible .monaco-list-row').filter({hasText:'zz_'+name}).count(),0,'Категория скрывается: '+name);await S.page.keyboard.press('Escape');
  }
- for(const show of [true,false]){
-  await configure(S,{...base,'suggest.showFunctions':true,'suggest.showDeprecated':show,'quickSuggestions.other':'off'});
-  await S.page.evaluate(()=>window.__ide.editor.trigger('test','editor.action.triggerSuggest',{}));await S.page.waitForTimeout(150);
-  C.eq(await S.page.locator('.suggest-widget.visible .monaco-list-row').filter({hasText:'zz_Deprecated'}).count()>0,show,'Устаревшие дополнения действительно фильтруются: '+show);await S.page.keyboard.press('Escape');
- }
+ C.eq(await S.page.evaluate(()=>EditorSettingsEntries.find(entry=>entry.key==='suggest.showDeprecated').available),false,'Категория устаревших дополнений явно недоступна в Axiom');
+ C.eq(await S.page.evaluate(()=>Object.hasOwn(EditorPreferences.normalize({'suggest.showDeprecated':false}),'suggest.showDeprecated')),false,'Недоступная настройка не применяется');
  await S.page.evaluate(()=>window.__completionFixture.dispose());
 }},
-{id:'editor-settings-provider-rendering',name:'CodeLens, встроенные пояснения и продолжения проверены с временными языковыми провайдерами',async fn({S,C}){
+{id:'editor-settings-provider-rendering',name:'Недоступные провайдеры исключены из настроек; поддержанные продолжения видимы и принимаются',async fn({S,C}){
  await S.launch({settings:{}});
  await S.page.evaluate(()=>{
-  window.__fixtures=[monaco.languages.registerCodeLensProvider('axiom',{provideCodeLenses(){return {lenses:[{range:{startLineNumber:1,startColumn:1,endLineNumber:1,endColumn:4},command:{id:'fixture.command',title:'CODELENS_FIXTURE'}}],dispose(){}};}}),
-   monaco.languages.registerInlayHintsProvider('axiom',{provideInlayHints(){return {hints:[{position:{lineNumber:1,column:8},label:'HINT_FIXTURE',kind:monaco.languages.InlayHintKind.Type}],dispose(){}};}}),
-   monaco.languages.registerInlineCompletionsProvider('axiom',{provideInlineCompletions(model){const end=model.getLineMaxColumn(1);return {items:[{insertText:' + 12345',range:{startLineNumber:1,startColumn:end,endLineNumber:1,endColumn:end}}]};},disposeInlineCompletions(){}})];
+  window.__fixtures=[monaco.languages.registerInlineCompletionsProvider('axiom',{provideInlineCompletions(model){const end=model.getLineMaxColumn(1);return {items:[{insertText:' + 12345',range:{startLineNumber:1,startColumn:end,endLineNumber:1,endColumn:end}}]};},disposeInlineCompletions(){}})];
  });
- await content(S,'Dim score As Integer = 1\nPrint score');
- await configure(S,{codeLens:true,codeLensFontFamily:'Consolas',codeLensFontSize:16,'inlayHints.enabled':'on','inlayHints.fontFamily':'Consolas','inlayHints.fontSize':15,'inlayHints.padding':true});await S.page.locator('.codelens-decoration').filter({hasText:'CODELENS_FIXTURE'}).waitFor({timeout:7000});
- C.ok(true,'CodeLens действительно появился над кодом');await S.page.waitForFunction(()=>document.querySelector('.view-lines').textContent.includes('HINT_FIXTURE'));
- C.ok(true,'Встроенное пояснение действительно появилось в строке');
- const lens=await S.page.locator('.codelens-decoration').filter({hasText:'CODELENS_FIXTURE'}).evaluate(el=>({size:getComputedStyle(el).fontSize,font:getComputedStyle(el).fontFamily}));
- C.eq(lens.size,'16px','Размер текста CodeLens применяется');C.contains(lens.font,'Consolas','Семейство шрифта CodeLens применяется');
- await configure(S,{codeLens:false,'inlayHints.enabled':'off'});await S.page.waitForTimeout(250);
- C.eq(await S.page.locator('.codelens-decoration').filter({hasText:'CODELENS_FIXTURE'}).count(),0,'CodeLens скрыт');
- C.eq(await S.page.locator('.view-lines').evaluate(el=>el.textContent.includes('HINT_FIXTURE')),false,'Встроенное пояснение скрыто');
+ for(const key of ['codeLens','codeLensFontFamily','codeLensFontSize','inlayHints.enabled','inlayHints.fontFamily','inlayHints.fontSize','inlayHints.padding']){
+  C.eq(await S.page.evaluate(key=>EditorSettingsEntries.find(entry=>entry.key===key).available,key),false,'Недоступность закреплена в каталоге: '+key);
+ }
+ await configure(S,{codeLens:true,codeLensFontFamily:'Consolas',codeLensFontSize:16,'inlayHints.enabled':'on'});
+ C.eq(await S.page.evaluate(()=>Object.keys(window.__ide.settings.editorPreferences).length),0,'Недоступные настройки не попадают в применённый профиль');
  await content(S,'Dim score As Integer = 1');await configure(S,{'inlineSuggest.enabled':true});
  await S.page.evaluate(()=>{const e=window.__ide.editor;e.setPosition({lineNumber:1,column:e.getModel().getLineMaxColumn(1)});e.trigger('test','editor.action.inlineSuggest.trigger',{});});
  await S.page.waitForFunction(()=>document.querySelector('.view-lines').textContent.includes('12345'),null,{timeout:7000});
@@ -104,7 +97,7 @@ module.exports=[
  C.ok(await S.page.locator('.view-lines .squiggly-inline-unnecessary').first().evaluate(el=>Number(getComputedStyle(el).opacity)<1),'Неиспользуемая сущность приглушена в тексте');
  C.ok(await S.page.locator('.monaco-editor .squiggly-warning').count()>0,'Предупреждение подчёркнуто');
  await configure(S,{showUnused:false,showDeprecated:false,renderValidationDecorations:'on'});await S.page.waitForTimeout(100);
- C.eq(await S.page.locator('.view-lines .squiggly-inline-deprecated').first().evaluate(el=>getComputedStyle(el).textDecorationLine),'none','Зачёркивание выключено');
+ C.eq(await S.page.evaluate(()=>Object.hasOwn(window.__ide.settings.editorPreferences,'showDeprecated')),false,'Недоступная настройка устаревших сущностей не применяется');
  C.eq(await S.page.locator('.view-lines .squiggly-inline-unnecessary').first().evaluate(el=>getComputedStyle(el).opacity),'1','Приглушение неиспользуемого выключено');
  await configure(S,{renderValidationDecorations:'off'});await S.page.waitForTimeout(100);
  C.eq(await S.page.locator('.monaco-editor .squiggly-warning').count(),0,'Подчёркивание диагностики выключено');

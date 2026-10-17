@@ -1,0 +1,30 @@
+[
+  {
+    "id": "document-structural-delivery",
+    "spec": "documents.spec.js",
+    "name": "Поздние ответы структурной правки сохраняют вкладку, каретку, настройки и исполнение",
+    "ms": 43038,
+    "passed": 18,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:56996/96fef34d-3243-4d98-82b7-69eca1c33784\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:57003/d0877d08-eb49-4ee9-b063-fb64c127b649\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:57007/75589e9e-981f-48d6-9e74-0dffc29e8fa0\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:57014/d9ad741e-6bd8-4da1-a2bb-636a238311c7\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:57024/2e3526ed-ac91-4b2e-8349-c3414a13d9dd\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:57029/ceb336f1-ad09-45b9-aea8-6e7c73727110\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:57038/d8185cbe-b476-41d5-8749-542817e5f78e\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\nDebugger ending on ws://127.0.0.1:57045/049ce5e9-d50f-4ef6-8324-17c779df15c1\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "document-structural-delivery-retry",
+    "spec": "documents.spec.js",
+    "name": "Текущий отказ структурной правки виден, повтор вставляет блок и сохраняет Undo",
+    "ms": 4606,
+    "passed": 4,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57053/5d44710c-19ac-421e-9bbe-296a5eeab315\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]

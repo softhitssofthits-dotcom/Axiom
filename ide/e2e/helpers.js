@@ -84,7 +84,7 @@ class Session {
       let seededSettings = {};
       try { seededSettings = typeof opts.settings === 'string' ? JSON.parse(opts.settings) : { ...opts.settings }; } catch { seededSettings = {}; }
       fs.writeFileSync(settingsPath, JSON.stringify(seededSettings), 'utf-8');
-    } else if (!fs.existsSync(settingsPath)) {
+    } else if (!opts.settingsAbsent && !fs.existsSync(settingsPath)) {
       fs.writeFileSync(settingsPath, '{}', 'utf-8');
     }
     if (opts.windowState) fs.writeFileSync(path.join(appDataDir, 'window-state.json'), typeof opts.windowState === 'string' ? opts.windowState : JSON.stringify(opts.windowState), 'utf-8');

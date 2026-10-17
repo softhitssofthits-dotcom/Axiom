@@ -55,3 +55,71 @@ module.exports = [
     },
   },
 ];
+
+module.exports.push({ id: 'startup-legacy-settings-import', name: 'Прежние настройки импортируются один раз без изменения исходника', async fn({ S, C }) {
+  const fs = require('node:fs'), path = require('node:path');
+  const profile = testWorkspace('legacy-settings-profile');
+  const file = writeAxm(testWorkspace('legacy-settings-files'), 'Программа.axm', 'PRINT 42\n');
+  const directory = path.join(profile, 'local', 'Axiom', 'Axiom.Ide'); fs.mkdirSync(directory, { recursive: true });
+  const legacy = path.join(directory, 'recent-files.json');
+  const original = JSON.stringify({ RecentFiles: [file], LastDirectoryPath: path.dirname(file),
+    Theme: 'Light', Language: 'English', IsFilesPaneVisible: false, IsStatusBarVisible: false,
+    SmartIdentifierEnabled: true, WindowState: 'Maximized' });
+  fs.writeFileSync(legacy, original);
+  await S.launch({ userData: profile, settingsAbsent: true });
+  C.eq(await S.page.evaluate(() => window.__ide.settings.legacyImportVersion), 1, 'Импорт отмечен в новом профиле');
+  C.eq(await S.page.evaluate(() => document.documentElement.dataset.theme), 'light', 'Перенесена светлая тема');
+  C.eq(await S.page.evaluate(() => window.__ide.settings.language), 'en', 'Перенесён язык');
+  C.ok(await S.page.locator('#project-explorer').evaluate(el => el.classList.contains('hidden')), 'Файловая панель скрыта по прежней настройке');
+  C.ok(await S.page.locator('#status-bar').evaluate(el => getComputedStyle(el).display === 'none'), 'Строка состояния скрыта по прежней настройке');
+  C.ok(await S.electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isMaximized()), 'Максимизация перенесена до открытия окна');
+  C.eq(fs.readFileSync(legacy, 'utf8'), original, 'Прежний файл не изменён');
+  await S.page.evaluate(() => window.__ide.setTheme('borland'));
+  await S.close();
+  fs.writeFileSync(legacy, JSON.stringify({ Theme: 'Dark', Language: 'Russian', RecentFiles: [] }));
+  await S.launch({ userData: profile });
+  C.eq(await S.page.evaluate(() => document.documentElement.dataset.theme), 'borland', 'Повтор не заменяет выбранную тему');
+  C.eq(await S.page.evaluate(() => window.__ide.settings.language), 'en', 'Повтор не заменяет язык');
+  C.ok(await S.page.evaluate(file => window.__ide.settings.recentFiles.includes(file), file), 'История не заменена повторным импортом');
+} });
+
+module.exports.push({ id: 'startup-corrupt-settings-preserved', name: 'Повреждённые настройки сохраняются отдельно при рабочем запуске IDE', async fn({ S, C }) {
+  const fs = require('node:fs'), path = require('node:path');
+  const profile = testWorkspace('corrupt-settings-profile');
+  const original = Buffer.from('\uFEFF{"theme": "dark", broken', 'utf8');
+  fs.writeFileSync(path.join(profile, 'settings.json'), original);
+  await S.launch({ userData: profile });
+  C.eq(await S.page.evaluate(() => window.__ide.settings.theme), 'dark', 'Запуск использует безопасные значения');
+  const backups = fs.readdirSync(profile).filter(name => name.startsWith('settings.invalid-'));
+  C.eq(backups.length, 1, 'Сохранена отдельная копия повреждённого профиля');
+  if (backups.length) C.eq(fs.readFileSync(path.join(profile, backups[0])).toString('base64'), original.toString('base64'), 'Повреждённые байты сохранены точно');
+  await S.page.evaluate(() => window.__ide.setTheme('basic')); await S.close();
+  C.eq(JSON.parse(fs.readFileSync(path.join(profile, 'settings.json'))).theme, 'basic', 'Новые настройки записываются');
+  await S.launch({ userData: profile });
+  C.eq(await S.page.evaluate(() => document.documentElement.dataset.theme), 'basic', 'Новый профиль восстанавливается');
+  C.eq(fs.readdirSync(profile).filter(name => name.startsWith('settings.invalid-')).length, 1, 'При повторе не создаётся лишняя копия');
+} });
+
+module.exports.push({ id: 'startup-recent-missing-file-and-directory', name: 'Недавние файлы и последний каталог сохраняются после отказа открытия отсутствующего файла', async fn({ S, C }) {
+  const path = require('node:path');
+  const directory = testWorkspace('recent-files-acceptance'), first = writeAxm(directory, 'Первый.axm', 'PRINT 1\n');
+  const second = writeAxm(directory, 'Второй.axm', 'PRINT 2\n'), missing = path.join(directory, 'Отсутствует.axm');
+  await S.launch({ settings: { recentFiles: [missing, first, second], lastOpenDir: directory, theme: 'dark' } });
+  await S.page.evaluate(file => window.__ide.openFile(file), first);
+  await S.page.waitForFunction(file => window.__ide.settings.recentFiles[0] === file, first);
+  const before = await S.page.evaluate(() => window.__ide.editor.getValue());
+  await S.page.evaluate(() => { const i = window.__ide, original = i.openFile.bind(i); i.openFile = file => window.__recentOpen = original(file); });
+  await S.page.locator('[data-menu="file"] > .menu-label').click();
+  await S.page.locator('#recent-submenu > .submenu-trigger').hover();
+  await S.page.locator('.recent-item').filter({ hasText: 'Отсутствует.axm' }).click();
+  await S.page.evaluate(() => window.__recentOpen);
+  C.eq(await S.page.evaluate(() => window.__ide.editor.getValue()), before, 'Отказ не изменил активный документ');
+  C.ok(S.rendererDialogs.some(dialog => dialog.message.includes('Отсутствует.axm')), 'Ошибка называет отсутствующий файл');
+  C.ok(await S.page.evaluate(files => files.every(file => window.__ide.settings.recentFiles.includes(file)), [first, second]), 'Остальные недавние файлы сохранены');
+  await S.electronApp.evaluate(({ dialog }) => { dialog.showOpenDialog = async (_owner, options) => { global.__recentDefault = options.defaultPath; return { canceled: true, filePaths: [] }; }; });
+  await S.page.evaluate(() => window.__ide.openDialog());
+  C.eq(await S.electronApp.evaluate(() => global.__recentDefault), directory, 'Диалог использует последний каталог');
+  const profile = S.userData; await S.close(); await S.launch({ userData: profile });
+  C.ok(await S.page.evaluate(files => files.every(file => window.__ide.settings.recentFiles.includes(file)), [first, second]), 'История сохранена после перезапуска');
+  C.eq(await S.page.evaluate(() => window.__ide.settings.lastOpenDir), directory, 'Последний каталог восстановлен');
+} });

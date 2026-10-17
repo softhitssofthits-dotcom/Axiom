@@ -42,6 +42,12 @@ contextBridge.exposeInMainWorld('axiom', {
   readClipboardText: () => ipcRenderer.invoke('read-clipboard-text'),
   writeClipboardText: (text) => ipcRenderer.invoke('write-clipboard-text', text),
   openLogFolder: () => ipcRenderer.invoke('open-log-folder'),
+  // Локальный справочник языка открывается в отдельном окне без доступа к IDE.
+  openManual: () => ipcRenderer.invoke('open-manual'),
+  // Журнал IDE: чтение, очистка и открытие собственных файлов журнала.
+  readEventLog: (options) => ipcRenderer.invoke('read-event-log', options),
+  clearEventLog: () => ipcRenderer.invoke('clear-event-log'),
+  openEventLogFile: (name) => ipcRenderer.invoke('open-event-log-file', name),
 
   // meta
   getVersion: () => ipcRenderer.invoke('get-version'),

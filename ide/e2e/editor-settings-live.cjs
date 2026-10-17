@@ -67,7 +67,7 @@ async function configureUI(S,entry,value){
   await input.selectOption(typeof value==='string'?'custom':JSON.stringify(value));
   if(typeof value==='string')await input.locator('..').locator('input').fill(value);
  }else await input.fill(entry.kind==='json'?JSON.stringify(value):String(value));
- await S.page.click('[data-settings-action="ok"]');await S.page.locator('.editor-settings-overlay').waitFor({state:'hidden'});await S.page.waitForTimeout(250);
+ await S.page.click('[data-settings-action="ok"]');await S.page.locator('.editor-settings-overlay').waitFor({state:'hidden',timeout:20000});await S.page.waitForTimeout(250);
 }
 async function baseline(S,key,mode){
  await S.page.evaluate(async({key,mode})=>{
@@ -91,6 +91,7 @@ async function prepare(S,key,mode){
   await text(S,"' wordUniqueDocument\nPrint wordU",{lineNumber:2,column:12});
   await prerequisites(S,{wordBasedSuggestions:'currentDocument'});
  }
+ if(mode==='suggest-insert')await text(S,'Dim appleName As Integer\nPrint appleName',{lineNumber:2,column:12});
  if(mode==='minimap-pixels')await S.page.waitForTimeout(1500);
  if(mode==='color-activation')await text(S,"' #ff0000");
  if(mode==='fold'||mode==='unfold-click')await text(S,'If True Then\n    Print 1\nEnd If\nIf True Then\n    Print 2\nEnd If\nIf True Then\n    Print 3\nEnd If');
@@ -259,11 +260,16 @@ async function action(S,key,mode,value){
   await S.page.keyboard.type('Ab');
  }
  else if(mode.startsWith('suggest')||mode==='accept-enter'||mode==='tab-completion'||mode==='word-suggest'){
-  await S.page.keyboard.type(mode==='suggest-filter'?'appel':mode==='suggest-insert'?'ApplName':mode==='suggest-view'||mode==='suggest-selection'?'AB':'');
-  if(mode!=='suggest-selection')await command('editor.action.triggerSuggest');await S.page.waitForTimeout(500);
-  if(mode==='accept-enter')await S.page.keyboard.press('Enter');
-  if(mode==='tab-completion'){await S.page.keyboard.press('Escape');await S.page.keyboard.type('Abs');await S.page.keyboard.press('Tab');}
-  if(mode==='suggest-insert')await S.page.keyboard.press('Enter');
+  if(mode==='suggest-insert'){
+   await command('editor.action.triggerSuggest');await S.page.waitForTimeout(500);
+   const row=S.page.locator('.suggest-widget.visible .monaco-list-row').filter({hasText:'appleName'}).first();
+   await row.waitFor({timeout:5000});await row.click();
+  }else{
+   await S.page.keyboard.type(mode==='suggest-filter'?'appel':mode==='suggest-view'||mode==='suggest-selection'?'AB':'');
+   if(mode!=='suggest-selection')await command('editor.action.triggerSuggest');await S.page.waitForTimeout(500);
+   if(mode==='accept-enter')await S.page.keyboard.press('Enter');
+   if(mode==='tab-completion'){await S.page.keyboard.press('Escape');await S.page.keyboard.type('Abs');await S.page.keyboard.press('Tab');}
+  }
  }
  else if(key==='accessibilityPageSize'){await S.page.keyboard.press('ArrowDown');}
  else if(mode==='diagnostics'||mode==='unused')await S.page.evaluate(()=>window.__ide.check(true));
@@ -328,6 +334,7 @@ async function observe(S,key,mode){
   const rect=n=>{if(!n)return null;const b=n.getBoundingClientRect();return{x:b.x,y:b.y,w:b.width,h:b.height};};
   const style=n=>{if(!n)return null;const s=getComputedStyle(n);return {font:s.fontFamily,size:s.fontSize,weight:s.fontWeight,height:s.lineHeight,spacing:s.letterSpacing,features:s.fontFeatureSettings,variations:s.fontVariationSettings,cursor:s.cursor,animation:s.animationName,visibility:s.visibility,display:s.display,color:s.color,border:s.borderRadius,background:s.backgroundColor,opacity:s.opacity,decoration:s.textDecorationLine,shadow:s.boxShadow,borderLeft:s.borderLeftColor,borderTop:s.borderTopColor};};
   if(mode==='color-activation')return window.__colorActivation;
+  if(mode==='detect-indent'){const o=e.getModel().getOptions();return {text:e.getValue(),indentation:{tabSize:o.tabSize,insertSpaces:o.insertSpaces}};}
   if(mode==='css')return style(q('.view-lines'));
   if(mode==='system-contrast')return {before:window.__contrastBefore,after:window.__contrastAfter,restored:true};
   if(mode==='lines'||mode==='final-line')return {numbers:qa('.line-numbers').map(n=>({text:n.textContent,...rect(n)})),glyph:rect(q('.glyph-margin')),text:rect(q('.monaco-scrollable-element'))};

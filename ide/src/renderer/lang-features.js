@@ -212,7 +212,16 @@ const LangFeatures = (() => {
       provideCompletionItems(model, position) {
         if(model.getLanguageId()!=='axiom')return {suggestions:[]};
         const word = model.getWordUntilPosition(position);
-        const range = { startLineNumber: position.lineNumber, endLineNumber: position.lineNumber, startColumn: word.startColumn, endColumn: word.endColumn };
+        // Отдельные диапазоны вставки и замещения делают действующей настройку
+        // suggest.insertMode: в режиме insert сохраняется хвост слова после курсора,
+        // в режиме replace слово замещается целиком.
+        const line = position.lineNumber;
+        const spanned = model.getWordAtPosition(position);
+        const coversCursor = spanned && spanned.startColumn <= position.column && position.column <= spanned.endColumn;
+        const range = {
+          insert: { startLineNumber: line, endLineNumber: line, startColumn: word.startColumn, endColumn: position.column },
+          replace: { startLineNumber: line, endLineNumber: line, startColumn: word.startColumn, endColumn: coversCursor ? Math.max(position.column, spanned.endColumn) : position.column },
+        };
         const meta = getMeta();
         const doc = scanDoc(model);
         const items = [];

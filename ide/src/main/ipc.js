@@ -249,34 +249,19 @@ function watcherNoteSelfWrite(filePath) {
 
 // ---------- settings ----------
 
-let settingsCache = null;
+// Профиль ведёт SettingsStore: он переносит прежний профиль RecentFilesState,
+// сохраняет повреждённый файл до замены и пишет настройки атомарно.
+const { SettingsStore } = require('./settings-store');
+let settingsStore = null;
 
 function loadSettings() {
-  if (settingsCache) return settingsCache;
-  try {
-    const p = path.join(app.getPath('userData'), 'settings.json');
-    if (fs.existsSync(p)) settingsCache = JSON.parse(fs.readFileSync(p, 'utf-8'));
-  } catch {}
-  if (!settingsCache || typeof settingsCache !== 'object') {
-    settingsCache = { theme: 'dark', language: 'ru', recentFiles: [], openTabs: [] };
-  }
-  // A corrupted persisted shape must never reach the renderer.
-  if (!Array.isArray(settingsCache.recentFiles)) settingsCache.recentFiles = [];
-  settingsCache.recentFiles = settingsCache.recentFiles.filter((f) => typeof f === 'string' && f);
-  if (!Array.isArray(settingsCache.openTabs)) settingsCache.openTabs = [];
-  settingsCache.openTabs = settingsCache.openTabs.filter((t) => t && typeof t === 'object' && typeof t.path === 'string');
-  if (typeof settingsCache.lastOpenDir !== 'string' || !settingsCache.lastOpenDir) delete settingsCache.lastOpenDir;
-  if (typeof settingsCache.lastProjectDir !== 'string' || !settingsCache.lastProjectDir) delete settingsCache.lastProjectDir;
-  return settingsCache;
+  if (!settingsStore) settingsStore = new SettingsStore(app.getPath('userData'));
+  return settingsStore.load();
 }
 
 function saveSettings() {
-  try {
-    const p = path.join(app.getPath('userData'), 'settings.json');
-    fs.mkdirSync(path.dirname(p), { recursive: true });
-    fs.writeFileSync(p, JSON.stringify(settingsCache, null, 2), 'utf-8');
-    return true;
-  } catch { return false; }
+  const store = settingsStore || (settingsStore = new SettingsStore(app.getPath('userData')));
+  return store.save(store.settings || store.load());
 }
 
 // ---------- IPC ----------
@@ -287,7 +272,8 @@ function logIpc(event, data) {
   try { ideLogger?.info(event, data); } catch {}
 }
 
-function setupIpc(logger) {
+function setupIpc(logger, options = {}) {
+  const manualWindow = options.manualWindow || null;
   ipcMain.handle('create-project-file', (event, root, target, text) => {
     if (event.senderFrame !== event.sender.mainFrame || !event.senderFrame.url.endsWith('/index.html'))
       return { ok: false, message: 'Недопустимый источник команды.' };
@@ -347,6 +333,20 @@ function setupIpc(logger) {
     }
   });
 
+  // Локальный справочник Axiom открывается отдельным окном без Node.js и API IDE.
+  ipcMain.handle('open-manual', async (event) => {
+    if (event.senderFrame !== event.sender.mainFrame || !event.senderFrame.url.endsWith('/index.html'))
+      return { ok: false, message: 'Недопустимый источник команды.' };
+    const owner = BrowserWindow.fromWebContents(event.sender);
+    try {
+      await manualWindow.open(owner);
+      return { ok: true };
+    } catch (e) {
+      logIpc('manual.open.failed', { message: e?.message || String(e) });
+      return { ok: false, message: e?.message || String(e) };
+    }
+  });
+
   ipcMain.handle('open-log-folder', async () => {
     const directory = path.join(app.getPath('userData'), 'logs');
     try {
@@ -358,6 +358,32 @@ function setupIpc(logger) {
       logIpc('logs.open.exception', { directory, message: e?.message || String(e) });
       return { ok: false, directory, error: e?.message || String(e) };
     }
+  });
+
+  // Журнал IDE: чтение, очистка и открытие ограничены собственными файлами IdeLogger
+  // в каталоге профиля и не влияют на вывод программы.
+  const { EventLog } = require('./event-log');
+  let eventLog = null;
+  const getEventLog = () => eventLog || (eventLog = new EventLog(path.join(app.getPath('userData'), 'logs')));
+  const fromMainFrame = (event) => event.senderFrame === event.sender.mainFrame && event.senderFrame.url.endsWith('/index.html');
+  ipcMain.handle('read-event-log', async (event, options) => {
+    if (!fromMainFrame(event)) return { ok: false, error: 'Недопустимый источник команды.' };
+    try { return { ok: true, ...getEventLog().read(options && typeof options === 'object' ? options : {}) }; }
+    catch (e) { return { ok: false, error: e?.message || String(e) }; }
+  });
+  ipcMain.handle('clear-event-log', async (event) => {
+    if (!fromMainFrame(event)) return { ok: false, error: 'Недопустимый источник команды.' };
+    try { return getEventLog().clear(); }
+    catch (e) { return { ok: false, errors: [{ file: '', message: e?.message || String(e) }] }; }
+  });
+  ipcMain.handle('open-event-log-file', async (event, name) => {
+    if (!fromMainFrame(event)) return { ok: false, error: 'Недопустимый источник команды.' };
+    try {
+      const file = getEventLog().resolveFile(name);
+      const error = await shell.openPath(file);
+      logIpc(error ? 'logs.file.failed' : 'logs.file.opened', { file, error: error || null });
+      return { ok: !error, file, error: error || null };
+    } catch (e) { return { ok: false, error: e?.message || String(e) }; }
   });
 
   ipcMain.handle('get-version', async () => {
@@ -506,11 +532,12 @@ function setupIpc(logger) {
   });
   ipcMain.handle('get-settings', async () => loadSettings());
   ipcMain.handle('save-settings', async (_e, patch) => {
-    const previous={...loadSettings()};
-    Object.assign(loadSettings(), patch);
-    const ok=saveSettings();
-    if(!ok) settingsCache=previous;
-    return {ok};
+    const settings = loadSettings();
+    const previous = { ...settings };
+    Object.assign(settings, patch);
+    const ok = saveSettings();
+    if (!ok && settingsStore) settingsStore.settings = previous;
+    return { ok };
   });
   // Synchronous variant for window teardown: beforeunload cannot await
   // an async invoke, so the final openTabs snapshot travels over sendSync.
@@ -525,6 +552,10 @@ function setupIpc(logger) {
     saveSettings();
     return s.recentFiles;
   });
+
+  // Профиль читается до создания окна: перенос прежнего профиля пишет window-state.json,
+  // который учитывается при выборе размеров и максимизации главного окна.
+  loadSettings();
 }
 
 module.exports = { setupIpc, killActivePty, parseDiagnostics };

@@ -1,0 +1,5 @@
+.event-log-filters { display:grid; grid-template-columns:minmax(120px,1fr) minmax(100px,140px) minmax(120px,250px); gap:8px; margin-bottom:12px; }
+.event-log-filters input,.event-log-filters select { min-width:0; }
+.event-log-text { flex:1; min-height:80px; resize:none; white-space:pre; overflow:auto; font-family:Consolas,monospace!important; margin-bottom:8px; }
+.event-log-actions { flex-wrap:wrap; }
+@media(max-width:700px) { .event-log-filters { grid-template-columns:1fr 1fr; }.event-log-filters input { grid-column:1 / -1; } }

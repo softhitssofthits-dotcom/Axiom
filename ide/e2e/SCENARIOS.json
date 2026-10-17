@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 462,
+  "count": 471,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -218,6 +218,16 @@
       "name": "Borland Pascal оформляет оболочку, редактор и консоль и сохраняется после запуска"
     },
     {
+      "id": "document-structural-delivery",
+      "spec": "documents.spec.js",
+      "name": "Поздние ответы структурной правки сохраняют вкладку, каретку, настройки и исполнение"
+    },
+    {
+      "id": "document-structural-delivery-retry",
+      "spec": "documents.spec.js",
+      "name": "Текущий отказ структурной правки виден, повтор вставляет блок и сохраняет Undo"
+    },
+    {
       "id": "editor-settings-all-appearance",
       "spec": "editor-settings-all.spec.js",
       "name": "Все параметры вкладки appearance: ввод, Monaco, профиль и перезапуск"
@@ -275,7 +285,7 @@
     {
       "id": "editor-settings-provider-rendering",
       "spec": "editor-settings-behavior.spec.js",
-      "name": "CodeLens, встроенные пояснения и продолжения проверены с временными языковыми провайдерами"
+      "name": "Недоступные провайдеры исключены из настроек; поддержанные продолжения видимы и принимаются"
     },
     {
       "id": "editor-settings-diagnostic-decorations",
@@ -1618,6 +1628,16 @@
       "name": "Один Enter после набранного DIM с открытым дополнением"
     },
     {
+      "id": "event-log-view-filter-copy-clear",
+      "spec": "event-log.spec.js",
+      "name": "Журнал IDE: просмотр, фильтр, копирование, открытие и очистка отделены от вывода программы"
+    },
+    {
+      "id": "event-log-locales-and-themes",
+      "spec": "event-log.spec.js",
+      "name": "Журнал использует общий язык, темы и клавиатурный фокус"
+    },
+    {
       "id": "execution-diagnostics-background-document",
       "spec": "execution-diagnostics.spec.js",
       "name": "Ошибка исполнения выделяется в запущенном документе при другой активной вкладке"
@@ -1841,6 +1861,16 @@
       "id": "graphics-host-fault-recover",
       "spec": "graphics-shutdown.spec.js",
       "name": "После отказа своего DesktopHost Electron отклоняет старый ввод и запускает новую VM"
+    },
+    {
+      "id": "help-local-manual-and-window-lifecycle",
+      "spec": "help.spec.js",
+      "name": "Локальный справочник открывается из меню, переходит к статье и не получает Node.js"
+    },
+    {
+      "id": "help-about-component-versions",
+      "spec": "help.spec.js",
+      "name": "О программе показывает фактические версии IDE, языка, компилятора и BytecodeVm"
     },
     {
       "id": "highlight-punctuation-and-maze",
@@ -2221,6 +2251,21 @@
       "id": "startup-russian-path-deduplicates",
       "spec": "startup.spec.js",
       "name": "Русский путь открывается один раз, даже при повторном выборе файла"
+    },
+    {
+      "id": "startup-legacy-settings-import",
+      "spec": "startup.spec.js",
+      "name": "Прежние настройки импортируются один раз без изменения исходника"
+    },
+    {
+      "id": "startup-corrupt-settings-preserved",
+      "spec": "startup.spec.js",
+      "name": "Повреждённые настройки сохраняются отдельно при рабочем запуске IDE"
+    },
+    {
+      "id": "startup-recent-missing-file-and-directory",
+      "spec": "startup.spec.js",
+      "name": "Недавние файлы и последний каталог сохраняются после отказа открытия отсутствующего файла"
     },
     {
       "id": "stop-failure-keeps-input",
