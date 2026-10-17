@@ -52,6 +52,19 @@ public sealed partial class Binder
             || type == TypeSymbol.Date || type == TypeSymbol.Time || type == TypeSymbol.DateTime;
     }
 
+    private static bool RequiresNumericAggregateArray(BuiltinFunctionId id, TypeSymbol elementType)
+    {
+        return id is BuiltinFunctionId.ArraySum or BuiltinFunctionId.ArrayAverage
+            && !IsNumeric(elementType);
+    }
+
+    private static bool RequiresOrderedAggregateArray(BuiltinFunctionId id, TypeSymbol elementType)
+    {
+        return id is BuiltinFunctionId.ArrayMin or BuiltinFunctionId.ArrayMax
+            && !IsNumeric(elementType)
+            && elementType != TypeSymbol.String;
+    }
+
     private static bool SupportsStructuralEquality(TypeSymbol type)
     {
         return type switch

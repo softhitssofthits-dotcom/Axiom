@@ -243,6 +243,30 @@ public sealed partial class Binder
             location);
     }
 
+    private void ReportArrayAggregateRequiresSupportedArray(string functionName, TypeSymbol actualType, TextLocation location)
+    {
+        _diagnostics.Report(
+            DiagnosticCodes.TypeMismatch,
+            $"Функция '{functionName}' не поддерживает элементы типа {actualType.Name}.",
+            location);
+    }
+
+    private void ReportArrayConcatRankMismatch(int leftRank, int rightRank, TextLocation location)
+    {
+        _diagnostics.Report(
+            DiagnosticCodes.TypeMismatch,
+            $"Ранг правого массива ARRAYCONCAT ({rightRank}) не совпадает с рангом левого ({leftRank}).",
+            location);
+    }
+
+    private void ReportArrayInitializerNotSupported(string name, TextLocation location)
+    {
+        _diagnostics.Report(
+            DiagnosticCodes.TypeMismatch,
+            $"Массив '{name}' нельзя инициализировать значением при объявлении. Используйте REDIM и присваивание элементов.",
+            location);
+    }
+
     private void ReportUnknownCallable(string name, TextLocation location)
     {
         _diagnostics.Report(DiagnosticCodes.UnknownCallable, $"Функция или процедура '{name}' не объявлена.", location);
@@ -365,14 +389,6 @@ public sealed partial class Binder
         _diagnostics.Report(
             DiagnosticCodes.InvalidTypeMember,
             $"Поле '{name}' в TYPE может иметь только скалярный встроенный тип или другой пользовательский TYPE.",
-            location);
-    }
-
-    private void ReportTypeFieldMultidimensionalArrayNotSupported(string name, TextLocation location)
-    {
-        _diagnostics.Report(
-            DiagnosticCodes.InvalidTypeMember,
-            $"Поле '{name}' в TYPE пока поддерживает только одномерную массивную форму.",
             location);
     }
 

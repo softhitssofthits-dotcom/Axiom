@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using Axiom.Bytecode;
 using Axiom.Core;
@@ -121,7 +122,15 @@ public sealed partial class BytecodeVm
 
         if (!TryValidateArraySlices(array, slices))
         {
-            ReportArraySlicesOutOfBounds(displayName, slices, array, location);
+            if (HasDescendingRange(slices))
+            {
+                ReportArrayRangeDescending(displayName, slices, location);
+            }
+            else
+            {
+                ReportArraySlicesOutOfBounds(displayName, slices, array, location);
+            }
+
             throw new RuntimeFailureException();
         }
 
@@ -560,29 +569,50 @@ public sealed partial class BytecodeVm
 
         if (type == TypeSymbol.Double)
         {
-            var doubleValue = Math.Truncate((double)value.Value!);
-            if (doubleValue >= int.MinValue && doubleValue <= int.MaxValue)
+            var rawValue = (double)value.Value!;
+
+            if (!double.IsFinite(rawValue) || rawValue != Math.Truncate(rawValue))
             {
-                return (int)doubleValue;
+                ReportNonIntegralArrayBound(rawValue.ToString(CultureInfo.InvariantCulture), location, detail);
             }
 
-            return ToInt32Checked(doubleValue, location, detail);
+            if (rawValue >= int.MinValue && rawValue <= int.MaxValue)
+            {
+                return (int)rawValue;
+            }
+
+            return ToInt32Checked(rawValue, location, detail);
         }
 
         if (type == TypeSymbol.Decimal)
         {
-            var decimalValue = decimal.Truncate((decimal)value.Value!);
-            if (decimalValue >= int.MinValue && decimalValue <= int.MaxValue)
+            var rawValue = (decimal)value.Value!;
+
+            if (rawValue != decimal.Truncate(rawValue))
             {
-                return (int)decimalValue;
+                ReportNonIntegralArrayBound(rawValue.ToString(CultureInfo.InvariantCulture), location, detail);
             }
 
-            return ToInt32Checked(decimalValue, location, detail);
+            if (rawValue >= int.MinValue && rawValue <= int.MaxValue)
+            {
+                return (int)rawValue;
+            }
+
+            return ToInt32Checked(rawValue, location, detail);
         }
 
         return ReportInvalidRuntimeState<int>(
             $"Значение типа '{value.Type.Name}' не может использоваться как индекс массива.",
             location);
+    }
+
+    private void ReportNonIntegralArrayBound(string value, TextLocation location, string detail)
+    {
+        ReportRuntimeDiagnostic(
+            DiagnosticCodes.BuiltinArgument,
+            $"{detail}: требуется целое число, получено {value}.",
+            location);
+        throw new RuntimeFailureException();
     }
 
     private static bool IsValidArrayBounds(IReadOnlyList<int> lowerBounds, IReadOnlyList<int> upperBounds)
@@ -637,6 +667,27 @@ public sealed partial class BytecodeVm
             location);
     }
 
+    private void ReportArrayRangeDescending(string arrayName, IReadOnlyList<RuntimeArrayIndexSlice> slices, TextLocation location)
+    {
+        ReportRuntimeDiagnostic(
+            DiagnosticCodes.ArrayBounds,
+            $"Диапазон {FormatArraySlices(slices)} массива '{arrayName}' имеет нижнюю границу больше верхней.",
+            location);
+    }
+
+    private static bool HasDescendingRange(IReadOnlyList<RuntimeArrayIndexSlice> slices)
+    {
+        foreach (var slice in slices)
+        {
+            if (slice.IsRange && slice.UpperBound < slice.LowerBound)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static string FormatArrayIndices(IReadOnlyList<int> indices)
     {
         return $"({string.Join(", ", indices)})";
@@ -687,6 +738,11 @@ public sealed partial class BytecodeVm
             }
 
             if (slice.UpperBound < lowerBound || slice.UpperBound > upperBound)
+            {
+                return false;
+            }
+
+            if (slice.IsRange && slice.UpperBound < slice.LowerBound)
             {
                 return false;
             }

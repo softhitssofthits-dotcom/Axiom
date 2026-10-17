@@ -1,0 +1,8 @@
+﻿' Отрицательный пример: BOOLEAN не поддерживается агрегатами ARRAYMIN и ARRAYMAX.
+' Ожидаемая диагностика при проверке программы:
+' MB2003 — Функция 'ARRAYMIN' не поддерживает элементы типа BOOLEAN.
+
+DIM flags(1 TO 2) AS BOOLEAN
+flags(1) = TRUE
+flags(2) = FALSE
+PRINT ARRAYMIN(flags)

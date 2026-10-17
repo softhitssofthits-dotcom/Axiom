@@ -12,7 +12,7 @@ public sealed class ArrayDimensionSyntax : SyntaxNode
         EndExpression = endExpression;
     }
 
-    public override SyntaxKind Kind => SyntaxKind.ArrayBounds;
+    public override SyntaxKind Kind => SyntaxKind.ArrayDimension;
 
     public ExpressionSyntax? StartExpression { get; }
 

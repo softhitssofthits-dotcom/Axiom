@@ -512,6 +512,14 @@ public sealed partial class BytecodeVm
             {
                 ExecuteInstruction(frame, instruction, instructionIndex);
             }
+            catch (ArrayAllocationFailureException ex)
+            {
+                HandleArrayRuntimeFailure(ex, frame, instructionIndex, runtimeFailureBoundaryDepth);
+            }
+            catch (ExpiredArrayViewException ex)
+            {
+                HandleArrayRuntimeFailure(ex, frame, instructionIndex, runtimeFailureBoundaryDepth);
+            }
             catch (EvaluationStackUnderflowException ex)
             {
                 ReportInvalidRuntimeState(ex.Message, ResolveLocation(frame.Routine.Id, instructionIndex));
@@ -547,6 +555,14 @@ public sealed partial class BytecodeVm
         try
         {
             ExecuteInstruction(frame, instruction, instructionIndex);
+        }
+        catch (ArrayAllocationFailureException ex)
+        {
+            HandleArrayRuntimeFailure(ex, frame, instructionIndex, runtimeFailureBoundaryDepth);
+        }
+        catch (ExpiredArrayViewException ex)
+        {
+            HandleArrayRuntimeFailure(ex, frame, instructionIndex, runtimeFailureBoundaryDepth);
         }
         catch (EvaluationStackUnderflowException ex)
         {
@@ -1170,6 +1186,37 @@ public sealed partial class BytecodeVm
 
         _ = frame.TryPopErrorHandler(out _);
         throw new RuntimeFailureException();
+    }
+
+    private void HandleArrayRuntimeFailure(
+        Exception failure,
+        BytecodeCallFrame frame,
+        int instructionIndex,
+        int minimumCallStackDepth)
+    {
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+
+        switch (failure)
+        {
+            case ArrayAllocationFailureException allocation:
+                ReportRuntimeDiagnostic(DiagnosticCodes.ArrayAllocation, allocation.Message, location);
+                break;
+
+            case ExpiredArrayViewException:
+                ReportRuntimeDiagnostic(
+                    DiagnosticCodes.ExpiredArrayView,
+                    "Подмассив-представление больше не связан с исходным массивом: исходный массив был переразмерен или освобождён.",
+                    location);
+                break;
+
+            default:
+                throw new InvalidOperationException("Неизвестный отказ массива времени выполнения.", failure);
+        }
+
+        if (!TryHandleRuntimeFailure(minimumCallStackDepth))
+        {
+            throw new RuntimeFailureException();
+        }
     }
 
     private bool TryHandleRuntimeFailure(int minimumCallStackDepth)

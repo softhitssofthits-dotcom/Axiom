@@ -1046,20 +1046,6 @@ public sealed partial class Binder
             return new BoundCallExpression(location, invalidTarget, arguments, descriptor.DeclaredReturnType);
         }
 
-        if (RequiresOneDimensionalArray(descriptor.Id) && arrayType.Rank != 1)
-        {
-            ReportOneDimensionalArrayRequired(descriptor.Name, arrayType.Rank, GetLocation(expression.Arguments[0]));
-
-            for (var index = 1; index < expression.Arguments.Count; index++)
-            {
-                arguments.Add(BindExpression(expression.Arguments[index]));
-            }
-
-            var invalidReturnType = ResolveArrayBuiltInReturnType(descriptor, arrayType);
-            var invalidTarget = new BoundFunctionExpression(location, descriptor.CreateSymbol());
-            return new BoundCallExpression(location, invalidTarget, arguments, invalidReturnType);
-        }
-
         if (RequiresExplicitDimensionArgument(descriptor.Id, arrayType.Rank, expression.Arguments.Count))
         {
             ReportArrayDimensionArgumentRequired(descriptor.Name, arrayType.Rank, location);
@@ -1102,6 +1088,24 @@ public sealed partial class Binder
             return new BoundCallExpression(location, invalidTarget, arguments, invalidReturnType);
         }
 
+        if (RequiresNumericAggregateArray(descriptor.Id, arrayType.ElementType)
+            || RequiresOrderedAggregateArray(descriptor.Id, arrayType.ElementType))
+        {
+            ReportArrayAggregateRequiresSupportedArray(
+                descriptor.Name,
+                arrayType.ElementType,
+                GetLocation(expression.Arguments[0]));
+
+            for (var index = 1; index < expression.Arguments.Count; index++)
+            {
+                arguments.Add(BindExpression(expression.Arguments[index]));
+            }
+
+            var invalidReturnType = ResolveArrayBuiltInReturnType(descriptor, arrayType);
+            var invalidTarget = new BoundFunctionExpression(location, descriptor.CreateSymbol());
+            return new BoundCallExpression(location, invalidTarget, arguments, invalidReturnType);
+        }
+
         if (descriptor.Id == BuiltinFunctionId.ArrayMap)
         {
             return BindPolymorphicArrayMapBuiltInCall(expression, descriptor, location, arrayType, arguments);
@@ -1125,6 +1129,28 @@ public sealed partial class Binder
         for (var index = 1; index < expression.Arguments.Count; index++)
         {
             var parameterType = ResolveArrayBuiltInParameterType(descriptor, arrayType, index);
+
+            if (descriptor.Id == BuiltinFunctionId.ArrayConcat && index == 1)
+            {
+                var rightArgument = BindExpression(expression.Arguments[index]);
+
+                if (rightArgument.Type is ArrayTypeSymbol rightArrayType
+                    && rightArrayType.Rank != arrayType.Rank)
+                {
+                    ReportArrayConcatRankMismatch(
+                        arrayType.Rank,
+                        rightArrayType.Rank,
+                        GetLocation(expression.Arguments[index]));
+                    arguments.Add(rightArgument);
+                    parameterTypes.Add(parameterType);
+                    continue;
+                }
+
+                arguments.Add(ApplyExpectedType(expression.Arguments[index], rightArgument, parameterType));
+                parameterTypes.Add(parameterType);
+                continue;
+            }
+
             var boundArgument = BindExpression(expression.Arguments[index], parameterType);
             arguments.Add(boundArgument);
             parameterTypes.Add(parameterType);
@@ -1603,48 +1629,6 @@ public sealed partial class Binder
             BoundArrayAccessExpression arrayAccessExpression => $"{GetArrayTargetDisplayName(arrayAccessExpression.Target)}(...)",
             _ => "массива"
         };
-    }
-
-    private static bool RequiresOneDimensionalArray(BuiltinFunctionId id)
-    {
-        return id is not (BuiltinFunctionId.LBound
-            or BuiltinFunctionId.UBound
-            or BuiltinFunctionId.ArrayLength
-            or BuiltinFunctionId.ArraySum
-            or BuiltinFunctionId.ArrayMin
-            or BuiltinFunctionId.ArrayMax
-            or BuiltinFunctionId.ArrayAverage
-            or BuiltinFunctionId.ArrayIsAllocated
-            or BuiltinFunctionId.ArrayRank
-            or BuiltinFunctionId.ArrayBounds
-            or BuiltinFunctionId.ArrayClone
-            or BuiltinFunctionId.ArraySlice
-            or BuiltinFunctionId.ArrayTake
-            or BuiltinFunctionId.ArraySkip
-            or BuiltinFunctionId.ArrayConcat
-            or BuiltinFunctionId.ArrayFlatten
-            or BuiltinFunctionId.ArrayReshape
-            or BuiltinFunctionId.ArrayToReversed
-              or BuiltinFunctionId.ArrayDistinct
-              or BuiltinFunctionId.ArrayToSorted
-              or BuiltinFunctionId.ArrayFill
-              or BuiltinFunctionId.ArrayPush
-              or BuiltinFunctionId.ArrayPop
-              or BuiltinFunctionId.ArrayInsert
-              or BuiltinFunctionId.ArrayRemove
-              or BuiltinFunctionId.ArrayReverse
-              or BuiltinFunctionId.ArraySort
-              or BuiltinFunctionId.ArrayContains
-            or BuiltinFunctionId.ArrayIndexOf
-            or BuiltinFunctionId.ArrayLastIndexOf
-            or BuiltinFunctionId.ArrayCount
-            or BuiltinFunctionId.ArrayFindAll
-            or BuiltinFunctionId.ArrayBinarySearch
-            or BuiltinFunctionId.ArrayEvery
-            or BuiltinFunctionId.ArraySome
-            or BuiltinFunctionId.ArrayFilter
-            or BuiltinFunctionId.ArrayMap
-            or BuiltinFunctionId.ArrayReduce);
     }
 
     private static bool RequiresExplicitDimensionArgument(BuiltinFunctionId id, int arrayRank, int argumentCount)

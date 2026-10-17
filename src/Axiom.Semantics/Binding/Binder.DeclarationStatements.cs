@@ -29,7 +29,15 @@ public sealed partial class Binder
                 TryDeclareScopedVariable(variable, declarator.Identifier.Location);
 
                 var arrayBounds = BindDeclaratorArrayBounds(declarator);
-                declarations.Add(new BoundVariableDeclarationStatement(GetLocation(statement), variable, initializer, arrayBounds, declarator.Identifier.Location));
+                var declaratorInitializer = initializer;
+
+                if (declarator.ArrayBounds is not null && declaratorInitializer is not null)
+                {
+                    ReportArrayInitializerNotSupported(declarator.Identifier.Text, declarator.Identifier.Location);
+                    declaratorInitializer = null;
+                }
+
+                declarations.Add(new BoundVariableDeclarationStatement(GetLocation(statement), variable, declaratorInitializer, arrayBounds, declarator.Identifier.Location));
             }
         }
 

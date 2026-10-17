@@ -6,7 +6,7 @@
 dotnet run --project src/Axiom.ManualChecks -- benchmark-bytecode --iterations 3 --warmup 1
 ```
 
-Команды .NET выполнять последовательно. `profile-bytecode-opcodes` и `audit-bytecode-coverage` остаются отдельными средствами. Каталог существующих нагрузок `samples/smoke/engine-compare/` сохранён как точный путь; 49 файлов перечислены ниже.
+Команды .NET выполнять последовательно. `profile-bytecode-opcodes` и `audit-bytecode-coverage` остаются отдельными средствами. Каталог существующих нагрузок `samples/smoke/engine-compare/` сохранён как точный путь; 51 файл перечислен ниже.
 
 ## Открытые измерения
 
@@ -25,6 +25,8 @@ dotnet run --project src/Axiom.ManualChecks -- benchmark-bytecode --iterations 3
 
 - `samples/smoke/engine-compare/array_callback_pipeline.axm`
 - `samples/smoke/engine-compare/array_cube_rollup.axm`
+- `samples/smoke/engine-compare/array_distinct_unique.axm`
+- `samples/smoke/engine-compare/array_push_pop_growth.axm`
 - `samples/smoke/engine-compare/array_search_probe.axm`
 - `samples/smoke/engine-compare/array_shape_transform_mesh.axm`
 - `samples/smoke/engine-compare/array_staging_roundtrip.axm`
@@ -88,3 +90,10 @@ dotnet run --project src/Axiom.ManualChecks -- benchmark-bytecode --iterations 3
 ## GPU-страницы SCREEN — 15 октября 2026 года
 
 В IDE 0.6.0 страницы SCREEN создаются по обращению и хранятся на GPU. Обычная публикация копирует видимую страницу и накладывает кешированный текстовый слой на GPU. Проверка обычных кадров подтверждает ReadbackBytes=0 до явного чтения; неизменный текст не составляется повторно. POINT, GET/PUT и PAINT сохраняют явную синхронизацию необходимых данных, сложные дуги готовят набор координат на CPU. Это функциональное доказательство отсутствия передачи обычного кадра, а не сравнительный замер FPS или полной памяти. Каталог engine-compare не менялся. Устройство, проверки и пределы — в локальном отчёте `reports/graphics/SCREEN_DIRECTX_MIGRATION.md`.
+
+
+## Нагрузки роста массива и ARRAYDISTINCT — 17 октября 2026 года
+
+Добавлены два сценария семейства массивов: `array_push_pop_growth.axm` (12 раундов по 1500 добавлений и 500 снятий) и `array_distinct_unique.axm` (6000 уникальных значений, четыре прохода). Они закрепляют измерения операций, которые раньше проверялись только косвенно.
+
+До исправления одиночные замеры Debug CLI давали около 9,1 с на 60 000 последовательных `ARRAYPUSH` и около 26,4 с на `ARRAYDISTINCT` с 20 000 уникальных значений. После перехода на ёмкость хранилища и хеш-множество те же сценарии укладываются примерно в 0,78 с и 0,4 с с учётом запуска CLI (около 0,32–0,42 с). Числа остаются диагностическими одиночными замерами, а не эталоном; существующие сценарии и их размеры не менялись.

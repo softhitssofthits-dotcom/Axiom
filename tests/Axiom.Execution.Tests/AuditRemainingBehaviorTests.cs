@@ -71,21 +71,21 @@ public sealed class AuditRemainingBehaviorTests
     [Fact]
     public void MinMax_RejectBooleanSingletons()
     {
-        const string source = """
-            DIM flags(1 TO 1) AS BOOLEAN
-            flags(1) = TRUE
-            TRY
-                PRINT ARRAYMIN(flags)
-            CATCH err
-                PRINT err.Code
-            END TRY
-            TRY
-                PRINT ARRAYMAX(flags)
-            CATCH err
-                PRINT err.Code
-            END TRY
-            """;
-        AssertProgram(source, ["MB3007", "MB3007"]);
+        foreach (var functionName in new[] { "ARRAYMIN", "ARRAYMAX" })
+        {
+            var source = $"""
+                DIM flags(1 TO 1) AS BOOLEAN
+                flags(1) = TRUE
+                PRINT {functionName}(flags)
+                """;
+
+            var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
+
+            Assert.Equal(ExecutionStatus.SemanticFailure, result.Status);
+            var diagnostic = Assert.Single(result.Diagnostics);
+            Assert.Equal("MB2003", diagnostic.Code);
+            Assert.Contains(functionName, diagnostic.Message, StringComparison.Ordinal);
+        }
     }
 
     [Fact]

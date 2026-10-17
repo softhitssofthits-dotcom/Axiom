@@ -153,6 +153,7 @@ public enum SyntaxKind
     TypeDeclaration,
     TypeField,
     ArrayBounds,
+    ArrayDimension,
     VariableDeclarator,
     VariableDeclaration,
     ConstantDeclaration,

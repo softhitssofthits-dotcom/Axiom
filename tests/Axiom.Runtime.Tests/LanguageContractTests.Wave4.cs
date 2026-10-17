@@ -141,10 +141,10 @@ names(1) = "a"
 PRINT ARRAYSUM(names)
 """;
 
-        var (_, _, stringsResult) = ExecuteProgram(strings);
+        var diagnostics = GetBindingDiagnostics(strings);
 
-        Assert.False(stringsResult.Succeeded);
-        Assert.Single(stringsResult.Diagnostics, static d => d.Code == "MB3007");
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
+        Assert.Contains("ARRAYSUM", diagnostic.Message, StringComparison.Ordinal);
     }
 
     [Fact]

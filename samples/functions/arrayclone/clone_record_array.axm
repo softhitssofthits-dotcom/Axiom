@@ -1,0 +1,19 @@
+' ARRAYCLONE создаёт независимую копию и для массива записей.
+' Ожидаемый вывод:
+' исходное 1
+' копия 99
+
+TYPE Point
+    X AS INTEGER
+END TYPE
+
+DIM source(1 TO 2) AS Point
+source(1).X = 1
+source(2).X = 2
+
+DIM copy() AS Point
+copy = ARRAYCLONE(source)   ' Копируем массив записей целиком.
+copy(1).X = 99              ' Меняем поле записи только в копии.
+
+PRINT "исходное "; source(1).X
+PRINT "копия "; copy(1).X

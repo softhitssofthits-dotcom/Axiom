@@ -5144,8 +5144,10 @@ END FUNCTION
     {
         const string text = """
 DIM values(1 TO 2, 1 TO 2) AS INTEGER
+DIM empty(,) AS INTEGER
+empty = ARRAYTAKE(values, 0, 1)
 DIM mapped(,) AS INTEGER
-mapped = ARRAYMAP(values(2 TO 1, 1 TO 2), DoubleIt)
+mapped = ARRAYMAP(empty, DoubleIt)
 PRINT ARRAYISALLOCATED(mapped)
 PRINT LBOUND(mapped, 1)
 PRINT UBOUND(mapped, 1)
@@ -5161,7 +5163,7 @@ END FUNCTION
         var (_, host, result) = ExecuteProgram(text);
 
         Assert.True(result.Succeeded);
-        Assert.Equal(["TRUE", "2", "1", "1", "2", "0"], host.Output);
+        Assert.Equal(["TRUE", "1", "0", "1", "2", "0"], host.Output);
     }
 
     [Fact]

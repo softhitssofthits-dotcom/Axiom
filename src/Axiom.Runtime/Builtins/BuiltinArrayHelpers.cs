@@ -10,35 +10,6 @@ internal static class BuiltinArrayHelpers
         return RuntimeValue.FromArray(arrayType, new RuntimeArrayValue(arrayType.ElementType, rank: arrayType.Rank));
     }
 
-    public static RuntimeValue CreateArrayValue(
-        ArrayTypeSymbol arrayType,
-        int lowerBound,
-        int upperBound,
-        Func<int, RuntimeValue> valueFactory)
-    {
-        ArgumentNullException.ThrowIfNull(arrayType);
-        ArgumentNullException.ThrowIfNull(valueFactory);
-
-        var array = new RuntimeArrayValue(arrayType.ElementType, rank: arrayType.Rank);
-        array.Allocate(lowerBound, upperBound);
-
-        ForEachIndexAscending(lowerBound, upperBound, index => array.SetValue(index, valueFactory(index)));
-
-        return RuntimeValue.FromArray(arrayType, array);
-    }
-
-    public static RuntimeValue CreateCompactArrayValue(ArrayTypeSymbol arrayType, IReadOnlyList<RuntimeValue> values)
-    {
-        ArgumentNullException.ThrowIfNull(arrayType);
-        ArgumentNullException.ThrowIfNull(values);
-
-        return CreateArrayValue(
-            arrayType,
-            lowerBound: 1,
-            upperBound: values.Count == 0 ? 0 : values.Count,
-            index => values[index - 1]);
-    }
-
     public static RuntimeValue CreateVisibleShapeArrayValue(
         ArrayTypeSymbol arrayType,
         RuntimeArrayValue source,
@@ -69,21 +40,6 @@ internal static class BuiltinArrayHelpers
         return RuntimeValue.FromArray(arrayType, array);
     }
 
-    public static RuntimeValue CloneArrayValue(ArrayTypeSymbol arrayType, RuntimeArrayValue source)
-    {
-        ArgumentNullException.ThrowIfNull(arrayType);
-        ArgumentNullException.ThrowIfNull(source);
-
-        if (!source.IsAllocated)
-        {
-            return CreateUnallocatedArrayValue(arrayType);
-        }
-
-        return source.Rank == 1
-            ? CreateArrayValue(arrayType, source.LowerBound, source.UpperBound, source.GetValue)
-            : RuntimeValue.FromArray(arrayType, source.Clone());
-    }
-
     public static RuntimeValue CreateArrayWindowCopy(
         ArrayTypeSymbol arrayType,
         RuntimeArrayValue source,
@@ -102,6 +58,7 @@ internal static class BuiltinArrayHelpers
         var upperBounds = source.UpperBounds.ToArray();
         var lowerBound = lowerBounds[selectedIndex];
         var upperBound = upperBounds[selectedIndex];
+        var sourceIndices = new int[source.Rank];
 
         return CreateVisibleShapeArrayValue(
             arrayType,
@@ -109,7 +66,11 @@ internal static class BuiltinArrayHelpers
             upperBounds,
             indices =>
             {
-                var sourceIndices = indices.ToArray();
+                for (var index = 0; index < sourceIndices.Length; index++)
+                {
+                    sourceIndices[index] = indices[index];
+                }
+
                 var offset = indices[selectedIndex] - lowerBound;
                 sourceIndices[selectedIndex] = upperBound - offset;
                 return source.GetValue(sourceIndices);
@@ -195,15 +156,11 @@ internal static class BuiltinArrayHelpers
 
     public static (int[] LowerBounds, int[] UpperBounds) CreateEmptyWindowBounds(
         RuntimeArrayValue array,
-        int dimension,
-        long selectedLowerBound)
+        int dimension)
     {
-        // Для пустого диапазона нужна пара lower, lower - 1. Минимальный
-        // INTEGER зарезервирован для поиска; край за MaxValue не представим.
-        if (selectedLowerBound <= int.MinValue || selectedLowerBound > int.MaxValue)
-            return CreateAdjustedBounds(array, dimension, 1, 0);
-
-        return CreateAdjustedBounds(array, dimension, (int)selectedLowerBound, (int)(selectedLowerBound - 1L));
+        // Пустой массив всегда имеет каноническую форму 1 TO 0: он не хранит
+        // позицию, потому что попасть в него индексом всё равно нельзя.
+        return CreateAdjustedBounds(array, dimension, 1, 0);
     }
 
     public static (int[] LowerBounds, int[] UpperBounds) CreateReducedBounds(RuntimeArrayValue array, int dimension)
@@ -461,10 +418,15 @@ internal static class BuiltinArrayHelpers
             var sortedLine = GetStableSortedLine(array, dimension, baseIndices, compare);
             var selectedIndex = dimension - 1;
             var lowerBound = array.GetLowerBound(dimension);
+            var indices = new int[baseIndices.Count];
 
             for (var offset = 0; offset < sortedLine.Count; offset++)
             {
-                var indices = baseIndices.ToArray();
+                for (var index = 0; index < indices.Length; index++)
+                {
+                    indices[index] = baseIndices[index];
+                }
+
                 indices[selectedIndex] = lowerBound + offset;
                 array.SetValue(indices, sortedLine[offset]);
             }
@@ -482,10 +444,15 @@ internal static class BuiltinArrayHelpers
         var lowerBound = array.GetLowerBound(dimension);
         var upperBound = array.GetUpperBound(dimension);
         var originalOrder = 0;
+        var indices = new int[baseIndices.Count];
+
+        for (var index = 0; index < indices.Length; index++)
+        {
+            indices[index] = baseIndices[index];
+        }
 
         for (var index = lowerBound; index <= upperBound; index++)
         {
-            var indices = baseIndices.ToArray();
             indices[selectedIndex] = index;
             values.Add((array.GetValue(indices), originalOrder));
             originalOrder++;
@@ -503,7 +470,14 @@ internal static class BuiltinArrayHelpers
                 : left.OriginalOrder.CompareTo(right.OriginalOrder);
         });
 
-        return values.Select(static item => item.Value).ToList();
+        var sorted = new List<RuntimeValue>(values.Count);
+
+        foreach (var item in values)
+        {
+            sorted.Add(item.Value);
+        }
+
+        return sorted;
     }
 
     public static int FindArrayBinarySearchIndex(

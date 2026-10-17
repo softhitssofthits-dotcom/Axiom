@@ -1481,3 +1481,122 @@ DesktopHost Debug собран последовательно после пов�
 Добавлен единый запуск `scripts/test.ps1 <group>`: группы .NET (`lexer`, `syntax`, `parser`, `semantics`, `bytecode`, `execution`, `runtime`, `cli`, `ide-backend`, `ide-dotnet`, `language`, `dotnet-all`), группы Node и Electron, а также составные `ide` и `all`. Скрипт сохранён в UTF-8 с BOM, потому что PowerShell 5.1 иначе читает кириллицу как ANSI; вывод `dotnet`/`node` направлен в консоль, чтобы не попадать в возвращаемое значение. Каталог и правила выбора — `docs/TESTING.md`; обновлены `AGENTS.md` (правило 5.0), `docs/DEVELOPMENT.md`, `docs/INDEX.md` и `ide/e2e/README.md`.
 
 Проверки инструмента: `--groups` показывает все группы без отсутствующих файлов; объединение групп покрывает 41/41 файл Node и 63/63 файла Electron без пропусков и дублей. Адресно: `e2e-language` — 9/9 сценариев, `ide-unit-renderer` — 63/63 теста, `lexer` — 36/36 тестов .NET. Реализация языка, компилятора и IDE не менялась, поэтому версии остаются 0.1.15 / 0.1.15 / 0.6.18. Следующий шаг — авторская оценка журнала, справочника, строки состояния и профиля в обычном запуске IDE; коммит и отправка этого изменения ожидают отдельного поручения.
+
+## Session 1516 - 2026-10-17 10:29 - Глубокий аудит подсистемы массивов
+
+По поручению автора проведён глубокий аудит массивов: языка, семантики, байткода, BytecodeVm, встроенных функций ARRAY*, представлений, тестов, примеров и справочника. Реализация не изменялась; работа только исследовательская.
+
+Прочитаны полностью `RuntimeArrayValue.cs`, `BytecodeVm.Arrays.cs`, `BytecodeVm.Builtins.Array.cs`, `BuiltinArrayHelpers.cs`, `BuiltinArrayAggregateHelpers.cs`, `BuiltinFunctions.Array.cs`, ключевые участки парсера, биндера, `RuntimeValue`, `RuntimeValueHelpers`, а также историческое досье, реестры покрытия и производительности, страницы `docs/manual/arrays*.html` и примеры. Диагностические программы собраны в `.artifacts/probes/` и запускались через `Axiom.Cli` (`run`, `check`).
+
+Подтверждены запуском и чтением кода:
+
+1. `REDIM a(1 TO 100000, 1 TO 100000)` роняет процесс необработанным `OverflowException` из `RuntimeArrayValue.CalculateLength`; диагностики языка нет.
+2. `ARRAYCLONE` одномерного массива `TYPE` копирует ссылки на записи: `b(1).X = 99` меняет `a(1).X`. Для ранга 2 поведение корректно. Причина — быстрый путь `TryCopyVisibleValuesToClone`/`Array.Copy`, обходящий `CopyForStorage`.
+3. Присваивание `STRING()` в поле `STRING * 3` для ранга 1 оставляет строку длиной 5; для ранга 2 обрезка до 3 работает. Причина та же.
+4. Представление после `REDIM` и `ERASE` корня продолжает работать со старым хранилищем: чтение даёт прежние значения, запись не видна корню. В справочнике это не описано, тестов нет.
+5. `ARRAYPUSH` перевыделяет массив на каждую операцию: 30 000 добавлений — около 2,5 с, 60 000 — около 9,1 с (базовая стоимость запуска около 0,32 с). `ARRAYPOP` устроен так же.
+6. `ARRAYDISTINCT` квадратичен: 20 000 уникальных значений — около 26,4 с.
+7. `a(4 TO 2)` создаёт представление с `LBOUND = 4`, `UBOUND = 2`; `ARRAYSLICE` с `count = 0` для ранга 2+ принимает начало вне границ и даёт `99 TO 98`, для ранга 1 — `1 TO 0`. Правила пустых форм противоречивы.
+8. `a(2.9)` молча читает и пишет `a(2)`; в справочнике усечение описано только для границ.
+9. `DIM a(1 TO 3) AS INTEGER = 5` даёт `BC3001` от понижателя вместо семантической диагностики.
+10. `ARRAYMIN` на массиве `DATE` проходит `check`, но падает на выполнении с `MB3007`; тип известен статически.
+11. `ARRAYCONCAT` с разным рангом сообщает `MB2003` о несовместимости типов, а не о ранге.
+12. Найдены мёртвые код и дублирование: `RequiresOneDimensionalArray` фактически всегда ложна; `ReportTypeFieldMultidimensionalArrayNotSupported` не вызывается; в `BuiltinArrayHelpers` не используются `CreateArrayValue`, `CreateCompactArrayValue`, `CloneArrayValue`, `ForEachArrayLineBaseIndicesAscending`; фабрики продублированы между `BytecodeVm` и общим слоем; `ArrayDimensionSyntax.Kind` делит `SyntaxKind.ArrayBounds`.
+
+Создан подробный реестр находок с воспроизведениями, оценкой влияния, пробелами тестов и справочника и поэтапным планом: `docs/audit/ARRAY_SUBSYSTEM_AUDIT_2026-10-17.md` (локальный каталог, не публикуется). В `docs/PLANS4.md` добавлен раздел с очередью исправлений и критериями приёмки первого этапа.
+
+Приоритеты зафиксированы так: P0 — безопасное выделение и переполнение; P1 — глубокое копирование ARRAYCLONE ранга 1, обрезка STRING * N, контракт представлений при REDIM/ERASE, ёмкость ARRAYPUSH/ARRAYPOP, хеш для ARRAYDISTINCT; P2 — единые правила пустых срезов, дробные индексы, диагностика рангов и перенос статических проверок в биндер; P3 — мёртвый код, дублирование, разделение `RuntimeArrayValue`, избыточные выделения памяти.
+
+Проверки: `node scripts/versioning.mjs check` и `check --base HEAD` — версии согласованы (язык 0.1.15, компилятор/CLI 0.1.15, IDE 0.6.18). `git diff --check` — только предупреждение Git о переводе LF в CRLF для `docs/PLANS4.md`, ошибок пробелов нет. Продуктовые версии не повышались: изменение только документационное. Сборка `src/Axiom.Cli` Debug выполнена для диагностических запусков, ошибок и предупреждений нет.
+
+Следующий точный шаг: исправить ARR-001 (безопасное выделение с перехватом переполнения и нехватки памяти), затем ARR-002/ARR-003 (глубокое копирование в Clone ранга 1) с регрессионными тестами и runnable-примерами.
+
+## Session 1517 - 2026-10-17 12:04 - Глобальный аналитический аудит графики SCREEN и CANVAS
+
+По прямому поручению автора проведён аудит без исправления реализации: SCREEN 0..10, CANVAS, все семейства графических операторов, 59 имён/62 формы функций графики и ввода, ресурсы IMAGE/SPRITE/TILESET/TILEMAP, режимы, координаты, палитра, страницы, текст, ввод, ошибки, закрытие и устойчивость. Создан локальный отчёт `docs/audit/GRAPHICS_SUBSYSTEM_AUDIT_2026-10-17.md` с воспроизведениями, причинами, критериями приёмки и десятью этапами исправлений. В PLANS4 добавлена предложенная очередь, в BYTECODE_COVERAGE — подтверждённые открытые границы. Исходники, постоянные тесты и примеры не менялись.
+
+Параллельная задача массивов сохранена. Проверки выполнялись в отдельном снимке `fd7d3a9c01eaf6ef080bf8adf9167510e2bb9392` внутри `.artifacts/graphics-audit-20261017/snapshot/`, с собственными obj, сборками и профилями Electron. Все 71 сверенный файл графики/ввода/DesktopHost совпадают с текущей папкой после нормализации CRLF/LF. Временные диагностические проверки и снимки находятся только в `.artifacts/graphics-audit-20261017/`.
+
+Воспроизведено 11 групп дефектов: старый способ вывода окна после SCREEN 0 → SCREEN 1; узорная PAINT на чёрном фоне (1 вместо 32 пикселей); переполнение обхода GET/PUT на верхних границах буфера 2147483647; внешнее переполнение POINT(selector), в том числе после WINDOW; молчаливый пропуск положительного масштаба DRAWIMAGE/DRAWSPRITE больше INTEGER.MAX; неодинаковые проверки мировых координат; CANVAS 16385×1 возвращает внутренний отказ вместо CATCH; потеря касательной большой окружности; блокировка будущих нажатий после 64 событий мыши без обработчика; удаление половины emoji в нативном INPUT; переполнение площади внутренних RuntimeImageValue/ScreenFramebuffer. Для первых десяти описано пользовательское проявление; для конструкторов отдельно отмечена внутренняя граница доказательства.
+
+Отдельно зафиксированы 39 устаревших ожиданий русских ошибок TILEMAP при действующем английском ERROR.Message: общий текст допускается нынешним механизмом, конкретные английские причины предложены как улучшение. Выбор монитора SCREEN 10 разобран по коду; физического второго монитора нет. Риски бюджета памяти, отмены и массовый PUT отделены от воспроизведённых ошибок, ускорение не заявляется.
+
+Проверки: Parsing 22/22, Semantics 49/49, Bytecode 27/27, Runtime 171/171, Execution 74/74; GPU/нативное окно 51/51. CLI Release и DesktopHost Debug в снимке собраны без ошибок/предупреждений. Сборная выборка TILEMAP зависела от совместного выполнения: после ограничения 30 секунд остановлена, класс предельных преобразований отдельно прошёл 41/41; с последовательными коллекциями xUnit весь набор завершился — 321 тест, 282 успешных и те же 39 отказов сообщений. Причина зависимости от параллельности не установлена. Первичный расширенный Ide-запуск также прерван; ни он, ни повторная прерванная выборка не объявляются полными.
+
+Штатная `e2e-graphics`: 21 сценарий, 20 прошли, 1 отказ активации окна, 140 успешных утверждений; отдельный повтор активации прошёл 1/1 с тремя утверждениями. Новая диагностическая приёмка проверила реальные красные пиксели всех SCREEN 1..10 на Hardware; отдельные GPU-наблюдения используют WARP. Нативными снимками подтверждены чёрный кадр после SCREEN 0, один пиксель PAINT и запись EF BF BD после удаления emoji. Временные четыре сценария не включались в продуктовый каталог: 475 относится только к снимку, действующий каталог остаётся 471. Физическая аппаратная приёмка, исчерпание памяти, удаление устройства и полный all не выполнялись.
+
+Версии аудита не повышались: язык 0.1.15, компилятор/CLI 0.1.15, IDE 0.6.18. `node scripts/versioning.mjs check` проходит; `check --base HEAD` сообщает о незавершённых параллельных изменениях языка без повышения в задаче массивов. Аудит не изменял за другого агента номера. Обработчик Git уже подключён через `.githooks`. Коммит и отправка не выполнялись.
+
+Следующий предложенный шаг после отдельного поручения на реализацию — GFX-001 (перепривязка окна SCREEN), затем GFX-003/004 (GET/PUT и POINT), GFX-002 (PAINT), GFX-009 (мышь). В рамках текущего поручения аналитическая работа завершена; исправления не начинались.
+
+## Session 1518 - 2026-10-17 12:14 - Массивы: выделение, копирование, представления и ёмкость
+
+По поручению автора начата реализация плана аудита массивов. Выполнены этапы P0 и P1; наблюдаемое поведение языка изменилось, поэтому повышены язык и компилятор.
+
+Выделение. `RuntimeArrayValue.CalculateLength` считает длину в `long` и проверяет предел 67 108 864 элементов без переполнения; `CreateElementStorage` перехватывает `OutOfMemoryException`. Оба случая сообщаются новым MB3013 (`DiagnosticCodes.ArrayAllocation`), исключение `ArrayAllocationFailureException` перехватывается в `ExecuteCurrentInstruction` и остаётся доступным для TRY/CATCH. Процесс больше не падает на `REDIM a(1 TO 100000, 1 TO 100000)`.
+
+Копирование. Быстрый путь `Clone` ранга 1 через `Array.Copy` оставлен только для типов без поштучного копирования; для TYPE и фиксированных строк используется `CopyForStorage`. Исправлены независимость клона массива записей и обрезка `STRING * N` для ранга 1; для ранга 2 поведение не изменилось.
+
+Представления. Введён `StorageLifetime`: корень помечает прежнее хранилище недействительным при выделении, перевыделении, освобождении и изменении формы через ARRAYPUSH/ARRAYPOP; представление сохраняет ссылку на прежний признак. Обращение к устаревшему представлению даёт MB3014 (`ExpiredArrayView`). `ARRAYPUSH`/`ARRAYINSERT` с многомерным значением копируют срез собственного массива до изменения размера (`SharesStorageWith`), поэтому существующая проверка `SameArrayViewIsSafeAsInsertionValue` проходит.
+
+Производительность. `RuntimeArrayValue` получил `_capacity`: рост удвоением, снятие без перевыделения, повторное использование слотов; метаданные одномерного корня обновляются на месте. `ARRAYDISTINCT` использует `RuntimeValueEqualityComparer` и `HashSet` для числовых, строковых, логических и временных типов; для записей сохранён прежний линейный путь. Замеры Debug CLI: 60 000 ARRAYPUSH — около 0,78 с вместо 9,1 с; ARRAYDISTINCT на 20 000 уникальных — около 0,4 с вместо 26,4 с (с учётом запуска).
+
+Тесты. Новый `tests/Axiom.Runtime.Tests/LanguageContractTests.ArrayRegression.cs` — 15 тестов: предел выделения для REDIM и DIM, независимость ARRAYCLONE для записей и `STRING * N` рангов 1 и 2, MB3014 после REDIM/ERASE/PUSH и перехват через TRY, порядок и границы PUSH/POP, повторное использование ёмкости, нижняя граница ≠ 1, порядок первого вхождения ARRAYDISTINCT для чисел и строк. Runtime 1145/1145. Execution по фильтру Array 387/387.
+
+Примеры: `samples/functions/arrayclone/clone_record_array.axm`, `samples/functions/arraypush/growing_array.axm`, `samples/functions/arraydistinct/first_occurrence_order.axm`, `samples/operators/redim/view_after_resize.axm`, `samples/acceptance/negative/array_allocation_limit.axm`; сценарии `samples/smoke/engine-compare/array_push_pop_growth.axm` и `array_distinct_unique.axm`. Все запущены через CLI и дают ожидаемый вывод.
+
+Документы: `arrays-dynamic.html`, `arrays-slices.html`, `arrays-diagnostics.html`, `BYTECODE_COVERAGE.md`, `BYTECODE_PERF_MATRIX.md` (51 файл нагрузок), PLANS4 и UNFINISHED_WORK. `node scripts/check-manual.mjs` пройден.
+
+Полная группа Execution содержит два известных отказа Maze Chase (`MazeChaseAcceptanceSample_TWritesAllCalibrationValues` и `MazeChaseApplyCalibrationSample_RewritesInitPelletAlignmentFromCalibrationFile`) из-за расхождения ожидания `pelletCenterRows` и фактического `pelletRowOffset` в HEAD; к массивам они не относятся и в этой задаче не исправлялись.
+
+Версии: язык 0.1.16, компилятор/CLI 0.1.16, IDE 0.6.18; `versioning check` и `check --base HEAD` прошли. Коммит не выполнялся.
+
+Следующий точный шаг: получить решение по контракту пустых срезов и дробных индексов, затем выполнить ARR-007 и ARR-010; после этого ARR-011 и перенос инициализатора массива и проверок типов агрегатов в биндер.
+
+## Session 1519 - 2026-10-17 14:11 - Массивы: контракт пустых форм, дробные индексы, ранняя диагностика
+
+По решению автора закреплён контракт P2. Пустой массив всегда имеет канонические границы 1 TO 0; обратный диапазон в индексировании (`a(4 TO 2)`) стал ошибкой MB3002 с отдельным текстом о нижней границе больше верхней. Дробные индексы и границы проверяются по значению: DOUBLE и DECIMAL допустимы только при нулевой дробной части, иначе MB3007; вычисленные целые индексы вида `position / 2` работают.
+
+Реализация: `CreateEmptyWindowBounds` больше не хранит позицию и всегда возвращает 1 TO 0; ARRAYTAKE, ARRAYSKIP и ARRAYSLICE с нулевым количеством используют его независимо от ранга. `TryValidateArraySlices` и `ValidateVisibleRange` отклоняют обратный диапазон; `ToArrayBound` проверяет дробную часть до преобразования. В биндере: инициализатор массива отклоняется с MB2003 вместо позднего BC3001; ARRAYSUM/ARRAYAVERAGE требуют числовые элементы, ARRAYMIN/ARRAYMAX — числовые или STRING; ARRAYCONCAT при разном ранге сообщает отдельный текст о рангах.
+
+Тесты обновлены под новый контракт: `ArrayEmptyBoundaryContractTests` (все пустые окна 1 TO 0, добавлена одномерная проверка), `ArrayShapeContractTests`, `ArrayWindowFormEvidenceTests`, `ArrayMetadataBoundaryEvidenceTests`, два теста ARRAYMAP с пустой формой переведены на ARRAYTAKE вместо обратного диапазона, `AuditRemainingBehaviorTests.MinMax_RejectBooleanSingletons` теперь ждёт семантическую MB2003. В `LanguageContractTests.ArrayRegression.cs` добавлены 9 тестов на дробный индекс и границу, целый вычисленный индекс, обратный диапазон, каноническое пустое окно, ранг ARRAYCONCAT, инициализатор и тип ARRAYMIN; всего в файле 24 теста.
+
+Примеры: `samples/functions/arrayslice/empty_window_bounds.axm`, `samples/acceptance/negative/array_fractional_index.axm`, `samples/acceptance/negative/array_descending_range.axm`, `samples/acceptance/negative/array_min_boolean.axm` (перенесён из `samples/functions/arraymin/unsupported_singleton.axm`, ссылка в `function-reference.html` обновлена).
+
+Проверки: Runtime 1154/1154; Execution 3211/3211 без двух известных отказов Maze Chase; Semantics 520/520; Parsing 167/167; Bytecode 248/248; check-manual пройден. Версии остаются язык 0.1.16, компилятор/CLI 0.1.16, IDE 0.6.18: это продолжение той же задачи, отдельное повышение не выполнялось.
+
+Справочник: `arrays-dynamic.html` (целые границы), `arrays-indexing.html` (целый индекс, восходящий диапазон), `arrays-slices.html` (обратный диапазон как ошибка), `arrays-diagnostics.html` (MB3002 для обратного диапазона, MB3007 для дробных значений), `arrays-and-builtins.html` (пустые формы, ранняя проверка агрегатов, ранг ARRAYCONCAT).
+
+Следующий точный шаг — P3: удалить мёртвую проверку одномерности и неиспользуемые помощники, свести фабрики к общему слою, разделить `RuntimeArrayValue` на shape/storage/algorithms и убрать `ToArray()` на каждый элемент в многомерных CONCAT/REVERSED/SORT.
+
+## Session 1520 - 2026-10-17 14:19 - Массивы: удаление мёртвого кода
+
+По вопросу автора удалён подтверждённо неиспользуемый код подсистемы массивов. Перед удалением каждая ссылка проверена поиском по `src` и `tests`.
+
+Удалено:
+
+- `RequiresOneDimensionalArray` и его вызов в `BindArrayBuiltInCall`: метод возвращал истину только для идентификаторов, отсутствующих в списке исключений, а список содержал все существующие `ARRAY*`, поэтому ветка была недостижима;
+- `ReportTypeFieldMultidimensionalArrayNotSupported`: объявлен, но нигде не вызывался;
+- `BuiltinArrayHelpers.CreateArrayValue`, `CreateCompactArrayValue`, `CloneArrayValue`: не вызывались снаружи помощника, а внутренняя цепочка вела только друг к другу.
+
+Сохранено после проверки: `ForEachArrayLineBaseIndicesAscending` (вызывается из `SortArrayAlongDimension` и `FindArrayBinarySearchCoordinateSet`), `ForEachArrayLineBaseIndicesForResize` (три вызова в `BytecodeVm.Builtins.Array.cs`), `ReportOneDimensionalArrayRequired` (нужен `PALETTE USING` в `Binder.IoStatements.cs`). Исходная формулировка аудита про «неиспользуемый» `ForEachArrayLineBaseIndicesAscending` уточнена в `docs/audit/ARRAY_SUBSYSTEM_AUDIT_2026-10-17.md`.
+
+Проверки: сборка `Axiom.Cli` Debug без ошибок и предупреждений; Runtime 1154/1154; Semantics 520/520; Execution по фильтру Array 390/390; Bytecode 248/248. Примеры `clone_record_array.axm`, `growing_array.axm`, `first_occurrence_order.axm`, `view_after_resize.axm`, `empty_window_bounds.axm` запущены повторно с прежним выводом. `versioning check` и `check --base HEAD` прошли; версии остаются язык 0.1.16, компилятор/CLI 0.1.16, IDE 0.6.18, потому что удаление мёртвого кода продолжает ту же задачу и не меняет наблюдаемое поведение.
+
+Остаток P3: `SyntaxKind.ArrayDimension` (сейчас измерение и границы измерения делят один вид узла), единый набор фабрик, разделение `RuntimeArrayValue`, устранение `ToArray()` на каждый элемент в многомерных CONCAT/REVERSED/SORT.
+
+## Session 1521 - 2026-10-17 14:33 - Массивы: P3 — вид узла, разделение значения, горячие пути
+
+Выполнен остаток P3 аудита массивов.
+
+- Введён `SyntaxKind.ArrayDimension`; `ArrayDimensionSyntax.Kind` больше не совпадает с `ArrayBoundsSyntax.Kind`. Добавлен тест `Parse_ArrayBoundsAndDimensionHaveDistinctSyntaxKinds`.
+- `RuntimeArrayValue` переведён в `partial` и разделён по ответственности: `RuntimeArrayValue.cs` (649 строк — значение и публичный контракт), `RuntimeArrayValue.Shape.cs` (354 — границы, страйды, линейные индексы, проверки вхождения), `RuntimeArrayValue.Storage.cs` (94 — выделение, предел, ёмкость, признак жизни хранилища), `RuntimeArrayValue.Copy.cs` (143 — клонирование и копирование пересечения). Поведение не менялось.
+- Многомерные `ARRAYCONCAT`, `ARRAYTOREVERSED` и `SortArrayAlongDimension`/`GetStableSortedLine` переиспользуют один буфер индексов вместо `ToArray()` на каждый элемент; `GetStableSortedLine` заполняет результат без промежуточного `Select().ToList()`.
+
+Проверки: сборка `Axiom.Cli` Debug без ошибок и предупреждений; Runtime 1154/1154; Semantics 520/520; Execution по фильтру Array 390/390; Parsing 168/168; Syntax 66/66; Bytecode 248/248. Примеры `array_shape_transform_mesh.axm`, `arrayconcat/by_column.axm`, `arrayconcat/maximum_index.axm`, `arraysort/multidimensional_by_dimension.axm`, `arraytoreversed/by_column.axm`, `arrayreverse/by_column.axm` дают прежний вывод.
+
+Документы: `ARCHITECTURE.md` (устройство значения массива и назначение четырёх файлов), `PLANS4.md`, `UNFINISHED_WORK.md`, аудит массивов. Версии остаются язык 0.1.16, компилятор/CLI 0.1.16, IDE 0.6.18: это продолжение той же задачи, наблюдаемое поведение не изменилось.
+
+Из аудита остаётся необязательный ARR-017: сужение публичного API `RuntimeArrayValue`; публичные `SetValue`/`GetValue` используются `ArrayAverageExactnessTests`, поэтому нужен `InternalsVisibleTo` или тестовый фасад. Остальные пункты аудита закрыты.
+
+Дополнение к Session 1521 — 14:33: после изменения `SyntaxKind` отпечаток снимка языка стал устаревшим. Выполнены `dotnet run --project scripts/language-audit` (inventory-only), `node scripts/build-language-reference.mjs --inventory .artifacts/language-inventory-current/inventory.json` и `node scripts/check-manual.mjs`; справочник снова проходит проверку (122 страницы, 4888 ссылок, 458 записей поиска). Обновлён `docs/manual/data/language-reference.json`.

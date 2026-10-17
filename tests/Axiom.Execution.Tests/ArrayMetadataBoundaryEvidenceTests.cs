@@ -49,6 +49,6 @@ public sealed class ArrayMetadataBoundaryEvidenceTests
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);
         Assert.Equal(ExecutionEngineKind.BytecodeVm, run.ActualEngine);
-        Assert.Equal(new[] { "-2147483647", "-2147483646", "2147483646", "2147483647", "2", "4", "TRUE", "2", "4", "-2147483647", "-2147483646", "2147483646", "2147483647", "-2147483647", "TRUE", "0", "2", "-2147483647", "-2147483646", "2147483646", "2147483645", "FALSE", "0", "2", "MB3005", "2147483645" }, run.Output);
+        Assert.Equal(new[] { "-2147483647", "-2147483646", "2147483646", "2147483647", "2", "4", "TRUE", "2", "4", "-2147483647", "-2147483646", "2147483646", "2147483647", "-2147483647", "TRUE", "0", "2", "-2147483647", "-2147483646", "1", "0", "FALSE", "0", "2", "MB3005", "0" }, run.Output);
     }
 }

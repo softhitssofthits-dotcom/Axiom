@@ -74,7 +74,7 @@ public sealed partial class BytecodeVm
             return BuiltinArrayHelpers.CreateArrayWindowCopy(
                 arrayType,
                 array,
-                BuiltinArrayHelpers.CreateEmptyWindowBounds(array, dimension, start));
+                BuiltinArrayHelpers.CreateEmptyWindowBounds(array, dimension));
         }
 
         var end = (long)start + count - 1L;
@@ -217,9 +217,16 @@ public sealed partial class BytecodeVm
         var lowerBound = array.GetLowerBound(dimension);
         var extent = BuiltinArrayHelpers.GetDimensionLength(array, dimension);
         var takeCount = Math.Min(count, extent);
-        var upperBound = takeCount == 0
-            ? lowerBound - 1
-            : lowerBound + takeCount - 1;
+
+        if (takeCount == 0)
+        {
+            return BuiltinArrayHelpers.CreateArrayWindowCopy(
+                arrayType,
+                array,
+                BuiltinArrayHelpers.CreateEmptyWindowBounds(array, dimension));
+        }
+
+        var upperBound = lowerBound + takeCount - 1;
 
         return BuiltinArrayHelpers.CreateArrayWindowCopy(
             arrayType,
@@ -259,7 +266,7 @@ public sealed partial class BytecodeVm
             return BuiltinArrayHelpers.CreateArrayWindowCopy(
                 arrayType,
                 array,
-                BuiltinArrayHelpers.CreateEmptyWindowBounds(array, dimension, (long)upperBound + 1L));
+                BuiltinArrayHelpers.CreateEmptyWindowBounds(array, dimension));
         }
 
         return BuiltinArrayHelpers.CreateArrayWindowCopy(
@@ -273,6 +280,25 @@ public sealed partial class BytecodeVm
         var array = RequireAllocatedArrayArgument(argument, "ARRAYDISTINCT", "array", location);
         var sourceArrayType = (ArrayTypeSymbol)argument.Type;
         var resultArrayType = (ArrayTypeSymbol)ArrayTypeSymbol.Create(sourceArrayType.ElementType);
+
+        if (RuntimeValueEqualityComparer.SupportsElementType(sourceArrayType.ElementType))
+        {
+            var seen = new HashSet<RuntimeValue>(RuntimeValueEqualityComparer.Instance);
+            var distinctValues = new List<RuntimeValue>(array.Length);
+
+            BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices =>
+            {
+                var candidate = array.GetValue(indices);
+
+                if (seen.Add(candidate))
+                {
+                    distinctValues.Add(candidate);
+                }
+            });
+
+            return CreateCompactArrayValue(resultArrayType, distinctValues);
+        }
+
         var values = new List<RuntimeValue>(array.Length);
 
         BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices =>
@@ -359,6 +385,7 @@ public sealed partial class BytecodeVm
         var leftLowerBound = left.GetLowerBound(dimension);
         var rightLowerBound = right.GetLowerBound(dimension);
         var resultLowerBound = resultLowerBounds[selectedIndex];
+        var sourceIndices = new int[resultLowerBounds.Length];
 
         return BuiltinArrayHelpers.CreateVisibleShapeArrayValue(
             arrayType,
@@ -366,7 +393,11 @@ public sealed partial class BytecodeVm
             resultUpperBounds,
             resultIndices =>
             {
-                var sourceIndices = resultIndices.ToArray();
+                for (var index = 0; index < sourceIndices.Length; index++)
+                {
+                    sourceIndices[index] = resultIndices[index];
+                }
+
                 var offset = resultIndices[selectedIndex] - resultLowerBound;
 
                 if (offset < leftLength)
@@ -528,6 +559,11 @@ public sealed partial class BytecodeVm
         var valueArray = RequireAllocatedArrayArgument(arguments[1], "ARRAYPUSH", "value", location);
         EnsureCompatibleDynamicArrayValueShape("ARRAYPUSH", array, valueArray, dimension, location);
 
+        if (valueArray.SharesStorageWith(array))
+        {
+            valueArray = valueArray.Clone();
+        }
+
         var expandedUpperBound = GetExpandedArrayUpperBound("ARRAYPUSH", array, dimension, location);
         var nextLowerBounds = array.LowerBounds.ToArray();
         var nextUpperBounds = array.UpperBounds.ToArray();
@@ -631,6 +667,12 @@ public sealed partial class BytecodeVm
         var dimension = explicitDimension ?? ResolveTransformDimension("ARRAYINSERT", array, arguments, dimensionArgumentIndex: 3, location);
         var valueArray = RequireAllocatedArrayArgument(arguments[2], "ARRAYINSERT", "value", location);
         EnsureCompatibleDynamicArrayValueShape("ARRAYINSERT", array, valueArray, dimension, location);
+
+        if (valueArray.SharesStorageWith(array))
+        {
+            valueArray = valueArray.Clone();
+        }
+
         var insertionDimensionIndex = RequireArrayInsertionIndex("ARRAYINSERT", array, index, dimension, location);
         var selectedDimensionIsEmpty = BuiltinArrayHelpers.GetDimensionLength(array, dimension) == 0;
         var previousDimensionUpperBound = selectedDimensionIsEmpty ? 0 : array.GetUpperBound(dimension);

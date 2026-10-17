@@ -123,7 +123,7 @@ PRINT ARRAYRANK(result)
 """;
         var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(Setup + "\n" + extra));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
-        Assert.Equal(new[] { "30", "5", "7", "1", "2", "10", "TRUE", "0", "1", "0", "0", "2", "0", "-2", "-1", "4", "3", "FALSE", "0", "1" }, run.Output);
+        Assert.Equal(new[] { "30", "5", "7", "1", "2", "10", "TRUE", "0", "1", "0", "0", "2", "0", "-2", "-1", "1", "0", "FALSE", "0", "1" }, run.Output);
     }
 
     [Theory]

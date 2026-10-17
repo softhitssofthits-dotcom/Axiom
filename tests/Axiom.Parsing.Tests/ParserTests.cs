@@ -1176,6 +1176,19 @@ END FUNCTION
     }
 
     [Fact]
+    public void Parse_ArrayBoundsAndDimensionHaveDistinctSyntaxKinds()
+    {
+        var program = ParseProgram("DIM grid(1 TO 2, 3 TO 4)", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var dim = AssertGlobalStatement<DimStatementSyntax>(program);
+        var bounds = Assert.IsType<ArrayBoundsSyntax>(dim.Declarations[0].Declarators[0].ArrayBounds);
+
+        Assert.Equal(SyntaxKind.ArrayBounds, bounds.Kind);
+        Assert.All(bounds.Dimensions, static dimension => Assert.Equal(SyntaxKind.ArrayDimension, dimension.Kind));
+    }
+
+    [Fact]
     public void Parse_RedimPreserveStatement()
     {
         var program = ParseProgram("REDIM PRESERVE items(2 TO 4)", out var diagnostics);

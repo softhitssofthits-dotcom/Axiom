@@ -3,9 +3,17 @@ using System.Runtime.CompilerServices;
 
 namespace Axiom.Runtime;
 
-public sealed class RuntimeArrayValue : IRuntimeStoredValue
+public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
 {
+    /// <summary>
+    /// Предельное число элементов одного массива. Им ограничивается размер
+    /// хранилища раньше, чем Int32-длина массива и память процесса.
+    /// </summary>
+    internal const int MaxElementCount = 64 * 1024 * 1024;
+
     private RuntimeValue[]? _elements;
+    private StorageLifetime? _storageLifetime;
+    private int _capacity;
     private readonly int[] _unallocatedLowerBounds;
     private readonly int[] _unallocatedUpperBounds;
     private bool _isView;
@@ -78,6 +86,8 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         array._fixedStorageIndices = CreateEmptyFixedStorageIndices(array.Rank);
         array._visibleStorageDimensions = CreateIdentityStorageDimensions(array.Rank);
         array._elements = array.CreateDefaultElements(array._storageLowerBounds, array._storageUpperBounds);
+        array._capacity = array._elements.Length;
+        array._storageLifetime = new StorageLifetime();
         array.RefreshShapeMetadata();
         return array;
     }
@@ -108,6 +118,8 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         }
 
         array._elements = elements;
+        array._capacity = elements.Length;
+        array._storageLifetime = new StorageLifetime();
         array.RefreshShapeMetadata();
         return array;
     }
@@ -133,8 +145,8 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
 
         var totalLength = firstLength <= 0 || secondLength <= 0
             ? 0
-            : checked(firstLength * secondLength);
-        var elements = new RuntimeValue[totalLength];
+            : ValidateElementCount((long)firstLength * secondLength);
+        var elements = CreateElementStorage(totalLength);
         var elementIndex = 0;
 
         for (var firstIndex = 1; firstIndex <= firstLength; firstIndex++)
@@ -149,6 +161,8 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         }
 
         array._elements = elements;
+        array._capacity = elements.Length;
+        array._storageLifetime = new StorageLifetime();
         array.RefreshShapeMetadata();
         return array;
     }
@@ -162,7 +176,8 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         IReadOnlyList<int> storageLowerBounds,
         IReadOnlyList<int> storageUpperBounds,
         IReadOnlyList<int?> fixedStorageIndices,
-        IReadOnlyList<int> visibleStorageDimensions)
+        IReadOnlyList<int> visibleStorageDimensions,
+        StorageLifetime storageLifetime)
         : this(elementType, fixedStringLength, lowerBounds.Count)
     {
         ArgumentNullException.ThrowIfNull(lowerBounds);
@@ -172,6 +187,7 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         ArgumentNullException.ThrowIfNull(storageUpperBounds);
         ArgumentNullException.ThrowIfNull(fixedStorageIndices);
         ArgumentNullException.ThrowIfNull(visibleStorageDimensions);
+        ArgumentNullException.ThrowIfNull(storageLifetime);
 
         _lowerBounds = lowerBounds.ToArray();
         _upperBounds = upperBounds.ToArray();
@@ -180,6 +196,8 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         _fixedStorageIndices = fixedStorageIndices.ToArray();
         _visibleStorageDimensions = visibleStorageDimensions.ToArray();
         _elements = elements;
+        _capacity = elements.Length;
+        _storageLifetime = storageLifetime;
         _isView = true;
         RefreshShapeMetadata();
     }
@@ -201,6 +219,17 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
     public bool IsAllocated => _elements is not null;
 
     public bool IsView => IsAllocated && _isView;
+
+    /// <summary>
+    /// Проверяет, что два массива читают одно и то же хранилище.
+    /// Нужно операциям изменения размера, которые получают срез
+    /// собственного массива как значение.
+    /// </summary>
+    internal bool SharesStorageWith(RuntimeArrayValue other)
+    {
+        ArgumentNullException.ThrowIfNull(other);
+        return IsAllocated && other.IsAllocated && ReferenceEquals(_elements, other._elements);
+    }
 
     public int Length => IsAllocated ? _visibleLength : 0;
 
@@ -411,7 +440,8 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
             _storageLowerBounds!,
             _storageUpperBounds!,
             nextFixedStorageIndices,
-            nextVisibleStorageDimensions);
+            nextVisibleStorageDimensions,
+            _storageLifetime!);
     }
 
     public void SetValue(int index, RuntimeValue value)
@@ -549,27 +579,44 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
             return false;
         }
 
+        if (Length + 1 > MaxElementCount)
+        {
+            throw new ArrayAllocationFailureException(
+                $"Не удалось расширить массив: число элементов превысит предел {MaxElementCount}.");
+        }
+
         var nextLowerBound = LowerBound;
         var nextUpperBound = Length == 0
             ? nextLowerBound
             : checked(UpperBound + 1);
-        var nextElements = new RuntimeValue[Length + 1];
 
-        if (Length > 0)
+        if (_elements!.Length < Length + 1)
         {
-            Array.Copy(_elements!, 0, nextElements, 0, Length);
+            var nextElements = CreateElementStorage(GrowCapacity(Length + 1));
+
+            if (Length > 0)
+            {
+                Array.Copy(_elements, 0, nextElements, 0, Length);
+            }
+
+            AttachStorage(nextElements);
         }
 
-        nextElements[^1] = value.CopyForStorage(FixedStringLength);
-        _lowerBounds = [nextLowerBound];
-        _upperBounds = [nextUpperBound];
+        _elements![Length] = value.CopyForStorage(FixedStringLength);
+        _lowerBounds![0] = nextLowerBound;
+        _upperBounds![0] = nextUpperBound;
         _storageLowerBounds = _lowerBounds;
         _storageUpperBounds = _upperBounds;
-        _fixedStorageIndices = CreateEmptyFixedStorageIndices(rank: 1);
-        _visibleStorageDimensions = CreateIdentityStorageDimensions(rank: 1);
+
+        if (_storageStrides is null || _storageStrides[0] != 1)
+        {
+            _storageStrides = [1];
+        }
+
+        _fixedStorageBaseOffset = 0;
+        _visibleLength = nextUpperBound - nextLowerBound + 1;
         _isView = false;
-        _elements = nextElements;
-        RefreshShapeMetadata();
+        RenewStorageLifetime();
         return true;
     }
 
@@ -584,9 +631,11 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
             return false;
         }
 
-        value = _elements![^1];
+        var previousLength = Length;
+        value = _elements![previousLength - 1];
+        _elements[previousLength - 1] = RuntimeValue.Void;
 
-        if (Length == 1)
+        if (previousLength == 1)
         {
             _lowerBounds = [1];
             _upperBounds = [0];
@@ -595,20 +644,16 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
             _fixedStorageIndices = CreateEmptyFixedStorageIndices(rank: 1);
             _visibleStorageDimensions = CreateIdentityStorageDimensions(rank: 1);
             _isView = false;
-            _elements = [];
             RefreshShapeMetadata();
+            RenewStorageLifetime();
             return true;
         }
 
-        var nextElements = new RuntimeValue[Length - 1];
-        Array.Copy(_elements, 0, nextElements, 0, nextElements.Length);
-        _upperBounds = [UpperBound - 1];
+        _upperBounds![0] = UpperBound - 1;
         _storageUpperBounds = _upperBounds;
-        _fixedStorageIndices = CreateEmptyFixedStorageIndices(rank: 1);
-        _visibleStorageDimensions = CreateIdentityStorageDimensions(rank: 1);
+        _visibleLength = previousLength - 1;
         _isView = false;
-        _elements = nextElements;
-        RefreshShapeMetadata();
+        RenewStorageLifetime();
         return true;
     }
 
@@ -623,14 +668,18 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         EnsureResizableRoot();
         ValidateBounds(lowerBounds, upperBounds, Rank);
 
-        _lowerBounds = lowerBounds.ToArray();
-        _upperBounds = upperBounds.ToArray();
-        _storageLowerBounds = _lowerBounds;
-        _storageUpperBounds = _upperBounds;
+        var nextLowerBounds = lowerBounds.ToArray();
+        var nextUpperBounds = upperBounds.ToArray();
+        var nextElements = CreateDefaultElements(nextLowerBounds, nextUpperBounds);
+
+        _lowerBounds = nextLowerBounds;
+        _upperBounds = nextUpperBounds;
+        _storageLowerBounds = nextLowerBounds;
+        _storageUpperBounds = nextUpperBounds;
         _fixedStorageIndices = CreateEmptyFixedStorageIndices(Rank);
         _visibleStorageDimensions = CreateIdentityStorageDimensions(Rank);
         _isView = false;
-        _elements = CreateDefaultElements(_storageLowerBounds, _storageUpperBounds);
+        AttachStorage(nextElements);
         RefreshShapeMetadata();
     }
 
@@ -664,13 +713,14 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         _fixedStorageIndices = CreateEmptyFixedStorageIndices(Rank);
         _visibleStorageDimensions = CreateIdentityStorageDimensions(Rank);
         _isView = false;
-        _elements = newElements;
+        AttachStorage(newElements);
         RefreshShapeMetadata();
     }
 
     public void Deallocate()
     {
         EnsureResizableRoot();
+        InvalidateStorageLifetime();
         _lowerBounds = null;
         _upperBounds = null;
         _storageLowerBounds = null;
@@ -681,32 +731,8 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
         _visibleLength = 0;
         _isView = false;
         _elements = null;
-    }
-
-    public RuntimeArrayValue Clone(int? fixedStringLengthOverride = null)
-    {
-        var clone = new RuntimeArrayValue(ElementType, fixedStringLengthOverride ?? FixedStringLength, Rank);
-
-        if (!IsAllocated)
-        {
-            return clone;
-        }
-
-        clone._lowerBounds = _lowerBounds!.ToArray();
-        clone._upperBounds = _upperBounds!.ToArray();
-        clone._storageLowerBounds = clone._lowerBounds;
-        clone._storageUpperBounds = clone._upperBounds;
-        clone._fixedStorageIndices = CreateEmptyFixedStorageIndices(clone.Rank);
-        clone._visibleStorageDimensions = CreateIdentityStorageDimensions(clone.Rank);
-        clone._elements = clone.CreateDefaultElements(clone._storageLowerBounds, clone._storageUpperBounds);
-        clone.RefreshShapeMetadata();
-
-        if (!TryCopyVisibleValuesToClone(clone))
-        {
-            clone.CopyVisibleValuesFrom(this);
-        }
-
-        return clone;
+        _capacity = 0;
+        _storageLifetime = null;
     }
 
     public void ForEachVisibleIndexSetAscending(Action<IReadOnlyList<int>> action)
@@ -749,576 +775,6 @@ public sealed class RuntimeArrayValue : IRuntimeStoredValue
             }
 
             index++;
-        }
-    }
-
-    private void CopyVisibleValuesFrom(RuntimeArrayValue source)
-    {
-        if (!source.IsAllocated || !IsAllocated || source.Length == 0)
-        {
-            return;
-        }
-
-        source.ForEachVisibleIndexSetAscending(indices => SetValue(indices, source.GetValue(indices)));
-    }
-
-    private bool TryCopyVisibleValuesToClone(RuntimeArrayValue clone)
-    {
-        if (Rank != 1
-            || !IsAllocated
-            || !clone.IsAllocated
-            || Length == 0
-            || clone.Length != Length)
-        {
-            return false;
-        }
-
-        return TryCopyOneDimensionalRangeTo(LowerBound, Length, clone._elements!, destinationIndex: 0);
-    }
-
-    private void CopyIntersection(
-        RuntimeValue[] sourceElements,
-        IReadOnlyList<int> sourceLowerBounds,
-        IReadOnlyList<int> sourceUpperBounds,
-        RuntimeValue[] targetElements,
-        IReadOnlyList<int> targetLowerBounds,
-        IReadOnlyList<int> targetUpperBounds)
-    {
-        if (sourceElements.Length == 0 || targetElements.Length == 0)
-        {
-            return;
-        }
-
-        if (Rank == 1)
-        {
-            var copyLowerBound = Math.Max(sourceLowerBounds[0], targetLowerBounds[0]);
-            var copyUpperBound = Math.Min(sourceUpperBounds[0], targetUpperBounds[0]);
-
-            if (copyUpperBound < copyLowerBound)
-            {
-                return;
-            }
-
-            var copyCount = copyUpperBound - copyLowerBound + 1;
-            var sourceOffset = copyLowerBound - sourceLowerBounds[0];
-            var targetOffset = copyLowerBound - targetLowerBounds[0];
-            Array.Copy(sourceElements, sourceOffset, targetElements, targetOffset, copyCount);
-            return;
-        }
-
-        var copyLowerBounds = new int[Rank];
-        var copyUpperBounds = new int[Rank];
-
-        for (var dimension = 0; dimension < Rank; dimension++)
-        {
-            copyLowerBounds[dimension] = Math.Max(sourceLowerBounds[dimension], targetLowerBounds[dimension]);
-            copyUpperBounds[dimension] = Math.Min(sourceUpperBounds[dimension], targetUpperBounds[dimension]);
-
-            if (copyUpperBounds[dimension] < copyLowerBounds[dimension])
-            {
-                return;
-            }
-        }
-
-        var sourceStrides = CalculateStrides(sourceLowerBounds, sourceUpperBounds);
-        var targetStrides = CalculateStrides(targetLowerBounds, targetUpperBounds);
-        var indices = new int[Rank];
-        CopyIntersectionRecursive(
-            dimension: 0,
-            indices,
-            sourceElements,
-            sourceLowerBounds,
-            sourceStrides,
-            targetElements,
-            targetLowerBounds,
-            targetStrides,
-            copyLowerBounds,
-            copyUpperBounds);
-    }
-
-    private void CopyIntersectionRecursive(
-        int dimension,
-        int[] indices,
-        RuntimeValue[] sourceElements,
-        IReadOnlyList<int> sourceLowerBounds,
-        IReadOnlyList<int> sourceStrides,
-        RuntimeValue[] targetElements,
-        IReadOnlyList<int> targetLowerBounds,
-        IReadOnlyList<int> targetStrides,
-        IReadOnlyList<int> copyLowerBounds,
-        IReadOnlyList<int> copyUpperBounds)
-    {
-        if (dimension == Rank)
-        {
-            var sourceIndex = GetLinearIndexWithStrides(indices, sourceLowerBounds, sourceStrides);
-            var targetIndex = GetLinearIndexWithStrides(indices, targetLowerBounds, targetStrides);
-            targetElements[targetIndex] = sourceElements[sourceIndex];
-            return;
-        }
-
-        var index = copyLowerBounds[dimension];
-
-        while (true)
-        {
-            indices[dimension] = index;
-            CopyIntersectionRecursive(
-                dimension + 1,
-                indices,
-                sourceElements,
-                sourceLowerBounds,
-                sourceStrides,
-                targetElements,
-                targetLowerBounds,
-                targetStrides,
-                copyLowerBounds,
-                copyUpperBounds);
-
-            if (index == copyUpperBounds[dimension])
-            {
-                break;
-            }
-
-            index++;
-        }
-    }
-
-    private static void ValidateBounds(IReadOnlyList<int> lowerBounds, IReadOnlyList<int> upperBounds, int expectedRank)
-    {
-        ArgumentNullException.ThrowIfNull(lowerBounds);
-        ArgumentNullException.ThrowIfNull(upperBounds);
-
-        if (lowerBounds.Count != expectedRank || upperBounds.Count != expectedRank)
-        {
-            throw new ArgumentException("Array bounds count must match array rank.");
-        }
-
-        for (var dimension = 0; dimension < expectedRank; dimension++)
-        {
-            ValidateDimensionBounds(lowerBounds[dimension], upperBounds[dimension]);
-        }
-    }
-
-    private static void ValidateDimensionBounds(int lowerBound, int upperBound)
-    {
-        if (upperBound < lowerBound && !IsCanonicalEmptyRange(lowerBound, upperBound))
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(upperBound),
-                upperBound,
-                "Upper bound must not be less than lower bound, except for the canonical empty range 1 TO 0.");
-        }
-    }
-
-    private static bool IsCanonicalEmptyRange(int lowerBound, int upperBound) => lowerBound == 1 && upperBound == 0;
-
-    private static bool IsEmptyRange(int lowerBound, int upperBound) => upperBound < lowerBound;
-
-    private static bool HasNonCanonicalEmptyVisibleRange(IReadOnlyList<int> lowerBounds, IReadOnlyList<int> upperBounds)
-    {
-        for (var dimension = 0; dimension < lowerBounds.Count; dimension++)
-        {
-            if (IsEmptyRange(lowerBounds[dimension], upperBounds[dimension])
-                && !IsCanonicalEmptyRange(lowerBounds[dimension], upperBounds[dimension]))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static int[] NormalizeStorageLowerBounds(IReadOnlyList<int> lowerBounds, IReadOnlyList<int> upperBounds)
-    {
-        var normalized = new int[lowerBounds.Count];
-
-        for (var dimension = 0; dimension < lowerBounds.Count; dimension++)
-        {
-            normalized[dimension] = IsEmptyRange(lowerBounds[dimension], upperBounds[dimension])
-                ? 1
-                : lowerBounds[dimension];
-        }
-
-        return normalized;
-    }
-
-    private static int[] NormalizeStorageUpperBounds(IReadOnlyList<int> lowerBounds, IReadOnlyList<int> upperBounds)
-    {
-        var normalized = new int[upperBounds.Count];
-
-        for (var dimension = 0; dimension < upperBounds.Count; dimension++)
-        {
-            normalized[dimension] = IsEmptyRange(lowerBounds[dimension], upperBounds[dimension])
-                ? 0
-                : upperBounds[dimension];
-        }
-
-        return normalized;
-    }
-
-    private RuntimeValue[] CreateDefaultElements(IReadOnlyList<int> lowerBounds, IReadOnlyList<int> upperBounds)
-    {
-        var length = CalculateLength(lowerBounds, upperBounds);
-        var elements = new RuntimeValue[length];
-
-        for (var index = 0; index < elements.Length; index++)
-        {
-            elements[index] = RuntimeValue.Default(ElementType, FixedStringLength);
-        }
-
-        return elements;
-    }
-
-    private static int CalculateLength(IReadOnlyList<int> lowerBounds, IReadOnlyList<int> upperBounds)
-    {
-        for (var dimension = 0; dimension < lowerBounds.Count; dimension++)
-        {
-            if (IsEmptyRange(lowerBounds[dimension], upperBounds[dimension]))
-            {
-                return 0;
-            }
-        }
-
-        var length = 1;
-
-        for (var dimension = 0; dimension < lowerBounds.Count; dimension++)
-        {
-            var extent = checked(upperBounds[dimension] - lowerBounds[dimension] + 1);
-            length = checked(length * extent);
-        }
-
-        return length;
-    }
-
-    private int GetLinearIndex(IReadOnlyList<int> localIndices)
-    {
-        if (!ContainsIndices(localIndices))
-        {
-            throw new ArgumentOutOfRangeException(nameof(localIndices), "Indices must stay within array bounds.");
-        }
-
-        var visibleStorageDimensions = GetVisibleStorageDimensions();
-        var storageLowerBounds = _storageLowerBounds!;
-        var storageStrides = _storageStrides!;
-        var linearIndex = _fixedStorageBaseOffset;
-
-        for (var index = 0; index < localIndices.Count; index++)
-        {
-            var storageDimension = visibleStorageDimensions[index];
-            linearIndex = checked(linearIndex + ((localIndices[index] - storageLowerBounds[storageDimension]) * storageStrides[storageDimension]));
-        }
-
-        return linearIndex;
-    }
-
-    private int GetLinearIndex(ReadOnlySpan<int> localIndices)
-    {
-        if (!TryGetLinearIndex(localIndices, out var linearIndex))
-        {
-            throw new ArgumentOutOfRangeException(nameof(localIndices), "Indices must stay within array bounds.");
-        }
-
-        return linearIndex;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool TryGetLinearIndex(ReadOnlySpan<int> localIndices, out int linearIndex)
-    {
-        if (localIndices.Length != Rank)
-        {
-            linearIndex = 0;
-            return false;
-        }
-
-        var lowerBounds = _lowerBounds!;
-        var upperBounds = _upperBounds!;
-        var visibleStorageDimensions = GetVisibleStorageDimensions();
-        var storageLowerBounds = _storageLowerBounds!;
-        var storageStrides = _storageStrides!;
-        linearIndex = _fixedStorageBaseOffset;
-
-        for (var index = 0; index < localIndices.Length; index++)
-        {
-            var localIndex = localIndices[index];
-            if (localIndex < lowerBounds[index] || localIndex > upperBounds[index])
-            {
-                linearIndex = 0;
-                return false;
-            }
-
-            var storageDimension = visibleStorageDimensions[index];
-            linearIndex = checked(linearIndex + ((localIndex - storageLowerBounds[storageDimension]) * storageStrides[storageDimension]));
-        }
-
-        return true;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool TryGetLinearIndex1(int index0, out int linearIndex)
-    {
-        if (Rank != 1)
-        {
-            linearIndex = 0;
-            return false;
-        }
-
-        var lowerBounds = _lowerBounds!;
-        var upperBounds = _upperBounds!;
-
-        if (index0 < lowerBounds[0] || index0 > upperBounds[0])
-        {
-            linearIndex = 0;
-            return false;
-        }
-
-        var storageDimension0 = GetVisibleStorageDimensions()[0];
-        linearIndex = checked(
-            _fixedStorageBaseOffset
-            + ((index0 - _storageLowerBounds![storageDimension0]) * _storageStrides![storageDimension0]));
-        return true;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool TryGetLinearIndex3(int index0, int index1, int index2, out int linearIndex)
-    {
-        if (Rank != 3)
-        {
-            linearIndex = 0;
-            return false;
-        }
-
-        var lowerBounds = _lowerBounds!;
-        var upperBounds = _upperBounds!;
-
-        if (index0 < lowerBounds[0] || index0 > upperBounds[0]
-            || index1 < lowerBounds[1] || index1 > upperBounds[1]
-            || index2 < lowerBounds[2] || index2 > upperBounds[2])
-        {
-            linearIndex = 0;
-            return false;
-        }
-
-        var visibleStorageDimensions = GetVisibleStorageDimensions();
-        var storageLowerBounds = _storageLowerBounds!;
-        var storageStrides = _storageStrides!;
-        var storageDimension0 = visibleStorageDimensions[0];
-        var storageDimension1 = visibleStorageDimensions[1];
-        var storageDimension2 = visibleStorageDimensions[2];
-
-        linearIndex = checked(
-            _fixedStorageBaseOffset
-            + ((index0 - storageLowerBounds[storageDimension0]) * storageStrides[storageDimension0])
-            + ((index1 - storageLowerBounds[storageDimension1]) * storageStrides[storageDimension1])
-            + ((index2 - storageLowerBounds[storageDimension2]) * storageStrides[storageDimension2]));
-        return true;
-    }
-
-    private int?[] GetFixedStorageIndices()
-    {
-        return _fixedStorageIndices ?? CreateEmptyFixedStorageIndices(_storageLowerBounds?.Length ?? Rank);
-    }
-
-    private int[] GetVisibleStorageDimensions()
-    {
-        return _visibleStorageDimensions ?? CreateIdentityStorageDimensions(Rank);
-    }
-
-    private static int?[] CreateEmptyFixedStorageIndices(int rank) => new int?[rank];
-
-    private static int[] CreateIdentityStorageDimensions(int rank)
-    {
-        var dimensions = new int[rank];
-
-        for (var index = 0; index < dimensions.Length; index++)
-        {
-            dimensions[index] = index;
-        }
-
-        return dimensions;
-    }
-
-    private void RefreshShapeMetadata()
-    {
-        _visibleLength = _lowerBounds is not null && _upperBounds is not null
-            ? CalculateLength(_lowerBounds, _upperBounds)
-            : 0;
-        _storageStrides = _storageLowerBounds is not null && _storageUpperBounds is not null
-            ? CalculateStrides(_storageLowerBounds, _storageUpperBounds)
-            : null;
-        _fixedStorageBaseOffset = _storageLowerBounds is not null && _storageStrides is not null
-            ? CalculateFixedStorageBaseOffset(GetFixedStorageIndices(), _storageLowerBounds, _storageStrides)
-            : 0;
-    }
-
-    private static void ValidateVisibleRange(int lowerBound, int upperBound, int visibleLowerBound, int visibleUpperBound)
-    {
-        if (lowerBound < visibleLowerBound || lowerBound > visibleUpperBound)
-        {
-            throw new ArgumentOutOfRangeException(nameof(lowerBound), "Range lower bound must stay within array bounds.");
-        }
-
-        if (upperBound < visibleLowerBound || upperBound > visibleUpperBound)
-        {
-            throw new ArgumentOutOfRangeException(nameof(upperBound), "Range upper bound must stay within array bounds.");
-        }
-    }
-
-    private static int GetLinearIndex(
-        IReadOnlyList<int> indices,
-        IReadOnlyList<int> lowerBounds,
-        IReadOnlyList<int> upperBounds)
-    {
-        return GetLinearIndexWithStrides(indices, lowerBounds, CalculateStrides(lowerBounds, upperBounds));
-    }
-
-    private static int GetLinearIndexWithStrides(
-        IReadOnlyList<int> indices,
-        IReadOnlyList<int> lowerBounds,
-        IReadOnlyList<int> strides)
-    {
-        if (indices.Count != lowerBounds.Count || indices.Count != strides.Count)
-        {
-            throw new ArgumentException("Index count must match array rank.", nameof(indices));
-        }
-
-        var linearIndex = 0;
-
-        for (var dimension = 0; dimension < indices.Count; dimension++)
-        {
-            linearIndex = checked(linearIndex + ((indices[dimension] - lowerBounds[dimension]) * strides[dimension]));
-        }
-
-        return linearIndex;
-    }
-
-    private static int[] CalculateStrides(IReadOnlyList<int> lowerBounds, IReadOnlyList<int> upperBounds)
-    {
-        var strides = new int[lowerBounds.Count];
-        var stride = 1;
-
-        for (var dimension = lowerBounds.Count - 1; dimension >= 0; dimension--)
-        {
-            strides[dimension] = stride;
-
-            if (IsEmptyRange(lowerBounds[dimension], upperBounds[dimension]))
-            {
-                stride = 0;
-                continue;
-            }
-
-            var extent = checked(upperBounds[dimension] - lowerBounds[dimension] + 1);
-            stride = checked(stride * extent);
-        }
-
-        return strides;
-    }
-
-    private static int CalculateFixedStorageBaseOffset(
-        IReadOnlyList<int?> fixedStorageIndices,
-        IReadOnlyList<int> storageLowerBounds,
-        IReadOnlyList<int> storageStrides)
-    {
-        var offset = 0;
-
-        for (var dimension = 0; dimension < storageStrides.Count; dimension++)
-        {
-            if (fixedStorageIndices[dimension] is { } fixedIndex)
-            {
-                offset = checked(offset + ((fixedIndex - storageLowerBounds[dimension]) * storageStrides[dimension]));
-            }
-        }
-
-        return offset;
-    }
-
-    private bool IsWithinBounds(IReadOnlyList<int> indices, bool requireFullRank)
-    {
-        if (!IsAllocated)
-        {
-            return false;
-        }
-
-        if (requireFullRank)
-        {
-            if (indices.Count != Rank)
-            {
-                return false;
-            }
-        }
-        else if (indices.Count < 1 || indices.Count > Rank)
-        {
-            return false;
-        }
-
-        for (var dimension = 0; dimension < indices.Count; dimension++)
-        {
-            if (indices[dimension] < _lowerBounds![dimension] || indices[dimension] > _upperBounds![dimension])
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private bool IsWithinBounds(ReadOnlySpan<int> indices, bool requireFullRank)
-    {
-        if (!IsAllocated)
-        {
-            return false;
-        }
-
-        if (requireFullRank)
-        {
-            if (indices.Length != Rank)
-            {
-                return false;
-            }
-        }
-        else if (indices.Length < 1 || indices.Length > Rank)
-        {
-            return false;
-        }
-
-        for (var dimension = 0; dimension < indices.Length; dimension++)
-        {
-            if (indices[dimension] < _lowerBounds![dimension] || indices[dimension] > _upperBounds![dimension])
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private void EnsureAllocated()
-    {
-        if (!IsAllocated)
-        {
-            throw new InvalidOperationException("Array is not allocated.");
-        }
-    }
-
-    private void EnsureResizableRoot()
-    {
-        if (IsView)
-        {
-            throw new InvalidOperationException("Array view cannot be resized or deallocated.");
-        }
-    }
-
-    private void ValidateDimensionNumber(int dimension)
-    {
-        if (dimension < 1 || dimension > Rank)
-        {
-            throw new ArgumentOutOfRangeException(nameof(dimension), dimension, $"Dimension must be between 1 and {Rank}.");
-        }
-    }
-
-    private void EnsureOneDimensional()
-    {
-        if (Rank != 1)
-        {
-            throw new InvalidOperationException("Single-index access is only valid for one-dimensional arrays.");
         }
     }
 }

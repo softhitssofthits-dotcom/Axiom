@@ -75,6 +75,8 @@ public static class DiagnosticCodes
     public const string MissingGraphicsMode = "MB3010";
     public const string CallStackOverflow = "MB3011";
     public const string NumericDomain = "MB3012";
+    public const string ArrayAllocation = "MB3013";
+    public const string ExpiredArrayView = "MB3014";
 
     // Конвейер выполнения (MB4xxx)
     public const string BytecodeCoverage = "MB4001";
