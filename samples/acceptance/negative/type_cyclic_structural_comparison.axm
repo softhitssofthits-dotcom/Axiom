@@ -1,0 +1,12 @@
+' Сравнение записей циклического TYPE отвергается диагностикой.
+' Компилятор сообщает MB2022 об объявлении и MB2003 о сравнении,
+' но не завершается аварийно.
+
+TYPE Node
+    Child AS Node
+END TYPE
+
+DIM a AS Node
+DIM b AS Node
+PRINT a = b
+PRINT a <> b

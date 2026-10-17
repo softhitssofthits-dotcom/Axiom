@@ -1277,8 +1277,13 @@ class AxiomIDE {
     if (seq !== this._liveCheckSeq || this._formatBusy || !m || m !== model) { this.log('check.live.stale', { seq }); return; }
     if (m.getValue() !== text) { this.log('check.live.stale-edit', { seq }); return; } // stale
     r.diagnostics.forEach((d) => { d.file = filePath; d.col = d.column; });
-    this.applyDiagnostics(r.diagnostics, true);
-    this.log('check.live.applied', { seq, diagnostics: r.diagnostics.length });
+    // Ошибки исполнения относятся к тому же неизменённому снимку: фоновая
+    // проверка, поставленная в очередь до запуска, не должна их стирать.
+    const runtime = (this._lastDiagnostics || []).filter((d) =>
+      d.executionSnapshot && d.file === filePath && this.diagnosticMatchesSnapshot(d));
+    const diagnostics = runtime.length ? [...r.diagnostics, ...runtime] : r.diagnostics;
+    this.applyDiagnostics(diagnostics, true);
+    this.log('check.live.applied', { seq, diagnostics: diagnostics.length, runtime: runtime.length });
   }
 
   // Outline panel — the current file's top-level declarations (SUB / FUNCTION / TYPE)

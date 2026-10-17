@@ -8,7 +8,7 @@ namespace Axiom.Runtime.Tests;
 internal static class RuntimeVmContractRunner
 {
     internal static (BoundProgram Program, TestRuntimeHost Host, RuntimeResult Result)
-        Execute(string source, TestRuntimeHost host)
+        Execute(string source, TestRuntimeHost host, BytecodeBreakpointSet? breakpoints = null)
     {
         var syntax = Parser.Parse(source, out var parseDiagnostics);
         Assert.Empty(parseDiagnostics);
@@ -29,7 +29,7 @@ internal static class RuntimeVmContractRunner
             string.Join("\n", compiled.Diagnostics.Select(static d => d.Message)));
         Assert.NotNull(compiled.Module);
 
-        var result = BytecodeVm.Execute(compiled.Module!, host);
+        var result = BytecodeVm.Execute(compiled.Module!, host, breakpoints: breakpoints);
         return (program, host, result);
     }
 }

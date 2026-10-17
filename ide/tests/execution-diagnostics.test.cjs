@@ -62,3 +62,35 @@ test('Правка после показа ошибки немедленно с�
   ide.settings.language = 'en';
   assert.match(ide.localizedDiagText(diagnostic), /executed version/);
 });
+
+function liveCheck(ide, model, diagnostics = []) {
+  Object.assign(ide, {
+    editor: { getModel: () => model },
+    documentServices: { request: async () => ({ diagnostics }) },
+    _liveCheckSeq: 1,
+  });
+}
+
+test('Фоновая проверка не стирает ошибку исполнения неизменённого снимка', async () => {
+  const { ide, first, markers, diagnostic } = setup();
+  ide.activeFile = 'a.axm';
+  first.model.getLanguageId = () => 'axiom';
+  liveCheck(ide, first.model);
+  ide.applyDiagnostics([diagnostic], false, 'a.axm');
+  await ide.runLiveCheck(1);
+  assert.ok(ide._lastDiagnostics.some(d => d.code === 'MB3001'));
+  assert.equal(markers.get(first.model).length, 1);
+});
+
+test('Фоновая проверка заменяет ошибку исполнения после правки текста', async () => {
+  const { ide, first, markers, diagnostic, edit } = setup();
+  ide.activeFile = 'a.axm';
+  first.model.getLanguageId = () => 'axiom';
+  liveCheck(ide, first.model, [{ code: 'MB2003', severity: 'error', message: 'Несовпадение типов.', line: 1, column: 1, length: 1 }]);
+  ide.applyDiagnostics([diagnostic], false, 'a.axm');
+  edit('PRINT missing');
+  ide.refreshExecutionDiagnostics(first.model);
+  await ide.runLiveCheck(1);
+  assert.equal(ide._lastDiagnostics.map(d => d.code).join(','), 'MB2003');
+  assert.equal(markers.get(first.model).map(m => m.code).join(','), 'MB2003');
+});

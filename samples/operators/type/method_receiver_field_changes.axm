@@ -1,0 +1,27 @@
+' Метод TYPE у поля вложенной записи меняет именно это поле.
+' Изменение SELF видно следующему оператору, а запись соседнего поля
+' через другой доступ не затирается.
+' Ожидаемый вывод:
+' 10
+' 10
+' 99
+
+TYPE Leaf
+    Value AS INTEGER
+    Other AS INTEGER
+
+    SUB Change()
+        SELF.Value = 10
+        PRINT root.Child.Value
+        root.Child.Other = 99
+    END SUB
+END TYPE
+
+TYPE Outer
+    Child AS Leaf
+END TYPE
+
+DIM root AS Outer
+root.Child.Change()
+PRINT root.Child.Value
+PRINT root.Child.Other

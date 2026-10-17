@@ -17,6 +17,7 @@
     MB2046:'The operation requires a compatible graphics mode. Text mode cannot be used for graphics.', MB2047:'Variable is declared but its value is never used.', MB2048:'NEXT counter name must match the FOR counter.',
     MB3001:'Division by zero.', MB3002:'Array index is out of bounds.', MB3003:'Input cannot be converted to the required type.', MB3004:'FOR STEP cannot be zero.', MB3005:'Invalid runtime state.',
     MB3006:'Function completed without returning a value.', MB3007:'Invalid built-in argument.', MB3008:'Numeric overflow.', MB3009:'Function value is empty.', MB3010:'Required graphics mode is not active.', MB3011:'Call stack overflow.', MB3012:'Argument is outside the numeric domain.',
+    MB3013:'Failed to allocate array: the element count exceeds the supported limit.', MB3014:'Array view refers to released storage.',
     MB4001:'Bytecode does not support this construct.', MB4002:'Cannot capture the value in bytecode.', MB4003:'Cannot create a bytecode JSON snapshot.',
   };
   const specific = [

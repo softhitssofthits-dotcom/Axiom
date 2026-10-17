@@ -3404,17 +3404,7 @@ public sealed class BytecodeModuleValidator
 
     private static bool SupportsStructuralEquality(TypeSymbol type)
     {
-        return type switch
-        {
-            var scalar when scalar == TypeSymbol.Integer
-                || scalar == TypeSymbol.Long
-                || scalar == TypeSymbol.Double
-                || scalar == TypeSymbol.Decimal
-                || scalar == TypeSymbol.String
-                || scalar == TypeSymbol.Boolean => true,
-            UserDefinedTypeSymbol userDefinedType => userDefinedType.Fields.All(static field => SupportsStructuralEquality(field.Type)),
-            _ => false
-        };
+        return StructuralEqualitySupport.IsSupported(type);
     }
 
     private static bool IsConversionCompatible(TypeSymbol sourceType, TypeSymbol targetType)
@@ -4959,10 +4949,19 @@ public sealed class BytecodeModuleValidator
 
         if (isByRefCall)
         {
-            var expectedOperandCount = 4 + (byRefCount * 3);
-            if (instruction.OperandCount != expectedOperandCount)
+            var operandIndex = 4;
+            for (var index = 0; index < byRefCount; index++)
             {
-                Report("BC4119", $"Инструкция CallByRef в процедуре '{routine.Name}' содержит {instruction.OperandCount} операнд(а/ов), но по заголовку требуется {expectedOperandCount}.", module, routine.Id, instructionIndex);
+                if (!TryReadByRefArgumentLayout(instruction, ref operandIndex, argumentCount, out var error))
+                {
+                    Report("BC4119", $"Инструкция CallByRef в процедуре '{routine.Name}' имеет некорректную раскладку BYREF-аргумента {index + 1}: {error}", module, routine.Id, instructionIndex);
+                    return;
+                }
+            }
+
+            if (operandIndex != instruction.OperandCount)
+            {
+                Report("BC4119", $"Инструкция CallByRef в процедуре '{routine.Name}' содержит {instruction.OperandCount} операнд(а/ов), но по раскладке используется {operandIndex}.", module, routine.Id, instructionIndex);
                 return;
             }
 
@@ -4973,6 +4972,115 @@ public sealed class BytecodeModuleValidator
         }
 
         ValidateTargetCapturesVisible(module, routine, instructionIndex, instruction.Opcode, targetRoutine);
+    }
+
+    private static bool TryReadByRefArgumentLayout(
+        BytecodeInstruction instruction,
+        ref int operandIndex,
+        int argumentCount,
+        out string error)
+    {
+        if (operandIndex + 2 > instruction.OperandCount)
+        {
+            error = "не хватает операндов для индекса и вида источника.";
+            return false;
+        }
+
+        var argumentIndex = instruction.GetOperand(operandIndex++);
+        var sourceKind = instruction.GetOperand(operandIndex++);
+
+        if (argumentIndex < 0 || argumentIndex >= argumentCount)
+        {
+            error = $"индекс аргумента {argumentIndex} вне диапазона 0..{argumentCount - 1}.";
+            return false;
+        }
+
+        if (sourceKind is < 0 or > 3 and not ByRefArgumentSourceKind.Address)
+        {
+            error = $"неизвестный вид источника {sourceKind}.";
+            return false;
+        }
+
+        if (sourceKind != ByRefArgumentSourceKind.Address)
+        {
+            if (operandIndex + 1 > instruction.OperandCount)
+            {
+                error = "не указан слот источника.";
+                return false;
+            }
+
+            _ = instruction.GetOperand(operandIndex++);
+            error = string.Empty;
+            return true;
+        }
+
+        if (operandIndex + 3 > instruction.OperandCount)
+        {
+            error = "не хватает операндов описания адреса.";
+            return false;
+        }
+
+        var baseKind = instruction.GetOperand(operandIndex++);
+        _ = instruction.GetOperand(operandIndex++);
+        var stepCount = instruction.GetOperand(operandIndex++);
+
+        if (baseKind is < 0 or > 3)
+        {
+            error = $"неизвестный вид базовой переменной адреса {baseKind}.";
+            return false;
+        }
+
+        if (stepCount <= 0)
+        {
+            error = "адрес не содержит шагов.";
+            return false;
+        }
+
+        for (var stepIndex = 0; stepIndex < stepCount; stepIndex++)
+        {
+            if (operandIndex + 2 > instruction.OperandCount)
+            {
+                error = "не хватает операндов шага адреса.";
+                return false;
+            }
+
+            var stepKind = instruction.GetOperand(operandIndex++);
+
+            if (stepKind == 0)
+            {
+                _ = instruction.GetOperand(operandIndex++);
+                continue;
+            }
+
+            if (stepKind != 1)
+            {
+                error = $"неизвестный вид шага адреса {stepKind}.";
+                return false;
+            }
+
+            var indexCount = instruction.GetOperand(operandIndex++);
+
+            if (indexCount <= 0 || operandIndex + (indexCount * 2) > instruction.OperandCount)
+            {
+                error = "некорректное число индексов шага адреса.";
+                return false;
+            }
+
+            for (var indexIndex = 0; indexIndex < indexCount; indexIndex++)
+            {
+                var indexKind = instruction.GetOperand(operandIndex++);
+                _ = instruction.GetOperand(operandIndex++);
+
+                if (indexKind is < 0 or > 3)
+                {
+                    error = $"неизвестный вид источника индекса {indexKind}.";
+                    return false;
+                }
+            }
+        }
+
+        error = string.Empty;
+        return true;
     }
 
     private void ValidateFunctionValueCall(

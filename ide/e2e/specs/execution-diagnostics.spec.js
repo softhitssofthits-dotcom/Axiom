@@ -59,4 +59,38 @@ module.exports = [{
       await S.close();
     }
   },
+}, {
+  id: 'execution-diagnostics-survive-live-check',
+  name: 'Ошибка исполнения не стирается фоновой проверкой при неизменённом тексте',
+  async fn({ S, C }) {
+    const directory = testWorkspace('execution-diagnostics-live-check');
+    const file = writeAxm(directory, 'огромный_массив.axm', 'DIM a(,) AS INTEGER\nREDIM a(1 TO 100000, 1 TO 100000)\n');
+    await S.launch();
+    await S.stubOpenDialog([file]);
+    await S.page.evaluate(() => window.__ide.handleAction('open'));
+    await S.page.waitForFunction(
+      (p) => window.__ide && window.__ide.activeFile === p && !window.__ide.dirty.has(p),
+      file, { timeout: 8000, polling: 100 }
+    );
+    await S.page.evaluate(() => window.__ide.run());
+    await S.waitIdle();
+    await S.page.waitForFunction(
+      () => !!document.querySelector('#diagnostics-content .diagnostic-item[data-code="MB3013"]'),
+      null, { timeout: 15000, polling: 100 }
+    );
+    C.ok((await markers(S, file)).includes('MB3013'), 'Ошибка выделения массива показана в Problems и в редакторе');
+
+    await S.page.evaluate(() => window.__ide.runLiveCheck());
+    await S.sleep(250);
+    C.ok(await S.page.evaluate(() => !!document.querySelector('#diagnostics-content .diagnostic-item[data-code="MB3013"]')),
+      'Фоновая проверка неизменённого текста сохранила ошибку исполнения');
+    C.ok((await markers(S, file)).includes('MB3013'), 'Маркер ошибки исполнения остался в редакторе');
+
+    await S.page.evaluate(() => window.__ide.editor.setValue('PRINT "Исправлено"\n'));
+    await S.page.evaluate(() => window.__ide.runLiveCheck());
+    await S.sleep(250);
+    C.ok(!(await S.page.evaluate(() => !!document.querySelector('#diagnostics-content .diagnostic-item[data-code="MB3013"]'))),
+      'После правки текста прежняя ошибка исполнения снята');
+    await S.screenshot('execution-diagnostics-live-check');
+  },
 }];

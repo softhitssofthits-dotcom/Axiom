@@ -38,6 +38,24 @@ public sealed class RuntimeRecordValue : IRuntimeStoredValue
         return record;
     }
 
+    /// <summary>
+    /// Создаёт запись для снимка состояния. Поля заполняются отдельно методом
+    /// <see cref="SetSnapshotField"/> без правил присваивания: вызывающая сторона
+    /// сама строит независимый граф значений.
+    /// </summary>
+    internal static RuntimeRecordValue CreateForSnapshot(UserDefinedTypeSymbol type)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        return new RuntimeRecordValue(type);
+    }
+
+    internal void SetSnapshotField(TypeFieldSymbol field, RuntimeValue value)
+    {
+        ArgumentNullException.ThrowIfNull(field);
+        ArgumentNullException.ThrowIfNull(value);
+        _fields[field.Ordinal] = value;
+    }
+
     public RuntimeValue GetField(TypeFieldSymbol field)
     {
         ArgumentNullException.ThrowIfNull(field);

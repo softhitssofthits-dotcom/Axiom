@@ -137,11 +137,13 @@ internal sealed class BytecodeCallFrame
     {
         if (!_hasSharedLocals)
         {
-            return _locals[slot];
+            var local = _locals[slot];
+            return local.Type == TypeSymbol.Void ? EnsureDefaultLocalValue(slot) : local;
         }
 
         var sharedLocals = _sharedLocals!;
-        return sharedLocals[slot]?.Value ?? _locals[slot];
+        var value = sharedLocals[slot]?.Value ?? _locals[slot];
+        return value.Type == TypeSymbol.Void ? EnsureDefaultLocalValue(slot) : value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -149,12 +151,55 @@ internal sealed class BytecodeCallFrame
     {
         if (!_hasSharedLocals)
         {
-            EvaluationStack.PushUnchecked(_locals[slot]);
+            var local = _locals[slot];
+            EvaluationStack.PushUnchecked(local.Type == TypeSymbol.Void ? EnsureDefaultLocalValue(slot) : local);
             return;
         }
 
         var sharedLocals = _sharedLocals!;
-        EvaluationStack.PushUnchecked(sharedLocals[slot]?.Value ?? _locals[slot]);
+        var value = sharedLocals[slot]?.Value ?? _locals[slot];
+        EvaluationStack.PushUnchecked(value.Type == TypeSymbol.Void ? EnsureDefaultLocalValue(slot) : value);
+    }
+
+    /// <summary>
+    /// Возвращает текущее значение слота без создания записи. Нужен снимкам
+    /// состояния: наблюдение не должно менять исполняемое состояние.
+    /// </summary>
+    public RuntimeValue PeekLocalValue(int slot)
+    {
+        if (!_hasSharedLocals)
+        {
+            return _locals[slot];
+        }
+
+        var sharedLocals = _sharedLocals!;
+        return sharedLocals[slot]?.Value ?? _locals[slot];
+    }
+
+    /// <summary>
+    /// Создаёт запись локальной переменной при первом чтении, если объявление
+    /// ещё не исполнялось. Служебные слоты без объявленного типа остаются VOID.
+    /// </summary>
+    private RuntimeValue EnsureDefaultLocalValue(int slot)
+    {
+        var variables = Routine.LocalVariables;
+        if (slot >= variables.Count || variables[slot].Type is not UserDefinedTypeSymbol recordType)
+        {
+            return RuntimeValue.Void;
+        }
+
+        var created = RuntimeValue.Default(recordType, _localFixedStringLengths[slot]);
+
+        if (_hasSharedLocals && _sharedLocals![slot] is { } sharedSlot)
+        {
+            sharedSlot.Value = created;
+        }
+        else
+        {
+            _locals[slot] = created;
+        }
+
+        return created;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -273,7 +318,7 @@ internal sealed class BytecodeCallFrame
             return sharedSlot;
         }
 
-        sharedSlot = new BytecodeVariableSlot(_locals[slot], _localFixedStringLengths[slot]);
+        sharedSlot = BytecodeVariableSlot.Adopt(_locals[slot], _localFixedStringLengths[slot]);
         _sharedLocals[slot] = sharedSlot;
         _hasSharedLocals = true;
         return sharedSlot;

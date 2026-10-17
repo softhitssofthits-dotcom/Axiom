@@ -65,22 +65,9 @@ public sealed partial class Binder
             && elementType != TypeSymbol.String;
     }
 
-    private static bool SupportsStructuralEquality(TypeSymbol type)
+    private bool SupportsStructuralEquality(TypeSymbol type)
     {
-        return type switch
-        {
-            var scalar when scalar == TypeSymbol.Integer
-                || scalar == TypeSymbol.Long
-                || scalar == TypeSymbol.Double
-                || scalar == TypeSymbol.Decimal
-                || scalar == TypeSymbol.String
-                || scalar == TypeSymbol.Boolean
-                || scalar == TypeSymbol.Date
-                || scalar == TypeSymbol.Time
-                || scalar == TypeSymbol.DateTime => true,
-            UserDefinedTypeSymbol userDefinedType => userDefinedType.Fields.All(static field => SupportsStructuralEquality(field.Type)),
-            _ => false
-        };
+        return StructuralEqualitySupport.IsSupported(type, _structuralEqualityCache);
     }
 
     private static bool IsTemporalType(TypeSymbol type)

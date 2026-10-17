@@ -921,6 +921,21 @@ public sealed class AcceptanceProgramTests
     }
 
     [Fact]
+    public void TypeCyclicStructuralComparisonSample_ReportsCycleAndComparisonWithoutCrash()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/acceptance/negative/type_cyclic_structural_comparison.axm");
+
+        var result = Run(sourceText);
+
+        Assert.Equal(ExecutionStatus.SemanticFailure, result.Status);
+        Assert.Contains(result.Diagnostics, static d => d.Code == "MB2022");
+        Assert.All(
+            result.Diagnostics.Where(static d => d.Code == "MB2003"),
+            static d => Assert.Contains("Node", d.Message, StringComparison.Ordinal));
+        Assert.Equal(3, result.Diagnostics.Count);
+    }
+
+    [Fact]
     public void TypeFieldAccessAcceptanceSample_RunsSuccessfully()
     {
         var sourceText = TestProgramLoader.LoadText("samples/operators/type/field_access.axm");
@@ -1035,6 +1050,54 @@ public sealed class AcceptanceProgramTests
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
         Assert.Equal(["5", "7", "8", "9"], result.Output);
+    }
+
+    [Fact]
+    public void TypeMethodReceiverFieldChangesAcceptanceSample_RunsSuccessfully()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/type/method_receiver_field_changes.axm");
+
+        var result = Run(sourceText);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Equal(["10", "10", "99"], result.Output);
+    }
+
+    [Fact]
+    public void TypeMethodReceiverArrayChangesAcceptanceSample_RunsSuccessfully()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/type/method_receiver_array_changes.axm");
+
+        var result = Run(sourceText);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Equal(["1", "10", "99"], result.Output);
+    }
+
+    [Fact]
+    public void TypeDefaultNumericConversionAcceptanceSample_RunsSuccessfully()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/type/default_numeric_conversion.axm");
+
+        var result = Run(sourceText);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Equal(["1", "1", "1", "-1"], result.Output);
+    }
+
+    [Fact]
+    public void TypeLargeFixedFieldAllocationAcceptanceSample_ReportsRuntimeDiagnosticInsideTry()
+    {
+        var sourceText = TestProgramLoader.LoadText("samples/operators/type/large_fixed_field_allocation.axm");
+
+        var result = Run(sourceText);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.True(result.Succeeded, FormatDiagnostics(result));
+        Assert.Equal(["42", "MB3013", "42"], result.Output);
     }
 
     [Fact]

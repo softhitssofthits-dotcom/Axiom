@@ -30,6 +30,51 @@ public sealed partial class RuntimeArrayValue
         return clone;
     }
 
+    /// <summary>
+    /// Готовит пустой массив той же формы для снимка состояния. Заполнение
+    /// выполняется отдельно через <see cref="FillForSnapshot"/>, чтобы
+    /// вызывающая сторона успела зарегистрировать объект до обхода элементов.
+    /// </summary>
+    internal RuntimeArrayValue CreateEmptyForSnapshot()
+    {
+        var clone = new RuntimeArrayValue(ElementType, FixedStringLength, Rank);
+
+        if (!IsAllocated)
+        {
+            return clone;
+        }
+
+        clone._lowerBounds = _lowerBounds!.ToArray();
+        clone._upperBounds = _upperBounds!.ToArray();
+        clone._storageLowerBounds = clone._lowerBounds;
+        clone._storageUpperBounds = clone._upperBounds;
+        clone._fixedStorageIndices = CreateEmptyFixedStorageIndices(clone.Rank);
+        clone._visibleStorageDimensions = CreateIdentityStorageDimensions(clone.Rank);
+        clone.AttachStorage(clone.CreateDefaultElements(clone._storageLowerBounds, clone._storageUpperBounds));
+        clone.RefreshShapeMetadata();
+        return clone;
+    }
+
+    /// <summary>
+    /// Заполняет заготовку снимка независимыми значениями элементов этого массива
+    /// без правил присваивания.
+    /// </summary>
+    internal void FillSnapshotInto(RuntimeArrayValue target, Func<RuntimeValue, RuntimeValue> snapshotElement)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        ArgumentNullException.ThrowIfNull(snapshotElement);
+
+        if (!IsAllocated || !target.IsAllocated || target.Length != Length)
+        {
+            return;
+        }
+
+        ForEachVisibleIndexSetAscending(indices =>
+        {
+            target._elements![target.GetLinearIndex(indices)] = snapshotElement(GetValue(indices));
+        });
+    }
+
     private bool RequiresElementCopy(int? fixedStringLength)
     {
         return fixedStringLength is not null || ElementType is UserDefinedTypeSymbol;

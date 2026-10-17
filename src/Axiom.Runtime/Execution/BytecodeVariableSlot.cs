@@ -28,6 +28,24 @@ internal class BytecodeVariableSlot
         _value = RuntimeValue.Void;
     }
 
+    private BytecodeVariableSlot(RuntimeValue value, int? fixedStringLength, bool adoptValue)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        FixedStringLength = fixedStringLength;
+        _value = value;
+        _ = adoptValue;
+    }
+
+    /// <summary>
+    /// Слот, который ссылается на уже подготовленное значение без копирования.
+    /// Нужен для видимых переменных и восстановления снимков: копия записи здесь
+    /// разорвала бы связь со значением, которое видят другие участники состояния.
+    /// </summary>
+    public static BytecodeVariableSlot Adopt(RuntimeValue value, int? fixedStringLength = null)
+    {
+        return new BytecodeVariableSlot(value, fixedStringLength, adoptValue: true);
+    }
+
     public int? FixedStringLength { get; }
 
     public virtual RuntimeValue Value

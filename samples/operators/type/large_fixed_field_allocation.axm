@@ -1,0 +1,27 @@
+' Запись с большим фиксированным полем создаётся в момент исполнения.
+' Превышение предела массива даёт MB3013 и перехватывается обычным TRY,
+' а объявление невызванной процедуры ничего не выделяет.
+' Ожидаемый вывод:
+' 42
+' MB3013
+' 42
+
+TYPE Big
+    Data(0 TO 67108864) AS INTEGER
+END TYPE
+
+SUB NeverCalled()
+    DIM local AS Big
+    PRINT UBOUND(local.Data)
+END SUB
+
+PRINT 42
+
+TRY
+    DIM local AS Big
+    PRINT UBOUND(local.Data)
+CATCH problem
+    PRINT problem.Code
+END TRY
+
+PRINT 42

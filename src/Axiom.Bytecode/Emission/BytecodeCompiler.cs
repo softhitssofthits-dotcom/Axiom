@@ -1245,42 +1245,96 @@ public sealed class BytecodeCompiler
             var variable = instruction.Variables[index];
             operands.Add(instruction.IntegerOperands[index]);
 
-            if (variable is ParameterSymbol parameter && parameterSlots.TryGetValue(parameter, out var parameterSlot))
+            if (!TryResolveVariableSource(variable, parameterSlots, localSlots, captureSlots, out var sourceKind, out var sourceSlot))
             {
+                Report(
+                    "BC5012",
+                    $"Эмиттер байткода не смог разрешить источник BYREF-аргумента '{variable.Name}' в процедуре '{routine.Name}'.",
+                    instruction.Location);
+                return null;
+            }
+
+            var address = index < instruction.ByRefAddresses.Count ? instruction.ByRefAddresses[index] : null;
+            if (address is null)
+            {
+                operands.Add(sourceKind);
+                operands.Add(sourceSlot);
+                continue;
+            }
+
+            operands.Add(ByRefArgumentSourceKind.Address);
+            operands.Add(sourceKind);
+            operands.Add(sourceSlot);
+            operands.Add(address.Steps.Count);
+
+            foreach (var step in address.Steps)
+            {
+                if (step.IsField)
+                {
+                    operands.Add(0);
+                    operands.Add(RegisterConstant(BytecodeConstantKind.String, step.FieldName!));
+                    continue;
+                }
+
                 operands.Add(1);
-                operands.Add(parameterSlot);
-                continue;
-            }
+                operands.Add(step.IndexVariables.Count);
 
-            if (localSlots.TryGetValue(variable, out var localSlot))
-            {
-                operands.Add(2);
-                operands.Add(localSlot);
-                continue;
-            }
+                foreach (var indexVariable in step.IndexVariables)
+                {
+                    if (!TryResolveVariableSource(indexVariable, parameterSlots, localSlots, captureSlots, out var indexKind, out var indexSlot))
+                    {
+                        Report(
+                            "BC5013",
+                            $"Эмиттер байткода не смог разрешить индекс адреса BYREF '{variable.Name}' в процедуре '{routine.Name}'.",
+                            instruction.Location);
+                        return null;
+                    }
 
-            if (captureSlots.TryGetValue(variable, out var captureSlot))
-            {
-                operands.Add(3);
-                operands.Add(captureSlot);
-                continue;
+                    operands.Add(indexKind);
+                    operands.Add(indexSlot);
+                }
             }
-
-            if (variable.IsGlobal)
-            {
-                operands.Add(0);
-                operands.Add(RegisterGlobal(variable));
-                continue;
-            }
-
-            Report(
-                "BC5012",
-                $"Эмиттер байткода не смог разрешить источник BYREF-аргумента '{variable.Name}' в процедуре '{routine.Name}'.",
-                instruction.Location);
-            return null;
         }
 
         return new BytecodeInstruction(Opcode.CallByRef, operands.ToArray());
+    }
+
+    private bool TryResolveVariableSource(
+        VariableSymbol variable,
+        IReadOnlyDictionary<ParameterSymbol, int> parameterSlots,
+        IReadOnlyDictionary<VariableSymbol, int> localSlots,
+        IReadOnlyDictionary<VariableSymbol, int> captureSlots,
+        out int sourceKind,
+        out int sourceSlot)
+    {
+        if (variable is ParameterSymbol parameter && parameterSlots.TryGetValue(parameter, out sourceSlot))
+        {
+            sourceKind = ByRefArgumentSourceKind.Argument;
+            return true;
+        }
+
+        if (localSlots.TryGetValue(variable, out sourceSlot))
+        {
+            sourceKind = ByRefArgumentSourceKind.Local;
+            return true;
+        }
+
+        if (captureSlots.TryGetValue(variable, out sourceSlot))
+        {
+            sourceKind = ByRefArgumentSourceKind.Capture;
+            return true;
+        }
+
+        if (variable.IsGlobal)
+        {
+            sourceKind = ByRefArgumentSourceKind.Global;
+            sourceSlot = RegisterGlobal(variable);
+            return true;
+        }
+
+        sourceKind = -1;
+        sourceSlot = -1;
+        return false;
     }
 
     private static BytecodeInstruction EmitCallValue(LoweredInstruction instruction)

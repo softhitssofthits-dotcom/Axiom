@@ -1,0 +1,29 @@
+' Метод TYPE у элемента массива меняет именно этот элемент.
+' Индекс получателя вычисляется один раз, а изменение соседнего
+' элемента через другой доступ сохраняется.
+' Ожидаемый вывод:
+' 1
+' 10
+' 99
+
+TYPE Leaf
+    Value AS INTEGER
+
+    SUB Change()
+        SELF.Value = 10
+        items(1).Value = 99
+    END SUB
+END TYPE
+
+DIM items(0 TO 1) AS Leaf
+DIM calls AS INTEGER
+
+items(Pick()).Change()
+PRINT calls
+PRINT items(0).Value
+PRINT items(1).Value
+
+FUNCTION Pick() AS INTEGER
+    calls = calls + 1
+    RETURN 0
+END FUNCTION

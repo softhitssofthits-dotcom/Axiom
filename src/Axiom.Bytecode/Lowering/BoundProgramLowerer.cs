@@ -743,6 +743,13 @@ public sealed class BoundProgramLowerer
 
         if (declaration.Initializer is null)
         {
+            if (declaration.Variable.Type is UserDefinedTypeSymbol recordType)
+            {
+                instructions.Add(LoweredInstruction.CreateRecord(declaration.Location, recordType));
+                instructions.Add(LoweredInstruction.StoreVariable(declaration.Location, declaration.Variable));
+                return;
+            }
+
             if (declaration.Variable.Type == TypeSymbol.Date
                 || declaration.Variable.Type == TypeSymbol.Time
                 || declaration.Variable.Type == TypeSymbol.DateTime)
@@ -1751,6 +1758,7 @@ public sealed class BoundProgramLowerer
         {
             var byRefArgumentIndices = new List<int>();
             var byRefVariables = new List<VariableSymbol>();
+            var byRefAddresses = new List<LoweredByRefAddress?>();
             var byRefCopyBackPlans = new List<ByRefCopyBackPlan>();
             var byValArgumentCount = 0;
 
@@ -1765,6 +1773,7 @@ public sealed class BoundProgramLowerer
                 {
                     byRefArgumentIndices.Add(index);
                     byRefVariables.Add(variableArgument.Variable);
+                    byRefAddresses.Add(null);
                     continue;
                 }
 
@@ -1776,6 +1785,19 @@ public sealed class BoundProgramLowerer
                     instructions.Add(LoweredInstruction.StoreVariable(argument.Location, receiverTemporary));
                     byRefArgumentIndices.Add(index);
                     byRefVariables.Add(receiverTemporary);
+                    byRefAddresses.Add(null);
+                    continue;
+                }
+
+                // Поле и элемент массива передаются адресом: метод видит и меняет
+                // фактическое хранилище получателя, а не временную копию записи.
+                if (parameter?.IsByRef == true
+                    && argument is not BoundVariableExpression
+                    && TryCreateByRefAddress(argument, instructions, out var byRefAddress))
+                {
+                    byRefArgumentIndices.Add(index);
+                    byRefVariables.Add(byRefAddress.BaseVariable);
+                    byRefAddresses.Add(byRefAddress);
                     continue;
                 }
 
@@ -1785,6 +1807,7 @@ public sealed class BoundProgramLowerer
                 {
                     byRefArgumentIndices.Add(index);
                     byRefVariables.Add(copyBackPlan.TempVariable);
+                    byRefAddresses.Add(null);
                     byRefCopyBackPlans.Add(copyBackPlan);
                     continue;
                 }
@@ -1800,7 +1823,8 @@ public sealed class BoundProgramLowerer
                     function.Function,
                     byValArgumentCount,
                     byRefArgumentIndices,
-                    byRefVariables));
+                    byRefVariables,
+                    byRefAddresses));
 
             foreach (var copyBackPlan in byRefCopyBackPlans)
             {
@@ -1844,6 +1868,76 @@ public sealed class BoundProgramLowerer
             && parameter.Type is UserDefinedTypeSymbol
             && string.Equals(parameter.Name, "SELF", StringComparison.OrdinalIgnoreCase)
             && !string.Equals(function.Name, function.ShortName, StringComparison.Ordinal);
+    }
+
+    private bool TryCreateByRefAddress(
+        BoundExpression argument,
+        List<LoweredInstruction> instructions,
+        out LoweredByRefAddress address)
+    {
+        ArgumentNullException.ThrowIfNull(argument);
+        ArgumentNullException.ThrowIfNull(instructions);
+
+        var steps = new List<LoweredByRefAddressStep>();
+        if (!TryAppendByRefAddressSteps(argument, instructions, steps, out var baseVariable))
+        {
+            address = null!;
+            return false;
+        }
+
+        address = new LoweredByRefAddress(baseVariable, steps);
+        return true;
+    }
+
+    private bool TryAppendByRefAddressSteps(
+        BoundExpression expression,
+        List<LoweredInstruction> instructions,
+        List<LoweredByRefAddressStep> steps,
+        out VariableSymbol baseVariable)
+    {
+        switch (expression)
+        {
+            case BoundVariableExpression variableExpression:
+                baseVariable = variableExpression.Variable;
+                return true;
+
+            case BoundFieldAccessExpression fieldAccess:
+                if (!TryAppendByRefAddressSteps(fieldAccess.Target, instructions, steps, out baseVariable))
+                {
+                    return false;
+                }
+
+                steps.Add(LoweredByRefAddressStep.Field(fieldAccess.Field.Name));
+                return true;
+
+            case BoundArrayAccessExpression arrayAccess:
+            {
+                if (!TryAppendByRefAddressSteps(arrayAccess.Target, instructions, steps, out baseVariable))
+                {
+                    return false;
+                }
+
+                // Индексы вычисляются один раз при вызове и сохраняются в локальных
+                // временных переменных: адрес не повторяет вычисление при каждом чтении.
+                var indexTemporaries = new VariableSymbol[arrayAccess.Indices.Count];
+
+                for (var index = 0; index < arrayAccess.Indices.Count; index++)
+                {
+                    var indexExpression = arrayAccess.Indices[index];
+                    var indexTemporary = CreateInternalTemporary(indexExpression.Type, $"__byref_index_{index}");
+                    indexTemporaries[index] = indexTemporary;
+                    LowerExpression(indexExpression, instructions);
+                    instructions.Add(LoweredInstruction.StoreVariable(indexExpression.Location, indexTemporary));
+                }
+
+                steps.Add(LoweredByRefAddressStep.Element(indexTemporaries));
+                return true;
+            }
+
+            default:
+                baseVariable = null!;
+                return false;
+        }
     }
 
     private bool TryLowerByRefCopyBackArgument(

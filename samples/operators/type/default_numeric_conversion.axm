@@ -1,0 +1,21 @@
+' Поле TYPE получает значение по умолчанию из совместимого литерала.
+' INTEGER принимается для DOUBLE, LONG и DECIMAL; преобразование
+' выполняется при объявлении типа.
+' Ожидаемый вывод:
+' 1
+' 1
+' 1
+' -1
+
+TYPE Measurements
+    Ratio AS DOUBLE = 1
+    Count AS LONG = 1
+    Amount AS DECIMAL = 1
+    Offset AS INTEGER = -1
+END TYPE
+
+DIM sample AS Measurements
+PRINT sample.Ratio
+PRINT sample.Count
+PRINT sample.Amount
+PRINT sample.Offset

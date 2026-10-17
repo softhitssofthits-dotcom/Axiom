@@ -98,7 +98,12 @@ public sealed partial class BytecodeVm
 
         foreach (var global in module.Globals)
         {
-            var initialValue = RuntimeValue.Default(global.Type, global.FixedStringLength);
+            // Запись глобальной переменной создаётся её инструкцией объявления:
+            // отложенная стратегия не должна превращаться в выделение всех полей-массивов
+            // ещё до начала исполнения программы.
+            var initialValue = global.Type is UserDefinedTypeSymbol
+                ? RuntimeValue.Void
+                : RuntimeValue.Default(global.Type, global.FixedStringLength);
             _globalsBySlot[global.Slot] = initialValue;
             _globalFixedStringLengths[global.Slot] = global.FixedStringLength;
             _hasGlobalSlot[global.Slot] = true;
@@ -2912,7 +2917,11 @@ public sealed partial class BytecodeVm
         for (var index = 0; index < defaultLocals.Length; index++)
         {
             var variable = index < routine.LocalVariables.Count ? routine.LocalVariables[index] : null;
-            defaultLocals[index] = variable is null
+
+            // Запись создаётся инструкцией объявления в момент исполнения: заранее
+            // подготовленный шаблон кадра не должен выделять поля-массивы даже
+            // для процедур, которые так и не будут вызваны.
+            defaultLocals[index] = variable is null || variable.Type is UserDefinedTypeSymbol
                 ? RuntimeValue.Void
                 : RuntimeValue.Default(variable.Type, variable.FixedStringLength);
             localFixedStringLengths[index] = variable?.FixedStringLength;
@@ -2938,7 +2947,7 @@ public sealed partial class BytecodeVm
     {
         if ((uint)slot < (uint)_globalsBySlot.Length && _hasGlobalSlot[slot])
         {
-            return _globalsBySlot[slot]!;
+            return EnsureGlobalValueCreated(slot);
         }
 
         return ReportInvalidRuntimeState<RuntimeValue>($"Не найден глобальный слот {slot}.", FallbackRuntimeLocation);
@@ -2947,7 +2956,27 @@ public sealed partial class BytecodeVm
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RuntimeValue LoadGlobalUnchecked(int slot)
     {
-        return _globalsBySlot[slot]!;
+        var value = _globalsBySlot[slot]!;
+        return value.Type == TypeSymbol.Void ? EnsureGlobalValueCreated(slot) : value;
+    }
+
+    /// <summary>
+    /// Запись глобальной переменной создаётся при первом чтении, если инструкция
+    /// объявления ещё не исполнялась. Правила наблюдаемого поведения сохраняются:
+    /// до DIM глобальная запись содержит значения по умолчанию, а выделение
+    /// фиксированных полей не выполняется заранее для всей программы.
+    /// </summary>
+    private RuntimeValue EnsureGlobalValueCreated(int slot)
+    {
+        if (_globalMetadata.TryGetValue(slot, out var global)
+            && global.Type is UserDefinedTypeSymbol recordType)
+        {
+            var created = RuntimeValue.Default(recordType, global.FixedStringLength);
+            _globalsBySlot[slot] = created;
+            return created;
+        }
+
+        return RuntimeValue.Void;
     }
 
     private RuntimeValue LoadFunctionValue(BytecodeCallFrame frame, int routineId, int instructionIndex)
@@ -3124,34 +3153,6 @@ public sealed partial class BytecodeVm
             captures,
             ResolveLocation(callerFrame.Routine.Id, instructionIndex),
             byRefArgumentSlots));
-    }
-
-    private BytecodeVariableSlot[] ResolveByRefArgumentSlots(BytecodeCallFrame callerFrame, BytecodeInstruction instruction)
-    {
-        var slots = new BytecodeVariableSlot[instruction.GetOperand(1)];
-        var byRefCount = instruction.GetOperand(3);
-        var operandIndex = 4;
-
-        for (var index = 0; index < byRefCount; index++)
-        {
-            var argumentIndex = instruction.GetOperand(operandIndex++);
-            var sourceKind = instruction.GetOperand(operandIndex++);
-            var sourceSlot = instruction.GetOperand(operandIndex++);
-
-            slots[argumentIndex] = sourceKind switch
-            {
-                0 => new BytecodeVariableSlot(
-                    () => LoadGlobalUnchecked(sourceSlot),
-                    value => StoreGlobalUnchecked(sourceSlot, value),
-                    GetGlobalFixedStringLength(sourceSlot)),
-                1 => callerFrame.Arguments[sourceSlot],
-                2 => callerFrame.GetOrCreateLocalSlot(sourceSlot),
-                3 => callerFrame.Captures[sourceSlot],
-                _ => throw new InvalidOperationException($"Unsupported BYREF source kind '{sourceKind}'.")
-            };
-        }
-
-        return slots;
     }
 
     private void ExecuteFunctionValueCall(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
@@ -5459,7 +5460,7 @@ public sealed partial class BytecodeVm
         for (var index = 0; index < snapshots.Count; index++)
         {
             var snapshot = snapshots[index];
-            slots[index] = new BytecodeVariableSlot(
+            slots[index] = BytecodeVariableSlot.Adopt(
                 CloneSnapshotValue(snapshot.Value, snapshot.FixedStringLength, sharedValues),
                 snapshot.FixedStringLength);
         }
@@ -5486,7 +5487,7 @@ public sealed partial class BytecodeVm
             }
 
             var snapshot = frameSnapshot.Captures[index];
-            captures[index] = new BytecodeVariableSlot(
+            captures[index] = BytecodeVariableSlot.Adopt(
                 CloneSnapshotValue(snapshot.Value, snapshot.FixedStringLength, sharedValues),
                 snapshot.FixedStringLength);
         }
@@ -5519,31 +5520,7 @@ public sealed partial class BytecodeVm
         ArgumentNullException.ThrowIfNull(value);
         ArgumentNullException.ThrowIfNull(sharedValues);
 
-        if (value.Type is ArrayTypeSymbol arrayType)
-        {
-            var array = value.AsArray();
-            if (!sharedValues.TryGetValue(array, out var clonedArray))
-            {
-                clonedArray = array.Clone(fixedStringLength);
-                sharedValues[array] = clonedArray;
-            }
-
-            return RuntimeValue.FromArray(arrayType, (RuntimeArrayValue)clonedArray);
-        }
-
-        if (value.Type is UserDefinedTypeSymbol userType)
-        {
-            var record = value.AsRecord();
-            if (!sharedValues.TryGetValue(record, out var clonedRecord))
-            {
-                clonedRecord = record.Clone();
-                sharedValues[record] = clonedRecord;
-            }
-
-            return RuntimeValue.FromRecord(userType, (RuntimeRecordValue)clonedRecord);
-        }
-
-        return value.CopyForStorage(fixedStringLength);
+        return RuntimeSnapshotFactory.CreateValueSnapshot(value, fixedStringLength, sharedValues);
     }
 
     private static void AddVisibleVariables(
@@ -5645,7 +5622,7 @@ public sealed partial class BytecodeVm
 
         for (var index = 0; index < frame.LocalCount; index++)
         {
-            var value = frame.LoadLocalValue(index);
+            var value = frame.PeekLocalValue(index);
             var fixedStringLength = frame.GetLocalFixedStringLength(index);
             if (!TryCreateValueSnapshot(value, fixedStringLength, sharedValues, out var valueSnapshot))
             {
@@ -5706,11 +5683,23 @@ public sealed partial class BytecodeVm
             var array = value.AsArray();
             if (!sharedValues.TryGetValue(array, out var clonedArray))
             {
-                clonedArray = array.Clone(fixedStringLength);
-                sharedValues[array] = clonedArray;
+                // Снимок должен быть независимым от исполняемого графа состояний:
+                // Clone выполняет правила присваивания, а не копирование состояния.
+                var snapshotArray = array.CreateEmptyForSnapshot();
+                sharedValues[array] = snapshotArray;
+                array.FillSnapshotInto(
+                    snapshotArray,
+                    element => RuntimeSnapshotFactory.CreateValueSnapshot(element, array.FixedStringLength, sharedValues));
+                clonedArray = snapshotArray;
             }
 
             snapshot = RuntimeValue.FromArray(arrayType, (RuntimeArrayValue)clonedArray);
+            return true;
+        }
+
+        if (value.Type is UserDefinedTypeSymbol recordType)
+        {
+            snapshot = RuntimeSnapshotFactory.CreateValueSnapshot(value, fixedStringLength, sharedValues);
             return true;
         }
 

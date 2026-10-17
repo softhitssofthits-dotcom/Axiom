@@ -252,16 +252,148 @@ public sealed partial class Binder
             return (false, null);
         }
 
-        if (initializer is not BoundLiteralExpression literal)
+        if (TryEvaluateConstantFieldDefault(initializer, fieldType, out var constantValue))
         {
-            ReportInvalidTypeFieldDefaultValue(
-                declarator.Identifier.Text,
-                GetLocation(fieldDeclaration.Initializer),
-                "Используйте константный литерал без обращения к переменным, вызовам и полям.");
-            return (false, null);
+            return (true, constantValue);
         }
 
-        return (true, literal.Value);
+        ReportInvalidTypeFieldDefaultValue(
+            declarator.Identifier.Text,
+            GetLocation(fieldDeclaration.Initializer),
+            "Используйте константный литерал без обращения к переменным, вызовам и полям.");
+        return (false, null);
+    }
+
+    /// <summary>
+    /// Значение поля TYPE задаётся только константой. Допустимое преобразование
+    /// литерала к типу поля вычисляется здесь: узел преобразования вокруг литерала
+    /// остаётся константным, а вызовы, переменные и произвольные выражения запрещены.
+    /// </summary>
+    private static bool TryEvaluateConstantFieldDefault(
+        BoundExpression initializer,
+        TypeSymbol fieldType,
+        out object? value)
+    {
+        value = null;
+
+        var expression = initializer;
+
+        while (expression is BoundConversionExpression conversion
+            && conversion.Expression is BoundLiteralExpression)
+        {
+            expression = conversion.Expression;
+        }
+
+        if (expression is not BoundLiteralExpression { Value: not null } literal)
+        {
+            return false;
+        }
+
+        if (literal.Type == fieldType)
+        {
+            value = literal.Value;
+            return true;
+        }
+
+        return TryConvertLiteralValue(literal.Value, literal.Type, fieldType, out value);
+    }
+
+    private static bool TryConvertLiteralValue(
+        object sourceValue,
+        TypeSymbol sourceType,
+        TypeSymbol targetType,
+        out object? value)
+    {
+        value = null;
+
+        if (!IsNumeric(sourceType) || !IsNumeric(targetType))
+        {
+            return false;
+        }
+
+        switch (targetType)
+        {
+            case var type when type == TypeSymbol.Integer:
+                return sourceType == TypeSymbol.Integer && TrySetInteger(sourceValue, out value);
+            case var type when type == TypeSymbol.Long:
+                return TrySetLong(sourceValue, out value);
+            case var type when type == TypeSymbol.Decimal:
+                return TrySetDecimal(sourceValue, out value);
+            case var type when type == TypeSymbol.Double:
+                return TrySetDouble(sourceValue, out value);
+            default:
+                return false;
+        }
+    }
+
+    private static bool TrySetInteger(object sourceValue, out object? value)
+    {
+        value = sourceValue;
+
+        return sourceValue is int;
+    }
+
+    private static bool TrySetLong(object sourceValue, out object? value)
+    {
+        value = null;
+
+        switch (sourceValue)
+        {
+            case int intValue:
+                value = (long)intValue;
+                return true;
+            case long longValue:
+                value = longValue;
+                return true;
+            case decimal decimalValue when decimalValue is >= long.MinValue and <= long.MaxValue:
+                value = (long)decimalValue;
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static bool TrySetDecimal(object sourceValue, out object? value)
+    {
+        value = null;
+
+        switch (sourceValue)
+        {
+            case int intValue:
+                value = (decimal)intValue;
+                return true;
+            case long longValue:
+                value = (decimal)longValue;
+                return true;
+            case decimal decimalValue:
+                value = decimalValue;
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static bool TrySetDouble(object sourceValue, out object? value)
+    {
+        value = null;
+
+        switch (sourceValue)
+        {
+            case int intValue:
+                value = (double)intValue;
+                return true;
+            case long longValue:
+                value = (double)longValue;
+                return true;
+            case decimal decimalValue:
+                value = (double)decimalValue;
+                return true;
+            case double doubleValue:
+                value = doubleValue;
+                return true;
+            default:
+                return false;
+        }
     }
 
     private bool TryEvaluateFixedTypeArrayBounds(

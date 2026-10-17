@@ -28,8 +28,10 @@ public sealed class LoweredInstruction
         bool preserve = false,
         bool handlerReceivesKeyText = false,
         int flags = 0,
-        int indexRangeMask = 0)
+        int indexRangeMask = 0,
+        IReadOnlyList<LoweredByRefAddress?>? byRefAddresses = null)
     {
+        ByRefAddresses = byRefAddresses ?? Array.Empty<LoweredByRefAddress?>();
         Kind = kind;
         Location = location;
         LiteralValue = literalValue;
@@ -98,6 +100,8 @@ public sealed class LoweredInstruction
 
     public int IndexRangeMask { get; }
 
+    public IReadOnlyList<LoweredByRefAddress?> ByRefAddresses { get; }
+
     public static LoweredInstruction LabelMarker(TextLocation location, string label)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(label);
@@ -165,7 +169,8 @@ public sealed class LoweredInstruction
         FunctionSymbol function,
         int byValArgumentCount,
         IReadOnlyList<int> argumentIndices,
-        IReadOnlyList<VariableSymbol> byRefVariables)
+        IReadOnlyList<VariableSymbol> byRefVariables,
+        IReadOnlyList<LoweredByRefAddress?>? byRefAddresses = null)
     {
         ArgumentNullException.ThrowIfNull(function);
         ArgumentNullException.ThrowIfNull(argumentIndices);
@@ -176,7 +181,8 @@ public sealed class LoweredInstruction
             function: function,
             variables: byRefVariables,
             integerOperands: argumentIndices,
-            valueCount: byValArgumentCount);
+            valueCount: byValArgumentCount,
+            byRefAddresses: byRefAddresses);
     }
 
     public static LoweredInstruction CallValue(TextLocation location, int argumentCount, TypeSymbol returnType)
