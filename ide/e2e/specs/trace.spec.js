@@ -4,6 +4,37 @@ async function open(S){const file=writeAxm(testWorkspace('trace'),'шаги.axm'
 async function paused(S,line){await S.page.waitForFunction(n=>!!window.__ide.execution.stopId && !window.__ide.execution.debugBusy && window.__ide.execution.line===n,line);}
 async function menu(S,command){await S.page.locator('#menu-trace > .menu-label').click();await S.page.locator(`#menu-trace [data-action="trace-${command}"]`).click();}
 module.exports=[
+{id:'trace-type-self-stepback',name:'Шаг назад восстанавливает поле TYPE, изменённое методом через адресуемый SELF',async fn({S,C}){
+const source='TYPE Cell\n    Value AS INTEGER = 1\n\n    SUB Change()\n        SELF.Value = SELF.Value + 4\n        SELF.Value = SELF.Value * 2\n    END SUB\nEND TYPE\n\nDIM cells(1 TO 1) AS Cell\ncells(1).Change()\nPRINT cells(1).Value\n';
+const file=writeAxm(testWorkspace('trace-type-self'),'тип-шаг-назад.axm',source);
+await S.launch();await S.page.evaluate(p=>window.__ide.openFile(p),file);
+await S.page.evaluate(()=>{const i=window.__ide;i.settings.formatOnBlur=false;i.settings.checkOnChange=false;});
+await S.page.evaluate(()=>window.__ide.run('debug'));
+await S.page.waitForFunction(()=>!!window.__ide.execution.stopId&&!window.__ide.execution.debugBusy);
+async function advance(command){
+const prior=await S.page.evaluate(()=>window.__ide.execution.stopId);
+await S.page.evaluate(c=>window.__ide.trace.command(c),command);
+await S.page.waitForFunction(stop=>window.__ide.execution.stopId&&window.__ide.execution.stopId!==stop&&!window.__ide.execution.debugBusy,prior);
+return {line:await S.page.evaluate(()=>window.__ide.execution.line),stop:await S.page.evaluate(()=>window.__ide.execution.stopId)};
+}
+for(let guard=0;guard<12&&await S.page.evaluate(()=>window.__ide.execution.line)!==11;guard++)await advance('stepOver');
+C.eq(await S.page.evaluate(()=>window.__ide.execution.line),11,'Обычные шаги дошли до вызова метода');
+const entered=await advance('stepInto');
+C.eq(entered.line,5,'Шаг с заходом открыл тело метода TYPE');
+const firstStop=entered.stop;
+const second=await advance('stepOver');
+C.eq(second.line,6,'Шаг выполнил первое изменение поля');
+C.ok(second.stop!==firstStop,'Шаг вперёд создал новую остановку');
+C.ok(await S.page.evaluate(()=>window.__ide.execution.canStepBack),'Остановка внутри метода имеет обратимую историю');
+const backed=await advance('stepBack');
+C.eq(backed.line,5,'Откат вернул первую строку изменения поля');
+C.eq((await S.diagnosticItems()).length,0,'Откат TYPE не создал диагностик');
+const replay=await advance('stepOver');
+C.eq(replay.line,6,'Повторный шаг снова выполнил первое изменение поля');
+await S.page.evaluate(()=>window.__ide.execution.debug('continue'));
+await S.waitIdle();await S.waitConsole('10');
+C.ok(true,'Повторное выполнение восстановило исходное поле: результат 10, а не 18');
+}},
 {id:'trace-context-menu',name:'Прежние команды точек остановки в контекстном меню ru/en',async fn({S,C}){
 await open(S);
 async function context(line){

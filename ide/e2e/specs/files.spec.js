@@ -218,6 +218,143 @@ module.exports.push({ id: 'files-external-deletion-preserves-buffer', name: 'У�
   C.ok(await S.page.evaluate(() => window.__ide.save()), 'Явное сохранение воссоздаёт файл');
   C.eq(require('fs').readFileSync(file, 'utf8'), 'PRINT 99\n', 'Записан пользовательский текст');
 } });
+async function projectMenu(S, relativeText) {
+  const entry = S.page.locator('#project-files .project-file').filter({ hasText: relativeText });
+  await entry.click({ button: 'right' });
+  await S.page.locator('#ax-project-context-menu:not([hidden])').waitFor();
+}
+async function rootMenu(S) {
+  await S.page.locator('#project-title').click({ button: 'right' });
+  await S.page.locator('#ax-project-context-menu:not([hidden])').waitFor();
+}
+module.exports.push({ id: 'files-project-copy-paste-conflict', name: 'Контекстное меню копирует файл в корень и не перезаписывает конфликт', async fn({ S, C }) {
+  const fs = require('fs'); const path = require('node:path');
+  const root = testWorkspace('project-copy-paste');
+  const folder = path.join(root, 'вложенная папка'); fs.mkdirSync(folder);
+  const source = writeAxm(folder, 'копия.axm', 'PRINT "Источник"\n');
+  const conflict = writeAxm(root, 'копия.axm', 'PRINT "Не трогать"\n');
+  await S.launch(); await S.page.evaluate(p => window.__ide.openProject(p), root);
+  await projectMenu(S, 'вложенная папка/копия.axm');
+  C.ok(await S.page.getByRole('menuitem', { name: 'Копировать', exact: true }).isEnabled(), 'Копирование доступно для файла проекта');
+  await S.page.getByRole('menuitem', { name: 'Копировать', exact: true }).click();
+  await S.waitStatus('Скопировано');
+  await rootMenu(S);
+  C.ok(await S.page.getByRole('menuitem', { name: 'Вставить', exact: true }).isEnabled(), 'Вставка доступна после копирования');
+  await S.page.getByRole('menuitem', { name: 'Вставить', exact: true }).click();
+  await S.waitStatus('не выполнена');
+  C.eq(fs.readFileSync(conflict, 'utf8'), 'PRINT "Не трогать"\n', 'Конфликт не перезаписал назначение');
+  C.eq(fs.readFileSync(source, 'utf8'), 'PRINT "Источник"\n', 'Источник копирования сохранён');
+  fs.unlinkSync(conflict);
+  await rootMenu(S);
+  await S.page.getByRole('menuitem', { name: 'Вставить', exact: true }).click();
+  await S.waitStatus('Скопировано в проект');
+  C.eq(fs.readFileSync(conflict, 'utf8'), 'PRINT "Источник"\n', 'Копия создана в корне проекта');
+  C.ok(fs.existsSync(source), 'Копирование сохранило исходный файл');
+  C.ok(await S.page.evaluate(p => [...document.querySelectorAll('#project-files .project-file')].some(item => item.dataset.path === p), conflict), 'Дерево показывает новый файл');
+} });
+module.exports.push({ id: 'files-project-locked-source-preserves-buffer', name: 'Заблокированный источник не теряет файл и позволяет повторить вставку', async fn({ S, C }) {
+  const fs = require('node:fs'); const path = require('node:path'); const { spawn } = require('node:child_process');
+  const root = testWorkspace('project-locked-source');
+  const folder = path.join(root, 'источник'); fs.mkdirSync(folder);
+  const source = writeAxm(folder, 'заблокированный.axm', 'PRINT 7\n');
+  const target = path.join(root, 'заблокированный.axm');
+  await S.launch(); await S.page.evaluate(p => window.__ide.openProject(p), root);
+  await projectMenu(S, 'источник/заблокированный.axm');
+  await S.page.getByRole('menuitem', { name: 'Копировать', exact: true }).click();
+  await S.waitStatus('Скопировано');
+  const script = "$stream=[System.IO.File]::Open($env:AXIOM_LOCK_FILE,[System.IO.FileMode]::Open,[System.IO.FileAccess]::ReadWrite,[System.IO.FileShare]::None);[Console]::Out.WriteLine('ready');[Console]::Out.Flush();[void][Console]::ReadLine();$stream.Dispose()";
+  const child = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64')], {
+    windowsHide: true, env: { ...process.env, AXIOM_LOCK_FILE: source }, stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  try {
+    await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => { child.kill(); reject(new Error('Не получено подтверждение блокировки')); }, 10000);
+      child.stdout.on('data', data => { if (String(data).includes('ready')) { clearTimeout(timer); resolve(); } });
+      child.once('exit', () => { clearTimeout(timer); reject(new Error('Блокировка завершилась раньше времени')); });
+    });
+    await rootMenu(S);
+    await S.page.getByRole('menuitem', { name: 'Вставить', exact: true }).click();
+    await S.waitStatus('не выполнена');
+    C.ok(fs.existsSync(source), 'Заблокированный источник остался на месте');
+    C.eq(fs.existsSync(target), false, 'Незавершённая вставка не создала назначение');
+  } finally {
+    child.stdin.end('release\n');
+    await new Promise(resolve => { const timer = setTimeout(resolve, 3000); child.once('exit', () => { clearTimeout(timer); resolve(); }); });
+  }
+  await rootMenu(S);
+  await S.page.getByRole('menuitem', { name: 'Вставить', exact: true }).click();
+  await S.waitStatus('Скопировано в проект');
+  C.eq(fs.readFileSync(target, 'utf8'), 'PRINT 7\n', 'Повтор после снятия блокировки использовал сохранённый буфер');
+} });
+module.exports.push({ id: 'files-project-cut-moves-open-dirty-document', name: 'Вырезание переносит открытый изменённый документ без потери модели и точки остановки', async fn({ S, C }) {
+  const fs = require('fs'); const path = require('node:path');
+  const root = testWorkspace('project-cut-open');
+  const folder = path.join(root, 'исходная папка'); fs.mkdirSync(folder);
+  const source = writeAxm(folder, 'перемещаемый.axm', 'PRINT 1\n');
+  const target = path.join(root, 'перемещаемый.axm');
+  await S.launch(); await S.page.evaluate(p => window.__ide.openProject(p), root);
+  await S.page.evaluate(p => window.__ide.openFile(p), source);
+  await S.page.evaluate(() => { const i = window.__ide; i.settings.formatOnBlur = false; i.settings.checkOnChange = false;
+    i.editor.getModel().setValue('PRINT 2\n'); });
+  const documentId = await S.page.evaluate(p => window.__ide.openFiles.get(p).documentId, source);
+  await S.page.evaluate(() => { window.__ide.editor.setPosition({ lineNumber: 1, column: 1 }); window.__ide.editor.focus(); });
+  await S.page.keyboard.press('F9');
+  await projectMenu(S, 'исходная папка/перемещаемый.axm');
+  await S.page.getByRole('menuitem', { name: 'Вырезать', exact: true }).click();
+  await S.waitStatus('Вырезано');
+  await rootMenu(S);
+  await S.page.getByRole('menuitem', { name: 'Вставить', exact: true }).click();
+  await S.waitStatus('Перемещено');
+  C.eq(fs.existsSync(source), false, 'Исходный путь освобождён');
+  C.eq(fs.readFileSync(target, 'utf8'), 'PRINT 1\n', 'Диск сохранил прежнее содержимое');
+  C.eq(await S.page.evaluate(() => window.__ide.activeFile), target, 'Активная вкладка получила новый путь');
+  C.eq(await S.page.evaluate(p => window.__ide.openFiles.get(p)?.documentId, target), documentId, 'Идентификатор открытого документа сохранён');
+  C.eq(await S.page.evaluate(() => window.__ide.editor.getValue()), 'PRINT 2\n', 'Несохранённая правка осталась в модели');
+  C.ok(await S.page.evaluate(p => window.__ide.openFiles.isDirty(p), target), 'Документ остаётся изменённым после переноса');
+  C.eq(await S.page.evaluate(() => window.__ide.trace.lines(window.__ide.openFiles.get(window.__ide.activeFile).model).join(',')), '1', 'Точка остановки перенесена вместе с моделью');
+  C.ok(await S.page.evaluate(p => [...document.querySelectorAll('#project-files .project-file')].some(item => item.dataset.path === p), target), 'Дерево обновило путь');
+  C.ok(await S.page.evaluate(() => window.__ide.save()), 'Перенесённый документ сохраняется');
+  C.eq(fs.readFileSync(target, 'utf8'), 'PRINT 2\n', 'Сохранение записало правку по новому пути');
+} });
+module.exports.push({ id: 'files-project-trash-confirm', name: 'Удаление в корзину отменяется без потерь и выполняется после подтверждения', async fn({ S, C }) {
+  const fs = require('fs'); const path = require('node:path');
+  const root = testWorkspace('project-trash');
+  const file = writeAxm(root, 'в корзину.axm', 'PRINT 5\n');
+  await S.launch(); await S.page.evaluate(p => window.__ide.openProject(p), root);
+  S.confirmAction = 'dismiss';
+  let dialog = S.page.waitForEvent('dialog');
+  await projectMenu(S, 'в корзину.axm');
+  await S.page.getByRole('menuitem', { name: 'Удалить в корзину', exact: true }).click();
+  await dialog;
+  await S.waitStatus('Удаление отменено');
+  C.ok(fs.existsSync(file), 'Отмена оставила файл на месте');
+  C.eq(fs.readFileSync(file, 'utf8'), 'PRINT 5\n', 'Отмена не изменила содержимое');
+  S.confirmAction = 'accept';
+  dialog = S.page.waitForEvent('dialog');
+  await projectMenu(S, 'в корзину.axm');
+  await S.page.getByRole('menuitem', { name: 'Удалить в корзину', exact: true }).click();
+  await dialog;
+  await S.page.waitForFunction(p => !window.__ide.openFiles.has(p) && ![...document.querySelectorAll('#project-files .project-file')].some(item => item.dataset.path === p), file);
+  await S.waitStatus('Перемещено в корзину');
+  C.eq(fs.existsSync(file), false, 'Подтверждённое удаление убрало файл через корзину Windows');
+} });
+module.exports.push({ id: 'files-project-properties', name: 'Свойства файла показываются в окне, свойства папки доступны через тот же IPC', async fn({ S, C }) {
+  const path = require('node:path');
+  const root = testWorkspace('project-properties');
+  const file = writeAxm(root, 'свойства.axm', 'PRINT 42\n');
+  await S.launch(); await S.page.evaluate(p => window.__ide.openProject(p), root);
+  const dialog = S.page.waitForEvent('dialog');
+  await projectMenu(S, 'свойства.axm');
+  await S.page.getByRole('menuitem', { name: 'Свойства', exact: true }).click();
+  await dialog;
+  const message = S.rendererDialogs.at(-1)?.message || '';
+  C.contains(message, 'Имя: свойства.axm', 'Свойства называют файл');
+  C.contains(message, `Путь: ${file}`, 'Свойства показывают полный путь');
+  C.contains(message, 'Размер: 9 байт', 'Свойства показывают размер файла');
+  const directory = await S.page.evaluate(p => window.axiom.projectFileProperties(p, p), root);
+  C.ok(directory.ok && directory.kind === 'directory' && directory.path.toLowerCase() === root.toLowerCase(), 'Свойства папки возвращают её тип и путь');
+  C.eq(directory.size, null, 'Размер папки не подменяется суммой файлов');
+} });
 module.exports.push({ id: 'files-save-open-writer', name: 'Открытый дескриптор другого процесса препятствует сохранению без потери текста', async fn({ S, C }) {
   const fs = require('fs'); const file = writeAxm(testWorkspace('save-open-writer'), 'открытый.axm', 'PRINT 1\n');
   await S.launch(); await S.page.evaluate(p => window.__ide.openFile(p), file);

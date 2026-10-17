@@ -1,0 +1,124 @@
+[
+  {
+    "id": "files-project-external-open",
+    "spec": "files.spec.js",
+    "name": "Файл вне проекта открывается и остаётся доступен отдельно от дерева проекта",
+    "ms": 5486,
+    "passed": 6,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57012/f13e8307-fccf-4cf7-8300-aa8d70bd6150\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "files-project-hides-windows-hidden-and-system-items",
+    "spec": "files.spec.js",
+    "name": "Дерево проекта исключает скрытые и системные файлы и папки Windows",
+    "ms": 4933,
+    "passed": 5,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57016/d0087097-37fd-4bbb-90aa-7824edd90e95\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "files-project-copy-paste-conflict",
+    "spec": "files.spec.js",
+    "name": "Контекстное меню копирует файл в корень и не перезаписывает конфликт",
+    "ms": 6298,
+    "passed": 7,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57021/0ad66224-0d85-4e51-8688-a5b8df3eb8c0\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": [
+      {
+        "type": "alert",
+        "message": "Назначение уже существует: C:\\Axiom\\.artifacts\\ide-shell\\e2e\\29428\\project-copy-paste\\копия.axm"
+      }
+    ]
+  },
+  {
+    "id": "files-project-locked-source-preserves-buffer",
+    "spec": "files.spec.js",
+    "name": "Заблокированный источник не теряет файл и позволяет повторить вставку",
+    "ms": 7280,
+    "passed": 3,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57025/a1555b53-0c0e-4f15-b131-d4142d08b888\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": [
+      {
+        "type": "alert",
+        "message": "Исключение при вызове \"Copy\" с \"3\" аргументами: \"Процесс не может получить доступ к файлу \"C:\\Axiom\\.artifacts\\ide-shell\\e2e\\29428\\project-locked-source\\источник\\заблокированный.axm\", так как этот файл используется другим процессом.\""
+      }
+    ]
+  },
+  {
+    "id": "files-project-cut-moves-open-dirty-document",
+    "spec": "files.spec.js",
+    "name": "Вырезание переносит открытый изменённый документ без потери модели и точки остановки",
+    "ms": 6664,
+    "passed": 10,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57029/dadef39f-38bc-4eff-8957-62950151147a\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  },
+  {
+    "id": "files-project-trash-confirm",
+    "spec": "files.spec.js",
+    "name": "Удаление в корзину отменяется без потерь и выполняется после подтверждения",
+    "ms": 5447,
+    "passed": 3,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57033/ff158154-4823-46c8-8e2d-cc1e2717c57f\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": [
+      {
+        "type": "confirm",
+        "message": "Удалить файл «в корзину.axm»?"
+      },
+      {
+        "type": "confirm",
+        "message": "Удалить файл «в корзину.axm»?"
+      }
+    ]
+  },
+  {
+    "id": "files-project-properties",
+    "spec": "files.spec.js",
+    "name": "Свойства файла показываются в окне, свойства папки доступны через тот же IPC",
+    "ms": 4862,
+    "passed": 5,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:57037/944001f7-d3d4-4be0-bb4a-16695fcee4f4\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": [
+      {
+        "type": "alert",
+        "message": "Имя: свойства.axm\nТип: Файл\nПуть: C:\\Axiom\\.artifacts\\ide-shell\\e2e\\29428\\project-properties\\свойства.axm\nРазмер: 9 байт\nИзменён: 2026-10-17T20:27:41.366Z\nСоздан: 2026-10-17T20:27:41.366Z\nТолько чтение: нет"
+      }
+    ]
+  }
+]

@@ -1,8 +1,8 @@
 # Текущий план Axiom
 
-Актуализация: 16 октября 2026 года. Рабочий продукт — Electron IDE и компилятор/BytecodeVm на .NET. Полная очередь и её приоритеты: [UNFINISHED_WORK.md](plans/UNFINISHED_WORK.md). Действующий план оболочки: [ELECTRON_IDE_PLAN.md](plans/ELECTRON_IDE_PLAN.md).
+Актуализация: 17 октября 2026 года. Рабочий продукт — Electron IDE и компилятор/BytecodeVm на .NET. Полная очередь и её приоритеты: [UNFINISHED_WORK.md](plans/UNFINISHED_WORK.md). Действующий план оболочки: [ELECTRON_IDE_PLAN.md](plans/ELECTRON_IDE_PLAN.md).
 
-Версии на дату обновления (единственный источник — `versions.json`): язык **0.1.18**, компилятор **0.1.18**, IDE **0.6.20**. Бейджи и строка текущих версий в `README.md` производны от `versions.json`: их обновляет `node scripts/versioning.mjs bump`, а `check` обнаруживает расхождение. Каталог Electron — `ide/e2e/SCENARIOS.json` (456 сценариев); размер каталога не равен числу пройденных проверок.
+Версии на дату обновления (единственный источник — `versions.json`): язык **0.1.19**, компилятор **0.1.19**, IDE **0.6.22**. Бейджи и строка текущих версий в `README.md` производны от `versions.json`: их обновляет `node scripts/versioning.mjs bump`, а `check` обнаруживает расхождение. Каталог Electron — `ide/e2e/SCENARIOS.json` (484 сценария); размер каталога не равен числу пройденных проверок.
 
 ## Где остановились
 
@@ -264,3 +264,13 @@ IDE 0.6.16 исправляет удаление нового запроса п�
 Проверки: Runtime 1194/1194, Execution 3261/3263 (два известных отказа Maze Chase), Ide 1007/1009 (два предсуществующих отказа ожиданий приглашения INPUT на `HEAD` не связаны с мышью), Node `ide-unit-renderer` 63/63, Electron `canvas-mouse` 5/5 и `graphics-lifecycle` 7/7 (54 утверждения), включая величину колеса 240 и отсутствие события в letterbox. Версии: язык/компилятор 0.1.19, IDE 0.6.21.
 
 Остаток: физическая приёмка мыши `SCREEN` при разных DPI и на втором мониторе остаётся аппаратной границей; полная матрица `ON/STOP/OFF` и device loss не заявляются пройденными. Примеры: `samples/operators/on-mouse/wheel_units.axm`, `samples/operators/on-mouse/focus_loss_release.axm`; справочник — `docs/manual/on-mouse.html`.
+
+## Файловая панель IDE12–IDE13 и TYPE StepBack — 17 октября 2026 года
+
+Закрыты две ранее начатые задачи. Файловые действия панели проекта доставлены в Electron: основной процесс владеет `ProjectFileActions`, preload открывает только именованные методы, renderer показывает контекстное меню файла и корня проекта, а `project-file-controller.js` согласует результат с открытыми документами. Копирование и вырезание не перезаписывают назначение; настоящая блокировка источника сохраняет файл и внутренний буфер; перемещение открытого dirty-документа сохраняет `documentId`, текст и точки; удаление требует подтверждения, проводит changed-документы через обычный выбор сохранения и вызывает `shell.trashItem`; свойства показывают файл и папку.
+
+Оконная приёмка: `e2e-documents` — 50/50, включая новые `files-project-copy-paste-conflict`, `files-project-locked-source-preserves-buffer`, `files-project-cut-moves-open-dirty-document`, `files-project-trash-confirm`, `files-project-properties`; доказательство — `ide/e2e/evidence/files-project-actions-results.json`. Node: `project-file-actions` 12/12 и новый `project-file-controller` 6/6.
+
+TYPE StepBack проверен в настоящем Electron: `trace-type-self-stepback` входит в метод TYPE с адресуемым `SELF`, делает шаг назад и повторный шаг, после чего вывод равен 10, а не 18. `e2e-debug` — 17/17; доказательство — `ide/e2e/evidence/trace-type-stepback-results.json`. Протокол отладки не расширялся.
+
+Версия IDE повышена до 0.6.22; язык и компилятор остаются 0.1.19. Границы: системный файловый буфер Windows, произвольные папки назначения, отдельная команда переименования и полная матрица графов TYPE/BYREF/массивных полей не входят. Второй монитор, смешанный DPI и device loss остаются аппаратными условиями. Следующий доступный участок — сверка оставшихся строк матрицы IDE42/44/46/47 с уже существующими сценариями; новых аудитов этим этапом не открывать.

@@ -274,11 +274,39 @@ function logIpc(event, data) {
 
 function setupIpc(logger, options = {}) {
   const manualWindow = options.manualWindow || null;
+  const fromMainFrame = (event) => event.senderFrame === event.sender.mainFrame && event.senderFrame.url.endsWith('/index.html');
+  const invalidSource = () => ({ ok: false, error: 'Недопустимый источник команды.' });
+  const { ProjectFileActions } = require('./project-file-actions');
+  // Один внутренний буфер файловой панели на окно IDE: системный буфер Windows
+  // не является частью договора этих действий.
+  const projectFileActions = new ProjectFileActions();
+  const projectPath = value => typeof value === 'string' && value.length > 0 && value.length <= 32767 && path.isAbsolute(value);
   ipcMain.handle('create-project-file', (event, root, target, text) => {
-    if (event.senderFrame !== event.sender.mainFrame || !event.senderFrame.url.endsWith('/index.html'))
-      return { ok: false, message: 'Недопустимый источник команды.' };
+    if (!fromMainFrame(event)) return { ok: false, message: 'Недопустимый источник команды.' };
     try { return { ok: true, path: require('./file-service').createProjectFile(root, target, text) }; }
     catch (error) { return { ok: false, message: error.message }; }
+  });
+  ipcMain.handle('capture-project-file', (event, root, item, cut) => {
+    if (!fromMainFrame(event)) return invalidSource();
+    if (!projectPath(root) || !projectPath(item) || typeof cut !== 'boolean') return { ok: false, error: 'Неверные аргументы файловой операции.' };
+    try { return projectFileActions.capture(root, item, cut); }
+    catch (error) { return { ok: false, error: error.message }; }
+  });
+  ipcMain.handle('paste-project-file', async (event, root, directory) => {
+    if (!fromMainFrame(event)) return invalidSource();
+    if (!projectPath(root) || !projectPath(directory)) return { ok: false, error: 'Неверные аргументы файловой операции.' };
+    return projectFileActions.paste(root, directory);
+  });
+  ipcMain.handle('trash-project-file', async (event, root, item) => {
+    if (!fromMainFrame(event)) return invalidSource();
+    if (!projectPath(root) || !projectPath(item)) return { ok: false, error: 'Неверные аргументы файловой операции.' };
+    return projectFileActions.trash(root, item);
+  });
+  ipcMain.handle('project-file-properties', (event, root, item) => {
+    if (!fromMainFrame(event)) return invalidSource();
+    if (!projectPath(root) || !projectPath(item)) return { ok: false, error: 'Неверные аргументы файловой операции.' };
+    try { return { ok: true, ...projectFileActions.properties(root, item) }; }
+    catch (error) { return { ok: false, error: error.message }; }
   });
   ipcMain.handle('confirm-document-close', async (event, name) => {
     const owner = BrowserWindow.fromWebContents(event.sender);
@@ -365,7 +393,6 @@ function setupIpc(logger, options = {}) {
   const { EventLog } = require('./event-log');
   let eventLog = null;
   const getEventLog = () => eventLog || (eventLog = new EventLog(path.join(app.getPath('userData'), 'logs')));
-  const fromMainFrame = (event) => event.senderFrame === event.sender.mainFrame && event.senderFrame.url.endsWith('/index.html');
   ipcMain.handle('read-event-log', async (event, options) => {
     if (!fromMainFrame(event)) return { ok: false, error: 'Недопустимый источник команды.' };
     try { return { ok: true, ...getEventLog().read(options && typeof options === 'object' ? options : {}) }; }

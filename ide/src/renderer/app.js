@@ -33,6 +33,7 @@ class AxiomIDE {
     this._outlineSeq = 0;
     this._lastEditorFocus = 0;
     this.execution = new window.ExecutionController(this, API);
+    this.projectFiles = new window.ProjectFileController(this, API);
     this.init();
   }
 
@@ -729,6 +730,7 @@ class AxiomIDE {
   async openProject(dir) {
     const files = await API.listProjectFiles(dir);
     this.projectDir = dir;
+    this.projectFiles.reset();
     this.saveSettings({ lastProjectDir: dir });
     this.renderProjectFiles(files);
     this.renderMiscellaneousFiles();
@@ -774,6 +776,7 @@ class AxiomIDE {
     for (const file of files) {
       const button = document.createElement('button');
       button.className = 'project-file' + (file === this.activeFile ? ' active' : '');
+      button.dataset.path = file;
       button.textContent = file.slice(this.projectDir.length + 1).replace(/\\/g, '/');
       button.title = file;
       button.onclick = () => this.openFile(file);
@@ -807,6 +810,7 @@ class AxiomIDE {
     };
     document.getElementById('project-explorer-close').onclick = () => this.setProjectExplorerVisible(false);
     document.getElementById('project-new-file').onclick = () => this.newProjectFile();
+    this.projectFiles.setup();
   }
 
   isProjectFile(p) {
@@ -838,6 +842,7 @@ class AxiomIDE {
     }
     if (this.projectDir !== closingProjectDir || [...approved].some(([entry, text]) => this.openFiles.get(entry.path) !== entry || entry.model.getValue() !== text)) return;
     this.projectDir = null;
+    this.projectFiles.reset();
     this.saveSettings({ lastProjectDir: null });
     const title = document.getElementById('project-title');
     title.textContent = I18N.t('project.open');

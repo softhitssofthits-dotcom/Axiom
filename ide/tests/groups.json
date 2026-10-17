@@ -31,6 +31,7 @@
     "portable-runtime.test.cjs",
     "program-keys.test.cjs",
     "project-file-actions.test.cjs",
+    "project-file-controller.test.cjs",
     "recovery-store.test.cjs",
     "run-document.test.cjs",
     "semantic-colors.test.cjs",
@@ -67,6 +68,7 @@
     "lang-features.test.cjs",
     "panel-splitter.test.cjs",
     "program-keys.test.cjs",
+    "project-file-controller.test.cjs",
     "semantic-colors.test.cjs",
     "themes.test.cjs",
     "ui-controls.test.cjs"

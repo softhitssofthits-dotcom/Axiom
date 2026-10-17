@@ -1,0 +1,16 @@
+[
+  {
+    "id": "trace-type-self-stepback",
+    "spec": "trace.spec.js",
+    "name": "Шаг назад восстанавливает поле TYPE, изменённое методом через адресуемый SELF",
+    "ms": 5563,
+    "passed": 9,
+    "failures": [],
+    "notes": [],
+    "crashed": false,
+    "consoleTail": [],
+    "pageErrors": [],
+    "mainStderrTail": "Debugger ending on ws://127.0.0.1:56996/13994fe5-2afc-43f9-83f9-2dad95e871b1\r\nFor help, see: https://nodejs.org/learn/getting-started/debugging\r\n",
+    "rendererDialogs": []
+  }
+]
