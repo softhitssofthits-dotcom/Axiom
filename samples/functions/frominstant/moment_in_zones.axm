@@ -1,0 +1,13 @@
+' Пример показывает обратное преобразование момента в местное время.
+' FROMINSTANT показывает один и тот же момент в разных часовых поясах.
+' Ожидается вывод:
+' 2024-02-29 12:34:56
+' 2024-02-29 15:34:56
+' 2024-02-29 07:34:56
+
+DIM moment AS UTCDATETIME = "2024-02-29T12:34:56Z"
+
+' Один и тот же момент в трёх поясах выглядит по-разному.
+PRINT FROMINSTANT(moment, "UTC")
+PRINT FROMINSTANT(moment, "Europe/Moscow")
+PRINT FROMINSTANT(moment, "America/New_York")

@@ -18,6 +18,14 @@ internal static class BuiltinDateTimeHelpers
     internal const string CanonicalTimeFormatWithFraction = "HH:mm:ss.FFFFFFF";
     internal const string CanonicalDateTimeFormatWithFraction = "yyyy-MM-dd HH:mm:ss.FFFFFFF";
 
+    /// <summary>
+    /// Момент записывается на шкале UTC с признаком Z. Отдельная форма нужна, чтобы
+    /// значение нельзя было спутать с календарным DATETIME: у того разделитель —
+    /// пробел и нет признака пояса.
+    /// </summary>
+    internal const string CanonicalInstantFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+    internal const string CanonicalInstantFormatWithFraction = "yyyy-MM-dd'T'HH:mm:ss.FFFFFFF'Z'";
+
     internal static readonly CultureInfo DateTimeCulture = CultureInfo.InvariantCulture;
 
     internal static readonly IReadOnlyDictionary<string, IntervalTokenInfo> DateTimeIntervalTokens =
@@ -131,6 +139,47 @@ internal static class BuiltinDateTimeHelpers
     /// Документированное разрешение функций текущего времени. DATE отбрасывает время
     /// суток, TIME и NOW — доли секунды; TIMER остаётся дробным и служит измерению.
     /// </summary>
+    internal static string FormatCanonicalInstant(DateTime utcValue)
+    {
+        var utc = DateTime.SpecifyKind(utcValue, DateTimeKind.Utc);
+        return utc.Ticks % TimeSpan.TicksPerSecond == 0
+            ? utc.ToString(CanonicalInstantFormat, DateTimeCulture)
+            : utc.ToString(CanonicalInstantFormatWithFraction, DateTimeCulture);
+    }
+
+    private static readonly string[] CanonicalInstantFormats =
+    [
+        CanonicalInstantFormat,
+        CanonicalInstantFormatWithFraction
+    ];
+
+    /// <summary>
+    /// Разбор момента принимает только запись с признаком Z. Смещение вида +03:00
+    /// не принимается: для момента смещение допустимо, но в языке пока нет формы,
+    /// которая бы его сохраняла, и молчаливое приведение скрыло бы потерю.
+    /// </summary>
+    internal static bool TryParseCanonicalInstant(string value, out DateTime utcValue)
+    {
+        // Проверка дробной части смотрит на конец строки, поэтому признак Z
+        // отрезается до неё: иначе «.125Z» считалось бы нецифровым хвостом.
+        var body = value.EndsWith('Z') ? value[..^1] : value;
+        if (!HasValidFractionalPart(body))
+        {
+            utcValue = default;
+            return false;
+        }
+
+        if (DateTime.TryParseExact(value, CanonicalInstantFormats, DateTimeCulture,
+                DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var parsed))
+        {
+            utcValue = DateTime.SpecifyKind(parsed, DateTimeKind.Utc);
+            return true;
+        }
+
+        utcValue = default;
+        return false;
+    }
+
     internal static DateTime TruncateToSecond(DateTime value)
     {
         return new DateTime(value.Ticks - value.Ticks % TimeSpan.TicksPerSecond, value.Kind);
@@ -192,6 +241,12 @@ internal static class BuiltinDateTimeHelpers
                 return true;
             }
 
+            if (value.Type == TypeSymbol.UtcDateTime)
+            {
+                converted = RuntimeValue.FromString(FormatCanonicalInstant(value.AsUtcDateTime()));
+                return true;
+            }
+
             failure = TemporalConversionFailure.Unsupported;
             return false;
         }
@@ -225,6 +280,21 @@ internal static class BuiltinDateTimeHelpers
             failure = value.Type == TypeSymbol.DateTime
                 ? TemporalConversionFailure.LosesComponent
                 : TemporalConversionFailure.Unsupported;
+            return false;
+        }
+
+        if (targetType == TypeSymbol.UtcDateTime)
+        {
+            // Момент не получается из календарного значения неявно: для этого нужна
+            // явная функция TOINSTANT, которая знает часовой пояс.
+            if (value.Type == TypeSymbol.String
+                && TryParseCanonicalInstant(value.AsString(), out var instant))
+            {
+                converted = RuntimeValue.FromUtcDateTime(instant);
+                return true;
+            }
+
+            failure = TemporalConversionFailure.Unsupported;
             return false;
         }
 

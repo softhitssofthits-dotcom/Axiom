@@ -85,6 +85,11 @@ public sealed class RuntimeValue : IRuntimeStoredValue
             return FromDateTime(default);
         }
 
+        if (type == TypeSymbol.UtcDateTime)
+        {
+            return FromUtcDateTime(default);
+        }
+
         if (type == TypeSymbol.Void)
         {
             return Void;
@@ -154,6 +159,8 @@ public sealed class RuntimeValue : IRuntimeStoredValue
     public static RuntimeValue FromTime(TimeOnly value) => new(TypeSymbol.Time, value);
 
     public static RuntimeValue FromDateTime(System.DateTime value) => new(TypeSymbol.DateTime, value);
+
+    public static RuntimeValue FromUtcDateTime(System.DateTime value) => new(TypeSymbol.UtcDateTime, value);
 
     public static RuntimeValue FromRuntimeError(RuntimeErrorValue value)
     {
@@ -405,6 +412,20 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         return (System.DateTime)Value!;
     }
 
+    /// <summary>
+    /// Значение момента на шкале UTC. Kind всегда Utc, поэтому повторные
+    /// преобразования пояса не меняют само значение.
+    /// </summary>
+    public System.DateTime AsUtcDateTime()
+    {
+        if (Type != TypeSymbol.UtcDateTime)
+        {
+            throw new InvalidOperationException($"Value of type {Type.Name} is not UTCDATETIME.");
+        }
+
+        return (System.DateTime)Value!;
+    }
+
     public RuntimeArrayValue AsArray()
     {
         if (Type is not ArrayTypeSymbol)
@@ -538,6 +559,11 @@ public sealed class RuntimeValue : IRuntimeStoredValue
             return Builtins.BuiltinDateTimeHelpers.FormatCanonicalDateTime(AsDateTime());
         }
 
+        if (Type == TypeSymbol.UtcDateTime)
+        {
+            return Builtins.BuiltinDateTimeHelpers.FormatCanonicalInstant(AsUtcDateTime());
+        }
+
         if (Type == TypeSymbol.File)
         {
             var file = AsFile();
@@ -637,6 +663,11 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         if (Type == TypeSymbol.DateTime)
         {
             return FromString(Builtins.BuiltinDateTimeHelpers.FormatCanonicalDateTime(AsDateTime()));
+        }
+
+        if (Type == TypeSymbol.UtcDateTime)
+        {
+            return FromString(Builtins.BuiltinDateTimeHelpers.FormatCanonicalInstant(AsUtcDateTime()));
         }
 
         return FromString(ToDisplayString());

@@ -216,7 +216,8 @@ internal static class BuiltinArrayAggregateHelpers
             return ExtremeComparisonKind.String;
         }
 
-        if (first.Type == TypeSymbol.Date || first.Type == TypeSymbol.Time || first.Type == TypeSymbol.DateTime)
+        if (first.Type == TypeSymbol.Date || first.Type == TypeSymbol.Time
+            || first.Type == TypeSymbol.DateTime || first.Type == TypeSymbol.UtcDateTime)
         {
             return ExtremeComparisonKind.Temporal;
         }

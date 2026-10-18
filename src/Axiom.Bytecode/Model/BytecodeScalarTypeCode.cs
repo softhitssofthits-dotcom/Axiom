@@ -9,5 +9,6 @@ public enum BytecodeScalarTypeCode
     String,
     Date,
     Time,
-    DateTime
+    DateTime,
+    UtcDateTime
 }

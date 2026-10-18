@@ -25,7 +25,7 @@
     "src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.cs",
     "src/Axiom.Syntax/SyntaxKind.cs"
   ],
-  "sourceFingerprint": "ee113580886f2f98225460a050503f271d3e2aa53d8155302b158ee8586884f1",
+  "sourceFingerprint": "9172b3fabbb3971160632d4c1e2af10e342e3afbfd05878ac8d39369e26ff4b9",
   "functions": [
     {
       "name": "ABS",
@@ -2905,6 +2905,45 @@
       ]
     },
     {
+      "name": "FROMINSTANT",
+      "description": "Возвращает календарную дату-время, в которую заданный момент выглядит в выбранном поясе.",
+      "sourceHref": "date-time-functions-time-zones.html#frominstant",
+      "forms": [
+        {
+          "key": "FROMINSTANT/0",
+          "id": "FromInstant",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "UTCDATETIME"
+            }
+          ],
+          "returnType": "DATETIME",
+          "binding": "Default",
+          "operandPolicy": "Declared",
+          "resultPolicy": "Declared"
+        },
+        {
+          "key": "FROMINSTANT/1",
+          "id": "FromInstantZone",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "UTCDATETIME"
+            },
+            {
+              "name": "timeZone",
+              "type": "STRING"
+            }
+          ],
+          "returnType": "DATETIME",
+          "binding": "Default",
+          "operandPolicy": "Declared",
+          "resultPolicy": "Declared"
+        }
+      ]
+    },
+    {
       "name": "FROMUTC",
       "description": "Возвращает дату и время, преобразованные из UTC в выбранный пояс.",
       "sourceHref": "date-time-functions-time-zones.html#fromutc",
@@ -3144,6 +3183,27 @@
             }
           ],
           "returnType": "STRING",
+          "binding": "Default",
+          "operandPolicy": "Declared",
+          "resultPolicy": "Declared"
+        }
+      ]
+    },
+    {
+      "name": "INSTANTVALUE",
+      "description": "Возвращает момент времени, прочитанный из текста с признаком UTC.",
+      "sourceHref": "date-time-functions-time-zones.html#instantvalue",
+      "forms": [
+        {
+          "key": "INSTANTVALUE/0",
+          "id": "InstantValue",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "STRING"
+            }
+          ],
+          "returnType": "UTCDATETIME",
           "binding": "Default",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"
@@ -5186,6 +5246,22 @@
       ]
     },
     {
+      "name": "NOWINSTANT",
+      "description": "Возвращает текущий момент времени на шкале UTC.",
+      "sourceHref": "date-time-functions-current.html#nowinstant",
+      "forms": [
+        {
+          "key": "NOWINSTANT/0",
+          "id": "NowInstant",
+          "parameters": [],
+          "returnType": "UTCDATETIME",
+          "binding": "Default",
+          "operandPolicy": "Declared",
+          "resultPolicy": "Declared"
+        }
+      ]
+    },
+    {
       "name": "PADLEFT",
       "description": "Возвращает строку, дополнив её слева до заданной ширины.",
       "sourceHref": "string-functions-build-and-split.html#padleft",
@@ -7151,6 +7227,45 @@
       ]
     },
     {
+      "name": "TOINSTANT",
+      "description": "Возвращает момент времени, соответствующий календарной дате-времени в заданном поясе.",
+      "sourceHref": "date-time-functions-time-zones.html#toinstant",
+      "forms": [
+        {
+          "key": "TOINSTANT/0",
+          "id": "ToInstant",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "DATETIME"
+            }
+          ],
+          "returnType": "UTCDATETIME",
+          "binding": "Default",
+          "operandPolicy": "Declared",
+          "resultPolicy": "Declared"
+        },
+        {
+          "key": "TOINSTANT/1",
+          "id": "ToInstantZone",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "DATETIME"
+            },
+            {
+              "name": "timeZone",
+              "type": "STRING"
+            }
+          ],
+          "returnType": "UTCDATETIME",
+          "binding": "Default",
+          "operandPolicy": "Declared",
+          "resultPolicy": "Declared"
+        }
+      ]
+    },
+    {
       "name": "TOTALFREESPACE",
       "description": "Возвращает общее число свободных байтов диска.",
       "sourceHref": "file-system-functions-management.html#totalfreespace",
@@ -8276,7 +8391,8 @@
     "STRING",
     "TILEMAP",
     "TILESET",
-    "TIME"
+    "TIME",
+    "UTCDATETIME"
   ],
   "internalSyntax": {
     "GlobalStatementSyntax": "Обёртка инструкции верхнего уровня; отдельного оператора GLOBAL нет.",

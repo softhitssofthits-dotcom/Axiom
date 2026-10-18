@@ -112,7 +112,8 @@ window.AxiomCodeDictionary = {
     "STRING",
     "TILEMAP",
     "TILESET",
-    "TIME"
+    "TIME",
+    "UTCDATETIME"
   ],
   "builtins": [
     "ABS",
@@ -220,6 +221,7 @@ window.AxiomCodeDictionary = {
     "FLOOR",
     "FLUSH",
     "FREESPACE",
+    "FROMINSTANT",
     "FROMUTC",
     "FULLPATH",
     "GETDIRS",
@@ -229,6 +231,7 @@ window.AxiomCodeDictionary = {
     "IMAGEWIDTH",
     "INKEY",
     "INSERT",
+    "INSTANTVALUE",
     "INSTR",
     "INSTRREV",
     "INT",
@@ -303,6 +306,7 @@ window.AxiomCodeDictionary = {
     "MOVEFILE",
     "NEWLINE",
     "NOW",
+    "NOWINSTANT",
     "PADLEFT",
     "PADRIGHT",
     "PATHEXISTS",
@@ -371,6 +375,7 @@ window.AxiomCodeDictionary = {
     "TIMER",
     "TIMESERIAL",
     "TIMEVALUE",
+    "TOINSTANT",
     "TOTALFREESPACE",
     "TOTALSPACE",
     "TOUTC",

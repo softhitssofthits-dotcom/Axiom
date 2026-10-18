@@ -20,7 +20,9 @@ public sealed partial class Binder
             || (fromType == TypeSymbol.String && toType == TypeSymbol.Time)
             || (fromType == TypeSymbol.String && toType == TypeSymbol.DateTime)
             || (fromType == TypeSymbol.Date && toType == TypeSymbol.DateTime)
-            || (fromType == TypeSymbol.Time && toType == TypeSymbol.DateTime);
+            || (fromType == TypeSymbol.Time && toType == TypeSymbol.DateTime)
+            || (fromType == TypeSymbol.UtcDateTime && toType == TypeSymbol.String)
+            || (fromType == TypeSymbol.String && toType == TypeSymbol.UtcDateTime);
     }
 
     private static bool IsNumeric(TypeSymbol type)
@@ -43,13 +45,15 @@ public sealed partial class Binder
             || type == TypeSymbol.Boolean
             || type == TypeSymbol.Date
             || type == TypeSymbol.Time
-            || type == TypeSymbol.DateTime;
+            || type == TypeSymbol.DateTime
+            || type == TypeSymbol.UtcDateTime;
     }
 
     private static bool SupportsOrderedComparison(TypeSymbol type)
     {
         return IsNumeric(type) || type == TypeSymbol.String
-            || type == TypeSymbol.Date || type == TypeSymbol.Time || type == TypeSymbol.DateTime;
+            || type == TypeSymbol.Date || type == TypeSymbol.Time
+            || type == TypeSymbol.DateTime || type == TypeSymbol.UtcDateTime;
     }
 
     private static bool RequiresNumericAggregateArray(BuiltinFunctionId id, TypeSymbol elementType)
@@ -75,7 +79,8 @@ public sealed partial class Binder
 
     private static bool IsTemporalType(TypeSymbol type)
     {
-        return type == TypeSymbol.Date || type == TypeSymbol.Time || type == TypeSymbol.DateTime;
+        return type == TypeSymbol.Date || type == TypeSymbol.Time
+            || type == TypeSymbol.DateTime || type == TypeSymbol.UtcDateTime;
     }
 
     private static bool IsTemporalComparisonOperand(TypeSymbol left, TypeSymbol right)

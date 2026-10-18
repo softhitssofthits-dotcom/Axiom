@@ -1176,6 +1176,12 @@ public sealed class BytecodeCompiler
             return true;
         }
 
+        if (type == TypeSymbol.UtcDateTime)
+        {
+            typeCode = BytecodeScalarTypeCode.UtcDateTime;
+            return true;
+        }
+
         typeCode = default;
         return false;
     }

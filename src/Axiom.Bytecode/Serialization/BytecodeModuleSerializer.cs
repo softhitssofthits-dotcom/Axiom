@@ -761,6 +761,14 @@ public static class BytecodeModuleSerializer
                 : timeValue.ToString("HH:mm:ss.FFFFFFF", System.Globalization.CultureInfo.InvariantCulture);
         }
 
+        if (field.DefaultValue is DateTime instantValue && field.Type == TypeSymbol.UtcDateTime)
+        {
+            var utc = DateTime.SpecifyKind(instantValue, DateTimeKind.Utc);
+            return utc.Ticks % TimeSpan.TicksPerSecond == 0
+                ? utc.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", System.Globalization.CultureInfo.InvariantCulture)
+                : utc.ToString("yyyy-MM-dd'T'HH:mm:ss.FFFFFFF'Z'", System.Globalization.CultureInfo.InvariantCulture);
+        }
+
         if (field.DefaultValue is DateTime dateTimeValue)
         {
             return dateTimeValue.Ticks % TimeSpan.TicksPerSecond == 0
@@ -822,6 +830,13 @@ public static class BytecodeModuleSerializer
                 Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty,
                 ["yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm:ss.FFFFFFF"],
                 System.Globalization.CultureInfo.InvariantCulture),
+            var type when type == TypeSymbol.UtcDateTime => DateTime.SpecifyKind(
+                DateTime.ParseExact(
+                    Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty,
+                    ["yyyy-MM-dd'T'HH:mm:ss'Z'", "yyyy-MM-dd'T'HH:mm:ss.FFFFFFF'Z'"],
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal),
+                DateTimeKind.Utc),
             _ => value
         };
     }

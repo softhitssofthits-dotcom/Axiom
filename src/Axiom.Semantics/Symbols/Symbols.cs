@@ -55,6 +55,12 @@ public class TypeSymbol : Symbol
 
     public static TypeSymbol DateTime { get; } = new("DATETIME");
 
+    /// <summary>
+    /// Однозначная позиция на шкале UTC. Отличается от DATETIME тем, что
+    /// означает момент, а не календарную запись: пояс и смещение не хранятся.
+    /// </summary>
+    public static TypeSymbol UtcDateTime { get; } = new("UTCDATETIME");
+
     public static RuntimeErrorTypeSymbol RuntimeError { get; } = new();
 
     public static TypeSymbol Void { get; } = new("VOID");
@@ -99,6 +105,7 @@ public class TypeSymbol : Symbol
                 "DATE" => Date,
                 "TIME" => Time,
                 "DATETIME" => DateTime,
+                "UTCDATETIME" => UtcDateTime,
                 _ => Error
             };
         }
@@ -124,6 +131,7 @@ public class TypeSymbol : Symbol
             SyntaxKind.DateKeyword => Date,
             SyntaxKind.TimeKeyword => Time,
             SyntaxKind.DateTimeKeyword => DateTime,
+            SyntaxKind.UtcDateTimeKeyword => UtcDateTime,
             _ => Error
         };
     }

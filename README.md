@@ -1,7 +1,7 @@
 # Axiom
 
-![version](https://img.shields.io/badge/version-0.1.28-blue)
-![IDE](https://img.shields.io/badge/IDE-0.6.23-green)
+![version](https://img.shields.io/badge/version-0.1.30-blue)
+![IDE](https://img.shields.io/badge/IDE-0.6.24-green)
 ![platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![status](https://img.shields.io/badge/status-early%20preview-orange)
 ![license](https://img.shields.io/badge/license-MIT-blue)
@@ -157,7 +157,7 @@ dotnet build src/Axiom.DesktopHost -c Debug
 
 ## Статус и планы
 
-Axiom находится в ранней разработке. Текущие номера версий независимы друг от друга: язык `0.1.28`, компилятор `0.1.28`, IDE `0.6.23`. Язык уже покрывает широкий набор возможностей и проверяется автоматическими тестами и запускаемыми примерами, но до «готового продукта» ещё далеко.
+Axiom находится в ранней разработке. Текущие номера версий независимы друг от друга: язык `0.1.30`, компилятор `0.1.30`, IDE `0.6.24`. Язык уже покрывает широкий набор возможностей и проверяется автоматическими тестами и запускаемыми примерами, но до «готового продукта» ещё далеко.
 
 Развитие идёт небольшими проверяемыми шагами. В первую очередь проект ориентирован на Windows; многофайловые модули, дополнительные средства языка и поставка на другие платформы требуют отдельных решений.
 

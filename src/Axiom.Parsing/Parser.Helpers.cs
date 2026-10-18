@@ -78,6 +78,7 @@ public sealed partial class Parser
             or SyntaxKind.DateKeyword
             or SyntaxKind.TimeKeyword
             or SyntaxKind.DateTimeKeyword
+            or SyntaxKind.UtcDateTimeKeyword
             or SyntaxKind.ImageKeyword
             or SyntaxKind.SpriteKeyword
             or SyntaxKind.TilemapKeyword
@@ -403,6 +404,7 @@ public sealed partial class Parser
             TokenKind.TryKeyword => SyntaxKind.TryKeyword,
             TokenKind.TypeKeyword => SyntaxKind.TypeKeyword,
             TokenKind.UsingKeyword => SyntaxKind.UsingKeyword,
+            TokenKind.UtcDateTimeKeyword => SyntaxKind.UtcDateTimeKeyword,
             TokenKind.UntilKeyword => SyntaxKind.UntilKeyword,
             TokenKind.ViewKeyword => SyntaxKind.ViewKeyword,
             TokenKind.WindowKeyword => SyntaxKind.WindowKeyword,

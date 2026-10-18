@@ -54,6 +54,7 @@ public enum TokenKind
     ConstKeyword,
     DateKeyword,
     DateTimeKeyword,
+    UtcDateTimeKeyword,
     DecimalKeyword,
     DimKeyword,
     DoKeyword,

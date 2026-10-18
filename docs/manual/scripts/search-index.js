@@ -831,7 +831,7 @@ window.AxiomSearchIndex = [
     "href": "date-time-functions-time-zones.html",
     "kind": "Тема",
     "category": "Дата и время",
-    "description": "Раздел описывает встроенные функции UTCOFFSET, TOUTC и FROMUTC. Они связывают дату и время без собственного пояса с правилами выбранного часового пояса.",
+    "description": "Раздел описывает встроенные функции UTCOFFSET, TOUTC, FROMUTC, TOINSTANT, FROMINSTANT и INSTANTVALUE. Они связывают календарную дату и время без собственного пояса с правилами выбранного часового пояса и с однозначной шкалой UTC.",
     "keywords": [
       "UTC и часовые пояса",
       "Дата и время"
@@ -3840,6 +3840,23 @@ window.AxiomSearchIndex = [
     ]
   },
   {
+    "title": "FROMINSTANT",
+    "href": "function-reference.html#fn-frominstant",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает календарную дату-время, в которую заданный момент выглядит в выбранном поясе.",
+    "keywords": [
+      "FROMINSTANT",
+      "date-time-functions-time-zones",
+      "value",
+      "value",
+      "timeZone"
+    ],
+    "aliases": [
+      "FROMINSTANT"
+    ]
+  },
+  {
     "title": "FROMUTC",
     "href": "function-reference.html#fn-fromutc",
     "kind": "Функция",
@@ -3979,6 +3996,21 @@ window.AxiomSearchIndex = [
     ],
     "aliases": [
       "INSERT"
+    ]
+  },
+  {
+    "title": "INSTANTVALUE",
+    "href": "function-reference.html#fn-instantvalue",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает момент времени, прочитанный из текста с признаком UTC.",
+    "keywords": [
+      "INSTANTVALUE",
+      "date-time-functions-time-zones",
+      "value"
+    ],
+    "aliases": [
+      "INSTANTVALUE"
     ]
   },
   {
@@ -5183,6 +5215,20 @@ window.AxiomSearchIndex = [
     ]
   },
   {
+    "title": "NOWINSTANT",
+    "href": "function-reference.html#fn-nowinstant",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает текущий момент времени на шкале UTC.",
+    "keywords": [
+      "NOWINSTANT",
+      "date-time-functions-current"
+    ],
+    "aliases": [
+      "NOWINSTANT"
+    ]
+  },
+  {
     "title": "PADLEFT",
     "href": "function-reference.html#fn-padleft",
     "kind": "Функция",
@@ -6289,6 +6335,23 @@ window.AxiomSearchIndex = [
     ]
   },
   {
+    "title": "TOINSTANT",
+    "href": "function-reference.html#fn-toinstant",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает момент времени, соответствующий календарной дате-времени в заданном поясе.",
+    "keywords": [
+      "TOINSTANT",
+      "date-time-functions-time-zones",
+      "value",
+      "value",
+      "timeZone"
+    ],
+    "aliases": [
+      "TOINSTANT"
+    ]
+  },
+  {
     "title": "TOTALFREESPACE",
     "href": "function-reference.html#fn-totalfreespace",
     "kind": "Функция",
@@ -6944,6 +7007,20 @@ window.AxiomSearchIndex = [
     ],
     "aliases": [
       "TIME"
+    ]
+  },
+  {
+    "title": "UTCDATETIME",
+    "href": "keyword-reference.html#type-utcdatetime",
+    "kind": "Тип",
+    "category": "Типы данных",
+    "description": "Тип данных UTCDATETIME и ссылка на его тематическое описание.",
+    "keywords": [
+      "UTCDATETIME",
+      "тип"
+    ],
+    "aliases": [
+      "UTCDATETIME"
     ]
   },
   {

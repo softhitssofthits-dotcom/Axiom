@@ -120,3 +120,9 @@
 Текущие версии: язык/компилятор 0.1.28, IDE 0.6.22. DTA-014 закрыт: добавлена независимая матрица `TemporalContextMatrixTests` (9 тестов) — `CONST`, интерполяция, поле `TYPE`, элемент массива, `IF`/`FOR`/`WHILE`/`DO`, аргумент и `RETURN`, `BYREF`, `SELECT CASE`, обратимость и агрегаты. Пример `samples/smoke/temporal_context_matrix.axm` входит в приёмочный обход.
 
 Проверки: Semantics 533/533, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3343/3345 (два известных отказа Maze Chase), положительная приёмка 555/555, `audit-bytecode-coverage` PASS, `check-manual` пройден. Открыты DTA-005 (момент), DTA-006 (длительность и монотонное измерение), DTA-007 (метаданные файлов) и DTA-015 (измерения); первые три требуют проектного решения автора по новым типам и именам.
+
+### 2026-10-18 16:41 - Тип момента времени UTCDATETIME
+
+Текущие версии: язык/компилятор 0.1.30, IDE 0.6.24. DTA-005 закрыт: введён четвёртый временной тип `UTCDATETIME` — момент времени, однозначная точка на шкале UTC. Календарные `DATE`, `TIME` и `DATETIME` не менялись. Момент печатается как `2024-02-29T12:34:56Z`, не смешивается неявно с календарными видами и переводится явными `TOINSTANT`/`FROMINSTANT`. Добавлены `INSTANTVALUE` и `NOWINSTANT`.
+
+Проверки: `InstantTypeContractTests` 11/11, Semantics 533/533, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3359/3361 (два известных отказа Maze Chase), Ide 1006/1009 (два предсуществующих отказа INPUT и один нестабильный), подсветка 55/55, `audit-bytecode-coverage` PASS, `check-manual` пройден. Примеры: `samples/operators/utcdatetime/distinct_moments.axm`, `samples/functions/{instantvalue,toinstant,frominstant,nowinstant}/`. Открыты DTA-006, DTA-007, DTA-015; следующий шаг — DTA-007 (типизированные метаданные файлов).

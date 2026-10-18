@@ -245,6 +245,131 @@ public sealed partial class BytecodeVm
         return RuntimeValue.FromTime(ExtractTimeValue("TIMEVALUE", value, location));
     }
 
+    /// <summary>
+    /// Явный разбор момента из текста с признаком Z. Смещение вида +03:00 не
+    /// принимается: языка пока не имеет формы, сохраняющей смещение, и молчаливое
+    /// приведение скрыло бы потерю.
+    /// </summary>
+    private RuntimeValue EvaluateInstantValueBuiltin(string value, TextLocation location)
+    {
+        if (BuiltinDateTimeHelpers.TryParseCanonicalInstant(value, out var instant))
+        {
+            return RuntimeValue.FromUtcDateTime(instant);
+        }
+
+        ReportBuiltInArgumentError(
+            "INSTANTVALUE",
+            "value",
+            "must be a UTC instant in form 'yyyy-MM-ddTHH:mm:ssZ' with optional fractional seconds.",
+            location);
+        throw new RuntimeFailureException();
+    }
+
+    private RuntimeValue EvaluateNowInstantBuiltin()
+    {
+        return RuntimeValue.FromUtcDateTime(
+            BuiltinDateTimeHelpers.TruncateToSecond(_host.GetLocalNow().UtcDateTime));
+    }
+
+    private RuntimeValue EvaluateToInstantBuiltin(RuntimeValue value, TextLocation location)
+    {
+        var dateTime = ExtractDateTimeValue("TOINSTANT", value, location);
+
+        try
+        {
+            var offset = ResolveLocalUtcOffsetForLocalDateTime("TOINSTANT", "value", dateTime, location);
+            var utcDateTime = new DateTimeOffset(DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified), offset).UtcDateTime;
+            return RuntimeValue.FromUtcDateTime(utcDateTime);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            ReportBuiltInArgumentError(
+                "TOINSTANT",
+                "value",
+                "must remain within canonical date-time range after UTC conversion.",
+                location);
+            throw new RuntimeFailureException();
+        }
+    }
+
+    private RuntimeValue EvaluateToInstantBuiltin(RuntimeValue value, string timeZoneId, TextLocation location)
+    {
+        var dateTime = ExtractDateTimeValue("TOINSTANT", value, location);
+        var timeZone = ResolveTimeZoneArgument("TOINSTANT", "timeZone", timeZoneId, location);
+
+        try
+        {
+            var offset = ResolveUtcOffsetForLocalDateTime("TOINSTANT", "value", timeZone, dateTime, location);
+            var utcDateTime = new DateTimeOffset(DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified), offset).UtcDateTime;
+            return RuntimeValue.FromUtcDateTime(utcDateTime);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            ReportBuiltInArgumentError(
+                "TOINSTANT",
+                "value",
+                "must remain within canonical date-time range after UTC conversion.",
+                location);
+            throw new RuntimeFailureException();
+        }
+    }
+
+    /// <summary>
+    /// Обратное отображение момента в календарное время. Два разных момента могут
+    /// дать одинаковую местную запись при переходе часов; это свойство календарного
+    /// представления, а не дефект: сам момент остаётся однозначным.
+    /// </summary>
+    private RuntimeValue EvaluateFromInstantBuiltin(RuntimeValue value, TextLocation location)
+    {
+        var instant = ExtractInstantValue("FROMINSTANT", value, location);
+
+        try
+        {
+            return RuntimeValue.FromDateTime(ConvertUtcToLocalDateTime(instant));
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            ReportBuiltInArgumentError(
+                "FROMINSTANT",
+                "value",
+                "must remain within canonical date-time range after local conversion.",
+                location);
+            throw new RuntimeFailureException();
+        }
+    }
+
+    private RuntimeValue EvaluateFromInstantBuiltin(RuntimeValue value, string timeZoneId, TextLocation location)
+    {
+        var instant = ExtractInstantValue("FROMINSTANT", value, location);
+        var timeZone = ResolveTimeZoneArgument("FROMINSTANT", "timeZone", timeZoneId, location);
+
+        try
+        {
+            return RuntimeValue.FromDateTime(
+                BuiltinDateTimeHelpers.ConvertUtcToTimeZoneDateTime(instant, timeZone));
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            ReportBuiltInArgumentError(
+                "FROMINSTANT",
+                "value",
+                "must remain within canonical date-time range after local conversion.",
+                location);
+            throw new RuntimeFailureException();
+        }
+    }
+
+    private DateTime ExtractInstantValue(string functionName, RuntimeValue value, TextLocation location)
+    {
+        if (value.Type == TypeSymbol.UtcDateTime)
+        {
+            return value.AsUtcDateTime();
+        }
+
+        ReportBuiltInArgumentError(functionName, "value", "must be a UTCDATETIME value.", location);
+        throw new RuntimeFailureException();
+    }
+
     private RuntimeValue EvaluateTimeValueBuiltin(string value, TextLocation location)
     {
         return RuntimeValue.FromTime(ParseCanonicalTimeBasedArgument("TIMEVALUE", "value", value, location).Time);

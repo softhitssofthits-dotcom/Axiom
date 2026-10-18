@@ -88,6 +88,11 @@ public static class RuntimeValueHelpers
             return right.Type == TypeSymbol.DateTime && left.AsDateTime() == right.AsDateTime();
         }
 
+        if (left.Type == TypeSymbol.UtcDateTime)
+        {
+            return right.Type == TypeSymbol.UtcDateTime && left.AsUtcDateTime() == right.AsUtcDateTime();
+        }
+
         if (left.Type is UserDefinedTypeSymbol)
         {
             return RecordsEqual(left.AsRecord(), right.AsRecord());
@@ -169,6 +174,11 @@ public static class RuntimeValueHelpers
         if (left.Type == TypeSymbol.DateTime)
         {
             return left.AsDateTime().CompareTo(right.AsDateTime());
+        }
+
+        if (left.Type == TypeSymbol.UtcDateTime)
+        {
+            return left.AsUtcDateTime().CompareTo(right.AsUtcDateTime());
         }
 
         throw new InvalidOperationException(

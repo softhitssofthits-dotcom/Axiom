@@ -1,0 +1,19 @@
+' Пример показывает перевод между календарным временем и моментом.
+' TOINSTANT читает местное время вместе с часовым поясом и даёт момент на шкале UTC.
+' FROMINSTANT делает обратное: показывает момент в выбранном поясе.
+' Ожидается вывод:
+' 2024-02-29T12:34:56.125Z
+' 2024-02-29 15:34:56.125
+' TRUE
+
+DIM localValue AS DATETIME = "2024-02-29 15:34:56.125"
+
+' Местное московское время 15:34:56 соответствует 12:34:56 UTC.
+DIM moment AS UTCDATETIME = TOINSTANT(localValue, "Europe/Moscow")
+PRINT moment
+
+' Обратное преобразование возвращает ту же календарную запись.
+PRINT FROMINSTANT(moment, "Europe/Moscow")
+
+' Пара преобразований не меняет момент.
+PRINT TOINSTANT(FROMINSTANT(moment, "Europe/Moscow"), "Europe/Moscow") = moment

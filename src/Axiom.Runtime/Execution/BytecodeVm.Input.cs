@@ -188,7 +188,7 @@ public sealed partial class BytecodeVm
             || type == TypeSymbol.Integer || type == TypeSymbol.Long
             || type == TypeSymbol.Double || type == TypeSymbol.Decimal
             || type == TypeSymbol.Date || type == TypeSymbol.Time
-            || type == TypeSymbol.DateTime;
+            || type == TypeSymbol.DateTime || type == TypeSymbol.UtcDateTime;
     }
 
     private bool TryParseInputValues(

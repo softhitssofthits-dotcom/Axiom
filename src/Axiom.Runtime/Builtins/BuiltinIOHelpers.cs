@@ -156,6 +156,13 @@ internal static class BuiltinIOHelpers
                 : null;
         }
 
+        if (type == TypeSymbol.UtcDateTime)
+        {
+            return BuiltinDateTimeHelpers.TryParseCanonicalInstant(text.ToString(), out var instant)
+                ? RuntimeValue.FromUtcDateTime(instant)
+                : null;
+        }
+
         return null;
     }
 

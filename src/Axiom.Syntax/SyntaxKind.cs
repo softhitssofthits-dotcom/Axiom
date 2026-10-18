@@ -54,6 +54,7 @@ public enum SyntaxKind
     ContinueKeyword,
     DateKeyword,
     DateTimeKeyword,
+    UtcDateTimeKeyword,
     DecimalKeyword,
     DimKeyword,
     DoKeyword,

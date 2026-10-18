@@ -27,6 +27,7 @@ public sealed class Lexer
         ["CONTINUE"] = TokenKind.ContinueKeyword,
         ["DATE"] = TokenKind.DateKeyword,
         ["DATETIME"] = TokenKind.DateTimeKeyword,
+        ["UTCDATETIME"] = TokenKind.UtcDateTimeKeyword,
         ["DECIMAL"] = TokenKind.DecimalKeyword,
         ["DIM"] = TokenKind.DimKeyword,
         ["DO"] = TokenKind.DoKeyword,

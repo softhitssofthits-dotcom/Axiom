@@ -2608,6 +2608,7 @@ public sealed class BytecodeModuleValidator
             BytecodeScalarTypeCode.Date => TypeSymbol.Date,
             BytecodeScalarTypeCode.Time => TypeSymbol.Time,
             BytecodeScalarTypeCode.DateTime => TypeSymbol.DateTime,
+            BytecodeScalarTypeCode.UtcDateTime => TypeSymbol.UtcDateTime,
             _ => null
         };
     }
@@ -3408,7 +3409,8 @@ public sealed class BytecodeModuleValidator
     private static bool IsComparisonOperationCompatible(TypeSymbol leftType, TypeSymbol rightType)
     {
         if (leftType == TypeSymbol.Integer || leftType == TypeSymbol.Long || leftType == TypeSymbol.String
-            || leftType == TypeSymbol.Date || leftType == TypeSymbol.Time || leftType == TypeSymbol.DateTime)
+            || leftType == TypeSymbol.Date || leftType == TypeSymbol.Time
+            || leftType == TypeSymbol.DateTime || leftType == TypeSymbol.UtcDateTime)
         {
             return rightType == leftType;
         }
@@ -3451,7 +3453,8 @@ public sealed class BytecodeModuleValidator
         {
             return sourceType == TypeSymbol.Date
                 || sourceType == TypeSymbol.Time
-                || sourceType == TypeSymbol.DateTime;
+                || sourceType == TypeSymbol.DateTime
+                || sourceType == TypeSymbol.UtcDateTime;
         }
 
         // Потеря календарной даты или времени суток не является допустимым
@@ -3471,6 +3474,11 @@ public sealed class BytecodeModuleValidator
             return sourceType == TypeSymbol.Date
                 || sourceType == TypeSymbol.Time
                 || sourceType == TypeSymbol.String;
+        }
+
+        if (targetType == TypeSymbol.UtcDateTime)
+        {
+            return sourceType == TypeSymbol.String;
         }
 
         return targetType == TypeSymbol.Decimal
@@ -4649,7 +4657,8 @@ public sealed class BytecodeModuleValidator
             || type == TypeSymbol.Boolean
             || type == TypeSymbol.Date
             || type == TypeSymbol.Time
-            || type == TypeSymbol.DateTime;
+            || type == TypeSymbol.DateTime
+            || type == TypeSymbol.UtcDateTime;
     }
 
     private void ValidateConversionInstruction(

@@ -174,6 +174,7 @@
             <Word>TILEMAP</Word>
             <Word>TILESET</Word>
             <Word>TIME</Word>
+            <Word>UTCDATETIME</Word>
         </Keywords>
 
         <Keywords color="BuiltIn">
@@ -247,6 +248,8 @@
             <Word>DATEDIFF</Word>
             <Word>DATEPART</Word>
             <Word>DATESERIAL</Word>
+            <Word>DATETIMESERIAL</Word>
+            <Word>DATETIMEVALUE</Word>
             <Word>DATEVALUE</Word>
             <Word>DAY</Word>
             <Word>DAYSINMONTH</Word>
@@ -280,6 +283,7 @@
             <Word>FLOOR</Word>
             <Word>FLUSH</Word>
             <Word>FREESPACE</Word>
+            <Word>FROMINSTANT</Word>
             <Word>FROMUTC</Word>
             <Word>FULLPATH</Word>
             <Word>GETDIRS</Word>
@@ -289,6 +293,7 @@
             <Word>IMAGEWIDTH</Word>
             <Word>INKEY</Word>
             <Word>INSERT</Word>
+            <Word>INSTANTVALUE</Word>
             <Word>INSTR</Word>
             <Word>INSTRREV</Word>
             <Word>INT</Word>
@@ -363,6 +368,7 @@
             <Word>MOVEFILE</Word>
             <Word>NEWLINE</Word>
             <Word>NOW</Word>
+            <Word>NOWINSTANT</Word>
             <Word>PADLEFT</Word>
             <Word>PADRIGHT</Word>
             <Word>PATHEXISTS</Word>
@@ -431,6 +437,7 @@
             <Word>TIMER</Word>
             <Word>TIMESERIAL</Word>
             <Word>TIMEVALUE</Word>
+            <Word>TOINSTANT</Word>
             <Word>TOTALFREESPACE</Word>
             <Word>TOTALSPACE</Word>
             <Word>TOUTC</Word>

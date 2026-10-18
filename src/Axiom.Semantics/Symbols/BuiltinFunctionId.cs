@@ -334,5 +334,11 @@ public enum BuiltinFunctionId
     DateTimeSerial,
     DateValueFromDateTime,
     TimeValueFromDateTime,
-    DateTimeValue
+    DateTimeValue,
+    InstantValue,
+    NowInstant,
+    ToInstant,
+    ToInstantZone,
+    FromInstant,
+    FromInstantZone
 }

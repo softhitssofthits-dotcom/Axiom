@@ -5938,6 +5938,7 @@ public sealed partial class BytecodeVm
             BytecodeScalarTypeCode.Date => TypeSymbol.Date,
             BytecodeScalarTypeCode.Time => TypeSymbol.Time,
             BytecodeScalarTypeCode.DateTime => TypeSymbol.DateTime,
+            BytecodeScalarTypeCode.UtcDateTime => TypeSymbol.UtcDateTime,
             _ => TypeSymbol.Error
         };
 

@@ -356,6 +356,24 @@ public sealed partial class Binder
             return false;
         }
 
+        if (fieldType == TypeSymbol.UtcDateTime)
+        {
+            // Момент записывается только с признаком Z: без него текст означал бы
+            // календарную запись и требовал бы пояса для перевода.
+            if (DateTime.TryParseExact(
+                    text,
+                    ["yyyy-MM-dd'T'HH:mm:ss'Z'", "yyyy-MM-dd'T'HH:mm:ss.FFFFFFF'Z'"],
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal,
+                    out var instant))
+            {
+                value = DateTime.SpecifyKind(instant, DateTimeKind.Utc);
+                return true;
+            }
+
+            return false;
+        }
+
         return false;
     }
 

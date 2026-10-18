@@ -42,6 +42,15 @@ public static partial class BuiltinFunctions
             CreateDefault(BuiltinFunctionId.DateValueFromDateTime, "DATEVALUE", TypeSymbol.Date, [Parameter("value", TypeSymbol.DateTime)]),
             CreateDefault(BuiltinFunctionId.TimeValueFromDateTime, "TIMEVALUE", TypeSymbol.Time, [Parameter("value", TypeSymbol.DateTime)]),
             CreateDefault(BuiltinFunctionId.DateTimeValue, "DATETIMEVALUE", TypeSymbol.DateTime, [Parameter("value", TypeSymbol.String)]),
+            // Момент времени: отдельный вид значения, поэтому и имена отдельные.
+            // TOINSTANT/FROMINSTANT повторяют пару TOUTC/FROMUTC по смыслу, а
+            // INSTANTVALUE читает текст с признаком Z.
+            CreateDefault(BuiltinFunctionId.InstantValue, "INSTANTVALUE", TypeSymbol.UtcDateTime, [Parameter("value", TypeSymbol.String)]),
+            CreateDefault(BuiltinFunctionId.NowInstant, "NOWINSTANT", TypeSymbol.UtcDateTime, []),
+            CreateDefault(BuiltinFunctionId.ToInstant, "TOINSTANT", TypeSymbol.UtcDateTime, [Parameter("value", TypeSymbol.DateTime)]),
+            CreateDefault(BuiltinFunctionId.ToInstantZone, "TOINSTANT", TypeSymbol.UtcDateTime, [Parameter("value", TypeSymbol.DateTime), Parameter("timeZone", TypeSymbol.String)]),
+            CreateDefault(BuiltinFunctionId.FromInstant, "FROMINSTANT", TypeSymbol.DateTime, [Parameter("value", TypeSymbol.UtcDateTime)]),
+            CreateDefault(BuiltinFunctionId.FromInstantZone, "FROMINSTANT", TypeSymbol.DateTime, [Parameter("value", TypeSymbol.UtcDateTime), Parameter("timeZone", TypeSymbol.String)]),
             CreateDefault(BuiltinFunctionId.IsDate, "ISDATE", TypeSymbol.Boolean, [Parameter("value", TypeSymbol.String)]),
             CreateDefault(BuiltinFunctionId.UtcOffset, "UTCOFFSET", TypeSymbol.Integer, []),
             CreateDefault(BuiltinFunctionId.UtcOffsetValue, "UTCOFFSET", TypeSymbol.Integer, [Parameter("value", TypeSymbol.DateTime)]),

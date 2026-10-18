@@ -752,10 +752,13 @@ public sealed class BoundProgramLowerer
 
             if (declaration.Variable.Type == TypeSymbol.Date
                 || declaration.Variable.Type == TypeSymbol.Time
-                || declaration.Variable.Type == TypeSymbol.DateTime)
+                || declaration.Variable.Type == TypeSymbol.DateTime
+                || declaration.Variable.Type == TypeSymbol.UtcDateTime)
             {
                 var initialText = declaration.Variable.Type == TypeSymbol.Date ? "0001-01-01"
-                    : declaration.Variable.Type == TypeSymbol.Time ? "00:00:00" : "0001-01-01 00:00:00";
+                    : declaration.Variable.Type == TypeSymbol.Time ? "00:00:00"
+                    : declaration.Variable.Type == TypeSymbol.UtcDateTime ? "0001-01-01T00:00:00Z"
+                    : "0001-01-01 00:00:00";
                 instructions.Add(LoweredInstruction.LoadLiteral(declaration.Location, initialText, TypeSymbol.String));
                 instructions.Add(LoweredInstruction.Convert(declaration.Location, declaration.Variable.Type));
                 instructions.Add(LoweredInstruction.StoreVariable(declaration.Location, declaration.Variable));

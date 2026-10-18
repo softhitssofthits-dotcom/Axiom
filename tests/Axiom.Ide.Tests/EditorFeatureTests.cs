@@ -452,14 +452,14 @@ public sealed class EditorFeatureTests
         var expectedKeywords = Enum.GetValues<SyntaxKind>()
             .Where(static kind => kind.ToString().EndsWith("Keyword", StringComparison.Ordinal))
             .Select(static kind => kind.ToString()[..^"Keyword".Length].ToUpperInvariant())
-            .Except(["BOOLEAN", "DATE", "DATETIME", "DECIMAL", "DOUBLE", "FILE", "IMAGE", "INTEGER", "LONG", "SPRITE", "STRING", "TILEMAP", "TILESET", "TIME"], StringComparer.OrdinalIgnoreCase)
+            .Except(["BOOLEAN", "DATE", "DATETIME", "DECIMAL", "DOUBLE", "FILE", "IMAGE", "INTEGER", "LONG", "SPRITE", "STRING", "TILEMAP", "TILESET", "TIME", "UTCDATETIME"], StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
         var missingKeywords = expectedKeywords
             .Where(keyword => !AxiomHighlightingVocabulary.Keywords.Contains(keyword))
             .ToArray();
 
-        var expectedTypes = new[] { "BOOLEAN", "DATE", "DATETIME", "DECIMAL", "DOUBLE", "FILE", "IMAGE", "INTEGER", "LONG", "SPRITE", "STRING", "TILEMAP", "TILESET", "TIME" };
+        var expectedTypes = new[] { "BOOLEAN", "DATE", "DATETIME", "DECIMAL", "DOUBLE", "FILE", "IMAGE", "INTEGER", "LONG", "SPRITE", "STRING", "TILEMAP", "TILESET", "TIME", "UTCDATETIME" };
         var missingTypes = expectedTypes
             .Where(typeName => !AxiomHighlightingVocabulary.TypeNames.Contains(typeName))
             .ToArray();
