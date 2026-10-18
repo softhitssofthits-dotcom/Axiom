@@ -90,3 +90,9 @@
 Текущие версии: язык/компилятор 0.1.23, IDE 0.6.22. DTA-012 закрыт: `DATETIMESERIAL(date, time)` собирает `DATETIME` из `DATE` и `TIME` с долями секунды, а `DATEVALUE`/`TIMEVALUE` принимают `DATETIME`. Сборка и разбор обратимы, часовой пояс не добавляется, аргумент `DATETIME` в `DATETIMESERIAL` отвергается правилом потери компонента.
 
 Проверки: `TemporalAssemblyContractTests` 8/8, Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3300/3302 (два известных отказа Maze Chase), `audit-bytecode-coverage` PASS, `check-manual` пройден. Пример — `samples/functions/datetimeserial/assemble_and_split.axm`. Попутно исправлены сборка палитры справочника (`themes.js`) и разбор многострочного индекса в аудите покрытия. Следующий шаг — DTA-010 (агрегаты для временных элементов).
+
+### 2026-10-18 13:08 - Агрегаты массивов для временных элементов
+
+Текущие версии: язык/компилятор 0.1.24, IDE 0.6.22. DTA-010 закрыт: `ARRAYMIN` и `ARRAYMAX` принимают массивы `DATE`, `TIME` и `DATETIME` и используют то же порядковое сравнение, что обычные операторы, без перевода в строки и с учётом долей секунды. `BOOLEAN` и записи по-прежнему дают MB2003, пустой массив — MB3007; `ARRAYTOSORTED`, `ARRAYCONTAINS` и `ARRAYDISTINCT` закреплены отдельным тестом.
+
+Проверки: `TemporalArrayAggregateContractTests` 8/8, Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3310/3312 (два известных отказа Maze Chase), `audit-bytecode-coverage` PASS, `check-manual` пройден. Примеры: `samples/functions/arraymin/temporal_elements.axm`, `samples/functions/arraymax/temporal_elements.axm`. Следующий шаг — DTA-009 (INPUT) либо DTA-013 (формат обмена).

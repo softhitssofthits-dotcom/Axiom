@@ -322,3 +322,11 @@ TYPE StepBack проверен в настоящем Electron: `trace-type-self-
 Попутно устранены две находки служебных инструментов: сборка палитры справочника снова читает общий реестр тем `themes.js`, а аудит покрытия разбирает многострочный индекс поиска по объектам, а не по строкам.
 
 Следующий точный шаг — DTA-010: агрегаты массивов (`ARRAYMIN`, `ARRAYMAX`, а также сверка `SORT`, поиска и `DISTINCT`) для временных элементов без перевода в строки.
+
+## Агрегаты массивов для временных элементов (DTA-010) — 18 октября 2026 года
+
+`ARRAYMIN` и `ARRAYMAX` принимают массивы `DATE`, `TIME` и `DATETIME`. Прежний отказ был в связывании (`RequiresOrderedAggregateArray`) и в исполнении (`RequireNumeric`); теперь агрегат использует существующее порядковое сравнение `RuntimeValueHelpers.Compare` и не переводит значения в строки. Доли секунды участвуют в сравнении. `BOOLEAN` и записи по-прежнему отклоняются как MB2003, пустой массив даёт MB3007. `ARRAYTOSORTED`, `ARRAYCONTAINS` и `ARRAYDISTINCT` уже работали и закреплены тестом.
+
+Проверки: `TemporalArrayAggregateContractTests` 8/8, Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3310/3312 (два известных отказа Maze Chase), `audit-bytecode-coverage` PASS, `check-manual` пройден. Примеры: `samples/functions/arraymin/temporal_elements.axm`, `samples/functions/arraymax/temporal_elements.axm`. Версии: язык/компилятор 0.1.24, IDE 0.6.22.
+
+Следующий точный шаг — DTA-009: ввод временных значений через INPUT с атомарной записью нескольких целей и приёмкой настоящего окна ввода, либо DTA-013: отдельный формат обмена с T, Z и смещением.

@@ -223,3 +223,11 @@ DTA-004 закрыт: `DATE(пояс)`, `TIME(пояс)` и `NOW(пояс)` пр
 Проверки: `tests/Axiom.Execution.Tests/TemporalAssemblyContractTests.cs` — 8 тестов. Итоги: Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3300/3302 (два известных отказа Maze Chase); `audit-bytecode-coverage` проходит (272 семейства, 338 форм). Пример `samples/functions/datetimeserial/assemble_and_split.axm`. Справочник: `date-time-functions-parts-and-serial.html` (карточка `DATETIMESERIAL`), `date-time-functions-arithmetic-and-validation.html` (вторая форма `DATEVALUE`/`TIMEVALUE`), `date-time-functions.html`.
 
 Попутно: сборка каталога справочника снова работает после перехода тем IDE в `themes.js`, а аудит покрытия снова читает многострочный индекс поиска. Версии: язык/компилятор 0.1.23, IDE 0.6.22.
+
+## Агрегаты массивов для временных элементов (DTA-010) — 18 октября 2026 года
+
+`ARRAYMIN` и `ARRAYMAX` принимают массивы `DATE`, `TIME` и `DATETIME`. Причина прежнего отказа была в двух местах: `RequiresOrderedAggregateArray` разрешал только числовые и строковые элементы, а `Extreme` начинал с `RequireNumeric`. Порядковое сравнение временных скаляров уже поддерживалось обычными операторами, поэтому агрегат использует `RuntimeValueHelpers.Compare` и не переводит значения в строки. `DATE` сравнивается по календарю, `TIME` — внутри суток, `DATETIME` — вместе с долями секунды. `BOOLEAN` и записи по-прежнему отклоняются как MB2003, пустой массив даёт MB3007.
+
+`ARRAYTOSORTED`, `ARRAYCONTAINS` и `ARRAYDISTINCT` уже работали с временными элементами; это подтверждено отдельным тестом.
+
+Проверки: `tests/Axiom.Execution.Tests/TemporalArrayAggregateContractTests.cs` — 8 тестов; `Execute_ArrayMinRejectsDateElementsAtBinding` заменён на `Execute_ArrayMinAcceptsTemporalElements`, потому что фиксировал снятое ограничение. Итоги: Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3310/3312 (два известных отказа Maze Chase), `audit-bytecode-coverage` PASS. Примеры: `samples/functions/arraymin/temporal_elements.axm`, `samples/functions/arraymax/temporal_elements.axm`. Справочник: `arrays-and-builtins.html`. Версии: язык/компилятор 0.1.24, IDE 0.6.22.

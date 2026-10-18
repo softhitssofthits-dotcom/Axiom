@@ -498,16 +498,19 @@ DIM values(1 TO 3) AS INTEGER = 5
     }
 
     [Fact]
-    public void Execute_ArrayMinRejectsDateElementsAtBinding()
+    public void Execute_ArrayMinAcceptsTemporalElements()
     {
+        // Прежнее ограничение отвергало DATE в ARRAYMIN. Порядковое сравнение
+        // временных скаляров уже поддержано, поэтому агрегат использует его же.
         const string text = """
 DIM values(1 TO 2) AS DATE
+values(1) = "2024-02-29"
+values(2) = "2024-01-15"
 PRINT ARRAYMIN(values)
 """;
 
         var diagnostics = GetBindingDiagnostics(text);
 
-        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
-        Assert.Contains("ARRAYMIN", diagnostic.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain(diagnostics, static d => d.Code == "MB2003");
     }
 }

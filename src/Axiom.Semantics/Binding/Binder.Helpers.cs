@@ -60,9 +60,12 @@ public sealed partial class Binder
 
     private static bool RequiresOrderedAggregateArray(BuiltinFunctionId id, TypeSymbol elementType)
     {
+        // ARRAYMIN/ARRAYMAX используют то же порядковое сравнение, что и обычные
+        // операторы, поэтому временные элементы допустимы без перевода в строки.
         return id is BuiltinFunctionId.ArrayMin or BuiltinFunctionId.ArrayMax
             && !IsNumeric(elementType)
-            && elementType != TypeSymbol.String;
+            && elementType != TypeSymbol.String
+            && !IsTemporalType(elementType);
     }
 
     private bool SupportsStructuralEquality(TypeSymbol type)

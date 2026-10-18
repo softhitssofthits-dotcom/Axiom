@@ -297,3 +297,11 @@ IDE 0.6.16 сохраняет новый запрос при позднем пу
 Попутно исправлены `scripts/build-manual-highlighting.mjs` (палитра из `themes.js`) и `BytecodeCoverageAudit` (разбор многострочного индекса поиска).
 
 Остаются открытыми DTA-005, DTA-006, DTA-007, DTA-009, DTA-010, DTA-011, DTA-013, DTA-014, DTA-015. Следующий доступный участок — DTA-010 (агрегаты массивов для временных элементов), затем DTA-009 (INPUT), DTA-011 (константы полей TYPE), DTA-013 (формат обмена).
+
+## Даты и время: DTA-010 (агрегаты массивов) закрыт — 18 октября 2026 года
+
+`ARRAYMIN` и `ARRAYMAX` принимают массивы `DATE`, `TIME` и `DATETIME` и используют то же порядковое сравнение, что обычные операторы: без перевода в строки, с учётом долей секунды. `BOOLEAN` и записи по-прежнему отклоняются как MB2003, пустой массив даёт MB3007. `ARRAYTOSORTED`, `ARRAYCONTAINS` и `ARRAYDISTINCT` уже работали с временными элементами и закреплены отдельным тестом.
+
+Постоянные проверки: `tests/Axiom.Execution.Tests/TemporalArrayAggregateContractTests.cs` (8); примеры `samples/functions/arraymin/temporal_elements.axm` и `samples/functions/arraymax/temporal_elements.axm`; справочник `arrays-and-builtins.html`.
+
+Остаются открытыми DTA-005, DTA-006, DTA-007, DTA-009, DTA-011, DTA-013, DTA-014, DTA-015. Следующий доступный участок — DTA-009 (ввод временных значений через INPUT) либо DTA-013 (формат обмена с T, Z и смещением).

@@ -2214,6 +2214,8 @@ window.AxiomSearchIndex = [
       "file-system-functions-text",
       "path",
       "text",
+      "path",
+      "text",
       "encoding"
     ],
     "aliases": [
@@ -2244,6 +2246,8 @@ window.AxiomSearchIndex = [
     "keywords": [
       "ARRAYBINARYSEARCH",
       "arrays-and-builtins",
+      "array",
+      "value",
       "array",
       "value",
       "dimension"
@@ -2291,6 +2295,8 @@ window.AxiomSearchIndex = [
     "keywords": [
       "ARRAYCONCAT",
       "arrays-and-builtins",
+      "left",
+      "right",
       "left",
       "right",
       "dimension"
@@ -2453,6 +2459,9 @@ window.AxiomSearchIndex = [
       "array",
       "index",
       "value",
+      "array",
+      "index",
+      "value",
       "dimension"
     ],
     "aliases": [
@@ -2561,6 +2570,7 @@ window.AxiomSearchIndex = [
       "ARRAYPOP",
       "arrays-functions",
       "array",
+      "array",
       "dimension"
     ],
     "aliases": [
@@ -2576,6 +2586,8 @@ window.AxiomSearchIndex = [
     "keywords": [
       "ARRAYPUSH",
       "arrays-functions",
+      "array",
+      "value",
       "array",
       "value",
       "dimension"
@@ -2627,6 +2639,8 @@ window.AxiomSearchIndex = [
       "arrays-functions",
       "array",
       "index",
+      "array",
+      "index",
       "dimension"
     ],
     "aliases": [
@@ -2659,6 +2673,7 @@ window.AxiomSearchIndex = [
       "ARRAYREVERSE",
       "arrays-and-builtins",
       "array",
+      "array",
       "dimension"
     ],
     "aliases": [
@@ -2676,6 +2691,8 @@ window.AxiomSearchIndex = [
       "arrays-and-builtins",
       "array",
       "count",
+      "array",
+      "count",
       "dimension"
     ],
     "aliases": [
@@ -2691,6 +2708,9 @@ window.AxiomSearchIndex = [
     "keywords": [
       "ARRAYSLICE",
       "arrays-and-builtins",
+      "array",
+      "start",
+      "count",
       "array",
       "start",
       "count",
@@ -2726,6 +2746,7 @@ window.AxiomSearchIndex = [
       "ARRAYSORT",
       "arrays-and-builtins",
       "array",
+      "array",
       "dimension"
     ],
     "aliases": [
@@ -2758,6 +2779,8 @@ window.AxiomSearchIndex = [
       "arrays-and-builtins",
       "array",
       "count",
+      "array",
+      "count",
       "dimension"
     ],
     "aliases": [
@@ -2774,6 +2797,7 @@ window.AxiomSearchIndex = [
       "ARRAYTOREVERSED",
       "arrays-and-builtins",
       "array",
+      "array",
       "dimension"
     ],
     "aliases": [
@@ -2789,6 +2813,7 @@ window.AxiomSearchIndex = [
     "keywords": [
       "ARRAYTOSORTED",
       "arrays-and-builtins",
+      "array",
       "array",
       "dimension"
     ],
@@ -2973,6 +2998,8 @@ window.AxiomSearchIndex = [
       "string-functions-build-and-split",
       "text",
       "width",
+      "text",
+      "width",
       "fill"
     ],
     "aliases": [
@@ -3114,6 +3141,8 @@ window.AxiomSearchIndex = [
       "file-system-functions-management",
       "source",
       "destination",
+      "source",
+      "destination",
       "overwrite"
     ],
     "aliases": [
@@ -3129,6 +3158,8 @@ window.AxiomSearchIndex = [
     "keywords": [
       "COPYFILE",
       "file-system-functions-management",
+      "source",
+      "destination",
       "source",
       "destination",
       "overwrite"
@@ -3207,6 +3238,12 @@ window.AxiomSearchIndex = [
       "date-time-functions-arithmetic-and-validation",
       "interval",
       "number",
+      "value",
+      "interval",
+      "number",
+      "value",
+      "interval",
+      "number",
       "value"
     ],
     "aliases": [
@@ -3224,6 +3261,12 @@ window.AxiomSearchIndex = [
       "date-time-functions-arithmetic-and-validation",
       "interval",
       "fromValue",
+      "toValue",
+      "interval",
+      "fromValue",
+      "toValue",
+      "interval",
+      "fromValue",
       "toValue"
     ],
     "aliases": [
@@ -3239,6 +3282,10 @@ window.AxiomSearchIndex = [
     "keywords": [
       "DATEPART",
       "date-time-functions-arithmetic-and-validation",
+      "part",
+      "value",
+      "part",
+      "value",
       "part",
       "value"
     ],
@@ -3288,6 +3335,7 @@ window.AxiomSearchIndex = [
     "keywords": [
       "DATEVALUE",
       "date-time-functions-arithmetic-and-validation",
+      "value",
       "value"
     ],
     "aliases": [
@@ -3786,6 +3834,7 @@ window.AxiomSearchIndex = [
       "FROMUTC",
       "date-time-functions-time-zones",
       "value",
+      "value",
       "timeZone"
     ],
     "aliases": [
@@ -3817,6 +3866,7 @@ window.AxiomSearchIndex = [
       "GETDIRS",
       "file-system-functions-paths",
       "path",
+      "path",
       "pattern"
     ],
     "aliases": [
@@ -3832,6 +3882,7 @@ window.AxiomSearchIndex = [
     "keywords": [
       "GETFILES",
       "file-system-functions-paths",
+      "path",
       "path",
       "pattern"
     ],
@@ -3926,7 +3977,9 @@ window.AxiomSearchIndex = [
       "string-functions-search-and-replace",
       "text",
       "fragment",
-      "start"
+      "start",
+      "text",
+      "fragment"
     ],
     "aliases": [
       "INSTR"
@@ -3943,7 +3996,9 @@ window.AxiomSearchIndex = [
       "string-functions-search-and-replace",
       "text",
       "fragment",
-      "start"
+      "start",
+      "text",
+      "fragment"
     ],
     "aliases": [
       "INSTRREV"
@@ -4079,6 +4134,7 @@ window.AxiomSearchIndex = [
       "JOIN",
       "string-functions-build-and-split",
       "items",
+      "items",
       "separator"
     ],
     "aliases": [
@@ -4125,6 +4181,7 @@ window.AxiomSearchIndex = [
       "LBOUND",
       "arrays-functions",
       "array",
+      "array",
       "dimension"
     ],
     "aliases": [
@@ -4157,6 +4214,8 @@ window.AxiomSearchIndex = [
       "string-functions-slices-and-length",
       "text",
       "count",
+      "text",
+      "count",
       "unit"
     ],
     "aliases": [
@@ -4172,6 +4231,7 @@ window.AxiomSearchIndex = [
     "keywords": [
       "LEN",
       "string-functions-slices-and-length",
+      "text",
       "text",
       "unit"
     ],
@@ -4253,6 +4313,13 @@ window.AxiomSearchIndex = [
       "path",
       "tileWidth",
       "tileHeight",
+      "path",
+      "tileWidth",
+      "tileHeight",
+      "margin",
+      "path",
+      "tileWidth",
+      "tileHeight",
       "margin",
       "spacing"
     ],
@@ -4314,6 +4381,7 @@ window.AxiomSearchIndex = [
     "keywords": [
       "LTRIM",
       "string-functions-trim-and-case",
+      "text",
       "text",
       "chars"
     ],
@@ -4906,6 +4974,9 @@ window.AxiomSearchIndex = [
       "text",
       "start",
       "count",
+      "text",
+      "start",
+      "count",
       "unit"
     ],
     "aliases": [
@@ -5058,6 +5129,8 @@ window.AxiomSearchIndex = [
       "file-system-functions-management",
       "source",
       "destination",
+      "source",
+      "destination",
       "overwrite"
     ],
     "aliases": [
@@ -5105,6 +5178,8 @@ window.AxiomSearchIndex = [
       "string-functions-build-and-split",
       "text",
       "width",
+      "text",
+      "width",
       "fill"
     ],
     "aliases": [
@@ -5120,6 +5195,8 @@ window.AxiomSearchIndex = [
     "keywords": [
       "PADRIGHT",
       "string-functions-build-and-split",
+      "text",
+      "width",
       "text",
       "width",
       "fill"
@@ -5217,6 +5294,7 @@ window.AxiomSearchIndex = [
       "READALLLINES",
       "file-system-functions-text",
       "path",
+      "path",
       "encoding"
     ],
     "aliases": [
@@ -5232,6 +5310,7 @@ window.AxiomSearchIndex = [
     "keywords": [
       "READFILE",
       "file-system-functions-text",
+      "path",
       "path",
       "encoding"
     ],
@@ -5312,6 +5391,8 @@ window.AxiomSearchIndex = [
       "regex-functions-replace-and-count",
       "text",
       "pattern",
+      "text",
+      "pattern",
       "modes"
     ],
     "aliases": [
@@ -5327,6 +5408,9 @@ window.AxiomSearchIndex = [
     "keywords": [
       "REGEXEXTRACT",
       "regex-functions-match-and-extract",
+      "text",
+      "pattern",
+      "group",
       "text",
       "pattern",
       "group",
@@ -5348,6 +5432,9 @@ window.AxiomSearchIndex = [
       "text",
       "pattern",
       "group",
+      "text",
+      "pattern",
+      "group",
       "modes"
     ],
     "aliases": [
@@ -5363,6 +5450,8 @@ window.AxiomSearchIndex = [
     "keywords": [
       "REGEXISMATCH",
       "regex-functions-match-and-extract",
+      "text",
+      "pattern",
       "text",
       "pattern",
       "modes"
@@ -5382,6 +5471,8 @@ window.AxiomSearchIndex = [
       "regex-functions-match-and-extract",
       "text",
       "pattern",
+      "text",
+      "pattern",
       "modes"
     ],
     "aliases": [
@@ -5397,6 +5488,8 @@ window.AxiomSearchIndex = [
     "keywords": [
       "REGEXMATCHES",
       "regex-functions-arrays-and-split",
+      "text",
+      "pattern",
       "text",
       "pattern",
       "modes"
@@ -5417,6 +5510,17 @@ window.AxiomSearchIndex = [
       "text",
       "pattern",
       "replacement",
+      "text",
+      "pattern",
+      "replacement",
+      "modes",
+      "text",
+      "pattern",
+      "replacement",
+      "count",
+      "text",
+      "pattern",
+      "replacement",
       "modes",
       "count"
     ],
@@ -5433,6 +5537,8 @@ window.AxiomSearchIndex = [
     "keywords": [
       "REGEXSPLIT",
       "regex-functions-arrays-and-split",
+      "text",
+      "pattern",
       "text",
       "pattern",
       "modes"
@@ -5598,6 +5704,8 @@ window.AxiomSearchIndex = [
       "string-functions-slices-and-length",
       "text",
       "count",
+      "text",
+      "count",
       "unit"
     ],
     "aliases": [
@@ -5642,6 +5750,7 @@ window.AxiomSearchIndex = [
     "keywords": [
       "RTRIM",
       "string-functions-trim-and-case",
+      "text",
       "text",
       "chars"
     ],
@@ -5836,6 +5945,7 @@ window.AxiomSearchIndex = [
     "keywords": [
       "SPLIT",
       "string-functions-build-and-split",
+      "text",
       "text",
       "separator"
     ],
@@ -6156,6 +6266,7 @@ window.AxiomSearchIndex = [
     "keywords": [
       "TIMEVALUE",
       "date-time-functions-arithmetic-and-validation",
+      "value",
       "value"
     ],
     "aliases": [
@@ -6202,6 +6313,7 @@ window.AxiomSearchIndex = [
       "TOUTC",
       "date-time-functions-time-zones",
       "value",
+      "value",
       "timeZone"
     ],
     "aliases": [
@@ -6218,6 +6330,7 @@ window.AxiomSearchIndex = [
       "TRIM",
       "string-functions-trim-and-case",
       "text",
+      "text",
       "chars"
     ],
     "aliases": [
@@ -6233,6 +6346,7 @@ window.AxiomSearchIndex = [
     "keywords": [
       "UBOUND",
       "arrays-functions",
+      "array",
       "array",
       "dimension"
     ],
@@ -6292,6 +6406,7 @@ window.AxiomSearchIndex = [
     "keywords": [
       "UTCOFFSET",
       "date-time-functions-time-zones",
+      "value",
       "value",
       "timeZone"
     ],
@@ -6383,6 +6498,8 @@ window.AxiomSearchIndex = [
     "keywords": [
       "WRITEFILE",
       "file-system-functions-text",
+      "path",
+      "text",
       "path",
       "text",
       "encoding"

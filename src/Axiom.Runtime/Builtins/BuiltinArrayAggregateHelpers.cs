@@ -185,15 +185,11 @@ internal static class BuiltinArrayAggregateHelpers
         bool preferLarger)
     {
         var best = FirstValue(array, functionName, location, reportArgumentError);
-        var strings = best.Type == TypeSymbol.String;
-        if (!strings)
-        {
-            RequireNumeric(functionName, best, location, reportArgumentError);
-        }
+        var comparisonKind = ResolveExtremeComparisonKind(functionName, best, location, reportArgumentError);
 
         ForEachAfterFirst(array, v =>
         {
-            var comparison = Compare(functionName, best, v, strings, location, reportArgumentError);
+            var comparison = Compare(functionName, best, v, comparisonKind, location, reportArgumentError);
             if ((preferLarger && comparison < 0) || (!preferLarger && comparison > 0))
             {
                 best = v;
@@ -203,15 +199,48 @@ internal static class BuiltinArrayAggregateHelpers
         return best;
     }
 
+    /// <summary>
+    /// Порядковое сравнение уже поддержано для DATE, TIME и DATETIME обычными
+    /// операторами, поэтому агрегаты используют тот же порядок и не переводят
+    /// значения в строки. Смешение видов внутри массива невозможно: тип элементов
+    /// задаётся объявлением.
+    /// </summary>
+    private static ExtremeComparisonKind ResolveExtremeComparisonKind(
+        string functionName,
+        RuntimeValue first,
+        TextLocation location,
+        Action<string, TextLocation> reportArgumentError)
+    {
+        if (first.Type == TypeSymbol.String)
+        {
+            return ExtremeComparisonKind.String;
+        }
+
+        if (first.Type == TypeSymbol.Date || first.Type == TypeSymbol.Time || first.Type == TypeSymbol.DateTime)
+        {
+            return ExtremeComparisonKind.Temporal;
+        }
+
+        RequireNumeric(functionName, first, location, reportArgumentError);
+        return ExtremeComparisonKind.Numeric;
+    }
+
+    private enum ExtremeComparisonKind
+    {
+        Numeric,
+        String,
+        Temporal
+    }
+
     private static int Compare(
         string functionName,
         RuntimeValue left,
         RuntimeValue right,
-        bool strings,
+        ExtremeComparisonKind comparisonKind,
         TextLocation location,
         Action<string, TextLocation> reportArgumentError)
     {
-        if (strings)
+        if (comparisonKind == ExtremeComparisonKind.String)
         {
             if (right.Type != TypeSymbol.String)
             {
@@ -219,6 +248,16 @@ internal static class BuiltinArrayAggregateHelpers
             }
 
             return string.CompareOrdinal(left.AsString(), right.AsString());
+        }
+
+        if (comparisonKind == ExtremeComparisonKind.Temporal)
+        {
+            if (right.Type != left.Type)
+            {
+                ReportUnsupportedElement(functionName, right, location, reportArgumentError);
+            }
+
+            return RuntimeValueHelpers.Compare(left, right);
         }
 
         if (left.Type == TypeSymbol.String || right.Type == TypeSymbol.String)
