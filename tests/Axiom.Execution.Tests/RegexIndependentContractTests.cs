@@ -150,7 +150,8 @@ PRINT v(2)
     {
         var text = new string('a', 12000) + "!a";
         var call = Call(name, $"\"{text}\"", "\"(?:a|aa)+$\"", modes ? "i" : null, count);
-        AssertRun($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
+        AssertRun($"TRY\nPRINT {call}\nCATCH err\nPRINT err.Code\nPRINT err.Message\nEND TRY",
+            ["MB3007", $"Function {name}: argument 'pattern' Pattern matching exceeded the 5 second timeout."]);
     }
 
     [Fact]

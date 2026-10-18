@@ -1,0 +1,6 @@
+' Строгая проверка всего текста и различие LF/CRLF.
+PRINT REGEXISMATCH("a1" + CHR(10), "^a\d+$")
+PRINT REGEXISMATCH("a1" + CHR(10), "\Aa\d+\z")
+PRINT REGEXISMATCH("a1" + CHR(13) + CHR(10), "^a\d+$", "m")
+PRINT REGEXISMATCH("a1" + CHR(13) + CHR(10), "^a\d+\r?$", "m")
+' Ожидается: TRUE, FALSE, FALSE, TRUE.

@@ -1,0 +1,50 @@
+namespace Axiom.Execution.Tests;
+public sealed class RegexContextContractTests
+{
+    [Fact]
+    public void RegexWorksInControlFlowRoutinesRecordsArraysAndInterpolation()
+    {
+AssertProgram("""
+FUNCTION FindNumber(t AS STRING) AS STRING
+RETURN REGEXMATCH(t, "\d+")
+END FUNCTION
+SUB ReplaceNumber(BYREF t AS STRING)
+t = REGEXREPLACE(t, "\d+", "x")
+END SUB
+TYPE Row
+value AS STRING
+END TYPE
+DIM rowValue AS Row
+rowValue.value = FindNumber("a12")
+DIM arrayValue(1 TO 2) AS STRING
+arrayValue(1) = REGEXEXTRACT("A34", "([A-Z])(\d+)", 2)
+PRINT rowValue.value
+PRINT arrayValue(1)
+DIM text AS STRING = "A12"
+ReplaceNumber(text)
+PRINT text
+FOR i = 1 TO 2
+IF REGEXISMATCH("a", "a") THEN PRINT REGEXCOUNT("aa", "a")
+SELECT CASE REGEXMATCH("A1", "\d")
+CASE "1"
+PRINT "select"
+END SELECT
+NEXT
+DIM n AS INTEGER = 0
+WHILE REGEXISMATCH("a", "a") AND n < 1
+PRINT "while"
+n = n + 1
+END WHILE
+DO
+PRINT "do"
+LOOP UNTIL REGEXISMATCH("x", "x")
+PRINT $"count={REGEXCOUNT("aa", "a")}"
+""", ["12","34","Ax","2","select","2","select","while","do","count=2"]);
+    }
+    private static void AssertProgram(string source, string[] expected)
+    {
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
+        Assert.True(result.Succeeded, string.Join("\n", result.Diagnostics.Select(d => d.Message)));
+        Assert.Equal(expected, result.Output);
+    }
+}

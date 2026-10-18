@@ -1,0 +1,5 @@
+' Обычная группа получает номер 1, именованная — номер 2.
+PRINT REGEXREPLACE("A12 B34", "(?<letter>[A-Z])(\d+)", "${letter}-$1")
+PRINT REGEXREPLACE("a", "a", "$$$&")
+PRINT REGEXREPLACE("a", "a", "${missing}")
+' Ожидается: A-12 B-34, $a, ${missing}.
