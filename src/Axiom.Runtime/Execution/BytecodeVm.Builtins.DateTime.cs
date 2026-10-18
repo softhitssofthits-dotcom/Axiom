@@ -6,60 +6,100 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
+    /// <summary>
+    /// Функции текущего времени имеют разрешение до секунды: DATE отбрасывает время
+    /// суток, TIME и NOW — доли секунды. Это документированная точность самих функций,
+    /// а не скрытая потеря при записи. Значение с долями секунды остаётся выразимым
+    /// каноническим текстом и печатается вместе с ними.
+    /// </summary>
+    private DateTime CurrentLocalInstant()
+    {
+        return BuiltinDateTimeHelpers.TruncateToSecond(_host.GetLocalNow().DateTime);
+    }
+
     private RuntimeValue EvaluateDateBuiltin()
     {
-        return RuntimeValue.FromDate(DateOnly.FromDateTime(_host.GetLocalNow().DateTime));
+        return RuntimeValue.FromDate(DateOnly.FromDateTime(CurrentLocalInstant()));
     }
 
     private RuntimeValue EvaluateDateBuiltin(string timeZoneId, TextLocation location)
     {
         var timeZone = ResolveTimeZoneArgument("DATE", "timeZone", timeZoneId, location);
-        var currentDateTime = BuiltinDateTimeHelpers.ConvertUtcToTimeZoneDateTime(_host.GetLocalNow().UtcDateTime, timeZone);
+        var currentDateTime = ConvertCurrentUtcToZone("DATE", timeZone, location);
         return RuntimeValue.FromDate(DateOnly.FromDateTime(currentDateTime));
     }
 
     private RuntimeValue EvaluateTimeBuiltin()
     {
-        return RuntimeValue.FromTime(TimeOnly.FromDateTime(_host.GetLocalNow().DateTime));
+        return RuntimeValue.FromTime(TimeOnly.FromDateTime(CurrentLocalInstant()));
     }
 
     private RuntimeValue EvaluateTimeBuiltin(string timeZoneId, TextLocation location)
     {
         var timeZone = ResolveTimeZoneArgument("TIME", "timeZone", timeZoneId, location);
-        var currentDateTime = BuiltinDateTimeHelpers.ConvertUtcToTimeZoneDateTime(_host.GetLocalNow().UtcDateTime, timeZone);
+        var currentDateTime = ConvertCurrentUtcToZone("TIME", timeZone, location);
         return RuntimeValue.FromTime(TimeOnly.FromDateTime(currentDateTime));
     }
 
     private RuntimeValue EvaluateNowBuiltin()
     {
-        return RuntimeValue.FromDateTime(_host.GetLocalNow().DateTime);
+        return RuntimeValue.FromDateTime(CurrentLocalInstant());
     }
 
     private RuntimeValue EvaluateNowBuiltin(string timeZoneId, TextLocation location)
     {
         var timeZone = ResolveTimeZoneArgument("NOW", "timeZone", timeZoneId, location);
-        var currentDateTime = BuiltinDateTimeHelpers.ConvertUtcToTimeZoneDateTime(_host.GetLocalNow().UtcDateTime, timeZone);
+        var currentDateTime = ConvertCurrentUtcToZone("NOW", timeZone, location);
         return RuntimeValue.FromDateTime(currentDateTime);
+    }
+
+    /// <summary>
+    /// Текущие часы в именованном поясе используют тот же языковой отказ, что и
+    /// TOUTC/FROMUTC. Источник часов задаётся извне и может вернуть предельный
+    /// момент; .NET-исключение не должно выходить за границы конвейера и обходить
+    /// TRY/CATCH программы.
+    /// </summary>
+    private DateTime ConvertCurrentUtcToZone(string functionName, TimeZoneInfo timeZone, TextLocation location)
+    {
+        try
+        {
+            return BuiltinDateTimeHelpers.TruncateToSecond(
+                BuiltinDateTimeHelpers.ConvertUtcToTimeZoneDateTime(_host.GetLocalNow().UtcDateTime, timeZone));
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            ReportBuiltInArgumentError(
+                functionName,
+                "timeZone",
+                "must keep the current moment within canonical date-time range after time zone conversion.",
+                location);
+            throw new RuntimeFailureException();
+        }
     }
 
     private RuntimeValue EvaluateUtcDateBuiltin()
     {
-        return RuntimeValue.FromDate(DateOnly.FromDateTime(_host.GetLocalNow().ToUniversalTime().DateTime));
+        return RuntimeValue.FromDate(DateOnly.FromDateTime(CurrentUtcInstant()));
     }
 
     private RuntimeValue EvaluateUtcTimeBuiltin()
     {
-        return RuntimeValue.FromTime(TimeOnly.FromDateTime(_host.GetLocalNow().ToUniversalTime().DateTime));
+        return RuntimeValue.FromTime(TimeOnly.FromDateTime(CurrentUtcInstant()));
     }
 
     private RuntimeValue EvaluateUtcNowBuiltin()
     {
-        return RuntimeValue.FromDateTime(_host.GetLocalNow().ToUniversalTime().DateTime);
+        return RuntimeValue.FromDateTime(CurrentUtcInstant());
     }
 
     private RuntimeValue EvaluateTimerBuiltin()
     {
         return RuntimeValue.FromDouble(_host.GetLocalNow().TimeOfDay.TotalSeconds);
+    }
+
+    private DateTime CurrentUtcInstant()
+    {
+        return BuiltinDateTimeHelpers.TruncateToSecond(_host.GetLocalNow().ToUniversalTime().DateTime);
     }
 
     private RuntimeValue EvaluateDateSerialBuiltin(int year, int month, int day, TextLocation location)

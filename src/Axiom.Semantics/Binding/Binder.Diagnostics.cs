@@ -71,12 +71,18 @@ public sealed partial class Binder
         _diagnostics.Report(DiagnosticCodes.TypeMismatch, message, location);
     }
 
-    private void ReportTruncatingTemporalAssignment(TypeSymbol targetType, TextLocation location)
+    /// <summary>
+    /// Сообщение одинаково для присваивания, аргумента, RETURN, сравнения, поля и
+    /// элемента массива: читатель должен видеть один договор, а не набор частных
+    /// запретов. Явные DATEVALUE и TIMEVALUE названы прямо в тексте.
+    /// </summary>
+    private void ReportLossyTemporalConversion(TypeSymbol targetType, TextLocation location)
     {
-        var truncatedComponent = targetType == TypeSymbol.Date ? "time" : "date";
+        var lostComponent = targetType == TypeSymbol.Date ? "time" : "date";
+        var explicitFunction = targetType == TypeSymbol.Date ? "DATEVALUE" : "TIMEVALUE";
         _diagnostics.Report(
             DiagnosticCodes.TypeMismatch,
-            $"Cannot assign a full date-time value to '{targetType.Name}': the {truncatedComponent} component would be silently truncated.",
+            $"Cannot convert a full date-time value to '{targetType.Name}': the {lostComponent} component would be truncated. Use {explicitFunction} to drop it explicitly.",
             location);
     }
 

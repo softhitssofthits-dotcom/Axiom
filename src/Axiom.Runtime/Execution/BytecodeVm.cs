@@ -5941,10 +5941,24 @@ public sealed partial class BytecodeVm
             _ => TypeSymbol.Error
         };
 
+        var temporalFailure = BuiltinDateTimeHelpers.TemporalConversionFailure.Unsupported;
         if (targetTypeSymbol != TypeSymbol.Error
-            && BuiltinDateTimeHelpers.TryConvertTemporalValue(value, targetTypeSymbol, out var temporalValue))
+            && BuiltinDateTimeHelpers.TryConvertTemporalValue(
+                value,
+                targetTypeSymbol,
+                out var temporalValue,
+                out temporalFailure))
         {
             return temporalValue;
+        }
+
+        if (temporalFailure == BuiltinDateTimeHelpers.TemporalConversionFailure.LosesComponent)
+        {
+            var lostComponent = targetTypeSymbol == TypeSymbol.Date ? "time" : "date";
+            var explicitFunction = targetTypeSymbol == TypeSymbol.Date ? "DATEVALUE" : "TIMEVALUE";
+            return ReportInvalidRuntimeState<RuntimeValue>(
+                $"Cannot convert a full date-time value to '{targetTypeSymbol.Name}': the {lostComponent} component would be truncated. Use {explicitFunction} to drop it explicitly.",
+                location);
         }
 
         return ReportInvalidRuntimeState<RuntimeValue>(

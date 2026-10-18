@@ -1,0 +1,11 @@
+' Пример показывает, что аргумент процедуры и RETURN подчиняются тому же
+' договору, что и объявление переменной: DATETIME не превращается в DATE молча.
+' Ожидается: диагностика MB2003 в объявлении параметра и в RETURN.
+
+FUNCTION CalendarPart(value AS DATETIME) AS DATE
+    ' Полное значение нельзя вернуть как DATE без явного DATEVALUE.
+    RETURN value
+END FUNCTION
+
+DIM moment AS DATETIME = "2026-04-20 14:05:06"
+PRINT CalendarPart(moment)

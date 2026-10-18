@@ -10,6 +10,14 @@ internal static class BuiltinDateTimeHelpers
     internal const string CanonicalTimeFormat = "HH:mm:ss";
     internal const string CanonicalDateTimeFormat = "yyyy-MM-dd HH:mm:ss";
 
+    /// <summary>
+    /// Дробная часть записывается только при ненулевых долях секунды, поэтому
+    /// значения с точностью до секунды сохраняют прежнюю краткую форму. Спецификатор
+    /// FFFFFFF отбрасывает конечные нули и тем самым даёт самую короткую точную запись.
+    /// </summary>
+    internal const string CanonicalTimeFormatWithFraction = "HH:mm:ss.FFFFFFF";
+    internal const string CanonicalDateTimeFormatWithFraction = "yyyy-MM-dd HH:mm:ss.FFFFFFF";
+
     internal static readonly CultureInfo DateTimeCulture = CultureInfo.InvariantCulture;
 
     internal static readonly IReadOnlyDictionary<string, IntervalTokenInfo> DateTimeIntervalTokens =
@@ -119,19 +127,50 @@ internal static class BuiltinDateTimeHelpers
         return date.ToString(CanonicalDateFormat, DateTimeCulture);
     }
 
+    /// <summary>
+    /// Документированное разрешение функций текущего времени. DATE отбрасывает время
+    /// суток, TIME и NOW — доли секунды; TIMER остаётся дробным и служит измерению.
+    /// </summary>
+    internal static DateTime TruncateToSecond(DateTime value)
+    {
+        return new DateTime(value.Ticks - value.Ticks % TimeSpan.TicksPerSecond, value.Kind);
+    }
+
     internal static string FormatCanonicalTime(TimeOnly time)
     {
-        return time.ToString(CanonicalTimeFormat, DateTimeCulture);
+        return time.Ticks % TimeSpan.TicksPerSecond == 0
+            ? time.ToString(CanonicalTimeFormat, DateTimeCulture)
+            : time.ToString(CanonicalTimeFormatWithFraction, DateTimeCulture);
     }
 
     internal static string FormatCanonicalDateTime(DateTime dateTime)
     {
-        return dateTime.ToString(CanonicalDateTimeFormat, DateTimeCulture);
+        return dateTime.Ticks % TimeSpan.TicksPerSecond == 0
+            ? dateTime.ToString(CanonicalDateTimeFormat, DateTimeCulture)
+            : dateTime.ToString(CanonicalDateTimeFormatWithFraction, DateTimeCulture);
     }
 
-    internal static bool TryConvertTemporalValue(RuntimeValue value, TypeSymbol targetType, out RuntimeValue converted)
+    /// <summary>
+    /// Результат неявного временного преобразования. Потеря календарной даты или
+    /// времени суток отличается от простого несовпадения видов: вызывающая сторона
+    /// обязана сообщить пользователю именно о потере компонента и назвать явную
+    /// функцию, которая выполняет такое преобразование осознанно.
+    /// </summary>
+    internal enum TemporalConversionFailure
+    {
+        None,
+        Unsupported,
+        LosesComponent
+    }
+
+    internal static bool TryConvertTemporalValue(
+        RuntimeValue value,
+        TypeSymbol targetType,
+        out RuntimeValue converted,
+        out TemporalConversionFailure failure)
     {
         converted = null!;
+        failure = TemporalConversionFailure.None;
 
         if (targetType == TypeSymbol.String)
         {
@@ -153,62 +192,39 @@ internal static class BuiltinDateTimeHelpers
                 return true;
             }
 
+            failure = TemporalConversionFailure.Unsupported;
             return false;
         }
 
-        if (targetType == TypeSymbol.Date)
+        if (targetType == TypeSymbol.Date || targetType == TypeSymbol.Time)
         {
-            if (value.Type == TypeSymbol.DateTime)
-            {
-                converted = RuntimeValue.FromDate(DateOnly.FromDateTime(value.AsDateTime()));
-                return true;
-            }
-
+            // Содержимое строки известно только здесь, поэтому полный текст
+            // даты-времени отвергается именно на этой границе. Скобки и переменная
+            // не меняют договор: DATEVALUE и TIMEVALUE остаются единственным
+            // явным способом отбросить компонент.
             if (value.Type == TypeSymbol.String)
             {
-                if (TryParseCanonicalDateOnly(value.AsString(), out var date))
+                if (targetType == TypeSymbol.Date && TryParseCanonicalDateOnly(value.AsString(), out var date))
                 {
                     converted = RuntimeValue.FromDate(date);
                     return true;
                 }
 
-                if (TryParseCanonicalDateTime(value.AsString(), out var dateTime))
-                {
-                    converted = RuntimeValue.FromDate(DateOnly.FromDateTime(dateTime));
-                    return true;
-                }
-
-                return false;
-            }
-
-            return false;
-        }
-
-        if (targetType == TypeSymbol.Time)
-        {
-            if (value.Type == TypeSymbol.DateTime)
-            {
-                converted = RuntimeValue.FromTime(TimeOnly.FromDateTime(value.AsDateTime()));
-                return true;
-            }
-
-            if (value.Type == TypeSymbol.String)
-            {
-                if (TryParseCanonicalTimeOnly(value.AsString(), out var time))
+                if (targetType == TypeSymbol.Time && TryParseCanonicalTimeOnly(value.AsString(), out var time))
                 {
                     converted = RuntimeValue.FromTime(time);
                     return true;
                 }
 
-                if (TryParseCanonicalDateTime(value.AsString(), out var dateTime))
-                {
-                    converted = RuntimeValue.FromTime(TimeOnly.FromDateTime(dateTime));
-                    return true;
-                }
-
+                failure = TryParseCanonicalDateTime(value.AsString(), out _)
+                    ? TemporalConversionFailure.LosesComponent
+                    : TemporalConversionFailure.Unsupported;
                 return false;
             }
 
+            failure = value.Type == TypeSymbol.DateTime
+                ? TemporalConversionFailure.LosesComponent
+                : TemporalConversionFailure.Unsupported;
             return false;
         }
 
@@ -226,20 +242,18 @@ internal static class BuiltinDateTimeHelpers
                 return true;
             }
 
-            if (value.Type == TypeSymbol.String)
+            if (value.Type == TypeSymbol.String
+                && TryParseCanonicalDateTime(value.AsString(), out var dateTime))
             {
-                if (TryParseCanonicalDateTime(value.AsString(), out var dateTime))
-                {
-                    converted = RuntimeValue.FromDateTime(dateTime);
-                    return true;
-                }
-
-                return false;
+                converted = RuntimeValue.FromDateTime(dateTime);
+                return true;
             }
 
+            failure = TemporalConversionFailure.Unsupported;
             return false;
         }
 
+        failure = TemporalConversionFailure.Unsupported;
         return false;
     }
 
@@ -248,14 +262,73 @@ internal static class BuiltinDateTimeHelpers
         return DateOnly.TryParseExact(value, CanonicalDateFormat, DateTimeCulture, DateTimeStyles.None, out date);
     }
 
+    /// <summary>
+    /// Разбор принимает и краткую форму, и запись с долями секунды. Договор
+    /// обратимый: любой текст, который выдаёт FormatCanonicalTime/FormatCanonicalDateTime,
+    /// читается обратно в то же значение.
+    /// </summary>
+    private static readonly string[] CanonicalTimeFormats =
+    [
+        CanonicalTimeFormat,
+        CanonicalTimeFormatWithFraction
+    ];
+
+    private static readonly string[] CanonicalDateTimeFormats =
+    [
+        CanonicalDateTimeFormat,
+        CanonicalDateTimeFormatWithFraction
+    ];
+
     internal static bool TryParseCanonicalTimeOnly(string value, out TimeOnly time)
     {
-        return TimeOnly.TryParseExact(value, CanonicalTimeFormat, DateTimeCulture, DateTimeStyles.None, out time);
+        if (!HasValidFractionalPart(value))
+        {
+            time = default;
+            return false;
+        }
+
+        return TimeOnly.TryParseExact(value, CanonicalTimeFormats, DateTimeCulture, DateTimeStyles.None, out time);
     }
 
     internal static bool TryParseCanonicalDateTime(string value, out DateTime dateTime)
     {
-        return DateTime.TryParseExact(value, CanonicalDateTimeFormat, DateTimeCulture, DateTimeStyles.None, out dateTime);
+        if (!HasValidFractionalPart(value))
+        {
+            dateTime = default;
+            return false;
+        }
+
+        return DateTime.TryParseExact(value, CanonicalDateTimeFormats, DateTimeCulture, DateTimeStyles.None, out dateTime);
+    }
+
+    /// <summary>
+    /// Точка без цифр не является дробной частью. Платформа принимает такую запись,
+    /// поэтому договор проверяется здесь явно: после точки должно быть от одной до
+    /// семи цифр, иначе текст считается недопустимым целиком.
+    /// </summary>
+    private static bool HasValidFractionalPart(string value)
+    {
+        var dot = value.LastIndexOf('.');
+        if (dot < 0)
+        {
+            return true;
+        }
+
+        var digits = value.Length - dot - 1;
+        if (digits is < 1 or > 7)
+        {
+            return false;
+        }
+
+        for (var index = dot + 1; index < value.Length; index++)
+        {
+            if (!char.IsAsciiDigit(value[index]))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     internal static bool TryParseCanonicalTemporal(string value, out CanonicalTemporalValue temporal)
@@ -427,7 +500,7 @@ internal static class BuiltinDateTimeHelpers
         reportError(
             functionName,
             "value",
-            $"must be a canonical date or date-time in form '{CanonicalDateFormat}' or '{CanonicalDateTimeFormat}'.",
+            $"must be a canonical date or date-time in form '{CanonicalDateFormat}' or '{CanonicalDateTimeFormat}' with optional fractional seconds.",
             location);
         throw new RuntimeFailureException();
     }
@@ -451,7 +524,7 @@ internal static class BuiltinDateTimeHelpers
         reportError(
             functionName,
             "value",
-            $"must be a canonical time or date-time in form '{CanonicalTimeFormat}' or '{CanonicalDateTimeFormat}'.",
+            $"must be a canonical time or date-time in form '{CanonicalTimeFormat}' or '{CanonicalDateTimeFormat}' with optional fractional seconds.",
             location);
         throw new RuntimeFailureException();
     }
@@ -471,7 +544,7 @@ internal static class BuiltinDateTimeHelpers
         reportError(
             functionName,
             argName,
-            $"must be a canonical date-time in form '{CanonicalDateTimeFormat}'.",
+            $"must be a canonical date-time in form '{CanonicalDateTimeFormat}' with optional fractional seconds.",
             location);
         throw new RuntimeFailureException();
     }
@@ -536,7 +609,7 @@ internal static class BuiltinDateTimeHelpers
         reportError(
             functionName,
             argumentName,
-            $"must be a canonical date or date-time in form '{CanonicalDateFormat}' or '{CanonicalDateTimeFormat}'.",
+            $"must be a canonical date or date-time in form '{CanonicalDateFormat}' or '{CanonicalDateTimeFormat}' with optional fractional seconds.",
             location);
         throw new RuntimeFailureException();
     }
@@ -561,7 +634,7 @@ internal static class BuiltinDateTimeHelpers
         reportError(
             functionName,
             argumentName,
-            $"must be a canonical time or date-time in form '{CanonicalTimeFormat}' or '{CanonicalDateTimeFormat}'.",
+            $"must be a canonical time or date-time in form '{CanonicalTimeFormat}' or '{CanonicalDateTimeFormat}' with optional fractional seconds.",
             location);
         throw new RuntimeFailureException();
     }

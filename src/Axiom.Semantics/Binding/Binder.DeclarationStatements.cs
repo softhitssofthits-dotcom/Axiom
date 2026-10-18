@@ -66,14 +66,7 @@ public sealed partial class Binder
                 explicitInitializer = BindExpression(declaration.Initializer);
                 if (explicitType != TypeSymbol.Error)
                 {
-                    if (TryReportTruncatingTemporalAssignment(declaration.Initializer, explicitInitializer, explicitType))
-                    {
-                        explicitInitializer = new BoundErrorExpression(GetLocation(declaration.Initializer));
-                    }
-                    else
-                    {
-                        explicitInitializer = ApplyExpectedType(declaration.Initializer, explicitInitializer, explicitType);
-                    }
+                    explicitInitializer = ApplyExpectedType(declaration.Initializer, explicitInitializer, explicitType);
                 }
             }
 
@@ -103,14 +96,7 @@ public sealed partial class Binder
         var initializer = BindExpression(declaration.Initializer);
         if (type != TypeSymbol.Error)
         {
-            if (TryReportTruncatingTemporalAssignment(declaration.Initializer, initializer, type))
-            {
-                initializer = new BoundErrorExpression(GetLocation(declaration.Initializer));
-            }
-            else
-            {
-                initializer = ApplyExpectedType(declaration.Initializer, initializer, type);
-            }
+            initializer = ApplyExpectedType(declaration.Initializer, initializer, type);
         }
 
         if (string.IsNullOrWhiteSpace(declaration.Identifier.Text))
@@ -166,14 +152,14 @@ public sealed partial class Binder
             return expression;
         }
 
-        if (TryReportTruncatingTemporalAssignment(expressionSyntax, expression, targetType))
-        {
-            return new BoundErrorExpression(GetLocation(expressionSyntax));
-        }
-
         if (expression.Type == targetType)
         {
             return expression;
+        }
+
+        if (TryReportLossyTemporalConversion(expressionSyntax, expression, targetType))
+        {
+            return new BoundErrorExpression(GetLocation(expressionSyntax));
         }
 
         if (TryConvertConstant(expressionSyntax, expression, targetType, out var convertedConstant))
@@ -300,49 +286,5 @@ public sealed partial class Binder
     private static TypeSymbol BindArrayVariableType(TypeSymbol elementType, int rank)
     {
         return ArrayTypeSymbol.Create(elementType, rank);
-    }
-
-    private bool TryReportTruncatingTemporalAssignment(
-        ExpressionSyntax initializerSyntax,
-        BoundExpression boundExpression,
-        TypeSymbol targetType)
-    {
-        if (targetType != TypeSymbol.Date && targetType != TypeSymbol.Time)
-        {
-            return false;
-        }
-
-        if (boundExpression.Type == TypeSymbol.DateTime
-            || (boundExpression.Type == TypeSymbol.String
-                && TryGetStringLiteralText(initializerSyntax, out var literalText)
-                && IsCanonicalDateTimeText(literalText)))
-        {
-            ReportTruncatingTemporalAssignment(targetType, GetLocation(initializerSyntax));
-            return true;
-        }
-
-        return false;
-    }
-
-    private static bool TryGetStringLiteralText(ExpressionSyntax expression, out string text)
-    {
-        if (expression is LiteralExpressionSyntax literal
-            && literal.LiteralToken.Kind == SyntaxKind.StringLiteralToken
-            && literal.LiteralToken.Value is string value)
-        {
-            text = value;
-            return true;
-        }
-
-        text = string.Empty;
-        return false;
-    }
-
-    private static bool IsCanonicalDateTimeText(string text)
-    {
-        return text.Length == 19
-            && text[10] == ' '
-            && DateOnly.TryParseExact(text.AsSpan(0, 10), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _)
-            && TimeOnly.TryParseExact(text.AsSpan(11, 8), "HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out _);
     }
 }

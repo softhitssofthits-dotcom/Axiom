@@ -32,11 +32,19 @@ public sealed partial class Binder
         return ApplyExpectedType(expression, boundExpression, expectedType);
     }
 
-    private BoundExpression ApplyExpectedType(ExpressionSyntax syntax, BoundExpression boundExpression, TypeSymbol expectedType)
+    private BoundExpression ApplyExpectedType(
+        ExpressionSyntax syntax,
+        BoundExpression boundExpression,
+        TypeSymbol expectedType)
     {
         if (boundExpression.Type == TypeSymbol.Error || boundExpression.Type == expectedType)
         {
             return boundExpression;
+        }
+
+        if (TryReportLossyTemporalConversion(syntax, boundExpression, expectedType))
+        {
+            return new BoundErrorExpression(GetLocation(syntax));
         }
 
         if (TryConvertConstant(syntax, boundExpression, expectedType, out var convertedConstant))

@@ -65,9 +65,11 @@ PRINT WEEKDAY(DATESERIAL(2026, 4, 26))
 
         var (_, _, result) = ExecuteProgram(text);
 
-        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3005");
-        Assert.Contains("STRING", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("DATE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        // Функция извлечения части разбирает строку сама, поэтому недопустимый
+        // текст сообщается её собственной диагностикой аргумента.
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("YEAR", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("yyyy-MM-dd", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -449,9 +451,9 @@ PRINT ENDOFYEAR(DATESERIAL(2026, 4, 20))
 
         var (_, _, result) = ExecuteProgram(text);
 
-        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3005");
-        Assert.Contains("STRING", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("DATE", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        var diagnostic = Assert.Single(result.Diagnostics, static d => d.Code == "MB3007");
+        Assert.Contains("STARTOFMONTH", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("yyyy-MM-dd", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

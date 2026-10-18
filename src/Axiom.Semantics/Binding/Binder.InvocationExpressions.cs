@@ -894,11 +894,34 @@ public sealed partial class Binder
         for (var index = 0; index < expression.Arguments.Count; index++)
         {
             arguments.Add(index < descriptor.Parameters.Count
-                ? ApplyExpectedType(expression.Arguments[index], rawArguments[index], descriptor.Parameters[index].Type)
+                ? ApplyBuiltInArgumentType(descriptor, expression.Arguments[index], rawArguments[index], index)
                 : rawArguments[index]);
         }
 
         return new BoundCallExpression(location, resolvedTarget, arguments, resolvedSymbol.ReturnType);
+    }
+
+    /// <summary>
+    /// Аргумент встроенной функции подчиняется общему договору временных
+    /// преобразований. Исключение одно: функции извлечения части принимают
+    /// DATETIME и канонический текст напрямую, потому что отбрасывание
+    /// ненужного компонента и есть их назначение.
+    /// </summary>
+    private BoundExpression ApplyBuiltInArgumentType(
+        BuiltinFunctionDescriptor descriptor,
+        ExpressionSyntax argumentSyntax,
+        BoundExpression boundArgument,
+        int parameterIndex)
+    {
+        var parameterType = descriptor.Parameters[parameterIndex].Type;
+
+        if (TemporalConversionRules.IsPartExtractionBuiltin(descriptor.Id)
+            && (parameterType == TypeSymbol.Date || parameterType == TypeSymbol.Time))
+        {
+            return ApplyPartExtractionArgument(argumentSyntax, boundArgument, parameterType);
+        }
+
+        return ApplyExpectedType(argumentSyntax, boundArgument, parameterType);
     }
 
     private BoundExpression BindResolvedBuiltInInvocation(
@@ -939,7 +962,13 @@ public sealed partial class Binder
 
             if (index < descriptor.Parameters.Count)
             {
-                arguments.Add(BindExpression(argument, descriptor.Parameters[index].Type));
+                var parameterType = descriptor.Parameters[index].Type;
+                var boundArgument = BindExpression(argument);
+
+                arguments.Add(TemporalConversionRules.IsPartExtractionBuiltin(descriptor.Id)
+                        && (parameterType == TypeSymbol.Date || parameterType == TypeSymbol.Time)
+                    ? ApplyPartExtractionArgument(argument, boundArgument, parameterType)
+                    : ApplyExpectedType(argument, boundArgument, parameterType));
             }
             else
             {

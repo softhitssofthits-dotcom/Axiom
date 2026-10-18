@@ -1,0 +1,30 @@
+' Пример показывает точность временных значений и обратимость канонического текста.
+' Значение с долями секунды печатается вместе с дробной частью, а текст,
+' прочитанный обратно, даёт равное значение. Функции текущего времени имеют
+' разрешение до секунды, поэтому NOW() печатается без дробной части.
+' Ожидается вывод:
+' 2024-02-29 12:34:56.125
+' TRUE
+' 12:34:56.125
+' TRUE
+' 2024-02-29 12:34:56
+' 19
+
+DIM moment AS DATETIME = "2024-02-29 12:34:56.125"
+DIM momentText AS STRING = moment
+DIM restored AS DATETIME = momentText
+
+' Дробная часть входит в текст, поэтому значение не меняется при сохранении и чтении.
+PRINT momentText
+PRINT moment = restored
+
+DIM clockTime AS TIME = "12:34:56.125"
+DIM timeText AS STRING = clockTime
+DIM restoredTime AS TIME = timeText
+PRINT timeText
+PRINT clockTime = restoredTime
+
+' Значение с точностью до секунды сохраняет краткую форму записи.
+DIM current AS DATETIME = NOW()
+PRINT current
+PRINT LEN(current)

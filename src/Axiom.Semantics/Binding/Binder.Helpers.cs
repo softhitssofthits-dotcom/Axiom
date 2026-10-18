@@ -5,6 +5,8 @@ public sealed partial class Binder
 {
     private static bool CanConvert(TypeSymbol fromType, TypeSymbol toType)
     {
+        // Временные переходы, теряющие календарную дату или время суток, здесь
+        // отсутствуют намеренно: их выполняет только явное извлечение части.
         return (fromType == TypeSymbol.Integer && toType == TypeSymbol.Long)
             || (fromType == TypeSymbol.Integer && toType == TypeSymbol.Decimal)
             || (fromType == TypeSymbol.Integer && toType == TypeSymbol.Double)
@@ -18,9 +20,7 @@ public sealed partial class Binder
             || (fromType == TypeSymbol.String && toType == TypeSymbol.Time)
             || (fromType == TypeSymbol.String && toType == TypeSymbol.DateTime)
             || (fromType == TypeSymbol.Date && toType == TypeSymbol.DateTime)
-            || (fromType == TypeSymbol.DateTime && toType == TypeSymbol.Date)
-            || (fromType == TypeSymbol.Time && toType == TypeSymbol.DateTime)
-            || (fromType == TypeSymbol.DateTime && toType == TypeSymbol.Time);
+            || (fromType == TypeSymbol.Time && toType == TypeSymbol.DateTime);
     }
 
     private static bool IsNumeric(TypeSymbol type)

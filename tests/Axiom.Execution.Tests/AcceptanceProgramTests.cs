@@ -77,6 +77,8 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/acceptance/negative/scope_field_requires_self.axm", ExecutionStatus.SemanticFailure, "MB2044")]
     [InlineData("samples/acceptance/negative/scope_field_typo_suggestion.axm", ExecutionStatus.SemanticFailure, "MB2023")]
     [InlineData("samples/acceptance/negative/call_operator_hint.axm", ExecutionStatus.SemanticFailure, "MB2001")]
+    [InlineData("samples/acceptance/negative/temporal_truncation_bypass.axm", ExecutionStatus.SemanticFailure, "MB2003")]
+    [InlineData("samples/acceptance/negative/temporal_truncation_in_call_and_return.axm", ExecutionStatus.SemanticFailure, "MB2003")]
     public void NegativeAcceptanceProgram_ReturnsExpectedDiagnostic(string relativePath, ExecutionStatus expectedStatus, string expectedCode)
     {
         var sourceText = TestProgramLoader.LoadText(relativePath);

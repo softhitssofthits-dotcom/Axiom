@@ -530,12 +530,12 @@ public sealed class RuntimeValue : IRuntimeStoredValue
 
         if (Type == TypeSymbol.Time)
         {
-            return AsTime().ToString(Builtins.BuiltinDateTimeHelpers.CanonicalTimeFormat, CultureInfo.InvariantCulture);
+            return Builtins.BuiltinDateTimeHelpers.FormatCanonicalTime(AsTime());
         }
 
         if (Type == TypeSymbol.DateTime)
         {
-            return AsDateTime().ToString(Builtins.BuiltinDateTimeHelpers.CanonicalDateTimeFormat, CultureInfo.InvariantCulture);
+            return Builtins.BuiltinDateTimeHelpers.FormatCanonicalDateTime(AsDateTime());
         }
 
         if (Type == TypeSymbol.File)
@@ -631,12 +631,12 @@ public sealed class RuntimeValue : IRuntimeStoredValue
 
         if (Type == TypeSymbol.Time)
         {
-            return FromString(AsTime().ToString(Builtins.BuiltinDateTimeHelpers.CanonicalTimeFormat, CultureInfo.InvariantCulture));
+            return FromString(Builtins.BuiltinDateTimeHelpers.FormatCanonicalTime(AsTime()));
         }
 
         if (Type == TypeSymbol.DateTime)
         {
-            return FromString(AsDateTime().ToString(Builtins.BuiltinDateTimeHelpers.CanonicalDateTimeFormat, CultureInfo.InvariantCulture));
+            return FromString(Builtins.BuiltinDateTimeHelpers.FormatCanonicalDateTime(AsDateTime()));
         }
 
         return FromString(ToDisplayString());

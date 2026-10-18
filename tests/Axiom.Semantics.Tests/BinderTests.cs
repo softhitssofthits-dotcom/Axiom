@@ -3798,6 +3798,33 @@ DIM d AS DATE = DATEVALUE("2026-01-02 12:00:00")
     }
 
     [Fact]
+    public void Bind_TruncatingDateTimeStringWithFractionalSecondsIsRejected()
+    {
+        const string text = """
+DIM d AS DATE = "2026-01-02 12:00:00.125"
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("MB2003", diagnostic.Code);
+        Assert.Contains("truncated", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Bind_FractionalDateTimeAssignmentToDateTimeIsAllowed()
+    {
+        const string text = """
+DIM dt AS DATETIME = "2026-01-02 12:00:00.125"
+DIM t AS TIME = "12:00:00.125"
+""";
+
+        var program = BindProgram(text, out var diagnostics);
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
     public void Bind_TimeValueAssignmentToTimeIsAllowed()
     {
         const string text = """

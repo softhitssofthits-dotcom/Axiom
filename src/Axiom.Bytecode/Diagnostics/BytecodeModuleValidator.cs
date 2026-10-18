@@ -2480,6 +2480,7 @@ public sealed class BytecodeModuleValidator
                         instruction.Opcode,
                         argumentTypes,
                         function.Parameters,
+                        builtin.CanonicalId,
                         builtin.Name);
                 }
                 else if (builtin is not null
@@ -3028,6 +3029,7 @@ public sealed class BytecodeModuleValidator
         Opcode opcode,
         IReadOnlyList<TypeSymbol?> actualTypes,
         IReadOnlyList<ParameterSymbol> parameters,
+        BuiltinFunctionId builtinId,
         string targetName)
     {
         if (actualTypes.Count != parameters.Count)
@@ -3039,7 +3041,8 @@ public sealed class BytecodeModuleValidator
         {
             var actualType = actualTypes[index];
             var expectedType = parameters[index].Type;
-            if (IsBuiltinArgumentCompatible(actualType, expectedType))
+            if (IsBuiltinArgumentCompatible(actualType, expectedType)
+                || IsPartExtractionArgument(builtinId, actualType, expectedType))
             {
                 continue;
             }
@@ -3071,7 +3074,8 @@ public sealed class BytecodeModuleValidator
         {
             var actualType = actualTypes[index];
             var expectedType = descriptor.Parameters[index].Type;
-            if (IsBuiltinDescriptorArgumentCompatible(actualType, expectedType, descriptor, index, actualTypes))
+            if (IsBuiltinDescriptorArgumentCompatible(actualType, expectedType, descriptor, index, actualTypes)
+                || IsPartExtractionArgument(descriptor.Id, actualType, expectedType))
             {
                 continue;
             }
@@ -3093,6 +3097,22 @@ public sealed class BytecodeModuleValidator
         }
 
         return expectedType == TypeSymbol.Double && IsNumericType(actualType);
+    }
+
+    /// <summary>
+    /// Валидатор повторяет договор связывания: функция извлечения части принимает
+    /// DATETIME и канонический текст напрямую, остальные аргументы подчиняются
+    /// общему запрету потери компонента.
+    /// </summary>
+    private static bool IsPartExtractionArgument(
+        BuiltinFunctionId builtinId,
+        TypeSymbol? actualType,
+        TypeSymbol expectedType)
+    {
+        return actualType is not null
+            && TemporalConversionRules.IsPartExtractionBuiltin(builtinId)
+            && (expectedType == TypeSymbol.Date || expectedType == TypeSymbol.Time)
+            && TemporalConversionRules.AcceptsPartExtractionArgument(actualType, expectedType);
     }
 
     private static bool IsBuiltinDescriptorArgumentCompatible(
@@ -3434,14 +3454,16 @@ public sealed class BytecodeModuleValidator
                 || sourceType == TypeSymbol.DateTime;
         }
 
+        // Потеря календарной даты или времени суток не является допустимым
+        // преобразованием Convert: для неё существует явное извлечение части.
         if (targetType == TypeSymbol.Date)
         {
-            return sourceType == TypeSymbol.DateTime || sourceType == TypeSymbol.String;
+            return sourceType == TypeSymbol.String;
         }
 
         if (targetType == TypeSymbol.Time)
         {
-            return sourceType == TypeSymbol.DateTime || sourceType == TypeSymbol.String;
+            return sourceType == TypeSymbol.String;
         }
 
         if (targetType == TypeSymbol.DateTime)
