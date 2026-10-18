@@ -4646,7 +4646,10 @@ public sealed class BytecodeModuleValidator
             || type == TypeSymbol.Double
             || type == TypeSymbol.Decimal
             || type == TypeSymbol.String
-            || type == TypeSymbol.Boolean;
+            || type == TypeSymbol.Boolean
+            || type == TypeSymbol.Date
+            || type == TypeSymbol.Time
+            || type == TypeSymbol.DateTime;
     }
 
     private void ValidateConversionInstruction(

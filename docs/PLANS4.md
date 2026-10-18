@@ -346,3 +346,13 @@ TYPE StepBack проверен в настоящем Electron: `trace-type-self-
 Проверки: `TemporalTypeFieldDefaultContractTests` 8/8, Semantics 533/533, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3326/3328 (два известных отказа Maze Chase), `audit-bytecode-coverage` PASS, `check-manual` пройден. Пример `samples/operators/type/temporal_field_defaults.axm`. Версии: язык/компилятор 0.1.26, IDE 0.6.22.
 
 Следующий точный шаг — DTA-009: ввод временных значений через INPUT со строгими правилами, атомарной записью нескольких целей и приёмкой настоящего окна ввода.
+
+## Ввод временных значений через INPUT (DTA-009) — 18 октября 2026 года
+
+`INPUT` принимает `DATE`, `TIME` и `DATETIME` в канонической форме ответа (`yyyy-MM-dd`, `HH:mm:ss`, `yyyy-MM-dd HH:mm:ss`, для `TIME` и `DATETIME` — с долями секунды). Региональные записи и формат с `T` не принимаются. Все поля разбираются до записи получателей, поэтому неверное поле даёт MB3003 и не меняет ни один из них. Отказ был в валидаторе байткода, в разборе `TryParseInputField` и в `TryParseInput`, который считал отказ разбора неподдержанным типом.
+
+Проверки: `TemporalInputContractTests` 6/6, Semantics 533/533, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3333/3335 (два известных отказа Maze Chase), положительная приёмка 554/554, `audit-bytecode-coverage` PASS, `check-manual` пройден. Пример `samples/operators/input/temporal_values.axm`. Версии: язык/компилятор 0.1.27, IDE 0.6.22.
+
+Граница: настоящее окно `INPUT` в Electron для временных значений отдельно не проверялось.
+
+Следующий шаг — этапы, требующие проектного решения: DTA-005 (однозначный момент времени), DTA-006 (длительность и монотонное измерение), DTA-007 (типизированные метаданные файлов), затем DTA-014 (матрица доказательств) и DTA-015 (измерения).

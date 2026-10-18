@@ -249,3 +249,13 @@ DTA-004 закрыт: `DATE(пояс)`, `TIME(пояс)` и `NOW(пояс)` пр
 Сериализация: `NormalizeTypeFieldDefaultValue` записывает значение каноническим текстом, `RestoreTypeFieldDefaultValue` читает его обратно, поэтому JSON-снимок байткода сохраняет временные значения по умолчанию.
 
 Проверки: `tests/Axiom.Execution.Tests/TemporalTypeFieldDefaultContractTests.cs` — 8 тестов, включая JSON-снимок. `Bind_TemporalFieldDefaultRemainsUnsupported` заменён двумя тестами. Итоги: Semantics 533/533, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3326/3328 (два известных отказа Maze Chase), `audit-bytecode-coverage` PASS. Пример `samples/operators/type/temporal_field_defaults.axm`; справочник `type.html`. Версии: язык/компилятор 0.1.26, IDE 0.6.22.
+
+## Ввод временных значений через INPUT (DTA-009) — 18 октября 2026 года
+
+`INPUT` принимает `DATE`, `TIME` и `DATETIME`. Отказ был в трёх местах: `IsSupportedInputTargetType` в валидаторе перечислял только числовые, строковый и логический виды, `BuiltinIOHelpers.TryParseInputField` не знал временных типов, а `BytecodeVm.TryParseInput` считал отсутствие результата признаком неподдержанного типа.
+
+Договор: каноническая форма ответа (`yyyy-MM-dd`, `HH:mm:ss`, `yyyy-MM-dd HH:mm:ss`, для `TIME` и `DATETIME` — с долями секунды). Региональные записи и формат обмена с `T` не принимаются: для ввода действует тот же строгий договор, что и для неявного преобразования строки. Все поля разбираются до записи получателей, поэтому неверное поле даёт MB3003 и не меняет ни один из них. Массивы, записи и файловые цели по-прежнему недопустимы.
+
+Проверки: `tests/Axiom.Execution.Tests/TemporalInputContractTests.cs` — 6 тестов; пример `samples/operators/input/temporal_values.axm` включён в положительный приёмочный обход с ответами. Итоги: Semantics 533/533, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3333/3335 (два известных отказа Maze Chase), положительная приёмка 554/554, `audit-bytecode-coverage` PASS. Справочник: `input.html`. Версии: язык/компилятор 0.1.27, IDE 0.6.22.
+
+Граница: приёмка выполнена через консольный провайдер ввода и CLI; настоящее окно `INPUT` в Electron для временных значений отдельно не проверялось.

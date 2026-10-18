@@ -171,14 +171,24 @@ public sealed partial class BytecodeVm
     private RuntimeValue? TryParseInput(TypeSymbol type, ReadOnlySpan<char> text, TextLocation location)
     {
         var result = BuiltinIOHelpers.TryParseInputField(type, text);
-        if (result is not null || type == TypeSymbol.String || type == TypeSymbol.Boolean
-            || type == TypeSymbol.Integer || type == TypeSymbol.Long
-            || type == TypeSymbol.Double || type == TypeSymbol.Decimal)
+
+        // Для поддержанного типа null означает отказ разбора, а не отсутствие
+        // поддержки: вызывающий код сообщает MB3003 с текстом значения.
+        if (IsSupportedInputType(type))
         {
             return result;
         }
 
         return ReportInvalidRuntimeState<RuntimeValue?>($"INPUT не поддерживает тип {type.Name}.", location);
+    }
+
+    private static bool IsSupportedInputType(TypeSymbol type)
+    {
+        return type == TypeSymbol.String || type == TypeSymbol.Boolean
+            || type == TypeSymbol.Integer || type == TypeSymbol.Long
+            || type == TypeSymbol.Double || type == TypeSymbol.Decimal
+            || type == TypeSymbol.Date || type == TypeSymbol.Time
+            || type == TypeSymbol.DateTime;
     }
 
     private bool TryParseInputValues(

@@ -3438,6 +3438,11 @@ public sealed class AcceptanceProgramTests
             return new QueueInputProvider("Ника, 7");
         }
 
+        if (relativePath.Equals("samples/operators/input/temporal_values.axm", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueInputProvider("2024-02-29", "12:34:56.125", "2024-02-29 12:34:56.125");
+        }
+
         if (relativePath.Equals("samples/smoke/engine-compare/input_record_intake.axm", StringComparison.OrdinalIgnoreCase))
         {
             return new QueueInputProvider(CreateInputRecordIntakeLines());

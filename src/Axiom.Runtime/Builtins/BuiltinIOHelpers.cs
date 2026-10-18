@@ -56,6 +56,29 @@ internal static class BuiltinIOHelpers
             return null;
         }
 
+        // Временной ввод использует те же канонические формы, что и присваивание:
+        // строку не угадывают, поэтому пользователь вводит точную запись.
+        if (type == TypeSymbol.Date)
+        {
+            return DateOnly.TryParseExact(text, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+                ? RuntimeValue.FromDate(date)
+                : null;
+        }
+
+        if (type == TypeSymbol.Time)
+        {
+            return TimeOnly.TryParseExact(text, ["HH:mm:ss", "HH:mm:ss.FFFFFFF"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var time)
+                ? RuntimeValue.FromTime(time)
+                : null;
+        }
+
+        if (type == TypeSymbol.DateTime)
+        {
+            return DateTime.TryParseExact(text, ["yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm:ss.FFFFFFF"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTime)
+                ? RuntimeValue.FromDateTime(dateTime)
+                : null;
+        }
+
         return null;
     }
 
@@ -108,6 +131,29 @@ internal static class BuiltinIOHelpers
             }
 
             return null;
+        }
+
+        // Временной ввод использует те же канонические формы, что и присваивание:
+        // строку не угадывают, поэтому пользователь вводит точную запись.
+        if (type == TypeSymbol.Date)
+        {
+            return DateOnly.TryParseExact(text, "yyyy-MM-dd".AsSpan(), CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+                ? RuntimeValue.FromDate(date)
+                : null;
+        }
+
+        if (type == TypeSymbol.Time)
+        {
+            return TimeOnly.TryParseExact(text, ["HH:mm:ss", "HH:mm:ss.FFFFFFF"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var time)
+                ? RuntimeValue.FromTime(time)
+                : null;
+        }
+
+        if (type == TypeSymbol.DateTime)
+        {
+            return DateTime.TryParseExact(text, ["yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm:ss.FFFFFFF"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTime)
+                ? RuntimeValue.FromDateTime(dateTime)
+                : null;
         }
 
         return null;

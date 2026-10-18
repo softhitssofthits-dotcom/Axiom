@@ -321,3 +321,13 @@ IDE 0.6.16 сохраняет новый запрос при позднем пу
 Постоянные проверки: `tests/Axiom.Execution.Tests/TemporalTypeFieldDefaultContractTests.cs` (8); пример `samples/operators/type/temporal_field_defaults.axm`; справочник `type.html`.
 
 Остаются открытыми DTA-005, DTA-006, DTA-007, DTA-009, DTA-014, DTA-015. Следующий доступный участок — DTA-009 (INPUT для временных значений).
+
+## Даты и время: DTA-009 (INPUT) закрыт — 18 октября 2026 года
+
+`INPUT` принимает `DATE`, `TIME` и `DATETIME` в канонической форме ответа; региональные записи и формат с `T` не принимаются. Все поля разбираются до записи, поэтому неверное поле даёт MB3003 и не меняет ни один получатель. Массивы, записи и файловые цели по-прежнему недопустимы.
+
+Постоянные проверки: `tests/Axiom.Execution.Tests/TemporalInputContractTests.cs` (6); пример `samples/operators/input/temporal_values.axm`; справочник `input.html`.
+
+Граница: настоящее окно `INPUT` в Electron для временных значений отдельно не проверялось.
+
+Остаются открытыми DTA-005, DTA-006, DTA-007, DTA-014, DTA-015 — все требуют проектного решения или отдельного этапа.
