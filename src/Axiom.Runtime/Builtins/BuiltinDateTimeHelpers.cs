@@ -302,6 +302,29 @@ internal static class BuiltinDateTimeHelpers
     }
 
     /// <summary>
+    /// Формат обмена отличается от канонической записи только разделителем T между
+    /// датой и временем. Смещение и суффикс Z здесь не принимаются: DATETIME не
+    /// хранит часовой пояс, и молча отбрасывать смещение значило бы потерять
+    /// информацию о моменте. Для момента нужен отдельный тип (DTA-005).
+    /// </summary>
+    private static readonly string[] ExchangeDateTimeFormats =
+    [
+        "yyyy-MM-dd'T'HH:mm:ss",
+        "yyyy-MM-dd'T'HH:mm:ss.FFFFFFF"
+    ];
+
+    internal static bool TryParseExchangeDateTime(string value, out DateTime dateTime)
+    {
+        if (!HasValidFractionalPart(value))
+        {
+            dateTime = default;
+            return false;
+        }
+
+        return DateTime.TryParseExact(value, ExchangeDateTimeFormats, DateTimeCulture, DateTimeStyles.None, out dateTime);
+    }
+
+    /// <summary>
     /// Точка без цифр не является дробной частью. Платформа принимает такую запись,
     /// поэтому договор проверяется здесь явно: после точки должно быть от одной до
     /// семи цифр, иначе текст считается недопустимым целиком.

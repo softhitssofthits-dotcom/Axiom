@@ -250,6 +250,32 @@ public sealed partial class BytecodeVm
         return RuntimeValue.FromTime(ParseCanonicalTimeBasedArgument("TIMEVALUE", "value", value, location).Time);
     }
 
+    /// <summary>
+    /// Явный разбор текста формата обмена. Неявное преобразование строки в DATETIME
+    /// остаётся строгим: здесь читается только каноническая запись и вариант с
+    /// разделителем T. Смещение и суффикс Z не принимаются, потому что DATETIME не
+    /// хранит часовой пояс.
+    /// </summary>
+    private RuntimeValue EvaluateDateTimeValueBuiltin(string value, TextLocation location)
+    {
+        if (BuiltinDateTimeHelpers.TryParseCanonicalDateTime(value, out var canonical))
+        {
+            return RuntimeValue.FromDateTime(canonical);
+        }
+
+        if (BuiltinDateTimeHelpers.TryParseExchangeDateTime(value, out var exchange))
+        {
+            return RuntimeValue.FromDateTime(exchange);
+        }
+
+        ReportBuiltInArgumentError(
+            "DATETIMEVALUE",
+            "value",
+            "must be a canonical date-time in form 'yyyy-MM-dd HH:mm:ss' or an exchange date-time in form 'yyyy-MM-ddTHH:mm:ss', with optional fractional seconds and without a time zone offset.",
+            location);
+        throw new RuntimeFailureException();
+    }
+
     private RuntimeValue EvaluateIsDateBuiltin(string value)
     {
         return RuntimeValue.FromBoolean(BuiltinDateTimeHelpers.IsCanonicalTemporalText(value));

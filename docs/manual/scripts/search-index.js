@@ -3327,6 +3327,21 @@ window.AxiomSearchIndex = [
     ]
   },
   {
+    "title": "DATETIMEVALUE",
+    "href": "function-reference.html#fn-datetimevalue",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает дату и время, прочитанные из строки в канонической записи или в формате обмена.",
+    "keywords": [
+      "DATETIMEVALUE",
+      "date-time-functions-arithmetic-and-validation",
+      "value"
+    ],
+    "aliases": [
+      "DATETIMEVALUE"
+    ]
+  },
+  {
     "title": "DATEVALUE",
     "href": "function-reference.html#fn-datevalue",
     "kind": "Функция",

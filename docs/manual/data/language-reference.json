@@ -25,7 +25,7 @@
     "src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.cs",
     "src/Axiom.Syntax/SyntaxKind.cs"
   ],
-  "sourceFingerprint": "b76785ad667069be3582f308122da5288548fc8ceec7750ebd79bce02992ee52",
+  "sourceFingerprint": "ee113580886f2f98225460a050503f271d3e2aa53d8155302b158ee8586884f1",
   "functions": [
     {
       "name": "ABS",
@@ -2159,6 +2159,27 @@
             {
               "name": "time",
               "type": "TIME"
+            }
+          ],
+          "returnType": "DATETIME",
+          "binding": "Default",
+          "operandPolicy": "Declared",
+          "resultPolicy": "Declared"
+        }
+      ]
+    },
+    {
+      "name": "DATETIMEVALUE",
+      "description": "Возвращает дату и время, прочитанные из строки в канонической записи или в формате обмена.",
+      "sourceHref": "date-time-functions-arithmetic-and-validation.html#datetimevalue",
+      "forms": [
+        {
+          "key": "DATETIMEVALUE/0",
+          "id": "DateTimeValue",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "STRING"
             }
           ],
           "returnType": "DATETIME",

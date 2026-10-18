@@ -41,6 +41,7 @@ public static partial class BuiltinFunctions
             CreateDefault(BuiltinFunctionId.TimeValue, "TIMEVALUE", TypeSymbol.Time, [Parameter("value", TypeSymbol.String)]),
             CreateDefault(BuiltinFunctionId.DateValueFromDateTime, "DATEVALUE", TypeSymbol.Date, [Parameter("value", TypeSymbol.DateTime)]),
             CreateDefault(BuiltinFunctionId.TimeValueFromDateTime, "TIMEVALUE", TypeSymbol.Time, [Parameter("value", TypeSymbol.DateTime)]),
+            CreateDefault(BuiltinFunctionId.DateTimeValue, "DATETIMEVALUE", TypeSymbol.DateTime, [Parameter("value", TypeSymbol.String)]),
             CreateDefault(BuiltinFunctionId.IsDate, "ISDATE", TypeSymbol.Boolean, [Parameter("value", TypeSymbol.String)]),
             CreateDefault(BuiltinFunctionId.UtcOffset, "UTCOFFSET", TypeSymbol.Integer, []),
             CreateDefault(BuiltinFunctionId.UtcOffsetValue, "UTCOFFSET", TypeSymbol.Integer, [Parameter("value", TypeSymbol.DateTime)]),

@@ -231,3 +231,13 @@ DTA-004 закрыт: `DATE(пояс)`, `TIME(пояс)` и `NOW(пояс)` пр
 `ARRAYTOSORTED`, `ARRAYCONTAINS` и `ARRAYDISTINCT` уже работали с временными элементами; это подтверждено отдельным тестом.
 
 Проверки: `tests/Axiom.Execution.Tests/TemporalArrayAggregateContractTests.cs` — 8 тестов; `Execute_ArrayMinRejectsDateElementsAtBinding` заменён на `Execute_ArrayMinAcceptsTemporalElements`, потому что фиксировал снятое ограничение. Итоги: Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3310/3312 (два известных отказа Maze Chase), `audit-bytecode-coverage` PASS. Примеры: `samples/functions/arraymin/temporal_elements.axm`, `samples/functions/arraymax/temporal_elements.axm`. Справочник: `arrays-and-builtins.html`. Версии: язык/компилятор 0.1.24, IDE 0.6.22.
+
+## Формат обмена для временных значений (DTA-013) — 18 октября 2026 года
+
+Добавлена `DATETIMEVALUE(value)`: явный разбор канонической записи `yyyy-MM-dd HH:mm:ss` и формата обмена `yyyy-MM-ddTHH:mm:ss`, в обеих формах — необязательная дробная часть секунд. Смещение `+03:00` и суффикс `Z` не принимаются, потому что `DATETIME` не хранит часовой пояс; для однозначного момента остаётся отдельный проект DTA-005. Результат печатается канонически, с пробелом.
+
+Строгий внутренний формат сохранён: неявное присваивание строки с `T` переменной `DATETIME` по-прежнему даёт MB3005, а `ISDATE` отвечает `FALSE` для формата обмена. Локализованный пользовательский ввод не расширялся — это часть DTA-009.
+
+Реализация: `TryParseExchangeDateTime` в `BuiltinDateTimeHelpers` (две формы `TryParseExact` и общая проверка дробной части), `EvaluateDateTimeValueBuiltin` в `BytecodeVm.Builtins.DateTime.cs`, регистрация и диспетчер; новый член `BuiltinFunctionId` добавлен в конец перечисления.
+
+Проверки: `tests/Axiom.Execution.Tests/TemporalExchangeFormatContractTests.cs` — 6 тестов. Итоги: Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3317/3319 (два известных отказа Maze Chase), `audit-bytecode-coverage` PASS, `check-manual` пройден (273 функции, 339 форм). Пример `samples/functions/datetimevalue/exchange_format.axm`; справочник `date-time-functions-arithmetic-and-validation.html`. Версии: язык/компилятор 0.1.25, IDE 0.6.22.

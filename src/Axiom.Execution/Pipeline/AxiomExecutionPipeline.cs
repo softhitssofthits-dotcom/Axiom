@@ -195,6 +195,7 @@ public sealed class AxiomExecutionPipeline
         BuiltinFunctionId.TimeValue,
         BuiltinFunctionId.DateValueFromDateTime,
         BuiltinFunctionId.TimeValueFromDateTime,
+        BuiltinFunctionId.DateTimeValue,
         BuiltinFunctionId.IsDate,
         BuiltinFunctionId.UtcOffset,
         BuiltinFunctionId.UtcOffsetValue,

@@ -310,6 +310,7 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.TimeValue => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateTimeValueBuiltin(GetStringUnchecked(value), location)),
             BuiltinFunctionId.DateValueFromDateTime => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDateValueFromDateTimeBuiltin(value, location)),
             BuiltinFunctionId.TimeValueFromDateTime => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateTimeValueFromDateTimeBuiltin(value, location)),
+            BuiltinFunctionId.DateTimeValue => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDateTimeValueBuiltin(GetStringUnchecked(value), location)),
             BuiltinFunctionId.IsDate => BuiltinExecution.UnaryNoLocation(static (vm, value) => vm.EvaluateIsDateBuiltin(GetStringUnchecked(value))),
             BuiltinFunctionId.UtcOffset => BuiltinExecution.NullaryNoLocation(static vm => vm.EvaluateUtcOffsetBuiltin()),
             BuiltinFunctionId.UtcOffsetValue => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateUtcOffsetBuiltin(value, location)),

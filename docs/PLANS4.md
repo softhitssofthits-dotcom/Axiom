@@ -330,3 +330,11 @@ TYPE StepBack проверен в настоящем Electron: `trace-type-self-
 Проверки: `TemporalArrayAggregateContractTests` 8/8, Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3310/3312 (два известных отказа Maze Chase), `audit-bytecode-coverage` PASS, `check-manual` пройден. Примеры: `samples/functions/arraymin/temporal_elements.axm`, `samples/functions/arraymax/temporal_elements.axm`. Версии: язык/компилятор 0.1.24, IDE 0.6.22.
 
 Следующий точный шаг — DTA-009: ввод временных значений через INPUT с атомарной записью нескольких целей и приёмкой настоящего окна ввода, либо DTA-013: отдельный формат обмена с T, Z и смещением.
+
+## Формат обмена для временных значений (DTA-013) — 18 октября 2026 года
+
+Добавлена `DATETIMEVALUE(value)`: явный разбор канонической записи и формата обмена с разделителем `T`, включая дробную часть секунд. Смещение и суффикс `Z` отвергаются как MB3007, поскольку `DATETIME` не хранит часовой пояс; однозначный момент остаётся отдельным проектом DTA-005. Неявное преобразование строки в `DATETIME` осталось строгим, `ISDATE` сохраняет собственный договор.
+
+Проверки: `TemporalExchangeFormatContractTests` 6/6, Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3317/3319 (два известных отказа Maze Chase), `audit-bytecode-coverage` PASS, `check-manual` пройден. Пример `samples/functions/datetimevalue/exchange_format.axm`. Версии: язык/компилятор 0.1.25, IDE 0.6.22.
+
+Следующий точный шаг — DTA-009: ввод временных значений через INPUT со строгими правилами, атомарной записью нескольких целей и приёмкой настоящего окна ввода; альтернатива — DTA-011 (проверяемые константы временных полей TYPE).

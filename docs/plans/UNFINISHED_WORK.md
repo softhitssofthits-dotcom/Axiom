@@ -305,3 +305,11 @@ IDE 0.6.16 сохраняет новый запрос при позднем пу
 Постоянные проверки: `tests/Axiom.Execution.Tests/TemporalArrayAggregateContractTests.cs` (8); примеры `samples/functions/arraymin/temporal_elements.axm` и `samples/functions/arraymax/temporal_elements.axm`; справочник `arrays-and-builtins.html`.
 
 Остаются открытыми DTA-005, DTA-006, DTA-007, DTA-009, DTA-011, DTA-013, DTA-014, DTA-015. Следующий доступный участок — DTA-009 (ввод временных значений через INPUT) либо DTA-013 (формат обмена с T, Z и смещением).
+
+## Даты и время: DTA-013 (формат обмена) закрыт — 18 октября 2026 года
+
+`DATETIMEVALUE` разбирает каноническую запись и формат обмена с разделителем `T`, включая доли секунды. Смещение и суффикс `Z` не принимаются: `DATETIME` не хранит часовой пояс. Неявное преобразование строки остаётся строгим, `ISDATE` сохраняет собственный договор, локализованный пользовательский ввод не расширялся.
+
+Постоянные проверки: `tests/Axiom.Execution.Tests/TemporalExchangeFormatContractTests.cs` (6); пример `samples/functions/datetimevalue/exchange_format.axm`; справочник `date-time-functions-arithmetic-and-validation.html`.
+
+Остаются открытыми DTA-005, DTA-006, DTA-007, DTA-009, DTA-011, DTA-014, DTA-015. Следующий доступный участок — DTA-009 (INPUT для временных значений) либо DTA-011 (проверяемые константы временных полей TYPE).

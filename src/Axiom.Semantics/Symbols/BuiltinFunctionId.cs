@@ -333,5 +333,6 @@ public enum BuiltinFunctionId
     // по имени перечисления, но конец списка исключает случайный сдвиг значений.
     DateTimeSerial,
     DateValueFromDateTime,
-    TimeValueFromDateTime
+    TimeValueFromDateTime,
+    DateTimeValue
 }
