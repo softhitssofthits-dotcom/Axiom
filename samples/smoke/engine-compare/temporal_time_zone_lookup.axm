@@ -1,0 +1,35 @@
+' Нагрузка на поиск и применение правил часового пояса.
+' Повторяет UTCOFFSET, TOUTC, FROMUTC, TOINSTANT и FROMINSTANT для нескольких
+' поясов, чтобы отделить стоимость работы с поясом от чистой календарной
+' арифметики. Текущее время не читается, поэтому вывод воспроизводим.
+
+DIM checksum AS LONG = 0
+DIM digest AS STRING = ""
+DIM localValue AS DATETIME = "2026-04-20 14:05:06"
+DIM winterValue AS DATETIME = "2026-01-20 14:05:06"
+
+FOR roundIndex = 1 TO 120
+    checksum = checksum + UTCOFFSET(localValue, "Europe/Moscow")
+    checksum = checksum + UTCOFFSET(winterValue, "America/New_York")
+    checksum = checksum + UTCOFFSET(localValue, "UTC")
+
+    DIM moscowUtc AS DATETIME = TOUTC(localValue, "Europe/Moscow")
+    DIM newYorkUtc AS DATETIME = TOUTC(localValue, "America/New_York")
+    checksum = checksum + HOUR(moscowUtc) + HOUR(newYorkUtc)
+
+    DIM restored AS DATETIME = FROMUTC(moscowUtc, "Europe/Moscow")
+    checksum = checksum + DAY(restored)
+
+    ' Момент и обратное отображение в местное время.
+    DIM moment AS UTCDATETIME = TOINSTANT(localValue, "Europe/Moscow")
+    DIM shown AS DATETIME = FROMINSTANT(moment, "Europe/Moscow")
+    checksum = checksum + HOUR(shown)
+
+    IF roundIndex <= 2 THEN
+        DIM momentText AS STRING = moment
+        digest = digest + momentText
+    END IF
+NEXT
+
+PRINT checksum
+PRINT LEN(digest)

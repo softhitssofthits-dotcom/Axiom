@@ -143,3 +143,9 @@
 Текущие версии: язык/компилятор 0.1.32, IDE 0.6.24. DTA-007 закрыт: `FILEDATEUTC`, `FILECREATEDATEUTC`, `FILEACCESSEDDATEUTC` и `DIRDATEUTC` возвращают `UTCDATETIME` и читают свойства UTC, поэтому результат однозначен и сохраняет точность носителя. Строковые формы не менялись.
 
 Проверки: `FileMetadataMomentContractTests` 6/6, Semantics 533/533, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3395/3397 (два известных отказа Maze Chase), подсветка 55/55, `audit-bytecode-coverage` PASS, `check-manual` пройден. Примеры: `samples/functions/{filedateutc,filecreatedateutc,fileaccesseddateutc,dirdateutc}/`. Открыты DTA-006 (длительность и монотонное измерение) и DTA-015 (измерения).
+
+### 2026-10-18 17:49 - Раздельные измерения дат и времени
+
+Текущие версии: язык/компилятор 0.1.33, IDE 0.6.24. DTA-015 закрыт: добавлены три адресные нагрузки — разбор и печать текста, поиск пояса, календарная арифметика. Медианы BytecodeVm 11,1 / 2,6 / 9,5 мс; поиск пояса самый дешёвый, кеш поясов не вводился.
+
+Файлы: `samples/smoke/engine-compare/temporal_{text_parse_and_format,time_zone_lookup,calendar_arithmetic}.axm`, регистрация в `Axiom.ManualChecks`, `BYTECODE_PERF_MATRIX.md`. Открыт только DTA-006 (длительность и монотонное измерение), требующий решения автора.

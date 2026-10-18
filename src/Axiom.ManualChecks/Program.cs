@@ -629,6 +629,11 @@ static BenchmarkCase[] GetBenchmarkCases()
         new BenchmarkCase("RND: deterministic stream", @"samples/smoke/engine-compare/random_stream_snapshot.axm", Array.Empty<string>(), null, static () => new SeededRuntimeRandom(24681357)),
         new BenchmarkCase("Дата и время: календарный конвейер", @"samples/smoke/engine-compare/date_time_calendar_pipeline.axm"),
         new BenchmarkCase("Дата и время: current-time снимок", @"samples/smoke/engine-compare/current_time_snapshot.axm", Array.Empty<string>(), CreateCurrentTimeBenchmarkClock()),
+        // Три отдельные нагрузки: разбор и печать текста, поиск пояса и чистая
+        // календарная арифметика. Смешивать эти затраты в одном замере нельзя.
+        new BenchmarkCase("Дата и время: разбор и печать текста", @"samples/smoke/engine-compare/temporal_text_parse_and_format.axm"),
+        new BenchmarkCase("Дата и время: поиск часового пояса", @"samples/smoke/engine-compare/temporal_time_zone_lookup.axm"),
+        new BenchmarkCase("Дата и время: календарная арифметика", @"samples/smoke/engine-compare/temporal_calendar_arithmetic.axm"),
         new BenchmarkCase("PRINT / PRINT USING: output gallery", @"samples/smoke/engine-compare/print_output_gallery.axm"),
         new BenchmarkCase("Управляющий слой: ветвления и циклы", @"samples/smoke/engine-compare/control_flow_branch_maze.axm"),
         new BenchmarkCase("Процедуры и замыкания: routine pipeline", @"samples/smoke/engine-compare/routine_closure_pipeline.axm"),

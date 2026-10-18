@@ -359,3 +359,11 @@ IDE 0.6.16 сохраняет новый запрос при позднем пу
 Постоянные проверки: `tests/Axiom.Execution.Tests/FileMetadataMomentContractTests.cs` (6); примеры `samples/functions/{filedateutc,filecreatedateutc,fileaccesseddateutc,dirdateutc}/`; справочник `file-system-paths.html` (`file-system-functions-paths.html`).
 
 Остаются открытыми DTA-006 (длительность и монотонное измерение) и DTA-015 (измерения). DTA-006 требует решения автора: нужен ли отдельный тип длительности или достаточно функций поверх числа секунд.
+
+## Даты и время: DTA-015 (измерения) закрыт — 18 октября 2026 года
+
+Добавлены три раздельные нагрузки: разбор и печать текста, поиск пояса, чистая календарная арифметика. Медианы BytecodeVm: 11,1 / 2,6 / 9,5 мс. Поиск пояса оказался самой дешёвой частью, поэтому кеш поясов не вводился.
+
+Файлы: `samples/smoke/engine-compare/temporal_text_parse_and_format.axm`, `temporal_time_zone_lookup.axm`, `temporal_calendar_arithmetic.axm`; регистрация в `src/Axiom.ManualChecks/Program.cs`; `BYTECODE_PERF_MATRIX.md`, раздел 21 аудита.
+
+Остаётся открытым только DTA-006 (длительность и монотонное измерение). Требуется решение автора: отдельный тип длительности или функции поверх числа секунд.

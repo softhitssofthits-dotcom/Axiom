@@ -293,3 +293,9 @@ DTA-004 закрыт: `DATE(пояс)`, `TIME(пояс)` и `NOW(пояс)` пр
 Строковые `FILEDATE`, `FILECREATEDATE`, `FILEACCESSEDDATE` и `DIRDATE` не менялись: они по-прежнему возвращают местное время текстом с точностью до секунды. Обе формы сосуществуют, и выбор остаётся за программой.
 
 Проверки: `tests/Axiom.Execution.Tests/FileMetadataMomentContractTests.cs` — 6 тестов: типизированные формы с долями секунды, типизированная дата каталога, сохранение прежнего договора строковых форм, отказ отсутствующих объектов, отказ неверного вида объекта и упорядочивание моментов вместе с `FROMINSTANT`. Итоги: Semantics 533/533, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3395/3397 (два известных отказа Maze Chase), подсветка 55/55, `audit-bytecode-coverage` PASS, `check-manual` пройден (281 функция, 349 форм). Примеры: `samples/functions/filedateutc/typed_and_text_forms.axm`, `samples/functions/filecreatedateutc/typed_moment.axm`, `samples/functions/fileaccesseddateutc/typed_moment.axm`, `samples/functions/dirdateutc/typed_and_text_forms.axm`. Справочник: `file-system-functions-paths.html`. Версии: язык/компилятор 0.1.32, IDE 0.6.24.
+
+## Раздельные измерения дат и времени (DTA-015) — 18 октября 2026 года
+
+Добавлены три адресные нагрузки вместо смешанных: разбор и печать текста (`temporal_text_parse_and_format.axm`), поиск и применение часового пояса (`temporal_time_zone_lookup.axm`), чистая календарная арифметика (`temporal_calendar_arithmetic.axm`). Все три зарегистрированы в `Axiom.ManualChecks` и проходят.
+
+Медианы BytecodeVm при трёх итерациях: 11,1 мс, 2,6 мс и 9,5 мс соответственно. Поиск пояса — самая дешёвая часть, поэтому отдельный кеш поясов не вводился. Подробности и границы измерений — `BYTECODE_PERF_MATRIX.md` и раздел 21 аудита. Каталог `engine-compare` содержит 56 файлов. Версии: язык/компилятор 0.1.33, IDE 0.6.24.
