@@ -259,3 +259,11 @@ DTA-004 закрыт: `DATE(пояс)`, `TIME(пояс)` и `NOW(пояс)` пр
 Проверки: `tests/Axiom.Execution.Tests/TemporalInputContractTests.cs` — 6 тестов; пример `samples/operators/input/temporal_values.axm` включён в положительный приёмочный обход с ответами. Итоги: Semantics 533/533, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3333/3335 (два известных отказа Maze Chase), положительная приёмка 554/554, `audit-bytecode-coverage` PASS. Справочник: `input.html`. Версии: язык/компилятор 0.1.27, IDE 0.6.22.
 
 Граница: приёмка выполнена через консольный провайдер ввода и CLI; настоящее окно `INPUT` в Electron для временных значений отдельно не проверялось.
+
+## Матрица контекстов временных значений (DTA-014) — 18 октября 2026 года
+
+Добавлена независимая матрица: `tests/Axiom.Execution.Tests/TemporalContextMatrixTests.cs` — 9 тестов, каждый отдельной программой. Покрыты `CONST`, интерполяция, поле `TYPE` и элемент массива, `IF`/`FOR`/`WHILE`/`DO`, аргумент `BYVAL` и `RETURN`, `BYREF` с адресуемой переменной, `SELECT CASE` внутри цикла с диапазоном и `CASE IS`, обратимость для трёх видов, различие значений с одинаковой видимой частью и выбор агрегатами.
+
+Вместе с прежними наборами (`TemporalConversionContractTests`, `TemporalPrecisionContractTests`, `TemporalSelectCaseContractTests`, `TemporalArrayAggregateContractTests`, `TemporalAssemblyContractTests`, `TemporalExchangeFormatContractTests`, `TemporalTypeFieldDefaultContractTests`, `TemporalInputContractTests`) матрица покрывает контексты из раздела 7 аудита. Пример `samples/smoke/temporal_context_matrix.axm` проходит приёмочный обход (555/555) и служит ручной проверкой в IDE.
+
+Не закрыты и не заявляются: настоящее окно `INPUT` в Electron, отладочное отображение и обратный шаг, физическая смена системных часов, аппаратные пояса с получасовым сезонным переходом и измерения производительности (DTA-015). Итоги: Execution 3343/3345 (два известных отказа Maze Chase). Версии: язык/компилятор 0.1.28, IDE 0.6.22.

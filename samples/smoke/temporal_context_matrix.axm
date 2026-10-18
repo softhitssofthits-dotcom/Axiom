@@ -1,0 +1,64 @@
+' Комплексный пример временных контекстов: CONST, интерполяция, поле TYPE,
+' массив, IF/FOR/WHILE/DO, SELECT CASE и процедуры.
+' Ожидается вывод:
+' 2024-02-29 12:34:56.125
+' момент 2024-02-29 12:34:56.125
+' 2024-02-29 12:34:56.125
+' IF ok
+' 2024
+' WHILE ok
+' DO ok
+' февраль
+' 2024-02-29 13:34:56.125
+' 2024-02-29 12:34:57.125
+
+CONST fixedMoment AS DATETIME = "2024-02-29 12:34:56.125"
+PRINT fixedMoment
+PRINT $"момент {fixedMoment}"
+
+TYPE Entry
+    Moment AS DATETIME
+END TYPE
+
+DIM item AS Entry
+item.Moment = fixedMoment
+PRINT item.Moment
+
+' Условие и циклы работают с временными значениями напрямую.
+IF item.Moment = "2024-02-29 12:34:56.125" THEN
+    PRINT "IF ok"
+END IF
+
+FOR i = 1 TO 1
+    PRINT YEAR(item.Moment)
+NEXT i
+
+DIM flag AS BOOLEAN = TRUE
+WHILE flag
+    flag = FALSE
+    PRINT "WHILE ok"
+END WHILE
+
+DO
+    PRINT "DO ok"
+LOOP WHILE FALSE
+
+' SELECT CASE выбирает ветвь по диапазону дат.
+SELECT CASE item.Moment
+    CASE "2024-02-01 00:00:00" TO "2024-02-29 23:59:59"
+        PRINT "февраль"
+END SELECT
+
+' Функция возвращает сдвинутое значение, процедура BYREF меняет адресуемую переменную.
+FUNCTION Shift(value AS DATETIME) AS DATETIME
+    RETURN DATEADD("h", 1, value)
+END FUNCTION
+
+SUB Bump(BYREF value AS DATETIME)
+    value = DATEADD("s", 1, value)
+END SUB
+
+PRINT Shift(item.Moment)
+DIM mutable AS DATETIME = item.Moment
+Bump(mutable)
+PRINT mutable
