@@ -1,0 +1,24 @@
+' Пример показывает симметричную сборку и разбор значения DATETIME.
+' DATETIMESERIAL соединяет готовые DATE и TIME без промежуточного текста,
+' а DATEVALUE и TIMEVALUE принимают DATETIME напрямую.
+' Ожидается вывод:
+' 2024-02-29 12:34:56.125
+' 2024-02-29
+' 12:34:56.125
+' TRUE
+
+DIM dayValue AS DATE = "2024-02-29"
+DIM clockTime AS TIME = "12:34:56.125"
+
+' Сборка: календарная дата и время суток переносятся целиком, доли секунды сохраняются.
+DIM moment AS DATETIME = DATETIMESERIAL(dayValue, clockTime)
+PRINT moment
+
+' Разбор: те же две части без текста и без неявного преобразования.
+DIM restoredDay AS DATE = DATEVALUE(moment)
+DIM restoredTime AS TIME = TIMEVALUE(moment)
+PRINT restoredDay
+PRINT restoredTime
+
+' Обратная сборка даёт то же значение, поэтому преобразование не теряет данные.
+PRINT DATETIMESERIAL(restoredDay, restoredTime) = moment

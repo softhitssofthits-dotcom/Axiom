@@ -45,7 +45,28 @@
 <h3>Пример</h3><pre><code class="language-axiom">PRINT TIMESERIAL(23, 59, 59)</code></pre><p>Ожидаемый вывод:</p>
 <pre><code>23:59:59</code></pre>
 <h3>См. также</h3>
-<p><a href="function-reference.html">Указатель встроенных функций</a></p></section><span id="year-month-day"></span><section class="article-section" id="year"><h2>YEAR</h2>
+<p><a href="function-reference.html">Указатель встроенных функций</a></p></section><span id="year-month-day"></span><section class="article-section" id="datetimeserial"><h2>DATETIMESERIAL</h2>
+<p>DATETIMESERIAL — встроенная функция языка Axiom, которая возвращает дату и время, собранные из готовых значений DATE и TIME.</p>
+<h3>Назначение</h3>
+<p>Функция собирает одно значение DATETIME из календарной даты и времени суток, полученных по отдельности, без промежуточной текстовой записи.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">DATETIMESERIAL(&lt;дата&gt;, &lt;время&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Первый аргумент должен иметь тип DATE, второй — тип TIME. Оба аргумента обязательны. Строка с канонической записью принимается, потому что разбор выполняет сама функция; значение DATETIME вместо одного из аргументов не подходит, поскольку его пришлось бы молча усечь.</p>
+<h3>Результат</h3>
+<p>Функция возвращает значение типа DATETIME: календарную дату первого аргумента и время суток второго аргумента, включая доли секунды.</p>
+<h3>Правила и ограничения</h3>
+<p>Обе части переносятся целиком, поэтому потеря компонента не происходит. Часовой пояс не добавляется: результат остаётся календарным временем без пояса. Значение DATETIME, полученное функцией, сравнимо с любым другим DATETIME и участвует в арифметике на равных условиях. Для обратного разбора используют DATEVALUE и TIMEVALUE с аргументом DATETIME.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента, в том числе попытку передать DATETIME вместо DATE или TIME. MB3007 возникает при недопустимой строке, номере или календарной дате.</p>
+<h3>Пример</h3><pre><code class="language-axiom">DIM dayValue AS DATE = "2024-02-29"
+DIM clockTime AS TIME = "12:34:56.125"
+PRINT DATETIMESERIAL(dayValue, clockTime)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>2024-02-29 12:34:56.125</code></pre>
+<h3>См. также</h3>
+<p><a href="date-time-functions-arithmetic-and-validation.html#datevalue">DATEVALUE</a>, <a href="date-time-functions-arithmetic-and-validation.html#timevalue">TIMEVALUE</a>, <a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="year"><h2>YEAR</h2>
 <p>YEAR — встроенная функция языка Axiom, которая возвращает год календарной даты.</p>
 <h3>Назначение</h3>
 <p>Функция позволяет извлечь нужный календарный компонент или вычислить границу периода для исходной даты.</p>

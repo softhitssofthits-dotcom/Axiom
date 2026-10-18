@@ -312,3 +312,13 @@ TYPE StepBack проверен в настоящем Electron: `trace-type-self-
 Проверки: `TemporalSelectCaseContractTests` 8/8, Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3291/3293 (два известных отказа Maze Chase), `check-manual` пройден. Пример `samples/control-flow/select_case/temporal_values.axm`. Версии: язык/компилятор 0.1.22, IDE 0.6.22.
 
 Следующий точный шаг — DTA-012: симметричная сборка `DATETIME` из `DATE` и `TIME` и явное извлечение частей без промежуточного текста. Затем DTA-010 (агрегаты массивов), DTA-009 (INPUT), DTA-011 (константы полей TYPE).
+
+## Сборка и разбор DATETIME без текста (DTA-012) — 18 октября 2026 года
+
+Добавлены `DATETIMESERIAL(date, time)` и вторая форма `DATEVALUE`/`TIMEVALUE` с аргументом `DATETIME`. Сборка переносит обе части целиком, включая доли секунды, и не добавляет часовой пояс; разбор типизирован, поэтому `DATETIMESERIAL(DATEVALUE(moment), TIMEVALUE(moment))` возвращает исходное значение. Аргумент `DATETIME` в `DATETIMESERIAL` отвергается правилом потери компонента с подсказкой `DATEVALUE`/`TIMEVALUE`.
+
+Проверки: `TemporalAssemblyContractTests` 8/8, Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3300/3302 (два известных отказа Maze Chase), `audit-bytecode-coverage` PASS, `check-manual` пройден. Пример `samples/functions/datetimeserial/assemble_and_split.axm`. Версии: язык/компилятор 0.1.23, IDE 0.6.22.
+
+Попутно устранены две находки служебных инструментов: сборка палитры справочника снова читает общий реестр тем `themes.js`, а аудит покрытия разбирает многострочный индекс поиска по объектам, а не по строкам.
+
+Следующий точный шаг — DTA-010: агрегаты массивов (`ARRAYMIN`, `ARRAYMAX`, а также сверка `SORT`, поиска и `DISTINCT`) для временных элементов без перевода в строки.

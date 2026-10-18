@@ -185,6 +185,7 @@ window.AxiomCodeDictionary = {
     "DATEDIFF",
     "DATEPART",
     "DATESERIAL",
+    "DATETIMESERIAL",
     "DATEVALUE",
     "DAY",
     "DAYSINMONTH",

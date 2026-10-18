@@ -145,20 +145,23 @@ internal static class BytecodeCoverageAudit
         var path = Path.Combine(root, "docs", "manual", "scripts", "search-index.js");
         var titles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var line in File.ReadLines(path, Encoding.UTF8))
+        // Индекс записывается многострочно, поэтому запись разбирается по объектам,
+        // а не по строкам файла. Одиночные строки-фикстуры разбираются тем же способом:
+        // каждый объект верхнего уровня внутри массива является отдельной записью.
+        foreach (var entry in EnumerateIndexEntries(File.ReadAllText(path, Encoding.UTF8)))
         {
-            if (!Regex.IsMatch(line, "\"?kind\"?\\s*:\\s*\"Функци(?:я|и)\"", RegexOptions.CultureInvariant))
+            if (!Regex.IsMatch(entry, "\"?kind\"?\\s*:\\s*\"Функци(?:я|и)\"", RegexOptions.CultureInvariant))
             {
                 continue;
             }
 
-            var match = TitleRegex.Match(line);
+            var match = TitleRegex.Match(entry);
             if (!match.Success)
             {
                 continue;
             }
 
-            var explicitNames = Regex.Match(line, @"""?functions""?:\s*\[(?<names>[^\]]*)\]", RegexOptions.CultureInvariant);
+            var explicitNames = Regex.Match(entry, @"""?functions""?:\s*\[(?<names>[^\]]*)\]", RegexOptions.CultureInvariant);
             if (explicitNames.Success)
             {
                 foreach (Match name in Regex.Matches(explicitNames.Groups["names"].Value, "\"(?<name>[^\"]+)\"", RegexOptions.CultureInvariant))
@@ -176,6 +179,64 @@ internal static class BytecodeCoverageAudit
         }
 
         return titles;
+    }
+
+    /// <summary>
+    /// Возвращает текст каждого объекта верхнего уровня в массиве индекса.
+    /// Фигурные скобки внутри строковых значений не влияют на глубину.
+    /// </summary>
+    private static IEnumerable<string> EnumerateIndexEntries(string text)
+    {
+        var start = -1;
+        var depth = 0;
+        var inString = false;
+
+        for (var index = 0; index < text.Length; index++)
+        {
+            var character = text[index];
+
+            if (inString)
+            {
+                if (character == '\\')
+                {
+                    index++;
+                }
+                else if (character == '"')
+                {
+                    inString = false;
+                }
+
+                continue;
+            }
+
+            if (character == '"')
+            {
+                inString = true;
+                continue;
+            }
+
+            if (character == '{')
+            {
+                if (depth == 0)
+                {
+                    start = index;
+                }
+
+                depth++;
+                continue;
+            }
+
+            if (character == '}' && depth > 0)
+            {
+                depth--;
+
+                if (depth == 0 && start >= 0)
+                {
+                    yield return text[start..(index + 1)];
+                    start = -1;
+                }
+            }
+        }
     }
 
     private static HashSet<string> GetSampleDirectoryNames(string root)

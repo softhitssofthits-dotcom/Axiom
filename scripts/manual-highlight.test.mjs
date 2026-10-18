@@ -31,10 +31,13 @@ test('Вставки интерполяции содержат код, влож�
 });
 test('Цвета светлой темы и семантические категории берутся из редактора IDE',()=>{
  highlighter();
- const editor=fs.readFileSync(path.join(root,'ide/src/renderer/app.js'),'utf8');
- const light=editor.split("defineTheme('axiom-light'")[1].split("defineTheme('axiom-dark'")[0];
+ // Темы IDE живут в общем реестре themes.js; цвета справочника обязаны совпадать с ним.
+ const themesContext={};
+ vm.runInNewContext(fs.readFileSync(path.join(root,'ide/src/renderer/themes.js'),'utf8'),themesContext);
+ const rules=themesContext.AxiomThemes.syntaxRules('light');
  const css=fs.readFileSync(path.join(root,'docs/manual/styles/code-colors.css'),'utf8');
- for(const match of light.matchAll(/token: '([^']+)', foreground: '([0-9a-fA-F]+)'/g))assert.ok(css.includes('.axiom-token--'+match[1].replaceAll('.','-')+'{color:#'+match[2]),match[1]);
+ assert.ok(rules.length>=10,'Светлая тема должна содержать правила подсветки');
+ for(const rule of rules)assert.ok(css.includes('.axiom-token--'+rule.token.replaceAll('.','-')+'{color:#'+rule.foreground),rule.token);
  assert.equal(fs.readFileSync(path.join(root,'docs/manual/scripts/semantic-colors.js'),'utf8'),fs.readFileSync(path.join(root,'ide/src/renderer/semantic-colors.js'),'utf8'));
 });
 

@@ -1815,3 +1815,23 @@ DTA-004. `DATE(пояс)`, `TIME(пояс)` и `NOW(пояс)` проходят 
 Версии: язык 0.1.22, компилятор 0.1.22, IDE 0.6.22. `node scripts/versioning.mjs check` пройден. Коммит этого этапа и отправка не выполнялись, посторонний каталог `.zcode/` не изменялся.
 
 Следующий шаг — DTA-012: симметричная сборка `DATETIME` из `DATE` и `TIME` и явное извлечение частей без промежуточного текста.
+
+## Session 1534 - 2026-10-18 12:58 - Сборка и разбор DATETIME без текста (DTA-012)
+
+По поручению автора продолжена очередь аудита дат и времени; выполнен DTA-012. Ранее DATETIME собирался только через текст или через DATEADD, а TIME → DATETIME подставлял минимальную дату, поэтому получить значение из готовых частей без промежуточной строки было нельзя.
+
+Формы. Добавлена `DATETIMESERIAL(date, time)` — сборка DATETIME из DATE и TIME с переносом обеих частей целиком, включая доли секунды. `DATEVALUE` и `TIMEVALUE` получили вторую форму с аргументом DATETIME, поэтому части извлекаются типизированно. Имена следуют линии BASIC: DATETIMESERIAL продолжает DATESERIAL и TIMESERIAL, а DATEVALUE/TIMEVALUE расширены вместо введения нового имени.
+
+Договор. Сборка не добавляет часовой пояс: результат остаётся календарным временем. Аргумент DATETIME вместо DATE или TIME отвергается общим правилом потери компонента с подсказкой DATEVALUE или TIMEVALUE. Сборка и разбор обратимы: `DATETIMESERIAL(DATEVALUE(moment), TIMEVALUE(moment))` равно `moment`.
+
+Реализация. Три новых члена `BuiltinFunctionId` добавлены в конец перечисления, чтобы не сдвигать сохранённые идентификаторы. Регистрация — `BuiltinFunctions.DateTime.cs`, диспетчер — `BytecodeVm.BuiltinDispatch.cs`, исполнение — `BytecodeVm.Builtins.DateTime.cs`; новый код использует существующие `ExtractDateValue`/`ExtractTimeValue`. Валидатор и понижение не менялись.
+
+Проверки. Новый `tests/Axiom.Execution.Tests/TemporalAssemblyContractTests.cs` — 8/8: сборка из двух частей, сохранение долей секунды, типизированный разбор и обратимость, текстовые формы, обратимость через текст, отказ аргумента DATETIME, отказ неверного числа аргументов и типа, участие результата в арифметике. Итоги: Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3300/3302 — оба отказа это известные Maze Chase.
+
+Служебные находки. Сборка каталога справочника падала: `scripts/build-manual-highlighting.mjs` искал палитру в `app.js`, тогда как темы переехали в общий реестр `ide/src/renderer/themes.js`. Источником стал реестр тем, а `scripts/manual-highlight.test.mjs` обновлён на тот же источник и снова проходит (4/4). Второй дефект: `BytecodeCoverageAudit` разбирал индекс поиска построчно и после перехода индекса на многострочную запись находил ноль записей, из-за чего `audit-bytecode-coverage` давал FAIL по всем 272 функциям. Разбор переведён на объекты верхнего уровня с учётом строк; аудит снова PASS (272 семейства, 338 форм, лишних записей и каталогов нет). Попутно удалён дубликат ключевого слова в записи DATEVALUE индекса.
+
+Пример и справочник. Новый `samples/functions/datetimeserial/assemble_and_split.axm` (вывод: `2024-02-29 12:34:56.125`, `2024-02-29`, `12:34:56.125`, `TRUE`). Обновлены `docs/manual/date-time-functions-parts-and-serial.html` (карточка DATETIMESERIAL), `date-time-functions-arithmetic-and-validation.html` (вторая форма DATEVALUE/TIMEVALUE и синтаксис), `date-time-functions.html`, `data/function-explanations.json`, `SPECIFICATION3.md`, `BYTECODE_COVERAGE.md`, `PLANS4.md`, `plans/UNFINISHED_WORK.md` и раздел 13 аудита. Пересобраны `function-reference.html`, индекс и словарь подсветки; `node scripts/check-manual.mjs` пройден: 122 страницы, 4906 ссылок, 272 функции, 338 форм.
+
+Версии: язык 0.1.23, компилятор 0.1.23, IDE 0.6.22. `node scripts/versioning.mjs check` пройден. Коммит этого этапа и отправка не выполнялись, посторонний каталог `.zcode/` не изменялся.
+
+Следующий шаг — DTA-010: агрегаты массивов ARRAYMIN/ARRAYMAX для временных элементов, а также сверка SORT, поиска и DISTINCT.

@@ -25,7 +25,7 @@
     "src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.cs",
     "src/Axiom.Syntax/SyntaxKind.cs"
   ],
-  "sourceFingerprint": "b5d051e9968cbbf97adc148549876062e0e97d4ea2f58bd3cc64fdf4a72cef05",
+  "sourceFingerprint": "b76785ad667069be3582f308122da5288548fc8ceec7750ebd79bce02992ee52",
   "functions": [
     {
       "name": "ABS",
@@ -2144,8 +2144,33 @@
       ]
     },
     {
+      "name": "DATETIMESERIAL",
+      "description": "Возвращает дату и время, собранные из готовых значений DATE и TIME.",
+      "sourceHref": "date-time-functions-parts-and-serial.html#datetimeserial",
+      "forms": [
+        {
+          "key": "DATETIMESERIAL/0",
+          "id": "DateTimeSerial",
+          "parameters": [
+            {
+              "name": "date",
+              "type": "DATE"
+            },
+            {
+              "name": "time",
+              "type": "TIME"
+            }
+          ],
+          "returnType": "DATETIME",
+          "binding": "Default",
+          "operandPolicy": "Declared",
+          "resultPolicy": "Declared"
+        }
+      ]
+    },
+    {
       "name": "DATEVALUE",
-      "description": "Возвращает календарную дату, прочитанную из строки.",
+      "description": "Возвращает календарную дату, прочитанную из строки или взятую из значения DATETIME.",
       "sourceHref": "date-time-functions-arithmetic-and-validation.html#datevalue",
       "forms": [
         {
@@ -2155,6 +2180,20 @@
             {
               "name": "value",
               "type": "STRING"
+            }
+          ],
+          "returnType": "DATE",
+          "binding": "Default",
+          "operandPolicy": "Declared",
+          "resultPolicy": "Declared"
+        },
+        {
+          "key": "DATEVALUE/1",
+          "id": "DateValueFromDateTime",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "DATETIME"
             }
           ],
           "returnType": "DATE",
@@ -7057,7 +7096,7 @@
     },
     {
       "name": "TIMEVALUE",
-      "description": "Возвращает время суток, прочитанное из строки.",
+      "description": "Возвращает время суток, прочитанное из строки или взятое из значения DATETIME.",
       "sourceHref": "date-time-functions-arithmetic-and-validation.html#timevalue",
       "forms": [
         {
@@ -7067,6 +7106,20 @@
             {
               "name": "value",
               "type": "STRING"
+            }
+          ],
+          "returnType": "TIME",
+          "binding": "Default",
+          "operandPolicy": "Declared",
+          "resultPolicy": "Declared"
+        },
+        {
+          "key": "TIMEVALUE/1",
+          "id": "TimeValueFromDateTime",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "DATETIME"
             }
           ],
           "returnType": "TIME",

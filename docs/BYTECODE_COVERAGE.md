@@ -211,3 +211,15 @@ DTA-004 закрыт: `DATE(пояс)`, `TIME(пояс)` и `NOW(пояс)` пр
 Понижение не менялось: селектор по-прежнему выражается обычными операциями сравнения, которые уже поддержаны для временных скаляров. Изменение только в связывании — `NormalizeSelectCaseSelectorExpression` направляет временной селектор через общий `ApplyExpectedType`, а `CanBindSelectCaseEquality`/`CanBindSelectCaseOrdering` допускают временные виды.
 
 Проверки: `tests/Axiom.Execution.Tests/TemporalSelectCaseContractTests.cs` — 8 тестов (точное значение для трёх видов, типизированный селектор, диапазон и `CASE IS` с включительными границами, обратный диапазон, различие по долям секунды, отказ смешения видов, отказ потери компонента в строковом селекторе, прежние правила числовых селекторов). Пример `samples/control-flow/select_case/temporal_values.axm`. Справочник: `select-case.html`. Итоги: Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3291/3293 (два известных отказа Maze Chase). Версии: язык/компилятор 0.1.22, IDE 0.6.22.
+
+## Сборка и разбор DATETIME без текста (DTA-012) — 18 октября 2026 года
+
+Добавлены три формы: `DATETIMESERIAL(date, time)` собирает `DATETIME` из готовых `DATE` и `TIME`, а `DATEVALUE` и `TIMEVALUE` получили вторую форму с аргументом `DATETIME` для типизированного извлечения частей. Раньше `DATETIME` собирался только через текст, а `TIME → DATETIME` подставлял минимальную дату.
+
+Имена следуют линии BASIC: `DATETIMESERIAL` продолжает `DATESERIAL` и `TIMESERIAL`, а `DATEVALUE`/`TIMEVALUE` расширены второй формой вместо введения нового имени. Новые члены `BuiltinFunctionId` добавлены в конец перечисления, чтобы не сдвигать сохранённые идентификаторы; регистрация, диспетчер и исполнение опираются на существующие `ExtractDateValue`/`ExtractTimeValue`, валидатор и понижение не менялись.
+
+Договор: `DATETIMESERIAL` принимает `DATE` и `TIME`, каноническая строка допустима, а `DATETIME` вместо аргумента отвергается общим правилом потери компонента. Часовой пояс не добавляется. Сборка и разбор обратимы.
+
+Проверки: `tests/Axiom.Execution.Tests/TemporalAssemblyContractTests.cs` — 8 тестов. Итоги: Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3300/3302 (два известных отказа Maze Chase); `audit-bytecode-coverage` проходит (272 семейства, 338 форм). Пример `samples/functions/datetimeserial/assemble_and_split.axm`. Справочник: `date-time-functions-parts-and-serial.html` (карточка `DATETIMESERIAL`), `date-time-functions-arithmetic-and-validation.html` (вторая форма `DATEVALUE`/`TIMEVALUE`), `date-time-functions.html`.
+
+Попутно: сборка каталога справочника снова работает после перехода тем IDE в `themes.js`, а аудит покрытия снова читает многострочный индекс поиска. Версии: язык/компилятор 0.1.23, IDE 0.6.22.

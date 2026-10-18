@@ -84,3 +84,9 @@
 Текущие версии: язык/компилятор 0.1.22, IDE 0.6.22. DTA-008 закрыт: `SELECT CASE` принимает `DATE`, `TIME` и `DATETIME` — точное значение, `CASE IS` и диапазон `TO` внутри одного вида; смешение видов даёт MB2003; строковый селектор разбирается в вид выражения выбора и подчиняется запрету потери компонента. Изменение только в связывании (`Binder.SelectCaseStatements.cs`), понижение и байткод не менялись.
 
 Проверки: `TemporalSelectCaseContractTests` 8/8, Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3291/3293 (два известных отказа Maze Chase), `check-manual` пройден. Пример — `samples/control-flow/select_case/temporal_values.axm`. Следующий шаг — DTA-012 (сборка `DATETIME` из `DATE` и `TIME`).
+
+### 2026-10-18 12:58 - Сборка и разбор DATETIME без текста
+
+Текущие версии: язык/компилятор 0.1.23, IDE 0.6.22. DTA-012 закрыт: `DATETIMESERIAL(date, time)` собирает `DATETIME` из `DATE` и `TIME` с долями секунды, а `DATEVALUE`/`TIMEVALUE` принимают `DATETIME`. Сборка и разбор обратимы, часовой пояс не добавляется, аргумент `DATETIME` в `DATETIMESERIAL` отвергается правилом потери компонента.
+
+Проверки: `TemporalAssemblyContractTests` 8/8, Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3300/3302 (два известных отказа Maze Chase), `audit-bytecode-coverage` PASS, `check-manual` пройден. Пример — `samples/functions/datetimeserial/assemble_and_split.axm`. Попутно исправлены сборка палитры справочника (`themes.js`) и разбор многострочного индекса в аудите покрытия. Следующий шаг — DTA-010 (агрегаты для временных элементов).

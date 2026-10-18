@@ -287,3 +287,13 @@ IDE 0.6.16 сохраняет новый запрос при позднем пу
 Постоянные проверки: `tests/Axiom.Execution.Tests/TemporalSelectCaseContractTests.cs` (8); пример `samples/control-flow/select_case/temporal_values.axm`; справочник `select-case.html`.
 
 Остаются открытыми DTA-005, DTA-006, DTA-007, DTA-009..DTA-015. Следующий доступный участок — DTA-012 (сборка `DATETIME` из `DATE` и `TIME` и явное извлечение частей), затем DTA-010 (агрегаты), DTA-009 (INPUT), DTA-011 (константы полей TYPE).
+
+## Даты и время: DTA-012 (сборка и разбор без текста) закрыт — 18 октября 2026 года
+
+Добавлены `DATETIMESERIAL(date, time)` и вторая форма `DATEVALUE`/`TIMEVALUE` с аргументом `DATETIME`. Сборка и разбор обратимы, доли секунды сохраняются, часовой пояс не добавляется. Аргумент `DATETIME` в `DATETIMESERIAL` отвергается общим правилом потери компонента.
+
+Постоянные проверки: `tests/Axiom.Execution.Tests/TemporalAssemblyContractTests.cs` (8); пример `samples/functions/datetimeserial/assemble_and_split.axm`; справочник `date-time-functions-parts-and-serial.html`.
+
+Попутно исправлены `scripts/build-manual-highlighting.mjs` (палитра из `themes.js`) и `BytecodeCoverageAudit` (разбор многострочного индекса поиска).
+
+Остаются открытыми DTA-005, DTA-006, DTA-007, DTA-009, DTA-010, DTA-011, DTA-013, DTA-014, DTA-015. Следующий доступный участок — DTA-010 (агрегаты массивов для временных элементов), затем DTA-009 (INPUT), DTA-011 (константы полей TYPE), DTA-013 (формат обмена).

@@ -328,5 +328,10 @@ public enum BuiltinFunctionId
     MapColumn,
     MapRow,
     MapWorldX,
-    MapWorldY
+    MapWorldY,
+    // Новые члены добавляются только в конец: сериализатор хранит идентификаторы
+    // по имени перечисления, но конец списка исключает случайный сдвиг значений.
+    DateTimeSerial,
+    DateValueFromDateTime,
+    TimeValueFromDateTime
 }

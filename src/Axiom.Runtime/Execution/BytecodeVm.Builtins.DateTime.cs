@@ -132,6 +132,19 @@ public sealed partial class BytecodeVm
         return RuntimeValue.FromTime(new TimeOnly(hour, minute, second));
     }
 
+    /// <summary>
+    /// Сборка DATETIME из готовых DATE и TIME без промежуточного текста. Обе части
+    /// уже проверены своими типами, поэтому дополнительных ограничений нет:
+    /// календарная дата берётся целиком, время суток — целиком вместе с долями секунды.
+    /// </summary>
+    private RuntimeValue EvaluateDateTimeSerialBuiltin(RuntimeValue dateValue, RuntimeValue timeValue, TextLocation location)
+    {
+        var date = ExtractDateValue("DATETIMESERIAL", dateValue, location);
+        var time = ExtractTimeValue("DATETIMESERIAL", timeValue, location);
+
+        return RuntimeValue.FromDateTime(date.ToDateTime(time));
+    }
+
     private RuntimeValue EvaluateYearBuiltin(RuntimeValue value, TextLocation location)
     {
         return RuntimeValue.FromInteger(ExtractDateValue("YEAR", value, location).Year);
@@ -215,6 +228,21 @@ public sealed partial class BytecodeVm
     private RuntimeValue EvaluateDateValueBuiltin(string value, TextLocation location)
     {
         return RuntimeValue.FromDate(ParseCanonicalDateBasedArgument("DATEVALUE", "value", value, location).Date);
+    }
+
+    /// <summary>
+    /// Типизированное извлечение даты из DATETIME. Отдельная форма нужна, чтобы
+    /// получить DATE без текста и без риска потерять компонент незаметно: вызов
+    /// явно называет намерение, а не полагается на неявное преобразование.
+    /// </summary>
+    private RuntimeValue EvaluateDateValueFromDateTimeBuiltin(RuntimeValue value, TextLocation location)
+    {
+        return RuntimeValue.FromDate(ExtractDateValue("DATEVALUE", value, location));
+    }
+
+    private RuntimeValue EvaluateTimeValueFromDateTimeBuiltin(RuntimeValue value, TextLocation location)
+    {
+        return RuntimeValue.FromTime(ExtractTimeValue("TIMEVALUE", value, location));
     }
 
     private RuntimeValue EvaluateTimeValueBuiltin(string value, TextLocation location)
