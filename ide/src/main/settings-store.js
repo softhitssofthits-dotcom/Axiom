@@ -4,6 +4,8 @@ const os = require('node:os');
 const { randomUUID } = require('node:crypto');
 
 const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+const transientRenameErrors = new Set(['EPERM', 'EACCES', 'EBUSY', 'ETXTBSY']);
+const sleepSync = milliseconds => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
 const parse = text => JSON.parse(text.replace(/^\uFEFF/, ''));
 function normalize(value) {
   const settings = { theme: 'dark', language: 'ru', ...value };
@@ -73,18 +75,22 @@ class SettingsStore {
   }
   save(value) {
     if (!isRecord(value) || !this.preserveInvalid()) return false;
-    const temporary = path.join(this.directory, `settings-${randomUUID()}.tmp`);
-    try {
-      this.fs.mkdirSync(this.directory, { recursive: true });
-      this.fs.writeFileSync(temporary, JSON.stringify(value, null, 2), { encoding: 'utf8', flag: 'wx' });
-      this.fs.renameSync(temporary, this.file);
-      this.needsBackup = false;
-      this.settings = value;
-      return true;
-    } catch {
-      try { this.fs.unlinkSync(temporary); } catch {}
-      return false;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const temporary = path.join(this.directory, `settings-${randomUUID()}.tmp`);
+      try {
+        this.fs.mkdirSync(this.directory, { recursive: true });
+        this.fs.writeFileSync(temporary, JSON.stringify(value, null, 2), { encoding: 'utf8', flag: 'wx' });
+        this.fs.renameSync(temporary, this.file);
+        this.needsBackup = false;
+        this.settings = value;
+        return true;
+      } catch (error) {
+        try { this.fs.unlinkSync(temporary); } catch {}
+        if (!transientRenameErrors.has(error?.code) || attempt === 2) return false;
+        sleepSync(10 * (attempt + 1));
+      }
     }
+    return false;
   }
 }
 module.exports = { SettingsStore };

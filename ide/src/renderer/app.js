@@ -726,7 +726,7 @@ class AxiomIDE {
   }
 
   // Проект в Axiom — это просто папка: конвенции main-файла нет, запускается активный
-  // сохранённый файл (как и в WPF-IDE).
+  // сохранённый файл.
   async openProject(dir) {
     const files = await API.listProjectFiles(dir);
     this.projectDir = dir;
@@ -1314,7 +1314,7 @@ class AxiomIDE {
   // ================= run / check / format / stop =================
 
   // The Run/Check target: the ACTIVE SAVED file. Axiom has no main-file convention —
-  // the WPF IDE runs the active document too. An open project folder only groups files.
+  // An open project folder only groups files.
   runTarget() {
     return this.activeFile;
   }

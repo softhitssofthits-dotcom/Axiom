@@ -48,7 +48,7 @@ node scripts/check-manual.mjs --inventory .artifacts/language-inventory-current/
 powershell -NoProfile -File scripts/ai-context.ps1 -StdoutOnly
 ```
 
-Проверки языка и служебных компонентов запускаются по группам (`lexer`, `parser`, `semantics`, `bytecode`, `execution`, `runtime`, `cli`, `ide-backend`, `ide-dotnet`) или целиком через `dotnet test Axiom.sln` последовательно. Проверка CLI без исполнения: `dotnet run --project src/Axiom.Cli -- check samples/smoke/bytecode-only/compiler_execution.axm --json`.
+Проверки языка и служебных компонентов запускаются по группам (`lexer`, `parser`, `semantics`, `bytecode`, `execution`, `runtime`, `cli`, `ide-backend`) или целиком через `dotnet test Axiom.sln` последовательно. Проверка CLI без исполнения: `dotnet run --project src/Axiom.Cli -- check samples/smoke/bytecode-only/compiler_execution.axm --json`.
 
 ## Версии
 

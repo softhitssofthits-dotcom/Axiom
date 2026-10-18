@@ -13,7 +13,7 @@ DIM icon AS IMAGE
 DIM walker AS SPRITE
 
 background = LOADIMAGE("../../graphics/game/art/Background.gif")
-icon = LOADIMAGE("../../../src/Axiom.Ide/Assets/axiom.ico")
+icon = LOADIMAGE("../../graphics/assets/axiom.ico")
 walker = LOADSPRITE("../../graphics/sprites/assets/walk_sheet.png", 16, 16)
 
 CANVAS WIDTH, HEIGHT

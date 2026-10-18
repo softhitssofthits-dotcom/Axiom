@@ -82,4 +82,67 @@ module.exports = [{
     await S.page.evaluate(() => window.__ide.setTheme('dark'));
     C.eq(S.pageErrors.length, 0, 'Нет ошибок страницы');
   },
+}, {
+  id: 'theme-suggest-widget-palette',
+  name: 'Список подсказок раскрашен ровно: совпадение и иконки берут цвета темы, а не Monaco',
+  async fn({ S, C }) {
+    await S.launch({ settings: { checkOnChange: false, formatOnBlur: false } });
+    const themes = await S.page.evaluate(() => window.AxiomThemes.ids());
+    const expectedFor = (theme) => S.page.evaluate((t) => {
+      const def = window.AxiomThemes.byId(t);
+      const probe = document.createElement('span'); document.body.appendChild(probe);
+      const toRgb = (hex) => { probe.style.color = hex; return getComputedStyle(probe).color; };
+      const kind = window.AxiomThemes.kind(t);
+      const readVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      const icons = {};
+      for (const [suffix, role] of [['keyword', 'keyword'], ['function', 'function'], ['class', 'type'],
+        ['struct', 'type'], ['variable', 'variable'], ['field', 'variable'], ['constant', 'variableReadonly'],
+        ['snippet', 'builtin'], ['array', 'array']]) {
+        icons[suffix] = kind === 'classic' ? 'rgb(0, 0, 0)' : toRgb(def.syntax[role]);
+      }
+      const result = { match: toRgb(def.suggest.match), selected: toRgb(def.suggest.selected), icons,
+        selectedIcon: toRgb(readVar('--xs-menu-hover-text') || readVar('--xs-text')) };
+      probe.remove(); return result;
+    }, theme);
+
+    for (const theme of themes) {
+      await S.page.evaluate((t) => window.__ide.setTheme(t), theme);
+      await S.page.evaluate(() => window.__ide.editor.getModel().setValue('fo'));
+      await S.page.evaluate(() => window.__ide.editor.setPosition({ lineNumber: 1, column: 3 }));
+      await S.page.evaluate(() => window.__ide.editor.trigger('test', 'editor.action.triggerSuggest', {}));
+      await S.page.waitForSelector('.suggest-widget .monaco-list-row', { timeout: 8000 });
+      const rows = await S.page.evaluate(() => [...document.querySelectorAll('.suggest-widget .monaco-list-row')].map((row) => {
+        const label = row.querySelector('.label-name');
+        const icon = row.querySelector('.suggest-icon');
+        const highlight = row.querySelector('.label-name .highlight');
+        return {
+          text: label ? label.textContent : '',
+          focused: row.classList.contains('focused'),
+          labelColor: label ? getComputedStyle(label).color : null,
+          highlightColor: highlight ? getComputedStyle(highlight).color : null,
+          iconClass: icon ? [...icon.classList].find((c) => c.startsWith('codicon-symbol-')) || '' : '',
+          iconColor: icon ? getComputedStyle(icon).color : null,
+        };
+      }));
+      const expected = await expectedFor(theme);
+      C.ok(rows.length >= 5, theme + ': список подсказок не пуст', String(rows.length));
+      for (const row of rows) {
+        C.ok(row.labelColor && row.labelColor !== expected.match, theme + ': подпись ' + row.text + ' не сливается с выделением');
+        if (row.highlightColor) {
+          const want = row.focused ? expected.selected : expected.match;
+          C.eq(row.highlightColor, want, theme + ': совпадение в строке ' + row.text + ' взято из палитры');
+        }
+        const suffix = row.iconClass.replace('codicon-symbol-', '');
+        if (expected.icons[suffix]) {
+          // Выбранная строка перекрашивает иконку в цвет текста подсветки — так же,
+          // как это делает сама подсказка для подписи и подробностей.
+          const want = row.focused ? expected.selectedIcon : expected.icons[suffix];
+          C.eq(row.iconColor, want, theme + ': иконка ' + suffix + ' взята из палитры');
+        }
+      }
+      await S.page.keyboard.press('Escape');
+    }
+    await S.page.evaluate(() => window.__ide.setTheme('dark'));
+    C.eq(S.pageErrors.length, 0, 'Нет ошибок страницы');
+  },
 }];

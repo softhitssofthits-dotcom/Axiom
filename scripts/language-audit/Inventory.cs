@@ -37,8 +37,6 @@ static class Inventory
             Vm = Mentions(sources.Where(p => Path.GetFileName(p).StartsWith("BytecodeVm")), "BuiltinFunctionId." + d.Id),
             Helpers = Mentions(sources.Where(p => p.Contains("Builtins")), d.Name),
             Tests = Mentions(tests, d.Name), Samples = Mentions(samples, d.Name), Manual = Mentions(manuals, d.Name),
-            Light = File.ReadAllText(Path.Combine(root, "src/Axiom.Ide/Editor/Highlighting/Axiom.xshd")).Contains(">" + d.Name + "<"),
-            Dark = File.ReadAllText(Path.Combine(root, "src/Axiom.Ide/Editor/Highlighting/Axiom.Dark.xshd")).Contains(">" + d.Name + "<"),
             HistoricalIssue = defects.TryGetValue(d.Name, out var issue) ? issue : null,
             Status = "UNVERIFIED_PER_FORM"
         }).ToArray();
@@ -60,9 +58,9 @@ static class Inventory
         var lines = new List<string> { $"# Независимая матрица реестра — {DateTime.Now:yyyy-MM-dd}", "",
             "Получена из загруженного реестра, включая перегрузки. Тип результата при специальной политике определяется связывателем; объявленный тип не является окончательным. Упоминания в тестах, примерах и справочнике — карта поиска, не доказательство выполнения. Семантический статус каждой строки: UNVERIFIED_PER_FORM. Историческая находка хранится отдельно и не означает текущий дефект.", "",
             $"Дескрипторов: {rows.Length}; имён: {rows.Select(r => r.Name).Distinct().Count()}; ID: {Enum.GetValues<BuiltinFunctionId>().Length}; незарегистрированные ID: {string.Join(", ", reserved)}.", "",
-            "| Имя | ID | Параметры | Объявленный результат | Связывание / операнды / результат | BytecodeVm | Тесты / примеры / manual | Подсветка светлая / тёмная |",
-            "|---|---|---|---|---|---|---|---|" };
-        lines.AddRange(rows.Select(r => $"| {r.Name} | {r.Id} | {string.Join(", ", r.Parameters.Select(p => p.Name + ": " + p.Type))} | {r.ReturnType} | {r.Binding} / {r.OperandPolicy} / {r.ResultPolicy} | {r.VmDispatch} | {r.Tests.Length} / {r.Samples.Length} / {r.Manual.Length} | {r.Light} / {r.Dark} |"));
+            "| Имя | ID | Параметры | Объявленный результат | Связывание / операнды / результат | BytecodeVm | Тесты / примеры / manual |",
+            "|---|---|---|---|---|---|---|" };
+        lines.AddRange(rows.Select(r => $"| {r.Name} | {r.Id} | {string.Join(", ", r.Parameters.Select(p => p.Name + ": " + p.Type))} | {r.ReturnType} | {r.Binding} / {r.OperandPolicy} / {r.ResultPolicy} | {r.VmDispatch} | {r.Tests.Length} / {r.Samples.Length} / {r.Manual.Length} |"));
         File.WriteAllLines(Path.Combine(output, "matrix.md"), lines);
     }
 }

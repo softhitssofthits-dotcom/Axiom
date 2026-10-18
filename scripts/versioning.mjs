@@ -84,7 +84,7 @@ function check() {
         if (/^src\/Axiom\.(Core|Lexing|Syntax|Parsing|Semantics|Bytecode|Runtime|Execution|Formatting)\//.test(p) && !p.endsWith('/AxiomVersionInfo.cs')) {
           required.add('language'); required.add('compiler');
         } else if (/^src\/Axiom\.Cli\//.test(p)) required.add('compiler');
-        else if (/^(ide\/(src\/|scripts\/|package(?:-lock)?\.json$)|src\/Axiom\.(DesktopHost|Ide\.Backend|Ide\.Contracts)\/)/.test(p)) required.add('ide');
+        else if (/^(ide\/(src\/|scripts\/|package(?:-lock)?\.json$)|src\/Axiom\.Ide(?:\.[^/]+)?\/|src\/Axiom\.DesktopHost\/)/.test(p)) required.add('ide');
         else if (/^scripts\/package-ide\.mjs$/.test(p)) required.add('ide');
         else if (/^src\//.test(p)) required.add('compiler');
       }

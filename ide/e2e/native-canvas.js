@@ -6,7 +6,7 @@ function probe(hwnd, action, args = {}) {
   const options = ['-NoProfile', '-NonInteractive', '-File', path.join(__dirname, 'native-canvas-probe.ps1'),
     '-WindowHandle', String(hwnd), '-Action', action];
   for (const [name, value] of Object.entries(args)) options.push('-' + name, String(value));
-  return JSON.parse(execFileSync('powershell.exe', options, { encoding:'utf8', timeout:15000, maxBuffer:24 * 1024 * 1024 }));
+  return JSON.parse(execFileSync('powershell.exe', options, { windowsHide:true, encoding:'utf8', timeout:15000, maxBuffer:24 * 1024 * 1024 }));
 }
 
 async function nativeCanvas(S) {

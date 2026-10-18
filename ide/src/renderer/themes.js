@@ -29,6 +29,7 @@
         'editorLineNumber.foreground': '#5f6c80', 'editorLineNumber.activeForeground': '#a5afbf',
         'editorIndentGuide.background1': '#2a3240', 'editorIndentGuide.activeBackground1': '#465064',
       },
+      suggest: { match: '#79b4ff', selected: '#cfe3ff' },
       console: {
         black: '#000000', red: '#cd3131', green: '#0dbc79', yellow: '#e5e510', blue: '#2472c8', magenta: '#bc3fbc',
         cyan: '#11a8cd', white: '#e5e5e5', brightBlack: '#666666', brightRed: '#f14c4c', brightGreen: '#23d18b',
@@ -48,6 +49,7 @@
         'editorLineNumber.foreground': '#8a98ab', 'editorLineNumber.activeForeground': '#536174',
         'editorIndentGuide.background1': '#e6ebf2', 'editorIndentGuide.activeBackground1': '#c4d1e1',
       },
+      suggest: { match: '#235fa9', selected: '#0b3f74' },
       console: {
         black: '#24292f', red: '#cf222e', green: '#1a7f37', yellow: '#9a6700', blue: '#0969da', magenta: '#8250df',
         cyan: '#0550ae', white: '#f6f8fa', brightBlack: '#57606a', brightRed: '#a40e26', brightGreen: '#116329',
@@ -68,6 +70,9 @@
         'editorIndentGuide.background1': '#3030A0', 'editorIndentGuide.activeBackground1': '#B8C7E8',
         'editorError.foreground': '#FFAAAA', 'editorWarning.foreground': '#FFFF55',
       },
+      // Подсказки в классических темах выводятся на светлой панели, поэтому
+      // совпадение выделяется тёмно-синим, а не жёлтым цветом редактора.
+      suggest: { match: '#0000aa', selected: '#ffff55' },
       console: {
         black: '#000000', red: '#AA0000', green: '#00AA00', yellow: '#AAAA00', blue: '#0000AA', magenta: '#AA00AA',
         cyan: '#00AAAA', white: '#AAAAAA', brightBlack: '#555555', brightRed: '#FF5555', brightGreen: '#55FF55',
@@ -102,6 +107,7 @@
         'focusBorder': '#FFFFFF', 'button.background': '#00AA00', 'button.foreground': '#000000',
         'button.hoverBackground': '#00AA00',
       },
+      suggest: { match: '#0000aa', selected: '#ffffff' },
       console: {
         black: '#000000', red: '#AA0000', green: '#00AA00', yellow: '#AA5500', blue: '#0000AA', magenta: '#AA00AA',
         cyan: '#00AAAA', white: '#AAAAAA', brightBlack: '#555555', brightRed: '#FF5555', brightGreen: '#55FF55',
@@ -192,13 +198,64 @@
     return colors;
   }
 
+  // Popup colours (suggest list, command palette). Matched characters and symbol icons
+  // must come from the theme palette: Monaco's built-in blue highlight and purple/blue
+  // symbol palette make one list look unevenly coloured in every Axiom theme.
+  function suggestColors(id) {
+    const def = get(id);
+    const selectedInk = readVars(id, ['--xs-menu-hover-text', '--xs-text']);
+    return {
+      'editorSuggestWidget.highlightForeground': def.suggest.match,
+      'editorSuggestWidget.focusHighlightForeground': def.suggest.selected,
+      'editorSuggestWidget.selectedIconForeground': selectedInk['--xs-menu-hover-text'] || selectedInk['--xs-text'] || '',
+      'list.highlightForeground': def.suggest.match,
+      'list.focusHighlightForeground': def.suggest.selected,
+    };
+  }
+
+  // Symbol icons reuse the syntax roles of the theme. Classic themes paint Monaco
+  // popups on the light chrome surface, where the editor palette (bright on the dark
+  // blue field) is unreadable, so there every icon uses the menu ink colour.
+  function symbolIconColors(id) {
+    const def = get(id);
+    const ink = def.kind === 'classic' ? (readVars(id, ['--xs-menu-text'])['--xs-menu-text'] || '#000000') : '';
+    const pick = key => ink || def.syntax[key];
+    return {
+      'symbolIcon.arrayForeground': pick('array'),
+      'symbolIcon.booleanForeground': pick('number'),
+      'symbolIcon.classForeground': pick('type'),
+      'symbolIcon.constantForeground': pick('variableReadonly'),
+      'symbolIcon.constructorForeground': pick('function'),
+      'symbolIcon.enumeratorForeground': pick('type'),
+      'symbolIcon.enumeratorMemberForeground': pick('variable'),
+      'symbolIcon.eventForeground': pick('function'),
+      'symbolIcon.fieldForeground': pick('variable'),
+      'symbolIcon.functionForeground': pick('function'),
+      'symbolIcon.interfaceForeground': pick('type'),
+      'symbolIcon.keywordForeground': pick('keyword'),
+      'symbolIcon.methodForeground': pick('function'),
+      'symbolIcon.moduleForeground': pick('identifier'),
+      'symbolIcon.namespaceForeground': pick('identifier'),
+      'symbolIcon.numberForeground': pick('number'),
+      'symbolIcon.operatorForeground': pick('operator'),
+      'symbolIcon.propertyForeground': pick('variable'),
+      'symbolIcon.snippetForeground': pick('builtin'),
+      'symbolIcon.stringForeground': pick('string'),
+      'symbolIcon.structForeground': pick('type'),
+      'symbolIcon.typeParameterForeground': pick('type'),
+      'symbolIcon.variableForeground': pick('variable'),
+    };
+  }
+
   function monacoTheme(id) {
     const def = get(id);
     return {
       base: def.monacoBase, inherit: true, semanticHighlighting: true,
       semanticTokenColors: semanticTokenColors(def.id),
       rules: syntaxRules(def.id),
-      colors: { ...surfaceColors(def.id), ...def.monacoColors },
+      colors: {
+        ...surfaceColors(def.id), ...suggestColors(def.id), ...symbolIconColors(def.id), ...def.monacoColors,
+      },
     };
   }
 
