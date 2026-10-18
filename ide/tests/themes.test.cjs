@@ -32,6 +32,8 @@ test('каждая тема описывает один и тот же набо�
       assert.match(value, /^#[0-9A-Fa-f]{6}$/, theme.id + ': hex синтаксиса ' + key);
     }
     for (const value of Object.values(theme.console)) assert.match(value, /^#[0-9A-Fa-f]{6}$/, theme.id + ': hex ANSI');
+    assert.deepEqual(Object.keys(theme.suggest).sort(), ['match', 'selected'], theme.id + ': цвета подсказок');
+    for (const value of Object.values(theme.suggest)) assert.match(value, /^#[0-9A-Fa-f]{6}$/, theme.id + ': hex подсказок');
   }
 });
 
@@ -142,4 +144,47 @@ test('консоль Borland продолжает синюю гамму рабо
   assert.ok(cb > cr && cb > cg, 'консоль в синей гамме (синий канал доминирует)');
   assert.ok(cb <= eb, 'консоль не светлее рабочего поля по синему каналу');
   assert.match(borland, /--xs-output-header-bg\s*:\s*#000055/i, 'шапка вывода в той же синей гамме');
+});
+
+test('подсказки и иконки символов берут цвета из палитры темы, а не из встроенной палитры Monaco', () => {
+  const colors = id => Themes.monacoTheme(id).colors;
+  const dark = colors('dark');
+  assert.equal(dark['editorSuggestWidget.highlightForeground'], Themes.byId('dark').suggest.match);
+  assert.equal(dark['editorSuggestWidget.focusHighlightForeground'], Themes.byId('dark').suggest.selected);
+  assert.equal(dark['list.highlightForeground'], Themes.byId('dark').suggest.match);
+  assert.equal(dark['symbolIcon.keywordForeground'], Themes.byId('dark').syntax.keyword);
+  assert.equal(dark['symbolIcon.functionForeground'], Themes.byId('dark').syntax.function);
+  assert.equal(dark['symbolIcon.methodForeground'], Themes.byId('dark').syntax.function);
+  assert.equal(dark['symbolIcon.classForeground'], Themes.byId('dark').syntax.type);
+  assert.equal(dark['symbolIcon.structForeground'], Themes.byId('dark').syntax.type);
+  assert.equal(dark['symbolIcon.variableForeground'], Themes.byId('dark').syntax.variable);
+  assert.equal(dark['symbolIcon.fieldForeground'], Themes.byId('dark').syntax.variable);
+  assert.equal(dark['symbolIcon.constantForeground'], Themes.byId('dark').syntax.variableReadonly);
+  assert.equal(dark['symbolIcon.snippetForeground'], Themes.byId('dark').syntax.builtin);
+  assert.equal(dark['symbolIcon.arrayForeground'], Themes.byId('dark').syntax.array);
+
+  const light = colors('light');
+  assert.equal(light['symbolIcon.keywordForeground'], Themes.byId('light').syntax.keyword);
+  assert.equal(light['symbolIcon.functionForeground'], Themes.byId('light').syntax.function);
+  assert.equal(light['editorSuggestWidget.highlightForeground'], Themes.byId('light').suggest.match);
+
+  // Классические темы показывают подсказки на светлой панели: яркая палитра
+  // редактора там нечитаема, поэтому все иконки используют цвет текста меню.
+  for (const id of ['basic', 'borland']) {
+    const classic = colors(id);
+    for (const [key, value] of Object.entries(classic)) {
+      if (key.startsWith('symbolIcon.')) assert.equal(value, '#000000', id + ': иконка ' + key + ' использует цвет меню');
+    }
+    assert.equal(classic['editorSuggestWidget.highlightForeground'], '#0000aa', id + ': совпадение выделено тёмно-синим');
+    assert.equal(classic['editorSuggestWidget.focusHighlightForeground'], Themes.byId(id).suggest.selected, id + ': совпадение в выбранной строке');
+  }
+
+  // Встроенная палитра Monaco не должна просачиваться ни в одну тему.
+  const foreign = ['#B180D7', '#75BEFF', '#EE9D28', '#2AAAFF'];
+  for (const id of Themes.ids()) {
+    for (const [key, value] of Object.entries(colors(id))) {
+      if (!key.startsWith('symbolIcon.') && !key.startsWith('editorSuggestWidget.')) continue;
+      assert.ok(!foreign.includes(String(value).toUpperCase()), id + ': ' + key + ' не использует цвет Monaco ' + value);
+    }
+  }
 });
