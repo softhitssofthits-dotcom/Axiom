@@ -152,6 +152,75 @@ public sealed partial class BytecodeVm
         return EvaluateExistingFileDate("FILEACCESSEDDATE", path, static file => file.LastAccessTime, location);
     }
 
+    /// <summary>
+    /// Типизированные формы файловых метаданных возвращают момент времени.
+    /// Файловая система хранит отметку в UTC, поэтому значение не зависит от
+    /// местного пояса и перевода часов; точность сохраняется до тика, а не
+    /// обрезается до секунды, как в строковых формах.
+    /// </summary>
+    private RuntimeValue EvaluateFileDateUtcBuiltin(string path, TextLocation location)
+    {
+        return EvaluateExistingFileMoment("FILEDATEUTC", path, static file => file.LastWriteTimeUtc, location);
+    }
+
+    private RuntimeValue EvaluateFileCreateDateUtcBuiltin(string path, TextLocation location)
+    {
+        return EvaluateExistingFileMoment("FILECREATEDATEUTC", path, static file => file.CreationTimeUtc, location);
+    }
+
+    private RuntimeValue EvaluateFileAccessDateUtcBuiltin(string path, TextLocation location)
+    {
+        return EvaluateExistingFileMoment("FILEACCESSEDDATEUTC", path, static file => file.LastAccessTimeUtc, location);
+    }
+
+    private RuntimeValue EvaluateDirDateUtcBuiltin(string path, TextLocation location)
+    {
+        try
+        {
+            var fullPath = BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.CurrentDirectory);
+            EnsureDirectoryExists("DIRDATEUTC", "path", fullPath, location);
+            return RuntimeValue.FromUtcDateTime(
+                DateTime.SpecifyKind(new DirectoryInfo(fullPath).LastWriteTimeUtc, DateTimeKind.Utc));
+        }
+        catch (RuntimeFailureException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
+        {
+            ReportFileSystemFailure("DIRDATEUTC", "path", ex, location);
+            throw new RuntimeFailureException();
+        }
+    }
+
+    private RuntimeValue EvaluateExistingFileMoment(
+        string functionName,
+        string path,
+        Func<FileInfo, DateTime> dateSelector,
+        TextLocation location)
+    {
+        try
+        {
+            var file = new FileInfo(BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.CurrentDirectory));
+            if (!file.Exists)
+            {
+                ReportFileSystemMissingFile(functionName, "path", location);
+                throw new RuntimeFailureException();
+            }
+
+            return RuntimeValue.FromUtcDateTime(DateTime.SpecifyKind(dateSelector(file), DateTimeKind.Utc));
+        }
+        catch (RuntimeFailureException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (BuiltinFileSystemHelpers.IsFileSystemException(ex))
+        {
+            ReportFileSystemFailure(functionName, "path", ex, location);
+            throw new RuntimeFailureException();
+        }
+    }
+
     private RuntimeValue EvaluateDirDateBuiltin(string path, TextLocation location)
     {
         try

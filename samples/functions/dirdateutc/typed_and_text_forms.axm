@@ -1,0 +1,17 @@
+' Пример показывает типизированную дату каталога.
+' DIRDATE возвращает местное время текстом, DIRDATEUTC — момент времени.
+' Ожидается вывод:
+' TRUE
+' TRUE
+
+DIM folder AS STRING = MAKETEMPDIR("axiom_dirdateutc_")
+
+' Строковая форма остаётся прежней: местное время без признака пояса.
+PRINT LEN(DIRDATE(folder)) = 19
+
+' Типизированная форма даёт момент на шкале UTC.
+DIM moment AS UTCDATETIME = DIRDATEUTC(folder)
+DIM momentText AS STRING = moment
+PRINT INSTR(momentText, "T") > 0 AND RIGHT(momentText, 1) = "Z"
+
+DELETEDIR(folder)

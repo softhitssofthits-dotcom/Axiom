@@ -7,7 +7,17 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Пути и сведения о файлах</span></nav>
-<p class="eyebrow">14 · Файловая система</p><h1 class="page-title">Пути и сведения о файлах</h1><p class="lead">Раздел содержит встроенные функции FILESIZE, FILEDATE, FILECREATEDATE, FILEACCESSEDDATE, DIRDATE, GETFILES, GETDIRS, COMBINEPATH, FILENAME, DIRNAME, EXTNAME, FULLPATH, PATHROOT, ISABSOLUTEPATH, которые работают с путями и файловыми ресурсами. Подробнее назначение, аргументы и результат каждой функции объяснены ниже.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<p class="eyebrow">14 · Файловая система</p><h1 class="page-title">Пути и сведения о файлах</h1><p class="lead">Раздел содержит встроенные функции FILESIZE, FILEDATE, FILECREATEDATE, FILEACCESSEDDATE, DIRDATE, GETFILES, GETDIRS, COMBINEPATH, FILENAME, DIRNAME, EXTNAME, FULLPATH, PATHROOT, ISABSOLUTEPATH, которые работают с путями и файловыми ресурсами. Подробнее назначение, аргументы и результат каждой функции объяснены ниже.</p><section class="article-section" id="file-time-forms"><h2>Строковые и типизированные формы времени</h2>
+<p>Функции FILEDATE, FILECREATEDATE, FILEACCESSEDDATE и DIRDATE возвращают STRING в местном времени с точностью до секунды. Это прежний договор: текст удобен для вывода, но теряет доли секунды и не говорит, в каком поясе записано время.</p>
+<p>Для точных отметок существуют типизированные формы с суффиксом UTC: FILEDATEUTC, FILECREATEDATEUTC, FILEACCESSEDDATEUTC и DIRDATEUTC. Они возвращают UTCDATETIME — момент времени. Такой результат не зависит от местного пояса и перевода часов, хранит полную точность файловой системы и печатается с признаком Z. Обе формы обращаются к одним и тем же метаданным; различие только в типе результата.</p>
+<pre><code class="language-axiom">DIM path AS STRING = MAKETEMPFILE("axiom_forms_")
+WRITEFILE(path, "данные")
+PRINT LEN(FILEDATE(path))
+PRINT RIGHT(FILEDATEUTC(path) &amp; "", 1)
+DELETEFILE(path)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>19
+Z</code></pre></section>
+<nav class="article-toc" aria-label="В этой статье"></nav>
 <section class="article-section"><h2>Назначение и условия работы</h2><p>Эта страница объединяет отдельные встроенные функции <code>FILESIZE</code>, <code>FILEDATE</code>, <code>FILECREATEDATE</code>, <code>FILEACCESSEDDATE</code>, <code>DIRDATE</code>, <code>GETFILES</code>, <code>GETDIRS</code>, <code>COMBINEPATH</code>, <code>FILENAME</code>, <code>DIRNAME</code>, <code>EXTNAME</code>, <code>FULLPATH</code>, <code>PATHROOT</code>, <code>ISABSOLUTEPATH</code>. Каждый блок синтаксиса относится к указанной функции; общей конструкции для всей группы нет.</p><p>Файловые операции доступны в консольной программе и в IDE без оператора SCREEN. Относительные пути разрешаются от CURRENTDIR() текущего запуска. Перед разрешением пути раскрываются переменные окружения. Нулевой символ в пути недопустим. Создание файла не создаёт родительский каталог; сначала вызовите MAKEDIR, если он нужен.</p></section>
 <section class="article-section" id="filesize"><h2>FILESIZE</h2><p><code>FILESIZE</code> — встроенная функция языка Axiom, которая возвращает физическую длину файла в байтах.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">FILESIZE(&lt;путь&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь к файлу.</p><h3>Результат и правила работы</h3><p>Результат LONG равен физической длине файла в байтах, включая BOM, если он записан. Для пустого файла возвращается 0. Файл должен существовать.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если файл отсутствует, путь не разрешается или размер нельзя получить из-за отказа доступа либо ошибки файловой системы.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
 DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
@@ -34,6 +44,98 @@ DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
 WRITEFILE(path, "AB")
 PRINT LEN(DIRDATE(folder))
 DELETEDIRRECURSIVE(folder)</code></pre><p>Ожидаемый вывод:</p><pre><code>19</code></pre></section>
+<section class="article-section" id="filedateutc"><h2>FILEDATEUTC</h2>
+<p>FILEDATEUTC — встроенная функция языка Axiom, которая возвращает момент последней записи в файл.</p>
+<h3>Назначение</h3>
+<p>Функция возвращает момент времени, а не текст местного времени. Такой результат однозначен, не зависит от часового пояса машины и сохраняет полную точность файловой системы, включая доли секунды.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">FILEDATEUTC(&lt;путь&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p><code>&lt;путь&gt;</code> имеет тип STRING и задаёт путь к существующему объекту. Относительный путь разрешается от CURRENTDIR() текущего запуска.</p>
+<h3>Результат</h3>
+<p>Функция возвращает значение типа UTCDATETIME. Результат печатается с разделителем T и признаком Z, например 2024-01-02T03:04:05.125Z.</p>
+<h3>Правила и ограничения</h3>
+<p>Объект должен существовать; для файловых форм каталог не подходит, для DIRDATEUTC не подходит файл. Фактическая точность зависит от операционной системы и файловой системы: не всякий носитель хранит доли секунды. Строковая форма той же метаданной остаётся доступной и по-прежнему возвращает местное время до секунды.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное число аргументов и несовместимый тип аргумента. MB3007 возникает, если объект отсутствует, путь не разрешается, метаданные недоступны или вид объекта не совпадает с функцией.</p>
+<h3>Пример</h3><pre><code class="language-axiom">DIM path AS STRING = MAKETEMPFILE("axiom_moment_")
+WRITEFILE(path, "данные")
+DIM moment AS UTCDATETIME = FILEDATEUTC(path)
+PRINT RIGHT(moment &amp; "", 1)
+DELETEFILE(path)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>Z</code></pre>
+<h3>См. также</h3>
+<p><a href="date-time-functions-time-zones.html#instant-concept">Календарное время и момент</a>, <a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="filecreatedateutc"><h2>FILECREATEDATEUTC</h2>
+<p>FILECREATEDATEUTC — встроенная функция языка Axiom, которая возвращает момент создания файла.</p>
+<h3>Назначение</h3>
+<p>Функция возвращает момент времени, а не текст местного времени. Такой результат однозначен, не зависит от часового пояса машины и сохраняет полную точность файловой системы, включая доли секунды.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">FILECREATEDATEUTC(&lt;путь&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p><code>&lt;путь&gt;</code> имеет тип STRING и задаёт путь к существующему объекту. Относительный путь разрешается от CURRENTDIR() текущего запуска.</p>
+<h3>Результат</h3>
+<p>Функция возвращает значение типа UTCDATETIME. Результат печатается с разделителем T и признаком Z, например 2024-01-02T03:04:05.125Z.</p>
+<h3>Правила и ограничения</h3>
+<p>Объект должен существовать; для файловых форм каталог не подходит, для DIRDATEUTC не подходит файл. Фактическая точность зависит от операционной системы и файловой системы: не всякий носитель хранит доли секунды. Строковая форма той же метаданной остаётся доступной и по-прежнему возвращает местное время до секунды.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное число аргументов и несовместимый тип аргумента. MB3007 возникает, если объект отсутствует, путь не разрешается, метаданные недоступны или вид объекта не совпадает с функцией.</p>
+<h3>Пример</h3><pre><code class="language-axiom">DIM path AS STRING = MAKETEMPFILE("axiom_moment_")
+WRITEFILE(path, "данные")
+DIM moment AS UTCDATETIME = FILECREATEDATEUTC(path)
+PRINT RIGHT(moment &amp; "", 1)
+DELETEFILE(path)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>Z</code></pre>
+<h3>См. также</h3>
+<p><a href="date-time-functions-time-zones.html#instant-concept">Календарное время и момент</a>, <a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="fileaccesseddateutc"><h2>FILEACCESSEDDATEUTC</h2>
+<p>FILEACCESSEDDATEUTC — встроенная функция языка Axiom, которая возвращает момент последнего доступа к файлу.</p>
+<h3>Назначение</h3>
+<p>Функция возвращает момент времени, а не текст местного времени. Такой результат однозначен, не зависит от часового пояса машины и сохраняет полную точность файловой системы, включая доли секунды.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">FILEACCESSEDDATEUTC(&lt;путь&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p><code>&lt;путь&gt;</code> имеет тип STRING и задаёт путь к существующему объекту. Относительный путь разрешается от CURRENTDIR() текущего запуска.</p>
+<h3>Результат</h3>
+<p>Функция возвращает значение типа UTCDATETIME. Результат печатается с разделителем T и признаком Z, например 2024-01-02T03:04:05.125Z.</p>
+<h3>Правила и ограничения</h3>
+<p>Объект должен существовать; для файловых форм каталог не подходит, для DIRDATEUTC не подходит файл. Фактическая точность зависит от операционной системы и файловой системы: не всякий носитель хранит доли секунды. Строковая форма той же метаданной остаётся доступной и по-прежнему возвращает местное время до секунды.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное число аргументов и несовместимый тип аргумента. MB3007 возникает, если объект отсутствует, путь не разрешается, метаданные недоступны или вид объекта не совпадает с функцией.</p>
+<h3>Пример</h3><pre><code class="language-axiom">DIM path AS STRING = MAKETEMPFILE("axiom_moment_")
+WRITEFILE(path, "данные")
+DIM moment AS UTCDATETIME = FILEACCESSEDDATEUTC(path)
+PRINT RIGHT(moment &amp; "", 1)
+DELETEFILE(path)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>Z</code></pre>
+<h3>См. также</h3>
+<p><a href="date-time-functions-time-zones.html#instant-concept">Календарное время и момент</a>, <a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="dirdateutc"><h2>DIRDATEUTC</h2>
+<p>DIRDATEUTC — встроенная функция языка Axiom, которая возвращает момент последнего изменения каталога.</p>
+<h3>Назначение</h3>
+<p>Функция возвращает момент времени, а не текст местного времени. Такой результат однозначен, не зависит от часового пояса машины и сохраняет полную точность файловой системы, включая доли секунды.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">DIRDATEUTC(&lt;путь&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p><code>&lt;путь&gt;</code> имеет тип STRING и задаёт путь к существующему объекту. Относительный путь разрешается от CURRENTDIR() текущего запуска.</p>
+<h3>Результат</h3>
+<p>Функция возвращает значение типа UTCDATETIME. Результат печатается с разделителем T и признаком Z, например 2024-01-02T03:04:05.125Z.</p>
+<h3>Правила и ограничения</h3>
+<p>Объект должен существовать; для файловых форм каталог не подходит, для DIRDATEUTC не подходит файл. Фактическая точность зависит от операционной системы и файловой системы: не всякий носитель хранит доли секунды. Строковая форма той же метаданной остаётся доступной и по-прежнему возвращает местное время до секунды.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное число аргументов и несовместимый тип аргумента. MB3007 возникает, если объект отсутствует, путь не разрешается, метаданные недоступны или вид объекта не совпадает с функцией.</p>
+<h3>Пример</h3><pre><code class="language-axiom">DIM path AS STRING = MAKETEMPFILE("axiom_moment_")
+WRITEFILE(path, "данные")
+DIM moment AS UTCDATETIME = DIRDATEUTC(path)
+PRINT RIGHT(moment &amp; "", 1)
+DELETEFILE(path)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>Z</code></pre>
+<h3>См. также</h3>
+<p><a href="date-time-functions-time-zones.html#instant-concept">Календарное время и момент</a>, <a href="function-reference.html">Указатель встроенных функций</a></p></section>
 <section class="article-section" id="getfiles"><h2>GETFILES</h2><p><code>GETFILES</code> — встроенная функция языка Axiom, которая возвращает массив полных путей файлов непосредственно в указанном каталоге.</p><p>Операция работает с путём файловой системы либо со строковыми частями пути.</p><h3>Синтаксис</h3><pre><code class="language-axiom">GETFILES(&lt;путь&gt;)</code></pre><pre><code class="language-axiom">GETFILES(&lt;путь&gt;, &lt;маска&gt;)</code></pre><h3>Аргументы</h3><p><code>&lt;путь&gt;</code> имеет тип <code>STRING</code>. Аргумент задаёт путь к каталогу.</p><p><code>&lt;маска&gt;</code> имеет тип <code>STRING</code>. Строка маски отбирает имена в указанном каталоге; например, *.txt. Пустая маска недопустима.</p><h3>Результат и правила работы</h3><p>Результат имеет тип <code>массив STRING ранга 1</code>. Без маски используется *. Обход не рекурсивный. Полные пути сортируются без учёта регистра. Результат имеет границы 1 TO N, а при отсутствии совпадений — 1 TO 0. Каталог должен существовать.</p><h3>Диагностика</h3><p>MB2004 означает неверное число аргументов; MB2003 — несовместимые типы. MB3007 возникает, если каталог отсутствует, перечисление недоступно, маска пуста или маска недопустима для перечисления файлов этой системой.</p><h3>Пример</h3><pre><code class="language-axiom">DIM folder AS STRING = MAKETEMPDIR("axiom_manual_")
 DIM path AS STRING = COMBINEPATH(folder, "notes.txt")
 WRITEFILE(path, "AB")

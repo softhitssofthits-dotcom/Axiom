@@ -25,7 +25,7 @@
     "src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.cs",
     "src/Axiom.Syntax/SyntaxKind.cs"
   ],
-  "sourceFingerprint": "9172b3fabbb3971160632d4c1e2af10e342e3afbfd05878ac8d39369e26ff4b9",
+  "sourceFingerprint": "e248b11e97b5fab01190c4f938d61accd03956d497e052ed8b0c008208d88340",
   "functions": [
     {
       "name": "ABS",
@@ -2355,6 +2355,27 @@
       ]
     },
     {
+      "name": "DIRDATEUTC",
+      "description": "Возвращает момент последнего изменения каталога на шкале UTC.",
+      "sourceHref": "file-system-functions-paths.html#dirdateutc",
+      "forms": [
+        {
+          "key": "DIRDATEUTC/0",
+          "id": "DirDateUtc",
+          "parameters": [
+            {
+              "name": "path",
+              "type": "STRING"
+            }
+          ],
+          "returnType": "UTCDATETIME",
+          "binding": "Default",
+          "operandPolicy": "Declared",
+          "resultPolicy": "Declared"
+        }
+      ]
+    },
+    {
       "name": "DIREXISTS",
       "description": "Проверяет, существует ли каталог по заданному пути.",
       "sourceHref": "file-system-functions-text.html#direxists",
@@ -2632,6 +2653,27 @@
       ]
     },
     {
+      "name": "FILEACCESSEDDATEUTC",
+      "description": "Возвращает момент последнего доступа к файлу на шкале UTC.",
+      "sourceHref": "file-system-functions-paths.html#fileaccesseddateutc",
+      "forms": [
+        {
+          "key": "FILEACCESSEDDATEUTC/0",
+          "id": "FileAccessDateUtc",
+          "parameters": [
+            {
+              "name": "path",
+              "type": "STRING"
+            }
+          ],
+          "returnType": "UTCDATETIME",
+          "binding": "Default",
+          "operandPolicy": "Declared",
+          "resultPolicy": "Declared"
+        }
+      ]
+    },
+    {
       "name": "FILECREATEDATE",
       "description": "Возвращает местные дату и время создания файла.",
       "sourceHref": "file-system-functions-paths.html#filecreatedate",
@@ -2653,6 +2695,27 @@
       ]
     },
     {
+      "name": "FILECREATEDATEUTC",
+      "description": "Возвращает момент создания файла на шкале UTC.",
+      "sourceHref": "file-system-functions-paths.html#filecreatedateutc",
+      "forms": [
+        {
+          "key": "FILECREATEDATEUTC/0",
+          "id": "FileCreateDateUtc",
+          "parameters": [
+            {
+              "name": "path",
+              "type": "STRING"
+            }
+          ],
+          "returnType": "UTCDATETIME",
+          "binding": "Default",
+          "operandPolicy": "Declared",
+          "resultPolicy": "Declared"
+        }
+      ]
+    },
+    {
       "name": "FILEDATE",
       "description": "Возвращает местные дату и время последней записи в файл.",
       "sourceHref": "file-system-functions-paths.html#filedate",
@@ -2667,6 +2730,27 @@
             }
           ],
           "returnType": "STRING",
+          "binding": "Default",
+          "operandPolicy": "Declared",
+          "resultPolicy": "Declared"
+        }
+      ]
+    },
+    {
+      "name": "FILEDATEUTC",
+      "description": "Возвращает момент последней записи в файл на шкале UTC.",
+      "sourceHref": "file-system-functions-paths.html#filedateutc",
+      "forms": [
+        {
+          "key": "FILEDATEUTC/0",
+          "id": "FileDateUtc",
+          "parameters": [
+            {
+              "name": "path",
+              "type": "STRING"
+            }
+          ],
+          "returnType": "UTCDATETIME",
           "binding": "Default",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"

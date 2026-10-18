@@ -1,0 +1,17 @@
+' Пример показывает момент создания файла.
+' FILECREATEDATEUTC возвращает значение UTCDATETIME, а не текст местного времени.
+' Ожидается вывод:
+' TRUE
+' TRUE
+
+DIM path AS STRING = MAKETEMPFILE("axiom_filecreatedateutc_")
+WRITEFILE(path, "данные")
+
+DIM created AS UTCDATETIME = FILECREATEDATEUTC(path)
+DIM createdText AS STRING = created
+
+' Момент содержит признак UTC и пригоден для сравнения.
+PRINT RIGHT(createdText, 1) = "Z"
+PRINT created = FILECREATEDATEUTC(path)
+
+DELETEFILE(path)

@@ -351,3 +351,11 @@ IDE 0.6.16 сохраняет новый запрос при позднем пу
 Попутно исправлена подсветка IDE: `DATETIMESERIAL` и `DATETIMEVALUE` отсутствовали в `.xshd`, словарь встроенных функций не был отсортирован.
 
 Остаются открытыми DTA-006 (длительность и монотонное измерение), DTA-007 (типизированные метаданные файлов, теперь может опираться на момент) и DTA-015 (измерения).
+
+## Даты и время: DTA-007 (метаданные файлов) закрыт — 18 октября 2026 года
+
+Добавлены `FILEDATEUTC`, `FILECREATEDATEUTC`, `FILEACCESSEDDATEUTC` и `DIRDATEUTC`, возвращающие `UTCDATETIME`. Строковые формы сохранены без изменений.
+
+Постоянные проверки: `tests/Axiom.Execution.Tests/FileMetadataMomentContractTests.cs` (6); примеры `samples/functions/{filedateutc,filecreatedateutc,fileaccesseddateutc,dirdateutc}/`; справочник `file-system-paths.html` (`file-system-functions-paths.html`).
+
+Остаются открытыми DTA-006 (длительность и монотонное измерение) и DTA-015 (измерения). DTA-006 требует решения автора: нужен ли отдельный тип длительности или достаточно функций поверх числа секунд.

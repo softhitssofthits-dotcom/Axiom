@@ -256,6 +256,7 @@
             <Word>DELETEDIRRECURSIVE</Word>
             <Word>DELETEFILE</Word>
             <Word>DIRDATE</Word>
+            <Word>DIRDATEUTC</Word>
             <Word>DIREXISTS</Word>
             <Word>DIRNAME</Word>
             <Word>DIRSIZE</Word>
@@ -269,8 +270,11 @@
             <Word>EXP</Word>
             <Word>EXTNAME</Word>
             <Word>FILEACCESSEDDATE</Word>
+            <Word>FILEACCESSEDDATEUTC</Word>
             <Word>FILECREATEDATE</Word>
+            <Word>FILECREATEDATEUTC</Word>
             <Word>FILEDATE</Word>
+            <Word>FILEDATEUTC</Word>
             <Word>FILEEXISTS</Word>
             <Word>FILELENGTH</Word>
             <Word>FILEMODE</Word>

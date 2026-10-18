@@ -1,0 +1,18 @@
+' Пример показывает момент последнего доступа к файлу.
+' FILEACCESSEDDATEUTC возвращает значение UTCDATETIME, а не текст местного времени.
+' Ожидается вывод:
+' TRUE
+' TRUE
+
+DIM path AS STRING = MAKETEMPFILE("axiom_fileaccess_")
+WRITEFILE(path, "данные")
+READFILE(path)
+
+DIM accessed AS UTCDATETIME = FILEACCESSEDDATEUTC(path)
+DIM accessedText AS STRING = accessed
+
+' Момент содержит признак UTC и сравним сам с собой.
+PRINT RIGHT(accessedText, 1) = "Z"
+PRINT accessed = FILEACCESSEDDATEUTC(path)
+
+DELETEFILE(path)

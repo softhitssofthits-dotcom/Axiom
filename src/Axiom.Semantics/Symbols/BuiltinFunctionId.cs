@@ -340,5 +340,9 @@ public enum BuiltinFunctionId
     ToInstant,
     ToInstantZone,
     FromInstant,
-    FromInstantZone
+    FromInstantZone,
+    FileDateUtc,
+    FileCreateDateUtc,
+    FileAccessDateUtc,
+    DirDateUtc
 }

@@ -2,7 +2,7 @@
 
 Дата: 18 октября 2026 года. Исходная ревизия: `c77220e0ababfc0b9fa21e17bdbfab439e3e56de`.
 Версии: язык 0.1.19, компилятор 0.1.19, IDE 0.6.22.
-Статус: исследование завершено в указанных ниже границах. Этапы 1 (DTA-002, DTA-003), 2 (DTA-001), DTA-004, DTA-005, DTA-008..DTA-014 реализованы 18 октября 2026 года; открыты DTA-006 (длительность и монотонное измерение), DTA-007 (типизированные метаданные файлов) и DTA-015 (измерения). Итог реализации — в разделах 10–19.
+Статус: исследование завершено в указанных ниже границах. Этапы 1 (DTA-002, DTA-003), 2 (DTA-001), DTA-004, DTA-005, DTA-007, DTA-008..DTA-014 реализованы 18 октября 2026 года; открыты DTA-006 (длительность и монотонное измерение) и DTA-015 (измерения). Итог реализации — в разделах 10–20.
 
 ## 1. Главный вывод
 
@@ -383,3 +383,15 @@ DTA-004. `DATE(пояс)`, `TIME(пояс)` и `NOW(пояс)` проходят 
 Примеры: `samples/operators/utcdatetime/distinct_moments.axm`, `samples/functions/instantvalue/parse_text.axm`, `samples/functions/toinstant/local_to_moment.axm`, `samples/functions/frominstant/moment_in_zones.axm`, `samples/functions/nowinstant/current_moment.axm`. Справочник: `date-time-functions-time-zones.html` (понятие и карточки `TOINSTANT`, `FROMINSTANT`, `INSTANTVALUE`), `date-time-functions-current.html` (`NOWINSTANT`), `date-time-functions.html` (обзор).
 
 Остаются открытыми DTA-006 (длительность и монотонное измерение), DTA-007 (типизированные метаданные файлов; теперь может опираться на момент) и DTA-015 (измерения).
+
+## 20. Реализация DTA-007 (типизированные метаданные файлов) — 18 октября 2026 года
+
+Добавлены четыре формы с суффиксом UTC: `FILEDATEUTC`, `FILECREATEDATEUTC`, `FILEACCESSEDDATEUTC` и `DIRDATEUTC`. Они возвращают `UTCDATETIME` и читают свойства `*TimeUtc`, поэтому результат однозначен, не зависит от местного пояса и сохраняет точность носителя.
+
+Договор. Строковые формы сохранены без изменений: `FILEDATE`, `FILECREATEDATE`, `FILEACCESSEDDATE` и `DIRDATE` по-прежнему возвращают местное время текстом с точностью до секунды, и существующие программы не меняются. Выбор имени через суффикс `UTC` держит типизированную и строковую формы рядом в указателе и дополнении IDE и прямо говорит, в какой шкале дан результат. Вид объекта проверяется так же, как в строковых формах: файловые формы отвергают каталог, `DIRDATEUTC` отвергает файл.
+
+Реализация. `EvaluateExistingFileMoment` и `EvaluateDirDateUtcBuiltin` в `BytecodeVm.Builtins.FileSystem.cs`; регистрация — `BuiltinFunctions.FileSystem.cs`, диспетчер — `BytecodeVm.BuiltinDispatch.cs`. Новые члены `BuiltinFunctionId` добавлены в конец перечисления.
+
+Проверки. `FileMetadataMomentContractTests` — 6 тестов: точность до долей секунды, типизированная дата каталога, сохранение прежнего договора строковых форм, отказ отсутствующего объекта, отказ неверного вида объекта, упорядочивание моментов вместе с `FROMINSTANT`. Итоги: Semantics 533/533, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3395/3397 (два известных отказа Maze Chase), подсветка 55/55, `audit-bytecode-coverage` PASS, `check-manual` пройден. Примеры: `samples/functions/filedateutc/`, `filecreatedateutc/`, `fileaccesseddateutc/`, `dirdateutc/`. Справочник: `file-system-functions-paths.html`.
+
+Остаются открытыми DTA-006 (длительность и монотонное измерение) и DTA-015 (измерения). DTA-006 требует проектного решения по именам и по тому, нужен ли отдельный тип длительности или достаточно функций.

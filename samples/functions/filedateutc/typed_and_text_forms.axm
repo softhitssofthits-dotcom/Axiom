@@ -1,0 +1,31 @@
+' Пример показывает разницу между строковой и типизированной формой даты файла.
+' FILEDATE возвращает местное время текстом с точностью до секунды.
+' FILEDATEUTC возвращает момент времени: он однозначен, содержит признак UTC
+' и сохраняет доли секунды, если файловая система их хранит.
+' Точные значения зависят от момента запуска, поэтому пример проверяет форму.
+' Ожидается вывод:
+' TRUE
+' TRUE
+' TRUE
+' TRUE
+
+DIM path AS STRING = MAKETEMPFILE("axiom_filedateutc_")
+WRITEFILE(path, "данные")
+
+' Строковая форма печатает местное время: длина ровно 19, без признаков T и Z.
+DIM textForm AS STRING = FILEDATE(path)
+PRINT LEN(textForm) = 19
+
+' Типизированная форма даёт момент: он всегда содержит разделитель T и признак Z.
+DIM moment AS UTCDATETIME = FILEDATEUTC(path)
+DIM momentText AS STRING = moment
+PRINT INSTR(momentText, "T") > 0 AND RIGHT(momentText, 1) = "Z"
+
+' Значение типизировано и сравнимо с другими моментами.
+PRINT moment = FILEDATEUTC(path)
+
+' Момент можно показать в календарном виде явной функцией: разделитель — пробел.
+DIM localText AS STRING = FROMINSTANT(moment, "UTC")
+PRINT INSTR(localText, " ") > 0
+
+DELETEFILE(path)

@@ -22,6 +22,13 @@ public static partial class BuiltinFunctions
             CreateDefault(BuiltinFunctionId.FileCreateDate, "FILECREATEDATE", TypeSymbol.String, [Parameter("path", TypeSymbol.String)]),
             CreateDefault(BuiltinFunctionId.FileAccessDate, "FILEACCESSEDDATE", TypeSymbol.String, [Parameter("path", TypeSymbol.String)]),
             CreateDefault(BuiltinFunctionId.DirDate, "DIRDATE", TypeSymbol.String, [Parameter("path", TypeSymbol.String)]),
+            // Типизированные формы тех же метаданных: момент времени вместо текста
+            // местного времени. Суффикс UTC выбран, чтобы форма стояла рядом со
+            // строковой в указателе и дополнении IDE.
+            CreateDefault(BuiltinFunctionId.FileDateUtc, "FILEDATEUTC", TypeSymbol.UtcDateTime, [Parameter("path", TypeSymbol.String)]),
+            CreateDefault(BuiltinFunctionId.FileCreateDateUtc, "FILECREATEDATEUTC", TypeSymbol.UtcDateTime, [Parameter("path", TypeSymbol.String)]),
+            CreateDefault(BuiltinFunctionId.FileAccessDateUtc, "FILEACCESSEDDATEUTC", TypeSymbol.UtcDateTime, [Parameter("path", TypeSymbol.String)]),
+            CreateDefault(BuiltinFunctionId.DirDateUtc, "DIRDATEUTC", TypeSymbol.UtcDateTime, [Parameter("path", TypeSymbol.String)]),
             CreateDefault(BuiltinFunctionId.GetFiles, "GETFILES", ArrayTypeSymbol.Create(TypeSymbol.String), [Parameter("path", TypeSymbol.String)]),
             CreateDefault(BuiltinFunctionId.GetFilesPattern, "GETFILES", ArrayTypeSymbol.Create(TypeSymbol.String), [Parameter("path", TypeSymbol.String), Parameter("pattern", TypeSymbol.String)]),
             CreateDefault(BuiltinFunctionId.GetDirs, "GETDIRS", ArrayTypeSymbol.Create(TypeSymbol.String), [Parameter("path", TypeSymbol.String)]),

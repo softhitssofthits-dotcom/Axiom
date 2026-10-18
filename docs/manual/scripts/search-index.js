@@ -3449,6 +3449,21 @@ window.AxiomSearchIndex = [
     ]
   },
   {
+    "title": "DIRDATEUTC",
+    "href": "function-reference.html#fn-dirdateutc",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает момент последнего изменения каталога на шкале UTC.",
+    "keywords": [
+      "DIRDATEUTC",
+      "file-system-functions-paths",
+      "path"
+    ],
+    "aliases": [
+      "DIRDATEUTC"
+    ]
+  },
+  {
     "title": "DIREXISTS",
     "href": "function-reference.html#fn-direxists",
     "kind": "Функция",
@@ -3645,6 +3660,21 @@ window.AxiomSearchIndex = [
     ]
   },
   {
+    "title": "FILEACCESSEDDATEUTC",
+    "href": "function-reference.html#fn-fileaccesseddateutc",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает момент последнего доступа к файлу на шкале UTC.",
+    "keywords": [
+      "FILEACCESSEDDATEUTC",
+      "file-system-functions-paths",
+      "path"
+    ],
+    "aliases": [
+      "FILEACCESSEDDATEUTC"
+    ]
+  },
+  {
     "title": "FILECREATEDATE",
     "href": "function-reference.html#fn-filecreatedate",
     "kind": "Функция",
@@ -3660,6 +3690,21 @@ window.AxiomSearchIndex = [
     ]
   },
   {
+    "title": "FILECREATEDATEUTC",
+    "href": "function-reference.html#fn-filecreatedateutc",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает момент создания файла на шкале UTC.",
+    "keywords": [
+      "FILECREATEDATEUTC",
+      "file-system-functions-paths",
+      "path"
+    ],
+    "aliases": [
+      "FILECREATEDATEUTC"
+    ]
+  },
+  {
     "title": "FILEDATE",
     "href": "function-reference.html#fn-filedate",
     "kind": "Функция",
@@ -3672,6 +3717,21 @@ window.AxiomSearchIndex = [
     ],
     "aliases": [
       "FILEDATE"
+    ]
+  },
+  {
+    "title": "FILEDATEUTC",
+    "href": "function-reference.html#fn-filedateutc",
+    "kind": "Функция",
+    "category": "Файлы и файловая система",
+    "description": "Возвращает момент последней записи в файл на шкале UTC.",
+    "keywords": [
+      "FILEDATEUTC",
+      "file-system-functions-paths",
+      "path"
+    ],
+    "aliases": [
+      "FILEDATEUTC"
     ]
   },
   {
