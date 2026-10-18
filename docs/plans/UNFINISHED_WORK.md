@@ -313,3 +313,11 @@ IDE 0.6.16 сохраняет новый запрос при позднем пу
 Постоянные проверки: `tests/Axiom.Execution.Tests/TemporalExchangeFormatContractTests.cs` (6); пример `samples/functions/datetimevalue/exchange_format.axm`; справочник `date-time-functions-arithmetic-and-validation.html`.
 
 Остаются открытыми DTA-005, DTA-006, DTA-007, DTA-009, DTA-011, DTA-014, DTA-015. Следующий доступный участок — DTA-009 (INPUT для временных значений) либо DTA-011 (проверяемые константы временных полей TYPE).
+
+## Даты и время: DTA-011 (временные поля TYPE) закрыт — 18 октября 2026 года
+
+Поле `DATE`, `TIME` или `DATETIME` принимает канонический строковый литерал; значение проверяется при объявлении и хранится типизированным. Невозможная дата даёт MB2027, потеря компонента — MB2003, вызовы функций по-прежнему недопустимы. JSON-снимок байткода сохраняет такие значения.
+
+Постоянные проверки: `tests/Axiom.Execution.Tests/TemporalTypeFieldDefaultContractTests.cs` (8); пример `samples/operators/type/temporal_field_defaults.axm`; справочник `type.html`.
+
+Остаются открытыми DTA-005, DTA-006, DTA-007, DTA-009, DTA-014, DTA-015. Следующий доступный участок — DTA-009 (INPUT для временных значений).

@@ -241,3 +241,11 @@ DTA-004 закрыт: `DATE(пояс)`, `TIME(пояс)` и `NOW(пояс)` пр
 Реализация: `TryParseExchangeDateTime` в `BuiltinDateTimeHelpers` (две формы `TryParseExact` и общая проверка дробной части), `EvaluateDateTimeValueBuiltin` в `BytecodeVm.Builtins.DateTime.cs`, регистрация и диспетчер; новый член `BuiltinFunctionId` добавлен в конец перечисления.
 
 Проверки: `tests/Axiom.Execution.Tests/TemporalExchangeFormatContractTests.cs` — 6 тестов. Итоги: Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3317/3319 (два известных отказа Maze Chase), `audit-bytecode-coverage` PASS, `check-manual` пройден (273 функции, 339 форм). Пример `samples/functions/datetimevalue/exchange_format.axm`; справочник `date-time-functions-arithmetic-and-validation.html`. Версии: язык/компилятор 0.1.25, IDE 0.6.22.
+
+## Временные значения по умолчанию в полях TYPE (DTA-011) — 18 октября 2026 года
+
+Поле `TYPE` типа `DATE`, `TIME` или `DATETIME` принимает канонический строковый литерал. Значение проверяется при объявлении и хранится типизированным: `TryConvertTemporalFieldDefault` разбирает текст теми же форматами, что и исполнение, `RuntimeRecordValue.CreateConfiguredDefaultFieldValue` возвращает `DateOnly`/`TimeOnly`/`DateTime`. Невозможная дата даёт MB2027, полный текст даты-времени в поле `DATE` или `TIME` — MB2003 по общему правилу потери компонента. Вызовы функций в значении по умолчанию по-прежнему недопустимы.
+
+Сериализация: `NormalizeTypeFieldDefaultValue` записывает значение каноническим текстом, `RestoreTypeFieldDefaultValue` читает его обратно, поэтому JSON-снимок байткода сохраняет временные значения по умолчанию.
+
+Проверки: `tests/Axiom.Execution.Tests/TemporalTypeFieldDefaultContractTests.cs` — 8 тестов, включая JSON-снимок. `Bind_TemporalFieldDefaultRemainsUnsupported` заменён двумя тестами. Итоги: Semantics 533/533, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3326/3328 (два известных отказа Maze Chase), `audit-bytecode-coverage` PASS. Пример `samples/operators/type/temporal_field_defaults.axm`; справочник `type.html`. Версии: язык/компилятор 0.1.26, IDE 0.6.22.

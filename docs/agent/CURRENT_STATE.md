@@ -102,3 +102,9 @@
 Текущие версии: язык/компилятор 0.1.25, IDE 0.6.22. DTA-013 закрыт: `DATETIMEVALUE` разбирает каноническую запись и формат обмена с `T`, включая доли секунды. Смещение и `Z` отвергаются как MB3007, поскольку `DATETIME` не хранит часовой пояс. Неявное преобразование строки в `DATETIME` осталось строгим, `ISDATE` сохраняет собственный договор, локализованный ввод не расширялся.
 
 Проверки: `TemporalExchangeFormatContractTests` 6/6, Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3317/3319 (два известных отказа Maze Chase), `audit-bytecode-coverage` PASS, `check-manual` пройден. Пример — `samples/functions/datetimevalue/exchange_format.axm`. Следующий шаг — DTA-009 (INPUT) либо DTA-011 (константы полей TYPE).
+
+### 2026-10-18 13:32 - Временные значения по умолчанию в полях TYPE
+
+Текущие версии: язык/компилятор 0.1.26, IDE 0.6.22. DTA-011 закрыт: поле `DATE`, `TIME` или `DATETIME` принимает канонический строковый литерал, проверяет его при объявлении и хранит типизированным. Невозможная дата даёт MB2027, потеря компонента — MB2003, вызовы функций недопустимы. JSON-снимок байткода сохраняет такие значения.
+
+Проверки: `TemporalTypeFieldDefaultContractTests` 8/8, Semantics 533/533, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3326/3328 (два известных отказа Maze Chase), `audit-bytecode-coverage` PASS, `check-manual` пройден. Пример — `samples/operators/type/temporal_field_defaults.axm`. Следующий шаг — DTA-009 (INPUT для временных значений).

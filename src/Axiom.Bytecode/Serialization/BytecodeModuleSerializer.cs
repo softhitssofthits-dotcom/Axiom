@@ -746,6 +746,28 @@ public static class BytecodeModuleSerializer
             return decimalValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         }
 
+        // Временные значения хранятся типизированно, но в артефакт записываются
+        // каноническим текстом: это единственная форма, которую одинаково читают
+        // JSON-сериализация и восстановление типа поля.
+        if (field.DefaultValue is DateOnly dateValue)
+        {
+            return dateValue.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        if (field.DefaultValue is TimeOnly timeValue)
+        {
+            return timeValue.Ticks % TimeSpan.TicksPerSecond == 0
+                ? timeValue.ToString("HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture)
+                : timeValue.ToString("HH:mm:ss.FFFFFFF", System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        if (field.DefaultValue is DateTime dateTimeValue)
+        {
+            return dateTimeValue.Ticks % TimeSpan.TicksPerSecond == 0
+                ? dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture)
+                : dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF", System.Globalization.CultureInfo.InvariantCulture);
+        }
+
         return field.DefaultValue;
     }
 
@@ -773,6 +795,9 @@ public static class BytecodeModuleSerializer
                 var type when type == TypeSymbol.Decimal => decimal.Parse(json.GetString() ?? "0", System.Globalization.CultureInfo.InvariantCulture),
                 var type when type == TypeSymbol.String => json.GetString() ?? string.Empty,
                 var type when type == TypeSymbol.Boolean => json.GetBoolean(),
+                var type when type == TypeSymbol.Date
+                    || type == TypeSymbol.Time
+                    || type == TypeSymbol.DateTime => json.GetString() ?? string.Empty,
                 _ => json.ToString()
             };
         }
@@ -785,6 +810,18 @@ public static class BytecodeModuleSerializer
             var type when type == TypeSymbol.Decimal => Convert.ToDecimal(value, System.Globalization.CultureInfo.InvariantCulture),
             var type when type == TypeSymbol.String => Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty,
             var type when type == TypeSymbol.Boolean => Convert.ToBoolean(value, System.Globalization.CultureInfo.InvariantCulture),
+            var type when type == TypeSymbol.Date => DateOnly.ParseExact(
+                Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty,
+                "yyyy-MM-dd",
+                System.Globalization.CultureInfo.InvariantCulture),
+            var type when type == TypeSymbol.Time => TimeOnly.ParseExact(
+                Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty,
+                ["HH:mm:ss", "HH:mm:ss.FFFFFFF"],
+                System.Globalization.CultureInfo.InvariantCulture),
+            var type when type == TypeSymbol.DateTime => DateTime.ParseExact(
+                Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty,
+                ["yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm:ss.FFFFFFF"],
+                System.Globalization.CultureInfo.InvariantCulture),
             _ => value
         };
     }

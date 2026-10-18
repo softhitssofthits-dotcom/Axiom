@@ -1,4 +1,5 @@
 using Axiom.Syntax;
+using System.Globalization;
 
 namespace Axiom.Semantics;
 
@@ -295,7 +296,67 @@ public sealed partial class Binder
             return true;
         }
 
+        if (TryConvertTemporalFieldDefault(literal.Value, literal.Type, fieldType, out value))
+        {
+            return true;
+        }
+
         return TryConvertLiteralValue(literal.Value, literal.Type, fieldType, out value);
+    }
+
+    /// <summary>
+    /// Начальное значение временного поля задаётся каноническим текстом и
+    /// проверяется при объявлении. Значение хранится типизированным, поэтому
+    /// недопустимая дата не попадает в программу, а поле получает готовое DATE,
+    /// TIME или DATETIME без повторного разбора.
+    /// </summary>
+    private static bool TryConvertTemporalFieldDefault(
+        object sourceValue,
+        TypeSymbol sourceType,
+        TypeSymbol fieldType,
+        out object? value)
+    {
+        value = null;
+
+        if (sourceType != TypeSymbol.String || sourceValue is not string text)
+        {
+            return false;
+        }
+
+        if (fieldType == TypeSymbol.Date)
+        {
+            if (DateOnly.TryParseExact(text, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+            {
+                value = date;
+                return true;
+            }
+
+            return false;
+        }
+
+        if (fieldType == TypeSymbol.Time)
+        {
+            if (TimeOnly.TryParseExact(text, ["HH:mm:ss", "HH:mm:ss.FFFFFFF"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var time))
+            {
+                value = time;
+                return true;
+            }
+
+            return false;
+        }
+
+        if (fieldType == TypeSymbol.DateTime)
+        {
+            if (DateTime.TryParseExact(text, ["yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm:ss.FFFFFFF"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTime))
+            {
+                value = dateTime;
+                return true;
+            }
+
+            return false;
+        }
+
+        return false;
     }
 
     private static bool TryConvertLiteralValue(

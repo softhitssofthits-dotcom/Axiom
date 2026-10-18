@@ -98,11 +98,27 @@ END TYPE
     }
 
     [Fact]
-    public void Bind_TemporalFieldDefaultRemainsUnsupported()
+    public void Bind_TemporalFieldDefaultAcceptsCanonicalText()
     {
+        // Раньше значение временного поля отвергалось. Теперь канонический текст
+        // проверяется при объявлении и хранится типизированным (DTA-011).
         const string text = """
 TYPE A
  Value AS DATE = "2024-01-01"
+END TYPE
+""";
+
+        var diagnostics = Bind(text);
+
+        Assert.DoesNotContain(diagnostics, static diagnostic => diagnostic.Code == DiagnosticCodes.InvalidTypeFieldDefaultValue);
+    }
+
+    [Fact]
+    public void Bind_InvalidTemporalFieldDefaultRemainsRejected()
+    {
+        const string text = """
+TYPE A
+ Value AS DATE = "2024-02-30"
 END TYPE
 """;
 

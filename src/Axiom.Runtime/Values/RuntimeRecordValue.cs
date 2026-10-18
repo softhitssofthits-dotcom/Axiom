@@ -150,6 +150,21 @@ public sealed class RuntimeRecordValue : IRuntimeStoredValue
             return RuntimeValue.FromBoolean((bool)field.DefaultValue!);
         }
 
+        if (field.Type == TypeSymbol.Date)
+        {
+            return RuntimeValue.FromDate((DateOnly)field.DefaultValue!);
+        }
+
+        if (field.Type == TypeSymbol.Time)
+        {
+            return RuntimeValue.FromTime((TimeOnly)field.DefaultValue!);
+        }
+
+        if (field.Type == TypeSymbol.DateTime)
+        {
+            return RuntimeValue.FromDateTime((DateTime)field.DefaultValue!);
+        }
+
         throw new InvalidOperationException($"TYPE field '{field.Name}' has unsupported default value type '{field.Type.Name}'.");
     }
 
