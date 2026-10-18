@@ -229,8 +229,8 @@ const I18N = (() => {
       'status.running': 'Выполняется…',
       'status.finished': 'Завершено',
       'status.error': 'Ошибка',
-      'status.compileTime': 'Проверка',
-      'status.totalTime': 'Всего',
+      'status.compileTimeElapsed': 'Проверка: {0} мс',
+      'status.totalTimeElapsed': 'Всего: {0} мс',
       'status.stopped': 'Остановлено',
       'status.saved': 'Сохранено',
       'status.saveFailed': 'Ошибка сохранения',
@@ -509,8 +509,8 @@ const I18N = (() => {
       'status.running': 'Running…',
       'status.finished': 'Finished',
       'status.error': 'Error',
-      'status.compileTime': 'Check',
-      'status.totalTime': 'Total',
+      'status.compileTimeElapsed': 'Check: {0} ms',
+      'status.totalTimeElapsed': 'Total: {0} ms',
       'status.stopped': 'Stopped',
       'status.saved': 'Saved',
       'status.saveFailed': 'Save failed',
@@ -564,17 +564,32 @@ const I18N = (() => {
 
   let current = 'ru';
 
+  // Imperative texts built from a template and arguments (timings, counters) cannot
+  // live in data-i18n, so setText remembers the key and arguments on the element and
+  // apply() re-renders it after every language switch. Without this the status bar
+  // would keep the wording of the language that happened to be active when it was
+  // last written.
+  const dynamicTexts = new Map();
+
   function setLocale(l) {
     if (STRINGS[l]) current = l;
     apply();
   }
 
-  function t(key, ...args) {
-    // Fallback chain across BOTH dictionaries before giving up: a key missing in the active
-    // locale must never leak the raw key into the UI.
+  function format(key, args) {
     let s = STRINGS[current][key] ?? STRINGS.ru[key] ?? STRINGS.en[key] ?? key;
     args.forEach((a, i) => { s = s.replace(`{${i}}`, a); });
     return s;
+  }
+
+  function t(key, ...args) {
+    return format(key, args);
+  }
+
+  function setText(el, key, ...args) {
+    if (!el) return;
+    dynamicTexts.set(el, { key, args });
+    el.textContent = format(key, args);
   }
 
   function apply() {
@@ -586,11 +601,15 @@ const I18N = (() => {
       const k = el.dataset.i18nTitle;
       if (k) UIControls.setLabel(el, t(k));
     });
+    for (const [el, entry] of dynamicTexts) {
+      if (el.isConnected === false) { dynamicTexts.delete(el); continue; }
+      el.textContent = format(entry.key, entry.args);
+    }
   }
 
   // dicts is exposed for the i18n-parity e2e spec: it asserts ru/en key parity and that every
   // data-i18n key in index.html exists in both dictionaries.
-  return { t, setLocale, apply, dicts: STRINGS, get current() { return current; } };
+  return { t, setText, setLocale, apply, dicts: STRINGS, get current() { return current; } };
 })();
 
 // Отдельные модули интерфейса обращаются к I18N через window; объявление const

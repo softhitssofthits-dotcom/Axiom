@@ -46,7 +46,7 @@ test('Действующее исключение не скрыто и повт�
 });
 
 function app() {
-  const context = { window: {}, performance: { now: () => 0 }, I18N: { t: key => key },
+  const context = { window: {}, performance: { now: () => 0 }, I18N: { t: key => key, setText: () => {} },
     document: { getElementById: () => ({}) } };
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(require.resolve('../src/renderer/app.js'), 'utf8')

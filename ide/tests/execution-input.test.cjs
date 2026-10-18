@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 function setup() {
-  const context = { window: {}, I18N: { t: key => key }, performance: { now: () => 0 } };
+  const context = { window: {}, I18N: { t: key => key, setText: () => {} }, performance: { now: () => 0 } };
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/renderer/execution-controller.js'), 'utf8'), context);
   const calls = { focus: 0, submitted: [], output: '' };

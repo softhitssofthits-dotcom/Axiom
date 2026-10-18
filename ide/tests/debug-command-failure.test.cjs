@@ -6,7 +6,7 @@ const vm = require('node:vm');
 
 function setup() {
   const context = { window: {}, document: { getElementById: () => ({}) }, performance: { now: () => 0 },
-    I18N: { t: (key, line) => line ? `${key}:${line}` : key } };
+    I18N: { t: (key, line) => line ? `${key}:${line}` : key, setText: () => {} } };
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/renderer/execution-controller.js'), 'utf8'), context);
   let resolve, reject;

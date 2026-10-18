@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 function setup() {
-  const context = { window: {}, I18N: { t: key => key } };
+  const context = { window: {}, I18N: { t: key => key, setText: () => {} } };
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/renderer/trace-controller.js'), 'utf8'), context);
   const app = fs.readFileSync(path.join(__dirname, '../src/renderer/app.js'), 'utf8');

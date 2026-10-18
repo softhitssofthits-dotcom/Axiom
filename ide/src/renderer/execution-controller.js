@@ -98,7 +98,7 @@ class ExecutionController {
           this.ide.applyDiagnostics(payload.diagnostics.map(d => ({ ...d, file, executionSnapshot: snapshot, col: d.column, severity: 'error' })), false, file);
           this.ide.switchPanel('diagnostics');
         }
-        document.getElementById('status-execution-time').textContent = I18N.t('trace.elapsed',Math.round(performance.now() - this.startedAt));
+        I18N.setText(document.getElementById('status-execution-time'),'trace.elapsed',Math.round(performance.now() - this.startedAt));
         this.ide.focusEditor(); break;
     }
     if(message.event==='execution.finished') this.ide.trace?.finished();

@@ -36,6 +36,7 @@
     "run-document.test.cjs",
     "semantic-colors.test.cjs",
     "settings-store.test.cjs",
+    "status-time-locale.test.cjs",
     "stop-failure.test.cjs",
     "structural-delivery.test.cjs",
     "themes.test.cjs",
@@ -70,6 +71,7 @@
     "program-keys.test.cjs",
     "project-file-controller.test.cjs",
     "semantic-colors.test.cjs",
+    "status-time-locale.test.cjs",
     "themes.test.cjs",
     "ui-controls.test.cjs"
   ],

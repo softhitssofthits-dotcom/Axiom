@@ -1332,7 +1332,7 @@ class AxiomIDE {
       if (explicit) {
         const elapsed = Math.round(performance.now() - startedAt);
         const failed = (r.diagnostics || []).some((d) => String(d.severity || '').toLowerCase() === 'error');
-        document.getElementById('status-execution-time').textContent = `${I18N.t('status.compileTime')}: ${elapsed}ms`;
+        I18N.setText(document.getElementById('status-execution-time'), 'status.compileTimeElapsed', elapsed);
         if (failed) this.setStatus(I18N.t('status.error'));
       }
     } catch (e) {
@@ -1340,7 +1340,7 @@ class AxiomIDE {
       this.showIdeProblem('status.checkFailed', e && e.message ? e.message : String(e));
       const elapsed = Math.round(performance.now() - startedAt);
       if (explicit) {
-        document.getElementById('status-execution-time').textContent = `${I18N.t('status.compileTime')}: ${elapsed}ms`;
+        I18N.setText(document.getElementById('status-execution-time'), 'status.compileTimeElapsed', elapsed);
         this.setStatus(I18N.t('status.error'));
       }
     }
@@ -1583,7 +1583,7 @@ class AxiomIDE {
         this.switchPanel('diagnostics');
       }
       if (this._consoleT0) {
-        document.getElementById('status-execution-time').textContent = `${I18N.t('status.totalTime')}: ${Math.round(performance.now() - this._consoleT0)}ms`;
+        I18N.setText(document.getElementById('status-execution-time'), 'status.totalTimeElapsed', Math.round(performance.now() - this._consoleT0));
         this._consoleT0 = null;
       }
       this.focusEditor();

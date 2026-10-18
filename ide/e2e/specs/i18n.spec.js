@@ -1,4 +1,6 @@
 // i18n: ru/en dictionaries stay in parity and every data-i18n key is translated.
+const { testWorkspace, writeAxm } = require('../helpers');
+
 module.exports = [
   {
     id: 'i18n-editor-context-menu',
@@ -66,6 +68,37 @@ module.exports = [
       await S.clickLangAction('lang-ru');
       const fileMenuRu = await S.page.evaluate(() => document.querySelector('.menu-item[data-menu="file"] .menu-label').textContent);
       C.eq(fileMenuRu, 'Файл', 'File menu back to Russian');
+    },
+  },
+  {
+    id: 'i18n-status-time-follows-language-in-every-theme',
+    name: 'Время проверки в строке состояния переводится при смене языка во всех темах',
+    async fn({ S, C }) {
+      const ws = testWorkspace('i18n-status-time');
+      const file = writeAxm(ws, 'timed.axm', 'PRINT 1\n');
+      await S.launch({ settings: { checkOnChange: false, formatOnBlur: false } });
+      await S.stubOpenDialog([file]);
+      await S.page.evaluate(() => window.__ide.handleAction('open'));
+      await S.page.waitForFunction(
+        (p) => window.__ide && window.__ide.activeFile === p,
+        file, { timeout: 8000, polling: 100 }
+      );
+      const themes = await S.page.evaluate(() => window.AxiomThemes.ids());
+      const readTime = () => S.page.evaluate(() => document.getElementById('status-execution-time').textContent);
+      for (const theme of themes) {
+        await S.page.evaluate(t => window.__ide.setTheme(t), theme);
+        await S.page.evaluate(() => window.__ide.setLanguage('ru'));
+        await S.page.evaluate(() => window.__ide.check(true));
+        const ru = await readTime();
+        C.ok(/^Проверка: \d+ мс$/.test(ru), theme + ': время проверки по-русски', ru);
+        await S.page.evaluate(() => window.__ide.setLanguage('en'));
+        const en = await readTime();
+        C.ok(/^Check: \d+ ms$/.test(en), theme + ': время проверки по-английски после смены языка', en);
+        C.eq(en.match(/\d+/)?.[0], ru.match(/\d+/)?.[0], theme + ': измеренное время не пересчитывается при смене языка');
+        await S.page.evaluate(() => window.__ide.setLanguage('ru'));
+        const back = await readTime();
+        C.eq(back, ru, theme + ': надпись возвращается к русскому варианту');
+      }
     },
   },
 ];
