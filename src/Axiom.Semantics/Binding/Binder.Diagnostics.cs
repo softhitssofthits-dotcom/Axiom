@@ -663,7 +663,7 @@ public sealed partial class Binder
 
     private void ReportInvalidSelectCaseRange(TextLocation location)
     {
-        _diagnostics.Report(DiagnosticCodes.InvalidSelectCaseRange, "Диапазон CASE ... TO допустим только для числовых или строковых значений.", location);
+        _diagnostics.Report(DiagnosticCodes.InvalidSelectCaseRange, "Диапазон CASE ... TO допустим только для числовых, строковых или временных значений одного вида.", location);
     }
 
     private void ReportInvalidRangeExpression(TextLocation location)

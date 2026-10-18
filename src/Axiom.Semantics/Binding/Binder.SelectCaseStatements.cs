@@ -53,7 +53,7 @@ public sealed partial class Binder
 
         if (CanBindSelectCaseEquality(testType, expression.Type))
         {
-            expression = NormalizeSelectCaseExpression(expression, comparisonType);
+            expression = NormalizeSelectCaseSelectorExpression(selector.Expression, expression, testType, comparisonType);
         }
         else if (testType != TypeSymbol.Error && expression.Type != TypeSymbol.Error)
         {
@@ -73,8 +73,8 @@ public sealed partial class Binder
 
         if (CanBindSelectCaseOrdering(testType, lowerBound.Type) && CanBindSelectCaseOrdering(testType, upperBound.Type))
         {
-            lowerBound = NormalizeSelectCaseExpression(lowerBound, comparisonType);
-            upperBound = NormalizeSelectCaseExpression(upperBound, comparisonType);
+            lowerBound = NormalizeSelectCaseSelectorExpression(selector.StartExpression, lowerBound, testType, comparisonType);
+            upperBound = NormalizeSelectCaseSelectorExpression(selector.EndExpression, upperBound, testType, comparisonType);
         }
         else if (testType != TypeSymbol.Error && lowerBound.Type != TypeSymbol.Error && upperBound.Type != TypeSymbol.Error)
         {
@@ -96,7 +96,7 @@ public sealed partial class Binder
         {
             if (CanBindSelectCaseEquality(testType, expression.Type))
             {
-                expression = NormalizeSelectCaseExpression(expression, comparisonType);
+                expression = NormalizeSelectCaseSelectorExpression(selector.Expression, expression, testType, comparisonType);
             }
             else if (testType != TypeSymbol.Error && expression.Type != TypeSymbol.Error)
             {
@@ -105,7 +105,7 @@ public sealed partial class Binder
         }
         else if (CanBindSelectCaseOrdering(testType, expression.Type))
         {
-            expression = NormalizeSelectCaseExpression(expression, comparisonType);
+            expression = NormalizeSelectCaseSelectorExpression(selector.Expression, expression, testType, comparisonType);
         }
         else if (testType != TypeSymbol.Error && expression.Type != TypeSymbol.Error)
         {
@@ -120,6 +120,26 @@ public sealed partial class Binder
         return testType;
     }
 
+    /// <summary>
+    /// Числовой селектор приводится к типу выражения выбора с прежними правилами.
+    /// Временной селектор подчиняется общему договору преобразований: строка
+    /// проверяется через ApplyExpectedType, поэтому полный текст даты-времени
+    /// отвергается для DATE или TIME и здесь, а не только в присваивании.
+    /// </summary>
+    private BoundExpression NormalizeSelectCaseSelectorExpression(
+        ExpressionSyntax syntax,
+        BoundExpression expression,
+        TypeSymbol testType,
+        TypeSymbol comparisonType)
+    {
+        if (IsTemporalType(testType))
+        {
+            return ApplyExpectedType(syntax, expression, comparisonType);
+        }
+
+        return NormalizeSelectCaseExpression(expression, comparisonType);
+    }
+
     private static BoundExpression NormalizeSelectCaseExpression(BoundExpression expression, TypeSymbol targetType)
     {
         if (expression.Type == TypeSymbol.Error || targetType == TypeSymbol.Error || expression.Type == targetType)
@@ -130,14 +150,30 @@ public sealed partial class Binder
         return new BoundConversionExpression(expression.Location, targetType, expression);
     }
 
+    /// <summary>
+    /// Временные значения сравниваются только внутри одного вида: DATE с DATE,
+    /// TIME с TIME, DATETIME с DATETIME. Смешение видов не выполняется неявно,
+    /// как и в DATEADD/DATEDIFF/DATEPART; строковый селектор разбирается в вид
+    /// выражения выбора.
+    /// </summary>
     private static bool CanBindSelectCaseEquality(TypeSymbol testType, TypeSymbol selectorType)
     {
+        if (IsTemporalType(testType))
+        {
+            return selectorType == testType || selectorType == TypeSymbol.String;
+        }
+
         return (IsNumeric(testType) && IsNumeric(selectorType))
             || testType == selectorType && (testType == TypeSymbol.String || testType == TypeSymbol.Boolean);
     }
 
     private static bool CanBindSelectCaseOrdering(TypeSymbol testType, TypeSymbol selectorType)
     {
+        if (IsTemporalType(testType))
+        {
+            return selectorType == testType || selectorType == TypeSymbol.String;
+        }
+
         return (IsNumeric(testType) && IsNumeric(selectorType))
             || testType == TypeSymbol.String && selectorType == TypeSymbol.String;
     }

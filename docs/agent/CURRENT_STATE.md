@@ -78,3 +78,9 @@
 Текущие версии: язык/компилятор 0.1.21, IDE 0.6.22. Этап 2 плана аудита дат и времени закрыт (DTA-001). `TIME` и `DATETIME` печатают доли секунды при ненулевой дробной части (`HH:mm:ss.FFFFFFF`, `yyyy-MM-dd HH:mm:ss.FFFFFFF`), краткая форма сохранена для целых секунд, разбор принимает обе формы, поэтому текст обратим. Все пути текстового представления идут через общие функции форматирования. `TIME`, `NOW`, `UTCTIME`, `UTCNOW` и формы с часовым поясом имеют документированное разрешение до секунды; `TIMER` остаётся дробным; даты файлов не менялись (DTA-007).
 
 Проверки: `TemporalPrecisionContractTests` 8/8, `BinderTests` +2, Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3282/3284 (два известных отказа Maze Chase), `check-manual` пройден. Пример — `samples/functions/now/fractional_seconds_roundtrip.axm`. Открыто: DTA-005..015, следующий шаг — DTA-008 (`SELECT CASE` для временных типов).
+
+### 2026-10-18 12:30 - SELECT CASE для временных типов
+
+Текущие версии: язык/компилятор 0.1.22, IDE 0.6.22. DTA-008 закрыт: `SELECT CASE` принимает `DATE`, `TIME` и `DATETIME` — точное значение, `CASE IS` и диапазон `TO` внутри одного вида; смешение видов даёт MB2003; строковый селектор разбирается в вид выражения выбора и подчиняется запрету потери компонента. Изменение только в связывании (`Binder.SelectCaseStatements.cs`), понижение и байткод не менялись.
+
+Проверки: `TemporalSelectCaseContractTests` 8/8, Semantics 532/532, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3291/3293 (два известных отказа Maze Chase), `check-manual` пройден. Пример — `samples/control-flow/select_case/temporal_values.axm`. Следующий шаг — DTA-012 (сборка `DATETIME` из `DATE` и `TIME`).

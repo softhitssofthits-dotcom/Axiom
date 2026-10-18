@@ -18,7 +18,7 @@
 
 ## Управление, процедуры и ввод-вывод
 
-Поддержаны IF/ELSEIF/ELSE, SELECT CASE, FOR/NEXT, WHILE, варианты DO/LOOP, выход и продолжение циклов; SUB/FUNCTION, RETURN, BYVAL/BYREF, локальные процедуры и функции; TRY/CATCH/FINALLY и ERROR. Точные договоры переходов и областей видимости находятся в [справочнике операторов](manual/operator-reference.html).
+Поддержаны IF/ELSEIF/ELSE, SELECT CASE, FOR/NEXT, WHILE, варианты DO/LOOP, выход и продолжение циклов; SUB/FUNCTION, RETURN, BYVAL/BYREF, локальные процедуры и функции; TRY/CATCH/FINALLY и ERROR. SELECT CASE принимает также `DATE`, `TIME` и `DATETIME`: точное значение, `CASE IS` и диапазон `TO` допустимы внутри одного вида, смешение видов отклоняется, а строковый селектор разбирается в вид выражения выбора и подчиняется запрету потери компонента. Точные договоры переходов и областей видимости находятся в [справочнике операторов](manual/operator-reference.html).
 
 PRINT, PRINT USING и INPUT используют договор консоли. INPUT одной STRING сохраняет полную логическую строку; ввод нескольких целей использует собственное разделение и не объявляется универсальным CSV-разбором. Интерполированные строки записываются как `$"..."`. Синтаксис и ошибки: [INPUT](manual/input.html), [PRINT](manual/print.html), [строки](manual/data-types-strings-and-files.html).
 
