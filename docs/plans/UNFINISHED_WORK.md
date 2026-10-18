@@ -367,3 +367,11 @@ IDE 0.6.16 сохраняет новый запрос при позднем пу
 Файлы: `samples/smoke/engine-compare/temporal_text_parse_and_format.axm`, `temporal_time_zone_lookup.axm`, `temporal_calendar_arithmetic.axm`; регистрация в `src/Axiom.ManualChecks/Program.cs`; `BYTECODE_PERF_MATRIX.md`, раздел 21 аудита.
 
 Остаётся открытым только DTA-006 (длительность и монотонное измерение). Требуется решение автора: отдельный тип длительности или функции поверх числа секунд.
+
+## Даты и время: DTA-006 (длительность и измерение) закрыт — 18 октября 2026 года
+
+По решению автора отдельный тип длительности не вводился. Добавлена `ELAPSEDSECONDS` в двух формах: без аргументов — монотонный счётчик запуска, с двумя `UTCDATETIME` — знаковая разность моментов. `TIMER` не менялся.
+
+`IRuntimeClock` получил метод `GetMonotonicSeconds`; тестовые часы переопределяют его для воспроизводимости. Постоянные проверки: `tests/Axiom.Execution.Tests/ElapsedSecondsContractTests.cs` (7); пример `samples/functions/elapsedseconds/measure_interval.axm`; справочник `date-time-functions-current.html`.
+
+Очередь аудита дат и времени закрыта полностью. Внешние границы, не отмечаемые пройденными: настоящее окно `INPUT` в Electron, отладочное отображение и обратный шаг, физическая смена системных часов, аппаратные пояса с получасовым сезонным переходом.

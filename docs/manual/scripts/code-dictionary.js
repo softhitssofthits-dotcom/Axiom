@@ -202,6 +202,7 @@ window.AxiomCodeDictionary = {
     "DRIVEFORMAT",
     "DRIVENAME",
     "DRIVETYPE",
+    "ELAPSEDSECONDS",
     "ENDOFMONTH",
     "ENDOFYEAR",
     "ENDSWITH",

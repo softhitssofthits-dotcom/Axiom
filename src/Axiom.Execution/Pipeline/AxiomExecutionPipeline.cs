@@ -198,6 +198,8 @@ public sealed class AxiomExecutionPipeline
         BuiltinFunctionId.DateTimeValue,
         BuiltinFunctionId.InstantValue,
         BuiltinFunctionId.NowInstant,
+        BuiltinFunctionId.ElapsedSecondsSinceStart,
+        BuiltinFunctionId.ElapsedSecondsBetween,
         BuiltinFunctionId.ToInstant,
         BuiltinFunctionId.ToInstantZone,
         BuiltinFunctionId.FromInstant,

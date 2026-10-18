@@ -263,6 +263,7 @@
             <Word>DRIVEFORMAT</Word>
             <Word>DRIVENAME</Word>
             <Word>DRIVETYPE</Word>
+            <Word>ELAPSEDSECONDS</Word>
             <Word>ENDOFMONTH</Word>
             <Word>ENDOFYEAR</Word>
             <Word>ENDSWITH</Word>

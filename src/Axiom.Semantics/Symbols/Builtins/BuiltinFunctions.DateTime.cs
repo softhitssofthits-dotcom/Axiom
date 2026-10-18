@@ -47,6 +47,12 @@ public static partial class BuiltinFunctions
             // INSTANTVALUE читает текст с признаком Z.
             CreateDefault(BuiltinFunctionId.InstantValue, "INSTANTVALUE", TypeSymbol.UtcDateTime, [Parameter("value", TypeSymbol.String)]),
             CreateDefault(BuiltinFunctionId.NowInstant, "NOWINSTANT", TypeSymbol.UtcDateTime, []),
+            // Длительность выражается числом секунд, а не отдельным типом.
+            // Без аргументов — монотонный счётчик с начала запуска: он не зависит
+            // от перевода системных часов. С двумя моментами — прошедшие секунды
+            // между событиями, со знаком.
+            CreateDefault(BuiltinFunctionId.ElapsedSecondsSinceStart, "ELAPSEDSECONDS", TypeSymbol.Double, []),
+            CreateDefault(BuiltinFunctionId.ElapsedSecondsBetween, "ELAPSEDSECONDS", TypeSymbol.Double, [Parameter("fromValue", TypeSymbol.UtcDateTime), Parameter("toValue", TypeSymbol.UtcDateTime)]),
             CreateDefault(BuiltinFunctionId.ToInstant, "TOINSTANT", TypeSymbol.UtcDateTime, [Parameter("value", TypeSymbol.DateTime)]),
             CreateDefault(BuiltinFunctionId.ToInstantZone, "TOINSTANT", TypeSymbol.UtcDateTime, [Parameter("value", TypeSymbol.DateTime), Parameter("timeZone", TypeSymbol.String)]),
             CreateDefault(BuiltinFunctionId.FromInstant, "FROMINSTANT", TypeSymbol.DateTime, [Parameter("value", TypeSymbol.UtcDateTime)]),

@@ -265,6 +265,30 @@ public sealed partial class BytecodeVm
         throw new RuntimeFailureException();
     }
 
+    /// <summary>
+    /// Прошедшее время этого запуска по монотонному счётчику. Перевод системных
+    /// часов и полночь на значение не влияют, поэтому результат годится для
+    /// измерения длительности, в отличие от разности TIMER.
+    /// </summary>
+    private RuntimeValue EvaluateElapsedSecondsSinceStartBuiltin()
+    {
+        var elapsed = _host.GetMonotonicSeconds() - _monotonicOriginSeconds;
+        return RuntimeValue.FromDouble(elapsed < 0 ? 0 : elapsed);
+    }
+
+    /// <summary>
+    /// Прошедшие секунды между двумя моментами. Знак сохраняется: отрицательный
+    /// результат означает, что конечное событие раньше начального. Разность
+    /// моментов однозначна и не зависит от пояса или перевода часов.
+    /// </summary>
+    private RuntimeValue EvaluateElapsedSecondsBetweenBuiltin(RuntimeValue fromValue, RuntimeValue toValue, TextLocation location)
+    {
+        var from = ExtractInstantValue("ELAPSEDSECONDS", fromValue, location);
+        var to = ExtractInstantValue("ELAPSEDSECONDS", toValue, location);
+
+        return RuntimeValue.FromDouble((to - from).TotalSeconds);
+    }
+
     private RuntimeValue EvaluateNowInstantBuiltin()
     {
         return RuntimeValue.FromUtcDateTime(

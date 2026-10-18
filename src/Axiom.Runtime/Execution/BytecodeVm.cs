@@ -41,6 +41,7 @@ public sealed partial class BytecodeVm
     private readonly HashSet<RuntimeTextFile> _openFiles = [];
     private readonly StringBuilder _pendingOutput = new();
     private readonly IRuntimeHost _host;
+    private readonly double _monotonicOriginSeconds;
     private readonly BytecodeModule _module;
     private readonly Action<BytecodeVmExecutionSnapshot>? _instructionObserver;
     private readonly Func<BytecodeVmExecutionSnapshot, bool>? _shouldStopBeforeInstruction;
@@ -68,6 +69,10 @@ public sealed partial class BytecodeVm
 
         _module = module;
         _host = host;
+
+        // Начало монотонного измерения фиксируется при создании исполнителя,
+        // поэтому ELAPSEDSECONDS() считает время именно этого запуска.
+        _monotonicOriginSeconds = host.GetMonotonicSeconds();
         _instructionObserver = instructionObserver;
         _shouldStopBeforeInstruction = shouldStopBeforeInstruction;
         _breakpoints = breakpoints;

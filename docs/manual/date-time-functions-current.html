@@ -7,7 +7,7 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Текущие дата и время</span></nav>
-<p class="eyebrow">Справочник языка</p><h1 class="page-title">Текущие дата и время</h1><p class="lead">Раздел описывает встроенные функции DATE, TIME, NOW, UTCDATE, UTCTIME, UTCNOW и TIMER. Они читают часы среды запуска; синтаксис разных функций показан отдельно.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<p class="eyebrow">Справочник языка</p><h1 class="page-title">Текущие дата и время</h1><p class="lead">Раздел описывает встроенные функции DATE, TIME, NOW, UTCDATE, UTCTIME, UTCNOW, NOWINSTANT, TIMER и ELAPSEDSECONDS. Они читают часы среды запуска и измеряют прошедшее время; синтаксис разных функций показан отдельно.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 <section class="article-section" id="date"><h2>DATE</h2>
 <p>DATE — встроенная функция языка Axiom, которая возвращает текущую календарную дату.</p>
 <h3>Назначение</h3>
@@ -147,6 +147,34 @@ PRINT ISDATE(value &amp; "")</code></pre><p>Ожидаемый вывод:</p>
 <pre><code>TRUE</code></pre>
 <h3>См. также</h3>
 <p><a href="function-reference.html">Указатель встроенных функций</a></p></section>
+<section class="article-section" id="elapsedseconds"><h2>ELAPSEDSECONDS</h2>
+<p>ELAPSEDSECONDS — встроенная функция языка Axiom, которая возвращает прошедшее время в секундах.</p>
+<h3>Назначение</h3>
+<p>Функция измеряет длительность: время работы участка программы либо интервал между двумя событиями. Отдельного типа длительности в языке нет по решению автора, поэтому прошедшее время выражается числом секунд типа DOUBLE.</p>
+<h3>Где работает</h3>
+<p>Функция вызывается в выражениях консольных и графических программ; оператор SCREEN или CANVAS не требуется.</p>
+<h3>Синтаксис</h3><pre><code class="language-axiom">ELAPSEDSECONDS()</code></pre><pre><code class="language-axiom">ELAPSEDSECONDS(&lt;начало&gt;, &lt;конец&gt;)</code></pre>
+<h3>Аргументы</h3>
+<p>Форма без аргументов не принимает значений. Форма с двумя аргументами требует значения типа UTCDATETIME: сначала начальный момент, затем конечный.</p>
+<h3>Результат</h3>
+<p>Функция возвращает число типа DOUBLE в секундах. Дробная часть сохраняется, поэтому результат пригоден для точных измерений.</p>
+<h3>Правила и ограничения</h3>
+<p>Форма без аргументов читает монотонный счётчик, а не календарные часы. Поэтому перевод системного времени, синхронизация часов и наступление полуночи на результат не влияют; отсчёт начинается при запуске программы и не может быть отрицательным. Именно этим она отличается от TIMER, который читает местные часы и в полночь начинается заново.</p>
+<p>Форма с двумя аргументами вычитает моменты и сохраняет знак: если конечный момент раньше начального, результат отрицательный. Такая разность однозначна и не зависит от часового пояса, потому что оба аргумента заданы на шкале UTC. Календарные значения DATE, TIME и DATETIME этой формой не принимаются: для них сначала нужен TOINSTANT, иначе результат зависел бы от неизвестного пояса.</p>
+<p>Форма с двумя аргументами измеряет интервал по календарным часам и потому чувствительна к их переводу. Для измерения времени работы программы используйте форму без аргументов.</p>
+<h3>Диагностика</h3>
+<p>Компилятор отклоняет неверное число аргументов и несовместимый тип аргумента. Ошибок выполнения у формы без аргументов нет; форма с двумя аргументами также не сообщает ошибок, если аргументы имеют тип UTCDATETIME.</p>
+<h3>Пример</h3><pre><code class="language-axiom">DIM started AS DOUBLE = ELAPSEDSECONDS()
+SLEEP 200
+PRINT ELAPSEDSECONDS() - started &gt;= 0.2
+
+DIM first AS UTCDATETIME = "2024-02-29T12:00:00Z"
+DIM second AS UTCDATETIME = "2024-02-29T14:30:00Z"
+PRINT ELAPSEDSECONDS(first, second)</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>TRUE
+9000</code></pre>
+<h3>См. также</h3>
+<p><a href="date-time-functions-current.html#timer">TIMER</a>, <a href="date-time-functions-time-zones.html#instant-concept">Календарное время и момент</a>, <a href="function-reference.html">Указатель встроенных функций</a></p></section>
 <section class="article-section" id="timer"><h2>TIMER</h2>
 <p>TIMER — встроенная функция языка Axiom, которая возвращает число секунд, прошедших с местной полуночи.</p>
 <h3>Назначение</h3>
@@ -159,12 +187,12 @@ PRINT ISDATE(value &amp; "")</code></pre><p>Ожидаемый вывод:</p>
 <h3>Результат</h3>
 <p>Результат DOUBLE в диапазоне от 0 включительно до 86400 исключительно; дробная часть задаёт долю секунды.</p>
 <h3>Правила и ограничения</h3>
-<p>Это местные системные часы, а не монотонный счётчик времени работы программы. В полночь значение начинается заново; перевод системных часов может изменить разность двух показаний. В отличие от TIME и NOW, TIMER сохраняет доли секунды и потому пригоден для грубого измерения прошедшего времени внутри одних суток.</p>
+<p>Это местные системные часы, а не монотонный счётчик времени работы программы. В полночь значение начинается заново; перевод системных часов может изменить разность двух показаний. В отличие от TIME и NOW, TIMER сохраняет доли секунды, поэтому подходит для грубой оценки положения мгновения внутри суток.</p><p>Для измерения длительности TIMER не годится: в полночь разность двух показаний становится отрицательной, а перевод часов меняет её произвольно. Используйте <a href="date-time-functions-current.html#elapsedseconds">ELAPSEDSECONDS</a>: форма без аргументов читает монотонный счётчик и не зависит от перевода часов.</p>
 <h3>Диагностика</h3>
 <p>Компилятор отклоняет неверное количество аргументов и несовместимый тип аргумента. </p>
 <h3>Пример</h3><pre><code class="language-axiom">DIM seconds AS DOUBLE = TIMER()
 PRINT seconds &gt;= 0 AND seconds &lt; 86400</code></pre><p>Ожидаемый вывод:</p>
 <pre><code>TRUE</code></pre>
 <h3>См. также</h3>
-<p><a href="function-reference.html">Указатель встроенных функций</a></p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<p><a href="date-time-functions-current.html#elapsedseconds">ELAPSEDSECONDS</a>, <a href="function-reference.html">Указатель встроенных функций</a></p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
 <script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

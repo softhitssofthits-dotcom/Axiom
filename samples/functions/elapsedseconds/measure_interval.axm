@@ -1,0 +1,24 @@
+' Пример показывает измерение прошедшего времени без отдельного типа длительности.
+' Без аргументов ELAPSEDSECONDS читает монотонный счётчик: перевод системных
+' часов и полночь на результат не влияют.
+' С двумя моментами функция даёт знаковую разность в секундах.
+' Ожидается вывод:
+' TRUE
+' 9000
+' -9000
+' 0
+
+' Измерение времени работы участка программы.
+DIM started AS DOUBLE = ELAPSEDSECONDS()
+SLEEP 200
+DIM spent AS DOUBLE = ELAPSEDSECONDS() - started
+
+' Пауза длится не меньше заданной и заведомо меньше пяти секунд.
+PRINT spent >= 0.2 AND spent < 5
+
+' Разность между двумя моментами: порядок аргументов задаёт знак.
+DIM first AS UTCDATETIME = "2024-02-29T12:00:00Z"
+DIM second AS UTCDATETIME = "2024-02-29T14:30:00Z"
+PRINT ELAPSEDSECONDS(first, second)
+PRINT ELAPSEDSECONDS(second, first)
+PRINT ELAPSEDSECONDS(first, first)

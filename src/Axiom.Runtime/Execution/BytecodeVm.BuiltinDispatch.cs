@@ -313,6 +313,8 @@ public sealed partial class BytecodeVm
             BuiltinFunctionId.DateTimeValue => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateDateTimeValueBuiltin(GetStringUnchecked(value), location)),
             BuiltinFunctionId.InstantValue => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateInstantValueBuiltin(GetStringUnchecked(value), location)),
             BuiltinFunctionId.NowInstant => BuiltinExecution.NullaryNoLocation(static vm => vm.EvaluateNowInstantBuiltin()),
+            BuiltinFunctionId.ElapsedSecondsSinceStart => BuiltinExecution.NullaryNoLocation(static vm => vm.EvaluateElapsedSecondsSinceStartBuiltin()),
+            BuiltinFunctionId.ElapsedSecondsBetween => BuiltinExecution.Binary(static (vm, from, to, location) => vm.EvaluateElapsedSecondsBetweenBuiltin(from, to, location)),
             BuiltinFunctionId.ToInstant => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateToInstantBuiltin(value, location)),
             BuiltinFunctionId.ToInstantZone => BuiltinExecution.Binary(static (vm, value, zone, location) => vm.EvaluateToInstantBuiltin(value, GetStringUnchecked(zone), location)),
             BuiltinFunctionId.FromInstant => BuiltinExecution.Unary(static (vm, value, location) => vm.EvaluateFromInstantBuiltin(value, location)),

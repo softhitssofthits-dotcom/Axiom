@@ -25,7 +25,7 @@
     "src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.cs",
     "src/Axiom.Syntax/SyntaxKind.cs"
   ],
-  "sourceFingerprint": "e248b11e97b5fab01190c4f938d61accd03956d497e052ed8b0c008208d88340",
+  "sourceFingerprint": "be886fe0f513fd14737aa93c4b16273a8c1f8b81b37b4eb34124008e3b9a3071",
   "functions": [
     {
       "name": "ABS",
@@ -2495,6 +2495,40 @@
             }
           ],
           "returnType": "STRING",
+          "binding": "Default",
+          "operandPolicy": "Declared",
+          "resultPolicy": "Declared"
+        }
+      ]
+    },
+    {
+      "name": "ELAPSEDSECONDS",
+      "description": "Возвращает прошедшее время в секундах: от начала запуска либо между двумя моментами.",
+      "sourceHref": "date-time-functions-current.html#elapsedseconds",
+      "forms": [
+        {
+          "key": "ELAPSEDSECONDS/0",
+          "id": "ElapsedSecondsSinceStart",
+          "parameters": [],
+          "returnType": "DOUBLE",
+          "binding": "Default",
+          "operandPolicy": "Declared",
+          "resultPolicy": "Declared"
+        },
+        {
+          "key": "ELAPSEDSECONDS/1",
+          "id": "ElapsedSecondsBetween",
+          "parameters": [
+            {
+              "name": "fromValue",
+              "type": "UTCDATETIME"
+            },
+            {
+              "name": "toValue",
+              "type": "UTCDATETIME"
+            }
+          ],
+          "returnType": "DOUBLE",
           "binding": "Default",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"

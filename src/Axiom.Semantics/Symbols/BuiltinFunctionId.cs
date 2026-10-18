@@ -344,5 +344,7 @@ public enum BuiltinFunctionId
     FileDateUtc,
     FileCreateDateUtc,
     FileAccessDateUtc,
-    DirDateUtc
+    DirDateUtc,
+    ElapsedSecondsSinceStart,
+    ElapsedSecondsBetween
 }

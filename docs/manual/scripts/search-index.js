@@ -789,7 +789,7 @@ window.AxiomSearchIndex = [
     "href": "date-time-functions-current.html",
     "kind": "Тема",
     "category": "Дата и время",
-    "description": "Раздел описывает встроенные функции DATE, TIME, NOW, UTCDATE, UTCTIME, UTCNOW и TIMER. Они читают часы среды запуска; синтаксис разных функций показан отдельно.",
+    "description": "Раздел описывает встроенные функции DATE, TIME, NOW, UTCDATE, UTCTIME, UTCNOW, NOWINSTANT, TIMER и ELAPSEDSECONDS. Они читают часы среды запуска и измеряют прошедшее время; синтаксис разных функций показан отдельно.",
     "keywords": [
       "Текущие значения",
       "Дата и время"
@@ -3551,6 +3551,22 @@ window.AxiomSearchIndex = [
     ],
     "aliases": [
       "DRIVETYPE"
+    ]
+  },
+  {
+    "title": "ELAPSEDSECONDS",
+    "href": "function-reference.html#fn-elapsedseconds",
+    "kind": "Функция",
+    "category": "Дата и время",
+    "description": "Возвращает прошедшее время в секундах: от начала запуска либо между двумя моментами.",
+    "keywords": [
+      "ELAPSEDSECONDS",
+      "date-time-functions-current",
+      "fromValue",
+      "toValue"
+    ],
+    "aliases": [
+      "ELAPSEDSECONDS"
     ]
   },
   {
