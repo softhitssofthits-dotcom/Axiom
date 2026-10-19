@@ -9,7 +9,16 @@ public sealed partial class BytecodeVm
     private static RuntimeValue CreateStringArrayValue(IReadOnlyList<string> values)
     {
         var arrayType = (ArrayTypeSymbol)ArrayTypeSymbol.Create(TypeSymbol.String);
-        return CreateCompactArrayValue(arrayType, values.Select(RuntimeValue.FromString).ToArray());
+        var items = new RuntimeValue[values.Count];
+
+        // Заполнение по индексу не создаёт промежуточный построитель LINQ:
+        // массив значений всё равно нужен CreateCompactArrayValue.
+        for (var index = 0; index < items.Length; index++)
+        {
+            items[index] = RuntimeValue.FromString(values[index]);
+        }
+
+        return CreateCompactArrayValue(arrayType, items);
     }
 
     private void EnsureFileExists(string functionName, string argumentName, string path, TextLocation location)

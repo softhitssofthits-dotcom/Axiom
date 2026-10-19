@@ -1,19 +1,5 @@
 {
-  "language": "0.2.0",
-  "compiler": "0.2.2",
-  "ide": "0.6.32",
-  "compilerOnlyChange": {
-    "version": "0.2.2",
-    "reason": "Индекс символов по запросу редактора; правила связывания, грамматика и исполнение языка не меняются.",
-    "paths": [
-      "src/Axiom.Semantics/Binding/Binder.EditorSymbols.cs",
-      "src/Axiom.Semantics/Binding/Binder.Declarations.cs",
-      "src/Axiom.Semantics/Binding/Binder.Expressions.cs",
-      "src/Axiom.Semantics/Binding/Binder.InvocationExpressions.cs",
-      "src/Axiom.Semantics/Binding/Binder.Modules.cs",
-      "src/Axiom.Semantics/Binding/Binder.TypeInvocations.cs",
-      "src/Axiom.Semantics/Binding/Binder.TypeResolution.cs",
-      "src/Axiom.Semantics/BoundNodes/BoundProgram.cs"
-    ]
-  }
+  "language": "0.2.1",
+  "compiler": "0.2.3",
+  "ide": "0.6.33"
 }

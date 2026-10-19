@@ -29,7 +29,12 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        return argumentName == "width" ? RuntimeStringLimits.Check(value) : value;
+        return value;
+    }
+
+    private int RequireNonNegativeWidth(string functionName, string argumentName, int value, TextLocation location)
+    {
+        return RuntimeStringLimits.Check(RequireNonNegativeCount(functionName, argumentName, value, location));
     }
 
     private int RequirePositiveStart(string functionName, int value, TextLocation location)

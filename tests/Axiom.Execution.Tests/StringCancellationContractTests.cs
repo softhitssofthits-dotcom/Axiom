@@ -31,6 +31,17 @@ PRINT REPLACE(text, "a", "xx")
         Assert.Equal(ExecutionStatus.Cancelled, result.Status);
     }
 
+    [Fact]
+    public void JoinObservesCancellationDuringElementScan()
+    {
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("""
+DIM items() AS STRING
+items = SPLIT(REPEAT("a,", 200000), ",")
+PRINT LEN(JOIN(items, ","))
+""", cancellationProvider: new CancelAfterChecks(64)));
+        Assert.Equal(ExecutionStatus.Cancelled, result.Status);
+    }
+
     private sealed class CancelAfterChecks(int limit) : IRuntimeCancellationProvider
     {
         private int _checks;

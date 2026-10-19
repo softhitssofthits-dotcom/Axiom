@@ -67,7 +67,12 @@ public sealed partial class Lexer
             return CreateToken(TokenKind.EndOfFileToken, _position, 0);
         }
 
-        if (Current == '"')
+        if (IsNewLine(Current))
+        {
+            return ReadUnterminatedInterpolatedStringEnd();
+        }
+
+        if (Current == '"' && Peek(1) != '"')
         {
             return ReadInterpolatedStringEnd();
         }
@@ -109,11 +114,6 @@ public sealed partial class Lexer
             return token;
         }
 
-        if (Current == '"')
-        {
-            return ReadInterpolatedStringEnd();
-        }
-
         ReportDiagnostic(_position, 1, DiagnosticCodes.UnterminatedString, "Неожиданный символ в интерполированной строке.");
         return CreateToken(TokenKind.BadToken, _position++, 1);
     }
@@ -125,6 +125,11 @@ public sealed partial class Lexer
 
         while (_position < _text.Length)
         {
+            if (IsNewLine(Current))
+            {
+                break;
+            }
+
             if (Current == '{')
             {
                 if (Peek(1) == '{')
@@ -136,30 +141,23 @@ public sealed partial class Lexer
                 break;
             }
 
+            if (Current == '}' && Peek(1) == '}')
+            {
+                content.Append('}');
+                _position += 2;
+                continue;
+            }
+
             if (Current == '"')
             {
+                if (Peek(1) == '"')
+                {
+                    content.Append('"');
+                    _position += 2;
+                    continue;
+                }
+
                 break;
-            }
-
-            if (Current == '\\' && Peek(1) == '{')
-            {
-                content.Append('{');
-                _position += 2;
-                continue;
-            }
-
-            if (Current == '\\' && Peek(1) == '"')
-            {
-                content.Append('"');
-                _position += 2;
-                continue;
-            }
-
-            if (Current == '\\' && Peek(1) == '\\')
-            {
-                content.Append('\\');
-                _position += 2;
-                continue;
             }
 
             content.Append(Current);
@@ -195,6 +193,17 @@ public sealed partial class Lexer
         }
 
         return CreateToken(TokenKind.InterpolatedStringEndToken, start, 1);
+    }
+
+    private Token ReadUnterminatedInterpolatedStringEnd()
+    {
+        var literalStart = _interpolatedStringStarts.Peek().Start;
+        ReportDiagnostic(literalStart, 0, DiagnosticCodes.UnterminatedString, "Незакрытая интерполированная строка.");
+
+        var previous = _interpolatedStringStarts.Pop();
+        _insideInterpolatedExpression = previous.InsideExpression;
+        _expectFormatSpecifier = previous.ExpectFormat;
+        return CreateToken(TokenKind.InterpolatedStringEndToken, _position, 0);
     }
 
     private Token ReadFormatSpecifier()

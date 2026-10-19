@@ -219,42 +219,21 @@ public sealed partial class BytecodeVm
             return true;
         }
 
-        var actualCount = CountInputFields(text);
-        if (actualCount != targets.Count)
+        if (!TrySplitInputFields(text, targets.Count, location, out var fields))
         {
-            ReportInputValueCountFailure(targets.Count, actualCount, location);
             return false;
         }
 
         var parsedValues = new RuntimeValue[targets.Count];
-        var span = text.AsSpan();
-        var start = 0;
 
         for (var index = 0; index < targets.Count; index++)
         {
-            var target = targets[index];
-            var remaining = span[start..];
-            ReadOnlySpan<char> field;
-
-            if (index == targets.Count - 1)
-            {
-                field = remaining;
-            }
-            else
-            {
-                var separatorIndex = remaining.IndexOf(',');
-                field = separatorIndex >= 0
-                    ? remaining[..separatorIndex]
-                    : remaining;
-                start += separatorIndex + 1;
-            }
-
-            field = NormalizeInputField(field, targets.Count > 1);
-            var parsedValue = TryParseInput(target.Type, field, location);
+            var field = NormalizeInputField(fields[index], trim: true);
+            var parsedValue = TryParseInput(targets[index].Type, field, location);
 
             if (parsedValue is null)
             {
-                ReportInputConversionFailure(target.Type, field.ToString(), location);
+                ReportInputConversionFailure(targets[index].Type, field.ToString(), location);
                 return false;
             }
 
@@ -262,6 +241,22 @@ public sealed partial class BytecodeVm
         }
 
         values = parsedValues;
+        return true;
+    }
+
+    // Один разбор полей для всех многозначных форм INPUT: две и три цели больше
+    // не имеют собственной логики запятых, а сообщение о числе полей считается
+    // одинаково.
+    private bool TrySplitInputFields(string text, int expectedCount, TextLocation location, out string[] fields)
+    {
+        fields = text.Split(',', StringSplitOptions.None);
+
+        if (fields.Length != expectedCount)
+        {
+            ReportInputValueCountFailure(expectedCount, fields.Length, location);
+            return false;
+        }
+
         return true;
     }
 
@@ -291,134 +286,47 @@ public sealed partial class BytecodeVm
             }
 
             case 2:
-                return TryParseAndStoreTwoInputValues(frame, targets, text, location, instructionIndex);
-
             case 3:
-                return TryParseAndStoreThreeInputValues(frame, targets, text, location, instructionIndex);
-
             default:
+                return TryParseAndStoreMultipleInputValues(frame, targets, text, location, instructionIndex);
+        }
+    }
+
+    private bool TryParseAndStoreMultipleInputValues(
+        BytecodeCallFrame frame,
+        InputTarget[] targets,
+        string text,
+        TextLocation location,
+        int instructionIndex)
+    {
+        if (!TrySplitInputFields(text, targets.Length, location, out var fields))
+        {
+            return false;
+        }
+
+        var values = new RuntimeValue[targets.Length];
+
+        for (var index = 0; index < targets.Length; index++)
+        {
+            var field = NormalizeInputField(fields[index], trim: true);
+            var parsedValue = TryParseInput(targets[index].Type, field, location);
+
+            if (parsedValue is null)
             {
-                if (!TryParseInputValues(targets, text, location, out var values))
-                {
-                    return false;
-                }
-
-                for (var index = 0; index < targets.Length; index++)
-                {
-                    StoreInputValue(frame, targets[index], values[index], instructionIndex);
-                }
-
-                return true;
+                ReportInputConversionFailure(targets[index].Type, field.ToString(), location);
+                return false;
             }
+
+            values[index] = parsedValue;
         }
-    }
 
-    private bool TryParseAndStoreTwoInputValues(
-        BytecodeCallFrame frame,
-        InputTarget[] targets,
-        string text,
-        TextLocation location,
-        int instructionIndex)
-    {
-        var span = text.AsSpan();
-        var firstSeparator = span.IndexOf(',');
-
-        if (firstSeparator < 0)
+        for (var index = 0; index < targets.Length; index++)
         {
-            ReportInputValueCountFailure(expectedCount: 2, actualCount: 1, location);
-            return false;
+            StoreInputValue(frame, targets[index], values[index], instructionIndex);
         }
 
-        var secondField = span[(firstSeparator + 1)..];
-        if (secondField.IndexOf(',') >= 0)
-        {
-            ReportInputValueCountFailure(expectedCount: 2, actualCount: CountInputFields(text), location);
-            return false;
-        }
-
-        var firstValue = TryParseInput(targets[0].Type, NormalizeInputField(span[..firstSeparator], trim: true), location);
-        if (firstValue is null)
-        {
-            ReportInputConversionFailure(targets[0].Type, NormalizeInputField(span[..firstSeparator], trim: true).ToString(), location);
-            return false;
-        }
-
-        var normalizedSecondField = NormalizeInputField(secondField, trim: true);
-        var parsedSecondValue = TryParseInput(targets[1].Type, normalizedSecondField, location);
-        if (parsedSecondValue is null)
-        {
-            ReportInputConversionFailure(targets[1].Type, normalizedSecondField.ToString(), location);
-            return false;
-        }
-
-        StoreInputValue(frame, targets[0], firstValue, instructionIndex);
-        StoreInputValue(frame, targets[1], parsedSecondValue, instructionIndex);
         return true;
     }
-
-    private bool TryParseAndStoreThreeInputValues(
-        BytecodeCallFrame frame,
-        InputTarget[] targets,
-        string text,
-        TextLocation location,
-        int instructionIndex)
-    {
-        var span = text.AsSpan();
-        var firstSeparator = span.IndexOf(',');
-
-        if (firstSeparator < 0)
-        {
-            ReportInputValueCountFailure(expectedCount: 3, actualCount: 1, location);
-            return false;
-        }
-
-        var remaining = span[(firstSeparator + 1)..];
-        var secondSeparatorRelative = remaining.IndexOf(',');
-        if (secondSeparatorRelative < 0)
-        {
-            ReportInputValueCountFailure(expectedCount: 3, actualCount: 2, location);
-            return false;
-        }
-
-        var secondSeparator = firstSeparator + 1 + secondSeparatorRelative;
-        var thirdField = span[(secondSeparator + 1)..];
-        if (thirdField.IndexOf(',') >= 0)
-        {
-            ReportInputValueCountFailure(expectedCount: 3, actualCount: CountInputFields(text), location);
-            return false;
-        }
-
-        var firstField = NormalizeInputField(span[..firstSeparator], trim: true);
-        var secondField = NormalizeInputField(span[(firstSeparator + 1)..secondSeparator], trim: true);
-        thirdField = NormalizeInputField(thirdField, trim: true);
-
-        var firstValue = TryParseInput(targets[0].Type, firstField, location);
-        if (firstValue is null)
-        {
-            ReportInputConversionFailure(targets[0].Type, firstField.ToString(), location);
-            return false;
-        }
-
-        var secondValue = TryParseInput(targets[1].Type, secondField, location);
-        if (secondValue is null)
-        {
-            ReportInputConversionFailure(targets[1].Type, secondField.ToString(), location);
-            return false;
-        }
-
-        var thirdValue = TryParseInput(targets[2].Type, thirdField, location);
-        if (thirdValue is null)
-        {
-            ReportInputConversionFailure(targets[2].Type, thirdField.ToString(), location);
-            return false;
-        }
-
-        StoreInputValue(frame, targets[0], firstValue, instructionIndex);
-        StoreInputValue(frame, targets[1], secondValue, instructionIndex);
-        StoreInputValue(frame, targets[2], thirdValue, instructionIndex);
-        return true;
-    }
-
     private static int CountInputFields(string text)
     {
         return BuiltinIOHelpers.CountInputFields(text);

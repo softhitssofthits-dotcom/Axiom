@@ -29,6 +29,7 @@
     "graphics-audit-repairs.spec.js",
     "graphics-crash.spec.js",
     "graphics-foreground.spec.js",
+    "graphics-input-console.spec.js",
     "graphics-input.spec.js",
     "graphics-lifecycle.spec.js",
     "graphics-shutdown.spec.js",
@@ -136,6 +137,7 @@
     "graphics-crash.spec.js",
     "graphics-audit-repairs.spec.js",
     "graphics-foreground.spec.js",
+    "graphics-input-console.spec.js",
     "graphics-input.spec.js",
     "graphics-lifecycle.spec.js",
     "graphics-shutdown.spec.js"
