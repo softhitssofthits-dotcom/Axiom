@@ -333,7 +333,7 @@ internal sealed class DesktopHost : IDisposable
         _pendingOutputVersion = (++_outputVersion).ToString();
         bool append = text.StartsWith(_publishedOutput, StringComparison.Ordinal);
         Event(append ? "output.append" : "output.replace", new { outputVersion = _pendingOutputVersion,
-            text = append ? text[_publishedOutput.Length..] : text });
+            text = append ? text[_publishedOutput.Length..] : text, outputLineCount = _console.OutputCheckpoint });
         _publishedOutput = text;
     }
 

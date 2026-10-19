@@ -314,12 +314,12 @@ internal static class LineFormatter
         }
 
         var insideInterpolation = false;
-        var interpolationStartOffset = -1;
         var insideExpression = false;
-        var expressionStartOffset = -1;
         var expressionTokens = new List<RawToken>();
         var interpolationText = new System.Text.StringBuilder();
         var lastTextOffset = -1;
+        var interpolationFrames = new Stack<(bool InsideExpression, int LastTextOffset,
+            List<RawToken> ExpressionTokens, StringBuilder Text)>();
 
         foreach (var token in lexerTokens)
         {
@@ -335,11 +335,15 @@ internal static class LineFormatter
 
             if (token.Kind == TokenKind.InterpolatedStringStartToken)
             {
+                if (insideInterpolation)
+                {
+                    interpolationFrames.Push((insideExpression, lastTextOffset, expressionTokens, interpolationText));
+                }
                 insideInterpolation = true;
-                interpolationStartOffset = token.Span.Start;
+                insideExpression = false;
                 lastTextOffset = token.Span.End;
-                interpolationText.Clear();
-                interpolationText.Append("$\"");
+                expressionTokens = [];
+                interpolationText = new StringBuilder("$\"");
                 continue;
             }
 
@@ -351,7 +355,6 @@ internal static class LineFormatter
                     interpolationText.Append(textBefore);
                     interpolationText.Append('{');
                     insideExpression = true;
-                    expressionStartOffset = token.Span.End;
                     expressionTokens.Clear();
                     continue;
                 }
@@ -387,8 +390,20 @@ internal static class LineFormatter
                     var textAfter = text[lastTextOffset..token.Span.Start];
                     interpolationText.Append(textAfter);
                     interpolationText.Append('"');
-                    tokens.Add(new RawToken(interpolationText.ToString(), RawTokenKind.String));
-                    insideInterpolation = false;
+                    var formattedString = new RawToken(interpolationText.ToString(), RawTokenKind.String);
+                    if (interpolationFrames.TryPop(out var frame))
+                    {
+                        insideExpression = frame.InsideExpression;
+                        lastTextOffset = frame.LastTextOffset;
+                        expressionTokens = frame.ExpressionTokens;
+                        interpolationText = frame.Text;
+                        expressionTokens.Add(formattedString);
+                    }
+                    else
+                    {
+                        tokens.Add(formattedString);
+                        insideInterpolation = false;
+                    }
                     continue;
                 }
 

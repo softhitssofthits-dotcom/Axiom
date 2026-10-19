@@ -5,6 +5,31 @@ namespace Axiom.Ide.Backend.Tests;
 
 public sealed class ScreenGpuSurfaceTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ViewportBorderLinesStayWithinTheirAbsoluteRectangle(bool warp)
+    {
+        using var gpu = new CanvasGpuSurface(320, 200, forceSoftware: warp);
+        gpu.EnableScreenPages();
+        gpu.SetScreenPalette(9, 196);
+        gpu.FillIndexed(20, 40, 100, 120, 3);
+        gpu.DrawIndexedLine(20, 40, 100, 40, 9, 0, 0, 319, 199);
+        gpu.DrawIndexedLine(100, 40, 100, 120, 9, 0, 0, 319, 199);
+        gpu.DrawIndexedLine(100, 120, 20, 120, 9, 0, 0, 319, 199);
+        gpu.DrawIndexedLine(20, 120, 20, 40, 9, 0, 0, 319, 199);
+        gpu.PublishScreen([]);
+        var pixels = gpu.ReadPublished();
+        for (var y = 0; y < 200; y++)
+            for (var x = 0; x < 320; x++)
+            {
+                var inside = x >= 20 && x <= 100 && y >= 40 && y <= 120;
+                var border = inside && (x == 20 || x == 100 || y == 40 || y == 120);
+                var expected = border ? 0xFFFF0000u : ScreenFramebuffer.MapColorToBgra(inside ? 3 : 0);
+                Assert.True(pixels[y * 320 + x] == expected, $"({x},{y}): {pixels[y * 320 + x]:X8}, ожидалось {expected:X8}");
+            }
+    }
+
     [Fact]
     public void UnchangedTextLayerIsReusedAndPaletteChangesInvalidateIt()
     {

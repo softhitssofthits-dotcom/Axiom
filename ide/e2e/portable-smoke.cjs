@@ -5,13 +5,16 @@ const { nativeCanvas } = require('./native-canvas');
 const root = path.resolve(__dirname, '../..');
 const source = path.join(root, '.artifacts/distribution/Axiom IDE');
 const folder = path.join(testWorkspace('portable-ide'), 'Проверка поставки с пробелами');
-fs.cpSync(source, folder, { recursive: true });
+// В текущем Node нативный cpSync искажает кириллицу в пути назначения.
+// Фильтр оставляет копирование на пути JavaScript с корректными путями Windows.
+fs.cpSync(source, folder, { recursive: true, filter: () => true });
 const executablePath = path.join(folder, 'Axiom IDE.exe');
 const S = new Session('portable-acceptance');
 const C = new Checks('portable-acceptance');
 const resultPath = path.join(root, '.artifacts/portable-acceptance-results.json');
 (async () => {
   try {
+    if (!fs.existsSync(executablePath)) throw new Error('Проверочная копия приложения не создана: ' + executablePath);
     await S.launch({ executablePath, portable: true });
     C.eq(await S.electronApp.evaluate(() => process.mainModule.require('node:child_process').spawnSync('dotnet',['--info']).error?.code),'ENOENT','SDK недоступен в среде приложения');
     for (const command of ['git','node']) C.eq(await S.electronApp.evaluate((_e, name) => process.mainModule.require('node:child_process').spawnSync(name,['--version']).error?.code,command),'ENOENT',command+' не требуется для запуска');

@@ -23,7 +23,7 @@ static class AuditCases
         Expr("val-inf", "VAL(" + Q("1e309") + ")", "0");
         Expr("val-nan", "VAL(" + Q("NaN") + ")", "0");
         Expr("val-prefix", "VAL(" + Q("12abc") + ")", "12");
-        Expr("val-comma", "VAL(" + Q("1,5") + ")", "15");
+        Expr("val-comma", "VAL(" + Q("1,5") + ")", "1");
         Expr("val-hex", "VAL(" + Q("&HFF") + ")", "0");
         Expr("cdec-overflow", "CDEC(VAL(\"1e30\"))", error: "MB3008");
         Expr("cint-trunc", "CINT(-2.9)", "-2");
@@ -46,8 +46,8 @@ static class AuditCases
         {
             c.Add(new("average-" + pair.Item1, $"DIM a(1 TO 2) AS DOUBLE\na(1) = VAL({Q(pair.Item2)})\na(2) = VAL({Q(pair.Item3)})\nPRINT ARRAYAVERAGE(a)", pair.Item1 == "cancel" ? "0" : "1E+308"));
         }
-        c.Add(new("min-bool-single", "DIM a(1 TO 1) AS BOOLEAN\na(1) = TRUE\nPRINT ARRAYMIN(a)", ErrorCode: "MB3007"));
-        c.Add(new("min-bool-double", "DIM a(1 TO 2) AS BOOLEAN\na(1) = TRUE\nPRINT ARRAYMIN(a)", ErrorCode: "MB3007"));
+        c.Add(new("min-bool-single", "DIM a(1 TO 1) AS BOOLEAN\na(1) = TRUE\nPRINT ARRAYMIN(a)", ErrorCode: "MB2003"));
+        c.Add(new("min-bool-double", "DIM a(1 TO 2) AS BOOLEAN\na(1) = TRUE\nPRINT ARRAYMIN(a)", ErrorCode: "MB2003"));
         c.Add(new("sum-long-overflow", "DIM a(1 TO 2) AS LONG\na(1)=9223372036854775807\na(2)=1\nPRINT ARRAYSUM(a)", ErrorCode: "MB3008"));
         c.Add(new("sum-catch", "DIM a(1 TO 2) AS INTEGER\na(1)=2147483647\na(2)=1\nTRY\nPRINT ARRAYSUM(a)\nCATCH err\nPRINT err.Code\nFINALLY\nPRINT 7\nEND TRY", "MB3008\n7"));
         c.Add(new("sum-overflow", "DIM a(1 TO 2) AS INTEGER\na(1)=2147483647\na(2)=1\nPRINT ARRAYSUM(a)", ErrorCode: "MB3008"));

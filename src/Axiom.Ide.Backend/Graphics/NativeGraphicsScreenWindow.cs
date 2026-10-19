@@ -170,21 +170,10 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
     public void Activate()
     {
         if (_closed || Hwnd == IntPtr.Zero) return;
-        var currentThread = GetCurrentThreadId();
-        var foregroundThread = GetWindowThreadProcessId(GetForegroundWindow(), out _);
-        // Electron и DesktopHost имеют разные очереди ввода. На время открытия
-        // связываем их, чтобы передать активность из IDE в окно программы.
-        var attached = foregroundThread != 0 && foregroundThread != currentThread &&
-            AttachThreadInput(currentThread, foregroundThread, true);
-        try
-        {
-            SetForegroundWindow(Hwnd);
-            SetFocus(Hwnd);
-        }
-        finally
-        {
-            if (attached) AttachThreadInput(currentThread, foregroundThread, false);
-        }
+        // Объединение очередей ввода через AttachThreadInput превращает смену
+        // активности в ожидание чужого оконного потока и может остановить запуск.
+        SetForegroundWindow(Hwnd);
+        SetFocus(Hwnd);
     }
 
     public void PresentFrame(ScreenFramebufferSnapshot? frame)
@@ -875,18 +864,6 @@ internal sealed class NativeGraphicsScreenWindow : IDisposable
 
     [DllImport("user32.dll")]
     private static extern bool SetForegroundWindow(IntPtr hWnd);
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr GetForegroundWindow();
-
-    [DllImport("user32.dll")]
-    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
-
-    [DllImport("kernel32.dll")]
-    private static extern uint GetCurrentThreadId();
-
-    [DllImport("user32.dll")]
-    private static extern bool AttachThreadInput(uint first, uint second, bool attach);
 
     [DllImport("user32.dll")]
     private static extern IntPtr SetFocus(IntPtr hWnd);

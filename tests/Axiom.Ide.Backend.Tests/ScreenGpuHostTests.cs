@@ -7,6 +7,32 @@ namespace Axiom.Ide.Backend.Tests;
 public sealed class ScreenGpuHostTests
 {
     [Fact]
+    public void ViewportBorderOnNonvisualPageDoesNotWriteAboveRectangle()
+    {
+        var gpu = new ProgramConsoleService(); gpu.GraphicsHost.UseGpuScreen = true;
+        try
+        {
+            gpu.ActivateScreen(1);
+            gpu.DrawLine(20, 60, 60, 100, 9, GraphicsLineKind.Box);
+            gpu.Paint(GraphicsPaintRequest.CreatePattern(30, 70, [0], 9, 6, 0, [0]));
+            gpu.Paint(GraphicsPaintRequest.CreatePattern(30, 70, [255], 9, 6, 0, [0]));
+            gpu.DrawCircle(160, 100, 60, 12, false, 0, .01, 1, false, false);
+            gpu.DrawCircle(160, 100, 30, 14);
+            gpu.ActivateScreen(1, 1, 0);
+            gpu.DrawLine(2, 3, 30, 45, 4, GraphicsLineKind.FilledBox);
+            gpu.SetPaletteColor(4, 46);
+            gpu.CopyScreenPage(1, 0);
+            gpu.WriteGraphicsText("Страница", true);
+            _ = gpu.GraphicsFrame;
+            gpu.SetPaletteColor(9, 196);
+            gpu.SetViewport(20, 40, 100, 120, 3, 9, true);
+            Assert.Equal(0, gpu.GetAbsolutePixel(20, 0));
+            Assert.Equal(9, gpu.GetAbsolutePixel(20, 40));
+        }
+        finally { gpu.DeactivateScreen(); }
+    }
+
+    [Fact]
     public void ScreenDrawingPagesTextAndPaletteMatchCpu()
     {
         var cpu = new ProgramConsoleService();

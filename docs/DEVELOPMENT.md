@@ -34,6 +34,7 @@ dotnet build src/Axiom.DesktopHost -c Debug
 .\scripts\test.ps1 list
 .\scripts\test.ps1 lexer
 .\scripts\test.ps1 ide-unit-renderer
+.\scripts\test.ps1 scripts-all
 .\scripts\test.ps1 e2e-editor
 .\scripts\test.ps1 all
 ```

@@ -247,7 +247,7 @@ async function action(S,key,mode,value){
   if(!['find-seed','find-space'].includes(mode))await S.page.locator('.find-widget .input').first().fill('target');
   if(mode==='find-loop'){await S.page.keyboard.press('Enter');await S.page.keyboard.press('Enter');}
   if(mode==='find-close')await S.page.keyboard.press('Enter');
-  if(mode==='find-space'){const b=await S.page.locator('.view-line').first().boundingBox();await S.page.mouse.move(b.x+30,b.y+8);await S.page.mouse.wheel(0,-120);}
+  if(mode==='find-space'){await S.page.locator('.view-line').first().hover({position:{x:30,y:8}});await S.page.mouse.wheel(0,-120);}
  }
  else if(mode==='signature'||mode==='signature-cycle'){await end();await S.page.keyboard.type('(');await S.page.waitForTimeout(500);if(mode==='signature-cycle')for(let n=0;n<5;n++)await S.page.keyboard.press('ArrowDown');}
  else if(mode.startsWith('hover')){

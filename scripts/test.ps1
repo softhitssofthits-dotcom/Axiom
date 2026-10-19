@@ -47,9 +47,11 @@ function Show-Groups {
     $unitGroups.PSObject.Properties.Name | ForEach-Object { Write-Host "  $_" }
     Write-Host "Группы Electron (ide/e2e):"
     $e2eGroups.PSObject.Properties.Name | ForEach-Object { Write-Host "  $_" }
+    Write-Host "Тесты инструментов (scripts/*.test.mjs):"
+    Write-Host "  scripts-all"
     Write-Host "Составные:"
-        Write-Host "  ide        — ide-backend + ide-unit-all + e2e-all"
-    Write-Host "  all        — dotnet-all + ide-unit-all + e2e-all"
+    Write-Host "  ide        — ide-backend + ide-unit-all + e2e-all"
+    Write-Host "  all        — dotnet-all + ide-unit-all + scripts-all + e2e-all"
 }
 
 function Invoke-Dotnet([string[]]$Projects) {
@@ -83,6 +85,17 @@ function Invoke-E2E([string]$Name) {
     return $LASTEXITCODE
 }
 
+function Invoke-ScriptTests {
+    $paths = @(Get-ChildItem -LiteralPath $PSScriptRoot -Filter "*.test.mjs" -File |
+        Sort-Object Name | ForEach-Object { $_.FullName })
+    if ($paths.Count -eq 0) {
+        Write-Error "Не найдены тесты инструментов scripts/*.test.mjs."
+    }
+    Write-Host "`n=== node --test scripts ($($paths.Count) файлов) ===" -ForegroundColor Cyan
+    & node --test @paths | Out-Host
+    return $LASTEXITCODE
+}
+
 $failures = @()
 
 try {
@@ -92,6 +105,7 @@ try {
         "all" {
             $failures += Invoke-Dotnet $dotnetGroups["dotnet-all"]
             $failures += Invoke-Unit $unitGroups."ide-unit-all"
+            $failures += Invoke-ScriptTests
             $failures += Invoke-E2E "e2e-all"
         }
         "ide" {
@@ -99,6 +113,7 @@ try {
             $failures += Invoke-Unit $unitGroups."ide-unit-all"
             $failures += Invoke-E2E "e2e-all"
         }
+        "scripts-all" { $failures += Invoke-ScriptTests }
         default {
             if ($dotnetGroups.Contains($Group)) {
                 $failures += Invoke-Dotnet $dotnetGroups[$Group]

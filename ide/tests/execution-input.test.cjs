@@ -91,3 +91,24 @@ test('Очистка единственной пустой строки сохр
   event('input.request', { inputRequestId: 'next', target: 'console', prompt: 'Следующий: ', outputText: '\r\nОтвет: да', outputLineCount: 2 });
   assert.equal(calls.output, '\x1bcОтвет: да\r\nСледующий: ');
 });
+
+test('Замена опубликованного вывода обновляет число строк перед активным INPUT', () => {
+  for (const count of [0, 1]) {
+    const { event, calls, controller } = setup();
+    event('input.request', { inputRequestId: 'next', prompt: 'Ответ: ', outputText: 'История', outputLineCount: 1 });
+    controller.inputText = '16';
+    event('output.replace', { text: '', outputVersion: '1', outputLineCount: count });
+    assert.equal(controller.outputLineCount, count);
+    assert.equal(calls.output, '\x1bc' + '\r\n'.repeat(count) + 'Ответ: 16');
+  }
+});
+
+test('Запоздалое добавление не меняет опережающий снимок INPUT, новый поток обновляет число строк', () => {
+  const { event, controller } = setup();
+  event('input.request', { inputRequestId: 'next', prompt: 'Ответ: ', outputText: 'Первая\nВторая', outputLineCount: 2 });
+  event('output.append', { text: 'Первая', outputVersion: '1', outputLineCount: 1 });
+  assert.equal(controller.outputText, 'Первая\nВторая');
+  assert.equal(controller.outputLineCount, 2);
+  event('output.append', { text: '\nВторая\nТретья', outputVersion: '2', outputLineCount: 3 });
+  assert.equal(controller.outputLineCount, 3);
+});

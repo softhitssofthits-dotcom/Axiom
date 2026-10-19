@@ -50,7 +50,10 @@ class ExecutionController {
         // Снимок INPUT может опережать таймер вывода. append относится только
         // к опубликованному потоку, а не к уже полученному полному снимку.
         this.streamedOutputText = message.event === 'output.append' ? this.streamedOutputText + payload.text : payload.text;
-        if (message.event === 'output.replace' || !this.outputText.startsWith(this.streamedOutputText)) this.outputText = this.streamedOutputText;
+        if (message.event === 'output.replace' || !this.outputText.startsWith(this.streamedOutputText)) {
+          this.outputText = this.streamedOutputText;
+          this.outputLineCount = payload.outputLineCount ?? (this.outputText ? this.outputText.split(/\r?\n/).length : 0);
+        }
         this.renderOutput(); this.api.acknowledgeOutput(this.sessionId, payload.outputVersion); break;
       case 'input.request':
         this.inputSubmission = null;

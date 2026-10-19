@@ -144,6 +144,22 @@ test('INPUT принимает значение один раз; отмена с
   assert.equal((await h.event('execution.finished', 's2')).payload.status, 'Cancelled');
 }));
 
+test('Поток вывода передаёт outputLineCount вместе с пустыми строками', () => withHost(async h => {
+  await h.start('DIM value AS STRING\nPRINT "Первая"\nPRINT\nINPUT value\n');
+  const input = await h.event('input.request', 's1');
+  assert.equal(input.payload.outputLineCount, 2);
+  let published = '';
+  while (published !== input.payload.outputText) {
+    const message = await h.wait(m => ['output.append', 'output.replace'].includes(m.event));
+    assert.equal(typeof message.payload.outputLineCount, 'number');
+    published = message.event === 'output.append' ? published + message.payload.text : message.payload.text;
+    if (published === input.payload.outputText) assert.equal(message.payload.outputLineCount, 2);
+    await h.request('output.ack', { outputVersion: message.payload.outputVersion }, 's1');
+  }
+  await h.request('execution.stop', {}, 's1');
+  await h.event('execution.finished', 's1');
+}));
+
 test('Занятый Host не запускает вторую VM и принимает Stop', () => withHost(async h => {
   await h.start('DO\nLOOP\n');
   await h.event('execution.state', 's1');

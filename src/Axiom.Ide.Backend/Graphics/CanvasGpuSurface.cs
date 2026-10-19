@@ -62,6 +62,12 @@ internal sealed partial class CanvasGpuSurface : IDisposable
     public void DrawLine(long x1, long y1, long x2, long y2, int color,
         long clipLeft, long clipTop, long clipRight, long clipBottom, uint paletteIndex = uint.MaxValue)
     {
+        if (x1 == x2 || y1 == y2)
+        {
+            Fill(Math.Max(Math.Min(x1, x2), clipLeft), Math.Max(Math.Min(y1, y2), clipTop),
+                Math.Min(Math.Max(x1, x2), clipRight), Math.Min(Math.Max(y1, y2), clipBottom), color, paletteIndex);
+            return;
+        }
         // Большие координаты обрабатываются отдельно без переполнения 32-битного шейдера.
         if (Math.Abs((double)x1) > 32768 || Math.Abs((double)y1) > 32768 ||
             Math.Abs((double)x2) > 32768 || Math.Abs((double)y2) > 32768)
