@@ -92,7 +92,10 @@ public sealed partial class Binder
             {
                 case InterpolatedStringTextPartSyntax textPart:
                     parts.Add(new BoundInterpolatedStringPart(
-                        new BoundLiteralExpression(textPart.TextToken.Location, textPart.TextToken.Text, TypeSymbol.String)));
+                        new BoundLiteralExpression(
+                            textPart.TextToken.Location,
+                            textPart.TextToken.Value as string ?? textPart.TextToken.Text,
+                            TypeSymbol.String)));
                     break;
 
                 case InterpolatedStringExpressionPartSyntax exprPart:
@@ -107,7 +110,8 @@ public sealed partial class Binder
                     string? formatSpecifier = null;
                     if (exprPart.FormatSpecifierToken is not null)
                     {
-                        formatSpecifier = exprPart.FormatSpecifierToken.Text;
+                        formatSpecifier = exprPart.FormatSpecifierToken.Value as string
+                            ?? exprPart.FormatSpecifierToken.Text.Trim();
                     }
 
                     parts.Add(new BoundInterpolatedStringPart(boundExpr, alignment, formatSpecifier));

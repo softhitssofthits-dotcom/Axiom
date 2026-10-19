@@ -14,9 +14,7 @@ public sealed partial class BytecodeVm
     private static RuntimeValue EvaluateRightBuiltin(RuntimeValue value, int count)
     {
         var text = GetStringUnchecked(value);
-        return count >= text.Length
-            ? value
-            : RuntimeValue.FromString(text.Substring(text.Length - count, count));
+        return count >= text.Length ? value : BuiltinStringHelpers.EvaluateRight(text, count);
     }
 
     private static RuntimeValue EvaluateMid(string text, int start, int count)
@@ -225,7 +223,7 @@ public sealed partial class BytecodeVm
         return CreateStringArrayValue(parts);
     }
 
-    private static RuntimeValue EvaluateJoinBuiltin(RuntimeArrayValue array, string separator)
+    private static RuntimeValue EvaluateJoinBuiltin(RuntimeArrayValue array, string separator, Action? checkCancellation = null)
     {
         if (!array.IsAllocated || array.Length == 0)
         {
@@ -242,6 +240,11 @@ public sealed partial class BytecodeVm
 
         for (var index = 0; index < array.Length; index++)
         {
+            if ((index & 1023) == 0)
+            {
+                checkCancellation?.Invoke();
+            }
+
             values[index] = array.GetValue(array.LowerBound + index).AsString();
             length += values[index].Length;
             RuntimeStringLimits.Check(length);

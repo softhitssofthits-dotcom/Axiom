@@ -52,6 +52,9 @@ public sealed partial class ProgramConsoleService : ViewModelBase, IProgramConso
             else if (e.PropertyName == nameof(InputPromptService.CurrentInputText))
             {
                 OnPropertyChanged(nameof(CurrentInputText));
+                // Символ, набранный в окне SCREEN, минует сеттер ниже и меняет
+                // модель напрямую: кадр публикуется здесь, иначе текст не виден.
+                PublishScreenInputFrame();
             }
         };
         _graphicsHostService = new GraphicsHostService(
@@ -109,14 +112,7 @@ public sealed partial class ProgramConsoleService : ViewModelBase, IProgramConso
     public string CurrentInputText
     {
         get => _inputPrompt.CurrentInputText;
-        set
-        {
-            _inputPrompt.CurrentInputText = value;
-            if (_inputState.Snapshot.IsScreenOutputActive && _inputPrompt.IsWaitingForInput)
-            {
-                _graphicsHostService.PublishFrame();
-            }
-        }
+        set => _inputPrompt.CurrentInputText = value;
     }
 
     public string? ResourceBaseDirectory { get; set; }
@@ -687,6 +683,16 @@ public sealed partial class ProgramConsoleService : ViewModelBase, IProgramConso
     private void OnInputWaitingChanged()
     {
         if (_inputState.Snapshot.IsScreenOutputActive)
+        {
+            _graphicsHostService.PublishFrame();
+        }
+    }
+
+    // Приглашение и набранный текст принадлежат окну SCREEN, поэтому его кадр
+    // обновляется на каждое изменение модели ввода.
+    private void PublishScreenInputFrame()
+    {
+        if (_inputState.Snapshot.IsScreenOutputActive && _inputPrompt.IsWaitingForInput)
         {
             _graphicsHostService.PublishFrame();
         }

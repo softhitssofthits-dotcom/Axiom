@@ -28,3 +28,7 @@
 ## Файловая подсистема — 19 октября 2026 года
 
 Тематические обработчики VM: BytecodeVm.Builtins.FileText.cs, Paths.cs, FileOperations.cs, Directories.cs, FileMetadata.cs и Storage.cs. Общие проверки — BytecodeVm.Builtins.FileSystem.cs; блочный сканер строк — Values/RuntimeTextFile.Lines.cs. Отдельного ускоренного файлового пути в BytecodeVm.cs больше нет: все формы используют единый договор.
+
+## Строковая подсистема — 19 октября 2026 года
+
+Текст интерполяции читает лексер (`Lexer.Strings.cs`): `{{`, `}}`, `""` и запрет перевода строки. Байндер (`Binder.Expressions.cs`) берёт семантическое значение токенов, а не исходную запись. Строковые встроенные функции исполняет делегатный диспетчер `BytecodeVm.BuiltinDispatch.cs` через помощники `BuiltinStringHelpers.cs` и `BuiltinStringUnitHelpers.cs`; отдельного ускоренного строкового пути нет, поэтому одно правило имеет одну реализацию.

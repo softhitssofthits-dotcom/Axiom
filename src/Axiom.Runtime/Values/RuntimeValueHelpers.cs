@@ -65,12 +65,14 @@ public static class RuntimeValueHelpers
 
         if (left.Type == TypeSymbol.String)
         {
-            return string.Equals(left.AsString(), right.AsString(), StringComparison.Ordinal);
+            // Как и числовые ветви, другой тип даёт неравенство, а не исключение.
+            return right.Type == TypeSymbol.String
+                && string.Equals(left.AsString(), right.AsString(), StringComparison.Ordinal);
         }
 
         if (left.Type == TypeSymbol.Boolean)
         {
-            return left.AsBoolean() == right.AsBoolean();
+            return right.Type == TypeSymbol.Boolean && left.AsBoolean() == right.AsBoolean();
         }
 
         if (left.Type == TypeSymbol.Date)

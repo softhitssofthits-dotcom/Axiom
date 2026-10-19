@@ -3236,7 +3236,7 @@ public sealed partial class BytecodeVm
         }
 
         if (executionInfo.HasFastHandler
-            && TryExecuteFastBuiltin(frame, executionInfo, instructionIndex, out var fastResult))
+            && TryExecuteFastGraphicsBuiltin(frame, executionInfo, instructionIndex, out var fastResult))
         {
             if (executionInfo.ReturnsValue)
             {
@@ -3265,20 +3265,6 @@ public sealed partial class BytecodeVm
         {
             InvalidateReverseExecutionHistory();
         }
-    }
-
-    private bool TryExecuteFastBuiltin(
-        BytecodeCallFrame frame,
-        BuiltinExecutionInfo executionInfo,
-        int instructionIndex,
-        out RuntimeValue result)
-    {
-        if (TryExecuteFastGraphicsBuiltin(frame, executionInfo, instructionIndex, out result))
-        {
-            return true;
-        }
-
-        return TryExecuteFastStringBuiltin(frame, executionInfo, out result);
     }
 
     private bool TryExecuteFastGraphicsBuiltin(

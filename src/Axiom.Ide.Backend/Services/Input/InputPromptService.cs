@@ -65,7 +65,7 @@ public sealed class InputPromptService : ViewModelBase
 
         if (!dispatcher.CheckAccess())
         {
-            return dispatcher.Invoke(() => RequestInput(request, onSubmit, isScreenOutputActive));
+            return dispatcher.Invoke(() => RequestInput(request, onSubmit, isScreenOutputActive, onWaitingChanged));
         }
 
         if (_pendingFrame is not null)

@@ -232,6 +232,9 @@ class AxiomIDE {
           [/(rem\b).*/, 'comment'],
           [/'.*$/, 'comment'],
           [/(\$)(")/, ['delimiter.interpolation', { token: 'string.quote', bracket: '@open', next: '@interpolatedString' }]],
+          // Литерал без закрывающей кавычки на этой же строке: подсветка не переносит
+          // его на следующую строку, как и компилятор (MB0002).
+          [/"(?:""|[^"])*$/, 'string'],
           [/"/, { token: 'string.quote', bracket: '@open', next: '@string' }],
           [/&H[0-9a-fA-F]+/, 'number.hex'],
           [/&B[01]+/, 'number.binary'],
@@ -254,14 +257,22 @@ class AxiomIDE {
         string: [
           [/""/, 'string.escape'],
           [/"/, { token: 'string.quote', bracket: '@close', next: '@pop' }],
+          // Monaco разбирает каждую строку отдельно: остаток строки без закрывающей
+          // кавычки завершает состояние, как это делает компилятор на конце строки.
+          [/[^"]+$/, { token: 'string', next: '@pop' }],
           [/[^"]+/, 'string'],
         ],
         // $"...{expression}...": the hole is highlighted as code, the markers as delimiters.
+        // Удвоенные скобки и кавычки — текст, как и в компиляторе.
         interpolatedString: [
+          [/\{\{/, 'string.escape'],
+          [/\}\}/, 'string.escape'],
           [/\{/, { token: 'delimiter.interpolation', bracket: '@open', next: '@interpolation' }],
           [/""/, 'string.escape'],
           [/"/, { token: 'string.quote', bracket: '@close', next: '@pop' }],
-          [/[^"{]+/, 'string'],
+          [/[^"{}]+$/, { token: 'string', next: '@pop' }],
+          [/[^"{}]+/, 'string'],
+          [/\}/, 'string'],
         ],
         interpolation: [
           [/(\$)(")/, ['delimiter.interpolation', { token: 'string.quote', bracket: '@open', next: '@interpolatedString' }]],
@@ -290,6 +301,7 @@ class AxiomIDE {
         nestedString: [
           [/""/, 'string.escape'],
           [/"/, { token: 'string.quote', bracket: '@close', next: '@pop' }],
+          [/[^"]+$/, { token: 'string', next: '@pop' }],
           [/[^"]+/, 'string'],
         ],
       },

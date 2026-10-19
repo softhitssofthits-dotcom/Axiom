@@ -86,3 +86,32 @@ module.exports.push({ id: 'highlight-interpolation-dollar', name: 'Знак до
     C.ok(markers.length === 3 && markers.every(m => m.color === color), '$ и обе скобки имеют цвет интерполяции в теме ' + theme);
   }
 } });
+
+module.exports.push({ id: 'highlight-unterminated-string-stops-at-line-end', name: 'Незакрытый литерал не продолжается на следующей строке', async fn({ S, C }) {
+  await S.launch();
+  const source = 'PRINT "abc\nPRINT "def"';
+  await S.page.evaluate(text => { window.__ide.editor.getModel().setValue(text); }, source);
+  const tokens = await S.page.evaluate(() => window.__ide.monaco.editor.tokenize(window.__ide.editor.getValue(), 'axiom'));
+  const secondLine = tokens[1];
+  C.ok(secondLine.some(t => t.offset === 0 && t.type === 'keyword.axiom'), 'Вторая строка начинается как код, а не как текст литерала', JSON.stringify(secondLine));
+  C.ok(secondLine.some(t => t.offset === 6 && t.type === 'string.quote.axiom'), 'Собственный литерал второй строки распознан');
+  const firstLine = tokens[0];
+  C.ok(firstLine.some(t => t.type === 'string.axiom'), 'Текст первой строки остаётся строкой');
+  C.ok(!firstLine.some(t => t.type === 'string.axiom' && t.offset >= source.indexOf('\n')), 'Перевод строки не относится к строке');
+  await S.screenshot('unterminated-string-line-end');
+} });
+
+module.exports.push({ id: 'highlight-interpolation-text-escapes', name: 'Удвоенные скобки и кавычки интерполяции относятся к тексту, а не к вставке', async fn({ S, C }) {
+  await S.launch();
+  const source = 'PRINT $"{{x}}""y""{1}"';
+  await S.page.evaluate(text => { window.__ide.editor.getModel().setValue(text); }, source);
+  const tokens = await S.page.evaluate(() => window.__ide.monaco.editor.tokenize(window.__ide.editor.getValue(), 'axiom')[0]);
+  const typeAt = offset => tokens.filter(t => t.offset <= offset).pop();
+  C.eq(typeAt(source.indexOf('{{')).type, 'string.escape.axiom', 'Удвоенная открывающая скобка относится к тексту');
+  C.eq(typeAt(source.indexOf('}}')).type, 'string.escape.axiom', 'Удвоенная закрывающая скобка относится к тексту');
+  C.eq(typeAt(source.indexOf('""')).type, 'string.escape.axiom', 'Удвоенная кавычка относится к тексту');
+  const interpolationOffsets = tokens.filter(t => t.type === 'delimiter.interpolation.axiom').map(t => t.offset);
+  C.eq(JSON.stringify(interpolationOffsets), JSON.stringify([6, 18, 20]), 'Скобки вставки остались единственной парой фигурных скобок');
+  C.ok(!tokens.some(t => t.offset >= 8 && t.offset < 18 && t.type === 'delimiter.interpolation.axiom'), 'Удвоенные пары не открывают вставку');
+  await S.screenshot('interpolation-text-escapes');
+} });
