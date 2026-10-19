@@ -25,8 +25,9 @@ internal static class DocumentCommands
         var openDocuments = projectDocuments.Select(document=>new SourceDocument(document.SourceFilePath,document.SourceText)).ToArray();
         if (method == "document.navigation")
         {
-            var graph = EditorCallGraph.Analyse(snapshot.SourceText);
-            return new { snapshot.DocumentId, snapshot.DocumentRevision, graph.Routines, graph.Calls, graph.IndirectCalls, graph.Complete };
+            var graph = EditorCallGraph.Analyse(snapshot.SourceText, snapshot.SourceFilePath,
+                SourceProject.LoadDependencies(snapshot.SourceText, snapshot.SourceFilePath, openDocuments));
+            return new { snapshot.DocumentId, snapshot.DocumentRevision, graph.Routines, graph.Calls, graph.IndirectCalls, graph.Complete, graph.SourceDocuments };
         }
         if (method == "document.hover")
         {

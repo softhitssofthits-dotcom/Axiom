@@ -9,6 +9,7 @@ class AxiomIDE {
     this.openFiles = new window.DocumentStore(() => {
       this.refreshDirtyIndicators(); this.persistRecovery();
       if(this.editor) this.scheduleLiveCheck();
+      this.assistant?.invalidate();
     });
     this.editedLines = new window.EditedLines();
     this.documentServices = new window.DocumentServices(this.openFiles, API);

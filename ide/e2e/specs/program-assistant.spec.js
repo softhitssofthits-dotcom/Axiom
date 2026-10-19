@@ -6,6 +6,54 @@ async function open(S,tag,source){const file=writeAxm(testWorkspace(tag),'про
 async function analyse(S){return S.page.evaluate(()=>window.__ide.documentServices.request(window.__ide.activeFile,'document.navigation'));}
 
 module.exports=[{
+  id:'assistant-module-navigation',name:'Межфайловые связи: снимок, переход в зависимость и возврат',
+  async fn({S,C}){
+    const folder=testWorkspace('assistant-modules');
+    const main=writeAxm(folder,'main.axm','IMPORT alpha\nIMPORT beta\nPRINT AlphaValue() + BetaValue()');
+    const alpha=writeAxm(folder,'alpha.axm','PUBLIC FUNCTION AlphaValue() AS INTEGER\nRETURN Hidden()\nEND FUNCTION\nFUNCTION Hidden() AS INTEGER\nRETURN 1\nEND FUNCTION');
+    writeAxm(folder,'beta.axm','PRINT Hidden()\nPUBLIC FUNCTION BetaValue() AS INTEGER\nRETURN Hidden()\nEND FUNCTION\nFUNCTION Hidden() AS INTEGER\nRETURN 2\nEND FUNCTION');
+    await S.launch({settings:{smartIdentifierEnabled:false}});
+    await S.page.evaluate(p=>window.__ide.openFile(p),main);
+    await S.page.evaluate(()=>window.__ide.assistant.show('outgoing',null));
+    let graph=await S.page.evaluate(()=>window.__ide.assistant.graph);
+    C.eq(graph.complete,true,'Все импорты связаны');
+    C.eq(new Set(graph.routines.filter(r=>r.name==='Hidden').map(r=>r.id)).size,2,'Закрытые одноимённые функции различаются');
+    C.contains(await S.page.locator('#assistant-body').innerText(),'alpha.axm','Файл указан в дереве');
+    const moduleMain=S.page.locator('.assistant-module-main').filter({hasText:'beta.axm'});
+    await moduleMain.locator('summary').first().click();
+    C.contains(await moduleMain.innerText(),'Hidden','Основной код зависимости доступен отдельной ветвью');
+    const branch=S.page.locator('.assistant-call-node').filter({has:S.page.locator('summary',{hasText:'AlphaValue'})}).first();
+    await branch.locator('summary').click();
+    await branch.locator('.assistant-call-sites > .assistant-link').first().click();
+    await S.page.waitForFunction(p=>window.__ide.activeFile===p,alpha);
+    C.eq(await S.page.evaluate(()=>window.__ide.editor.getPosition().lineNumber),1,'Открыто объявление в закрытой зависимости');
+    await S.page.evaluate(()=>{const a=window.__ide.assistant;a.travel(a.back,a.forward);});
+    C.eq(await S.page.evaluate(()=>window.__ide.activeFile),main,'Возврат в исходный документ');
+    await S.page.evaluate(p=>{const i=window.__ide;i.openFiles.get(p).model.setValue('PUBLIC FUNCTION AlphaValue() AS INTEGER\nRETURN 3\nEND FUNCTION');},alpha);
+    await S.page.evaluate(()=>window.__ide.assistant.show('outgoing',null));
+    graph=await S.page.evaluate(()=>window.__ide.assistant.graph);
+    C.eq(graph.calls.filter(c=>c.sourceFilePath===alpha).length,0,'Граф использует несохранённый текст');
+    await S.page.evaluate(p=>window.__ide.openFiles.get(p).model.setValue('PUBLIC FUNCTION AlphaValue() AS INTEGER\nRETURN 4\nEND FUNCTION'),alpha);
+    C.eq(await S.page.evaluate(()=>window.__ide.assistant.valid()),false,'Изменение зависимости делает панель устаревшей');
+    await S.page.evaluate(async()=>{
+      const i=window.__ide,a=i.assistant;
+      await a.show('outgoing',null);
+      const target=a.graph.routines.find(r=>r.name==='BetaValue');
+      const original=i.openFile.bind(i);i._restoreNavigationOpen=()=>{i.openFile=original;};
+      i.openFile=async file=>{await original(file);await new Promise(resolve=>{i._releaseNavigation=resolve;});};
+      i._navigationHistory=a.back.length;
+      i._pendingNavigation=a.navigateSource(a.view,target);
+    });
+    await S.page.waitForFunction(()=>!!window.__ide._releaseNavigation);
+    const race=await S.page.evaluate(async alpha=>{
+      const i=window.__ide;i.switchToFile(alpha);i._releaseNavigation();await i._pendingNavigation;i._restoreNavigationOpen();
+      return {file:i.activeFile,unchanged:i.assistant.back.length===i._navigationHistory};
+    },alpha);
+    C.eq(race.file,alpha,'Поздний переход не перехватывает выбранную третью вкладку');
+    C.eq(race.unchanged,true,'Отменённый переход не изменяет историю');
+    C.eq(S.pageErrors.length,0,'Нет ошибок интерфейса');
+  }
+},{
   id:'assistant-semantic-calls',name:'Связи компилятора: рекурсия, вложенные функции, перегрузки методов и неполный текст',
   async fn({S,C}){
     await S.launch({settings:{smartIdentifierEnabled:false}});

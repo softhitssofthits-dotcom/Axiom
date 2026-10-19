@@ -22,7 +22,11 @@ class ProgramAssistant {
     this.menu.hidden = true; this.menu.setAttribute('role','menu'); document.body.append(this.menu);
     this.popup = UIControls.createContextMenu(this.menu,{translate:I18N.t,onClose:()=>this.contextElement?.focus(),onAction:id=>this.contextAction(id)});
     ide.editor.onDidChangeModelContent(()=>this.invalidate());
-    ide.editor.onDidChangeModel(()=>queueMicrotask(()=>{this.invalidate();this.updateHistory();}));
+    ide.editor.onDidChangeModel(()=>{
+      const pending=this.pendingNavigation;
+      if(pending&&![pending.origin,pending.target].some(file=>ide.openFiles.get(file)?.model===ide.editor.getModel()))this.pendingNavigation=null;
+      queueMicrotask(()=>{this.invalidate();this.updateHistory();});
+    });
     ide.monaco.editor.onDidChangeMarkers(resources=>{
       if(resources.some(uri=>uri.toString()===ide.editor.getModel()?.uri.toString())) ide.outlinePanel?.render();
     });
@@ -89,10 +93,10 @@ class ProgramAssistant {
     for(const stack of [this.back,this.forward])for(let i=stack.length-1;i>=0;i--)if(!this.alive(stack[i]))this.release(stack.splice(i,1)[0]);
     UIControls.setEnabled(this.backButton,this.back.length>0); UIControls.setEnabled(this.forwardButton,this.forward.length>0);
   }
-  navigate(file,line,column=1) {
+  navigate(file,line,column=1,bookmark=null) {
     const doc=this.ide.openFiles.get(file);
     if(!doc||doc.model.isDisposed())return;
-    this.push(this.back,this.capture()); this.forward.splice(0).forEach(b=>this.release(b));
+    this.push(this.back,bookmark||this.capture()); this.forward.splice(0).forEach(b=>this.release(b));
     if(file!==this.ide.activeFile)this.ide.switchToFile(file);
     const position=doc.model.validatePosition({lineNumber:line,column});
     this.ide.editor.setPosition(position); this.ide.editor.revealLineInCenter(position.lineNumber); this.ide.editor.focus();
@@ -114,7 +118,37 @@ class ProgramAssistant {
   }
   valid(view=this.view) {
     const doc=view&&this.ide.openFiles.get(view.file);
-    return !!doc&&doc.model===view.model&&doc.documentId===view.documentId&&doc.model.getVersionId()===view.version&&this.ide.editor.getModel()===doc.model;
+    return !!doc&&doc.model===view.model&&doc.documentId===view.documentId&&doc.model.getVersionId()===view.version&&this.ide.editor.getModel()===doc.model&&(!view.project||view.project.isCurrent());
+  }
+  sameFile(left,right) {return String(left||'').replace(/\\/g,'/').toLowerCase()===String(right||'').replace(/\\/g,'/').toLowerCase();}
+  async navigateSource(view,location) {
+    if(!this.valid(view))return;
+    const file=location.sourceFilePath||view.file;
+    const source=this.graph?.sourceDocuments?.find(s=>this.sameFile(s.sourceFilePath,location.sourceFilePath));
+    if(!source)return;
+    // Открытие меняет состав проекта. Проверяем старый снимок до открытия,
+    // затем фактический текст цели, прежде чем применять координаты.
+    const bookmark=this.capture();
+    const operation={origin:view.file,target:file};this.pendingNavigation=operation;
+    try {
+      if(!this.ide.openFiles.get(file))await this.ide.openFile(file);
+      if(this.pendingNavigation!==operation||this.view!==view){this.release(bookmark);return;}
+      const doc=this.ide.openFiles.get(file);
+      const original=this.ide.openFiles.get(view.file);
+      const unchanged=this.pendingNavigation===operation&&this.view===view&&original?.model===view.model&&!view.model.isDisposed()&&view.model.getVersionId()===view.version&&
+        (view.project?.documents||[]).every(snapshot=>{
+          const entry=this.ide.openFiles.get(snapshot.sourceFilePath);
+          return entry?.documentId===snapshot.documentId&&entry.revision===snapshot.documentRevision;
+        });
+      if(!unchanged||!doc||doc.model.isDisposed()||doc.model.getValue()!==source.sourceText){
+        this.release(bookmark);this.status.textContent=this.t('stale');return;
+      }
+      this.navigate(file,location.line,location.column,bookmark);
+    }catch(error){
+      this.release(bookmark);
+      if(this.pendingNavigation===operation&&this.view===view)this.status.textContent=this.t('failed')+' '+error.message;
+    }
+    finally{if(this.pendingNavigation===operation)this.pendingNavigation=null;}
   }
   clearBody() {this.previewEditor?.dispose();this.previewEditor=null;this.previewModel?.dispose();this.previewModel=null;this.body.replaceChildren();}
   invalidate() {
@@ -144,6 +178,7 @@ class ProgramAssistant {
     else this.show(id,c.item);
   }
   async show(mode,item) {
+    this.pendingNavigation=null;
     if(item?.kind==='type')mode='preview';
     if(this.ide._formatBusy){this.status.textContent=this.t('stale');this.ide.showPanel();this.ide.switchPanel('assistant');return;}
     this.ide.rebuildOutline();
@@ -154,7 +189,8 @@ class ProgramAssistant {
     }
     const doc=this.ide.openFiles.get(this.ide.activeFile);if(!doc)return;
     this.clearBody();
-    const view={mode,item,file:this.ide.activeFile,model:doc.model,documentId:doc.documentId,version:doc.model.getVersionId()};
+    const view={mode,item,file:this.ide.activeFile,model:doc.model,documentId:doc.documentId,version:doc.model.getVersionId(),
+      project:mode==='preview'?null:this.ide.openFiles.captureProject(this.ide.activeFile)};
     this.view=view;const sequence=++this.sequence;this.localize();this.updateHistory();
     this.ide.showPanel();this.ide.switchPanel('assistant');
     UIControls.setEnabled(this.refreshButton,true);
@@ -165,7 +201,7 @@ class ProgramAssistant {
       const graph=await this.ide.documentServices.request(view.file,'document.navigation');
       if(sequence!==this.sequence||!this.valid(view))return;
       if(!graph){this.status.textContent=this.t('stale');return;}
-      const routine=item?graph.routines.find(r=>r.line===item.lineNo&&r.kind===item.kind&&r.name.split('.').at(-1).toUpperCase()===item.name.toUpperCase()):graph.routines.find(r=>r.id==='main');
+      const routine=item?graph.routines.find(r=>this.sameFile(r.sourceFilePath||view.file,view.file)&&r.line===item.lineNo&&r.kind===item.kind&&r.name.split('.').at(-1).toUpperCase()===item.name.toUpperCase()):graph.routines.find(r=>r.id==='main');
       if(!routine){this.status.textContent=this.t('unresolved');return;}
       this.graph=graph;this.graphView=view;this.graphRoot=routine;
       this.graphStatus(graph);
@@ -178,7 +214,7 @@ class ProgramAssistant {
   }
   graphStatus(graph) {
     this.status.textContent=this.t(graph.complete?'static':'partial')+' '+this.t('summary')
-      .replace('{routines}',graph.routines.filter(r=>r.id!=='main'&&!r.isBuiltin).length).replace('{calls}',graph.calls.length);
+      .replace('{routines}',graph.routines.filter(r=>r.kind!=='main'&&!r.isBuiltin).length).replace('{calls}',graph.calls.length);
     if(graph.indirectCalls?.length)this.status.textContent+=' '+this.t('indirectCount').replace('{count}',graph.indirectCalls.length);
   }
   showPreview(view) {
@@ -195,14 +231,14 @@ class ProgramAssistant {
     if(root.signature){const signature=document.createElement('p');signature.className='assistant-root-signature';signature.textContent=root.signature;this.body.append(signature);}
     if(view.item?.description){const note=document.createElement('p');note.className='assistant-source-note';note.textContent=this.t('sourceComment')+' '+view.item.description;this.body.append(note);}
     let nodes=0;
-    const name=r=>r.id==='main'?this.t('main'):r.name;
+    const name=r=>(r.kind==='main'?this.t('main'):r.name)+(r.sourceFilePath?' — '+r.sourceFilePath.split(/[\\/]/).at(-1):'');
     const branch=(routine,path,depth)=>{
       const list=document.createElement('div');list.className='assistant-branches';
       const edges=graph.calls.filter(c=>incoming?c.callee===routine.id:c.caller===routine.id);
       const indirect=incoming?[]:(graph.indirectCalls||[]).filter(c=>c.caller===routine.id);
       for(const site of indirect){
         if(++nodes>1000)break;
-        list.append(this.button(this.t('indirect')+' — '+this.t('line')+' '+site.line+':'+site.column,()=>{if(this.valid(view))this.navigate(view.file,site.line,site.column);},'assistant-call-site'));
+        list.append(this.button(this.t('indirect')+' — '+this.t('line')+' '+site.line+':'+site.column,()=>this.navigateSource(view,site),'assistant-call-site'));
       }
       const groups=new Map();
       for(const edge of edges){const id=incoming?edge.caller:edge.callee;if(!groups.has(id))groups.set(id,[]);groups.get(id).push(edge);}
@@ -214,12 +250,12 @@ class ProgramAssistant {
         const summary=document.createElement('summary');summary.textContent=name(related)+(related.line?' — '+this.t('line')+' '+related.line:'')+' ('+calls.length+')'+(path.has(id)?' — '+this.t('cycle'):'');
         summary.title=related.signature;details.append(summary);
         const content=document.createElement('div');content.className='assistant-call-sites';
-        if(!related.isBuiltin)content.append(this.button(this.t('openDefinition'),()=>{if(this.valid(view))this.navigate(view.file,related.line,related.column);}));
+        if(!related.isBuiltin)content.append(this.button(this.t('openDefinition'),()=>this.navigateSource(view,related)));
         if(related.isBuiltin){const signature=document.createElement('p');signature.textContent=related.signature;content.append(signature);}
         for(const call of calls){
           if(++nodes>1000){const note=document.createElement('p');note.textContent=this.t('limit');content.append(note);break;}
-          const label=(call.kind==='handler'?this.t('handler')+' — ':call.kind==='reference'?this.t('reference')+' — ':'')+this.t('line')+' '+call.line+':'+call.column;
-          content.append(this.button(label,()=>{if(this.valid(view))this.navigate(view.file,call.line,call.column);},'assistant-call-site'));
+          const label=(call.kind==='handler'?this.t('handler')+' — ':call.kind==='reference'?this.t('reference')+' — ':'')+(call.sourceFilePath?call.sourceFilePath.split(/[\\/]/).at(-1)+' — ':'')+this.t('line')+' '+call.line+':'+call.column;
+          content.append(this.button(label,()=>this.navigateSource(view,call),'assistant-call-site'));
         }
         details.append(content);
         let expanded=false;
@@ -233,8 +269,14 @@ class ProgramAssistant {
       }
       return list;
     };
-    if(!root.isBuiltin)this.body.append(this.button(this.t('openDefinition'),()=>{if(this.valid(view))this.navigate(view.file,root.line,root.column);}));
+    if(!root.isBuiltin)this.body.append(this.button(this.t('openDefinition'),()=>this.navigateSource(view,root)));
     this.body.append(branch(root,new Set([root.id]),0));
+    if(root.kind==='main'&&!incoming)for(const module of graph.routines.filter(r=>r.kind==='main'&&r.id!==root.id)){
+      const details=document.createElement('details');details.className='assistant-module-main';
+      const summary=document.createElement('summary');summary.textContent=name(module);details.append(summary);
+      details.append(this.button(this.t('openDefinition'),()=>this.navigateSource(view,module)),branch(module,new Set([module.id]),0));
+      this.body.append(details);
+    }
   }
 
   regionDialog(contextItem=null,rename=false) {
