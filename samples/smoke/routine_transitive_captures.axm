@@ -1,0 +1,38 @@
+' Проверка транзитивных захватов: промежуточная функция передаёт
+' вызываемой функции захваченную переменную внешней процедуры.
+' Ожидаемый вывод: 11 и 10.
+
+FUNCTION Outer() AS INTEGER
+    DIM x AS INTEGER = 10
+
+    FUNCTION PeerAlpha() AS INTEGER
+        RETURN PeerBeta()
+    END FUNCTION
+
+    FUNCTION PeerBeta() AS INTEGER
+        x = x + 1
+        RETURN x
+    END FUNCTION
+
+    RETURN PeerAlpha()
+END FUNCTION
+
+FUNCTION MakeReader() AS FUNCTION() AS INTEGER
+    DIM captured AS INTEGER = 10
+
+    FUNCTION Middle() AS FUNCTION() AS INTEGER
+        FUNCTION Deep() AS INTEGER
+            RETURN captured
+        END FUNCTION
+
+        RETURN Deep
+    END FUNCTION
+
+    RETURN Middle()
+END FUNCTION
+
+PRINT Outer()
+
+DIM reader AS FUNCTION() AS INTEGER
+reader = MakeReader()
+PRINT reader()

@@ -73,9 +73,18 @@ internal class BytecodeVariableSlot
     public void Store(RuntimeValue value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        Value = FixedStringLength is null && value.Type is not UserDefinedTypeSymbol && !value.RequiresCopyForStorage
+
+        var normalizedValue = FixedStringLength is null && value.Type is not UserDefinedTypeSymbol && !value.RequiresCopyForStorage
             ? value
             : NormalizeForStorage(value, FixedStringLength);
+
+        if (_setter is null)
+        {
+            _value = normalizedValue;
+            return;
+        }
+
+        _setter(normalizedValue);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

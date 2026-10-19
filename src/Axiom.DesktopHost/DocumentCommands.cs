@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text.Json;
 using Axiom.Execution;
 using Axiom.Formatting;
@@ -20,6 +21,8 @@ internal static class DocumentCommands
         if (string.IsNullOrWhiteSpace(snapshot.DocumentId) || snapshot.DocumentId.Length > 128 ||
             snapshot.DocumentRevision < 0 || snapshot.SourceText is null)
             throw new ArgumentException("Некорректный снимок документа.");
+        var projectDocuments = ProjectSnapshot.Validate(snapshot.SourceFilePath,snapshot.ProjectDocuments,snapshot.DocumentId);
+        var openDocuments = projectDocuments.Select(document=>new SourceDocument(document.SourceFilePath,document.SourceText)).ToArray();
         if (method == "document.navigation")
         {
             var graph = EditorCallGraph.Analyse(snapshot.SourceText);
@@ -31,7 +34,14 @@ internal static class DocumentCommands
             var identifiers = Lexer.Lex(snapshot.SourceText, out _)
                 .Where(token => token.Kind == TokenKind.IdentifierToken)
                 .Select(token => new EditorIdentifier(token.Text, token.Location.Span)).ToArray();
-            var hovers = Binder.GetEditorHovers(syntax, identifiers);
+            var compilation = new AxiomExecutionPipeline().Compile(new CompilationRequest(snapshot.SourceText,
+                sourceName: snapshot.SourceFilePath,
+                additionalDocuments: SourceProject.LoadDependencies(snapshot.SourceText, snapshot.SourceFilePath,openDocuments)));
+            var modules = compilation.CompiledProgram?.BoundProgram.Modules;
+            var imports = syntax.Members.OfType<Axiom.Syntax.ImportStatementSyntax>()
+                .Where(import => modules?.ContainsKey(import.ModuleName) == true)
+                .Select(import => modules![import.ModuleName]).ToArray();
+            var hovers = Binder.GetEditorHovers(syntax, identifiers, imports);
             return new { snapshot.DocumentId, snapshot.DocumentRevision, hovers };
         }
         var formatter = new AxiomCodeFormattingService();
@@ -62,14 +72,18 @@ internal static class DocumentCommands
                 edits = resultText != snapshot.SourceText ? new[] { new TextEdit(prefix, snapshot.SourceText.Length - prefix - suffix, resultText.Substring(prefix, resultText.Length - prefix - suffix)) } : [],
                 plan.NewCaretOffset };
         }
-        var result = new AxiomExecutionPipeline().Compile(new CompilationRequest(snapshot.SourceText, includeUsageWarnings: true));
+        var result = new AxiomExecutionPipeline().Compile(new CompilationRequest(snapshot.SourceText, includeUsageWarnings: true,
+            sourceName: snapshot.SourceFilePath,
+            additionalDocuments: SourceProject.LoadDependencies(snapshot.SourceText, snapshot.SourceFilePath,openDocuments)));
         var diagnostics = result.Diagnostics.Concat(result.BackendDiagnostics)
-            .DistinctBy(d => (d.Code, d.Location.Span, d.Message))
+            .DistinctBy(d => (d.Code, d.Location.Document, d.Location.Span, d.Message))
             .Select(d => {
                 var item = ProgramDiagnosticItem.FromDiagnostic(d);
+                var owner=projectDocuments.FirstOrDefault(document=>string.Equals(Path.GetFullPath(document.SourceFilePath),item.SourceFilePath,StringComparison.OrdinalIgnoreCase));
                 return new { item.Code, item.Stage, item.Message, item.Line, item.Column,
                     item.Length, item.SpanStart, item.SpanLength,
-                    snapshot.DocumentId, snapshot.DocumentRevision, snapshot.SourceFilePath,
+                    documentId=owner?.DocumentId ?? snapshot.DocumentId, documentRevision=owner?.DocumentRevision ?? snapshot.DocumentRevision,
+                    sourceFilePath = item.SourceFilePath ?? snapshot.SourceFilePath,
                     severity = d.Severity.ToString().ToLowerInvariant() };
             }).ToArray();
         return new { snapshot.DocumentId, snapshot.DocumentRevision,

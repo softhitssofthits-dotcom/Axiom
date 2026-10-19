@@ -2,7 +2,7 @@ namespace Axiom.Runtime;
 
 public readonly record struct BytecodeSourceBreakpoint
 {
-    public BytecodeSourceBreakpoint(int line, int? column = null)
+    public BytecodeSourceBreakpoint(int line, int? column = null, string? document = null)
     {
         if (line < 1)
         {
@@ -16,17 +16,21 @@ public readonly record struct BytecodeSourceBreakpoint
 
         Line = line;
         Column = column;
+        Document = document;
     }
 
     public int Line { get; }
 
     public int? Column { get; }
 
+    public string? Document { get; }
+
     public bool Matches(BytecodeVmExecutionSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
 
         return snapshot.SourceLocation.Line == Line
+            && (Document is null || string.Equals(Document, snapshot.SourceLocation.Document, StringComparison.Ordinal))
             && (Column is null || snapshot.SourceLocation.Column == Column.Value);
     }
 }

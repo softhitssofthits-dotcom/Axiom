@@ -3258,7 +3258,7 @@ public sealed class AcceptanceProgramTests
                 : repositoryRoot;
             try
             {
-                return RunFromWorkingDirectory(directory, sourceText, CreateAuditInputProvider(relativePath));
+                return RunFromWorkingDirectory(directory, sourceText, CreateAuditInputProvider(relativePath), Path.Combine(repositoryRoot, relativePath));
             }
             finally
             {
@@ -3529,10 +3529,12 @@ public sealed class AcceptanceProgramTests
     private static ExecutionResult RunFromWorkingDirectory(
         string workingDirectory,
         string sourceText,
-        IInputProvider? inputProvider = null)
+        IInputProvider? inputProvider = null,
+        string? sourcePath = null)
     {
         return new AxiomExecutionPipeline().Run(new ExecutionRequest(
-            sourceText, inputProvider, resourceBaseDirectory: workingDirectory));
+            sourceText, inputProvider, resourceBaseDirectory: workingDirectory,
+            sourceName: sourcePath, additionalDocuments: SourceProject.LoadDependencies(sourceText, sourcePath)));
     }
 
     private static string CreateArtifactsTestDirectory(string prefix)

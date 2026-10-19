@@ -10,14 +10,14 @@
     });
     let scope = globals;
     codeLines.forEach((line, n) => {
-      const proc = line.match(/^\s*(SUB|FUNCTION)\s+([A-Za-z_]\w*)\s*\((.*)\)/i);
+      const proc = line.match(/^\s*(?:(?:PUBLIC|PRIVATE)\s+)?(SUB|FUNCTION)\s+([A-Za-z_]\w*)\s*\((.*)\)/i);
       if (proc) {
         globals.set(proc[2].toUpperCase(), [1, 0]); scope = new Map(); scopes.push(scope);
         for (const match of proc[3].matchAll(/(?:^|,)\s*([A-Za-z_]\w*)\s*(\()?/g)) scope.set(match[1].toUpperCase(), [match[2] ? 3 : 0, 0]);
       }
       scopeAt[n] = scope;
       for (const match of line.matchAll(/\b(DIM|CONST)\s+([A-Za-z_]\w*)\s*(\()?/gi)) scope.set(match[2].toUpperCase(), [match[3] ? 3 : 0, /^CONST$/i.test(match[1]) ? 1 : 0]);
-      const type = line.match(/^\s*TYPE\s+([A-Za-z_]\w*)/i); if (type) globals.set(type[1].toUpperCase(), [2, 0]);
+      const type = line.match(/^\s*(?:(?:PUBLIC|PRIVATE)\s+)?TYPE\s+([A-Za-z_]\w*)/i); if (type) globals.set(type[1].toUpperCase(), [2, 0]);
       if (/^\s*END\s+(SUB|FUNCTION)\b/i.test(line)) scope = globals;
     });
     const data = []; let previousLine = 0, previousStart = 0;

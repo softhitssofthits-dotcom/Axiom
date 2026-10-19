@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 function setup() {
-  const context = { window: {}, I18N: { t: key => key, setText: () => {} }, performance: { now: () => 0 } };
+  const context = { window: {}, document:{getElementById:()=>({})}, I18N: { t: key => key, setText: () => {} }, performance: { now: () => 0 } };
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/renderer/execution-controller.js'), 'utf8'), context);
   const calls = { problems: [], focus: 0 };
@@ -16,12 +16,44 @@ function setup() {
     openFiles: new Map([['file', { documentId: 'document', revision: 1, model: { getValue: () => 'PRINT 42' } }]]) };
   const requests = [];
   let backendFault;
-  const api = { onBackendEvent() {}, onBackendFault(fn) { backendFault = fn; }, startExecution() {
-    return new Promise((resolve, reject) => requests.push({ resolve, reject }));
+  const api = { onBackendEvent() {}, onBackendFault(fn) { backendFault = fn; }, startExecution(snapshot) {
+    return new Promise((resolve, reject) => requests.push({ resolve, reject,snapshot }));
   } };
   return { controller: new context.window.ExecutionController(ide, api), ide, calls, requests,
     fault: () => backendFault({ message: 'DesktopHost завершился' }) };
 }
+
+test('Запуск передаёт неизменный текст открытой зависимости',async()=>{
+  const {controller,ide,requests}=setup();
+  const documents=[{documentId:'helper-id',documentRevision:2,sourceFilePath:'helper.axm',sourceText:'PRINT 2'}];
+  ide.openFiles.captureProject=()=>({documents,isCurrent:()=>true});
+  const pending=controller.start('file');
+  assert.equal(requests[0].snapshot.projectDocuments?.[0].sourceText,'PRINT 2');
+  requests[0].resolve({ok:true,payload:{sessionId:'run'}});await pending;
+  assert.equal(controller.sourceSnapshot.documents[0].sourceText,'PRINT 2');
+});
+
+test('Ошибка зависимости сохраняет текст и идентификатор снимка запуска',()=>{
+  const {controller,ide}=setup();let diagnostics;
+  ide.focusEditor=()=>{};ide.applyDiagnostics=items=>{diagnostics=items;};controller.renderOutput=()=>{};
+  controller.sessionId='run';controller.sourceSnapshot={documentId:'document',file:'file',sourceText:'PRINT Answer()',documents:[{
+    documentId:'helper-id',sourceFilePath:'helper.axm',sourceText:'PRINT 1/0',documentRevision:2}]};
+  controller.event({sessionId:'run',event:'execution.finished',payload:{status:'RuntimeFailed',outputText:'',diagnostics:[{
+    code:'MB3001',sourceFilePath:'helper.axm',line:1,column:8,message:'error'}]}});
+  assert.equal(diagnostics[0].executionSnapshot?.documentId,'helper-id');
+  assert.equal(diagnostics[0].executionSnapshot?.sourceText,'PRINT 1/0');
+});
+
+test('Закрытая при старте зависимость получает фактический текст из службы исполнения',()=>{
+  const {controller,ide}=setup();let diagnostics;
+  ide.focusEditor=()=>{};ide.applyDiagnostics=items=>{diagnostics=items;};controller.renderOutput=()=>{};
+  controller.sessionId='run';controller.sourceSnapshot={documentId:'document',file:'file',sourceText:'PRINT Answer()',documents:[]};
+  controller.event({sessionId:'run',event:'execution.finished',payload:{status:'RuntimeFailed',outputText:'',
+    sourceDocuments:[{sourceFilePath:'helper.axm',sourceText:'PRINT 1/0'}],diagnostics:[{
+      code:'MB3001',sourceFilePath:'helper.axm',line:1,column:8,message:'error'}]}});
+  assert.equal(diagnostics[0].executionSnapshot?.sourceText,'PRINT 1/0');
+  assert.equal(diagnostics[0].executionSnapshot?.documentId,null);
+});
 
 test('Отказ DesktopHost во время подготовки завершает ожидание запуска', async () => {
   const { controller, ide, requests, fault } = setup();

@@ -31,12 +31,24 @@ class TraceController {
   }
   mark(payload) {
     this.clearMarker();
-    const file=this.ide.openFiles.get(this.ide._runFile);
+    const target=payload.sourceFilePath || this.ide._runFile;
+    const file=this.ide.openFiles.get(target);
+    if(!file && payload.sourceFilePath && this.ide.openFile) {
+      return this.ide.openFile(target).then(()=>{
+        if(this.ide.execution.stopId===payload.stopId) this.mark(payload);
+      }).catch(error=>this.ide.log('trace.document.failed',{message:error.message}));
+    }
     if(!file || file.model.isDisposed()) return;
-    this.ide.switchToFile(this.ide._runFile);
+    this.ide.switchToFile(target);
+    const snapshot=this.ide.execution.snapshotForFile?.(target);
+    if(snapshot && file.model.getValue()!==snapshot.sourceText) return;
     if(payload.line) this.marker={model:file.model,ids:file.model.deltaDecorations([], [{
       range:new this.ide.monaco.Range(payload.line,1,payload.line,1),
-      options:{isWholeLine:true,className:'trace-current-line',glyphMarginClassName:'trace-current-arrow'} }])};
+      options:{isWholeLine:true,className:'trace-current-line',glyphMarginClassName:'trace-current-arrow'} }]),sourceText:snapshot?.sourceText};
+    if(payload.line) {
+      this.ide.editor.revealLineInCenter(payload.line);
+      this.ide.editor.setPosition({lineNumber:payload.line,column:payload.column || 1});
+    }
   }
   clearMarker() {
     if(this.marker && !this.marker.model.isDisposed()) this.marker.model.deltaDecorations(this.marker.ids,[]);
@@ -56,6 +68,7 @@ class TraceController {
   }
   update() {
     const ide=this.ide;
+    if(this.marker?.sourceText!==undefined && !this.marker.model.isDisposed() && this.marker.model.getValue()!==this.marker.sourceText) this.clearMarker();
     for(const [model] of this.points) if(model.isDisposed()) this.points.delete(model);
     if(this.locale!==I18N.current) {
       this.locale=I18N.current;

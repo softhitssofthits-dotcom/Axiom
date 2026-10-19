@@ -24,6 +24,11 @@ public static class BlockLineClassifier
         }
 
         var upper = body.ToUpperInvariant();
+        if (StartsWithWord(upper, "PUBLIC") || StartsWithWord(upper, "PRIVATE"))
+        {
+            var modifierLength = StartsWithWord(upper, "PUBLIC") ? 6 : 7;
+            upper = upper[modifierLength..].TrimStart();
+        }
 
         if (StartsWithWord(upper, "ELSEIF") && EndsWithWord(upper, "THEN"))
         {

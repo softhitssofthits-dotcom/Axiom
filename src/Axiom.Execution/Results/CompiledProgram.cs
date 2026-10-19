@@ -11,7 +11,8 @@ public sealed class CompiledProgram
         ProgramSyntax syntax,
         BoundProgram boundProgram,
         LoweredProgram? loweredProgram = null,
-        BytecodeModule? bytecodeModule = null)
+        BytecodeModule? bytecodeModule = null,
+        IEnumerable<SourceDocument>? sourceDocuments = null)
     {
         ArgumentNullException.ThrowIfNull(sourceText);
         ArgumentNullException.ThrowIfNull(syntax);
@@ -22,9 +23,12 @@ public sealed class CompiledProgram
         BoundProgram = boundProgram;
         LoweredProgram = loweredProgram;
         BytecodeModule = bytecodeModule;
+        SourceDocuments = sourceDocuments?.ToArray() ?? [];
     }
 
     public string SourceText { get; }
+
+    public IReadOnlyList<SourceDocument> SourceDocuments { get; }
 
     public ProgramSyntax Syntax { get; }
 

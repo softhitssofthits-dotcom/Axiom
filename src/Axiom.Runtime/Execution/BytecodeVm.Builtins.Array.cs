@@ -935,17 +935,25 @@ public sealed partial class BytecodeVm
             return EvaluateOneDimensionalArrayEveryBuiltin(array, predicate, location);
         }
 
-        var every = true;
+        var cursor = new ArrayIndexCursor(array);
 
-        BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices =>
+        VmCallbackStep Next()
         {
-            if (every && !InvokeArrayPredicate(predicate, array.GetValue(indices), location))
+            if (!cursor.TryTake(out var indices))
             {
-                every = false;
+                return new VmCallbackComplete(RuntimeValue.FromBoolean(true));
             }
-        });
 
-        return every;
+            return new VmCallbackInvoke(
+                predicate,
+                [array.GetValue(indices)],
+                location,
+                result => result.AsBoolean()
+                    ? Next()
+                    : new VmCallbackComplete(RuntimeValue.FromBoolean(false)));
+        }
+
+        return RunCallbackChain(Next()).AsBoolean();
     }
 
     private bool EvaluateArraySomeBuiltin(RuntimeValue argument, RuntimeValue predicateArgument, TextLocation location)
@@ -958,17 +966,25 @@ public sealed partial class BytecodeVm
             return EvaluateOneDimensionalArraySomeBuiltin(array, predicate, location);
         }
 
-        var any = false;
+        var cursor = new ArrayIndexCursor(array);
 
-        BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices =>
+        VmCallbackStep Next()
         {
-            if (!any && InvokeArrayPredicate(predicate, array.GetValue(indices), location))
+            if (!cursor.TryTake(out var indices))
             {
-                any = true;
+                return new VmCallbackComplete(RuntimeValue.FromBoolean(false));
             }
-        });
 
-        return any;
+            return new VmCallbackInvoke(
+                predicate,
+                [array.GetValue(indices)],
+                location,
+                result => result.AsBoolean()
+                    ? new VmCallbackComplete(RuntimeValue.FromBoolean(true))
+                    : Next());
+        }
+
+        return RunCallbackChain(Next()).AsBoolean();
     }
 
     private RuntimeValue EvaluateArrayFilterBuiltin(RuntimeValue argument, RuntimeValue predicateArgument, TextLocation location)
@@ -984,17 +1000,32 @@ public sealed partial class BytecodeVm
         }
 
         var values = new List<RuntimeValue>(array.Length);
+        var cursor = new ArrayIndexCursor(array);
 
-        BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices =>
+        VmCallbackStep Next()
         {
-            var value = array.GetValue(indices);
-            if (InvokeArrayPredicate(predicate, value, location))
+            if (!cursor.TryTake(out var indices))
             {
-                values.Add(value);
+                return new VmCallbackComplete(CreateCompactArrayValue(resultArrayType, values));
             }
-        });
 
-        return CreateCompactArrayValue(resultArrayType, values);
+            var value = array.GetValue(indices);
+            return new VmCallbackInvoke(
+                predicate,
+                [value],
+                location,
+                result =>
+                {
+                    if (result.AsBoolean())
+                    {
+                        values.Add(value);
+                    }
+
+                    return Next();
+                });
+        }
+
+        return RunCallbackChain(Next());
     }
 
     private RuntimeValue EvaluateArrayMapBuiltin(RuntimeValue argument, RuntimeValue selectorArgument, TextLocation location)
@@ -1008,10 +1039,33 @@ public sealed partial class BytecodeVm
             return EvaluateOneDimensionalArrayMapBuiltin(array, resultType, selector, location);
         }
 
-        return BuiltinArrayHelpers.CreateVisibleShapeArrayValue(
-            resultType,
-            array,
-            indices => InvokeArrayCallback(selector, array.GetValue(indices), location));
+        var result = RuntimeArrayValue.CreateVisibleShape(
+            resultType.ElementType,
+            fixedStringLength: null,
+            array.LowerBounds,
+            array.UpperBounds);
+        var cursor = new ArrayIndexCursor(array);
+
+        VmCallbackStep Next()
+        {
+            if (!cursor.TryTake(out var indices))
+            {
+                return new VmCallbackComplete(RuntimeValue.FromArray(resultType, result));
+            }
+
+            var targetIndices = (int[])indices.Clone();
+            return new VmCallbackInvoke(
+                selector,
+                [array.GetValue(indices)],
+                location,
+                value =>
+                {
+                    result.SetValue(targetIndices, value);
+                    return Next();
+                });
+        }
+
+        return RunCallbackChain(Next());
     }
 
     private RuntimeValue EvaluateArrayReduceBuiltin(
@@ -1029,11 +1083,27 @@ public sealed partial class BytecodeVm
         }
 
         var accumulator = seed;
+        var cursor = new ArrayIndexCursor(array);
 
-        BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices =>
-            accumulator = InvokeArrayCallback(reducer, accumulator, array.GetValue(indices), location));
+        VmCallbackStep Next()
+        {
+            if (!cursor.TryTake(out var indices))
+            {
+                return new VmCallbackComplete(accumulator);
+            }
 
-        return accumulator;
+            return new VmCallbackInvoke(
+                reducer,
+                [accumulator, array.GetValue(indices)],
+                location,
+                value =>
+                {
+                    accumulator = value;
+                    return Next();
+                });
+        }
+
+        return RunCallbackChain(Next());
     }
 
     private bool EvaluateOneDimensionalArrayEveryBuiltin(
@@ -1043,23 +1113,35 @@ public sealed partial class BytecodeVm
     {
         var index = array.LowerBound;
         var upperBound = array.UpperBound;
+        var exhausted = index > upperBound;
 
-        while (index <= upperBound)
+        VmCallbackStep Next()
         {
-            if (!InvokeArrayPredicate(predicate, array.GetValue(index), location))
+            if (exhausted)
             {
-                return false;
+                return new VmCallbackComplete(RuntimeValue.FromBoolean(true));
             }
 
+            var current = index;
             if (index == upperBound)
             {
-                break;
+                exhausted = true;
+            }
+            else
+            {
+                index++;
             }
 
-            index++;
+            return new VmCallbackInvoke(
+                predicate,
+                [array.GetValue(current)],
+                location,
+                result => result.AsBoolean()
+                    ? Next()
+                    : new VmCallbackComplete(RuntimeValue.FromBoolean(false)));
         }
 
-        return true;
+        return RunCallbackChain(Next()).AsBoolean();
     }
 
     private bool EvaluateOneDimensionalArraySomeBuiltin(
@@ -1069,23 +1151,35 @@ public sealed partial class BytecodeVm
     {
         var index = array.LowerBound;
         var upperBound = array.UpperBound;
+        var exhausted = index > upperBound;
 
-        while (index <= upperBound)
+        VmCallbackStep Next()
         {
-            if (InvokeArrayPredicate(predicate, array.GetValue(index), location))
+            if (exhausted)
             {
-                return true;
+                return new VmCallbackComplete(RuntimeValue.FromBoolean(false));
             }
 
+            var current = index;
             if (index == upperBound)
             {
-                break;
+                exhausted = true;
+            }
+            else
+            {
+                index++;
             }
 
-            index++;
+            return new VmCallbackInvoke(
+                predicate,
+                [array.GetValue(current)],
+                location,
+                result => result.AsBoolean()
+                    ? new VmCallbackComplete(RuntimeValue.FromBoolean(true))
+                    : Next());
         }
 
-        return false;
+        return RunCallbackChain(Next()).AsBoolean();
     }
 
     private RuntimeValue EvaluateOneDimensionalArrayFilterBuiltin(
@@ -1097,24 +1191,42 @@ public sealed partial class BytecodeVm
         var values = new List<RuntimeValue>(array.Length);
         var index = array.LowerBound;
         var upperBound = array.UpperBound;
+        var exhausted = index > upperBound;
 
-        while (index <= upperBound)
+        VmCallbackStep Next()
         {
-            var value = array.GetValue(index);
-            if (InvokeArrayPredicate(predicate, value, location))
+            if (exhausted)
             {
-                values.Add(value);
+                return new VmCallbackComplete(CreateCompactArrayValue(resultArrayType, values));
             }
 
+            var current = index;
             if (index == upperBound)
             {
-                break;
+                exhausted = true;
+            }
+            else
+            {
+                index++;
             }
 
-            index++;
+            var value = array.GetValue(current);
+            return new VmCallbackInvoke(
+                predicate,
+                [value],
+                location,
+                result =>
+                {
+                    if (result.AsBoolean())
+                    {
+                        values.Add(value);
+                    }
+
+                    return Next();
+                });
         }
 
-        return CreateCompactArrayValue(resultArrayType, values);
+        return RunCallbackChain(Next());
     }
 
     private RuntimeValue EvaluateOneDimensionalArrayMapBuiltin(
@@ -1130,19 +1242,37 @@ public sealed partial class BytecodeVm
             array.UpperBounds);
         var index = array.LowerBound;
         var upperBound = array.UpperBound;
+        var exhausted = index > upperBound;
 
-        while (index <= upperBound)
+        VmCallbackStep Next()
         {
-            result.SetValue(index, InvokeArrayCallback(selector, array.GetValue(index), location));
-            if (index == upperBound)
+            if (exhausted)
             {
-                break;
+                return new VmCallbackComplete(RuntimeValue.FromArray(resultType, result));
             }
 
-            index++;
+            var current = index;
+            if (index == upperBound)
+            {
+                exhausted = true;
+            }
+            else
+            {
+                index++;
+            }
+
+            return new VmCallbackInvoke(
+                selector,
+                [array.GetValue(current)],
+                location,
+                value =>
+                {
+                    result.SetValue(current, value);
+                    return Next();
+                });
         }
 
-        return RuntimeValue.FromArray(resultType, result);
+        return RunCallbackChain(Next());
     }
 
     private RuntimeValue EvaluateOneDimensionalArrayReduceBuiltin(
@@ -1154,19 +1284,90 @@ public sealed partial class BytecodeVm
         var accumulator = seed;
         var index = array.LowerBound;
         var upperBound = array.UpperBound;
+        var exhausted = index > upperBound;
 
-        while (index <= upperBound)
+        VmCallbackStep Next()
         {
-            accumulator = InvokeArrayCallback(reducer, accumulator, array.GetValue(index), location);
-            if (index == upperBound)
+            if (exhausted)
             {
-                break;
+                return new VmCallbackComplete(accumulator);
             }
 
-            index++;
+            var current = index;
+            if (index == upperBound)
+            {
+                exhausted = true;
+            }
+            else
+            {
+                index++;
+            }
+
+            return new VmCallbackInvoke(
+                reducer,
+                [accumulator, array.GetValue(current)],
+                location,
+                value =>
+                {
+                    accumulator = value;
+                    return Next();
+                });
         }
 
-        return accumulator;
+        return RunCallbackChain(Next());
+    }
+
+    private sealed class ArrayIndexCursor
+    {
+        private readonly int[] _indices;
+        private readonly int[] _lowerBounds;
+        private readonly int[] _upperBounds;
+        private bool _started;
+        private bool _exhausted;
+
+        public ArrayIndexCursor(RuntimeArrayValue array)
+        {
+            _indices = new int[array.Rank];
+            _lowerBounds = new int[array.Rank];
+            _upperBounds = new int[array.Rank];
+            _exhausted = array.Length == 0;
+
+            for (var dimension = 0; dimension < array.Rank; dimension++)
+            {
+                _lowerBounds[dimension] = array.GetLowerBound(dimension + 1);
+                _upperBounds[dimension] = array.GetUpperBound(dimension + 1);
+                _indices[dimension] = _lowerBounds[dimension];
+            }
+        }
+
+        public bool TryTake(out int[] indices)
+        {
+            indices = _indices;
+            if (_exhausted)
+            {
+                return false;
+            }
+
+            if (!_started)
+            {
+                _started = true;
+                return true;
+            }
+
+            for (var dimension = _indices.Length - 1; dimension >= 0; dimension--)
+            {
+                if (_indices[dimension] < _upperBounds[dimension])
+                {
+                    _indices[dimension]++;
+                    return true;
+                }
+
+                _indices[dimension] = _lowerBounds[dimension];
+            }
+
+            _exhausted = true;
+            return false;
+        }
     }
 
     private RuntimeArrayValue RequireArrayArgument(RuntimeValue argument, string functionName, TextLocation location)
@@ -1191,27 +1392,6 @@ public sealed partial class BytecodeVm
 
         ReportEmptyFunctionValue(location);
         throw new RuntimeFailureException();
-    }
-
-    private bool InvokeArrayPredicate(RuntimeFunctionValue predicate, RuntimeValue value, TextLocation location)
-    {
-        return InvokeArrayCallback(predicate, value, location).AsBoolean();
-    }
-
-    private RuntimeValue InvokeArrayCallback(RuntimeFunctionValue callback, RuntimeValue value, TextLocation location)
-    {
-        ReadOnlySpan<RuntimeValue> arguments = [value];
-        return InvokeBytecodeFunction(callback, arguments, location);
-    }
-
-    private RuntimeValue InvokeArrayCallback(
-        RuntimeFunctionValue callback,
-        RuntimeValue first,
-        RuntimeValue second,
-        TextLocation location)
-    {
-        ReadOnlySpan<RuntimeValue> arguments = [first, second];
-        return InvokeBytecodeFunction(callback, arguments, location);
     }
 
     private RuntimeArrayValue RequireAllocatedArrayArgument(RuntimeValue argument, string functionName, string argumentName, TextLocation location)

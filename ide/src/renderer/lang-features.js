@@ -52,7 +52,7 @@ const LangFeatures = (() => {
     const res = { subs: [], functions: [], types: [], vars: [] };
     const lines = model.getValue().replace(/\r\n/g, '\n').split('\n');
     for (const [lineIndex, raw] of lines.entries()) {
-      const line = codeOf(raw).trim();
+      const line = codeOf(raw).trim().replace(/^(?:PUBLIC|PRIVATE)\s+/i, '');
       if (!line) continue;
       let m;
       if ((m = line.match(/^SUB\s+([A-Za-z_]\w*)\s*\(([^)]*)\)/i))) {
@@ -83,7 +83,7 @@ const LangFeatures = (() => {
       }
     }
     const declarations = [...res.subs.map(item => ({item, kind:'SUB'})), ...res.functions.map(item => ({item, kind:'FUNCTION'})), ...res.types.map(item => ({item, kind:'TYPE'}))].sort((a,b) => a.item.lineNo-b.item.lineNo);
-    const codeLines=lines.map(raw=>codeOf(raw).trim());
+    const codeLines=lines.map(raw=>codeOf(raw).trim().replace(/^(?:PUBLIC|PRIVATE)\s+/i, ''));
     for (let index=0; index<declarations.length; index++) {
       const {item,kind}=declarations[index];
       const limit=(declarations[index+1]?.item.lineNo || lines.length+1)-1;
@@ -352,12 +352,13 @@ const LangFeatures = (() => {
       if (!file) return null;
       const version = model.getVersionId();
       let cached = hoverCache.get(model);
-      if (!cached || cached.version !== version) {
-        cached = { version, request: ide.documentServices.request(file, 'document.hover') };
+      if (!cached || cached.file !== file || cached.version !== version || (cached.project && !cached.project.isCurrent())) {
+        cached = { version,file,project:ide.openFiles.captureProject?.(file),request: ide.documentServices.request(file, 'document.hover') };
         hoverCache.set(model, cached);
       }
       try {
         const result = await cached.request;
+        if(cached.project && !cached.project.isCurrent()) return null;
         if (!result && hoverCache.get(model) === cached) hoverCache.delete(model);
         return result?.hovers || null;
       } catch (error) {

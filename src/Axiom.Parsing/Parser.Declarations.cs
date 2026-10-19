@@ -4,8 +4,45 @@ namespace Axiom.Parsing;
 
 public sealed partial class Parser
 {
+    private ImportStatementSyntax ParseImportStatement()
+    {
+        var importKeyword = Match(SyntaxKind.ImportKeyword, "IMPORT");
+        var nameToken = MatchIdentifier();
+        return new ImportStatementSyntax(importKeyword, nameToken);
+    }
     private MemberSyntax ParseMember()
     {
+        return ParseMember(allowVisibility: false);
+    }
+
+    private MemberSyntax ParseMember(bool allowVisibility)
+    {
+        if (allowVisibility && Current.Kind is SyntaxKind.PublicKeyword or SyntaxKind.PrivateKeyword)
+        {
+            var visibilityKeyword = NextToken();
+            SkipNewLines();
+
+            switch (Current.Kind)
+            {
+                case SyntaxKind.TypeKeyword:
+                    return ParseTypeDeclaration(visibilityKeyword);
+
+                case SyntaxKind.SubKeyword:
+                    return ParseSubDeclaration(visibilityKeyword);
+
+                case SyntaxKind.FunctionKeyword:
+                    return ParseFunctionDeclaration(visibilityKeyword);
+
+                case SyntaxKind.DimKeyword:
+                case SyntaxKind.ConstKeyword:
+                    return new ModuleStatementSyntax(visibilityKeyword, ParseStatement());
+
+                default:
+                    ReportUnexpectedToken(Current, "PUBLIC или PRIVATE допускается только перед объявлением DIM, CONST, SUB, FUNCTION или TYPE");
+                    return new GlobalStatementSyntax(ParseStatement());
+            }
+        }
+
         return Current.Kind switch
         {
             SyntaxKind.TypeKeyword => ParseTypeDeclaration(),
@@ -15,7 +52,7 @@ public sealed partial class Parser
         };
     }
 
-    private TypeDeclarationSyntax ParseTypeDeclaration()
+    private TypeDeclarationSyntax ParseTypeDeclaration(SyntaxToken? visibilityKeyword = null)
     {
         var typeKeyword = Match(SyntaxKind.TypeKeyword, "TYPE");
         var identifier = MatchIdentifier();
@@ -53,7 +90,7 @@ public sealed partial class Parser
         }
 
         var (endKeyword, endTypeKeyword) = MatchEndPair(SyntaxKind.TypeKeyword, "END TYPE");
-        return new TypeDeclarationSyntax(typeKeyword, identifier, fields, methods, endKeyword, endTypeKeyword);
+        return new TypeDeclarationSyntax(typeKeyword, identifier, fields, methods, endKeyword, endTypeKeyword, visibilityKeyword);
     }
 
     private TypeFieldSyntax ParseTypeField()
@@ -80,7 +117,7 @@ public sealed partial class Parser
         return new TypeFieldSyntax(declarators, commaTokens, typeClause, equalsToken, initializer);
     }
 
-    private SubDeclarationSyntax ParseSubDeclaration()
+    private SubDeclarationSyntax ParseSubDeclaration(SyntaxToken? visibilityKeyword = null)
     {
         var subKeyword = Match(SyntaxKind.SubKeyword, "SUB");
         var identifier = MatchIdentifier();
@@ -100,10 +137,11 @@ public sealed partial class Parser
             closeParenToken,
             statements,
             endKeyword,
-            endSubKeyword);
+            endSubKeyword,
+            visibilityKeyword);
     }
 
-    private FunctionDeclarationSyntax ParseFunctionDeclaration()
+    private FunctionDeclarationSyntax ParseFunctionDeclaration(SyntaxToken? visibilityKeyword = null)
     {
         var functionKeyword = Match(SyntaxKind.FunctionKeyword, "FUNCTION");
         var identifier = MatchIdentifier();
@@ -125,7 +163,8 @@ public sealed partial class Parser
             returnType,
             statements,
             endKeyword,
-            endFunctionKeyword);
+            endFunctionKeyword,
+            visibilityKeyword);
     }
 
     private TypeClauseSyntax ParseTypeClause()

@@ -1,6 +1,33 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const {DocumentStore}=require('../src/renderer/documents');
 const {DocumentServices}=require('../src/renderer/document-services');
 function model(text){let listener;return {getValue:()=>text,onDidChangeContent:fn=>(listener=fn,{dispose(){}}),change(value){text=value;listener();}};}
+test('Проверка передаёт снимок открытой зависимости и отвергает ответ после её правки',async()=>{
+ const store=new DocumentStore(),main=model('IMPORT helper\nPRINT Answer()'),helper=model('PUBLIC FUNCTION Answer() AS INTEGER\nRETURN 2\nEND FUNCTION');
+ store.set('C:/project/main.axm',{model:main});store.set('C:/project/helper.axm',{model:helper});store.set('C:/other/hidden.axm',{model:model('PRINT 0')});
+ let respond,snapshot;const service=new DocumentServices(store,{documentCommand:(_method,s)=>{snapshot=s;return new Promise(resolve=>respond=resolve);}});
+ const pending=service.request('C:/project/main.axm','document.compile');
+ assert.equal(snapshot.projectDocuments?.length,1);
+ assert.equal(snapshot.projectDocuments[0].sourceText,helper.getValue());
+ helper.change('PRINT missing');respond({ok:true,payload:{...snapshot,diagnostics:[]}});
+ assert.equal(await pending,null);
+});
+
+test('Закрытие зависимости и Save As отклоняют прежний проектный ответ',async()=>{
+ for(const action of ['close','rename']){
+  const store=new DocumentStore();store.set('C:/project/main.axm',{model:model('IMPORT helper')});store.set('C:/project/helper.axm',{model:model('PRINT 2')});
+  let respond,snapshot;const service=new DocumentServices(store,{documentCommand:(_method,s)=>{snapshot=s;return new Promise(resolve=>respond=resolve);}});
+  const pending=service.request('C:/project/main.axm','document.hover');
+  if(action==='close')store.delete('C:/project/helper.axm');else store.rename('C:/project/helper.axm','C:/project/renamed.axm');
+  respond({ok:true,payload:{...snapshot,hovers:[]}});assert.equal(await pending,null);
+ }
+});
+
+test('Форматирование не устаревает из-за правки зависимости',async()=>{
+ const store=new DocumentStore(),helper=model('PRINT 2');store.set('C:/project/main.axm',{model:model('print 1')});store.set('C:/project/helper.axm',{model:helper});
+ let respond,snapshot;const service=new DocumentServices(store,{documentCommand:(_method,s)=>{snapshot=s;return new Promise(resolve=>respond=resolve);}});
+ const pending=service.request('C:/project/main.axm','document.format');helper.change('PRINT 3');
+ respond({ok:true,payload:{...snapshot,sourceText:'PRINT 1'}});assert.ok(await pending);
+});
 test('Ответы документа переставлены: старый запрос не заменяет новый',async()=>{
  const store=new DocumentStore(),m=model('PRINT 1');store.set('a.axm',{model:m});const replies=[];
  const service=new DocumentServices(store,{documentCommand:(_method,snapshot)=>new Promise(resolve=>replies.push({resolve,snapshot}))});

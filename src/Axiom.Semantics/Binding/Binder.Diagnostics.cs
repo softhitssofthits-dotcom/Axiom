@@ -27,6 +27,11 @@ public sealed partial class Binder
             message += " Оператор CALL в Axiom отсутствует: для вызова процедуры просто напишите Foo().";
         }
 
+        if (TryReportPrivateModuleMember(name, location))
+        {
+            return;
+        }
+
         _diagnostics.Report(DiagnosticCodes.UnknownName, message, location);
     }
 
@@ -275,6 +280,11 @@ public sealed partial class Binder
 
     private void ReportUnknownCallable(string name, TextLocation location)
     {
+        if (TryReportPrivateModuleMember(name, location))
+        {
+            return;
+        }
+
         _diagnostics.Report(DiagnosticCodes.UnknownCallable, $"Функция или процедура '{name}' не объявлена.", location);
     }
 
@@ -387,6 +397,11 @@ public sealed partial class Binder
 
     private void ReportUnknownType(string name, TextLocation location)
     {
+        if (TryReportPrivateModuleMember(name, location))
+        {
+            return;
+        }
+
         _diagnostics.Report(DiagnosticCodes.UnknownType, $"Тип '{name}' не объявлен.", location);
     }
 

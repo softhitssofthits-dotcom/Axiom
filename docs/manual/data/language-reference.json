@@ -25,7 +25,7 @@
     "src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.cs",
     "src/Axiom.Syntax/SyntaxKind.cs"
   ],
-  "sourceFingerprint": "8bd1362ed3e3f19b5a7e4f6de5a404f579df189ca4497544ade4b89ab802e92c",
+  "sourceFingerprint": "037f5a5dafd9f999d3c3b08b56346daa8f589cd0abe5e9f6fe61d9f3392a9ce8",
   "functions": [
     {
       "name": "ABS",
@@ -7873,6 +7873,12 @@
       "href": "function.html"
     },
     {
+      "id": "importstatement-import",
+      "name": "IMPORT",
+      "syntax": "ImportStatement",
+      "href": "import.html"
+    },
+    {
       "id": "print-print",
       "name": "PRINT",
       "syntax": "Print",
@@ -8443,6 +8449,7 @@
     "GET",
     "IF",
     "IMP",
+    "IMPORT",
     "INPUT",
     "IS",
     "KEY",
@@ -8466,7 +8473,9 @@
     "PRESERVE",
     "PRESET",
     "PRINT",
+    "PRIVATE",
     "PSET",
+    "PUBLIC",
     "PUT",
     "RANDOMIZE",
     "REDIM",

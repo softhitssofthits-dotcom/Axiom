@@ -12,10 +12,14 @@
       const token = {}; methods.set(method, token);
       const revision = document.revision;
       const canonicalPath = document.path;
+      const projectOperation=['document.compile','document.analyse','document.hover','document.navigation'].includes(method);
+      const project=projectOperation ? this.store.captureProject?.(canonicalPath) : null;
       const snapshot = { ...options, documentId: document.documentId, documentRevision: revision,
-        sourceText: document.model.getValue(), sourceFilePath: document.path.startsWith('untitled') ? null : document.path };
+        sourceText: document.model.getValue(), sourceFilePath: document.path.startsWith('untitled') ? null : document.path,
+        ...(project ? {projectDocuments:project.documents} : {}) };
       const current = () => methods.get(method) === token && this.store.get(canonicalPath) === document && document.path === canonicalPath &&
-          document.documentId === snapshot.documentId && document.revision === revision && !document.model.isDisposed?.();
+          document.documentId === snapshot.documentId && document.revision === revision && !document.model.isDisposed?.() &&
+          (!project || project.isCurrent());
       let response;
       try { response = await this.api.documentCommand(method, snapshot); }
       catch (error) { if (!current()) return null; throw error; }

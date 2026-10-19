@@ -33,6 +33,12 @@ test('Ошибка исполнения обновляет целевой док
   assert.deepEqual(markers.get(other.model), ['existing']);
 });
 
+test('Диагностика импортированного документа получает маркер при проверке активного файла', () => {
+  const {ide,first,markers,diagnostic}=setup();
+  ide.applyDiagnostics([diagnostic],true);
+  assert.equal(markers.get(first.model).length,1);
+});
+
 test('Диапазон запущенного снимка не применяется к изменённому тексту и не даёт переход', () => {
   const { ide, first, markers, diagnostic, jumps, edit } = setup();
   edit('PRINT "Исправлено"');

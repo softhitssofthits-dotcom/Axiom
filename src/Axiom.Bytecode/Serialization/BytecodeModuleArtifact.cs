@@ -115,7 +115,8 @@ public sealed record TextLocationArtifact(
     int SpanStart,
     int SpanLength,
     int Line,
-    int Column)
+    int Column,
+    string? Document = null)
 {
     [JsonIgnore]
     public int SpanEnd => SpanStart + SpanLength;

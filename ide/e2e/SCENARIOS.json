@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 491,
+  "count": 501,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -2101,6 +2101,56 @@
       "id": "menu-fixed-check-column",
       "spec": "menu-layout.spec.js",
       "name": "В меню только команды, названия не сдвигаются при включении галочек"
+    },
+    {
+      "id": "modules-keywords-formatting",
+      "spec": "modules.spec.js",
+      "name": "Модули: ключевые слова, объявления и форматирование в редакторе"
+    },
+    {
+      "id": "modules-import-run-refresh",
+      "spec": "modules.spec.js",
+      "name": "Модули: запуск импортированной функции и обновление зависимости"
+    },
+    {
+      "id": "modules-document-breakpoint",
+      "spec": "modules.spec.js",
+      "name": "Модули: точка останова и текущая строка в импортированном документе"
+    },
+    {
+      "id": "modules-diagnostic-open-file",
+      "spec": "modules.spec.js",
+      "name": "Модули: переход по ошибке открывает зависимость и показывает диапазон"
+    },
+    {
+      "id": "modules-unsaved-project-snapshot",
+      "spec": "modules.spec.js",
+      "name": "Модули: проверка, подсказка и запуск используют несохранённую зависимость"
+    },
+    {
+      "id": "modules-stale-project-response",
+      "spec": "modules.spec.js",
+      "name": "Модули: правка зависимости отменяет поздний ответ проверки"
+    },
+    {
+      "id": "modules-runtime-snapshot-diagnostic",
+      "spec": "modules.spec.js",
+      "name": "Модули: ошибка запущенной версии не подчёркивает исправленную зависимость"
+    },
+    {
+      "id": "modules-debug-immutable-snapshot",
+      "spec": "modules.spec.js",
+      "name": "Модули: продолжение отладки использует снимок до правки зависимости"
+    },
+    {
+      "id": "modules-closed-runtime-snapshot",
+      "spec": "modules.spec.js",
+      "name": "Модули: фактический текст закрытой зависимости защищает диапазон ошибки"
+    },
+    {
+      "id": "modules-closed-debug-snapshot",
+      "spec": "modules.spec.js",
+      "name": "Модули: шаг в закрытую зависимость не отмечает изменённый текст"
     },
     {
       "id": "navigation-keeps-saved-document",

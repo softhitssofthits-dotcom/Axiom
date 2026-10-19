@@ -7,6 +7,34 @@ const context = { window: {} };
 vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/renderer/lang-features.js'), 'utf8'), context);
 const signature = context.window.LangFeatures.builtinSignature;
 
+test('Семантическая подсказка обновляется после правки зависимости при неизменном основном тексте',async()=>{
+ const p=providers('PRINT value');let revision=0,calls=0;
+ p.ide.openFiles.captureProject=()=>{const captured=revision;return {isCurrent:()=>captured===revision};};
+ p.ide.documentServices.request=async()=>{calls++;return {hovers:[{start:6,length:5,name:'value',kind:'variable',type:revision?'STRING':'INTEGER'}]};};
+ const hover=()=>p.features._hoverProvider.provideHover(p.model,{lineNumber:1,column:7});
+ assert.match((await hover()).contents[0].value,/INTEGER/);
+ revision++;assert.match((await hover()).contents[0].value,/STRING/);assert.equal(calls,2);
+});
+
+test('Переименование основного файла обновляет подсказку без изменения текста',async()=>{
+ const p=providers('PRINT value');let calls=0;
+ p.ide.documentServices.request=async()=>({hovers:[{start:6,length:5,name:'value',kind:'variable',type:++calls===1?'INTEGER':'STRING'}]});
+ const hover=()=>p.features._hoverProvider.provideHover(p.model,{lineNumber:1,column:7});
+ assert.match((await hover()).contents[0].value,/INTEGER/);
+ const entry=p.ide.openFiles.get('test');p.ide.openFiles.delete('test');p.ide.openFiles.set('renamed',entry);
+ assert.match((await hover()).contents[0].value,/STRING/);
+});
+
+test('Открытые и закрытые объявления сохраняются в обзоре документа', () => {
+  const doc=context.window.LangFeatures.scanDoc({getValue:()=>
+    'IMPORT tools\nPUBLIC FUNCTION Answer() AS INTEGER\nRETURN 42\nEND FUNCTION\nPRIVATE SUB Work()\nEND SUB\nPUBLIC TYPE Box\nItem AS INTEGER\nEND TYPE\nPRIVATE DIM count AS INTEGER'});
+  assert.equal(doc.functions[0]?.name,'Answer');
+  assert.equal(doc.functions[0]?.endLineNo,4);
+  assert.equal(doc.subs[0]?.name,'Work');
+  assert.equal(doc.types[0]?.name,'Box');
+  assert.equal(doc.vars[0]?.name,'count');
+});
+
 test('Заготовка однострочного IF не добавляет END IF и переводится', () => {
   const p=providers('');
   const suggestion=()=>p.features._completionProvider.provideCompletionItems(p.model,{lineNumber:1,column:1}).suggestions.find(s=>s.insertText.startsWith('IF ')&&!s.insertText.includes('\n'));

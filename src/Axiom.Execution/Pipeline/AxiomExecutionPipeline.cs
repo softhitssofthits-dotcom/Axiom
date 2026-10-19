@@ -4,6 +4,7 @@ using Axiom.Core;
 using Axiom.Parsing;
 using Axiom.Runtime;
 using Axiom.Semantics;
+using Axiom.Syntax;
 
 namespace Axiom.Execution;
 
@@ -296,7 +297,7 @@ public sealed class AxiomExecutionPipeline
         ArgumentNullException.ThrowIfNull(request);
 
         var compilation = CompileCore(request.SourceText, request.ProgressReporter, request.BytecodeSnapshotPath,
-            request.IncludeUsageWarnings, request.InitialGraphicsContext);
+            request.IncludeUsageWarnings, request.InitialGraphicsContext, request.SourceName, request.AdditionalDocuments);
 
         foreach (var diagnostic in compilation.Diagnostics)
         {
@@ -321,7 +322,8 @@ public sealed class AxiomExecutionPipeline
                 : graphicsHost.IsScreenOutputActive ? InitialGraphicsContext.TextScreen : InitialGraphicsContext.None
             : InitialGraphicsContext.None;
         var compilation = CompileCore(request.SourceText, progressReporter: null, request.BytecodeSnapshotPath,
-            initialGraphicsContext: initialGraphicsContext);
+            initialGraphicsContext: initialGraphicsContext, sourceName: request.SourceName,
+            additionalDocuments: request.AdditionalDocuments);
 
         if (!compilation.FrontendSucceeded)
         {
@@ -409,126 +411,176 @@ public sealed class AxiomExecutionPipeline
         IProgress<int>? progressReporter,
         string? bytecodeSnapshotPath,
         bool includeUsageWarnings = false,
-        InitialGraphicsContext initialGraphicsContext = InitialGraphicsContext.None)
+        InitialGraphicsContext initialGraphicsContext = InitialGraphicsContext.None,
+        string? sourceName = null,
+        IReadOnlyList<SourceDocument>? additionalDocuments = null)
     {
         var frontendStopwatch = Stopwatch.StartNew();
 
         progressReporter?.Report(5);
-        var syntax = Parser.Parse(sourceText, out var syntaxDiagnostics);
+        ProgramSyntax syntax;
+        DiagnosticBag syntaxDiagnostics;
+        BoundProgram boundProgram;
 
-        if (syntaxDiagnostics.Count > 0)
+        if (additionalDocuments is null or { Count: 0 })
+        {
+            syntax = Parser.Parse(sourceText, out syntaxDiagnostics, sourceName);
+            if (syntaxDiagnostics.Count > 0)
+            {
+                return SyntaxFailure(syntaxDiagnostics);
+            }
+
+            progressReporter?.Report(55);
+            boundProgram = Binder.Bind(syntax, out var semanticDiagnostics, initialGraphicsContext: initialGraphicsContext);
+            return ContinueCompilation(sourceText, syntax, boundProgram, semanticDiagnostics);
+        }
+
+        var entryModuleName = Path.GetFileNameWithoutExtension(sourceName ?? "main");
+        syntax = Parser.Parse(sourceText, out syntaxDiagnostics, sourceName);
+        var allSyntaxDiagnostics = new DiagnosticBag();
+        allSyntaxDiagnostics.AddRange(syntaxDiagnostics);
+        var modules = new List<ModuleSyntax> { new(entryModuleName, syntax) };
+
+        foreach (var document in additionalDocuments)
+        {
+            var documentSyntax = Parser.Parse(document.Text, out var documentDiagnostics, document.Name);
+            allSyntaxDiagnostics.AddRange(documentDiagnostics);
+            modules.Add(new ModuleSyntax(document.ModuleName, documentSyntax));
+        }
+
+        if (allSyntaxDiagnostics.Count > 0)
+        {
+            return SyntaxFailure(allSyntaxDiagnostics);
+        }
+
+        progressReporter?.Report(55);
+        boundProgram = Binder.BindModules(
+            modules,
+            entryModuleName,
+            out var moduleDiagnostics,
+            initialGraphicsContext: initialGraphicsContext);
+        return ContinueCompilation(sourceText, syntax, boundProgram, moduleDiagnostics);
+
+        CompilationResult SyntaxFailure(DiagnosticBag diagnostics)
         {
             frontendStopwatch.Stop();
             progressReporter?.Report(100);
             return new CompilationResult(
                 CompilationStatus.SyntaxFailure,
-                syntaxDiagnostics.ToArray(),
+                diagnostics.ToArray(),
                 compiledProgram: null,
                 frontendPreparationDuration: frontendStopwatch.Elapsed);
         }
 
-        progressReporter?.Report(55);
-        var boundProgram = Binder.Bind(syntax, out var semanticDiagnostics, initialGraphicsContext: initialGraphicsContext);
-
-        if (includeUsageWarnings && !semanticDiagnostics.Any(static diagnostic => diagnostic.Severity == DiagnosticSeverity.Error))
-            semanticDiagnostics.AddRange(VariableUsageAnalysis.Analyze(boundProgram));
-
-        if (semanticDiagnostics.Any(static diagnostic => diagnostic.Severity != DiagnosticSeverity.Warning))
+        CompilationResult ContinueCompilation(
+            string text,
+            ProgramSyntax parsedSyntax,
+            BoundProgram program,
+            DiagnosticBag semanticDiagnostics)
         {
-            // Предупреждения (например, MB2045 о совпадении имён переменной и процедуры)
-            // не блокируют компиляцию и выполнение — они остаются в списке диагностик.
+            if (includeUsageWarnings && !semanticDiagnostics.Any(static diagnostic => diagnostic.Severity == DiagnosticSeverity.Error))
+                semanticDiagnostics.AddRange(VariableUsageAnalysis.Analyze(program));
+
+            if (semanticDiagnostics.Any(static diagnostic => diagnostic.Severity != DiagnosticSeverity.Warning))
+            {
+                // Предупреждения сохраняются в диагностике, но не блокируют выполнение.
+                // Ошибки семантики завершают компиляцию до понижения.
+                frontendStopwatch.Stop();
+                progressReporter?.Report(100);
+                return new CompilationResult(
+                    CompilationStatus.SemanticFailure,
+                    semanticDiagnostics.ToArray(),
+                    compiledProgram: null,
+                    frontendPreparationDuration: frontendStopwatch.Elapsed);
+            }
+
             frontendStopwatch.Stop();
+            var frontendPreparationDuration = frontendStopwatch.Elapsed;
+            var sourceDocuments = new[] { new SourceDocument(sourceName ?? "main.axm", text) }
+                .Concat(additionalDocuments ?? []);
+            var compiledProgram = new CompiledProgram(text, parsedSyntax, program, sourceDocuments: sourceDocuments);
+
+            var loweringStopwatch = Stopwatch.StartNew();
+            progressReporter?.Report(70);
+            var loweringResult = new BoundProgramLowerer().Lower(program);
+            loweringStopwatch.Stop();
+            var loweringDuration = loweringStopwatch.Elapsed;
+
+            if (!loweringResult.Succeeded)
+            {
+                progressReporter?.Report(100);
+                return new CompilationResult(
+                    CompilationStatus.BackendFailure,
+                    semanticDiagnostics.ToArray(),
+                    compiledProgram,
+                    loweringResult.Diagnostics.Select(MapBackendDiagnostic).ToArray(),
+                    backendSucceeded: false,
+                    bytecodeAvailable: false,
+                    frontendPreparationDuration: frontendPreparationDuration,
+                    loweringDuration: loweringDuration);
+            }
+
+            compiledProgram = new CompiledProgram(
+                text,
+                parsedSyntax,
+                program,
+                loweredProgram: loweringResult.Program);
+
+            var bytecodeStopwatch = Stopwatch.StartNew();
+            progressReporter?.Report(90);
+            var bytecodeResult = new BytecodeCompiler().Compile(loweringResult.Program!);
+            bytecodeStopwatch.Stop();
+            var bytecodeEmissionDuration = bytecodeStopwatch.Elapsed;
             progressReporter?.Report(100);
+
+            if (!bytecodeResult.Succeeded)
+            {
+                return new CompilationResult(
+                    CompilationStatus.BackendFailure,
+                    semanticDiagnostics.ToArray(),
+                    compiledProgram,
+                    bytecodeResult.Diagnostics.Select(MapBackendDiagnostic).ToArray(),
+                    backendSucceeded: false,
+                    bytecodeAvailable: false,
+                    frontendPreparationDuration: frontendPreparationDuration,
+                    loweringDuration: loweringDuration,
+                    bytecodeEmissionDuration: bytecodeEmissionDuration);
+            }
+
+            if (bytecodeSnapshotPath is not null
+                && !TryWriteBytecodeSnapshot(bytecodeSnapshotPath, bytecodeResult.Module!, out var snapshotDiagnostic))
+            {
+                return new CompilationResult(
+                    CompilationStatus.BackendFailure,
+                    semanticDiagnostics.ToArray(),
+                    compiledProgram,
+                    [snapshotDiagnostic],
+                    backendSucceeded: false,
+                    bytecodeAvailable: false,
+                    frontendPreparationDuration: frontendPreparationDuration,
+                    loweringDuration: loweringDuration,
+                    bytecodeEmissionDuration: bytecodeEmissionDuration);
+            }
+
+            compiledProgram = new CompiledProgram(
+                text,
+                parsedSyntax,
+                program,
+                loweredProgram: loweringResult.Program,
+                bytecodeModule: bytecodeResult.Module,
+                sourceDocuments: sourceDocuments);
+
             return new CompilationResult(
-                CompilationStatus.SemanticFailure,
-                semanticDiagnostics.ToArray(),
-                compiledProgram: null,
-                frontendPreparationDuration: frontendStopwatch.Elapsed);
-        }
-
-        frontendStopwatch.Stop();
-        var frontendPreparationDuration = frontendStopwatch.Elapsed;
-        var compiledProgram = new CompiledProgram(sourceText, syntax, boundProgram);
-
-        var loweringStopwatch = Stopwatch.StartNew();
-        progressReporter?.Report(70);
-        var loweringResult = new BoundProgramLowerer().Lower(boundProgram);
-        loweringStopwatch.Stop();
-        var loweringDuration = loweringStopwatch.Elapsed;
-
-        if (!loweringResult.Succeeded)
-        {
-            progressReporter?.Report(100);
-            return new CompilationResult(
-                CompilationStatus.BackendFailure,
+                CompilationStatus.Success,
                 semanticDiagnostics.ToArray(),
                 compiledProgram,
-                loweringResult.Diagnostics.Select(MapBackendDiagnostic).ToArray(),
-                backendSucceeded: false,
-                bytecodeAvailable: false,
-                frontendPreparationDuration: frontendPreparationDuration,
-                loweringDuration: loweringDuration);
-        }
-
-        compiledProgram = new CompiledProgram(
-            sourceText,
-            syntax,
-            boundProgram,
-            loweredProgram: loweringResult.Program);
-
-        var bytecodeStopwatch = Stopwatch.StartNew();
-        progressReporter?.Report(90);
-        var bytecodeResult = new BytecodeCompiler().Compile(loweringResult.Program!);
-        bytecodeStopwatch.Stop();
-        var bytecodeEmissionDuration = bytecodeStopwatch.Elapsed;
-        progressReporter?.Report(100);
-
-        if (!bytecodeResult.Succeeded)
-        {
-            return new CompilationResult(
-                CompilationStatus.BackendFailure,
-                semanticDiagnostics.ToArray(),
-                compiledProgram,
-                bytecodeResult.Diagnostics.Select(MapBackendDiagnostic).ToArray(),
-                backendSucceeded: false,
-                bytecodeAvailable: false,
+                backendDiagnostics: [],
+                backendSucceeded: true,
+                bytecodeAvailable: true,
                 frontendPreparationDuration: frontendPreparationDuration,
                 loweringDuration: loweringDuration,
                 bytecodeEmissionDuration: bytecodeEmissionDuration);
         }
-
-        if (bytecodeSnapshotPath is not null
-            && !TryWriteBytecodeSnapshot(bytecodeSnapshotPath, bytecodeResult.Module!, out var snapshotDiagnostic))
-        {
-            return new CompilationResult(
-                CompilationStatus.BackendFailure,
-                semanticDiagnostics.ToArray(),
-                compiledProgram,
-                [snapshotDiagnostic],
-                backendSucceeded: false,
-                bytecodeAvailable: false,
-                frontendPreparationDuration: frontendPreparationDuration,
-                loweringDuration: loweringDuration,
-                bytecodeEmissionDuration: bytecodeEmissionDuration);
-        }
-
-        compiledProgram = new CompiledProgram(
-            sourceText,
-            syntax,
-            boundProgram,
-            loweredProgram: loweringResult.Program,
-            bytecodeModule: bytecodeResult.Module);
-
-        return new CompilationResult(
-            CompilationStatus.Success,
-            semanticDiagnostics.ToArray(),
-            compiledProgram,
-            backendDiagnostics: [],
-            backendSucceeded: true,
-            bytecodeAvailable: true,
-            frontendPreparationDuration: frontendPreparationDuration,
-            loweringDuration: loweringDuration,
-            bytecodeEmissionDuration: bytecodeEmissionDuration);
     }
 
     private static bool TryWriteBytecodeSnapshot(
@@ -617,9 +669,10 @@ public sealed class AxiomExecutionPipeline
     {
         var runtimeHost = new ExecutionRuntimeHostAdapter(request.InputProvider, request.OutputWriter, request.RuntimeClock, request.RuntimeRandom, request.CancellationProvider, request.ResourceBaseDirectory);
         var executionStopwatch = Stopwatch.StartNew();
-        var breakpoints = request.SourceBreakpointLines.Count == 0
+        var breakpoints = request.SourceBreakpointLines.Count == 0 && request.SourceBreakpoints.Count == 0
             ? null
-            : BytecodeBreakpointSet.FromLines(request.SourceBreakpointLines.ToArray());
+            : new BytecodeBreakpointSet(request.SourceBreakpointLines.Select(line => new BytecodeSourceBreakpoint(line))
+                .Concat(request.SourceBreakpoints));
         var firstInstructionAlreadyStopped = false;
         var stopBeforeFirstInstruction = request.StopBeforeFirstInstruction
             ? snapshot =>

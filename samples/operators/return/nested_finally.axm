@@ -1,0 +1,22 @@
+' Проверка RETURN во вложенных TRY/FINALLY.
+' Ожидаемый вывод: inner, outer, 7, 11.
+
+DIM cleanup AS INTEGER = 0
+
+FUNCTION Work() AS INTEGER
+    TRY
+        TRY
+            ' RETURN должен выполнить оба FINALLY, начиная с внутреннего.
+            RETURN 7
+        FINALLY
+            PRINT "inner"
+            cleanup = cleanup + 1
+        END TRY
+    FINALLY
+        PRINT "outer"
+        cleanup = cleanup + 10
+    END TRY
+END FUNCTION
+
+PRINT Work()
+PRINT cleanup

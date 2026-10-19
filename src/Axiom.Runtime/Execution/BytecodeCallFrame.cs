@@ -10,7 +10,6 @@ internal sealed class BytecodeCallFrame
     private IReadOnlyDictionary<VariableSymbol, BytecodeVariableSlot>? _visibleVariables;
     private Dictionary<int, RuntimeValue>? _cachedFunctionValuesByRoutineId;
     private Dictionary<int, BytecodeVariableSlot[]>? _cachedCapturedSlotsByRoutineId;
-    private BytecodeVariableSlot[]? _byRefArgumentTargets;
     private readonly List<BytecodeErrorHandlerFrame> _errorHandlers = [];
     private readonly RuntimeValue[] _locals;
     private readonly int?[] _localFixedStringLengths;
@@ -24,7 +23,6 @@ internal sealed class BytecodeCallFrame
         int?[] localFixedStringLengths,
         BytecodeVariableSlot[] captures,
         TextLocation callSiteLocation,
-        BytecodeVariableSlot[]? byRefArgumentTargets = null,
         int evaluationStackCapacity = 16)
     {
         ArgumentNullException.ThrowIfNull(routine);
@@ -40,7 +38,6 @@ internal sealed class BytecodeCallFrame
         _sharedLocals = locals.Length == 0 ? null : new BytecodeVariableSlot?[locals.Length];
         Captures = captures;
         CallSiteLocation = callSiteLocation;
-        _byRefArgumentTargets = byRefArgumentTargets;
         EvaluationStack = new BytecodeEvaluationStack(evaluationStackCapacity);
     }
 
@@ -52,9 +49,57 @@ internal sealed class BytecodeCallFrame
 
     public TextLocation CallSiteLocation { get; private set; }
 
-    public BytecodeVariableSlot[]? ByRefArgumentTargets => _byRefArgumentTargets;
-
     public BytecodeEvaluationStack EvaluationStack { get; }
+
+    public Func<RuntimeValue, VmCallbackStep>? CallbackContinuation { get; set; }
+
+    public Action<RuntimeValue>? CallbackCompletion { get; set; }
+
+    public bool IsInputHandlerFrame { get; set; }
+
+    public bool DiscardReturnValue { get; set; }
+
+    public bool HasCallbackContinuation => CallbackContinuation is not null;
+
+    public void ClearCallbackState()
+    {
+        CallbackContinuation = null;
+        CallbackCompletion = null;
+        IsInputHandlerFrame = false;
+        DiscardReturnValue = false;
+    }
+
+    /// <summary>
+    /// Освобождает ссылки завершённого кадра до помещения в пул. Значения
+    /// захваченных ячеек остаются живыми через сами слоты замыканий.
+    /// </summary>
+    public void ReleaseReferences()
+    {
+        ClearCallbackState();
+        _visibleVariables = null;
+        _cachedFunctionValuesByRoutineId?.Clear();
+        _cachedCapturedSlotsByRoutineId?.Clear();
+        EvaluationStack.Clear();
+        _errorHandlers.Clear();
+        Captures = Array.Empty<BytecodeVariableSlot>();
+
+        if (_locals.Length > 0)
+        {
+            Array.Clear(_locals, 0, _locals.Length);
+        }
+
+        if (_sharedLocals is not null)
+        {
+            Array.Clear(_sharedLocals, 0, _sharedLocals.Length);
+        }
+
+        _hasSharedLocals = false;
+
+        for (var index = 0; index < Arguments.Length; index++)
+        {
+            Arguments[index] = null!;
+        }
+    }
 
     public int LocalCount => _locals.Length;
 
@@ -69,13 +114,12 @@ internal sealed class BytecodeCallFrame
         BytecodeVariableSlot[] arguments,
         BytecodeVariableSlot[] captures,
         TextLocation callSiteLocation,
-        BytecodeVariableSlot[]? byRefArgumentTargets,
         RuntimeValue[] defaultLocals)
     {
         Captures = captures;
         CallSiteLocation = callSiteLocation;
-        _byRefArgumentTargets = byRefArgumentTargets;
         InstructionPointer = 0;
+        ClearCallbackState();
         _visibleVariables = null;
         _cachedFunctionValuesByRoutineId?.Clear();
         _cachedCapturedSlotsByRoutineId?.Clear();

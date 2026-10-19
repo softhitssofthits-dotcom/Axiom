@@ -45,6 +45,7 @@ for(const fn of functions){
 const statementRows=[
  ['DIM','Dim','dim.html'],['CONST','Const','const.html'],['TYPE','TypeDeclaration','type.html'],
  ['SUB','SubDeclaration','sub.html'],['FUNCTION','FunctionDeclaration','function.html'],
+ ['IMPORT','ImportStatement','import.html'],
  ['PRINT','Print','print.html'],['PRINT USING','PrintUsing','print.html'],['INPUT','Input','input.html'],
  ['SLEEP','Sleep','sleep.html'],['RANDOMIZE','Randomize','randomize.html'],
  ['OPEN','Open','open.html'],['CLOSE','Close','close.html'],
@@ -177,6 +178,9 @@ for(const op of statements){
 }
 fs.writeFileSync(path.join(manual,'operator-reference.html'),shell('operator-reference','Операторы и инструкции','Раздел перечисляет объявления, инструкции и управляющие конструкции Axiom. Каждая запись ведёт к основному описанию соответствующей формы.',body));
 const definitions={
+ IMPORT:['Подключает открытые объявления другого исходного модуля.','import.html'],
+ PUBLIC:['Открывает объявление для импортирующих модулей.','visibility.html'],
+ PRIVATE:['Оставляет объявление доступным только внутри текущего модуля.','visibility.html'],
  AS:['Обозначает тип переменной, поля, параметра или результата; в OPEN связывает файл с переменной.','dim.html'],
  APPEND:['Режим OPEN для добавления текста в конец файла.','open.html'],OUTPUT:['Режим OPEN для записи текстового файла.','open.html'],
  BYREF:['Передача параметра по ссылке на изменяемое место хранения.','sub.html'],BYVAL:['Передача параметра по значению.','sub.html'],

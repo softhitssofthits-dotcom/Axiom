@@ -127,5 +127,6 @@ public enum Opcode
     PopErrorHandler,
     RaiseError,
     EndFinally,
-    Smooth
+    Smooth,
+    SnapshotValue
 }

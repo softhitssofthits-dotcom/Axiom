@@ -1,0 +1,31 @@
+' Проверка момента снимка аргумента BYVAL.
+' Запись фиксируется сразу при вычислении своего аргумента,
+' поэтому изменение исходной записи следующим аргументом уже не влияет на копию.
+' Ожидаемый вывод: 1, затем 2.
+
+TYPE Box
+    item AS INTEGER
+END TYPE
+
+DIM shared AS Box
+shared.item = 1
+
+FUNCTION Touch() AS INTEGER
+    ' Меняем исходную запись во время вычисления второго аргумента.
+    shared.item = 2
+    RETURN 0
+END FUNCTION
+
+FUNCTION Observe(copy AS Box, ignored AS INTEGER) AS INTEGER
+    RETURN copy.item
+END FUNCTION
+
+FUNCTION ObserveLater(ignored AS INTEGER, copy AS Box) AS INTEGER
+    RETURN copy.item
+END FUNCTION
+
+' Первый аргумент вычислен раньше Touch, поэтому копия равна 1.
+PRINT Observe(shared, Touch())
+
+' Здесь копия вычисляется после Touch и видит уже изменённое значение 2.
+PRINT ObserveLater(Touch(), shared)

@@ -17,6 +17,8 @@ public abstract class Symbol
 
     public string Name { get; }
 
+    public string? ContainingModule { get; internal set; }
+
     public override string ToString() => Name;
 }
 

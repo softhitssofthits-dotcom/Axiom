@@ -1,3 +1,4 @@
+using Axiom.Core;
 using Axiom.Syntax;
 using System.Globalization;
 
@@ -10,6 +11,13 @@ public sealed partial class Binder
         foreach (var typeDeclaration in members.OfType<TypeDeclarationSyntax>())
         {
             var name = typeDeclaration.Identifier.Text;
+
+            if (_importedTypes.ContainsKey(name))
+            {
+                Report(DiagnosticCodes.ImportedNameConflict,
+                    $"Тип '{name}' конфликтует с импортированным типом.", typeDeclaration.Identifier.Location);
+                continue;
+            }
 
             if (TypeSymbol.FromSyntaxKind(typeDeclaration.Identifier.Kind) != TypeSymbol.Error)
             {
@@ -27,8 +35,12 @@ public sealed partial class Binder
     private void PrepareTypeDeclarations(IEnumerable<MemberSyntax> members)
     {
         foreach (var constStatement in members
-                     .OfType<GlobalStatementSyntax>()
-                     .Select(static statement => statement.Statement)
+                     .Select(static member => member switch
+                     {
+                         GlobalStatementSyntax global => global.Statement,
+                         ModuleStatementSyntax module => module.Statement,
+                         _ => null
+                     })
                      .OfType<ConstStatementSyntax>())
         {
             RegisterGlobalIntegralConstantDeclaration(constStatement);

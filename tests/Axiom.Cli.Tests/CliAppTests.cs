@@ -5,6 +5,25 @@ namespace Axiom.Cli.Tests;
 
 public sealed class CliAppTests
 {
+    [Fact]
+    public void RunAndCheckLoadImportedSiblingFiles()
+    {
+        var directory = Path.GetFullPath(Path.Combine(".artifacts", "tests", "cli-modules", Guid.NewGuid().ToString("N")));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var entry = Path.Combine(directory, "main.axm");
+            File.WriteAllText(entry, "IMPORT helper\nPRINT Answer()");
+            File.WriteAllText(Path.Combine(directory, "helper.axm"), "PUBLIC FUNCTION Answer() AS INTEGER\nRETURN 42\nEND FUNCTION");
+            var check = Run(["check", entry]);
+            Assert.Equal(0, check.ExitCode);
+            var run = Run(["run", entry]);
+            Assert.Equal(0, run.ExitCode);
+            Assert.Contains("42", run.Stdout);
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
+
     private static (int ExitCode, string Stdout, string Stderr) Run(
         string[] args,
         string? stdin = null,

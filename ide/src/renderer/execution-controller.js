@@ -11,18 +11,24 @@ class ExecutionController {
     const ide = this.ide;
     const request = this.startRequest = {};
     ide.running = true; this.starting = true; this.pendingStop = false; this.pendingEvents = []; this.clearedEmptyHistory = false; this.outputLineCount = 0; this.clearedOutputLineCount = 0; this.outputText = ''; this.streamedOutputText = ''; this.clearedOutputPrefix = ''; this.inputPrompt = ''; this.inputText = ''; this.inputRequestId = null; this.inputTarget = null; this.stopId = null;
-    this.canStepBack=false;this.callDepth=0;this.line=null;this.debugBusy=false;this.debugRequest=null;this.stopRequest=null;this.debugError=null;ide.trace?.clearMarker();ide.trace?.update();
+    this.canStepBack=false;this.callDepth=0;this.line=null;this.sourceFilePath=null;this.debugBusy=false;this.debugRequest=null;this.stopRequest=null;this.debugError=null;ide.trace?.clearMarker();ide.trace?.update();
     ide._stopRequested = false; ide.clearDiagnostics(); ide.showPanel(); ide.switchPanel('console');
     ide.setStatus(I18N.t('trace.preparing'));
     if (!ide.ensureConsole()) { ide.running = false; this.starting = false; this.startRequest = null; ide.trace?.finished(); return; }
     ide.term.reset(); this.startedAt = performance.now();
     const document = ide.openFiles.get(file);
-    const snapshot = this.sourceSnapshot = { documentId: document.documentId, sourceText: document.model.getValue(), file };
+    const project=ide.openFiles.captureProject?.(file);
+    const snapshot = this.sourceSnapshot = { documentId: document.documentId, sourceText: document.model.getValue(), file,
+      documents:project?.documents || [] };
     let response;
     try {
       response = await this.api.startExecution({ documentId: document.documentId,
         documentRevision: document.revision, sourceText: snapshot.sourceText, sourceFilePath: file,
-        launchKind, breakpointLines: breakpoints, stopBeforeFirstInstruction: launchKind === 'debug' && stopFirst });
+        projectDocuments:snapshot.documents,
+        launchKind, breakpointLines: breakpoints,
+        sourceBreakpoints: launchKind === 'debug' ? [...ide.openFiles].flatMap(([path,entry]) =>
+          path.startsWith('untitled') ? [] : (ide.trace?.lines?.(entry.model) || []).map(line=>({sourceFilePath:path,line}))) : [],
+        stopBeforeFirstInstruction: launchKind === 'debug' && stopFirst });
     } catch (error) {
       if (this.startRequest === request) this.fault(error?.message || 'Не удалось начать выполнение.');
       return;
@@ -41,6 +47,7 @@ class ExecutionController {
     if (this.starting) { this.pendingEvents.push(message); return; }
     if (!this.sessionId || message.sessionId !== this.sessionId) return;
     const payload = message.payload;
+    this.acceptSourceDocuments(payload.sourceDocuments);
     switch (message.event) {
       case 'execution.state':
         this.ide.setStatus(I18N.t(({Compiling:'trace.compiling',Running:'status.running',WaitingForInput:'trace.waiting',Paused:'trace.running'})[payload.state] || 'trace.running'));
@@ -76,11 +83,11 @@ class ExecutionController {
       }
       case 'debug.paused':
         this.debugRequest=null;this.debugBusy=false;this.debugError=null;
-        this.callDepth=payload.callDepth;this.line=payload.line;this.ide.trace?.mark(payload);
+        this.callDepth=payload.callDepth;this.line=payload.line;this.sourceFilePath=payload.sourceFilePath;this.ide.trace?.mark(payload);
         this.stopId = payload.stopId; this.canStepBack = payload.canStepBack;
         this.outputText = payload.outputText; this.outputLineCount = payload.outputLineCount ?? (payload.outputText ? payload.outputText.split(/\r?\n/).length : 0); this.renderOutput();
         this.ide.setStatus(I18N.t('trace.paused',payload.line ?? '—'));
-        if (payload.line) { this.ide.editor.revealLineInCenter(payload.line); this.ide.editor.setPosition({ lineNumber: payload.line, column: payload.column || 1 }); }
+        if (payload.line && !this.ide.trace?.mark) { this.ide.editor.revealLineInCenter(payload.line); this.ide.editor.setPosition({ lineNumber: payload.line, column: payload.column || 1 }); }
         this.ide.editor.focus(); break;
       case 'graphics.surface':
         this.surface = payload;
@@ -98,7 +105,12 @@ class ExecutionController {
           const snapshot = this.sourceSnapshot;
           const entry = snapshot && [...this.ide.openFiles.values()].find(entry => entry.documentId === snapshot.documentId);
           const file = entry?.path || snapshot?.file || this.ide._runFile;
-          this.ide.applyDiagnostics(payload.diagnostics.map(d => ({ ...d, file, executionSnapshot: snapshot, col: d.column, severity: 'error' })), false, file);
+          this.ide.applyDiagnostics(payload.diagnostics.map(d => {
+            const origin=this.snapshotForFile(d.sourceFilePath || snapshot?.file);
+            const current=origin && [...this.ide.openFiles.values()].find(entry=>entry.documentId===origin.documentId);
+            return {...d,file:current?.path || d.sourceFilePath || file,executionSnapshot:origin,
+              col:d.column,severity:'error'};
+          }), false, file);
           this.ide.switchPanel('diagnostics');
         }
         I18N.setText(document.getElementById('status-execution-time'),'trace.elapsed',Math.round(performance.now() - this.startedAt));
@@ -106,6 +118,26 @@ class ExecutionController {
     }
     if(message.event==='execution.finished') this.ide.trace?.finished();
     else this.ide.trace?.update();
+  }
+  snapshotForFile(file) {
+    const snapshot=this.sourceSnapshot;
+    if(!snapshot) return null;
+    const key=value=>String(value||'').replace(/\//g,'\\').toLowerCase();
+    if(!file || key(file)===key(snapshot.file)) return snapshot;
+    const document=snapshot.documents?.find(document=>key(document.sourceFilePath)===key(file));
+    return document ? {documentId:document.documentId,sourceText:document.sourceText,file:document.sourceFilePath} : null;
+  }
+  acceptSourceDocuments(sources) {
+    if(!this.sourceSnapshot || !Array.isArray(sources) || !sources.length) return;
+    const key=value=>String(value||'').replace(/\//g,'\\').toLowerCase();
+    const documents=[...(this.sourceSnapshot.documents || [])];
+    for(const source of sources) {
+      if(key(source.sourceFilePath)===key(this.sourceSnapshot.file)) continue;
+      const index=documents.findIndex(document=>key(document.sourceFilePath)===key(source.sourceFilePath));
+      const document={...(index<0 ? {documentId:null,documentRevision:null} : documents[index]),...source};
+      if(index<0) documents.push(document); else documents[index]=document;
+    }
+    this.sourceSnapshot.documents=documents;
   }
   clearConsole() {
     this.clearedOutputPrefix = this.outputText || ''; this.clearedOutputLineCount = this.outputLineCount;
@@ -195,7 +227,7 @@ class ExecutionController {
     this.debugRequest=null;
     if (!result.ok) {
       this.stopId = stopId;this.debugError=result.error.message;
-      this.ide.trace?.mark({line});
+      this.ide.trace?.mark({line,sourceFilePath:this.sourceFilePath});
       this.ide.setStatus(this.debugError);
     }
     this.debugBusy=false;this.ide.trace?.update();

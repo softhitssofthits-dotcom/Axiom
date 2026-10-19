@@ -85,5 +85,6 @@ public enum LoweredInstructionKind
     JumpIfTrue,
     JumpIfFalse,
     Pop,
-    Return
+    Return,
+    SnapshotValue
 }

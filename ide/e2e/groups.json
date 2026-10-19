@@ -34,6 +34,7 @@
     "graphics-shutdown.spec.js",
     "help.spec.js",
     "highlighting.spec.js",
+    "modules.spec.js",
     "i18n.spec.js",
     "identifier-alphabet.spec.js",
     "input-prompts.spec.js",
@@ -79,6 +80,7 @@
     "format-triggers.spec.js",
     "language-delivery.spec.js",
     "language-format.spec.js",
+    "modules.spec.js",
     "navigation-clean.spec.js",
     "outline-navigation.spec.js",
     "problems.spec.js",
@@ -95,6 +97,7 @@
   "e2e-language": [
     "enter-declaration.spec.js",
     "highlighting.spec.js",
+    "modules.spec.js",
     "identifier-alphabet.spec.js",
     "interpolation-typo.spec.js",
     "regex.spec.js",

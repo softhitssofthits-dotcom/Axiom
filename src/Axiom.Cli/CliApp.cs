@@ -108,7 +108,9 @@ internal static class CliApp
                 diagnosticSink: sink,
                 runtimeClock: host,
                 runtimeRandom: host,
-                cancellationProvider: host));
+                cancellationProvider: host,
+                sourceName: Path.GetFullPath(path),
+                additionalDocuments: SourceProject.LoadDependencies(source, path)));
             exitCode = result.Status == ExecutionStatus.Success ? 0 : 1;
         }
         catch (ConsoleGraphicsNotSupportedException error)
@@ -179,7 +181,7 @@ internal static class CliApp
             return 2;
         }
 
-        var (checkDiagnostics, checkHasError) = CheckSource(source);
+        var (checkDiagnostics, checkHasError) = CheckSource(source, path);
         if (wantsJson)
         {
             stdout.Write(DiagnosticsJson(checkDiagnostics, !checkHasError, path));
@@ -189,11 +191,12 @@ internal static class CliApp
         return checkHasError ? 1 : 0;
     }
 
-    private static (List<Diagnostic> Diagnostics, bool HasError) CheckSource(string source)
+    private static (List<Diagnostic> Diagnostics, bool HasError) CheckSource(string source, string? path = null)
     {
         var sink = new CollectingDiagnosticSink();
         var pipeline = new AxiomExecutionPipeline();
-        var compilation = pipeline.Compile(new CompilationRequest(source, diagnosticSink: sink));
+        var compilation = pipeline.Compile(new CompilationRequest(source, diagnosticSink: sink,
+            sourceName: path is null ? null : Path.GetFullPath(path), additionalDocuments: SourceProject.LoadDependencies(source, path)));
 
         // Диагностики Axiom не делятся на ошибки/предупреждения: любая диагностика — ошибка.
         var diagnostics = sink.Diagnostics
@@ -218,7 +221,7 @@ internal static class CliApp
             }
 
             builder.Append('{')
-                .Append(Q).Append("file").Append(Q).Append(':').Append(Q).Append(JsonText.Escape(fileName)).Append(Q)
+                .Append(Q).Append("file").Append(Q).Append(':').Append(Q).Append(JsonText.Escape(diagnostic.Location.Document ?? fileName)).Append(Q)
                 .Append(',').Append(Q).Append("line").Append(Q).Append(':').Append(diagnostic.Location.Line)
                 .Append(',').Append(Q).Append("col").Append(Q).Append(':').Append(diagnostic.Location.Column)
                 .Append(',').Append(Q).Append("length").Append(Q).Append(':').Append(diagnostic.Location.Span.Length)
@@ -341,7 +344,7 @@ internal static class CliApp
     {
         foreach (var diagnostic in diagnostics)
         {
-            stderr.WriteLine($"{fileName}({diagnostic.Location.Line},{diagnostic.Location.Column}): ошибка {diagnostic.Code}: {diagnostic.Message}");
+            stderr.WriteLine($"{diagnostic.Location.Document ?? fileName}({diagnostic.Location.Line},{diagnostic.Location.Column}): ошибка {diagnostic.Code}: {diagnostic.Message}");
         }
     }
 

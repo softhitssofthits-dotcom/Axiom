@@ -223,7 +223,7 @@ public static class BytecodeModuleSerializer
 
     private static TextLocation FromArtifact(TextLocationArtifact location)
     {
-        return new TextLocation(new TextSpan(location.SpanStart, location.SpanLength), location.Line, location.Column);
+        return new TextLocation(new TextSpan(location.SpanStart, location.SpanLength), location.Line, location.Column, location.Document);
     }
 
     private static BytecodeHeaderArtifact ToArtifact(BytecodeHeader header)
@@ -378,7 +378,8 @@ public static class BytecodeModuleSerializer
             SpanStart: location.Span.Start,
             SpanLength: location.Span.Length,
             Line: location.Line,
-            Column: location.Column);
+            Column: location.Column,
+            Document: location.Document);
     }
 
     private static object? NormalizeConstantValue(BytecodeConstant constant)

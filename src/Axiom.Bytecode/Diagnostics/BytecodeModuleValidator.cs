@@ -928,6 +928,7 @@ public sealed class BytecodeModuleValidator
                 case Opcode.Locate:
                 case Opcode.CloseFile:
                 case Opcode.FormatInterpolatedPart:
+                case Opcode.SnapshotValue:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
                     break;
 
@@ -1350,6 +1351,13 @@ public sealed class BytecodeModuleValidator
             case Opcode.PrintValue:
                 _ = Pop();
                 break;
+
+            case Opcode.SnapshotValue:
+            {
+                var valueType = Pop();
+                Push(valueType);
+                break;
+            }
 
             case Opcode.Screen:
             {
@@ -3664,6 +3672,11 @@ public sealed class BytecodeModuleValidator
             case Opcode.AppendStringCapture:
                 popCount = 1;
                 pushCount = instruction.Opcode is Opcode.Negate or Opcode.Not or Opcode.Convert ? 1 : 0;
+                return true;
+
+            case Opcode.SnapshotValue:
+                popCount = 1;
+                pushCount = 1;
                 return true;
 
             case Opcode.OpenFile:

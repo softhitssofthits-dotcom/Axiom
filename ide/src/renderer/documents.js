@@ -38,6 +38,23 @@
     }
     isDirty(path) { const entry = this.get(path); return !!entry && (!!entry.missing || entry.model.getValue() !== entry.savedText); }
     markSaved(path, text) { const entry = this.get(path); if (entry) { entry.missing = false; entry.savedText = text === undefined ? entry.model.getValue() : text; entry.savedRevision = entry.revision; this.onChange(); } }
+    captureProject(path) {
+      const entryKey=key(path), folder=entryKey.slice(0,entryKey.lastIndexOf('\\')+1);
+      const entries=()=>[...this.values()].filter(entry=>{
+        const name=key(entry.path);
+        return !name.startsWith('untitled') && name.endsWith('.axm') && name!==entryKey &&
+          name.slice(0,name.lastIndexOf('\\')+1)===folder && !entry.model.isDisposed?.();
+      }).sort((a,b)=>key(a.path).localeCompare(key(b.path)));
+      const captured=String(path).startsWith('untitled') ? [] : entries();
+      const documents=captured.map(entry=>({documentId:entry.documentId,documentRevision:entry.revision,
+        sourceFilePath:entry.path,sourceText:entry.model.getValue()}));
+      return {documents,isCurrent:()=>{
+        const current=String(path).startsWith('untitled') ? [] : entries();
+        return current.length===captured.length && current.every((entry,index)=>entry===captured[index] &&
+          entry.path===documents[index].sourceFilePath && entry.documentId===documents[index].documentId &&
+          entry.revision===documents[index].documentRevision && entry.model.getValue()===documents[index].sourceText);
+      }};
+    }
   }
   return { DocumentStore };
 });

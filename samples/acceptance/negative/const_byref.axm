@@ -1,0 +1,11 @@
+' Отрицательный пример: CONST нельзя передать в BYREF.
+' Ожидается диагностика MB2010 при проверке программы.
+
+CONST fixedValue AS INTEGER = 10
+
+SUB Mutate(BYREF value AS INTEGER)
+    value = 99
+END SUB
+
+Mutate(fixedValue)
+PRINT fixedValue

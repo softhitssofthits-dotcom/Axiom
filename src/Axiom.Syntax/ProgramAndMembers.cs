@@ -138,6 +138,50 @@ public sealed class ProgramSyntax : SyntaxNode
     public SyntaxToken EndOfFileToken { get; }
 }
 
+public sealed class ImportStatementSyntax : MemberSyntax
+{
+    public ImportStatementSyntax(SyntaxToken importKeyword, SyntaxToken nameToken)
+    {
+        ArgumentNullException.ThrowIfNull(importKeyword);
+        ArgumentNullException.ThrowIfNull(nameToken);
+
+        ImportKeyword = importKeyword;
+        NameToken = nameToken;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.ImportStatement;
+
+    public SyntaxToken ImportKeyword { get; }
+
+    public SyntaxToken NameToken { get; }
+
+    public string ModuleName => NameToken.Text;
+}
+
+/// <summary>
+/// Верхнеуровневая инструкция с явным модификатором PUBLIC или PRIVATE.
+/// Модификатор действует только на уровне модуля.
+/// </summary>
+public sealed class ModuleStatementSyntax : MemberSyntax
+{
+    public ModuleStatementSyntax(SyntaxToken visibilityKeyword, StatementSyntax statement)
+    {
+        ArgumentNullException.ThrowIfNull(visibilityKeyword);
+        ArgumentNullException.ThrowIfNull(statement);
+
+        VisibilityKeyword = visibilityKeyword;
+        Statement = statement;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.ModuleStatement;
+
+    public SyntaxToken VisibilityKeyword { get; }
+
+    public StatementSyntax Statement { get; }
+
+    public bool IsPublic => VisibilityKeyword.Kind == SyntaxKind.PublicKeyword;
+}
+
 public sealed class GlobalStatementSyntax : MemberSyntax
 {
     public GlobalStatementSyntax(StatementSyntax statement)
@@ -231,7 +275,8 @@ public sealed class TypeDeclarationSyntax : MemberSyntax
         IReadOnlyList<TypeFieldSyntax> fields,
         IReadOnlyList<MemberSyntax> methods,
         SyntaxToken endKeyword,
-        SyntaxToken endTypeKeyword)
+        SyntaxToken endTypeKeyword,
+        SyntaxToken? visibilityKeyword = null)
     {
         ArgumentNullException.ThrowIfNull(typeKeyword);
         ArgumentNullException.ThrowIfNull(identifier);
@@ -246,9 +291,12 @@ public sealed class TypeDeclarationSyntax : MemberSyntax
         Methods = methods;
         EndKeyword = endKeyword;
         EndTypeKeyword = endTypeKeyword;
+        VisibilityKeyword = visibilityKeyword;
     }
 
     public override SyntaxKind Kind => SyntaxKind.TypeDeclaration;
+
+    public SyntaxToken? VisibilityKeyword { get; }
 
     public SyntaxToken TypeKeyword { get; }
 
@@ -274,7 +322,8 @@ public sealed class SubDeclarationSyntax : MemberSyntax
         SyntaxToken closeParenToken,
         IReadOnlyList<StatementSyntax> statements,
         SyntaxToken endKeyword,
-        SyntaxToken endSubKeyword)
+        SyntaxToken endSubKeyword,
+        SyntaxToken? visibilityKeyword = null)
     {
         ArgumentNullException.ThrowIfNull(subKeyword);
         ArgumentNullException.ThrowIfNull(identifier);
@@ -295,9 +344,12 @@ public sealed class SubDeclarationSyntax : MemberSyntax
         Statements = statements;
         EndKeyword = endKeyword;
         EndSubKeyword = endSubKeyword;
+        VisibilityKeyword = visibilityKeyword;
     }
 
     public override SyntaxKind Kind => SyntaxKind.SubDeclaration;
+
+    public SyntaxToken? VisibilityKeyword { get; }
 
     public SyntaxToken SubKeyword { get; }
 
@@ -330,7 +382,8 @@ public sealed class FunctionDeclarationSyntax : MemberSyntax
         TypeClauseSyntax returnType,
         IReadOnlyList<StatementSyntax> statements,
         SyntaxToken endKeyword,
-        SyntaxToken endFunctionKeyword)
+        SyntaxToken endFunctionKeyword,
+        SyntaxToken? visibilityKeyword = null)
     {
         ArgumentNullException.ThrowIfNull(functionKeyword);
         ArgumentNullException.ThrowIfNull(identifier);
@@ -353,9 +406,12 @@ public sealed class FunctionDeclarationSyntax : MemberSyntax
         Statements = statements;
         EndKeyword = endKeyword;
         EndFunctionKeyword = endFunctionKeyword;
+        VisibilityKeyword = visibilityKeyword;
     }
 
     public override SyntaxKind Kind => SyntaxKind.FunctionDeclaration;
+
+    public SyntaxToken? VisibilityKeyword { get; }
 
     public SyntaxToken FunctionKeyword { get; }
 

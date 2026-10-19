@@ -1,0 +1,2 @@
+IMPORT tools
+PRINT Square(5)

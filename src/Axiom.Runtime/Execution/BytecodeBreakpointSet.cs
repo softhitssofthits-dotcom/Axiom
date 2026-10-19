@@ -2,7 +2,7 @@ namespace Axiom.Runtime;
 
 public sealed class BytecodeBreakpointSet
 {
-    private readonly HashSet<int> _lines;
+    private readonly HashSet<SourceLine> _lines;
     private readonly HashSet<SourcePosition> _positions;
 
     public BytecodeBreakpointSet(IEnumerable<BytecodeSourceBreakpoint> breakpoints)
@@ -16,11 +16,11 @@ public sealed class BytecodeBreakpointSet
         {
             if (breakpoint.Column is { } column)
             {
-                _positions.Add(new SourcePosition(breakpoint.Line, column));
+                _positions.Add(new SourcePosition(breakpoint.Document, breakpoint.Line, column));
             }
             else
             {
-                _lines.Add(breakpoint.Line);
+                _lines.Add(new SourceLine(breakpoint.Document, breakpoint.Line));
             }
         }
     }
@@ -54,7 +54,9 @@ public sealed class BytecodeBreakpointSet
     {
         ArgumentNullException.ThrowIfNull(snapshot);
 
-        return _lines.Contains(snapshot.SourceLocation.Line);
+        var location = snapshot.SourceLocation;
+        return _lines.Contains(new SourceLine(null, location.Line))
+            || _lines.Contains(new SourceLine(location.Document, location.Line));
     }
 
     public bool ShouldStopBeforePositionBreakpoint(BytecodeVmExecutionSnapshot snapshot)
@@ -62,8 +64,11 @@ public sealed class BytecodeBreakpointSet
         ArgumentNullException.ThrowIfNull(snapshot);
 
         var location = snapshot.SourceLocation;
-        return _positions.Contains(new SourcePosition(location.Line, location.Column));
+        return _positions.Contains(new SourcePosition(null, location.Line, location.Column))
+            || _positions.Contains(new SourcePosition(location.Document, location.Line, location.Column));
     }
 
-    private readonly record struct SourcePosition(int Line, int Column);
+    private readonly record struct SourceLine(string? Document, int Line);
+
+    private readonly record struct SourcePosition(string? Document, int Line, int Column);
 }

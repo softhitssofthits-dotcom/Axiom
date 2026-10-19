@@ -9,9 +9,9 @@ public sealed partial class Parser
     private readonly IReadOnlyList<SyntaxToken> _tokens;
     private int _position;
 
-    public Parser(string text)
+    public Parser(string text, string? document = null)
     {
-        var lexedTokens = Lexer.Lex(text, out var lexerDiagnostics);
+        var lexedTokens = Lexer.Lex(text, out var lexerDiagnostics, document);
 
         Diagnostics = new DiagnosticBag();
         Diagnostics.AddRange(lexerDiagnostics);
@@ -30,7 +30,12 @@ public sealed partial class Parser
 
     public static ProgramSyntax Parse(string text, out DiagnosticBag diagnostics)
     {
-        var parser = new Parser(text);
+        return Parse(text, out diagnostics, document: null);
+    }
+
+    public static ProgramSyntax Parse(string text, out DiagnosticBag diagnostics, string? document)
+    {
+        var parser = new Parser(text, document);
         var program = parser.ParseProgram();
         diagnostics = parser.Diagnostics;
         return program;
@@ -39,6 +44,7 @@ public sealed partial class Parser
     public ProgramSyntax ParseProgram()
     {
         var members = new List<MemberSyntax>();
+        var importsClosed = false;
 
         SkipNewLines();
 
@@ -52,8 +58,21 @@ public sealed partial class Parser
                 continue;
             }
 
+            if (Current.Kind == SyntaxKind.ImportKeyword)
+            {
+                if (importsClosed)
+                {
+                    ReportUnexpectedToken(Current, "оператор IMPORT должен находиться в начале файла до других объявлений");
+                }
+
+                members.Add(ParseImportStatement());
+                SkipNewLines();
+                continue;
+            }
+
+            importsClosed = true;
             var start = _position;
-            members.Add(ParseMember());
+            members.Add(ParseMember(allowVisibility: true));
 
             if (_position == start)
             {

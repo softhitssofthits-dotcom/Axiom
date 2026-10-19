@@ -784,4 +784,9 @@ public sealed class LoweredInstruction
     {
         return new LoweredInstruction(LoweredInstructionKind.Return, location);
     }
+
+    public static LoweredInstruction SnapshotValue(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.SnapshotValue, location);
+    }
 }

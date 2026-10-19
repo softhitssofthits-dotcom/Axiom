@@ -18,6 +18,8 @@ public sealed class ProgramRunService : IProgramRunService
     private CompiledProgram? _compiledProgram;
     private readonly IProgramMessageProvider _messages;
 
+    public IReadOnlyList<SourceDocument> CurrentSourceDocuments { get; private set; } = [];
+
     public ProgramRunService(
         AxiomExecutionPipeline pipeline,
         IProgramConsoleService consoleService,
@@ -44,7 +46,7 @@ public sealed class ProgramRunService : IProgramRunService
             var compilationResult = _pipeline.Compile(new CompilationRequest(sourceText, progress));
             var diagnostics = compilationResult.Diagnostics
                 .Concat(compilationResult.BackendDiagnostics)
-                .DistinctBy(static diagnostic => (diagnostic.Code, diagnostic.Location.Line, diagnostic.Location.Column, diagnostic.Location.Span, diagnostic.Message))
+                .DistinctBy(static diagnostic => (diagnostic.Code, diagnostic.Location.Document, diagnostic.Location.Line, diagnostic.Location.Column, diagnostic.Location.Span, diagnostic.Message))
                 .Select(ProgramDiagnosticItem.FromDiagnostic)
                 .ToArray();
 
@@ -105,8 +107,20 @@ public sealed class ProgramRunService : IProgramRunService
         string? sourceFilePath = null,
         TimeSpan? timeout = null,
         IRuntimeCancellationProvider? cancellationProvider = null)
+        => RunWithSourceBreakpoints(sourceText, null, sourceBreakpointLines, stopBeforeFirstInstruction, sourceFilePath, timeout, cancellationProvider);
+
+    public ProgramRunResult RunWithSourceBreakpoints(
+        string sourceText,
+        IEnumerable<BytecodeSourceBreakpoint>? sourceBreakpoints,
+        IEnumerable<int>? sourceBreakpointLines = null,
+        bool stopBeforeFirstInstruction = false,
+        string? sourceFilePath = null,
+        TimeSpan? timeout = null,
+        IRuntimeCancellationProvider? cancellationProvider = null,
+        IEnumerable<SourceDocument>? projectDocuments = null)
     {
         ArgumentNullException.ThrowIfNull(sourceText);
+        CurrentSourceDocuments = [];
 
         try
         {
@@ -114,8 +128,13 @@ public sealed class ProgramRunService : IProgramRunService
             _consoleService.ResourceBaseDirectory = runBaseDirectory;
             _consoleService.BeginSession();
             var inputProvider = new IdeInputProvider(_consoleService);
+            var sourceName = string.IsNullOrWhiteSpace(sourceFilePath) ? null : Path.GetFullPath(sourceFilePath);
+            var additionalDocuments = SourceProject.LoadDependencies(sourceText, sourceName, projectDocuments);
+            var sourceDocuments = new[] { new SourceDocument(sourceName ?? "main.axm", sourceText) }.Concat(additionalDocuments).ToArray();
+            CurrentSourceDocuments = sourceDocuments;
             var usesCompiledCache = _compiledProgram is not null
-                && string.Equals(_compiledProgram.SourceText, sourceText, StringComparison.Ordinal);
+                && _compiledProgram.SourceDocuments.Select(document => (document.Name, document.Text))
+                    .SequenceEqual(sourceDocuments.Select(document => (document.Name, document.Text)));
             var preparationDuration = TimeSpan.Zero;
 
             CompiledProgram compiledProgram;
@@ -127,7 +146,8 @@ public sealed class ProgramRunService : IProgramRunService
             else
             {
                 var preparationStopwatch = Stopwatch.StartNew();
-                var compilationResult = _pipeline.Compile(new CompilationRequest(sourceText));
+                var compilationResult = _pipeline.Compile(new CompilationRequest(sourceText,
+                    sourceName: sourceName, additionalDocuments: additionalDocuments));
                 preparationStopwatch.Stop();
                 preparationDuration = compilationResult.FrontendPreparationDuration == TimeSpan.Zero
                     ? preparationStopwatch.Elapsed
@@ -138,7 +158,7 @@ public sealed class ProgramRunService : IProgramRunService
                     _compiledProgram = null;
                     var failedDiagnostics = compilationResult.Diagnostics
                         .Concat(compilationResult.BackendDiagnostics)
-                        .DistinctBy(static diagnostic => (diagnostic.Code, diagnostic.Location.Line, diagnostic.Location.Column, diagnostic.Location.Span, diagnostic.Message))
+                        .DistinctBy(static diagnostic => (diagnostic.Code, diagnostic.Location.Document, diagnostic.Location.Line, diagnostic.Location.Column, diagnostic.Location.Span, diagnostic.Message))
                         .Select(ProgramDiagnosticItem.FromDiagnostic)
                         .ToArray();
 
@@ -186,9 +206,14 @@ public sealed class ProgramRunService : IProgramRunService
                     inputProvider: inputProvider,
                     outputWriter: _consoleService,
                     cancellationProvider: effectiveCancellation,
-                    sourceBreakpointLines: sourceBreakpointLines,
+                    sourceBreakpointLines: sourceName is null ? sourceBreakpointLines : [],
                     stopBeforeFirstInstruction: stopBeforeFirstInstruction,
-                    resourceBaseDirectory: runBaseDirectory));
+                    resourceBaseDirectory: runBaseDirectory,
+                    sourceName: sourceName,
+                    additionalDocuments: additionalDocuments,
+                    sourceBreakpoints: (sourceName is null ? Enumerable.Empty<BytecodeSourceBreakpoint>()
+                        : (sourceBreakpointLines ?? []).Select(line => new BytecodeSourceBreakpoint(line, document: sourceName)))
+                        .Concat(sourceBreakpoints ?? [])));
 
             var diagnostics = executionResult.Diagnostics
                 .Select(ProgramDiagnosticItem.FromDiagnostic)

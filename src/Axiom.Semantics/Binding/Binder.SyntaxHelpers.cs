@@ -139,6 +139,8 @@ public sealed partial class Binder
         return declaration switch
         {
             GlobalStatementSyntax globalStatement => GetLocation(globalStatement.Statement),
+            ImportStatementSyntax importStatement => importStatement.ImportKeyword.Location,
+            ModuleStatementSyntax moduleStatement => GetLocation(moduleStatement.Statement),
             TypeDeclarationSyntax typeDeclaration => typeDeclaration.Identifier.Location,
             SubDeclarationSyntax subDeclaration => subDeclaration.Identifier.Location,
             FunctionDeclarationSyntax functionDeclaration => functionDeclaration.Identifier.Location,

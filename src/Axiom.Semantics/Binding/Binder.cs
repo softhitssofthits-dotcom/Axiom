@@ -1,4 +1,4 @@
-﻿using Axiom.Core;
+using Axiom.Core;
 using Axiom.Syntax;
 
 namespace Axiom.Semantics;
@@ -45,6 +45,8 @@ public sealed partial class Binder
 
     private Binder()
     {
+        _imports = [];
+        _moduleLocation = new TextLocation(new TextSpan(0, 0), 1, 1);
         _globalScope = new BoundScope(enclosingScope: null);
         _scope = _globalScope;
 
@@ -60,6 +62,13 @@ public sealed partial class Binder
         bool checkGraphicsModes = true, InitialGraphicsContext initialGraphicsContext = InitialGraphicsContext.None)
     {
         ArgumentNullException.ThrowIfNull(program);
+
+        if (program.Members.Any(member => member is ImportStatementSyntax or ModuleStatementSyntax))
+        {
+            const string singleModuleName = "<single>";
+            return BindModules([new ModuleSyntax(singleModuleName, program)], singleModuleName, out diagnostics,
+                checkGraphicsModes, initialGraphicsContext);
+        }
 
         var binder = new Binder();
         var boundProgram = binder.BindProgram(program);
@@ -83,6 +92,10 @@ public sealed partial class Binder
             if (member is GlobalStatementSyntax globalStatement)
             {
                 _globalStatements.Add(BindStatement(globalStatement.Statement));
+            }
+            else if (member is ModuleStatementSyntax moduleStatement)
+            {
+                _globalStatements.Add(BindStatement(moduleStatement.Statement));
             }
         }
 

@@ -11,6 +11,72 @@ namespace Axiom.Ide.Backend.Tests;
 public sealed class ProgramRunServiceTests
 {
     [Fact]
+    public void SameDiagnosticInDifferentDependenciesIsNotCollapsed()
+    {
+        var directory=Path.GetFullPath(Path.Combine(".artifacts","tests","project-diagnostics",Guid.NewGuid().ToString("N")));
+        var first=Path.Combine(directory,"first.axm");var second=Path.Combine(directory,"second.axm");
+        var service=CreateService();
+        var result=service.RunWithSourceBreakpoints("IMPORT first\nIMPORT second",null,sourceFilePath:Path.Combine(directory,"main.axm"),
+            projectDocuments:[new SourceDocument(first,"PRINT missingName"),new SourceDocument(second,"PRINT missingName")]);
+        Assert.Equal(ProgramRunStatus.SemanticFailure,result.Status);
+        Assert.Equal(2,result.Diagnostics.Count(d=>d.Code=="MB2001"));
+        Assert.Equal(2,result.Diagnostics.Where(d=>d.Code=="MB2001").Select(d=>d.SourceFilePath).Distinct().Count());
+    }
+
+    [Fact]
+    public void UnsavedDependencySnapshotChangesExecutionWithoutSavingDisk()
+    {
+        var directory = Path.GetFullPath(Path.Combine(".artifacts","tests","ide-project-snapshot",Guid.NewGuid().ToString("N")));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var entry=Path.Combine(directory,"main.axm");
+            var helper=Path.Combine(directory,"helper.axm");
+            const string source="IMPORT helper\nPRINT Answer()";
+            File.WriteAllText(entry,source);
+            const string saved="PUBLIC FUNCTION Answer() AS INTEGER\nRETURN 1\nEND FUNCTION";
+            File.WriteAllText(helper,saved);
+            var service=CreateService();
+            foreach(var value in new[]{2,3})
+            {
+                var result=service.RunWithSourceBreakpoints(source,null,sourceFilePath:entry,
+                    projectDocuments:[new SourceDocument(helper,$"PUBLIC FUNCTION Answer() AS INTEGER\nRETURN {value}\nEND FUNCTION")]);
+                Assert.True(result.Succeeded);
+                Assert.Contains(value.ToString(),result.OutputText);
+            }
+            var diskResult=service.Run(source,sourceFilePath:entry);
+            Assert.True(diskResult.Succeeded);
+            Assert.Contains("1",diskResult.OutputText);
+            Assert.Equal(saved,File.ReadAllText(helper));
+        }
+        finally { Directory.Delete(directory,recursive:true); }
+    }
+
+    [Fact]
+    public void ImportedFileChangesInvalidateCompiledCache()
+    {
+        var directory = Path.GetFullPath(Path.Combine(".artifacts", "tests", "ide-modules", Guid.NewGuid().ToString("N")));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var entry = Path.Combine(directory, "main.axm");
+            var helper = Path.Combine(directory, "helper.axm");
+            const string source = "IMPORT helper\nPRINT Answer()";
+            File.WriteAllText(entry, source);
+            File.WriteAllText(helper, "PUBLIC FUNCTION Answer() AS INTEGER\nRETURN 1\nEND FUNCTION");
+            var service = CreateService();
+            var first = service.Run(source, sourceFilePath: entry);
+            Assert.True(first.Succeeded);
+            Assert.Contains("1", first.OutputText);
+            File.WriteAllText(helper, "PUBLIC FUNCTION Answer() AS INTEGER\nRETURN 2\nEND FUNCTION");
+            var second = service.Run(source, sourceFilePath: entry);
+            Assert.True(second.Succeeded);
+            Assert.Contains("2", second.OutputText);
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
+
+    [Fact]
     public void Compile_ReturnsSuccessWithoutDiagnostics()
     {
         var service = CreateService();

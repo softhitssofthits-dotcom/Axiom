@@ -10,6 +10,7 @@ const { CanvasWindow } = require('./canvas-window');
 const { sameSourceText } = require('./file-service');
 const { portableRuntime } = require('./portable-runtime');
 const { graphicsOwnerEnvironment } = require('./graphics-owner');
+const { validateProjectDocuments } = require('./project-snapshots');
 
 let client;
 let owner;
@@ -61,7 +62,8 @@ function setupBackendIpc() {
   handle('backend-document', (method, snapshot) => {
     if (!['document.compile', 'document.analyse', 'document.hover', 'document.navigation', 'document.format', 'document.editTransition', 'document.normalizeIdentifiers'].includes(method) ||
         !snapshot || typeof snapshot.sourceText !== 'string' || typeof snapshot.documentId !== 'string' ||
-        !Number.isInteger(snapshot.documentRevision) || snapshot.documentRevision < 0 || snapshot.documentRevision > 2147483647)
+        !Number.isInteger(snapshot.documentRevision) || snapshot.documentRevision < 0 || snapshot.documentRevision > 2147483647 ||
+        !validateProjectDocuments(snapshot.sourceFilePath,snapshot.projectDocuments,snapshot.documentId))
       throw new Error('Недопустимый запрос документа.');
     return getClient().request(method, snapshot);
   });
@@ -69,7 +71,8 @@ function setupBackendIpc() {
     if (sessionId) throw Object.assign(new Error('Программа ещё выполняется.'), { code: 'BUSY' });
     if (!document || typeof document.sourceFilePath !== 'string' || !path.isAbsolute(document.sourceFilePath) || typeof document.sourceText !== 'string' ||
         !Number.isSafeInteger(document.documentRevision) || document.documentRevision < 0 || typeof document.documentId !== 'string' ||
-        !['run', 'debug'].includes(document.launchKind)) throw new Error('Некорректный снимок документа.');
+        !['run', 'debug'].includes(document.launchKind) ||
+        !validateProjectDocuments(document.sourceFilePath,document.projectDocuments,document.documentId)) throw new Error('Некорректный снимок документа.');
     // Запуск должен соответствовать действительно сохранённому файлу.
     const saved = fs.readFileSync(document.sourceFilePath, 'utf8').replace(/^\uFEFF/, '');
     if (!sameSourceText(saved, document.sourceText)) throw new Error('Документ изменён после сохранения. Сохраните его перед запуском.');

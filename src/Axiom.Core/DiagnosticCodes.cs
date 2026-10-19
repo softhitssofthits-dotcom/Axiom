@@ -61,6 +61,14 @@ public static class DiagnosticCodes
     public const string InvalidGraphicsContext = "MB2046";
     public const string UnusedVariable = "MB2047";
     public const string InvalidNextCounter = "MB2048";
+    public const string UnknownModule = "MB2049";
+    public const string DuplicateModule = "MB2050";
+    public const string MissingEntryModule = "MB2051";
+    public const string CyclicModuleImport = "MB2052";
+    public const string PrivateModuleMember = "MB2053";
+    public const string AmbiguousModuleMember = "MB2054";
+    public const string ImportedNameConflict = "MB2055";
+    public const string InvalidVisibilityContext = "MB2056";
 
     // Время выполнения (MB3xxx)
     public const string DivisionByZero = "MB3001";

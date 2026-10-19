@@ -1,0 +1,3 @@
+PUBLIC FUNCTION Square(value AS INTEGER) AS INTEGER
+    RETURN value * value
+END FUNCTION

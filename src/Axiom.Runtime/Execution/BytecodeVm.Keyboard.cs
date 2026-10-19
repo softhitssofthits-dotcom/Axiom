@@ -8,51 +8,6 @@ public sealed partial class BytecodeVm
 {
     private readonly Dictionary<string, KeyboardHandlerRegistration> _keyboardHandlers = new(StringComparer.Ordinal);
     private readonly Queue<string> _bufferedKeys = [];
-    private int _keyboardHandlerDepth;
-
-    private void ExecuteStatementBoundary(int instructionIndex)
-    {
-        if (_keyboardHandlers.Count == 0 && _mouseHandlers.Count == 0)
-        {
-            return;
-        }
-
-        if (_keyboardHandlerDepth > 0)
-        {
-            return;
-        }
-
-        var location = ResolveLocation(CurrentFrame.Routine.Id, instructionIndex);
-        if (_mouseHandlers.Count > 0)
-        {
-            DispatchMouseHandlers(location);
-        }
-
-        if (_keyboardHandlers.Count == 0)
-        {
-            return;
-        }
-
-        var deferredKeys = new List<string>();
-
-        while (TryReadKeyboardKey(out var keyText))
-        {
-            var normalizedKey = KeyboardInputNormalizer.Normalize(keyText);
-            if (!TryGetKeyboardHandler(normalizedKey, out var registration))
-            {
-                deferredKeys.Add(keyText);
-                continue;
-            }
-
-            var handlerKeyText = registration.Chord.IsSingleKey ? normalizedKey : registration.Chord.CanonicalText;
-            InvokeKeyboardHandler(registration, handlerKeyText, location);
-        }
-
-        foreach (var deferredKey in deferredKeys)
-        {
-            _bufferedKeys.Enqueue(deferredKey);
-        }
-    }
 
     private bool TryGetKeyboardHandler(string normalizedKey, out KeyboardHandlerRegistration registration)
     {
@@ -283,24 +238,6 @@ public sealed partial class BytecodeVm
 
         keyText = _host.ReadKey();
         return !string.IsNullOrEmpty(keyText);
-    }
-
-    private void InvokeKeyboardHandler(KeyboardHandlerRegistration registration, string normalizedKey, TextLocation location)
-    {
-        _keyboardHandlerDepth++;
-
-        try
-        {
-            var arguments = registration.PassKeyText
-                ? new[] { RuntimeValue.FromString(normalizedKey) }
-                : Array.Empty<RuntimeValue>();
-
-            _ = InvokeBytecodeFunction(registration.Handler, arguments, location);
-        }
-        finally
-        {
-            _keyboardHandlerDepth--;
-        }
     }
 
     private readonly record struct KeyboardHandlerRegistration(RuntimeFunctionValue Handler, bool PassKeyText, KeyboardInputChord Chord, bool IsEnabled);

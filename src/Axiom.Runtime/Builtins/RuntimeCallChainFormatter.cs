@@ -32,9 +32,7 @@ public static class RuntimeCallChainFormatter
             builder.Append("- ");
             builder.Append(FormatRoutineLabel(frame));
             builder.Append(", вызов в ");
-            builder.Append(frame.CallSite.Line);
-            builder.Append(':');
-            builder.Append(frame.CallSite.Column);
+            builder.Append(frame.CallSite);
 
             if (frame.Function?.ContainingRoutine is not null)
             {

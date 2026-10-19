@@ -83,6 +83,9 @@ public sealed partial class Lexer
         ["PRESERVE"] = TokenKind.PreserveKeyword,
         ["PRESET"] = TokenKind.PresetKeyword,
         ["PRINT"] = TokenKind.PrintKeyword,
+        ["PRIVATE"] = TokenKind.PrivateKeyword,
+        ["PUBLIC"] = TokenKind.PublicKeyword,
+        ["IMPORT"] = TokenKind.ImportKeyword,
         ["PUT"] = TokenKind.PutKeyword,
         ["PSET"] = TokenKind.PSetKeyword,
         ["REDIM"] = TokenKind.RedimKeyword,
@@ -119,11 +122,13 @@ public sealed partial class Lexer
     };
 
     private readonly string _text;
+    private readonly string? _document;
     private int _position;
 
-    public Lexer(string text)
+    public Lexer(string text, string? document = null)
     {
         _text = text ?? string.Empty;
+        _document = string.IsNullOrWhiteSpace(document) ? null : document;
         Diagnostics = new DiagnosticBag();
     }
 
@@ -147,9 +152,9 @@ public sealed partial class Lexer
         return tokens;
     }
 
-    public static IReadOnlyList<Token> Lex(string text, out DiagnosticBag diagnostics)
+    public static IReadOnlyList<Token> Lex(string text, out DiagnosticBag diagnostics, string? document = null)
     {
-        var lexer = new Lexer(text);
+        var lexer = new Lexer(text, document);
         var tokens = lexer.Lex();
         diagnostics = lexer.Diagnostics;
         return tokens;
@@ -535,7 +540,7 @@ public sealed partial class Lexer
     private TextLocation CreateLocation(int start, int length)
     {
         var (line, column) = GetLineAndColumn(start);
-        return new TextLocation(new TextSpan(start, length), line, column);
+        return new TextLocation(new TextSpan(start, length), line, column, _document);
     }
 
     private (int line, int column) GetLineAndColumn(int targetPosition)

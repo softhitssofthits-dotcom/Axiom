@@ -264,6 +264,12 @@ public sealed partial class Binder
             return userType;
         }
 
+        if (typeSyntax.TypeToken.Kind == SyntaxKind.IdentifierToken
+            && _importedTypes.TryGetValue(typeSyntax.TypeToken.Text, out var importedType))
+        {
+            return importedType;
+        }
+
         ReportUnknownType(typeSyntax.TypeToken.Text, typeSyntax.TypeToken.Location);
         return TypeSymbol.Error;
     }

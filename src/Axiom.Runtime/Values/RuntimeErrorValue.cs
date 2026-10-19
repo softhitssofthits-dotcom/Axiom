@@ -4,7 +4,7 @@ namespace Axiom.Runtime;
 
 public sealed class RuntimeErrorValue
 {
-    public RuntimeErrorValue(string code, string message, int line, int column)
+    public RuntimeErrorValue(string code, string message, int line, int column, string? document = null)
     {
         ArgumentNullException.ThrowIfNull(code);
         ArgumentNullException.ThrowIfNull(message);
@@ -13,6 +13,7 @@ public sealed class RuntimeErrorValue
         Message = message;
         Line = line;
         Column = column;
+        Document = document;
     }
 
     public string Code { get; }
@@ -22,6 +23,8 @@ public sealed class RuntimeErrorValue
     public int Line { get; }
 
     public int Column { get; }
+
+    public string? Document { get; }
 
     public RuntimeValue GetField(TypeFieldSymbol field)
     {

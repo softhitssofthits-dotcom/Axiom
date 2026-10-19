@@ -1,4 +1,12 @@
 const {test}=require('node:test'); const assert=require('node:assert/strict'); const {classify}=require('../src/renderer/semantic-colors');
+test('Модификаторы доступности не скрывают функцию и тип от семантической раскраски',()=>{
+ const source='PUBLIC FUNCTION Answer() AS INTEGER\nRETURN 42\nEND FUNCTION\nPRIVATE TYPE Box\nItem AS INTEGER\nEND TYPE';
+ const tokens=source.split('\n').map(line=>[...line.matchAll(/[A-Za-z_]\w*|[^A-Za-z_]+/g)].map(m=>({offset:m.index,type:/^(PUBLIC|PRIVATE|FUNCTION|AS|INTEGER|RETURN|END|TYPE)$/.test(m[0])?'keyword.axiom':'identifier.axiom'})));
+ const data=[...classify(source,tokens).data]; let line=0,column=0; const decoded=[];
+ for(let i=0;i<data.length;i+=5){line+=data[i];column=data[i]===0?column+data[i+1]:data[i+1];decoded.push({word:source.split('\n')[line].slice(column,column+data[i+2]),kind:data[i+3]});}
+ assert.ok(decoded.some(t=>t.word==='Answer'&&t.kind===1));
+ assert.ok(decoded.some(t=>t.word==='Box'&&t.kind===2));
+});
 test('Цвета объявлений различают процедуры, константы, массивы и локальное перекрытие',()=>{
  const source='CONST limit = 2\nDIM items(3) AS INTEGER\nSUB Draw(limit AS INTEGER)\nlimit = items(0)\nEND SUB\nPRINT limit';
  const lines=source.split('\n'); const tokens=lines.map(line=>[...line.matchAll(/[A-Za-z_]\w*|[^A-Za-z_]+/g)].map(m=>({offset:m.index,type:/^[A-Za-z_]/.test(m[0])&&!/^(CONST|DIM|SUB|AS|INTEGER|END|PRINT)$/.test(m[0])?'identifier.axiom':'keyword.axiom'})));

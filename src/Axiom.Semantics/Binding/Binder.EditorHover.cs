@@ -14,11 +14,11 @@ public sealed partial class Binder
     private List<EditorHoverInfo>? _editorConstants;
     // Подсказки используют те же символы и области видимости, что и исполнение.
     public static IReadOnlyList<EditorHoverInfo> GetEditorHovers(ProgramSyntax syntax,
-        IReadOnlyList<EditorIdentifier> identifiers)
+        IReadOnlyList<EditorIdentifier> identifiers, IReadOnlyList<ModuleSymbol>? imports = null)
     {
         ArgumentNullException.ThrowIfNull(syntax);
         ArgumentNullException.ThrowIfNull(identifiers);
-        var binder = new Binder { _editorStatements = [], _editorConstants = [] };
+        var binder = new Binder(imports ?? [], syntax.EndOfFileToken.Location) { _editorStatements = [], _editorConstants = [] };
         var program = binder.BindProgram(syntax);
         var items = new Dictionary<int, EditorHoverInfo>();
 

@@ -10,7 +10,8 @@ public sealed record ProgramDiagnosticItem(
     int? Column,
     int? Length,
     int? SpanStart = null,
-    int? SpanLength = null)
+    int? SpanLength = null,
+    string? SourceFilePath = null)
 {
     public string Position =>
         Line.HasValue && Column.HasValue
@@ -29,7 +30,8 @@ public sealed record ProgramDiagnosticItem(
             diagnostic.Location.Column,
             diagnostic.Location.Length,
             diagnostic.Location.Span.Start,
-            diagnostic.Location.Span.Length);
+            diagnostic.Location.Span.Length,
+            diagnostic.Location.Document);
     }
 
     public static ProgramDiagnosticItem CreateInfrastructure(string code, string message)

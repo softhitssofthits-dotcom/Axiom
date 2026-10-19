@@ -13,7 +13,6 @@ public sealed partial class BytecodeVm
     private readonly Dictionary<BuiltinMouseHelpers.MouseHandlerKey, MouseHandlerRegistration> _mouseHandlers = [];
     private readonly Queue<MouseInputEvent> _bufferedMouseEvents = [];
     private long _observedMouseClearGeneration;
-    private int _mouseHandlerDepth;
 
     private long ReadMouseX()
     {
@@ -33,56 +32,6 @@ public sealed partial class BytecodeVm
     {
         RequireDrawableSurfaceActive("MOUSEBUTTON", FallbackRuntimeLocation);
         return _host.IsMouseButtonDown(buttonNumber);
-    }
-
-    private void DispatchMouseHandlers(TextLocation location)
-    {
-        if (!_host.IsScreenActive && !_host.IsCanvasActive)
-        {
-            return;
-        }
-
-        if (_mouseHandlerDepth > 0)
-        {
-            return;
-        }
-
-        DiscardBufferedEventsAfterClear();
-        var deferredEvents = new List<MouseInputEvent>();
-        var processedEvents = 0;
-        // Повторно отложенные события не должны занимать весь бюджет опроса.
-        var bufferedBudget = Math.Min(_bufferedMouseEvents.Count, MaxMouseEventsPerDispatch / 2);
-
-        while (processedEvents < MaxMouseEventsPerDispatch)
-        {
-            MouseInputEvent mouseEvent;
-            if (processedEvents < bufferedBudget)
-                mouseEvent = _bufferedMouseEvents.Dequeue();
-            else
-            {
-                mouseEvent = _host.ReadMouseEvent();
-                if (!BuiltinMouseHelpers.IsSupportedMouseEvent(mouseEvent)) break;
-            }
-            processedEvents++;
-            var handlerKey = BuiltinMouseHelpers.GetMouseHandlerKey(mouseEvent);
-            if (!_mouseHandlers.TryGetValue(handlerKey, out var registration) || !registration.IsEnabled)
-            {
-                deferredEvents.Add(mouseEvent);
-                continue;
-            }
-
-            InvokeMouseHandler(registration, mouseEvent, location);
-        }
-
-        foreach (var deferredEvent in deferredEvents)
-        {
-            if (_bufferedMouseEvents.Count >= MaxBufferedMouseEvents)
-            {
-                break;
-            }
-
-            _bufferedMouseEvents.Enqueue(deferredEvent);
-        }
     }
 
     private void DiscardBufferedEventsAfterClear()
@@ -141,34 +90,6 @@ public sealed partial class BytecodeVm
         RequireDrawableSurfaceActive("MOUSEPRESS", FallbackRuntimeLocation);
         DiscardBufferedEventsAfterClear();
         return BuiltinMouseHelpers.ConsumeMouseButtonPress(buttonNumber, _bufferedMouseEvents, _host.ReadMouseEvent);
-    }
-
-    private void InvokeMouseHandler(MouseHandlerRegistration registration, MouseInputEvent mouseEvent, TextLocation location)
-    {
-        _mouseHandlerDepth++;
-
-        try
-        {
-            // Один снимок позиции на обработчик: X и Y не могут относиться
-            // к разным событиям ввода.
-            _host.GetMousePosition(out var absoluteMouseX, out var absoluteMouseY);
-            var mouseX = BuiltinMouseHelpers.TranslateMouseXToRuntimeCoordinates(_host, absoluteMouseX, absoluteMouseY);
-            var mouseY = BuiltinMouseHelpers.TranslateMouseYToRuntimeCoordinates(_host, absoluteMouseX, absoluteMouseY);
-            var arguments = registration.PassEvent
-                ? new[]
-                {
-                    RuntimeValue.FromInteger(mouseEvent.ButtonNumber),
-                    RuntimeValue.FromLong(mouseX),
-                    RuntimeValue.FromLong(mouseY)
-                }
-                : Array.Empty<RuntimeValue>();
-
-            _ = InvokeBytecodeFunction(registration.Handler, arguments, location);
-        }
-        finally
-        {
-            _mouseHandlerDepth--;
-        }
     }
 
     private static MouseInputEventKind ToMouseInputEventKind(int eventKind) => eventKind switch

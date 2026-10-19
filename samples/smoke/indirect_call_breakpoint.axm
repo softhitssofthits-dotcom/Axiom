@@ -1,0 +1,16 @@
+' Проверка косвенного вызова через функциональное значение.
+' Поставьте точку останова на строке RETURN total и нажмите F9,
+' затем запустите программу: IDE должна остановиться внутри Work,
+' а продолжение должно один раз напечатать 100000.
+
+FUNCTION Work() AS INTEGER
+    DIM total AS INTEGER = 0
+    FOR i = 1 TO 100000
+        total = total + 1
+    NEXT
+    RETURN total
+END FUNCTION
+
+DIM action AS FUNCTION() AS INTEGER
+action = Work
+PRINT action()

@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Threading;
 using Axiom.Execution;
+using Axiom.Runtime;
 using Axiom.Ide.Contracts;
 using Axiom.Ide.Models;
 using Axiom.Ide.Services.Execution;
@@ -16,6 +17,7 @@ namespace Axiom.DesktopHost;
 // чтение stdin остаётся независимым от VM, включая ожидание INPUT.
 internal sealed class DesktopHost : IDisposable
 {
+    private readonly HashSet<string> _publishedSourceDocuments = new(StringComparer.OrdinalIgnoreCase);
     private readonly Application _application;
     private readonly ProgramConsoleService _console;
     private readonly ProgramRunService _runner;
@@ -269,14 +271,24 @@ internal sealed class DesktopHost : IDisposable
         if (!Path.IsPathFullyQualified(file) || !File.Exists(file)) throw new HostError("INVALID_DOCUMENT", "Перед запуском сохраните документ.");
         string launch = String(payload, "launchKind") ?? "";
         if (launch is not ("run" or "debug")) throw new HostError("INVALID_REQUEST", "Недопустимый вид запуска.");
+        var projectDocuments = payload.TryGetProperty("projectDocuments",out var projectSources)
+            ? projectSources.Deserialize<ProjectDocumentSnapshot[]>(new JsonSerializerOptions { PropertyNameCaseInsensitive=true }) : null;
+        var openDocuments = ProjectSnapshot.Validate(file,projectDocuments,String(payload,"documentId"))
+            .Select(document=>new SourceDocument(document.SourceFilePath,document.SourceText)).ToArray();
         int[] breakpoints = payload.TryGetProperty("breakpointLines", out var points) ? points.EnumerateArray().Select(x => x.GetInt32()).ToArray() : [];
+        var sourceBreakpoints = payload.TryGetProperty("sourceBreakpoints", out var sourcePoints)
+            ? sourcePoints.EnumerateArray().Select(point => new BytecodeSourceBreakpoint(point.GetProperty("line").GetInt32(),
+                document: point.GetProperty("sourceFilePath").GetString())).ToArray()
+            : [];
         bool stopFirst = launch == "debug" && payload.TryGetProperty("stopBeforeFirstInstruction", out var stop) && stop.GetBoolean();
         _frames?.Reset();
+        _publishedSourceDocuments.Clear();
         _publishedOutput = ""; _pendingOutputVersion = null;
         _sessionId = session; _graphicsSessionId = session; _sequence = 0; _cancel = new ManualCancellationProvider(); _working = true;
         Volatile.Write(ref _cancellationRegistration, new CancellationRegistration(session, _cancel));
         Respond(id, new { accepted = true }); Event("execution.state", new { state = "Compiling" });
-        Work(() => _runner.Run(source, launch == "debug" ? breakpoints : [], stopFirst, file, cancellationProvider: _cancel));
+        Work(() => _runner.RunWithSourceBreakpoints(source, launch == "debug" ? sourceBreakpoints : [],
+            launch == "debug" ? breakpoints : [], stopFirst, file, cancellationProvider: _cancel,projectDocuments:openDocuments));
     }
 
     private void Work(Func<ProgramRunResult> action)
@@ -302,11 +314,15 @@ internal sealed class DesktopHost : IDisposable
     private void Complete(ProgramRunResult result)
     {
         _working = false;
+        var sourceDocuments = TakeSourceDocuments(result.Diagnostics.Select(diagnostic=>diagnostic.SourceFilePath)
+            .Append(result.DebuggerState?.StopInfo.SourceLocation?.Document));
         if (result.DebuggerState is { } debugger && _cancel?.IsCancellationRequested != true)
         {
             _debugger = debugger; _stopId = (++_stopCounter).ToString();
             Event("execution.state", new { state = "Paused" });
             Event("debug.paused", new { stopId = _stopId, debugger.StopInfo.Line, debugger.StopInfo.Column,
+                sourceFilePath = debugger.StopInfo.SourceLocation?.Document,
+                sourceDocuments,
                 debugger.StopInfo.Opcode, debugger.StopInfo.CallDepth, debugger.StopInfo.CanStepBack, outputText = _console.OutputText, outputLineCount = _console.OutputCheckpoint });
             return;
         }
@@ -315,8 +331,15 @@ internal sealed class DesktopHost : IDisposable
             ProgramRunStatus.SyntaxFailure or ProgramRunStatus.SemanticFailure or ProgramRunStatus.BackendFailure => "CompilationFailed",
             ProgramRunStatus.RuntimeFailure => "RuntimeFailed", _ => "InfrastructureFailed" };
         Event("execution.finished", new { status, outputText = _console.OutputText, outputLineCount = _console.OutputCheckpoint, actualEngine = result.ActualEngine?.ToString(),
-            diagnostics = result.Diagnostics, durationMilliseconds = result.TotalDuration.TotalMilliseconds });
+            diagnostics = result.Diagnostics, sourceDocuments,durationMilliseconds = result.TotalDuration.TotalMilliseconds });
         Finish();
+    }
+
+    private object[] TakeSourceDocuments(IEnumerable<string?> names)
+    {
+        var requested=names.OfType<string>().ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return _runner.CurrentSourceDocuments.Where(document=>requested.Contains(document.Name) && _publishedSourceDocuments.Add(document.Name))
+            .Select(document=>(object)new {sourceFilePath=document.Name,sourceText=document.Text}).ToArray();
     }
 
     private void Finish()

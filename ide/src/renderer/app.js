@@ -6,7 +6,10 @@ class AxiomIDE {
     this.langMeta = null; // language registry from `axiom metadata`; null until loaded
     this.editor = null;
     this._recoveryEnabled = false;
-    this.openFiles = new window.DocumentStore(() => { this.refreshDirtyIndicators(); this.persistRecovery(); });
+    this.openFiles = new window.DocumentStore(() => {
+      this.refreshDirtyIndicators(); this.persistRecovery();
+      if(this.editor) this.scheduleLiveCheck();
+    });
     this.editedLines = new window.EditedLines();
     this.documentServices = new window.DocumentServices(this.openFiles, API);
     this.documentSaver = new window.DocumentSaver(this.openFiles, API);
@@ -192,7 +195,7 @@ class AxiomIDE {
   // Monarch dictionaries come from `axiom metadata` (the language registry of the CLI).
   // Embedded lists below are only a fallback when axiom.exe is missing or broken.
   static FALLBACK_DICTS = {
-    keywords: ['AND','APPEND','AS','BEGINFRAME','BYREF','BYVAL','CAMERA','CANVAS','CASE','CATCH','CIRCLE','CLOSE','CLS','COLOR','CONST','CONTINUE','DIM','DO','DRAW','DRAWCIRCLE','DRAWIMAGE','DRAWLINE','DRAWRECT','DRAWSPRITE','DRAWTILE','DRAWTILELAYER','DRAWTILEMAP','DRAWTEXT','ELSE','ELSEIF','END','ERROR','EQV','ERASE','EXIT','FALSE','TRUE','FILLCIRCLE','FILLRECT','FINALLY','FOR','FUNCTION','GET','IF','IMP','INPUT','IS','KEY','LINE','LOCATE','LOOP','MOD','MOUSE','NEXT','NOT','OFF','ON','OPEN','OR','OUTPUT','PAINT','PALETTE','PCOPY','PRESERVE','PRESENT','PRESET','PRINT','PSET','PUT','REDIM','RESETCAMERA','RETURN','SCREEN','SELECT','SELF','SETMAPTILE','SMOOTH','SLEEP','STEP','STOP','SUB','THEN','TO','TRANSPARENT','TRY','TYPE','UNTIL','USING','VIEW','VIEWPORT','WHILE','WINDOW','XOR'],
+    keywords: ['AND','APPEND','AS','BEGINFRAME','BYREF','BYVAL','CAMERA','CANVAS','CASE','CATCH','CIRCLE','CLOSE','CLS','COLOR','CONST','CONTINUE','DIM','DO','DRAW','DRAWCIRCLE','DRAWIMAGE','DRAWLINE','DRAWRECT','DRAWSPRITE','DRAWTILE','DRAWTILELAYER','DRAWTILEMAP','DRAWTEXT','ELSE','ELSEIF','END','ERROR','EQV','ERASE','EXIT','FALSE','TRUE','FILLCIRCLE','FILLRECT','FINALLY','FOR','FUNCTION','GET','IF','IMP','IMPORT','INPUT','IS','KEY','LINE','LOCATE','LOOP','MOD','MOUSE','NEXT','NOT','OFF','ON','OPEN','OR','OUTPUT','PAINT','PALETTE','PCOPY','PRESERVE','PRESENT','PRESET','PRINT','PRIVATE','PUBLIC','PSET','PUT','REDIM','RESETCAMERA','RETURN','SCREEN','SELECT','SELF','SETMAPTILE','SMOOTH','SLEEP','STEP','STOP','SUB','THEN','TO','TRANSPARENT','TRY','TYPE','UNTIL','USING','VIEW','VIEWPORT','WHILE','WINDOW','XOR'],
     typeNames: ['BOOLEAN','DATE','DATETIME','DECIMAL','DOUBLE','FILE','IMAGE','INTEGER','LONG','SPRITE','STRING','TILEMAP','TILESET','TIME','UTCDATETIME'],
     builtins: ['ABS','ASC','CHR','DATE','DATEADD','DATEDIFF','DAY','EOF','EXP','FILEEXISTS','FLOOR','INSTR','INT','JOIN','LCASE','LEFT','LEN','LOG','LTRIM','MID','MIN','MAX','MONTH','NOW','POW','READFILE','REPLACE','RGB','RIGHT','RND','ROUND','SGN','SIN','SQR','STR','SUBSTRCOUNT','TAN','TIME','TIMER','TRIM','TYPE','UCASE','VAL','WEEKDAY','WRITEFILE','YEAR'],
   };
@@ -1282,7 +1285,7 @@ class AxiomIDE {
     const m = this.editor.getModel();
     if (seq !== this._liveCheckSeq || this._formatBusy || !m || m !== model) { this.log('check.live.stale', { seq }); return; }
     if (m.getValue() !== text) { this.log('check.live.stale-edit', { seq }); return; } // stale
-    r.diagnostics.forEach((d) => { d.file = filePath; d.col = d.column; });
+    r.diagnostics.forEach((d) => { d.file = d.sourceFilePath || filePath; d.col = d.column; });
     // Ошибки исполнения относятся к тому же неизменённому снимку: фоновая
     // проверка, поставленная в очередь до запуска, не должна их стирать.
     const runtime = (this._lastDiagnostics || []).filter((d) =>
@@ -1327,7 +1330,7 @@ class AxiomIDE {
     try {
       const r = await this.documentServices.request(target, 'document.compile');
       if (!r || target !== this.activeFile) return;
-      r.diagnostics.forEach(d => { d.file = target; d.col = d.column; });
+      r.diagnostics.forEach(d => { d.file = d.sourceFilePath || target; d.col = d.column; });
       if (r.status === 'BackendFailure' && !r.diagnostics.length) throw new Error('Компилятор не подготовил байт-код.');
       this.applyDiagnostics(r.diagnostics, true);
       if (explicit) {
@@ -1778,7 +1781,7 @@ class AxiomIDE {
   diagnosticMatchesSnapshot(d) {
     if (!d.executionSnapshot) return true;
     const entry = this.openFiles.get(d.file);
-    return !!entry && entry.documentId === d.executionSnapshot.documentId && !entry.model.isDisposed?.() &&
+    return !!entry && (d.executionSnapshot.documentId==null || entry.documentId === d.executionSnapshot.documentId) && !entry.model.isDisposed?.() &&
       entry.model.getValue() === d.executionSnapshot.sourceText;
   }
 
@@ -1795,6 +1798,11 @@ class AxiomIDE {
       if (active) byModel.set(active.model, []);
     } else {
       for (const { model } of this.openFiles.values()) byModel.set(model, []);
+    }
+
+    for (const diagnostic of diags) {
+      const entry = this.openFiles.get(diagnostic.file);
+      if (entry && !byModel.has(entry.model)) byModel.set(entry.model, []);
     }
 
     this.assistant?.acceptDiagnostics(byModel.keys());
@@ -1944,6 +1952,14 @@ class AxiomIDE {
 
   // Problems panel: a click navigates AND opens the extended error details in the editor.
   jumpToDiagnostic(d) {
+    if(d.file && !this.openFiles.has(d.file) && this.openFile && (!d.executionSnapshot || d.executionSnapshot.documentId==null)) {
+      return this.openFile(d.file).then(()=>{
+        if(this.openFiles.has(d.file)) {
+          this.applyDiagnostics(this._lastDiagnostics || [d],this._lastDiagnosticsOnlyActive,this._lastDiagnosticsTargetFile);
+          this.jumpToDiagnostic(d);
+        }
+      }).catch(error=>this.log('diagnostics.document.failed',{message:error.message}));
+    }
     if (!this.diagnosticMatchesSnapshot(d)) { this.setStatus(this.localizedDiagText(d)); return; }
     const line = Math.max(1, d.line || 1);
     const col = Math.max(1, d.col || 1);

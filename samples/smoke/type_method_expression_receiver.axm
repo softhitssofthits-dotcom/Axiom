@@ -1,0 +1,27 @@
+' Проверка живого SELF для элемента массива, возвращённого выражением.
+' Метод должен видеть и менять фактический элемент, а не временную копию.
+' Ожидаемый вывод: 1, EXPECTED, 1.
+
+TYPE Cell
+    item AS INTEGER
+
+    SUB Edit()
+        SELF.item = SELF.item + 1
+        PRINT cells(1).item
+        ERROR "EXPECTED", "проверка живого SELF"
+    END SUB
+END TYPE
+
+DIM cells(1 TO 1) AS Cell
+
+FUNCTION GetCells() AS Cell ()
+    RETURN cells
+END FUNCTION
+
+TRY
+    GetCells()(1).Edit()
+CATCH problem
+    PRINT problem.Code
+END TRY
+
+PRINT cells(1).item

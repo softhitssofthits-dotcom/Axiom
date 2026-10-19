@@ -222,7 +222,7 @@ public sealed partial class Parser
 
     private static TextLocation CreateDiagnosticLocation(TextLocation sourceLocation)
     {
-        return new TextLocation(new TextSpan(sourceLocation.Span.Start, 0), sourceLocation.Line, sourceLocation.Column);
+        return new TextLocation(new TextSpan(sourceLocation.Span.Start, 0), sourceLocation.Line, sourceLocation.Column, sourceLocation.Document);
     }
 
     private static bool IsStatementTerminator(SyntaxKind kind)
@@ -376,6 +376,9 @@ public sealed partial class Parser
             TokenKind.PreserveKeyword => SyntaxKind.PreserveKeyword,
             TokenKind.PresetKeyword => SyntaxKind.PresetKeyword,
             TokenKind.PrintKeyword => SyntaxKind.PrintKeyword,
+            TokenKind.PrivateKeyword => SyntaxKind.PrivateKeyword,
+            TokenKind.PublicKeyword => SyntaxKind.PublicKeyword,
+            TokenKind.ImportKeyword => SyntaxKind.ImportKeyword,
             TokenKind.PutKeyword => SyntaxKind.PutKeyword,
             TokenKind.PSetKeyword => SyntaxKind.PSetKeyword,
             TokenKind.RedimKeyword => SyntaxKind.RedimKeyword,
