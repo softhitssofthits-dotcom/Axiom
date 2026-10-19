@@ -74,3 +74,20 @@ test('Завершение предыдущего консольного отв�
   assert.equal(controller.inputRequestId, '2');
   assert.equal(calls.submitted.length, 1);
 });
+
+test('INPUT сохраняет одну и две начальные пустые строки из полного снимка', () => {
+  for (const count of [1, 2]) {
+    const { event, calls } = setup();
+    event('input.request', { inputRequestId: 'blank', target: 'console', prompt: 'Ответ: ',
+      outputText: '\r\n'.repeat(count - 1), outputLineCount: count });
+    assert.equal(calls.output, '\x1bc' + '\r\n'.repeat(count) + 'Ответ: ');
+  }
+});
+
+test('Очистка единственной пустой строки сохраняется после полного снимка ответа', () => {
+  const { event, calls, controller } = setup();
+  event('input.request', { inputRequestId: 'blank', target: 'console', prompt: 'Ответ: ', outputText: '', outputLineCount: 1 });
+  controller.clearConsole();
+  event('input.request', { inputRequestId: 'next', target: 'console', prompt: 'Следующий: ', outputText: '\r\nОтвет: да', outputLineCount: 2 });
+  assert.equal(calls.output, '\x1bcОтвет: да\r\nСледующий: ');
+});

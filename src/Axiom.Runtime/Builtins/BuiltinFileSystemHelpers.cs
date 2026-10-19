@@ -28,15 +28,16 @@ internal static class BuiltinFileSystemHelpers
 
     public static string ReadTextFileWithFallback(string fullPath)
     {
-        var bytes = File.ReadAllBytes(fullPath);
+        var bytes = RuntimeStringLimits.ReadBytes(fullPath);
 
         try
         {
-            return StripUtf8Bom(StrictUtf8TextEncoding.GetString(bytes));
+            var start = bytes.AsSpan().StartsWith(new byte[] { 0xEF, 0xBB, 0xBF }) ? 3 : 0;
+            return RuntimeStringLimits.Decode(StrictUtf8TextEncoding, bytes, start);
         }
         catch (DecoderFallbackException)
         {
-            return Windows1251TextEncoding.GetString(bytes);
+            return RuntimeStringLimits.Decode(Windows1251TextEncoding, bytes);
         }
     }
 

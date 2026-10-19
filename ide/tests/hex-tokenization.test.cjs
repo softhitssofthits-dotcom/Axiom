@@ -36,3 +36,10 @@ for (const state of ['root', 'interpolation']) {
     assert.equal(expression.exec('&b1010')[0], '&b1010');
   });
 }
+
+test('Вложенная интерполяция открывает полный автомат строк раньше обычной кавычки', () => {
+  const rules = language().tokenizer.interpolation;
+  const first = rules.findIndex(item => item[0].test('$"'));
+  assert.equal(rules[first][1][0], 'delimiter.interpolation');
+  assert.equal(rules[first][1][1].next, '@interpolatedString');
+});

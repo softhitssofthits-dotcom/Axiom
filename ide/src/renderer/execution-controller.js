@@ -1,6 +1,6 @@
 class ExecutionController {
   constructor(ide, api) {
-    this.inputSubmission = null;
+    this.inputSubmission = null; this.outputLineCount = 0; this.clearedOutputLineCount = 0;
     this.ide = ide; this.api = api; this.sessionId = null; this.stopId = null;
     this.inputRequestId = null; this.inputTarget = null; this.inputRevision = 0; this.inputText = ''; this.inputPrompt = ''; this.outputText = ''; this.streamedOutputText = ''; this.pendingEvents = [];
     this.disposers = [api.onBackendEvent(message => this.event(message)),
@@ -10,7 +10,7 @@ class ExecutionController {
     this.inputSubmission = null;
     const ide = this.ide;
     const request = this.startRequest = {};
-    ide.running = true; this.starting = true; this.pendingStop = false; this.pendingEvents = []; this.outputText = ''; this.streamedOutputText = ''; this.clearedOutputPrefix = ''; this.inputPrompt = ''; this.inputText = ''; this.inputRequestId = null; this.inputTarget = null; this.stopId = null;
+    ide.running = true; this.starting = true; this.pendingStop = false; this.pendingEvents = []; this.clearedEmptyHistory = false; this.outputLineCount = 0; this.clearedOutputLineCount = 0; this.outputText = ''; this.streamedOutputText = ''; this.clearedOutputPrefix = ''; this.inputPrompt = ''; this.inputText = ''; this.inputRequestId = null; this.inputTarget = null; this.stopId = null;
     this.canStepBack=false;this.callDepth=0;this.line=null;this.debugBusy=false;this.debugRequest=null;this.stopRequest=null;this.debugError=null;ide.trace?.clearMarker();ide.trace?.update();
     ide._stopRequested = false; ide.clearDiagnostics(); ide.showPanel(); ide.switchPanel('console');
     ide.setStatus(I18N.t('trace.preparing'));
@@ -57,7 +57,7 @@ class ExecutionController {
         this.inputRevision++;
         this.inputRequestId = payload.inputRequestId; this.inputText = ''; this.inputPrompt = payload.prompt;
         this.inputTarget = payload.target || 'console';
-        this.outputText = payload.outputText; this.renderOutput();
+        this.outputText = payload.outputText; this.outputLineCount = payload.outputLineCount ?? (payload.outputText ? payload.outputText.split(/\r?\n/).length : 0); this.renderOutput();
         if (this.inputTarget !== 'screen') this.ide.term.focus();
         break;
       case 'input.completed': {
@@ -75,7 +75,7 @@ class ExecutionController {
         this.debugRequest=null;this.debugBusy=false;this.debugError=null;
         this.callDepth=payload.callDepth;this.line=payload.line;this.ide.trace?.mark(payload);
         this.stopId = payload.stopId; this.canStepBack = payload.canStepBack;
-        this.outputText = payload.outputText; this.renderOutput();
+        this.outputText = payload.outputText; this.outputLineCount = payload.outputLineCount ?? (payload.outputText ? payload.outputText.split(/\r?\n/).length : 0); this.renderOutput();
         this.ide.setStatus(I18N.t('trace.paused',payload.line ?? '—'));
         if (payload.line) { this.ide.editor.revealLineInCenter(payload.line); this.ide.editor.setPosition({ lineNumber: payload.line, column: payload.column || 1 }); }
         this.ide.editor.focus(); break;
@@ -88,7 +88,7 @@ class ExecutionController {
         this.inputSubmission = null;
         this.debugRequest=null;this.debugBusy=false;this.debugError=null;
         this.inputRequestId = null; this.inputTarget = null; this.inputPrompt = ''; this.inputText = '';
-        this.outputText = payload.outputText; this.renderOutput();
+        this.outputText = payload.outputText; this.outputLineCount = payload.outputLineCount ?? (payload.outputText ? payload.outputText.split(/\r?\n/).length : 0); this.renderOutput();
         this.ide.running = false; this.inputRequestId = null; this.stopId = null; this.sessionId = null;
         this.ide.setStatus(I18N.t(({Succeeded:'status.finished',Cancelled:'status.stopped',CompilationFailed:'trace.compileFailed',RuntimeFailed:'trace.runtimeFailed'})[payload.status] || 'trace.failed'));
         if (payload.diagnostics?.length) {
@@ -105,7 +105,8 @@ class ExecutionController {
     else this.ide.trace?.update();
   }
   clearConsole() {
-    this.clearedOutputPrefix = this.outputText || '';
+    this.clearedOutputPrefix = this.outputText || ''; this.clearedOutputLineCount = this.outputLineCount;
+    this.clearedEmptyHistory = !this.outputText && this.outputLineCount > 0;
     this.renderOutput();
   }
   renderOutput() {
@@ -115,9 +116,11 @@ class ExecutionController {
     const fullHistory = this.outputText || '';
     const prefix = this.clearedOutputPrefix || '';
     if (prefix && !fullHistory.startsWith(prefix)) this.clearedOutputPrefix = '';
-    const history = prefix && fullHistory.startsWith(prefix)
+    let history = prefix && fullHistory.startsWith(prefix)
       ? fullHistory.slice(prefix.length).replace(/^\r?\n/, '') : fullHistory;
-    const separator = this.inputRequestId && history && !history.endsWith('\n') ? '\n' : '';
+    if (this.clearedEmptyHistory) history = history.replace(/^\r?\n/, '');
+    const hasHistory = history.length > 0 || this.outputLineCount > (this.clearedOutputLineCount || 0);
+    const separator = this.inputRequestId && hasHistory ? '\n' : '';
     const text = history + separator + (this.inputRequestId ? this.inputPrompt + this.inputText : '');
     // write() асинхронен: синхронный reset() не удаляет ожидающие записи.
     // RIS сбрасывает терминал внутри той же очереди перед новым снимком.

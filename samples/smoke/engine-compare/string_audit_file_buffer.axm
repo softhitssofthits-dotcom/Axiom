@@ -1,0 +1,17 @@
+' Ожидается 0, 1024000, 1024000: видимость до FLUSH и длина после него.
+IF NOT DIREXISTS(".artifacts") THEN
+    DIM created AS BOOLEAN = MAKEDIR(".artifacts")
+END IF
+DIM path AS STRING = ".artifacts/string_audit_file_buffer.txt"
+DIM handle AS FILE
+DIM block AS STRING = REPEAT("x", 1024)
+OPEN path FOR OUTPUT AS handle
+FOR i = 1 TO 1000
+    DIM written AS BOOLEAN = WRITE(handle, block)
+NEXT
+PRINT FILESIZE(path)
+PRINT FILELENGTH(handle)
+DIM flushed AS BOOLEAN = FLUSH(handle)
+CLOSE handle
+PRINT LEN(READFILE(path))
+DIM deleted AS BOOLEAN = DELETEFILE(path)

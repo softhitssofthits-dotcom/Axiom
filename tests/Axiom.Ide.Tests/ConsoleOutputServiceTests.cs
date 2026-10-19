@@ -5,6 +5,24 @@ namespace Axiom.Ide.Tests;
 public sealed class ConsoleOutputServiceTests
 {
     [Fact]
+    public void LeadingEmptyLinesHaveCheckpointsAndSurviveRestore()
+    {
+        var service = new ConsoleOutputService();
+        service.AppendTranscriptLine("");
+        Assert.Equal(1, service.OutputCheckpoint);
+        service.AppendTranscriptLine("");
+        service.AppendTranscriptLine("X");
+        Assert.Equal(3, service.OutputCheckpoint);
+        Assert.Equal(Environment.NewLine + Environment.NewLine + "X", service.OutputText);
+        service.RestoreOutputCheckpoint(1);
+        Assert.Equal(1, service.OutputCheckpoint);
+        service.AppendTranscriptLine("Y");
+        Assert.Equal(Environment.NewLine + "Y", service.OutputText);
+        service.ClearOutput();
+        Assert.Equal(0, service.OutputCheckpoint);
+    }
+
+    [Fact]
     public void OutputText_InitiallyEmpty()
     {
         var service = new ConsoleOutputService();
@@ -20,6 +38,22 @@ public sealed class ConsoleOutputServiceTests
         service.AppendTranscriptLine("hello");
 
         Assert.Equal("hello", service.OutputText);
+    }
+
+    [Fact]
+    public void OutputText_ReusesSnapshotUntilHistoryChanges()
+    {
+        var service = new ConsoleOutputService();
+
+        var first = service.OutputText;
+        var second = service.OutputText;
+        Assert.Same(first, second);
+
+        service.AppendTranscriptLine("hello");
+        var changed = service.OutputText;
+        Assert.Equal("hello", changed);
+        Assert.NotSame(first, changed);
+        Assert.Same(changed, service.OutputText);
     }
 
     [Fact]

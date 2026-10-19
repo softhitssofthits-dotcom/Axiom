@@ -251,4 +251,17 @@ module.exports = [
       C.ok(await S.page.evaluate(style => document.querySelector('[data-check="format' + style + '"]').classList.contains('on'), style), 'В меню отмечен выбранный стиль');
     }
   } },
+  { id: 'language-nested-interpolation-and-scientific-print', name: 'Вложенная интерполяция и PRINT USING: проверка, раскраска, форматирование и исполнение', async fn({ S, C }) {
+    const source = 'PRINT $"a{$"b{1}c"}d"\nPRINT USING "###.##^^^^"; 0.001\nPRINT USING "#.################"; 1.0\nTRY\n    PRINT USING "#"; "text"\nCATCH problem\n    PRINT problem.Code\nEND TRY\n';
+    await open(S, source, 'nested-string-audit');
+    await S.page.evaluate(() => window.__ide.check(false));
+    C.ok(await S.page.evaluate(() => !window.__ide._lastDiagnostics.some(item => item.severity === 'error')), 'Источник проходит проверку');
+    const tokens = await S.page.evaluate(() => window.__ide.monaco.editor.tokenize(window.__ide.editor.getValue(), 'axiom')[0]);
+    C.ok(tokens.some(item => item.type === 'number.axiom'), 'Число во внутренней вставке подсвечено как число');
+    for (const style of ['Classic', 'Modern']) {
+      await S.page.evaluate(async ({ source, style }) => { const i=window.__ide; i.editor.getModel().setValue(source); i.settings.formattingStyle=style; await i.formatWholeDocument('string-audit'); }, { source, style });
+      await S.page.evaluate(() => window.__ide.run()); await S.waitIdle();
+      C.eq(await S.page.evaluate(() => window.__ide.execution.outputText.replace(/\r/g, '')), 'ab1cd\n  1.00E-03\n1.0000000000000000\nMB3007', 'Результат строк после форматирования ' + style);
+    }
+  } },
 ];

@@ -1,0 +1,12 @@
+' Ожидается: 50000, 40000, 30000, 3000.
+DIM text AS STRING = REPEAT("А😀é", 10000)
+DIM checksum AS LONG = 0
+FOR i = 1 TO 1000
+    checksum = checksum + LEN(LEFT(text, 1, "CODEPOINT"))
+    checksum = checksum + LEN(MID(text, 2147483647, 1, "CODEPOINT"))
+    checksum = checksum + LEN(RIGHT(text, 1, "GRAPHEME"))
+NEXT
+PRINT LEN(text)
+PRINT LEN(text, "CODEPOINT")
+PRINT LEN(text, "GRAPHEME")
+PRINT checksum

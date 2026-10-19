@@ -90,11 +90,27 @@ module.exports.push({
       language+': переменная ошибки правильно описана на строке '+position.lineNumber+' при '+JSON.stringify(newline));
     }
    }
+   await S.page.keyboard.press('Escape');
+   await S.page.waitForFunction(() => ![...document.querySelectorAll('.monaco-hover')]
+    .some(el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().width > 0));
    await S.page.evaluate(()=>window.__ide.editor.revealLineInCenter(3));
-   const box=await S.page.locator('#editor').boundingBox();
-   const point=await S.page.evaluate(()=>window.__ide.editor.getScrolledVisiblePosition({lineNumber:3,column:8}));
+   await S.page.waitForFunction(() => {
+    const editor=window.__ide.editor;
+    const point=editor.getScrolledVisiblePosition({lineNumber:3,column:8});
+    const node=editor.getDomNode();
+    if(!point || !node) return null;
+    const box=node.getBoundingClientRect();
+    if(!box.width || !box.height || !point.height) return null;
+    return true;
+   });
+   const layout=await S.page.evaluate(() => {
+    const editor=window.__ide.editor;
+    const point=editor.getScrolledVisiblePosition({lineNumber:3,column:8});
+    const box=editor.getDomNode().getBoundingClientRect();
+    return {x:box.x+point.left+3,y:box.y+point.top+point.height/2};
+   });
    await S.page.mouse.move(0,0);
-   await S.page.mouse.move(box.x+point.left+3,box.y+point.top+point.height/2);
+   await S.page.mouse.move(layout.x,layout.y);
    await S.page.waitForFunction(()=>[...document.querySelectorAll('.monaco-hover')].some(el=>el.textContent.includes('problem')&&el.textContent.includes('ERROR')));
    C.ok(true,'Подсказка действительно открывается мышью при '+JSON.stringify(newline));
    await S.page.keyboard.press('Escape');

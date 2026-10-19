@@ -106,4 +106,20 @@ module.exports = [{
     C.contains(await visible(S), 'Принято: Анна', 'Повтор принят');
     C.ok(!(await visible(S)).includes('Старая история'), 'Скрытый вывод не вернулся');
   },
+}, {
+  id: 'console-leading-empty-lines',
+  name: 'Начальные пустые PRINT сохраняются перед INPUT и удаляются очисткой',
+  async fn({ S, C }) {
+    for (const count of [1, 2]) {
+      await launch(S, 'console-leading-empty-' + count, 'PRINT\n'.repeat(count));
+      C.eq(await visible(S), '\n'.repeat(count) + 'Ответ:', 'Сохранено начальных пустых строк: ' + count);
+      await S.page.evaluate(() => window.__ide.execution.clearConsole());
+      C.eq(await visible(S), 'Ответ:', 'Очистка скрыла пустую историю');
+      await S.page.evaluate(() => window.__ide.execution.input('да\r'));
+      await S.waitIdle();
+      C.ok(!(await visible(S)).startsWith('\n'), 'Пустая история не вернулась после ответа');
+      C.contains(await visible(S), 'Принято: да', 'Строковый ответ принят');
+      await S.close();
+    }
+  },
 }];

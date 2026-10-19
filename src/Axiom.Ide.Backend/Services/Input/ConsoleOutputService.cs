@@ -1,6 +1,7 @@
 using Axiom.Ide.Services.Diagnostics;
 using Axiom.Ide.Services.EventLog;
 using Axiom.Ide.ViewModels;
+using System.Text;
 
 namespace Axiom.Ide.Services.Input;
 
@@ -12,7 +13,9 @@ public sealed class ConsoleOutputService : ViewModelBase
 {
     private readonly IIdeTraceService _traceService;
     private readonly IIdeEventLogService _eventLogService;
-    private string _outputText = string.Empty;
+    private readonly StringBuilder _outputBuilder = new();
+    private readonly List<int> _lineEnds = [];
+    private string? _outputSnapshot;
 
     public ConsoleOutputService(
         IIdeTraceService? traceService = null,
@@ -27,26 +30,39 @@ public sealed class ConsoleOutputService : ViewModelBase
     /// </summary>
     public string OutputText
     {
-        get => _outputText;
-        set => SetProperty(ref _outputText, value);
+        get => _outputSnapshot ??= _outputBuilder.ToString();
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _outputBuilder.Clear();
+            _lineEnds.Clear();
+            _outputBuilder.Append(value);
+            RebuildLineEnds(value);
+            _outputSnapshot = value;
+            OnPropertyChanged();
+        }
     }
 
     /// <summary>
     /// Контрольная точка вывода (количество строк).
     /// </summary>
-    public int OutputCheckpoint =>
-        string.IsNullOrEmpty(OutputText)
-            ? 0
-            : OutputText.Split(Environment.NewLine).Length;
+    public int OutputCheckpoint => _lineEnds.Count;
 
     /// <summary>
     /// Добавить строку в консольный вывод.
     /// </summary>
     public void AppendTranscriptLine(string line)
     {
-        OutputText = string.IsNullOrEmpty(OutputText)
-            ? line
-            : $"{OutputText}{Environment.NewLine}{line}";
+        ArgumentNullException.ThrowIfNull(line);
+        var parts = line.Split(Environment.NewLine, StringSplitOptions.None);
+        foreach (var part in parts)
+        {
+            if (_lineEnds.Count > 0) _outputBuilder.Append(Environment.NewLine);
+            _outputBuilder.Append(part);
+            _lineEnds.Add(_outputBuilder.Length);
+        }
+        _outputSnapshot = null;
+        OnPropertyChanged(nameof(OutputText));
 
         _traceService.Write("console.output", SanitizeForLog(line));
         _eventLogService.Write(new IdeEventLogEntry
@@ -66,7 +82,7 @@ public sealed class ConsoleOutputService : ViewModelBase
     /// </summary>
     public void ClearOutput()
     {
-        if (string.IsNullOrEmpty(OutputText))
+        if (_lineEnds.Count == 0)
         {
             return;
         }
@@ -92,25 +108,16 @@ public sealed class ConsoleOutputService : ViewModelBase
             throw new ArgumentOutOfRangeException(nameof(checkpoint), checkpoint, "Output checkpoint must not be negative.");
         }
 
-        if (string.IsNullOrEmpty(OutputText))
-        {
-            if (checkpoint == 0)
-            {
-                return;
-            }
-
-            throw new ArgumentOutOfRangeException(nameof(checkpoint), checkpoint, "Output checkpoint is outside the current output range.");
-        }
-
-        var lines = OutputText.Split(Environment.NewLine);
-        if (checkpoint > lines.Length)
+        if (checkpoint > _lineEnds.Count)
         {
             throw new ArgumentOutOfRangeException(nameof(checkpoint), checkpoint, "Output checkpoint is outside the current output range.");
         }
 
-        OutputText = checkpoint == 0
-            ? string.Empty
-            : string.Join(Environment.NewLine, lines.Take(checkpoint));
+        var targetLength = checkpoint == 0 ? 0 : _lineEnds[checkpoint - 1];
+        _outputBuilder.Length = targetLength;
+        _lineEnds.RemoveRange(checkpoint, _lineEnds.Count - checkpoint);
+        _outputSnapshot = null;
+        OnPropertyChanged(nameof(OutputText));
 
         _eventLogService.Write(new IdeEventLogEntry
         {
@@ -128,6 +135,30 @@ public sealed class ConsoleOutputService : ViewModelBase
     public void Reset()
     {
         OutputText = string.Empty;
+    }
+
+    private void RebuildLineEnds(string value)
+    {
+        if (value.Length == 0) return;
+
+        var start = 0;
+        while (start <= value.Length)
+        {
+            var separator = value.IndexOf(Environment.NewLine, start, StringComparison.Ordinal);
+            if (separator < 0)
+            {
+                _lineEnds.Add(value.Length);
+                return;
+            }
+
+            _lineEnds.Add(separator);
+            start = separator + Environment.NewLine.Length;
+            if (start == value.Length)
+            {
+                _lineEnds.Add(value.Length);
+                return;
+            }
+        }
     }
 
     private static string SanitizeForLog(string text)

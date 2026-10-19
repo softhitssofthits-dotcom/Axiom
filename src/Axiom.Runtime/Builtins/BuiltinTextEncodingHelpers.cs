@@ -25,9 +25,9 @@ internal static class BuiltinTextEncodingHelpers
     public static string Read(string path, string name)
     {
         var encoding = Resolve(name);
-        var bytes = File.ReadAllBytes(path);
+        var bytes = RuntimeStringLimits.ReadBytes(path);
         var start = ContentStart(bytes, encoding);
-        return encoding.GetString(bytes, start, bytes.Length - start);
+        return RuntimeStringLimits.Decode(encoding, bytes, start);
     }
 
     public static void Write(string path, string text, string name, bool append)

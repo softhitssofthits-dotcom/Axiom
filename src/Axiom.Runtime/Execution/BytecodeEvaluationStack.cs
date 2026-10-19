@@ -35,7 +35,10 @@ internal sealed class BytecodeEvaluationStack
             Grow();
         }
 
-        _items[Count++] = value;
+        // Вычисленный операнд больше не принадлежит изменяемому слоту.
+        // Последующий вызов может дописать его накопитель через BYREF/замыкание.
+        var snapshot = value.RequiresCopyForStorage ? value.CopyForStorage() : value;
+        _items[Count++] = snapshot;
         if (Count > _highWaterMark)
         {
             _highWaterMark = Count;

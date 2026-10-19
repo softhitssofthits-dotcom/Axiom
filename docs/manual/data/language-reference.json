@@ -25,7 +25,7 @@
     "src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.cs",
     "src/Axiom.Syntax/SyntaxKind.cs"
   ],
-  "sourceFingerprint": "be886fe0f513fd14737aa93c4b16273a8c1f8b81b37b4eb34124008e3b9a3071",
+  "sourceFingerprint": "8bd1362ed3e3f19b5a7e4f6de5a404f579df189ca4497544ade4b89ab802e92c",
   "functions": [
     {
       "name": "ABS",

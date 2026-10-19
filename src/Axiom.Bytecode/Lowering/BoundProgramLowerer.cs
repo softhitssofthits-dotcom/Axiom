@@ -3,7 +3,7 @@ using Axiom.Syntax;
 
 namespace Axiom.Bytecode;
 
-public sealed class BoundProgramLowerer
+public sealed partial class BoundProgramLowerer
 {
     private readonly List<BytecodeDiagnostic> _diagnostics = [];
     private readonly Stack<LoopExitContext> _doLoopExitLabels = [];
@@ -830,30 +830,6 @@ public sealed class BoundProgramLowerer
         instructions.Add(LoweredInstruction.StoreVariable(assignment.Location, variable.Variable));
     }
 
-    private bool TryLowerStringAppendAssignment(
-        BoundAssignmentStatement assignment,
-        VariableSymbol targetVariable,
-        List<LoweredInstruction> instructions)
-    {
-        if (targetVariable.Type != TypeSymbol.String
-            || assignment.Expression is not BoundBinaryExpression binary
-            || binary.Left is not BoundVariableExpression leftVariable
-            || !ReferenceEquals(leftVariable.Variable, targetVariable))
-        {
-            return false;
-        }
-
-        var useDisplayString = binary.OperatorKind == SyntaxKind.AmpersandToken;
-        if (!useDisplayString
-            && (binary.OperatorKind != SyntaxKind.PlusToken || binary.Type != TypeSymbol.String))
-        {
-            return false;
-        }
-
-        LowerExpression(binary.Right, instructions);
-        instructions.Add(LoweredInstruction.AppendStringVariable(assignment.Location, targetVariable, useDisplayString));
-        return true;
-    }
 
     private void LowerArrayDeclaration(BoundVariableDeclarationStatement declaration, List<LoweredInstruction> instructions)
     {

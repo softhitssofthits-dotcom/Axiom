@@ -29,7 +29,6 @@ public sealed partial class BytecodeVm
     private readonly Dictionary<(int RoutineId, int InstructionIndex), InputInstructionPlan> _inputInstructionCache = [];
     private readonly Dictionary<(int RoutineId, int InstructionIndex), TypeFieldSymbol> _recordFieldCache = [];
     private readonly Dictionary<string, UserDefinedTypeSymbol> _recordTypeCache = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, List<BuiltinPrintUsingHelpers.PrintUsingFormatToken>> _printUsingFormatCache = new(StringComparer.Ordinal);
     private readonly Dictionary<TileTransformCacheKey, RuntimeImageValue> _tileTransformCache = [];
     private readonly Dictionary<(int CallerRoutineId, int TargetRoutineId), CaptureBinding[]> _captureBindingCache = [];
     private readonly RuntimeValue?[] _constantValues;
@@ -125,12 +124,22 @@ public sealed partial class BytecodeVm
         Func<BytecodeVmExecutionSnapshot, bool>? shouldStopBeforeInstruction = null,
         BytecodeBreakpointSet? breakpoints = null)
     {
-        var vm = new BytecodeVm(
+        BytecodeVm vm;
+        try
+        {
+            vm = new BytecodeVm(
             module,
             host ?? NullRuntimeHost.Instance,
             instructionObserver,
             shouldStopBeforeInstruction,
             breakpoints);
+        }
+        catch (StringResourceLimitException error)
+        {
+            var diagnostics = new DiagnosticBag();
+            diagnostics.Report(DiagnosticCodes.BuiltinArgument, error.Message, FallbackRuntimeLocation);
+            return new RuntimeResult(diagnostics);
+        }
 
         try
         {
@@ -526,6 +535,14 @@ public sealed partial class BytecodeVm
             {
                 HandleArrayRuntimeFailure(ex, frame, instructionIndex, runtimeFailureBoundaryDepth);
             }
+            catch (StringResourceLimitException ex)
+            {
+                HandleStringResourceFailure(ex.Message, frame, instructionIndex, runtimeFailureBoundaryDepth);
+            }
+            catch (OutOfMemoryException)
+            {
+                HandleStringResourceFailure("Недостаточно памяти для результата операции.", frame, instructionIndex, runtimeFailureBoundaryDepth);
+            }
             catch (ExpiredArrayViewException ex)
             {
                 HandleArrayRuntimeFailure(ex, frame, instructionIndex, runtimeFailureBoundaryDepth);
@@ -569,6 +586,14 @@ public sealed partial class BytecodeVm
         catch (ArrayAllocationFailureException ex)
         {
             HandleArrayRuntimeFailure(ex, frame, instructionIndex, runtimeFailureBoundaryDepth);
+        }
+        catch (StringResourceLimitException ex)
+        {
+            HandleStringResourceFailure(ex.Message, frame, instructionIndex, runtimeFailureBoundaryDepth);
+        }
+        catch (OutOfMemoryException)
+        {
+            HandleStringResourceFailure("Недостаточно памяти для результата операции.", frame, instructionIndex, runtimeFailureBoundaryDepth);
         }
         catch (ExpiredArrayViewException ex)
         {
@@ -1198,6 +1223,12 @@ public sealed partial class BytecodeVm
         throw new RuntimeFailureException();
     }
 
+    private void HandleStringResourceFailure(string message, BytecodeCallFrame frame, int instructionIndex, int minimumCallStackDepth)
+    {
+        ReportRuntimeDiagnostic(DiagnosticCodes.BuiltinArgument, message, ResolveLocation(frame.Routine.Id, instructionIndex));
+        if (!TryHandleRuntimeFailure(minimumCallStackDepth)) throw new RuntimeFailureException();
+    }
+
     private void HandleArrayRuntimeFailure(
         Exception failure,
         BytecodeCallFrame frame,
@@ -1343,7 +1374,7 @@ public sealed partial class BytecodeVm
         stack.Push(opcode switch
         {
             Opcode.Add => EvaluateAdd(left, right, location),
-            Opcode.Concat => RuntimeValue.FromString(left.ToDisplayString() + right.ToDisplayString()),
+            Opcode.Concat => RuntimeValue.FromString(RuntimeStringLimits.Concat(left.ToDisplayString(), right.ToDisplayString())),
             Opcode.Subtract => EvaluateSubtract(left, right, location),
             Opcode.Multiply => EvaluateMultiply(left, right, location),
             Opcode.Power => EvaluatePower(left, right, location),
@@ -1365,105 +1396,6 @@ public sealed partial class BytecodeVm
             Opcode.CompareGreaterOrEqual => RuntimeValue.FromBoolean(Compare(left, right, location) >= 0),
             _ => throw new InvalidOperationException($"Unsupported binary opcode '{opcode}'.")
         });
-    }
-
-    private void ExecuteFormatInterpolatedPart(BytecodeCallFrame frame, int instructionIndex)
-    {
-        var stack = frame.EvaluationStack;
-        var formatSpec = stack.Pop().AsString();
-        var alignment = stack.Pop().AsInteger();
-        var value = stack.Pop();
-
-        try
-        {
-            var formatted = FormatInterpolatedValue(value, alignment, formatSpec);
-            stack.Push(RuntimeValue.FromString(formatted));
-        }
-        catch (FormatException)
-        {
-            ReportRuntimeDiagnostic(DiagnosticCodes.BuiltinArgument,
-                $"Numeric format '{formatSpec}' is not supported for {value.Type.Name}.",
-                ResolveLocation(frame.Routine.Id, instructionIndex));
-            throw new RuntimeFailureException();
-        }
-    }
-
-    private static string FormatInterpolatedValue(RuntimeValue value, int alignment, string format)
-    {
-        string formatted;
-
-        if (!string.IsNullOrEmpty(format))
-        {
-            var upperFormat = format.ToUpperInvariant();
-            formatted = value.Type switch
-            {
-                var t when t == TypeSymbol.Integer => ((int)value.AsInteger()).ToString(upperFormat, System.Globalization.CultureInfo.InvariantCulture),
-                var t when t == TypeSymbol.Long => value.AsLong().ToString(upperFormat, System.Globalization.CultureInfo.InvariantCulture),
-                var t when t == TypeSymbol.Double => value.AsDouble().ToString(upperFormat, System.Globalization.CultureInfo.InvariantCulture),
-                var t when t == TypeSymbol.Decimal => value.AsDecimal().ToString(upperFormat, System.Globalization.CultureInfo.InvariantCulture),
-                _ => value.ToDisplayString()
-            };
-        }
-        else
-        {
-            formatted = value.ToDisplayString();
-        }
-
-        if (alignment != 0)
-        {
-            formatted = alignment > 0
-                ? formatted.PadLeft(alignment)
-                : formatted.PadRight(-alignment);
-        }
-
-        return formatted;
-    }
-
-    private void ExecuteAppendStringGlobal(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
-    {
-        var slot = instruction.GetOperand(0);
-        var right = PopValue(frame, instructionIndex);
-        var useDisplayString = instruction.GetOperand(1) != 0;
-        var fixedStringLength = GetGlobalFixedStringLength(slot);
-        var current = LoadGlobalUnchecked(slot);
-        var value = AppendStringValue(current, right, useDisplayString, fixedStringLength);
-        StoreAppendStringGlobalValue(slot, value);
-    }
-
-    private void ExecuteAppendStringLocal(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
-    {
-        var slot = instruction.GetOperand(0);
-        var right = PopValue(frame, instructionIndex);
-        var useDisplayString = instruction.GetOperand(1) != 0;
-        var fixedStringLength = frame.GetLocalFixedStringLength(slot);
-        var current = frame.LoadLocalValue(slot);
-        var value = AppendStringValue(current, right, useDisplayString, fixedStringLength);
-        frame.StoreAppendStringLocalValue(slot, value);
-    }
-
-    private static void ExecuteAppendStringSlot(BytecodeVariableSlot slot, RuntimeValue right, bool useDisplayString)
-    {
-        var value = AppendStringValue(slot.Value, right, useDisplayString, slot.FixedStringLength);
-        slot.StoreAppendStringValue(value);
-    }
-
-    private static RuntimeValue AppendStringValue(RuntimeValue current, RuntimeValue right, bool useDisplayString, int? fixedStringLength)
-    {
-        var appendText = useDisplayString ? right.ToDisplayString() : right.AsString();
-
-        if (fixedStringLength is not null)
-        {
-            return RuntimeValue.FromString(RuntimeValue.NormalizeFixedString(current.AsString() + appendText, fixedStringLength.Value));
-        }
-
-        var accumulator = current.AsStringAccumulator();
-        if (accumulator is null)
-        {
-            accumulator = new RuntimeStringAccumulator(current.AsString());
-        }
-
-        accumulator.Append(appendText);
-        return RuntimeValue.FromStringAccumulator(accumulator);
     }
 
     private void ExecuteAddInstruction(BytecodeCallFrame frame, int instructionIndex)
@@ -2056,7 +1988,7 @@ public sealed partial class BytecodeVm
 
         if (left.Type == TypeSymbol.String && opcode == Opcode.Add)
         {
-            result = RuntimeValue.FromString(GetStringUnchecked(left) + GetStringUnchecked(right));
+            result = RuntimeValue.FromString(RuntimeStringLimits.Concat(GetStringUnchecked(left), GetStringUnchecked(right)));
             return true;
         }
 
@@ -2120,7 +2052,7 @@ public sealed partial class BytecodeVm
 
         if (type == TypeSymbol.String)
         {
-            result = RuntimeValue.FromString(GetStringUnchecked(left) + GetStringUnchecked(right));
+            result = RuntimeValue.FromString(RuntimeStringLimits.Concat(GetStringUnchecked(left), GetStringUnchecked(right)));
             return true;
         }
 
@@ -4080,213 +4012,6 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private static bool TryExecuteFastStringBuiltin(
-        BytecodeCallFrame frame,
-        BuiltinExecutionInfo executionInfo,
-        out RuntimeValue result)
-    {
-        result = RuntimeValue.Void;
-        var stack = frame.EvaluationStack;
-
-        switch (executionInfo.CanonicalId)
-        {
-            case BuiltinFunctionId.Len:
-            {
-                if (stack.Count < 1)
-                {
-                    return false;
-                }
-
-                var value = stack.PeekUnchecked();
-                if (value.Type != TypeSymbol.String)
-                {
-                    return false;
-                }
-
-                stack.PopUnchecked();
-                result = RuntimeValue.FromInteger(GetStringUnchecked(value).Length);
-                return true;
-            }
-
-            case BuiltinFunctionId.TrimWhitespace:
-            {
-                if (stack.Count < 1)
-                {
-                    return false;
-                }
-
-                var value = stack.PeekUnchecked();
-                if (value.Type != TypeSymbol.String)
-                {
-                    return false;
-                }
-
-                stack.PopUnchecked();
-                result = RuntimeValue.FromString(GetStringUnchecked(value).Trim());
-                return true;
-            }
-
-            case BuiltinFunctionId.LTrimWhitespace:
-            {
-                if (stack.Count < 1)
-                {
-                    return false;
-                }
-
-                var value = stack.PeekUnchecked();
-                if (value.Type != TypeSymbol.String)
-                {
-                    return false;
-                }
-
-                stack.PopUnchecked();
-                result = RuntimeValue.FromString(GetStringUnchecked(value).TrimStart());
-                return true;
-            }
-
-            case BuiltinFunctionId.RTrimWhitespace:
-            {
-                if (stack.Count < 1)
-                {
-                    return false;
-                }
-
-                var value = stack.PeekUnchecked();
-                if (value.Type != TypeSymbol.String)
-                {
-                    return false;
-                }
-
-                stack.PopUnchecked();
-                result = RuntimeValue.FromString(GetStringUnchecked(value).TrimEnd());
-                return true;
-            }
-
-            case BuiltinFunctionId.Contains:
-            {
-                if (stack.Count < 2)
-                {
-                    return false;
-                }
-
-                var right = stack.PeekUnchecked();
-                var left = stack.PeekUnchecked(1);
-                if (left.Type != TypeSymbol.String || right.Type != TypeSymbol.String)
-                {
-                    return false;
-                }
-
-                stack.PopUnchecked();
-                stack.PopUnchecked();
-                result = RuntimeValue.FromBoolean(GetStringUnchecked(left).Contains(GetStringUnchecked(right)));
-                return true;
-            }
-
-            case BuiltinFunctionId.StartsWith:
-            {
-                if (stack.Count < 2)
-                {
-                    return false;
-                }
-
-                var right = stack.PeekUnchecked();
-                var left = stack.PeekUnchecked(1);
-                if (left.Type != TypeSymbol.String || right.Type != TypeSymbol.String)
-                {
-                    return false;
-                }
-
-                stack.PopUnchecked();
-                stack.PopUnchecked();
-                result = RuntimeValue.FromBoolean(GetStringUnchecked(left).StartsWith(GetStringUnchecked(right), StringComparison.Ordinal));
-                return true;
-            }
-
-            case BuiltinFunctionId.EndsWith:
-            {
-                if (stack.Count < 2)
-                {
-                    return false;
-                }
-
-                var right = stack.PeekUnchecked();
-                var left = stack.PeekUnchecked(1);
-                if (left.Type != TypeSymbol.String || right.Type != TypeSymbol.String)
-                {
-                    return false;
-                }
-
-                stack.PopUnchecked();
-                stack.PopUnchecked();
-                result = RuntimeValue.FromBoolean(GetStringUnchecked(left).EndsWith(GetStringUnchecked(right), StringComparison.Ordinal));
-                return true;
-            }
-
-            case BuiltinFunctionId.LCase:
-            {
-                if (stack.Count < 1)
-                {
-                    return false;
-                }
-
-                var value = stack.PeekUnchecked();
-                if (value.Type != TypeSymbol.String)
-                {
-                    return false;
-                }
-
-                stack.PopUnchecked();
-                var text = GetStringUnchecked(value);
-                var lowered = text.ToLowerInvariant();
-                result = ReferenceEquals(text, lowered) ? value : RuntimeValue.FromString(lowered);
-                return true;
-            }
-
-            case BuiltinFunctionId.UCase:
-            {
-                if (stack.Count < 1)
-                {
-                    return false;
-                }
-
-                var value = stack.PeekUnchecked();
-                if (value.Type != TypeSymbol.String)
-                {
-                    return false;
-                }
-
-                stack.PopUnchecked();
-                var text = GetStringUnchecked(value);
-                var uppered = text.ToUpperInvariant();
-                result = ReferenceEquals(text, uppered) ? value : RuntimeValue.FromString(uppered);
-                return true;
-            }
-
-            case BuiltinFunctionId.InStr:
-            {
-                if (stack.Count < 2)
-                {
-                    return false;
-                }
-
-                var right = stack.PeekUnchecked();
-                var left = stack.PeekUnchecked(1);
-                if (left.Type != TypeSymbol.String || right.Type != TypeSymbol.String)
-                {
-                    return false;
-                }
-
-                stack.PopUnchecked();
-                stack.PopUnchecked();
-                result = RuntimeValue.FromInteger(GetStringUnchecked(left).IndexOf(GetStringUnchecked(right), StringComparison.Ordinal) + 1);
-                return true;
-            }
-
-            default:
-                return false;
-        }
-    }
-
     private bool TryExecuteFastFileSystemMutationBuiltin(
         BytecodeCallFrame frame,
         BuiltinFunctionId builtinId,
@@ -5228,7 +4953,7 @@ public sealed partial class BytecodeVm
     private void AppendPendingOutput(string text)
     {
         _hasPendingOutput = true;
-        _pendingOutput.Append(text);
+        RuntimeStringLimits.Append(_pendingOutput, text);
     }
 
     private void AppendPendingOutput(RuntimeValue value)
@@ -5261,17 +4986,17 @@ public sealed partial class BytecodeVm
 
         if (value.Type == TypeSymbol.String)
         {
-            _pendingOutput.Append(GetStringUnchecked(value));
+            RuntimeStringLimits.Append(_pendingOutput, GetStringUnchecked(value));
             return;
         }
 
         if (value.Type == TypeSymbol.Boolean)
         {
-            _pendingOutput.Append(GetBooleanUnchecked(value) ? "TRUE" : "FALSE");
+            RuntimeStringLimits.Append(_pendingOutput, GetBooleanUnchecked(value) ? "TRUE" : "FALSE");
             return;
         }
 
-        _pendingOutput.Append(value.ToDisplayString());
+        RuntimeStringLimits.Append(_pendingOutput, value.ToDisplayString());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -5281,11 +5006,11 @@ public sealed partial class BytecodeVm
         Span<char> buffer = stackalloc char[64];
         if (value.TryFormat(buffer, out var written, default, CultureInfo.InvariantCulture))
         {
-            _pendingOutput.Append(buffer[..written]);
+            RuntimeStringLimits.Append(_pendingOutput, buffer[..written]);
             return;
         }
 
-        _pendingOutput.Append(value.ToString(default, CultureInfo.InvariantCulture));
+        RuntimeStringLimits.Append(_pendingOutput, value.ToString(default, CultureInfo.InvariantCulture));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -5295,17 +5020,17 @@ public sealed partial class BytecodeVm
         Span<char> buffer = stackalloc char[64];
         if (value.TryFormat(buffer, out var written, format, CultureInfo.InvariantCulture))
         {
-            _pendingOutput.Append(buffer[..written]);
+            RuntimeStringLimits.Append(_pendingOutput, buffer[..written]);
             return;
         }
 
-        _pendingOutput.Append(value.ToString(format, CultureInfo.InvariantCulture));
+        RuntimeStringLimits.Append(_pendingOutput, value.ToString(format, CultureInfo.InvariantCulture));
     }
 
     private void AppendPrintSeparator()
     {
         _hasPendingOutput = true;
-        _pendingOutput.Append(' ');
+        RuntimeStringLimits.Append(_pendingOutput, " ");
     }
 
     private string GetPendingOutputPreview()
@@ -6001,7 +5726,7 @@ public sealed partial class BytecodeVm
     {
         return left.Type switch
         {
-            var type when type == TypeSymbol.String => RuntimeValue.FromString(left.AsString() + right.AsString()),
+            var type when type == TypeSymbol.String => RuntimeValue.FromString(RuntimeStringLimits.Concat(left.AsString(), right.AsString())),
             var type when type == TypeSymbol.Integer => EvaluateCheckedIntegerOperation(
                 () => checked(left.AsInteger() + right.AsInteger()),
                 "Результат операции '+'",

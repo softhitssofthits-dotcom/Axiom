@@ -112,12 +112,21 @@ internal static class BuiltinRegexHelpers
         {
             if (replacement.Contains('$'))
             {
-                // Разбор подстановок остаётся у движка регулярных выражений.
-                return regex.Replace(text, match =>
+                StringBuilder? expanded = null;
+                var previousEnd = 0;
+                var remainingMatches = count ?? int.MaxValue;
+                for (var match = regex.Match(text); match.Success; match = match.NextMatch())
                 {
                     checkCancellation();
-                    return match.Result(replacement);
-                }, count ?? -1);
+                    expanded ??= new StringBuilder();
+                    RuntimeStringLimits.Append(expanded, text.AsSpan(previousEnd, match.Index - previousEnd));
+                    AppendReplacement(expanded, match, replacement, checkCancellation);
+                    previousEnd = match.Index + match.Length;
+                    if (--remainingMatches == 0) break;
+                }
+                if (expanded is null) return text;
+                RuntimeStringLimits.Append(expanded, text.AsSpan(previousEnd));
+                return expanded.ToString();
             }
             StringBuilder? result = null;
             var position = 0;
@@ -131,15 +140,70 @@ internal static class BuiltinRegexHelpers
                 }
                 else
                 {
-                    result ??= new StringBuilder().Append(text.AsSpan(0, position));
-                    result.Append(text.AsSpan(position, match.Index - position));
-                    result.Append(replacement);
+                    if (result is null)
+                    {
+                        result = new StringBuilder();
+                        RuntimeStringLimits.Append(result, text.AsSpan(0, position));
+                    }
+                    RuntimeStringLimits.Append(result, text.AsSpan(position, match.Index - position));
+                    RuntimeStringLimits.Append(result, replacement);
                 }
                 position = match.Index + match.Length;
                 if (--remaining == 0) break;
             }
-            return result is null ? text : result.Append(text.AsSpan(position)).ToString();
+            if (result is null) return text;
+            RuntimeStringLimits.Append(result, text.AsSpan(position));
+            return result.ToString();
         }, location, report, name, checkCancellation);
+
+    private static void AppendReplacement(StringBuilder builder, Match match, string replacement, Action checkCancellation)
+    {
+        var position = 0;
+        while (position < replacement.Length)
+        {
+            checkCancellation();
+            var dollar = replacement.IndexOf('$', position);
+            if (dollar < 0)
+            {
+                RuntimeStringLimits.Append(builder, replacement.AsSpan(position));
+                break;
+            }
+            RuntimeStringLimits.Append(builder, replacement.AsSpan(position, dollar - position));
+            var end = dollar + 1;
+            if (end < replacement.Length)
+            {
+                if (replacement[end] == '{')
+                {
+                    var close = replacement.IndexOf('}', end + 1);
+                    if (close >= 0 && replacement.AsSpan(end + 1, close - end - 1).IndexOf('$') < 0) end = close + 1;
+                }
+                else if (char.IsAsciiDigit(replacement[end]))
+                {
+                    while (end < replacement.Length && char.IsAsciiDigit(replacement[end])) end++;
+                }
+                else end++;
+            }
+            // Значение каждой отдельной подстановки определяет сам .NET.
+            // Между подстановками проверяем суммарный размер до копирования.
+            var token = replacement[dollar..end];
+            var repetitions = 1;
+            var nextPosition = end;
+            while (nextPosition < replacement.Length && replacement.AsSpan(nextPosition).StartsWith(token, StringComparison.Ordinal))
+            {
+                if ((repetitions & 1023) == 0) checkCancellation();
+                repetitions++;
+                nextPosition += token.Length;
+            }
+            var expanded = match.Result(token);
+            RuntimeStringLimits.Check(builder.Length + (long)expanded.Length * repetitions);
+            for (var repeat = 0; repeat < repetitions; repeat++)
+            {
+                if ((repeat & 1023) == 0) checkCancellation();
+                builder.Append(expanded);
+            }
+            position = nextPosition;
+        }
+    }
 
     public static int Count(Regex regex, string text, TextLocation location,
         Action<string, string, string, TextLocation> report, string name, Action checkCancellation) =>

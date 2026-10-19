@@ -61,7 +61,7 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         if (type == TypeSymbol.String)
         {
             return FromString(fixedStringLength is { } length
-                ? new string(' ', length)
+                ? new string(' ', RuntimeStringLimits.Check(length))
                 : string.Empty);
         }
 
@@ -132,9 +132,11 @@ public sealed class RuntimeValue : IRuntimeStoredValue
 
     public static RuntimeValue FromDecimal(decimal value) => new(TypeSymbol.Decimal, value);
 
-    public static RuntimeValue FromString(string value) => value.Length == 0
-        ? EmptyStringValue
-        : new(TypeSymbol.String, value);
+    public static RuntimeValue FromString(string value)
+    {
+        RuntimeStringLimits.Check(value.Length);
+        return value.Length == 0 ? EmptyStringValue : new(TypeSymbol.String, value);
+    }
 
     internal static RuntimeValue FromStringAccumulator(RuntimeStringAccumulator value)
     {
@@ -493,6 +495,7 @@ public sealed class RuntimeValue : IRuntimeStoredValue
     public static string NormalizeFixedString(string value, int fixedStringLength)
     {
         ArgumentNullException.ThrowIfNull(value);
+        RuntimeStringLimits.Check(fixedStringLength);
 
         if (fixedStringLength < 1)
         {

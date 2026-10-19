@@ -11,11 +11,6 @@ public sealed partial class BytecodeVm
         return BuiltinStringHelpers.EvaluateLeft(text, count);
     }
 
-    private static RuntimeValue EvaluateRight(string text, int count)
-    {
-        return BuiltinStringHelpers.EvaluateRight(text, count);
-    }
-
     private static RuntimeValue EvaluateRightBuiltin(RuntimeValue value, int count)
     {
         var text = GetStringUnchecked(value);
@@ -29,8 +24,6 @@ public sealed partial class BytecodeVm
         return BuiltinStringHelpers.EvaluateMid(text, start, count);
     }
 
-    private static string EvaluateTrimWhitespace(string text) => BuiltinStringHelpers.TrimWhitespace(text);
-
     private static RuntimeValue EvaluateTrimWhitespaceBuiltin(RuntimeValue value)
     {
         var text = GetStringUnchecked(value);
@@ -39,8 +32,6 @@ public sealed partial class BytecodeVm
     }
 
     private static string EvaluateTrimCharacters(string text, string chars) => BuiltinStringHelpers.TrimByCharacters(text, chars, trimStart: true, trimEnd: true);
-
-    private static string EvaluateLeftTrimWhitespace(string text) => BuiltinStringHelpers.LeftTrimWhitespace(text);
 
     private static RuntimeValue EvaluateLeftTrimWhitespaceBuiltin(RuntimeValue value)
     {
@@ -51,8 +42,6 @@ public sealed partial class BytecodeVm
 
     private static string EvaluateLeftTrimCharacters(string text, string chars) => BuiltinStringHelpers.TrimByCharacters(text, chars, trimStart: true, trimEnd: false);
 
-    private static string EvaluateRightTrimWhitespace(string text) => BuiltinStringHelpers.RightTrimWhitespace(text);
-
     private static RuntimeValue EvaluateRightTrimWhitespaceBuiltin(RuntimeValue value)
     {
         var text = GetStringUnchecked(value);
@@ -61,11 +50,6 @@ public sealed partial class BytecodeVm
     }
 
     private static string EvaluateRightTrimCharacters(string text, string chars) => BuiltinStringHelpers.TrimByCharacters(text, chars, trimStart: false, trimEnd: true);
-
-    private static RuntimeValue EvaluateReverse(string text)
-    {
-        return BuiltinStringHelpers.EvaluateReverse(text);
-    }
 
     private static RuntimeValue EvaluateReverseBuiltin(RuntimeValue value)
     {
@@ -93,17 +77,6 @@ public sealed partial class BytecodeVm
         return BuiltinStringHelpers.EvaluateEndsWith(text, fragment).AsBoolean();
     }
 
-    private string EvaluateReplace(string text, string oldText, string newText, TextLocation location)
-    {
-        if (oldText.Length == 0)
-        {
-            ReportBuiltInArgumentError("REPLACE", "oldText", "не может быть пустой строкой.", location);
-            throw new RuntimeFailureException();
-        }
-
-        return BuiltinStringHelpers.EvaluateReplace(text, oldText, newText);
-    }
-
     private RuntimeValue EvaluateReplaceBuiltin(
         RuntimeValue textValue,
         RuntimeValue oldTextValue,
@@ -120,7 +93,7 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        var replaced = BuiltinStringHelpers.EvaluateReplace(text, oldText, newText);
+        var replaced = BuiltinStringHelpers.EvaluateReplace(text, oldText, newText, ThrowIfBuiltinCancellationRequested);
         return string.Equals(replaced, text, StringComparison.Ordinal)
             ? textValue
             : RuntimeValue.FromString(replaced);
@@ -151,7 +124,7 @@ public sealed partial class BytecodeVm
             }
         }
 
-        var replaced = RuntimeStringReplaceMany.Replace(text, oldRules, newRules);
+        var replaced = RuntimeStringReplaceMany.Replace(text, oldRules, newRules, ThrowIfBuiltinCancellationRequested);
         return ReferenceEquals(replaced, text)
             ? textValue
             : RuntimeValue.FromString(replaced);
@@ -197,7 +170,7 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        return BuiltinStringHelpers.EvaluateSubStrCount(text, fragment);
+        return BuiltinStringHelpers.EvaluateSubStrCount(text, fragment, ThrowIfBuiltinCancellationRequested);
     }
 
     private int EvaluateAsc(string text, TextLocation location)
@@ -265,10 +238,13 @@ public sealed partial class BytecodeVm
         }
 
         var values = new string[array.Length];
+        long length = (long)separator.Length * (array.Length - 1);
 
         for (var index = 0; index < array.Length; index++)
         {
             values[index] = array.GetValue(array.LowerBound + index).AsString();
+            length += values[index].Length;
+            RuntimeStringLimits.Check(length);
         }
 
         return RuntimeValue.FromString(string.Join(separator, values));
