@@ -12,6 +12,7 @@ public enum RuntimeTextFileMode
 
 public sealed partial class RuntimeTextFile : IDisposable
 {
+    private readonly Action? _checkCancellation;
     private readonly Encoding _encoding;
     private readonly Encoding _strictEncoding;
     private readonly FileStream _stream;
@@ -27,11 +28,13 @@ public sealed partial class RuntimeTextFile : IDisposable
     private long _length;
     private bool _disposed;
 
-    public RuntimeTextFile(string path, RuntimeTextFileMode mode, Encoding encoding, string? explicitEncodingName = null)
+    public RuntimeTextFile(string path, RuntimeTextFileMode mode, Encoding encoding, string? explicitEncodingName = null, Action? checkCancellation = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         ArgumentNullException.ThrowIfNull(encoding);
 
+        _checkCancellation = checkCancellation;
+        _checkCancellation?.Invoke();
         Path = path;
         Mode = mode;
         _encoding = explicitEncodingName is null ? encoding : BuiltinTextEncodingHelpers.Resolve(explicitEncodingName);
@@ -47,18 +50,18 @@ public sealed partial class RuntimeTextFile : IDisposable
                     if (explicitEncodingName is not null)
                     {
                         _stream = openedStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-                        _contentStart = BuiltinTextEncodingHelpers.ValidateStream(_stream, _strictEncoding);
+                        _contentStart = BuiltinTextEncodingHelpers.ValidateStream(_stream, _strictEncoding, _checkCancellation);
                         _stream.Position = _contentStart;
                         break;
                     }
                     // Единый контракт чтения с READFILE: строгий UTF-8 с BOM,
                     // при невалидном UTF-8 — Windows-1251.
-                    var (inputEncoding, contentStart) = DetectInputEncoding(path, encoding);
+                    _stream = openedStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    var (inputEncoding, contentStart) = DetectInputEncoding(_stream, encoding, _checkCancellation);
                     _encoding = inputEncoding;
                     _strictEncoding = ReferenceEquals(inputEncoding, encoding)
                         ? _strictEncoding
                         : inputEncoding;
-                    _stream = openedStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
                     _contentStart = contentStart;
                     _stream.Seek(_contentStart, SeekOrigin.Begin);
                     break;
@@ -79,7 +82,7 @@ public sealed partial class RuntimeTextFile : IDisposable
                     if (explicitEncodingName is not null)
                     {
                         if (_stream.Length > 0)
-                            _contentStart = BuiltinTextEncodingHelpers.ValidateStream(_stream, _strictEncoding);
+                            _contentStart = BuiltinTextEncodingHelpers.ValidateStream(_stream, _strictEncoding, _checkCancellation);
                         else
                         {
                             var preamble = _encoding.GetPreamble();
@@ -200,7 +203,7 @@ public sealed partial class RuntimeTextFile : IDisposable
     public void SkipLine()
     {
         EnsureMode(RuntimeTextFileMode.Input);
-        ReadLineCore();
+        ReadLineCore(skip: true);
     }
 
     public void Dispose()

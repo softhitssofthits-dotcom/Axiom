@@ -45,6 +45,7 @@ public sealed partial class RuntimeTextFile
 
             for (long index = scanStart; index < position; index += IsUtf16 ? 2 : 1)
             {
+                if ((index - scanStart) % 4096 == 0) _checkCancellation?.Invoke();
                 var next = IsUtf16 ? ReadUtf16Unit() : _stream.ReadByte();
 
                 if (next < 0)

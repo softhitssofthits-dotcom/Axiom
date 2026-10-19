@@ -1,0 +1,12 @@
+' Маска задаёт имя внутри указанной папки, а не путь в другую папку.
+DIM entries() AS STRING
+TRY
+    entries = GETFILES(CURRENTDIR(), "../*")
+CATCH problem
+    PRINT problem.Code
+END TRY
+TRY
+    entries = GETDIRS(CURRENTDIR(), "subfolder/*")
+CATCH problem
+    PRINT problem.Code
+END TRY

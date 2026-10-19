@@ -22,15 +22,15 @@ internal static class BuiltinTextEncodingHelpers
         return Encoding.GetEncoding(1251, EncoderFallback.ExceptionFallback, DecoderFallback.ExceptionFallback);
     }
 
-    public static string Read(string path, string name)
+    public static string Read(string path, string name, Action? checkCancellation = null)
     {
         var encoding = Resolve(name);
-        var bytes = RuntimeStringLimits.ReadBytes(path);
+        var bytes = RuntimeStringLimits.ReadBytes(path, checkCancellation);
         var start = ContentStart(bytes, encoding);
         return RuntimeStringLimits.Decode(encoding, bytes, start);
     }
 
-    public static void Write(string path, string text, string name, bool append)
+    public static void Write(string path, string text, string name, bool append, Action? checkCancellation = null)
     {
         var encoding = Resolve(name);
         // Кодирование завершено до создания/обнуления файла: ошибка не портит его.
@@ -40,7 +40,7 @@ internal static class BuiltinTextEncodingHelpers
             FileAccess.ReadWrite, FileShare.Read);
         if (append && stream.Length > 0)
         {
-            ValidateStream(stream, encoding);
+            ValidateStream(stream, encoding, checkCancellation);
             stream.Seek(0, SeekOrigin.End);
         }
         else
@@ -50,7 +50,7 @@ internal static class BuiltinTextEncodingHelpers
         stream.Write(payload);
     }
 
-    public static long ValidateStream(FileStream stream, Encoding encoding)
+    public static long ValidateStream(FileStream stream, Encoding encoding, Action? checkCancellation = null)
     {
         stream.Position = 0;
         var header = new byte[3];
@@ -60,7 +60,11 @@ internal static class BuiltinTextEncodingHelpers
         using var reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks: false,
             bufferSize: 4096, leaveOpen: true);
         var characters = new char[4096];
-        while (reader.Read(characters, 0, characters.Length) != 0) { }
+        while (true)
+        {
+            checkCancellation?.Invoke();
+            if (reader.Read(characters, 0, characters.Length) == 0) break;
+        }
         return start;
     }
 

@@ -31,7 +31,8 @@ public sealed partial class BytecodeVm
                 BuiltinFileSystemHelpers.NormalizeFileSystemPath(path, _host.CurrentDirectory),
                 ReadOpenMode(instruction.GetOperand(0), location),
                 BuiltinFileSystemHelpers.FileSystemTextEncoding,
-                encodingName);
+                encodingName,
+                ThrowIfBuiltinCancellationRequested);
 
             _openFiles.Add(file);
             InvalidateReverseExecutionHistory();

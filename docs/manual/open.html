@@ -31,5 +31,6 @@ CLOSE f
 DELETEFILE(path)</code></pre><p>Ожидаемый вывод:</p><pre><code>0
 Привет 😀</code></pre></section>
 <section class="article-section"><h2>См. также</h2><p><a href="close.html">CLOSE</a> · <a href="file-system-functions-open-files.html">Функции FILE</a> · <a href="file-system-functions-text.html">Целый текстовый файл</a></p></section>
+<section class="article-section" id="input-stream"><h2>Проверка входного файла и остановка</h2><p>В режиме INPUT определение кодировки и последующее чтение используют один открытый файловый поток. Автоматическое распознавание по-прежнему проверяет UTF-8 с переходом к WINDOWS-1251 при невалидном UTF-8; явная кодировка сохраняет строгую проверку. Во время проверки содержимого обрабатывается остановка программы. При остановке неудавшееся открытие освобождает поток; пользовательский CATCH остановку не перехватывает.</p></section>
 <div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
 <script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

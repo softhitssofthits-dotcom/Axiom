@@ -38,12 +38,19 @@ internal static class RuntimeStringLimits
             throw new StringResourceLimitException("Закодированный текст превышает допустимый размер строкового результата.");
     }
 
-    internal static byte[] ReadBytes(string path)
+    internal static byte[] ReadBytes(string path, Action? checkCancellation = null)
     {
         using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
         CheckEncodedLength(stream.Length);
         var bytes = new byte[(int)stream.Length];
-        stream.ReadExactly(bytes);
+        var offset = 0;
+        while (offset < bytes.Length)
+        {
+            checkCancellation?.Invoke();
+            var read = stream.Read(bytes, offset, Math.Min(65536, bytes.Length - offset));
+            if (read == 0) throw new EndOfStreamException();
+            offset += read;
+        }
         return bytes;
     }
 

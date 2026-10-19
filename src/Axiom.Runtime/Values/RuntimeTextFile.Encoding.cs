@@ -13,9 +13,8 @@ public sealed partial class RuntimeTextFile
             DecoderFallback.ExceptionFallback);
     }
 
-    private static (Encoding Encoding, long ContentStart) DetectInputEncoding(string path, Encoding defaultEncoding)
+    private static (Encoding Encoding, long ContentStart) DetectInputEncoding(FileStream probe, Encoding defaultEncoding, Action? checkCancellation)
     {
-        using var probe = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
 
         var header = new byte[3];
         var contentStart = 0;
@@ -32,7 +31,7 @@ public sealed partial class RuntimeTextFile
         // Без BOM первые три байта также являются текстом и должны
         // участвовать в проверке, включая короткие файлы.
         probe.Seek(contentStart, SeekOrigin.Begin);
-        if (IsStrictUtf8(probe))
+        if (IsStrictUtf8(probe, checkCancellation))
         {
             return (defaultEncoding, contentStart);
         }
@@ -57,7 +56,7 @@ public sealed partial class RuntimeTextFile
         return total;
     }
 
-    private static bool IsStrictUtf8(Stream stream)
+    private static bool IsStrictUtf8(Stream stream, Action? checkCancellation)
     {
         var decoder = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true).GetDecoder();
         var buffer = new byte[4096];
@@ -68,6 +67,7 @@ public sealed partial class RuntimeTextFile
         {
             while (!completed)
             {
+                checkCancellation?.Invoke();
                 var bytesRead = stream.Read(buffer, 0, buffer.Length);
                 var flush = bytesRead == 0;
                 decoder.Convert(

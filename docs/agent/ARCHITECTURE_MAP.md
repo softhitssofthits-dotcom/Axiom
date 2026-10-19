@@ -24,3 +24,7 @@
 | Справочник и полнота | `docs/manual/`, `scripts/check-manual.mjs` |
 
 Точные договоры находятся в текущей спецификации, коде, примерах и проверках. Эта карта не является самостоятельной спецификацией.
+
+## Файловая подсистема — 19 октября 2026 года
+
+Тематические обработчики VM: BytecodeVm.Builtins.FileText.cs, Paths.cs, FileOperations.cs, Directories.cs, FileMetadata.cs и Storage.cs. Общие проверки — BytecodeVm.Builtins.FileSystem.cs; блочный сканер строк — Values/RuntimeTextFile.Lines.cs. Отдельного ускоренного файлового пути в BytecodeVm.cs больше нет: все формы используют единый договор.

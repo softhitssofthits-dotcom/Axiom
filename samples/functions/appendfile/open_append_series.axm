@@ -1,0 +1,13 @@
+' Для серии строгих записей файл проверяется один раз при OPEN APPEND.
+MAKEDIR(".artifacts")
+DIM path AS STRING = ".artifacts/filesystem_append_series.txt"
+WRITEFILE(path, "", "UTF-8")
+DIM f AS FILE
+OPEN path FOR APPEND AS f USING "UTF-8"
+FOR i = 1 TO 100
+    WRITE(f, "А😀")
+NEXT
+CLOSE f
+PRINT READFILE(path, "UTF-8") = REPEAT("А😀", 100)
+PRINT FILESIZE(path) = 600
+DELETEFILE(path)

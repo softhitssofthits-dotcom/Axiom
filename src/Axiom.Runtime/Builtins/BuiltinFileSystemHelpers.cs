@@ -26,9 +26,9 @@ internal static class BuiltinFileSystemHelpers
         return Path.GetFullPath(expanded);
     }
 
-    public static string ReadTextFileWithFallback(string fullPath)
+    public static string ReadTextFileWithFallback(string fullPath, Action? checkCancellation = null)
     {
-        var bytes = RuntimeStringLimits.ReadBytes(fullPath);
+        var bytes = RuntimeStringLimits.ReadBytes(fullPath, checkCancellation);
 
         try
         {
@@ -52,54 +52,54 @@ internal static class BuiltinFileSystemHelpers
         return Encoding.GetEncoding(1251);
     }
 
-    public static string[] ReadDecodedLines(string text)
+    public static string[] ReadDecodedLines(string text, Action? checkCancellation = null)
     {
         if (string.IsNullOrEmpty(text))
             return [];
 
         var lines = new List<string>();
         using var reader = new StringReader(text);
-        while (reader.ReadLine() is { } line)
+        while (true)
+        {
+            checkCancellation?.Invoke();
+            if (reader.ReadLine() is not { } line) break;
             lines.Add(line);
+        }
         return lines.ToArray();
     }
 
-    public static void CopyDirectory(string sourceDir, string destDir, bool overwrite)
+    public static void CopyDirectory(string sourceDir, string destDir, bool overwrite, Action? checkCancellation = null)
     {
-        BuiltinDirectoryHelpers.CopyDirectory(sourceDir, destDir, overwrite);
+        BuiltinDirectoryHelpers.CopyDirectory(sourceDir, destDir, overwrite, checkCancellation);
     }
 
-    public static long GetDirectorySize(string dirPath)
+    public static long GetDirectorySize(string dirPath, Action? checkCancellation = null)
     {
-        return BuiltinDirectoryHelpers.GetDirectorySize(dirPath);
+        return BuiltinDirectoryHelpers.GetDirectorySize(dirPath, checkCancellation);
     }
 
-    public static string CreateTemporaryFile(string prefix)
+    public static string CreateTemporaryFile(string prefix, Func<string>? nextPath = null)
     {
-        var tempPath = Path.GetTempPath();
-        string filePath;
-        do
+        for (var attempt = 0; attempt < 128; attempt++)
         {
-            filePath = Path.Combine(tempPath, prefix + Path.GetRandomFileName());
+            var path = nextPath?.Invoke() ?? Path.Combine(Path.GetTempPath(), prefix + Path.GetRandomFileName());
+            try
+            {
+                using var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+                return path;
+            }
+            catch (Exception ex) when ((ex is IOException or UnauthorizedAccessException)
+                && (File.Exists(path) || Directory.Exists(path)))
+            {
+                // Занятое имя не даёт права обнулить существующий объект.
+            }
         }
-        while (File.Exists(filePath));
-
-        using (File.Create(filePath)) { }
-        return filePath;
+        throw new IOException("Не удалось выбрать свободное имя временного файла за 128 попыток.");
     }
 
     public static string CreateTemporaryDirectory(string prefix)
     {
-        var tempPath = Path.GetTempPath();
-        string dirPath;
-        do
-        {
-            dirPath = Path.Combine(tempPath, prefix + Path.GetFileNameWithoutExtension(Path.GetRandomFileName()));
-        }
-        while (Directory.Exists(dirPath));
-
-        Directory.CreateDirectory(dirPath);
-        return dirPath;
+        return Directory.CreateTempSubdirectory(prefix).FullName;
     }
 
     public static bool IsFileSystemException(Exception ex)

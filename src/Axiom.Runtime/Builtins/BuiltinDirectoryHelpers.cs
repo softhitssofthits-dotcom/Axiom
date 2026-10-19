@@ -3,15 +3,17 @@ namespace Axiom.Runtime.Builtins;
 /// <summary>Обход обычных файлов и каталогов без перехода по вложенным ссылкам.</summary>
 internal static class BuiltinDirectoryHelpers
 {
-    public static long GetDirectorySize(string directory)
+    public static long GetDirectorySize(string directory, Action? checkCancellation = null)
     {
         long size = 0;
         var pending = new Stack<string>();
         pending.Push(directory);
         while (pending.TryPop(out var current))
         {
+            checkCancellation?.Invoke();
             foreach (var entry in Directory.EnumerateFileSystemEntries(current))
             {
+                checkCancellation?.Invoke();
                 var attributes = File.GetAttributes(entry);
                 if ((attributes & FileAttributes.ReparsePoint) != 0) continue;
                 if ((attributes & FileAttributes.Directory) != 0)
@@ -23,7 +25,7 @@ internal static class BuiltinDirectoryHelpers
         return size;
     }
 
-    public static void CopyDirectory(string source, string destination, bool overwrite)
+    public static void CopyDirectory(string source, string destination, bool overwrite, Action? checkCancellation = null)
     {
         var sourcePath = ResolveDirectoryPath(source);
         var destinationPath = ResolveDirectoryPath(destination);
@@ -38,10 +40,12 @@ internal static class BuiltinDirectoryHelpers
         pending.Push((sourcePath, destinationPath));
         while (pending.TryPop(out var pair))
         {
+            checkCancellation?.Invoke();
             RejectDestinationLink(pair.Destination);
             Directory.CreateDirectory(pair.Destination);
             foreach (var entry in Directory.EnumerateFileSystemEntries(pair.Source))
             {
+                checkCancellation?.Invoke();
                 var attributes = File.GetAttributes(entry);
                 if ((attributes & FileAttributes.ReparsePoint) != 0) continue;
                 var target = Path.Combine(pair.Destination, Path.GetFileName(entry));

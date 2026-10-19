@@ -1,0 +1,17 @@
+' SKIPLINE не создаёт строковый результат и пропускает длинную строку блоками.
+MAKEDIR(".artifacts")
+DIM path AS STRING = ".artifacts/filesystem_skip_large.txt"
+DIM f AS FILE
+OPEN path FOR OUTPUT AS f USING "UTF-8"
+DIM block AS STRING = REPEAT("a", 65536)
+FOR i = 1 TO 257
+    WRITE(f, block)
+NEXT
+WRITELINE(f, "")
+WRITE(f, "Следующая строка")
+CLOSE f
+OPEN path FOR INPUT AS f USING "UTF-8"
+PRINT SKIPLINE(f)
+PRINT READLINE(f)
+CLOSE f
+DELETEFILE(path)

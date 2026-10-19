@@ -4,59 +4,6 @@ namespace Axiom.Runtime;
 
 public sealed partial class RuntimeTextFile
 {
-    private string ReadLineCore()
-    {
-        if (IsUtf16) return ReadUtf16LineCore();
-        var startPosition = _position;
-        var bytes = new List<byte>();
-
-        try
-        {
-            while (true)
-            {
-                var next = _stream.ReadByte();
-
-                if (next < 0)
-                {
-                    break;
-                }
-
-                _position++;
-
-                if (next == '\n')
-                {
-                    break;
-                }
-
-                if (next == '\r')
-                {
-                    var maybeLf = _stream.ReadByte();
-
-                    if (maybeLf == '\n')
-                    {
-                        _position++;
-                    }
-                    else if (maybeLf >= 0)
-                    {
-                        _stream.Seek(-1, SeekOrigin.Current);
-                    }
-
-                    break;
-                }
-
-                RuntimeStringLimits.CheckEncodedLength((long)bytes.Count + 1);
-                bytes.Add((byte)next);
-            }
-
-            return DecodeStrict(bytes.ToArray(), startPosition);
-        }
-        catch
-        {
-            RestoreReadPosition(startPosition);
-            throw;
-        }
-    }
-
     private string ReadDecodedText(int? maxCharacters)
     {
         var startPosition = _position;
@@ -81,6 +28,7 @@ public sealed partial class RuntimeTextFile
 
             while (startPosition + consumedBytes < _length)
             {
+                _checkCancellation?.Invoke();
                 var remainingFileBytes = _length - (startPosition + consumedBytes);
                 var bytesToRead = (int)Math.Min(byteBuffer.Length, remainingFileBytes);
                 var bytesRead = _stream.Read(byteBuffer, 0, bytesToRead);
@@ -170,18 +118,6 @@ public sealed partial class RuntimeTextFile
         }
     }
 
-    private string DecodeStrict(byte[] bytes, long startPosition)
-    {
-        try
-        {
-            return RuntimeStringLimits.Decode(_strictEncoding, bytes);
-        }
-        catch (DecoderFallbackException ex)
-        {
-            throw CreateInvalidTextReadException(startPosition, ex);
-        }
-    }
-
     private void FlushDecoder(Decoder decoder, StringBuilder builder, char[] charBuffer, ref int? remainingCharacters)
     {
         while (true)
@@ -264,45 +200,4 @@ public sealed partial class RuntimeTextFile
         _position = position;
     }
 
-    private string ReadUtf16LineCore()
-    {
-        EnsureUtf16Alignment();
-        var start = _position;
-        var bytes = new List<byte>();
-        _stream.Position = start;
-        try
-        {
-            while (true)
-            {
-                var unit = ReadUtf16Unit();
-                if (unit < 0) break;
-                _position += 2;
-                if (unit == '\n') break;
-                if (unit == '\r')
-                {
-                    var next = ReadUtf16Unit();
-                    if (next == '\n') _position += 2;
-                    else if (next >= 0) _stream.Seek(-2, SeekOrigin.Current);
-                    break;
-                }
-                RuntimeStringLimits.CheckEncodedLength((long)bytes.Count + 2);
-                if (_strictEncoding.CodePage == 1200)
-                {
-                    bytes.Add((byte)unit);
-                    bytes.Add((byte)(unit >> 8));
-                }
-                else
-                {
-                    bytes.Add((byte)(unit >> 8));
-                    bytes.Add((byte)unit);
-                }
-            }
-            return DecodeStrict(bytes.ToArray(), start);
-        }
-        catch
-        {
-            RestoreReadPosition(start);
-            throw;
-        }
-    }
 }
