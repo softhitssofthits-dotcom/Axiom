@@ -1,0 +1,21 @@
+' Ожидается TRUE: разовые строгие добавления и открытый FILE дают один текст.
+IF NOT DIREXISTS(".artifacts") THEN
+    DIM created AS BOOLEAN = MAKEDIR(".artifacts")
+END IF
+DIM first AS STRING = ".artifacts/string_audit_append_calls.txt"
+DIM second AS STRING = ".artifacts/string_audit_append_open.txt"
+DIM cleared AS BOOLEAN = WRITEFILE(first, "", "UTF-8")
+FOR i = 1 TO 200
+    DIM added AS BOOLEAN = APPENDFILE(first, "А😀", "UTF-8")
+NEXT
+DIM handle AS FILE
+OPEN second FOR OUTPUT AS handle USING "UTF-8"
+CLOSE handle
+OPEN second FOR APPEND AS handle USING "UTF-8"
+FOR i = 1 TO 200
+    DIM written AS BOOLEAN = WRITE(handle, "А😀")
+NEXT
+CLOSE handle
+PRINT READFILE(first, "UTF-8") = READFILE(second, "UTF-8")
+DIM removedFirst AS BOOLEAN = DELETEFILE(first)
+DIM removedSecond AS BOOLEAN = DELETEFILE(second)

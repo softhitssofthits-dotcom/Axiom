@@ -4,10 +4,7 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
-    private static string EvaluateInsert(string text, int start, string fragment)
-    {
-        return BuiltinStringHelpers.EvaluateInsert(text, start - 1, fragment).AsString();
-    }
+
 
     private static RuntimeValue EvaluateInsertBuiltin(RuntimeValue textValue, int start, RuntimeValue fragmentValue)
     {

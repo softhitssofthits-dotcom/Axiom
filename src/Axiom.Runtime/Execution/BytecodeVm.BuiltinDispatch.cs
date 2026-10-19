@@ -25,17 +25,17 @@ public sealed partial class BytecodeVm
         return builtin.CanonicalId switch
         {
             BuiltinFunctionId.LenUnits => BuiltinExecution.Binary(static (vm, text, unit, location) => RuntimeValue.FromInteger(
-                BuiltinStringUnitHelpers.Length(GetStringUnchecked(text), BuiltinStringUnitHelpers.Parse(GetStringUnchecked(unit), "LEN", location, vm.ReportBuiltInArgumentError)))),
+                BuiltinStringUnitHelpers.Length(GetStringUnchecked(text), BuiltinStringUnitHelpers.Parse(GetStringUnchecked(unit), "LEN", location, vm.ReportBuiltInArgumentError), vm.ThrowIfBuiltinCancellationRequested))),
             BuiltinFunctionId.LeftUnits => BuiltinExecution.Ternary(static (vm, text, count, unit, location) => BuiltinStringUnitHelpers.Slice(
                 GetStringUnchecked(text), 1, vm.RequirePositiveCount("LEFT", "count", GetIntegerUnchecked(count), location),
-                BuiltinStringUnitHelpers.Parse(GetStringUnchecked(unit), "LEFT", location, vm.ReportBuiltInArgumentError))),
+                BuiltinStringUnitHelpers.Parse(GetStringUnchecked(unit), "LEFT", location, vm.ReportBuiltInArgumentError), checkCancellation: vm.ThrowIfBuiltinCancellationRequested)),
             BuiltinFunctionId.RightUnits => BuiltinExecution.Ternary(static (vm, text, count, unit, location) => BuiltinStringUnitHelpers.Slice(
                 GetStringUnchecked(text), 1, vm.RequirePositiveCount("RIGHT", "count", GetIntegerUnchecked(count), location),
-                BuiltinStringUnitHelpers.Parse(GetStringUnchecked(unit), "RIGHT", location, vm.ReportBuiltInArgumentError), fromRight: true)),
+                BuiltinStringUnitHelpers.Parse(GetStringUnchecked(unit), "RIGHT", location, vm.ReportBuiltInArgumentError), fromRight: true, checkCancellation: vm.ThrowIfBuiltinCancellationRequested)),
             BuiltinFunctionId.MidUnits => BuiltinExecution.Variadic(static (vm, arguments, location) => BuiltinStringUnitHelpers.Slice(
                 GetStringUnchecked(arguments[0]), vm.RequirePositiveStart("MID", GetIntegerUnchecked(arguments[1]), location),
                 vm.RequirePositiveCount("MID", "count", GetIntegerUnchecked(arguments[2]), location),
-                BuiltinStringUnitHelpers.Parse(GetStringUnchecked(arguments[3]), "MID", location, vm.ReportBuiltInArgumentError))),
+                BuiltinStringUnitHelpers.Parse(GetStringUnchecked(arguments[3]), "MID", location, vm.ReportBuiltInArgumentError), checkCancellation: vm.ThrowIfBuiltinCancellationRequested)),
             BuiltinFunctionId.Len => BuiltinExecution.UnaryNoLocation(static (vm, value) => RuntimeValue.FromInteger(GetStringUnchecked(value).Length)),
             BuiltinFunctionId.Left => BuiltinExecution.Binary(static (vm, text, count, location) =>
                 BytecodeVm.EvaluateLeft(

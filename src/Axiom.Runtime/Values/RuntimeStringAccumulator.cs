@@ -16,7 +16,7 @@ internal sealed class RuntimeStringAccumulator
     public void Append(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
-        _builder.Append(text);
+        RuntimeStringLimits.Append(_builder, text);
         _cachedText = null;
     }
 

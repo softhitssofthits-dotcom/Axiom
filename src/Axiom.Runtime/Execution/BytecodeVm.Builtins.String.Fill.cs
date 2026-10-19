@@ -22,38 +22,7 @@ public sealed partial class BytecodeVm
             return string.Empty;
         }
 
-        return new string(RequireFillCharacter("STRING", fill, location), count);
-    }
-
-    private string EvaluatePadLeft(string text, int width, string fill, TextLocation location)
-    {
-        var fillCharacter = RequireFillCharacter("PADLEFT", fill, location);
-        return text.Length >= width
-            ? text
-            : text.PadLeft(width, fillCharacter);
-    }
-
-    private string EvaluatePadRight(string text, int width, string fill, TextLocation location)
-    {
-        var fillCharacter = RequireFillCharacter("PADRIGHT", fill, location);
-        return text.Length >= width
-            ? text
-            : text.PadRight(width, fillCharacter);
-    }
-
-    private string EvaluateCenter(string text, int width, string fill, TextLocation location)
-    {
-        var fillCharacter = RequireFillCharacter("CENTER", fill, location);
-
-        if (text.Length >= width)
-        {
-            return text;
-        }
-
-        var padLeft = (width - text.Length) / 2;
-        return text
-            .PadLeft(text.Length + padLeft, fillCharacter)
-            .PadRight(width, fillCharacter);
+        return new string(RequireFillCharacter("STRING", fill, location), RuntimeStringLimits.Check(count));
     }
 
     private static RuntimeValue EvaluatePadLeftBuiltin(RuntimeValue value, int width)

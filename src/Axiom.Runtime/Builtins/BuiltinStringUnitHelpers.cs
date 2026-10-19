@@ -17,40 +17,71 @@ internal static class BuiltinStringUnitHelpers
         throw new RuntimeFailureException();
     }
 
-    public static int Length(string text, Unit unit)
+    public static int Length(string text, Unit unit, Action? checkCancellation = null)
     {
         if (unit == Unit.Utf16) return text.Length;
-        if (unit == Unit.Grapheme) return StringInfo.ParseCombiningCharacters(text).Length;
         var count = 0;
-        for (var position = 0; position < text.Length; position++)
+        for (var position = 0; position < text.Length;)
         {
+            if ((count & 1023) == 0) checkCancellation?.Invoke();
             count++;
-            if (char.IsHighSurrogate(text[position]) && position + 1 < text.Length && char.IsLowSurrogate(text[position + 1])) position++;
+            position += ElementLength(text, position, unit);
         }
         return count;
     }
 
-    public static RuntimeValue Slice(string text, int start, int count, Unit unit, bool fromRight = false)
+    public static RuntimeValue Slice(string text, int start, int count, Unit unit, bool fromRight = false, Action? checkCancellation = null)
     {
         if (unit == Unit.Utf16)
             return fromRight ? BuiltinStringHelpers.EvaluateRight(text, count) : BuiltinStringHelpers.EvaluateMid(text, start, count);
-        var boundaries = Boundaries(text, unit);
-        var first = fromRight ? Math.Max(0, boundaries.Length - count) : start - 1;
-        if (first >= boundaries.Length) return RuntimeValue.FromString(string.Empty);
-        var last = first + Math.Min(count, boundaries.Length - first);
-        var end = last == boundaries.Length ? text.Length : boundaries[last];
-        return RuntimeValue.FromString(text.Substring(boundaries[first], end - boundaries[first]));
+        if (text.Length == 0 || start > text.Length) return RuntimeValue.FromString(string.Empty);
+        if (fromRight)
+        {
+            if (count >= text.Length) return RuntimeValue.FromString(text);
+            if (unit == Unit.CodePoint)
+            {
+                var position = text.Length;
+                for (var seen = 0; seen < count && position > 0; seen++)
+                {
+                    if ((seen & 1023) == 0) checkCancellation?.Invoke();
+                    position--;
+                    if (char.IsLowSurrogate(text[position]) && position > 0 && char.IsHighSurrogate(text[position - 1])) position--;
+                }
+                return RuntimeValue.FromString(text[position..]);
+            }
+            if (count <= 256) return RightGraphemes(text, count, checkCancellation);
+            var length = Length(text, unit, checkCancellation);
+            if (count >= length) return RuntimeValue.FromString(text);
+            start = length - count + 1;
+        }
+        var offset = 0;
+        var first = -1;
+        var index = 1;
+        while (offset < text.Length)
+        {
+            if ((index & 1023) == 1) checkCancellation?.Invoke();
+            if (index == start) first = offset;
+            if (first >= 0 && index - start >= count) break;
+            offset += ElementLength(text, offset, unit);
+            index++;
+        }
+        return RuntimeValue.FromString(first < 0 ? string.Empty : text.Substring(first, offset - first));
     }
 
-    private static int[] Boundaries(string text, Unit unit)
+    private static RuntimeValue RightGraphemes(string text, int count, Action? checkCancellation)
     {
-        if (unit == Unit.Grapheme) return StringInfo.ParseCombiningCharacters(text);
-        var boundaries = new List<int>();
-        for (var position = 0; position < text.Length; position++)
+        Span<int> recent = stackalloc int[256];
+        var seen = 0;
+        for (var offset = 0; offset < text.Length; seen++)
         {
-            boundaries.Add(position);
-            if (char.IsHighSurrogate(text[position]) && position + 1 < text.Length && char.IsLowSurrogate(text[position + 1])) position++;
+            if ((seen & 1023) == 0) checkCancellation?.Invoke();
+            recent[seen % count] = offset;
+            offset += ElementLength(text, offset, Unit.Grapheme);
         }
-        return boundaries.ToArray();
+        return RuntimeValue.FromString(seen <= count ? text : text[recent[seen % count]..]);
     }
+
+    private static int ElementLength(string text, int position, Unit unit) => unit == Unit.Grapheme
+        ? StringInfo.GetNextTextElementLength(text.AsSpan(position))
+        : char.IsHighSurrogate(text[position]) && position + 1 < text.Length && char.IsLowSurrogate(text[position + 1]) ? 2 : 1;
 }

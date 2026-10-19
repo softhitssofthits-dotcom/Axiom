@@ -14,37 +14,37 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateRegexIsMatchBuiltin(string text, string pattern, string modes, TextLocation location) =>
         BuiltinRegexHelpers.IsMatch(CreateRegex("REGEXISMATCH", pattern, modes, location), text, location,
-            ReportBuiltInArgumentError, "REGEXISMATCH", ThrowIfRegexCancellationRequested);
+            ReportBuiltInArgumentError, "REGEXISMATCH", ThrowIfBuiltinCancellationRequested);
 
     private RuntimeValue EvaluateRegexMatchBuiltin(string text, string pattern, string modes, TextLocation location) =>
         BuiltinRegexHelpers.Match(CreateRegex("REGEXMATCH", pattern, modes, location), text, location,
-            ReportBuiltInArgumentError, "REGEXMATCH", ThrowIfRegexCancellationRequested);
+            ReportBuiltInArgumentError, "REGEXMATCH", ThrowIfBuiltinCancellationRequested);
 
     private RuntimeValue EvaluateRegexExtractBuiltin(string text, string pattern, int group, string modes, TextLocation location)
     {
         ValidateRegexGroup("REGEXEXTRACT", group, location);
         return BuiltinRegexHelpers.Extract(CreateRegex("REGEXEXTRACT", pattern, modes, location), text, group, location,
-            ReportBuiltInArgumentError, "REGEXEXTRACT", ThrowIfRegexCancellationRequested);
+            ReportBuiltInArgumentError, "REGEXEXTRACT", ThrowIfBuiltinCancellationRequested);
     }
 
     private RuntimeValue EvaluateRegexMatchesBuiltin(string text, string pattern, string modes, TextLocation location) =>
         BuiltinRegexHelpers.Matches(CreateRegex("REGEXMATCHES", pattern, modes, location), text, location,
-            ReportBuiltInArgumentError, "REGEXMATCHES", CreateRegexArrayValue, ThrowIfRegexCancellationRequested);
+            ReportBuiltInArgumentError, "REGEXMATCHES", CreateRegexArrayValue, ThrowIfBuiltinCancellationRequested);
 
     private RuntimeValue EvaluateRegexExtractAllBuiltin(string text, string pattern, int group, string modes, TextLocation location)
     {
         ValidateRegexGroup("REGEXEXTRACTALL", group, location);
         return BuiltinRegexHelpers.ExtractAll(CreateRegex("REGEXEXTRACTALL", pattern, modes, location), text, group, location,
-            ReportBuiltInArgumentError, "REGEXEXTRACTALL", CreateRegexArrayValue, ThrowIfRegexCancellationRequested);
+            ReportBuiltInArgumentError, "REGEXEXTRACTALL", CreateRegexArrayValue, ThrowIfBuiltinCancellationRequested);
     }
 
     private RuntimeValue EvaluateRegexSplitBuiltin(string text, string pattern, string modes, TextLocation location) =>
         BuiltinRegexHelpers.Split(CreateRegex("REGEXSPLIT", pattern, modes, location), text, location,
-            ReportBuiltInArgumentError, "REGEXSPLIT", CreateRegexArrayValue, ThrowIfRegexCancellationRequested);
+            ReportBuiltInArgumentError, "REGEXSPLIT", CreateRegexArrayValue, ThrowIfBuiltinCancellationRequested);
 
     private RuntimeValue EvaluateRegexCountBuiltin(string text, string pattern, string modes, TextLocation location) =>
         RuntimeValue.FromInteger(BuiltinRegexHelpers.Count(CreateRegex("REGEXCOUNT", pattern, modes, location), text, location,
-            ReportBuiltInArgumentError, "REGEXCOUNT", ThrowIfRegexCancellationRequested));
+            ReportBuiltInArgumentError, "REGEXCOUNT", ThrowIfBuiltinCancellationRequested));
 
     private RuntimeValue EvaluateRegexReplaceBuiltin(RuntimeValue textValue, RuntimeValue patternValue,
         RuntimeValue replacementValue, string modes, int? count, TextLocation location)
@@ -54,7 +54,7 @@ public sealed partial class BytecodeVm
         var text = GetStringUnchecked(textValue);
         var regex = CreateRegex("REGEXREPLACE", GetStringUnchecked(patternValue), modes, location);
         var result = BuiltinRegexHelpers.Replace(regex, text, GetStringUnchecked(replacementValue), count, location,
-            ReportBuiltInArgumentError, "REGEXREPLACE", ThrowIfRegexCancellationRequested);
+            ReportBuiltInArgumentError, "REGEXREPLACE", ThrowIfBuiltinCancellationRequested);
         return string.Equals(result, text, StringComparison.Ordinal) ? textValue : RuntimeValue.FromString(result);
     }
 
@@ -74,7 +74,7 @@ public sealed partial class BytecodeVm
 
     private Regex CreateRegex(string name, string pattern, string modes, TextLocation location)
     {
-        ThrowIfRegexCancellationRequested();
+        ThrowIfBuiltinCancellationRequested();
         var options = BuiltinRegexHelpers.ParseRegexModes(modes, location, name, ReportBuiltInArgumentError);
         var key = (pattern, options);
         if (_regexCache.TryGetValue(key, out var cached))
@@ -94,7 +94,7 @@ public sealed partial class BytecodeVm
         return regex;
     }
 
-    private void ThrowIfRegexCancellationRequested()
+    private void ThrowIfBuiltinCancellationRequested()
     {
         // Общая отмена очищает стек: CATCH не должен перехватывать остановку пользователя.
         if (CheckCancellationRequested()) throw new RuntimeFailureException();

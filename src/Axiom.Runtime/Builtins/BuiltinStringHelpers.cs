@@ -55,6 +55,7 @@ internal static class BuiltinStringHelpers
     {
         if (start < 0) start = 0;
         if (start > text.Length) start = text.Length;
+        RuntimeStringLimits.Check((long)text.Length + insert.Length);
         return RuntimeValue.FromString(text.Insert(start, insert));
     }
 
@@ -72,13 +73,18 @@ internal static class BuiltinStringHelpers
         if (count <= 0 || text.Length == 0)
             return RuntimeValue.FromString(string.Empty);
 
-        return RuntimeValue.FromString(string.Concat(Enumerable.Repeat(text, count)));
+        var length = RuntimeStringLimits.Check((long)text.Length * count);
+        return RuntimeValue.FromString(string.Create(length, text, static (destination, fragment) =>
+        {
+            for (var offset = 0; offset < destination.Length; offset += fragment.Length)
+                fragment.AsSpan().CopyTo(destination[offset..]);
+        }));
     }
 
     public static RuntimeValue EvaluateSpace(int count)
     {
         if (count <= 0) return RuntimeValue.FromString(string.Empty);
-        return RuntimeValue.FromString(new string(' ', count));
+        return RuntimeValue.FromString(new string(' ', RuntimeStringLimits.Check(count)));
     }
 
     public static int EvaluateInStr(int start, string text, string fragment)
@@ -99,13 +105,14 @@ internal static class BuiltinStringHelpers
         return index >= 0 ? index + 1 : 0;
     }
 
-    public static int EvaluateSubStrCount(string text, string fragment)
+    public static int EvaluateSubStrCount(string text, string fragment, Action? checkCancellation = null)
     {
         if (fragment.Length == 0) return 0;
         var count = 0;
         var index = 0;
         while ((index = text.IndexOf(fragment, index, StringComparison.Ordinal)) >= 0)
         {
+            if ((count & 1023) == 0) checkCancellation?.Invoke();
             count++;
             index += fragment.Length;
         }
@@ -151,8 +158,10 @@ internal static class BuiltinStringHelpers
         return RuntimeValue.FromBoolean(text.EndsWith(fragment, StringComparison.Ordinal));
     }
 
-    public static string EvaluateReplace(string text, string oldValue, string newValue)
+    public static string EvaluateReplace(string text, string oldValue, string newValue, Action? checkCancellation = null)
     {
+        if (newValue.Length > oldValue.Length)
+            RuntimeStringLimits.Check(text.Length + (long)EvaluateSubStrCount(text, oldValue, checkCancellation) * (newValue.Length - oldValue.Length));
         return text.Replace(oldValue, newValue, StringComparison.Ordinal);
     }
 
@@ -170,9 +179,9 @@ internal static class BuiltinStringHelpers
     {
         if (string.IsNullOrWhiteSpace(text)) return 0d;
 
-        var trimmed = text.Trim();
+        var trimmed = text.AsSpan().Trim();
 
-        if (double.TryParse(trimmed, System.Globalization.CultureInfo.InvariantCulture, out var value))
+        if (double.TryParse(trimmed, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value))
             return double.IsFinite(value) ? value : 0d;
 
         var i = 0;
@@ -181,7 +190,7 @@ internal static class BuiltinStringHelpers
         if (i < trimmed.Length && (trimmed[i] == '+' || trimmed[i] == '-'))
             i++;
 
-        while (i < trimmed.Length && char.IsDigit(trimmed[i]))
+        while (i < trimmed.Length && char.IsAsciiDigit(trimmed[i]))
         {
             hasDigits = true;
             i++;
@@ -190,7 +199,7 @@ internal static class BuiltinStringHelpers
         if (i < trimmed.Length && trimmed[i] == '.')
         {
             i++;
-            while (i < trimmed.Length && char.IsDigit(trimmed[i]))
+            while (i < trimmed.Length && char.IsAsciiDigit(trimmed[i]))
             {
                 hasDigits = true;
                 i++;
@@ -201,12 +210,15 @@ internal static class BuiltinStringHelpers
 
         if (i < trimmed.Length && (trimmed[i] == 'e' || trimmed[i] == 'E'))
         {
+            var exponentStart = i;
             i++;
             if (i < trimmed.Length && (trimmed[i] == '+' || trimmed[i] == '-'))
                 i++;
 
-            while (i < trimmed.Length && char.IsDigit(trimmed[i]))
+            var exponentDigitsStart = i;
+            while (i < trimmed.Length && char.IsAsciiDigit(trimmed[i]))
                 i++;
+            if (i == exponentDigitsStart) i = exponentStart;
         }
 
         if (i < trimmed.Length)

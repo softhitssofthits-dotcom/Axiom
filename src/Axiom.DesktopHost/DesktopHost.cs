@@ -89,7 +89,7 @@ internal sealed class DesktopHost : IDisposable
                 _inputRequestId = (++_inputCounter).ToString();
                 Event("execution.state", new { state = "WaitingForInput" });
                 Event("input.request", new { inputRequestId = _inputRequestId, prompt = _console.CurrentPromptText,
-                    outputText = _console.OutputText, target = _console.IsScreenOutputActive ? "screen" : "console" });
+                    outputText = _console.OutputText, outputLineCount = _console.OutputCheckpoint, target = _console.IsScreenOutputActive ? "screen" : "console" });
             }
             else
             {
@@ -292,7 +292,7 @@ internal sealed class DesktopHost : IDisposable
             {
                 Console.Error.WriteLine(e);
                 _application.Dispatcher.BeginInvoke(() => {
-                    Event("execution.finished", new { status = "InfrastructureFailed", outputText = _console.OutputText, actualEngine = (string?)null });
+                    Event("execution.finished", new { status = "InfrastructureFailed", outputText = _console.OutputText, outputLineCount = _console.OutputCheckpoint, actualEngine = (string?)null });
                     Finish();
                 });
             }
@@ -307,14 +307,14 @@ internal sealed class DesktopHost : IDisposable
             _debugger = debugger; _stopId = (++_stopCounter).ToString();
             Event("execution.state", new { state = "Paused" });
             Event("debug.paused", new { stopId = _stopId, debugger.StopInfo.Line, debugger.StopInfo.Column,
-                debugger.StopInfo.Opcode, debugger.StopInfo.CallDepth, debugger.StopInfo.CanStepBack, outputText = _console.OutputText });
+                debugger.StopInfo.Opcode, debugger.StopInfo.CallDepth, debugger.StopInfo.CanStepBack, outputText = _console.OutputText, outputLineCount = _console.OutputCheckpoint });
             return;
         }
         var status = result.Status switch {
             ProgramRunStatus.Success => "Succeeded", ProgramRunStatus.Cancelled => "Cancelled",
             ProgramRunStatus.SyntaxFailure or ProgramRunStatus.SemanticFailure or ProgramRunStatus.BackendFailure => "CompilationFailed",
             ProgramRunStatus.RuntimeFailure => "RuntimeFailed", _ => "InfrastructureFailed" };
-        Event("execution.finished", new { status, outputText = _console.OutputText, actualEngine = result.ActualEngine?.ToString(),
+        Event("execution.finished", new { status, outputText = _console.OutputText, outputLineCount = _console.OutputCheckpoint, actualEngine = result.ActualEngine?.ToString(),
             diagnostics = result.Diagnostics, durationMilliseconds = result.TotalDuration.TotalMilliseconds });
         Finish();
     }
@@ -381,7 +381,7 @@ internal sealed class DesktopHost : IDisposable
         {
             _debugger = null;
             _console.EndSession(); _console.DeactivateScreen();
-            Event("execution.finished", new { status = "Cancelled", outputText = _console.OutputText, actualEngine = "BytecodeVm", diagnostics = Array.Empty<object>() });
+            Event("execution.finished", new { status = "Cancelled", outputText = _console.OutputText, outputLineCount = _console.OutputCheckpoint, actualEngine = "BytecodeVm", diagnostics = Array.Empty<object>() });
             Finish();
         }
     }

@@ -264,6 +264,7 @@ class AxiomIDE {
           [/[^"{]+/, 'string'],
         ],
         interpolation: [
+          [/(\$)(")/, ['delimiter.interpolation', { token: 'string.quote', bracket: '@open', next: '@interpolatedString' }]],
           [/"/, { token: 'string.quote', bracket: '@open', next: '@nestedString' }],
           [/\{/, { token: '@brackets', bracket: '@open', next: '@push' }],
           [/\}/, { token: 'delimiter.interpolation', bracket: '@close', next: '@pop' }],

@@ -310,6 +310,30 @@ DTA-004 закрыт: `DATE(пояс)`, `TIME(пояс)` и `NOW(пояс)` пр
 
 Проверки: `tests/Axiom.Execution.Tests/ElapsedSecondsContractTests.cs` — 7 тестов: измерение паузы, независимость от скачков календарных часов, знаковая разность, доли секунды, интервал через сутки и перевод часов, отказ календарных аргументов, отсчёт с нуля на каждом запуске. Итоги: Semantics 533/533, Runtime 1194/1194, Bytecode 248/248, CLI 30/30, Execution 3407/3409 (два известных отказа Maze Chase), подсветка 55/55, `audit-bytecode-coverage` PASS, `check-manual` пройден (282 функции, 351 форма). Пример `samples/functions/elapsedseconds/measure_interval.axm`. Справочник: `date-time-functions-current.html`. Версии: язык/компилятор 0.1.34, IDE 0.6.24.
 
+
+## Строковые вычисления, форматирование и ресурсы — 18 октября 2026 года
+
+Обновлены понижение присоединения строк, чтение вычисленного строкового значения, лексический автомат вложенной интерполяции и исполнители строковых функций. Набор зарегистрированных форм не расширен. Независимые ожидания добавлены в следующие проверки:
+
+| Договор | Проверки | Граница подтверждения |
+|---|---|---|
+| Левый операнд раньше правого для `+`/`&` | `tests/Axiom.Execution.Tests/StringEvaluationOrderContractTests.cs` | Глобальная переменная, захваченное локальное значение и BYREF с изменением назначения вызовом справа |
+| Сохранение прочитанной строки | `tests/Axiom.Execution.Tests/StringAccumulatorOwnershipTests.cs` | Другой получатель, ранее вычисленный аргумент, сравнение и сохранённый элемент массива |
+| Знак экспоненты, точные цифры LONG/DECIMAL и длинная дробная маска PRINT USING | `tests/Axiom.Execution.Tests/PrintUsingScientificContractTests.cs` | Знак показателя, LONG около 2^53, DECIMAL и маски 29/16 дробных разрядов; не полная матрица всех масок |
+| Вложенная интерполяция | `tests/Axiom.Execution.Tests/NestedInterpolationContractTests.cs` | Внутренний текст, вставка, вызов LEN, внутренний формат и внешнее выравнивание |
+| Полный числовой префикс VAL | `tests/Axiom.Execution.Tests/ValPrefixContractTests.cs` | Неполная экспонента, ASCII/Unicode-цифры, числовой хвост, пустая строка и переполнение |
+| Предел результата 16 777 216 единиц UTF-16, MB3007 | `tests/Axiom.Execution.Tests/StringResourceContractTests.cs` | SPACE, REPEAT, PADLEFT, CATCH и сохранение назначения; не отдельная проверка каждого производителя строк |
+| Отмена внутренних строковых обходов | `tests/Axiom.Execution.Tests/StringCancellationContractTests.cs` | REPLACEMANY, SUBSTRCOUNT и LEN CODEPOINT с управляемым запросом отмены; не оконная проверка Stop |
+| Последовательный LINENUMBER и отложенная запись | `tests/Axiom.Runtime.Tests/TextFileSequentialPositionTests.cs` | CR/LF/CRLF, возврат позиции, крупная запись до/после FLUSH и перезапись после SEEK |
+
+Справочник обновлён непосредственно на страницах операций, типа STRING, интерполяции, PRINT USING, VAL, построения/поиска/срезов строк и текстовых файлов. Действующие примеры `samples/expressions/interpolation_basic.axm`, `samples/expressions/interpolation_format.axm` и `samples/operators/print/using_basic.axm` сохраняются; точные новые случаи также приведены в тексте справочника. Наличие прежнего примера не объявляется отдельной приёмкой нового пограничного случая. Итоги запусков, дополнительные примеры и измерения фиксируются по фактическому выполнению; этот перечень сам по себе не является отчётом о полном прогоне или ускорении.
+
+## Матрица строк после аудита — 19 октября 2026 года
+
+Проверены контексты строковых значений: глобальное/локальное/BYREF вычисление, накопитель и сохранённые копии, поля `TYPE`, массивы, аргументы и `RETURN`, интерполяция, отладочный обратный шаг, Unicode-срезы, текстовые файлы, `PRINT USING`, `VAL`, пределы результата, внутренняя отмена и `INPUT`. Постоянные доказательства: `StringEvaluationOrderContractTests`, `StringAccumulatorOwnershipTests`, `StringValueContextMatrixTests`, `NestedInterpolationContractTests`, `PrintUsingScientificContractTests`, `ValPrefixContractTests`, `StringResourceContractTests`, `StringCancellationContractTests`, `UnicodeSliceAllocationTests`, `TextFileSequentialPositionTests`, `StringAuditAcceptanceTests`.
+
+Свежий адресный Execution-набор этих договоров: 52/52; строковая группа Execution: 266/266; Runtime: 1196/1196; `ConsoleOutputServiceTests`: 14/14. Electron-проверки начальных пустых строк, вывода, `INPUT` и очистки консоли прошли адресно. Полный каталог 488 Electron-сценариев отложен до слияния веток.
+
 ## Даты и время: независимая проверка реализации — 18 октября 2026 года
 
 На e9622a00 прошли 94 новых контрактных теста Execution и 155 прежних конкретных тестов календаря, форм, полуночи, Unicode, поясов и метаданных. Дополнительные 16 диагностических сценариев подтвердили потерянную пересылку GetMonotonicSeconds, отказ равенства записей с UTCDATETIME и различающийся разбор строки с точкой без цифр в присваивании, INPUT и поле TYPE. Подробности — [отчёт повторной проверки](plans/DATE_TIME_IMPLEMENTATION_REVIEW_2026-10-18.md).
