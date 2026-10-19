@@ -9,6 +9,7 @@
 .tmp-build/
 .vs/
 .codex/
+.zcode/
 
 # Test and coverage outputs
 TestResults/
