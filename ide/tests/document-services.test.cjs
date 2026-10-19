@@ -22,6 +22,16 @@ test('Закрытие зависимости и Save As отклоняют пр
  }
 });
 
+test('Навигация использует явную точку входа и отклоняет ответ после её смены',async()=>{
+ const store=new DocumentStore();store.set('C:/project/main.axm',{model:model('IMPORT helper')});store.set('C:/project/helper.axm',{model:model('PRINT 1')});
+ store.navigationEntryId=store.get('C:/project/main.axm').documentId;
+ let respond,snapshot;const service=new DocumentServices(store,{documentCommand:(_method,s)=>{snapshot=s;return new Promise(resolve=>respond=resolve);}});
+ const pending=service.request('C:/project/helper.axm','document.navigation');
+ assert.equal(snapshot.navigationEntryPath,'C:/project/main.axm');
+ store.navigationEntryId=null;respond({ok:true,payload:{...snapshot,symbols:[]}});
+ assert.equal(await pending,null);
+});
+
 test('Форматирование не устаревает из-за правки зависимости',async()=>{
  const store=new DocumentStore(),helper=model('PRINT 2');store.set('C:/project/main.axm',{model:model('print 1')});store.set('C:/project/helper.axm',{model:helper});
  let respond,snapshot;const service=new DocumentServices(store,{documentCommand:(_method,s)=>{snapshot=s;return new Promise(resolve=>respond=resolve);}});

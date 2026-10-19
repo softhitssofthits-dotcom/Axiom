@@ -79,6 +79,75 @@ test('Совмещённые правки реализации IDE по-преж
   assert.match(result.stderr, /Изменён ide/);
 });
 
+function compilerChange(f, version = '0.1.1', declaredVersion = version) {
+  f.write('versions.json', JSON.stringify({ language: '0.1.0', compiler: version, ide: '0.1.0',
+    compilerOnlyChange: { version: declaredVersion, reason: 'Редакторские метаданные без изменения правил языка',
+      paths: ['src/Axiom.Semantics/Binding/Binder.EditorSymbols.cs'] } }));
+  f.write('docs/CHANGELOG.md', `Язык **0.1.0** · компилятор/CLI **${version}** · IDE **0.1.0**\n`);
+  execFileSync(process.execPath, ['scripts/versioning.mjs', 'sync'], { cwd: f.directory });
+  f.write('src/Axiom.Semantics/Binding/Binder.EditorSymbols.cs', 'Редакторские метаданные\n');
+  f.git('add', '.');
+}
+
+test('Явная классификация редакторской правки повышает компилятор без изменения версии языка', () => {
+  const f = fixture(); compilerChange(f);
+  const result = f.check('--base', 'HEAD');
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(f.check('--staged').status, 0);
+});
+
+test('Классификация прежнего выпуска не действует после нового повышения компилятора', () => {
+  const f = fixture(); compilerChange(f, '0.1.2', '0.1.1');
+  const result = f.check('--base', 'HEAD');
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Изменён language/);
+});
+
+test('Явная классификация не отменяет обязательное повышение компилятора', () => {
+  const f = fixture(); compilerChange(f, '0.1.0');
+  const result = f.check('--base', 'HEAD');
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Изменён compiler/);
+});
+
+test('Классификация действует только для перечисленных файлов', () => {
+  const f = fixture(); compilerChange(f);
+  f.write('src/Axiom.Runtime/New.cs', 'Изменение исполнения\n'); f.git('add', '.');
+  const result = f.check('--base', 'HEAD');
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Изменён language/);
+});
+
+test('Классификация не принимает пути реализации VM и пустую причину', () => {
+  const f = fixture(); compilerChange(f);
+  const versions = JSON.parse(fs.readFileSync(path.join(f.directory, 'versions.json'), 'utf8'));
+  versions.compilerOnlyChange.paths = ['src/Axiom.Runtime/New.cs'];
+  f.write('versions.json', JSON.stringify(versions));
+  assert.match(f.check('--base', 'HEAD').stderr, /compilerOnlyChange требует/);
+  versions.compilerOnlyChange.paths = ['src/Axiom.Semantics/Binding/Binder.EditorSymbols.cs'];
+  versions.compilerOnlyChange.reason = ' ';
+  f.write('versions.json', JSON.stringify(versions));
+  assert.match(f.check('--base', 'HEAD').stderr, /compilerOnlyChange требует/);
+});
+
+test('Классификация подготовленного набора не берётся из более новой рабочей версии', () => {
+  const f = fixture(); compilerChange(f);
+  const versions = JSON.parse(fs.readFileSync(path.join(f.directory, 'versions.json'), 'utf8'));
+  delete versions.compilerOnlyChange; f.write('versions.json', JSON.stringify(versions));
+  assert.equal(f.check('--staged').status, 0);
+  assert.match(f.check('--base', 'HEAD').stderr, /Изменён language/);
+});
+
+test('Новое повышение компилятора удаляет классификацию прежнего выпуска', () => {
+  const f = fixture(); compilerChange(f);
+  const bump = spawnSync(process.execPath, ['scripts/versioning.mjs', 'bump', 'compiler', 'patch', 'Следующий выпуск'],
+    { cwd: f.directory, encoding: 'utf8' });
+  assert.equal(bump.status, 0, bump.stderr);
+  const versions = JSON.parse(fs.readFileSync(path.join(f.directory, 'versions.json'), 'utf8'));
+  assert.equal(versions.compiler, '0.1.2');
+  assert.equal(versions.compilerOnlyChange, undefined);
+});
+
 test('Документация и инструменты сопровождения не требуют продуктовой версии', () => {
   const f = fixture();
   f.write('AGENTS.md', 'Уточнение правил разработки\n');

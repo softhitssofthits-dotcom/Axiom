@@ -49,6 +49,7 @@
     "panels.spec.js",
     "problems.spec.js",
     "program-assistant.spec.js",
+    "project-symbols.spec.js",
     "regex.spec.js",
     "retro-menu-palettes.spec.js",
     "run-document.spec.js",
@@ -84,7 +85,8 @@
     "navigation-clean.spec.js",
     "outline-navigation.spec.js",
     "problems.spec.js",
-    "program-assistant.spec.js"
+    "program-assistant.spec.js",
+    "project-symbols.spec.js"
   ],
   "e2e-settings": [
     "editor-settings-all.spec.js",

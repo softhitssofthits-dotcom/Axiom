@@ -18,7 +18,8 @@ internal static class EditorCallGraph
     internal sealed record Edge(string Caller, string Callee, int Start, int Length, int Line, int Column, string Kind, string? SourceFilePath);
     internal sealed record IndirectCall(string Caller, int Start, int Length, int Line, int Column, string? SourceFilePath);
     internal sealed record Source(string? SourceFilePath, string SourceText);
-    internal sealed record Graph(Routine[] Routines, Edge[] Calls, IndirectCall[] IndirectCalls, bool Complete, Source[] SourceDocuments);
+    internal sealed record SymbolSite(string SymbolId, string Name, bool IsDeclaration, string? SourceFilePath, int Start, int Length, int Line, int Column);
+    internal sealed record Graph(Routine[] Routines, Edge[] Calls, IndirectCall[] IndirectCalls, bool Complete, Source[] SourceDocuments, SymbolSite[] Symbols);
 
     public static Graph Analyse(string source, string? sourceFilePath = null, IReadOnlyList<SourceDocument>? dependencies = null)
     {
@@ -31,9 +32,8 @@ internal static class EditorCallGraph
             parseDiagnostics.AddRange(errors);
             modules.Add(new(document.ModuleName, tree));
         }
-        var program = dependencies.Count > 0 || syntax.Members.OfType<Axiom.Syntax.ImportStatementSyntax>().Any()
-            ? Axiom.Semantics.Binder.BindModules(modules, modules[0].Name, out var bindDiagnostics, checkGraphicsModes: false)
-            : Axiom.Semantics.Binder.Bind(syntax, out bindDiagnostics, checkGraphicsModes: false);
+        var program = Axiom.Semantics.Binder.BindModules(modules, modules[0].Name, out var bindDiagnostics,
+            checkGraphicsModes: false, collectEditorSymbols: true);
         var sources = new[] { new Source(sourceFilePath, source) }
             .Concat(dependencies.Select(d => new Source(d.Name, d.Text))).ToArray();
         string MainId(string? document) => document == sourceFilePath ? "main" : "main:" + document;
@@ -103,9 +103,15 @@ internal static class EditorCallGraph
         }
         foreach (var group in program.GlobalStatements.GroupBy(s => s.Location.Document)) Visit(MainId(group.Key), group);
         foreach (var routine in program.Routines) Visit(ids[routine.Symbol], routine.Statements);
+        var symbolIds = new Dictionary<Symbol, string>(ReferenceEqualityComparer.Instance);
+        foreach (var declaration in program.EditorSymbols.Where(s => s.IsDeclaration))
+            symbolIds.TryAdd(declaration.Symbol, declaration.Location.Document + ":" + declaration.Location.Span.Start);
+        var symbols = program.EditorSymbols.Where(s => symbolIds.ContainsKey(s.Symbol)).Select(s =>
+            new SymbolSite(symbolIds[s.Symbol], s.Symbol.Name, s.IsDeclaration, s.Location.Document,
+                s.Location.Span.Start, s.Location.Span.Length, s.Location.Line, s.Location.Column)).Distinct().ToArray();
         return new(routines.ToArray(), calls.Distinct().OrderBy(c => c.Start).ToArray(), indirectCalls.Distinct().OrderBy(c=>c.Start).ToArray(),
             indirectCalls.Count == 0 && !parseDiagnostics.Any(d => d.Severity == Axiom.Core.DiagnosticSeverity.Error) &&
-            !bindDiagnostics.Any(d => d.Severity == Axiom.Core.DiagnosticSeverity.Error), sources);
+            !bindDiagnostics.Any(d => d.Severity == Axiom.Core.DiagnosticSeverity.Error), sources, symbols);
     }
 
     private static Routine Describe(string id, FunctionSymbol symbol, int line, int column, int start, string? document = null)

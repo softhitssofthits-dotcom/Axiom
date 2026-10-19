@@ -261,12 +261,14 @@ public sealed partial class Binder
         if (typeSyntax.TypeToken.Kind == SyntaxKind.IdentifierToken
             && _declaredTypes.TryGetValue(typeSyntax.TypeToken.Text, out var userType))
         {
+            _editorReferences?.Add(new(userType, typeSyntax.TypeToken.Location, false));
             return userType;
         }
 
         if (typeSyntax.TypeToken.Kind == SyntaxKind.IdentifierToken
             && _importedTypes.TryGetValue(typeSyntax.TypeToken.Text, out var importedType))
         {
+            _editorReferences?.Add(new(importedType, typeSyntax.TypeToken.Location, false));
             return importedType;
         }
 

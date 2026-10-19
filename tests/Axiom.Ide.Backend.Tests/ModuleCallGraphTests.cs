@@ -29,4 +29,20 @@ public sealed class ModuleCallGraphTests
         Assert.False(graph.Complete);
         Assert.Empty(graph.Calls);
     }
+
+    [Fact]
+    public void SymbolIdsJoinImportedUsesAndKeepPrivateDeclarationsSeparate()
+    {
+        var graph = EditorCallGraph.Analyse("IMPORT alpha\nIMPORT beta\nPRINT total + AlphaValue() + BetaValue()", "main.axm",
+        [new SourceDocument("alpha.axm", "PUBLIC DIM total AS INTEGER = 2\nPUBLIC FUNCTION AlphaValue() AS INTEGER\nRETURN hidden\nEND FUNCTION\nDIM hidden AS INTEGER = 1"),
+         new SourceDocument("beta.axm", "PUBLIC FUNCTION BetaValue() AS INTEGER\nRETURN hidden\nEND FUNCTION\nDIM hidden AS INTEGER = 2")]);
+        Assert.True(graph.Complete);
+        var total = Assert.Single(graph.Symbols, s => s.Name == "total" && s.IsDeclaration);
+        Assert.Contains(graph.Symbols, s => s.SymbolId == total.SymbolId && !s.IsDeclaration && s.SourceFilePath == "main.axm");
+        var hidden = graph.Symbols.Where(s => s.Name == "hidden" && s.IsDeclaration).ToArray();
+        Assert.Equal(2, hidden.Length);
+        Assert.NotEqual(hidden[0].SymbolId, hidden[1].SymbolId);
+        Assert.All(hidden, declaration => Assert.All(graph.Symbols.Where(s => s.SymbolId == declaration.SymbolId),
+            site => Assert.Equal(declaration.SourceFilePath, site.SourceFilePath)));
+    }
 }

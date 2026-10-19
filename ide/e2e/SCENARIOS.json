@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 502,
+  "count": 503,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -2251,6 +2251,11 @@
       "id": "assistant-guards-and-tracked-history",
       "spec": "program-assistant.spec.js",
       "name": "Защита от пересечения разделов, только чтение, актуальная диагностика и возврат после правки"
+    },
+    {
+      "id": "project-symbol-index-navigation",
+      "spec": "project-symbols.spec.js",
+      "name": "Индекс символов: точка входа, переменные, типы, поля и параметры"
     },
     {
       "id": "regex-language-contract",

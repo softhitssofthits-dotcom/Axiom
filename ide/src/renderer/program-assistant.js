@@ -13,8 +13,9 @@ class ProgramAssistant {
     this.backButton = icon('assistant-back','arrow-left',()=>this.travel(this.back,this.forward));
     this.forwardButton = icon('assistant-forward','arrow-right',()=>this.travel(this.forward,this.back));
     this.refreshButton = icon('assistant-refresh','refresh',()=>this.refresh());
+    this.entryButton = icon('assistant-entry','home',()=>this.selectEntry());
     this.heading = document.createElement('strong'); this.heading.id = 'assistant-heading';
-    this.toolbar.append(this.backButton,this.forwardButton,this.refreshButton,this.heading);
+    this.toolbar.append(this.backButton,this.forwardButton,this.refreshButton,this.entryButton,this.heading);
     this.status = document.createElement('div'); this.status.id = 'assistant-status'; this.status.setAttribute('role','status');
     this.body = document.createElement('div'); this.body.id = 'assistant-body';
     this.root.append(this.toolbar,this.status,this.body); document.getElementById('panel-content').append(this.root);
@@ -26,6 +27,11 @@ class ProgramAssistant {
       const pending=this.pendingNavigation;
       if(pending&&![pending.origin,pending.target].some(file=>ide.openFiles.get(file)?.model===ide.editor.getModel()))this.pendingNavigation=null;
       queueMicrotask(()=>{this.invalidate();this.updateHistory();});
+    });
+    ide.editor.onDidChangeCursorPosition(event=>{
+      const pending=this.pendingNavigation;
+      if(pending?.position&&ide.editor.getModel()===pending.model&&
+        (event.position.lineNumber!==pending.position.lineNumber||event.position.column!==pending.position.column))this.pendingNavigation=null;
     });
     ide.monaco.editor.onDidChangeMarkers(resources=>{
       if(resources.some(uri=>uri.toString()===ide.editor.getModel()?.uri.toString())) ide.outlinePanel?.render();
@@ -64,8 +70,12 @@ class ProgramAssistant {
         run:()=>name==='createRegion'?this.regionDialog():this.show(name,this.currentItem())}));
       this.actions.push(ide.editor.addAction({id:'axiom.navigation.back',label:this.t('back'),keybindings:[ide.monaco.KeyMod.Alt|ide.monaco.KeyCode.LeftArrow],run:()=>this.travel(this.back,this.forward)}));
       this.actions.push(ide.editor.addAction({id:'axiom.navigation.forward',label:this.t('forward'),keybindings:[ide.monaco.KeyMod.Alt|ide.monaco.KeyCode.RightArrow],run:()=>this.travel(this.forward,this.back)}));
+      this.actions.push(ide.editor.addAction({id:'axiom.navigation.definition',label:this.t('definition'),keybindings:[ide.monaco.KeyCode.F12],contextMenuGroupId:'navigation',run:()=>this.symbols(true)}));
+      this.actions.push(ide.editor.addAction({id:'axiom.navigation.references',label:this.t('references'),keybindings:[ide.monaco.KeyMod.Shift|ide.monaco.KeyCode.F12],contextMenuGroupId:'navigation',run:()=>this.symbols(false)}));
+      this.actions.push(ide.editor.addAction({id:'axiom.navigation.entry',label:this.t('entry'),run:()=>this.selectEntry()}));
     }
     this.tab.textContent=this.t('tab');
+    UIControls.setLabel(this.entryButton,this.t('entry'));
     for(const [button,key] of [[this.backButton,'back'],[this.forwardButton,'forward'],[this.refreshButton,'refresh']]) UIControls.setLabel(button,this.t(key));
     if(this.view) this.heading.textContent=this.t(this.view.mode)+': '+(this.view.item?.displayName||this.view.item?.name||this.t('main'));
     if(this.view&&this.valid()&&this.graphView===this.view){
@@ -77,6 +87,41 @@ class ProgramAssistant {
   currentItem() {
     const line=this.ide.editor.getPosition()?.lineNumber;
     return this.ide.outlinePanel?.items.findLast(item=>line>=item.lineNo&&line<=item.endLineNo)||null;
+  }
+  selectEntry() {
+    const doc=this.ide.openFiles.get(this.ide.activeFile);
+    if(!doc||doc.path.startsWith('untitled')||!doc.path.toLowerCase().endsWith('.axm'))return;
+    this.ide.openFiles.navigationEntryId=this.ide.openFiles.navigationEntryId===doc.documentId?null:doc.documentId;
+    this.pendingNavigation=null;this.sequence++;this.clearBody();this.view=null;
+    this.status.textContent=this.ide.openFiles.navigationEntryId?this.t('entrySelected')+' '+doc.path:this.t('entryCleared');
+    this.ide.showPanel();this.ide.switchPanel('assistant');
+  }
+  async symbols(definition) {
+    const doc=this.ide.openFiles.get(this.ide.activeFile),position=this.ide.editor.getPosition();
+    if(!doc||!position)return;
+    this.pendingNavigation=null;this.clearBody();
+    const view={mode:definition?'definition':'references',file:this.ide.activeFile,model:doc.model,documentId:doc.documentId,
+      version:doc.model.getVersionId(),project:this.ide.openFiles.captureProject(this.ide.activeFile)};
+    const word=doc.model.getWordAtPosition(position);
+    this.view=view;const sequence=++this.sequence,offset=doc.model.getOffsetAt(word?{lineNumber:position.lineNumber,column:word.startColumn}:position);
+    this.localize();this.status.textContent=this.t('loading');this.ide.showPanel();this.ide.switchPanel('assistant');
+    try{
+      const graph=await this.ide.documentServices.request(view.file,'document.navigation');
+      if(sequence!==this.sequence||!this.valid(view))return;
+      if(!graph){this.status.textContent=this.t('stale');return;}
+      const currentPosition=this.ide.editor.getPosition();
+      if(currentPosition?.lineNumber!==position.lineNumber||currentPosition.column!==position.column){this.status.textContent=this.t('chooseAgain');return;}
+      this.graph=graph;
+      const site=graph.symbols?.find(s=>this.sameFile(s.sourceFilePath||view.file,view.file)&&s.start<=offset&&offset<s.start+s.length);
+      const sites=site?graph.symbols.filter(s=>s.symbolId===site.symbolId&&(!definition||s.isDeclaration)):[];
+      if(!sites.length){this.status.textContent=this.t('unresolved');return;}
+      this.status.textContent=this.t(graph.complete?'static':'partial');
+      for(const target of sites){
+        const label=target.name+' — '+(target.sourceFilePath?.split(/[\\/]/).at(-1)||this.t('main'))+':'+target.line+':'+target.column;
+        this.body.append(this.button(label,()=>this.navigateSource(view,target)));
+      }
+      if(definition&&sites.length===1)await this.navigateSource(view,sites[0]);
+    }catch(error){if(sequence===this.sequence&&this.valid(view))this.status.textContent=this.t('failed')+' '+error.message;}
   }
   alive(bookmark) {
     return [...this.ide.openFiles.values()].some(doc=>doc.documentId===bookmark.documentId&&doc.model===bookmark.model&&!doc.model.isDisposed()&&!!doc.model.getDecorationRange(bookmark.decoration));
@@ -129,9 +174,15 @@ class ProgramAssistant {
     // Открытие меняет состав проекта. Проверяем старый снимок до открытия,
     // затем фактический текст цели, прежде чем применять координаты.
     const bookmark=this.capture();
-    const operation={origin:view.file,target:file};this.pendingNavigation=operation;
+    const position=this.ide.editor?.getPosition?.();
+    const operation={origin:view.file,target:file,model:view.model,position};this.pendingNavigation=operation;
+    const canOpen=()=>{
+      const current=this.ide.editor?.getPosition?.();
+      return this.pendingNavigation===operation&&this.view===view&&this.valid(view)&&
+        (!position||(current?.lineNumber===position.lineNumber&&current.column===position.column));
+    };
     try {
-      if(!this.ide.openFiles.get(file))await this.ide.openFile(file);
+      if(!this.ide.openFiles.get(file))await this.ide.openFile(file,canOpen);
       if(this.pendingNavigation!==operation||this.view!==view){this.release(bookmark);return;}
       const doc=this.ide.openFiles.get(file);
       const original=this.ide.openFiles.get(view.file);
@@ -158,6 +209,7 @@ class ProgramAssistant {
   }
   refresh() {
     if(!this.view)return;
+    if(['definition','references'].includes(this.view.mode)){this.symbols(this.view.mode==='definition');return;}
     if(this.view.file!==this.ide.activeFile){this.status.textContent=this.t('chooseAgain');return;}
     this.ide.rebuildOutline();
     const matches=this.ide.outlinePanel.items.filter(i=>i.id===this.view.item?.id);
@@ -201,7 +253,7 @@ class ProgramAssistant {
       const graph=await this.ide.documentServices.request(view.file,'document.navigation');
       if(sequence!==this.sequence||!this.valid(view))return;
       if(!graph){this.status.textContent=this.t('stale');return;}
-      const routine=item?graph.routines.find(r=>this.sameFile(r.sourceFilePath||view.file,view.file)&&r.line===item.lineNo&&r.kind===item.kind&&r.name.split('.').at(-1).toUpperCase()===item.name.toUpperCase()):graph.routines.find(r=>r.id==='main');
+      const routine=item?graph.routines.find(r=>this.sameFile(r.sourceFilePath||view.file,view.file)&&r.line===item.lineNo&&r.kind===item.kind&&r.name.split('.').at(-1).toUpperCase()===item.name.toUpperCase()):graph.routines.find(r=>r.kind==='main'&&this.sameFile(r.sourceFilePath||view.file,view.file));
       if(!routine){this.status.textContent=this.t('unresolved');return;}
       this.graph=graph;this.graphView=view;this.graphRoot=routine;
       this.graphStatus(graph);

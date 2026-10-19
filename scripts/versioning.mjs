@@ -20,6 +20,11 @@ const valid = value => typeof value === 'string' && /^(0|[1-9]\d*)\.(0|[1-9]\d*)
 const fail = message => { throw new Error(message); };
 const validate = versions => {
   for (const c of components) if (!valid(versions[c])) fail(`Некорректная версия ${c}: ${versions[c]}`);
+  const change = versions.compilerOnlyChange;
+  if (change !== undefined && (!change || !valid(change.version) || typeof change.reason !== 'string' || !change.reason.trim() ||
+      !Array.isArray(change.paths) || !change.paths.length || new Set(change.paths).size !== change.paths.length ||
+      change.paths.some(p => typeof p !== 'string' || !/^src\/Axiom\.(Core|Semantics|Execution|Formatting)\/(?:[\w-]+\/)*[\w.-]+\.cs$/.test(p))))
+    fail('compilerOnlyChange требует версию компилятора, причину и точные пути его исходников.');
 };
 const coreSource = v => `// Создан scripts/versioning.mjs из versions.json. Не редактировать вручную.\nnamespace Axiom.Core;\n\npublic static class AxiomVersionInfo\n{\n    public const string LanguageVersion = "${v.language}";\n    public const string CompilerVersion = "${v.compiler}";\n}\n`;
 const propsSource = v => `<Project>\n  <!-- Создан scripts/versioning.mjs из versions.json. -->\n  <PropertyGroup>\n    <AxiomLanguageVersion>${v.language}</AxiomLanguageVersion>\n    <AxiomCompilerVersion>${v.compiler}</AxiomCompilerVersion>\n    <AxiomIdeVersion>${v.ide}</AxiomIdeVersion>\n    <Version Condition="'$(MSBuildProjectName)' != 'Axiom.DesktopHost'">${v.compiler}</Version>\n    <Version Condition="'$(MSBuildProjectName)' == 'Axiom.DesktopHost'">${v.ide}</Version>\n  </PropertyGroup>\n</Project>\n`;
@@ -80,9 +85,11 @@ function check() {
       old = JSON.parse(git('show', base + ':versions.json')); validate(old);
       const paths = git('diff', ...(staged ? ['--cached'] : []), '--name-only', base, '--').split('\n');
       const required = new Set();
+      const compilerOnlyPaths = new Set(v.compilerOnlyChange?.version === v.compiler ? v.compilerOnlyChange.paths : []);
       for (const p of paths) {
         if (/^src\/Axiom\.(Core|Lexing|Syntax|Parsing|Semantics|Bytecode|Runtime|Execution|Formatting)\//.test(p) && !p.endsWith('/AxiomVersionInfo.cs')) {
-          required.add('language'); required.add('compiler');
+          if (!compilerOnlyPaths.has(p)) required.add('language');
+          required.add('compiler');
         } else if (/^src\/Axiom\.Cli\//.test(p)) required.add('compiler');
         else if (/^(ide\/(src\/|scripts\/|package(?:-lock)?\.json$)|src\/Axiom\.Ide(?:\.[^/]+)?\/|src\/Axiom\.DesktopHost\/)/.test(p)) required.add('ide');
         else if (/^scripts\/package-ide\.mjs$/.test(p)) required.add('ide');
@@ -107,6 +114,7 @@ try {
     if (level === 'major') fail('Переход MAJOR выполняется отдельно по прямому решению автора; измените versions.json, выполните sync и добавьте запись в журнал.');
     const v = json('versions.json'); validate(v);
     const affected = scope === 'all' ? components : scope === 'language' ? ['language', 'compiler'] : [scope];
+    if (affected.includes('compiler')) delete v.compilerOnlyChange;
     for (const c of affected) { const n=v[c].split('.').map(Number); if(level==='minor'){n[1]++;n[2]=0;}else n[2]++; v[c]=n.join('.'); }
     write('versions.json', JSON.stringify(v, null, 2) + '\n'); sync(v);
     const date = new Intl.DateTimeFormat('sv-SE', {timeZone:'Europe/Moscow',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date());

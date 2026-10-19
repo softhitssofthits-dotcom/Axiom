@@ -881,7 +881,8 @@ class AxiomIDE {
     setTimeout(() => this.editor?.layout(), 0);
   }
 
-  async openFile(p) {
+  async openFile(p, isCurrent = () => true) {
+    if (!isCurrent()) return;
     if (this.openFiles.has(p)) {
       this.switchToFile(this.openFiles.get(p).path);
       // Re-opening an already-open file still bumps recency.
@@ -892,7 +893,8 @@ class AxiomIDE {
     }
     let content, readonly;
     try { content = await API.readFileContent(p); readonly = await API.fileReadonly(p); }
-    catch { alert(I18N.t('dialog.openFailed', p)); return; }
+    catch { if (isCurrent()) alert(I18N.t('dialog.openFailed', p)); return; }
+    if (!isCurrent()) return;
     const model = this.monaco.editor.createModel(content.replace(/^\uFEFF/, ''), /\.axm$/i.test(p) ? 'axiom' : 'plaintext', this.monaco.Uri.file(p));
     this.openFiles.set(p, { model, viewState: null, readonly });
     this.createTab(p);

@@ -5,7 +5,7 @@
   let nextId = 0;
   const key = path => String(path).replace(/\//g, '\\').toLowerCase();
   class DocumentStore {
-    constructor(onChange = () => {}) { this.entries = new Map(); this.onChange = onChange; }
+    constructor(onChange = () => {}) { this.entries = new Map(); this.onChange = onChange; this.navigationEntryId = null; }
     get size() { return this.entries.size; }
     has(path) { return this.entries.has(key(path)); }
     get(path) { return this.entries.get(key(path)); }
@@ -18,7 +18,11 @@
       const entry = { ...value, path, documentId: 'document-' + (++nextId), revision: 0, savedRevision: 0,
         savedText: value.model.getValue(), breakpoints: new Set(), readonly: !!value.readonly };
       entry.subscription = value.model.onDidChangeContent(() => {
-        if (entry.revision === 2147483647) { entry.documentId = 'document-' + (++nextId); entry.revision = 0; }
+        if (entry.revision === 2147483647) {
+          const selected = this.navigationEntryId === entry.documentId;
+          entry.documentId = 'document-' + (++nextId); entry.revision = 0;
+          if (selected) this.navigationEntryId = entry.documentId;
+        }
         else entry.revision++;
         this.onChange();
       });
@@ -28,7 +32,12 @@
     *values() { yield* this.entries.values(); }
     *[Symbol.iterator]() { for (const entry of this.entries.values()) yield [entry.path, entry]; }
     forEach(callback) { for (const entry of this.entries.values()) callback(entry, entry.path, this); }
-    delete(path) { const entry = this.get(path); if (!entry) return false; entry.subscription.dispose(); const deleted = this.entries.delete(key(path)); this.onChange(); return deleted; }
+    delete(path) {
+      const entry = this.get(path); if (!entry) return false;
+      entry.subscription.dispose(); const deleted = this.entries.delete(key(path));
+      if (this.navigationEntryId === entry.documentId) this.navigationEntryId = null;
+      this.onChange(); return deleted;
+    }
     rename(oldPath, newPath) {
       const entry = this.get(oldPath); if (!entry) throw new Error('Документ не найден.');
       const other = this.get(newPath); if (other && other !== entry) throw new Error('Целевой документ уже открыт.');

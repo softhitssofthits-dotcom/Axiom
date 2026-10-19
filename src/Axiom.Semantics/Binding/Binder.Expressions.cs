@@ -122,6 +122,7 @@ public sealed partial class Binder
     {
         if (_scope.TryLookupVariable(expression.IdentifierToken.Text, out var variable) && variable is not null)
         {
+            _editorReferences?.Add(new(variable, expression.IdentifierToken.Location, false));
             return new BoundVariableExpression(expression.IdentifierToken.Location, variable);
         }
 

@@ -12,6 +12,7 @@ public sealed partial class Binder
             if (_declaredTypes.TryGetValue(nameExpression.IdentifierToken.Text, out var recordType)
                 || _importedTypes.TryGetValue(nameExpression.IdentifierToken.Text, out recordType))
             {
+                _editorReferences?.Add(new(recordType, nameExpression.IdentifierToken.Location, false));
                 return BindTypeCreationExpression(recordType, expression);
             }
 

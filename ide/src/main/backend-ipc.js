@@ -65,6 +65,10 @@ function setupBackendIpc() {
         !Number.isInteger(snapshot.documentRevision) || snapshot.documentRevision < 0 || snapshot.documentRevision > 2147483647 ||
         !validateProjectDocuments(snapshot.sourceFilePath,snapshot.projectDocuments,snapshot.documentId))
       throw new Error('Недопустимый запрос документа.');
+    if(snapshot.navigationEntryPath!=null&&(
+      method!=='document.navigation'||typeof snapshot.navigationEntryPath!=='string'||!path.isAbsolute(snapshot.navigationEntryPath)||
+      typeof snapshot.sourceFilePath!=='string'||path.dirname(path.resolve(snapshot.navigationEntryPath)).toLowerCase()!==path.dirname(path.resolve(snapshot.sourceFilePath)).toLowerCase()||
+      path.extname(snapshot.navigationEntryPath).toLowerCase()!=='.axm'))throw new Error('Недопустимая точка входа навигации.');
     return getClient().request(method, snapshot);
   });
   handle('backend-start', async document => {

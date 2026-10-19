@@ -25,9 +25,25 @@ internal static class DocumentCommands
         var openDocuments = projectDocuments.Select(document=>new SourceDocument(document.SourceFilePath,document.SourceText)).ToArray();
         if (method == "document.navigation")
         {
-            var graph = EditorCallGraph.Analyse(snapshot.SourceText, snapshot.SourceFilePath,
-                SourceProject.LoadDependencies(snapshot.SourceText, snapshot.SourceFilePath, openDocuments));
-            return new { snapshot.DocumentId, snapshot.DocumentRevision, graph.Routines, graph.Calls, graph.IndirectCalls, graph.Complete, graph.SourceDocuments };
+            var entryText = snapshot.SourceText;
+            var entryPath = snapshot.SourceFilePath;
+            var navigationDocuments = openDocuments.ToList();
+            if (entryPath is not null) navigationDocuments.Add(new SourceDocument(entryPath, entryText));
+            if (snapshot.NavigationEntryPath is { } selected)
+            {
+                if (!Path.IsPathFullyQualified(selected) || entryPath is null ||
+                    !string.Equals(Path.GetDirectoryName(Path.GetFullPath(selected)), Path.GetDirectoryName(Path.GetFullPath(entryPath)), StringComparison.OrdinalIgnoreCase) ||
+                    !string.Equals(Path.GetExtension(selected), ".axm", StringComparison.OrdinalIgnoreCase))
+                    throw new ArgumentException("Точка входа навигации должна быть файлом .axm в той же папке.");
+                var entry = navigationDocuments.FirstOrDefault(d => string.Equals(Path.GetFullPath(d.Name), Path.GetFullPath(selected), StringComparison.OrdinalIgnoreCase))
+                    ?? throw new ArgumentException("Откройте точку входа навигации в редакторе.");
+                entryPath = entry.Name; entryText = entry.Text;
+            }
+            var graph = EditorCallGraph.Analyse(entryText, entryPath,
+                SourceProject.LoadDependencies(entryText, entryPath, navigationDocuments));
+            if (!graph.SourceDocuments.Any(d => string.Equals(d.SourceFilePath, snapshot.SourceFilePath, StringComparison.OrdinalIgnoreCase)))
+                throw new ArgumentException("Текущий файл не входит в IMPORT выбранной точки входа. Выберите другую точку входа навигации.");
+            return new { snapshot.DocumentId, snapshot.DocumentRevision, graph.Routines, graph.Calls, graph.IndirectCalls, graph.Complete, graph.SourceDocuments, graph.Symbols };
         }
         if (method == "document.hover")
         {

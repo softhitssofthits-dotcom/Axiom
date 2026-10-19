@@ -94,7 +94,8 @@ public sealed partial class Binder
         string entryModuleName,
         out DiagnosticBag diagnostics,
         bool checkGraphicsModes = true,
-        InitialGraphicsContext initialGraphicsContext = InitialGraphicsContext.None)
+        InitialGraphicsContext initialGraphicsContext = InitialGraphicsContext.None,
+        bool collectEditorSymbols = false)
     {
         ArgumentNullException.ThrowIfNull(modules);
         ArgumentException.ThrowIfNullOrWhiteSpace(entryModuleName);
@@ -193,6 +194,7 @@ public sealed partial class Binder
         var allGlobalStatements = new List<BoundStatement>();
         var allRoutines = new List<BoundRoutine>();
         var boundModules = new Dictionary<string, ModuleSymbol>(StringComparer.OrdinalIgnoreCase);
+        var editorSymbols = collectEditorSymbols ? new List<EditorSymbolOccurrence>() : null;
 
         foreach (var module in order)
         {
@@ -203,6 +205,7 @@ public sealed partial class Binder
                 .Select(dependency => boundModules[dependency.Name])
                 .ToArray();
             var binder = new Binder(imports, GetModuleLocation(module));
+            if (collectEditorSymbols) { binder._editorStatements = []; binder._editorReferences = []; binder._editorGlobalConstantReferences = []; }
 
             binder.DeclareModule(module.Syntax);
             binder.BindModuleGlobals(module.Syntax);
@@ -226,12 +229,13 @@ public sealed partial class Binder
             {
                 allGlobalStatements.AddRange(binder._globalStatements);
                 allRoutines.AddRange(binder._routines);
+                editorSymbols?.AddRange(binder.CollectEditorSymbols());
             }
 
             boundModules[module.Name] = binder.CreateModuleSymbol(module);
         }
 
-        var boundProgram = new BoundProgram(GetModuleLocation(entryModule), allGlobalStatements, allRoutines, boundModules);
+        var boundProgram = new BoundProgram(GetModuleLocation(entryModule), allGlobalStatements, allRoutines, boundModules, editorSymbols);
 
         if (checkGraphicsModes)
         {

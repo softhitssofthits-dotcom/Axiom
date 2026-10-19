@@ -88,3 +88,21 @@ for (const stale of [false, true]) {
     else await assert.rejects(operation, /Отказ проверки/);
   });
 }
+
+test('Отменённое открытие навигации не создаёт модель и не переключает вкладку после чтения', async () => {
+  const {ide} = app();
+  let resolve, current = true, switched = false, created = false;
+  const context = {window: {axiom: {readFileContent: () => new Promise(done => {resolve = done;}), fileReadonly: async () => false,
+    watchFile: async () => {}, addRecentFile: async () => []}},
+    I18N: {t: key => key}, alert() { throw new Error('Неожиданное уведомление'); }};
+  vm.createContext(context);
+  vm.runInContext(fs.readFileSync(require.resolve('../src/renderer/app.js'), 'utf8')
+    .replace('window.__ide = new AxiomIDE();', 'window.AxiomIDE = AxiomIDE;'), context);
+  ide.monaco = {Uri: {file: path => path}, editor: {createModel() { created = true; return {}; }}};
+  ide.switchToFile = () => { switched = true; };
+  ide.createTab = () => {}; ide.scheduleLiveCheck = () => {}; ide.settings = {}; ide.renderRecentFiles = () => {};
+  const request = context.window.AxiomIDE.prototype.openFile.call(ide, 'helper.axm', () => current);
+  current = false; resolve('PRINT 1'); await request;
+  assert.equal(created, false); assert.equal(switched, false);
+  assert.equal(ide.openFiles.has('helper.axm'), false);
+});

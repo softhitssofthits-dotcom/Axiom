@@ -40,3 +40,27 @@ test('Исчезнувший неизменённый файл требует с
   editor.edit('PRINT 2'); editor.edit('PRINT 1'); assert.equal(store.isDirty('a.axm'), true);
   store.markSaved('a.axm'); assert.equal(store.isDirty('a.axm'), false);
 });
+
+test('Закрытие точки входа снимает выбор до уведомления; закрытие зависимости его сохраняет', () => {
+  let observed;
+  const store = new DocumentStore(() => { observed = store.navigationEntryId; });
+  store.set('main.axm', { model: model('IMPORT helper') });
+  store.set('helper.axm', { model: model('PRINT 1') });
+  const entryId = store.get('main.axm').documentId;
+  store.navigationEntryId = entryId;
+  store.delete('helper.axm'); assert.equal(observed, entryId);
+  store.delete('main.axm'); assert.equal(observed, null);
+  store.set('main.axm', { model: model('PRINT 2') });
+  assert.equal(store.navigationEntryId, null);
+});
+
+test('Выбранная точка входа переживает переименование и смену идентичности при переполнении редакции', () => {
+  const store = new DocumentStore(), editor = model('PRINT 1');
+  store.set('main.axm', { model: editor });
+  store.navigationEntryId = store.get('main.axm').documentId;
+  store.rename('main.axm', 'renamed.axm');
+  const entry = store.get('renamed.axm');
+  assert.equal(store.navigationEntryId, entry.documentId);
+  entry.revision = 2147483647; editor.edit('PRINT 2');
+  assert.equal(store.navigationEntryId, entry.documentId);
+});

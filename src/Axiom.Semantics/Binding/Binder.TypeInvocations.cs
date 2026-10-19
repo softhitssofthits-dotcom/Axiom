@@ -208,6 +208,8 @@ public sealed partial class Binder
                 continue;
             }
 
+            _editorReferences?.Add(new(field, namedArgument.IdentifierToken.Location, false));
+
             var value = BindExpression(namedArgument.Expression, field.Type);
             initializers.Add(new BoundRecordLiteralFieldInitializer(field, value));
         }

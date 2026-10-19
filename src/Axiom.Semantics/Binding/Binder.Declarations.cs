@@ -25,10 +25,12 @@ public sealed partial class Binder
                 continue;
             }
 
-            if (!_declaredTypes.TryAdd(name, new UserDefinedTypeSymbol(name)))
+            var type = new UserDefinedTypeSymbol(name);
+            if (!_declaredTypes.TryAdd(name, type))
             {
                 ReportDuplicateDeclaration(name, typeDeclaration.Identifier.Location);
             }
+            else _editorReferences?.Add(new(type, typeDeclaration.Identifier.Location, true));
         }
     }
 
@@ -79,11 +81,15 @@ public sealed partial class Binder
 
                             if (!hasFixedStringLength)
                             {
-                                fields.Add(new TypeFieldSymbol(declarator.Identifier.Text, TypeSymbol.Error));
+                                var invalidField = new TypeFieldSymbol(declarator.Identifier.Text, TypeSymbol.Error);
+                                fields.Add(invalidField);
+                                _editorReferences?.Add(new(invalidField, declarator.Identifier.Location, true));
                                 continue;
                             }
 
-                            fields.Add(BindTypeField(fieldDeclaration, declarator, fieldType, fixedStringLength));
+                            var field = BindTypeField(fieldDeclaration, declarator, fieldType, fixedStringLength);
+                            fields.Add(field);
+                            _editorReferences?.Add(new(field, declarator.Identifier.Location, true));
                         }
                     }
 
@@ -614,7 +620,9 @@ public sealed partial class Binder
                 break;
 
             case NameExpressionSyntax nameExpression:
-                return TryResolveGlobalIntegralConstant(nameExpression.IdentifierToken.Text, activeConstants, out value);
+                var resolved = TryResolveGlobalIntegralConstant(nameExpression.IdentifierToken.Text, activeConstants, out value);
+                if (resolved) _editorGlobalConstantReferences?.Add(nameExpression.IdentifierToken);
+                return resolved;
 
             case ParenthesizedExpressionSyntax parenthesizedExpression:
                 return TryEvaluateGlobalIntegralConstantCore(parenthesizedExpression.Expression, activeConstants, out value);
