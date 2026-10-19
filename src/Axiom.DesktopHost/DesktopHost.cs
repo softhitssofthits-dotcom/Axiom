@@ -24,6 +24,7 @@ internal sealed class DesktopHost : IDisposable
     private readonly JsonSerializerOptions _json = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
     private string? _sessionId;
     private string? _graphicsSessionId;
+    private string _surfaceKind = "screen";
     private int _documentRequests;
     private long _sequence;
     private long _stopCounter;
@@ -69,7 +70,10 @@ internal sealed class DesktopHost : IDisposable
         {
             if (_sessionId is not null && e.PropertyName is nameof(ProgramConsoleService.GraphicsFrame) or nameof(ProgramConsoleService.ScreenWindowHandle) or nameof(ProgramConsoleService.IsScreenActive) or nameof(ProgramConsoleService.IsCanvasActive))
             {
-                Event("graphics.surface", new { kind = _console.IsCanvasActive ? "canvas" : "screen",
+                // При деактивации флаги уже сброшены; closed относится к прежней поверхности.
+                if (_console.IsCanvasActive) _surfaceKind = "canvas";
+                else if (_console.IsScreenOutputActive) _surfaceKind = "screen";
+                Event("graphics.surface", new { kind = _surfaceKind,
                     state = _console.IsScreenOutputActive || _console.IsCanvasActive ? "changed" : "closed",
                     logicalWidth = _console.ScreenWidth, logicalHeight = _console.ScreenHeight,
                     windowHandle = _console.ScreenWindowHandle.ToInt64().ToString(),
@@ -367,6 +371,8 @@ internal sealed class DesktopHost : IDisposable
 
     private void Cancel()
     {
+        if (_console.IsCanvasActive) _surfaceKind = "canvas";
+        else if (_console.IsScreenOutputActive) _surfaceKind = "screen";
         _cancel?.Cancel();
         if (_console.IsWaitingForInput) _console.CancelPendingInput();
         _inputRequestId = null;

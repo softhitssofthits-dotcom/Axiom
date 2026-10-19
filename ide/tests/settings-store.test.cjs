@@ -90,3 +90,16 @@ test('Импорт не заменяет существующее состоян
   new SettingsStore(w.current, { legacyPath: w.legacy }).load();
   assert.equal(fs.readFileSync(file, 'utf8'), state);
 });
+test('Атомарная запись повторяет временную блокировку переименования', t => {
+  const w = workspace(t); let attempts = 0;
+  const store = new SettingsStore(w.current, { legacyPath: w.legacy, fs: {
+    ...fs,
+    renameSync(source, target) {
+      attempts++;
+      if (attempts < 3) { const error = new Error('temporary sharing violation'); error.code = 'EPERM'; throw error; }
+      return fs.renameSync(source, target);
+    },
+  } });
+  assert.equal(store.save({ theme: 'dark', language: 'ru' }), true);
+  assert.equal(attempts, 3);
+});

@@ -1,7 +1,7 @@
 ﻿' Ожидается: загружает значок IDE, печатает размер, рисует два раза и ждёт ESC.
 SCREEN 1
 DIM logo AS IMAGE
-logo = LOADIMAGE("../../../src/Axiom.Ide/Assets/axiom.ico")
+logo = LOADIMAGE("../assets/axiom.ico")
 PRINT "image size="; IMAGEWIDTH(logo); "x"; IMAGEHEIGHT(logo)
 DRAWIMAGE logo, 16, 24
 SLEEP

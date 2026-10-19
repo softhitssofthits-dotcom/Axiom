@@ -2937,8 +2937,8 @@ public sealed class AcceptanceProgramTests
             var calibrationPath = Path.Combine(calibrationDirectory, "maze_chase_pellet_calibration.txt");
             var calibrationText = File.ReadAllText(calibrationPath);
             Assert.StartsWith("' Полный снимок текущей калибровки maze_chase", calibrationText, StringComparison.Ordinal);
-            Assert.Contains("pelletCenterRows(5) = -33", calibrationText, StringComparison.Ordinal);
-            Assert.DoesNotContain("pelletCenterRows(5) = 12", calibrationText, StringComparison.Ordinal);
+            Assert.Contains("pelletRowOffset(5) = -33", calibrationText, StringComparison.Ordinal);
+            Assert.DoesNotContain("pelletRowOffset(5) = 12", calibrationText, StringComparison.Ordinal);
         }
         finally
         {
@@ -2962,8 +2962,8 @@ public sealed class AcceptanceProgramTests
             File.Copy(sourceGamePath, targetGamePath, overwrite: true);
 
             var calibrationText = File.ReadAllText(Path.Combine(repositoryRoot, "samples", "graphics", "game", "maze_chase_pellet_calibration.txt"));
-            calibrationText = calibrationText.Replace("pelletCenterRows(5) = -33", "pelletCenterRows(5) = -44", StringComparison.Ordinal);
-            calibrationText = calibrationText.Replace("pelletCenterCols(26) = 0", "pelletCenterCols(26) = 9", StringComparison.Ordinal);
+            calibrationText = calibrationText.Replace("pelletRowOffset(5) = -33", "pelletRowOffset(5) = -44", StringComparison.Ordinal);
+            calibrationText = calibrationText.Replace("pelletColOffset(26) = 0", "pelletColOffset(26) = 9", StringComparison.Ordinal);
             File.WriteAllText(targetCalibrationPath, calibrationText);
 
             var result = RunFromWorkingDirectory(workingDirectory, sourceText);
@@ -2973,16 +2973,16 @@ public sealed class AcceptanceProgramTests
             Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
             Assert.Equal(
                 [
-                    "Калибровка перенесена в maze_chase.axm.",
-                    "Процедура InitPelletAlignment() полностью обновлена из файла калибровки."
+                    "Калибровка встроена в maze_chase.axm.",
+                    "Исходник сохранён в maze_chase.axm.bak."
                 ],
                 result.Output);
 
             var updatedGameText = File.ReadAllText(targetGamePath);
-            Assert.Contains("pelletCenterRows(5) = -44", updatedGameText, StringComparison.Ordinal);
-            Assert.Contains("pelletCenterCols(26) = 9", updatedGameText, StringComparison.Ordinal);
-            Assert.DoesNotContain("pelletCenterRows(5) = -33", updatedGameText, StringComparison.Ordinal);
-            Assert.DoesNotContain("pelletCenterCols(26) = 0", updatedGameText, StringComparison.Ordinal);
+            Assert.Contains("pelletRowOffset(5) = -44", updatedGameText, StringComparison.Ordinal);
+            Assert.Contains("pelletColOffset(26) = 9", updatedGameText, StringComparison.Ordinal);
+            Assert.DoesNotContain("pelletRowOffset(5) = -33", updatedGameText, StringComparison.Ordinal);
+            Assert.DoesNotContain("pelletColOffset(26) = 0", updatedGameText, StringComparison.Ordinal);
         }
         finally
         {

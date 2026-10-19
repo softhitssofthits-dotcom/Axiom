@@ -132,6 +132,13 @@ public sealed partial class BytecodeVm
         var left = GetWholeNumberUnchecked(PopValue(frame, instructionIndex));
         if (!TryApplyCanvasViewport(left, top, rightExclusive, bottomExclusive))
         {
+            // Окно закрыли во время выполнения: флаг активности ещё виден,
+            // но поверхности уже нет. Отмена не должна выглядеть ошибкой аргумента.
+            if (_host.ScreenWidth <= 0 || _host.ScreenHeight <= 0)
+            {
+                return;
+            }
+
             ReportInvalidCanvasViewport("VIEWPORT", location);
             throw new RuntimeFailureException();
         }

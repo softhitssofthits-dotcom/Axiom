@@ -55,8 +55,7 @@ node ide/e2e/runner.js --list
 | `execution` | `Axiom.Execution.Tests` | Подготовка и исполнение программ |
 | `runtime` | `Axiom.Runtime.Tests` | Встроенные функции, значения, границы |
 | `cli` | `Axiom.Cli.Tests` | Команды `axiom` и их вывод |
-| `ide-backend` | `Axiom.Ide.Backend.Tests` | Общие службы DesktopHost |
-| `ide-dotnet` | `Axiom.Ide.Tests` | Модель IDE на C# |
+| `ide-backend` | `Axiom.Ide.Backend.Tests` | Общие службы DesktopHost и графики |
 | `language` | Все языковые проекты | Сквозная правка языка без IDE |
 | `dotnet-all` | `Axiom.sln` | Полная проверка .NET |
 

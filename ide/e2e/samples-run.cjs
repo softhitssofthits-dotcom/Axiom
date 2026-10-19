@@ -10,7 +10,6 @@ fs.cpSync(path.join(ROOT, 'samples'), path.join(sandbox, 'samples'), { recursive
 for (const name of ['README.md', 'PROJECT.md']) fs.copyFileSync(path.join(ROOT, name), path.join(sandbox, name));
 fs.mkdirSync(path.join(sandbox, 'docs'), { recursive: true });
 fs.copyFileSync(path.join(ROOT, 'docs', 'PLANS4.md'), path.join(sandbox, 'docs', 'PLANS4.md'));
-fs.cpSync(path.join(ROOT, 'src', 'Axiom.Ide', 'Assets'), path.join(sandbox, 'src', 'Axiom.Ide', 'Assets'), { recursive: true });
 function files(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap(e => e.isDirectory()
     ? files(path.join(dir, e.name)) : e.name.endsWith('.axm') ? [path.join(dir, e.name)] : []);

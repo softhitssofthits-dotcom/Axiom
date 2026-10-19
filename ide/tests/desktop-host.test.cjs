@@ -220,7 +220,9 @@ test('CANVAS использует нативное GPU-окно без обыч�
     assert.equal(pending.length, 0, 'Нет частичного заголовка или пиксельных данных');
     await h.request('execution.stop', {}, 's1');
     assert.equal((await h.event('execution.finished', 's1')).payload.status, 'Cancelled');
-    const closed = await h.wait(m => m.event === 'graphics.surface' && m.payload.kind === 'canvas' && m.payload.state === 'closed');
+    const closed = await h.wait(m => m.event === 'graphics.surface' && m.payload.state === 'closed' &&
+      BigInt(m.sequence) > BigInt(opened.sequence));
+    assert.equal(closed.payload.kind, 'canvas');
     assert.equal(closed.payload.windowHandle, '0');
   } finally { socket?.destroy(); await h.close(); }
 });

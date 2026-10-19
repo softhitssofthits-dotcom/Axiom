@@ -25,7 +25,6 @@ $dotnetGroups = [ordered]@{
     "runtime"    = @("tests/Axiom.Runtime.Tests/Axiom.Runtime.Tests.csproj")
     "cli"        = @("tests/Axiom.Cli.Tests/Axiom.Cli.Tests.csproj")
     "ide-backend" = @("tests/Axiom.Ide.Backend.Tests/Axiom.Ide.Backend.Tests.csproj")
-    "ide-dotnet" = @("tests/Axiom.Ide.Tests/Axiom.Ide.Tests.csproj")
     "language"   = @(
         "tests/Axiom.Lexing.Tests/Axiom.Lexing.Tests.csproj"
         "tests/Axiom.Syntax.Tests/Axiom.Syntax.Tests.csproj"
@@ -49,7 +48,7 @@ function Show-Groups {
     Write-Host "Группы Electron (ide/e2e):"
     $e2eGroups.PSObject.Properties.Name | ForEach-Object { Write-Host "  $_" }
     Write-Host "Составные:"
-    Write-Host "  ide        — ide-dotnet + ide-backend + ide-unit-all + e2e-all"
+        Write-Host "  ide        — ide-backend + ide-unit-all + e2e-all"
     Write-Host "  all        — dotnet-all + ide-unit-all + e2e-all"
 }
 
@@ -96,7 +95,6 @@ try {
             $failures += Invoke-E2E "e2e-all"
         }
         "ide" {
-            $failures += Invoke-Dotnet $dotnetGroups["ide-dotnet"]
             $failures += Invoke-Dotnet $dotnetGroups["ide-backend"]
             $failures += Invoke-Unit $unitGroups."ide-unit-all"
             $failures += Invoke-E2E "e2e-all"
