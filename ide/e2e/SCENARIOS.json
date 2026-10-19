@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 503,
+  "count": 506,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -1878,6 +1878,11 @@
       "name": "SCREEN и CANVAS сразу выходят на передний план при запуске"
     },
     {
+      "id": "graphics-input-console-duplication",
+      "spec": "graphics-input-console.spec.js",
+      "name": "INPUT в режиме SCREEN работает только в окне и не дублирует приглашение в консоли"
+    },
+    {
       "id": "graphics-input-native-lifecycle",
       "spec": "graphics-input.spec.js",
       "name": "SCREEN: нативный INPUT сохраняет фокус, закрывает запрос и повторяет неверное число"
@@ -1951,6 +1956,16 @@
       "id": "highlight-interpolation-dollar",
       "spec": "highlighting.spec.js",
       "name": "Знак доллара интерполяции совпадает по цвету с фигурными скобками"
+    },
+    {
+      "id": "highlight-unterminated-string-stops-at-line-end",
+      "spec": "highlighting.spec.js",
+      "name": "Незакрытый литерал не продолжается на следующей строке"
+    },
+    {
+      "id": "highlight-interpolation-text-escapes",
+      "spec": "highlighting.spec.js",
+      "name": "Удвоенные скобки и кавычки интерполяции относятся к тексту, а не к вставке"
     },
     {
       "id": "i18n-editor-context-menu",

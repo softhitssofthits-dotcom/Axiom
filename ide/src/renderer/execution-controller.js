@@ -155,14 +155,19 @@ class ExecutionController {
       ? fullHistory.slice(prefix.length).replace(/^\r?\n/, '') : fullHistory;
     if (this.clearedEmptyHistory) history = history.replace(/^\r?\n/, '');
     const hasHistory = history.length > 0 || this.outputLineCount > (this.clearedOutputLineCount || 0);
-    const separator = this.inputRequestId && hasHistory ? '\n' : '';
-    const text = history + separator + (this.inputRequestId ? this.inputPrompt + this.inputText : '');
+    // Ввод принадлежит окну SCREEN: приглашение рисует само окно, и в консоли
+    // его быть не должно.
+    const pending = this.inputRequestId && this.inputTarget !== 'screen' ? this.inputPrompt + this.inputText : '';
+    const separator = pending && hasHistory ? '\n' : '';
+    const text = history + separator + pending;
     // write() асинхронен: синхронный reset() не удаляет ожидающие записи.
     // RIS сбрасывает терминал внутри той же очереди перед новым снимком.
     this.ide.term.write('\x1bc' + text.replace(/\r?\n/g, '\r\n'));
   }
   async input(data) {
     if (data === '\u0003') { await this.stop(); return; }
+    // Пока SCREEN активен, ответ принимает только его окно.
+    if (this.inputTarget === 'screen') return;
     if (!this.inputRequestId) return;
     for (const character of data) {
       if (character === '\r' || character === '\n') {

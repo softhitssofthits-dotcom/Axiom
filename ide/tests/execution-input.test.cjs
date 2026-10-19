@@ -112,3 +112,35 @@ test('Запоздалое добавление не меняет опережа
   event('output.append', { text: '\nВторая\nТретья', outputVersion: '2', outputLineCount: 3 });
   assert.equal(controller.outputLineCount, 3);
 });
+
+test('Запрос SCREEN не дублирует приглашение в консоли IDE', () => {
+  const { request, calls } = setup();
+  request('1', 'screen');
+  assert.doesNotMatch(calls.output, /Ответ:/);
+});
+
+test('Консольный запрос по-прежнему показывает приглашение', () => {
+  const { request, calls } = setup();
+  request('1', 'console');
+  assert.match(calls.output, /Ответ:/);
+});
+
+test('Терминал не отправляет ответ, пока ввод принадлежит окну SCREEN', async () => {
+  const { request, controller, calls } = setup();
+  request('1', 'screen');
+  await controller.input('чужой ответ\r');
+  assert.equal(calls.submitted.length, 0);
+  assert.equal(controller.inputRequestId, '1');
+  assert.equal(controller.inputText, '');
+});
+
+test('После нативного завершения запроса SCREEN терминал снова работает', async () => {
+  const { request, event, controller, calls } = setup();
+  request('1', 'screen');
+  await controller.input('игнор\r');
+  event('input.completed', { inputRequestId: '1' });
+  request('2', 'console');
+  await controller.input('42\r');
+  assert.equal(calls.submitted.length, 1);
+  assert.equal(calls.submitted[0][2], '42');
+});
