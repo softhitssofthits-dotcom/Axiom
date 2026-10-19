@@ -1496,6 +1496,21 @@ VIEWPORT (200, 10)-(210, 20)
     }
 
     [Fact]
+    public void Execute_CompiledViewportDuringCanvasTeardownDoesNotReportInvalidArgument()
+    {
+        // Окно закрывают во время выполнения: флаг активности ещё виден,
+        // а размеры поверхности уже сброшены.
+        var host = new TestRuntimeHost();
+        host.ActivateCanvas(160, 90);
+        host.LoseCanvasSurface();
+
+        var (_, _, result) = ExecuteProgram("VIEWPORT (10, 10)-(20, 20)", host);
+
+        Assert.True(result.Succeeded);
+        Assert.DoesNotContain(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3007");
+    }
+
+    [Fact]
     public void Execute_CompiledViewportAcceptsIntegerExpressionsFromProgramState()
     {
         const string text = """
@@ -7538,6 +7553,14 @@ END FUNCTION
             ResetWindow();
             ResetTextViewport();
             CanvasActivations.Add((width, height));
+        }
+
+        // Окно могли закрыть между проверкой активности и выполнением инструкции:
+        // флаг ещё виден как активный, но поверхности уже нет.
+        public void LoseCanvasSurface()
+        {
+            _canvasWidth = 0;
+            _canvasHeight = 0;
         }
 
         public void SetGraphicsSmoothing(bool enabled) => GraphicsSmoothingChanges.Add(enabled);
