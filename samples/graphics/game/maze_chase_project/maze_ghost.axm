@@ -1,0 +1,90 @@
+' maze_ghost — преследователь и поиск кратчайшего клеточного пути.
+' Единую программу запускает main.axm; этот файл не запускает игровой цикл при импорте.
+' PUBLIC обозначает договор с соседними модулями; PRIVATE сохраняет внутреннее состояние.
+
+IMPORT maze_config
+IMPORT maze_world
+IMPORT maze_motion
+
+' #region Закрытое состояние призрака
+
+PRIVATE DIM ghost AS Walker                                                                             ' Состояние призрака использует ту же модель перемещения.
+PRIVATE DIM ghostTarget AS Walker
+
+' #endregion
+
+' #region Открытые операции призрака
+
+' ResetGhost возвращает призрака на стартовую клетку, не меняя цель героя.
+PUBLIC SUB ResetGhost()
+    ghost.tileCol = GhostStartColumn()                                                                    ' Возвращаем призрака в стартовый столбец.
+    ghost.tileRow = GhostStartRow()                                                                    ' Возвращаем призрака в стартовую строку.
+    ghost.dir = DIR_LEFT                                                                         ' По умолчанию призрак стартует движением влево.
+    ghost.wantedDir = DIR_LEFT                                                                     ' И желаемое направление у него тоже влево.
+    ghost.travel = 0                                                                             ' Внутриклеточный путь призрака также обнуляем.
+END SUB
+
+' StepGhost получает снимок цели и передаёт собственный Walker по ссылке.
+' Выбор направления видит актуальную клетку призрака на каждом новом узле шага.
+PUBLIC SUB StepGhost(target AS Walker)
+    ghostTarget = target
+    StepWalker(ghost, GHOST_SPEED, TRUE, ChooseGhostDirection)
+END SUB
+
+' GetGhost выдаёт только копию; состояние изменяется через StepGhost/ResetGhost.
+PUBLIC FUNCTION GetGhost() AS Walker
+    RETURN ghost
+END FUNCTION
+
+' #endregion
+
+' #region Выбор маршрута
+
+' ChooseGhostDirection — Функция ищет кратчайший проходимый путь к клетке героя.
+PRIVATE FUNCTION ChooseGhostDirection() AS INTEGER                                                     ' Функция ищет кратчайший проходимый путь к клетке героя.
+    DIM visited(1 TO MAZE_ROWS, 1 TO MAZE_COLUMNS) AS BOOLEAN                                  ' Отмечает клетки, уже добавленные в очередь поиска.
+    DIM firstDirection(1 TO MAZE_ROWS, 1 TO MAZE_COLUMNS) AS INTEGER                            ' Хранит первый ход кратчайшего пути до каждой клетки.
+    DIM queueRows(1 TO MAZE_ROWS * MAZE_COLUMNS) AS INTEGER                                    ' Очередь строк для обхода карты в ширину.
+    DIM queueCols(1 TO MAZE_ROWS * MAZE_COLUMNS) AS INTEGER                                    ' Очередь столбцов для обхода карты в ширину.
+    DIM head AS INTEGER = 1                                                                     ' Индекс следующей клетки для обработки.
+    DIM tail AS INTEGER = 1                                                                     ' Индекс последней добавленной клетки.
+    DIM currentRow AS INTEGER                                                                   ' Строка клетки, которую сейчас обрабатываем.
+    DIM currentCol AS INTEGER                                                                   ' Столбец клетки, которую сейчас обрабатываем.
+    DIM nextRow AS INTEGER                                                                      ' Строка проверяемого соседнего узла.
+    DIM nextCol AS INTEGER                                                                      ' Столбец проверяемого соседнего узла с учётом туннеля.
+
+    queueRows(1) = ghost.tileRow                                                                ' Поиск начинается с текущей клетки призрака.
+    queueCols(1) = ghost.tileCol
+    visited(ghost.tileRow, ghost.tileCol) = TRUE
+
+    DO WHILE head <= tail                                                                       ' Очередь обходит клетки по возрастанию расстояния.
+        currentRow = queueRows(head)                                                            ' Берём следующую клетку из очереди.
+        currentCol = queueCols(head)
+        IF currentRow = ghostTarget.tileRow AND currentCol = ghostTarget.tileCol THEN                    ' Цель найдена кратчайшим обходом.
+            RETURN firstDirection(currentRow, currentCol)                                      ' Возвращаем направление первого шага из старта.
+        END IF
+
+        FOR candidate = DIR_LEFT TO DIR_DOWN                                                    ' Проверяем соседей в стабильном порядке.
+            IF CanMove(currentCol, currentRow, candidate) THEN                                 ' В очередь попадают только проходимые клетки.
+                nextRow = currentRow + DirY(candidate)                                         ' Считаем соседнюю строку.
+                nextCol = WrapTunnelColumn(currentCol + DirX(candidate), nextRow)              ' Переход через тоннель считается обычным ребром графа.
+                IF NOT visited(nextRow, nextCol) THEN                                          ' Повторно клетки не посещаем.
+                    visited(nextRow, nextCol) = TRUE                                           ' Отмечаем клетку до добавления в очередь.
+                    IF currentRow = ghost.tileRow AND currentCol = ghost.tileCol THEN          ' Для соседей старта первым ходом будет текущий кандидат.
+                        firstDirection(nextRow, nextCol) = candidate
+                    ELSE                                                                        ' Остальные клетки наследуют первый ход пути.
+                        firstDirection(nextRow, nextCol) = firstDirection(currentRow, currentCol)
+                    END IF
+                    tail = tail + 1                                                            ' Добавляем соседа в конец очереди.
+                    queueRows(tail) = nextRow
+                    queueCols(tail) = nextCol
+                END IF
+            END IF
+        NEXT
+        head = head + 1                                                                         ' Переходим к следующей клетке того же расстояния.
+    LOOP
+
+    RETURN 0                                                                                    ' Если пути нет, призрак остаётся на месте до следующей проверки.
+END FUNCTION                                                                                    ' Завершаем поиск направления призрака.
+
+' #endregion

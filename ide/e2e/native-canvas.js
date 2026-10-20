@@ -23,7 +23,12 @@ class NativeCanvas {
     for (let i = 0; i < 40; i++) { const value = await test(); if (value) return value; await this.S.page.waitForTimeout(50); }
     throw new Error('Ожидание нативного CANVAS истекло');
   }
-  capture(outputPath) { const result = this.action('capture', outputPath ? { OutputPath:outputPath } : {}); return { ...result, data:Buffer.from(result.bgra, 'base64') }; }
+  capture(outputPath, heldKey) {
+    const args = outputPath ? { OutputPath:outputPath } : {};
+    if (heldKey) args.Key = keys[heldKey] ?? heldKey.charCodeAt(0);
+    const result = this.action('capture', args);
+    return { ...result, data:Buffer.from(result.bgra, 'base64') };
+  }
   pixel(x, y) {
     const frame = this.capture();
     const bounds = this.bounds(frame);

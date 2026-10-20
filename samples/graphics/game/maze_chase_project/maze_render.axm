@@ -1,0 +1,134 @@
+' maze_render — графические ресурсы, поле и HUD; логика партии здесь не изменяется.
+' Единую программу запускает main.axm; этот файл не запускает игровой цикл при импорте.
+' PUBLIC обозначает договор с соседними модулями; PRIVATE сохраняет внутреннее состояние.
+
+IMPORT maze_config
+IMPORT maze_world
+IMPORT maze_calibration
+IMPORT maze_motion
+IMPORT maze_player
+IMPORT maze_ghost
+IMPORT maze_game
+
+' #region Закрытые ресурсы и палитра
+
+PRIVATE DIM mazeBackground AS IMAGE                                                                     ' Фоновая картинка лабиринта, которую мы рисуем как эталонный контур.
+PRIVATE DIM playerFrames(1 TO 12) AS SPRITE                                                            ' Набор кадров героя: 4 направления по 3 кадра.
+PRIVATE DIM ghostSprite AS SPRITE                                                                       ' Спрайт призрака, который гонится за героем.
+PRIVATE DIM WALL_LIGHT_COLOR AS INTEGER = RGB(90, 214, 255)                                            ' Светлая голубая линия для HUD и декоративных контуров.
+PRIVATE DIM BACKGROUND_COLOR AS INTEGER = RGB(1, 4, 14)                                                ' Почти чёрный фон за пределами картинки лабиринта.
+PRIVATE DIM POWER_PELLET_COLOR AS INTEGER = RGB(255, 240, 176)                                         ' Цвет обычных и крупных точек.
+PRIVATE DIM HUD_BACKGROUND_COLOR AS INTEGER = RGB(4, 8, 18)                                            ' Фон информационной панели сверху.
+PRIVATE DIM HUD_TEXT_COLOR AS INTEGER = RGB(255, 244, 180)                                             ' Цвет строки со счётом и числом жизней.
+PRIVATE DIM HUD_STATUS_COLOR AS INTEGER = RGB(210, 228, 255)                                           ' Цвет строки статуса с подсказками игроку.
+
+' #endregion
+
+' #region Загрузка и отрисовка
+
+' LoadResources — Процедура загружает все графические ресурсы игры.
+PUBLIC SUB LoadResources()                                                                             ' Процедура загружает все графические ресурсы игры.
+    mazeBackground = LOADIMAGE("art/Background.gif")                                            ' Загружаем эталонный фон лабиринта из GIF-файла.
+
+    playerFrames(SpriteSlot(DIR_RIGHT, 1)) = LOADSPRITE("art/pacman-right/1.png", 16, 16)     ' Загружаем первый кадр героя, смотрящего вправо.
+    playerFrames(SpriteSlot(DIR_RIGHT, 2)) = LOADSPRITE("art/pacman-right/2.png", 16, 16)     ' Загружаем второй кадр героя, смотрящего вправо.
+    playerFrames(SpriteSlot(DIR_RIGHT, 3)) = LOADSPRITE("art/pacman-right/3.png", 16, 16)     ' Загружаем третий кадр героя, смотрящего вправо.
+
+    playerFrames(SpriteSlot(DIR_LEFT, 1)) = LOADSPRITE("art/pacman-left/1.png", 16, 16)       ' Загружаем первый кадр героя, смотрящего влево.
+    playerFrames(SpriteSlot(DIR_LEFT, 2)) = LOADSPRITE("art/pacman-left/2.png", 16, 16)       ' Загружаем второй кадр героя, смотрящего влево.
+    playerFrames(SpriteSlot(DIR_LEFT, 3)) = LOADSPRITE("art/pacman-left/3.png", 16, 16)       ' Загружаем третий кадр героя, смотрящего влево.
+
+    playerFrames(SpriteSlot(DIR_UP, 1)) = LOADSPRITE("art/pacman-up/1.png", 16, 16)           ' Загружаем первый кадр героя, смотрящего вверх.
+    playerFrames(SpriteSlot(DIR_UP, 2)) = LOADSPRITE("art/pacman-up/2.png", 16, 16)           ' Загружаем второй кадр героя, смотрящего вверх.
+    playerFrames(SpriteSlot(DIR_UP, 3)) = LOADSPRITE("art/pacman-up/3.png", 16, 16)           ' Загружаем третий кадр героя, смотрящего вверх.
+
+    playerFrames(SpriteSlot(DIR_DOWN, 1)) = LOADSPRITE("art/pacman-down/1.png", 16, 16)       ' Загружаем первый кадр героя, смотрящего вниз.
+    playerFrames(SpriteSlot(DIR_DOWN, 2)) = LOADSPRITE("art/pacman-down/2.png", 16, 16)       ' Загружаем второй кадр героя, смотрящего вниз.
+    playerFrames(SpriteSlot(DIR_DOWN, 3)) = LOADSPRITE("art/pacman-down/3.png", 16, 16)       ' Загружаем третий кадр героя, смотрящего вниз.
+
+    ghostSprite = LOADSPRITE("art/ghosts/blinky.png", 16, 16)                                  ' Загружаем спрайт красного призрака.
+END SUB                                                                                         ' Завершаем загрузку ресурсов.
+
+' DrawMazeWorld — Процедура рисует весь мир внутри viewport без ручных экранных смещений.
+PUBLIC SUB DrawMazeWorld()
+    DIM playerView AS Walker = GetPlayer()
+    DIM ghostView AS Walker = GetGhost()                                                                             ' Процедура рисует весь мир внутри viewport без ручных экранных смещений.
+    VIEWPORT (WorldViewportLeft(), WorldViewportTop()) - (WorldViewportRight(), WorldViewportBottom()) ' Отдаём отдельный прямоугольник под мир и оставляем HUD вне него.
+    CAMERA 0, 0                                                                                  ' Начало координат мира совпадает с началом карты.
+
+    DrawMazeBackground()                                                                         ' Рисуем фон лабиринта.
+    DrawVisiblePellets()                                                                         ' Рисуем оставшиеся точки на полной карте.
+
+    DRAWSPRITE playerFrames(CurrentPlayerSpriteSlot()), 0, EntityPixelX(playerView.tileCol, playerView.tileRow, playerView.dir, playerView.travel) - (TILE \ 2), EntityPixelY(playerView.tileCol, playerView.tileRow, playerView.dir, playerView.travel) - (TILE \ 2) ' Рисуем героя по его пиксельным координатам.
+    DRAWSPRITE ghostSprite, 0, EntityPixelX(ghostView.tileCol, ghostView.tileRow, ghostView.dir, ghostView.travel) - (TILE \ 2), EntityPixelY(ghostView.tileCol, ghostView.tileRow, ghostView.dir, ghostView.travel) - (TILE \ 2)          ' Рисуем призрака по его пиксельным координатам.
+END SUB                                                                                         ' Завершаем рисование мира.
+
+' DrawMazeBackground — Процедура рисует эталонную подложку всей карты.
+PRIVATE SUB DrawMazeBackground()                                                                        ' Процедура рисует эталонную подложку всей карты.
+    DRAWIMAGE mazeBackground, 0, 0, MazeColumns() * TILE, MAZE_ROWS * TILE                            ' Рисуем эталонную картинку лабиринта от начала мировых координат viewport.
+END SUB                                                                                         ' Завершаем рисование стен.
+
+' DrawVisiblePellets — Процедура рисует все оставшиеся точки полной карты.
+PRIVATE SUB DrawVisiblePellets()                                                                        ' Процедура рисует все оставшиеся точки полной карты.
+    DIM tileText AS STRING                                                                      ' Символ клетки, чтобы понять, есть ли здесь точка.
+
+    FOR rowIndex = 1 TO MAZE_ROWS                                                               ' Проходим строки карты.
+        FOR columnIndex = 1 TO MAZE_COLUMNS                                                     ' Проходим столбцы карты.
+            tileText = CellAt(rowIndex, columnIndex)                                            ' Считываем символ текущей клетки.
+
+            IF tileText = "." THEN                                                              ' Если клетка содержит обычную точку...
+                FILLCIRCLE PelletPixelX(columnIndex), PelletPixelY(rowIndex), 2, POWER_PELLET_COLOR ' ...рисуем маленькую точку в реальном центре коридора.
+            END IF                                                                              ' Завершаем рисование обычной точки.
+
+            IF tileText = "o" THEN                                                              ' Если клетка содержит крупную точку...
+                FILLCIRCLE PelletPixelX(columnIndex), PelletPixelY(rowIndex), 5, POWER_PELLET_COLOR ' ...рисуем крупную точку в том же реальном центре тоннеля.
+            END IF                                                                              ' Завершаем рисование крупной точки.
+        NEXT                                                                                    ' Переходим к следующему столбцу.
+    NEXT                                                                                        ' Переходим к следующей строке.
+END SUB                                                                                         ' Завершаем рисование точек.
+
+' DrawHud — Процедура рисует верхнюю панель интерфейса.
+PUBLIC SUB DrawHud(paused AS BOOLEAN)                                                                                   ' Процедура рисует верхнюю панель интерфейса.
+    RESETCAMERA                                                                                 ' Возвращаемся из мировых координат в экранные.
+    VIEWPORT                                                                                     ' Сбрасываем viewport на весь CANVAS, чтобы HUD жил поверх мира.
+    FILLRECT 0, 0, VIEW_WIDTH, HUD_HEIGHT, HUD_BACKGROUND_COLOR                                 ' Рисуем фон верхней панели.
+    DRAWLINE 0, HUD_HEIGHT - 1, VIEW_WIDTH - 1, HUD_HEIGHT - 1, WALL_LIGHT_COLOR               ' Проводим светлую разделительную линию под HUD.
+
+    DRAWTEXT "Очки: " + TRIM(STR(GameScore())) + "   Жизни: " + TRIM(STR(GameLives())) + "   Точек осталось: " + TRIM(STR(PelletsRemaining())), 8, 7, HUD_TEXT_COLOR ' Печатаем счёт, жизни и число оставшихся точек.
+    IF paused THEN                                                                              ' Если игра сейчас стоит на паузе...
+        DRAWTEXT "Пауза. Нажмите SPACE, чтобы продолжить.", 8, 19, HUD_STATUS_COLOR             ' ...показываем отдельную подсказку паузы.
+    ELSE                                                                                        ' Иначе игра идёт или уже завершена.
+        DRAWTEXT GameStatus(), 8, 19, HUD_STATUS_COLOR                                            ' Печатаем текущую подсказку или игровое сообщение.
+    END IF                                                                                      ' Завершаем выбор строки статуса.
+END SUB                                                                                         ' Завершаем рисование HUD.
+
+' CurrentPlayerSpriteSlot — Функция выбирает индекс текущего спрайта героя.
+PRIVATE FUNCTION CurrentPlayerSpriteSlot() AS INTEGER
+    DIM playerView AS Walker = GetPlayer()                                                   ' Функция выбирает индекс текущего спрайта героя.
+    DIM animationFrame AS INTEGER = 3                                                           ' По умолчанию берём кадр с самым открытым ртом.
+
+    IF playerView.animationStep = 1 THEN                                                                  ' Если сейчас первый шаг анимации...
+        animationFrame = 1                                                                      ' ...берём первый кадр.
+    END IF                                                                                      ' Завершаем выбор первого кадра.
+
+    IF playerView.animationStep = 2 OR playerView.animationStep = 4 THEN                                            ' Если сейчас средняя фаза открытия или закрытия рта...
+        animationFrame = 2                                                                      ' ...берём промежуточный кадр.
+    END IF                                                                                      ' Завершаем выбор промежуточного кадра.
+
+    RETURN SpriteSlot(playerView.facing, animationFrame)                                             ' Возвращаем общий индекс кадра по направлению и фазе анимации.
+END FUNCTION                                                                                    ' Завершаем выбор текущего кадра героя.
+
+' SpriteSlot — Функция переводит направление и номер кадра в индекс массива спрайтов.
+PRIVATE FUNCTION SpriteSlot(dir AS INTEGER, frameNumber AS INTEGER) AS INTEGER                          ' Функция переводит направление и номер кадра в индекс массива спрайтов.
+    RETURN ((dir - 1) * 3) + frameNumber                                                        ' Считаем смещение по три кадра на каждое направление.
+END FUNCTION                                                                                    ' Завершаем вычисление индекса спрайта.
+
+' #endregion
+
+
+' #region Начало кадра
+' ClearGameFrame очищает фон тем же цветом, которым владеет модуль отрисовки.
+PUBLIC SUB ClearGameFrame()
+    CLS BACKGROUND_COLOR
+END SUB
+' #endregion

@@ -243,3 +243,92 @@ module.exports=[{
     C.eq(S.pageErrors.length,0,'Защитные сценарии без ошибок страницы');
   },
 }];
+
+module.exports.push({
+  id:'maze-project-assistant-navigation',
+  name:'Модульный Maze Chase: общий граф, F12, ссылки Walker и список каждого файла',
+  async fn({S,C}) {
+    const folder=path.resolve(__dirname,'../../../samples/graphics/game/maze_chase_project');
+    const main=path.join(folder,'main.axm'),player=path.join(folder,'maze_player.axm'),motion=path.join(folder,'maze_motion.axm');
+    await S.launch({settings:{smartIdentifierEnabled:false,sidebarVisible:true,sidebarWidth:320}});
+    await S.page.evaluate(async main=>{const i=window.__ide;await i.openFile(main);i.assistant.selectEntry();await i.assistant.show('outgoing',null);},main);
+    const graph=await S.page.evaluate(()=>window.__ide.assistant.graph);
+    C.eq(graph.complete,false,'Косвенный вызов не выдаётся за полностью известный статический граф');
+    C.eq(graph.sourceDocuments.length,9,'Общий состав включает точку входа и восемь зависимостей');
+    const walker=graph.routines.find(r=>r.name==='StepWalker');
+    const callers=graph.calls.filter(c=>c.callee===walker.id&&c.kind==='call').map(c=>graph.routines.find(r=>r.id===c.caller));
+    C.eq(callers.map(r=>r.name).sort().join(','),'StepGhost,StepPlayer','Общий шаг вызывается из двух модулей');
+    C.ok(callers.every(r=>r.sourceFilePath!==walker.sourceFilePath),'Входящие вызовы действительно межфайловые');
+    const chooser=graph.routines.find(r=>r.name==='ChooseGhostDirection');
+    C.ok(graph.calls.some(c=>c.callee===chooser.id&&c.kind==='reference'),'Передача закрытой функции отмечена ссылкой');
+    C.ok(graph.indirectCalls.some(c=>c.caller===walker.id),'Вызов функционального параметра отмечен косвенным');
+    for(const name of ['main','maze_config','maze_world','maze_calibration','maze_motion','maze_player','maze_ghost','maze_game','maze_render']) {
+      const file=path.join(folder,name+'.axm');
+      const text=fs.readFileSync(file,'utf8');
+      const expected=[...text.matchAll(/^(?:PUBLIC |PRIVATE )?(SUB|FUNCTION)\s+(\w+)/gm)].map(m=>m[2]).sort();
+      const actual=await S.page.evaluate(async file=>{const i=window.__ide;await i.openFile(file);i.rebuildOutline();return {names:i.outlinePanel.items.filter(x=>['sub','function'].includes(x.kind)).map(x=>x.name).sort(),regions:i.outlinePanel.regions.length};},file);
+      C.eq(actual.names.join(','),expected.join(','),'Список процедур активного файла: '+name);
+      C.ok(actual.regions>0,'Русские разделы доступны: '+name);
+    }
+    await S.page.evaluate(async player=>{
+      const i=window.__ide;await i.openFile(player);const m=i.editor.getModel();i.editor.setPosition(m.getPositionAt(m.getValue().indexOf('StepWalker(player,')+4));await i.assistant.symbols(true);
+    },player);
+    await S.page.waitForFunction(motion=>window.__ide.activeFile===motion,motion);
+    C.contains(await S.page.evaluate(()=>window.__ide.editor.getModel().getLineContent(window.__ide.editor.getPosition().lineNumber)),'PUBLIC SUB StepWalker','F12 открывает точное объявление общего движения');
+    await S.page.evaluate(()=>{const a=window.__ide.assistant;a.travel(a.back,a.forward);});
+    await S.page.waitForFunction(player=>window.__ide.activeFile===player,player);
+    C.ok(true,'История вернула вызов в модуле героя');
+    await S.page.evaluate(async()=>{
+      const i=window.__ide,m=i.editor.getModel();i.editor.setPosition(m.getPositionAt(m.getValue().indexOf('AS Walker')+3));await i.assistant.symbols(false);
+    });
+    const references=await S.page.locator('#assistant-body').innerText();
+    C.contains(references,'maze_config.axm','Ссылки Walker включают объявление');
+    C.contains(references,'maze_ghost.axm','Ссылки Walker включают другой модуль');
+    for(const theme of ['dark','light','basic','borland']) {
+      await S.page.evaluate(t=>window.__ide.setTheme(t),theme);
+      C.eq(await S.page.locator('#outline-list').isVisible(),true,'Левая панель доступна: '+theme);
+    }
+    C.eq(S.pageErrors.length,0,'Ошибок страницы нет');
+  }
+});
+
+module.exports.push({
+  id:'maze-project-snapshots-debug',
+  name:'Модульный Maze Chase: несохранённые тексты, подсказки при ошибке и отладка закрытого файла',
+  async fn({S,C}) {
+    const sourceFolder=path.resolve(__dirname,'../../../samples/graphics/game/maze_chase_project');
+    const folder=testWorkspace('maze-project-debug');fs.cpSync(sourceFolder,folder,{recursive:true});
+    const main=path.join(folder,'main.axm'),player=path.join(folder,'maze_player.axm'),game=path.join(folder,'maze_game.axm');
+    await S.launch({settings:{smartIdentifierEnabled:false}});
+    await S.page.evaluate(async({main,player})=>{
+      const i=window.__ide;await i.openFile(main);i.assistant.selectEntry();await i.openFile(player);
+      i.editor.getModel().setValue("' Несохранённая строка перед объявлениями\n"+i.editor.getValue());
+    },{main,player});
+    const snapshot=await S.page.evaluate(()=>window.__ide.documentServices.request(window.__ide.activeFile,'document.navigation'));
+    const step=snapshot.routines.find(r=>r.name==='StepPlayer');
+    const savedLine=fs.readFileSync(player,'utf8').split(/\r?\n/).findIndex(s=>s.startsWith('PUBLIC SUB StepPlayer'))+1;
+    C.eq(step.line,savedLine+1,'Общий граф анализирует несохранённую версию зависимости');
+    await S.page.evaluate(async main=>{const i=window.__ide;await i.openFile(main);i.editor.getModel().setValue(i.editor.getValue()+'\nPRINT unknownForHover\n');},main);
+    const hover=await S.page.evaluate(()=>window.__ide.documentServices.request(window.__ide.activeFile,'document.hover'));
+    C.ok(hover.hovers.some(h=>h.name==='InitGame'),'Ошибка main не удаляет подсказки корректного импорта');
+    const mainText=fs.readFileSync(main,'utf8'),playerText=fs.readFileSync(player,'utf8');
+    await S.page.evaluate(async({main,player,mainText,playerText})=>{
+      const i=window.__ide;i.openFiles.get(main).model.setValue(mainText);i.openFiles.get(player).model.setValue(playerText);i.markDirty(main,false);i.markDirty(player,false);
+      await i.closeFile(player,true);i.switchToFile(main);
+      const line=mainText.split(/\r?\n/).findIndex(s=>/^\s+UpdateGameStep\(\)/.test(s))+1;
+      i.trace.toggle(line);await i.run('debug',false);
+    },{main,player,mainText,playerText});
+    await S.page.waitForFunction(()=>!!window.__ide.execution.stopId);
+    C.eq(await S.page.evaluate(game=>window.__ide.openFiles.has(game),game),false,'Модуль правил до шага закрыт');
+    C.note('before '+JSON.stringify(await S.page.evaluate(()=>({line:window.__ide.execution.line,path:window.__ide.execution.sourceFilePath,active:window.__ide.activeFile}))));
+    await S.page.evaluate(()=>window.__ide.execution.debug('stepInto'));
+    C.note('after '+JSON.stringify(await S.page.evaluate(()=>({line:window.__ide.execution.line,path:window.__ide.execution.sourceFilePath,active:window.__ide.activeFile,stop:window.__ide.execution.stopId}))));
+    await S.page.waitForFunction(game=>window.__ide.activeFile===game&&!!window.__ide.execution.stopId,game);
+    C.eq(await S.page.evaluate(()=>window.__ide.trace.marker?.model===window.__ide.editor.getModel()),true,'Шаг открыл зависимость и поставил маркер на её модель');
+    C.contains(await S.page.evaluate(()=>window.__ide.editor.getModel().getLineContent(window.__ide.execution.line)),'StepPlayer','Остановка относится к реальному оператору зависимости');
+    await S.page.evaluate(()=>window.__ide.stop());await S.waitIdle();
+    C.eq(fs.readFileSync(main,'utf8'),mainText,'Несохранённые проверки не изменили main на диске');
+    C.eq(fs.readFileSync(player,'utf8'),playerText,'Исходник героя сохранён');
+    C.eq(S.pageErrors.length,0,'Снимки и отладка без ошибок страницы');
+  }
+});

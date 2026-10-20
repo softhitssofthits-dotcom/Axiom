@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 508,
+  "count": 511,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -36,6 +36,11 @@
       "id": "backend-debug-step-and-continue",
       "spec": "backend.spec.js",
       "name": "Пауза, шаг и продолжение в Electron"
+    },
+    {
+      "id": "maze-project-native-controls",
+      "spec": "backend.spec.js",
+      "name": "Модульный Maze Chase: нативное движение героя и закрытие окна"
     },
     {
       "id": "canvas-mouse-world-click",
@@ -2276,6 +2281,16 @@
       "id": "assistant-guards-and-tracked-history",
       "spec": "program-assistant.spec.js",
       "name": "Защита от пересечения разделов, только чтение, актуальная диагностика и возврат после правки"
+    },
+    {
+      "id": "maze-project-assistant-navigation",
+      "spec": "program-assistant.spec.js",
+      "name": "Модульный Maze Chase: общий граф, F12, ссылки Walker и список каждого файла"
+    },
+    {
+      "id": "maze-project-snapshots-debug",
+      "spec": "program-assistant.spec.js",
+      "name": "Модульный Maze Chase: несохранённые тексты, подсказки при ошибке и отладка закрытого файла"
     },
     {
       "id": "project-symbol-index-navigation",

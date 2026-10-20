@@ -42,7 +42,7 @@ function setup() {
     scheduleLiveCheck() {}, renderRecentFiles() {}, log() {}, formatWholeDocument: async () => {} });
   const trace = Object.create(context.window.TraceController.prototype);
   trace.ide = ide;
-  return { ide, trace, reads, rejectedReads, readCounts, alerts, activated, main,
+  return { context, ide, trace, reads, rejectedReads, readCounts, alerts, activated, main,
     pause: (stopId, sourceFilePath) => ({ stopId, sourceFilePath, line: 1, column: 1 }) };
 }
 
@@ -123,3 +123,25 @@ test('Обычное чтение открывает зависимость и �
   assert.equal(ide.activeFile, 'helper.axm');
   assert.equal(ide.openFiles.get('helper.axm').model.decorations.length, 1);
 });
+
+for (const previousStop of [null, 'previous']) {
+  test(`Событие debug.paused публикует новую остановку до перехода из ${previousStop}`, async () => {
+    const { context, ide, trace, reads, pause } = setup();
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/renderer/execution-controller.js'), 'utf8'), context);
+    const execution = Object.create(context.window.ExecutionController.prototype);
+    Object.assign(execution, { ide, sessionId: 'session', stopId: previousStop,
+      snapshotForFile: ide.execution.snapshotForFile, renderOutput() {} });
+    ide.execution = execution; ide.trace = trace; ide.setStatus = () => {};
+    trace.update = () => {};
+    let opening;
+    const mark = trace.mark.bind(trace);
+    trace.mark = payload => (opening = mark(payload));
+    execution.event({ event: 'debug.paused', sessionId: 'session', payload: pause('next', 'helper.axm') });
+    assert.equal(reads.has('helper.axm'), true, 'Настоящий обработчик события должен начать чтение закрытого файла');
+    reads.get('helper.axm')('PRINT 1');
+    await opening;
+    assert.equal(execution.stopId, 'next');
+    assert.equal(ide.activeFile, 'helper.axm');
+    assert.equal(trace.marker.model, ide.openFiles.get('helper.axm').model);
+  });
+}

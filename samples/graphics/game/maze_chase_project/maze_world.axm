@@ -1,0 +1,275 @@
+' maze_world — карта, стартовые клетки и однократный сбор точек.
+' Единую программу запускает main.axm; этот файл не запускает игровой цикл при импорте.
+' PUBLIC обозначает договор с соседними модулями; PRIVATE сохраняет внутреннее состояние.
+
+IMPORT maze_config
+
+' #region Закрытое состояние карты
+
+PRIVATE DIM maze(1 TO MAZE_ROWS) AS STRING                                                              ' Массив строк, в котором хранится логическая карта лабиринта.
+PRIVATE DIM mazeCols AS INTEGER = 0                                                                     ' Количество столбцов логической карты, вычисляется после загрузки.
+PRIVATE DIM playerStartCol AS INTEGER                                                                   ' Стартовый столбец героя на логической сетке.
+PRIVATE DIM playerStartRowValue AS INTEGER                                                                   ' Стартовая строка героя на логической сетке.
+PRIVATE DIM ghostStartCol AS INTEGER                                                                    ' Стартовый столбец призрака на логической сетке.
+PRIVATE DIM ghostStartRowValue AS INTEGER                                                                    ' Стартовая строка призрака на логической сетке.
+PRIVATE DIM pelletsLeft AS INTEGER                                                                      ' Сколько точек осталось на карте.
+PRIVATE DIM mazeErrorMessage AS STRING = ""                                                            ' Ошибка структуры карты не допускает запуск игровой логики.
+
+' #endregion
+
+' #region Создание и проверка карты
+
+' InitMaze — Процедура загружает текстовую карту и стартовые метки.
+PUBLIC SUB InitMaze()                                                                                  ' Процедура загружает текстовую карту и стартовые метки.
+    maze(1) = "############################"                                                    ' Верхняя рамка лабиринта.
+    maze(2) = "############################"                                                    ' Вторая верхняя строка рамки.
+    maze(3) = "############################"                                                    ' Третья верхняя строка рамки.
+    maze(4) = "############################"                                                    ' Четвёртая верхняя строка рамки.
+    maze(5) = "#o...........##...........o#"                                                    ' Верхний длинный коридор с крупными точками по краям.
+    maze(6) = "#.####.#####.##.#####.####.#"                                                    ' Верхний блок коридоров и стен.
+    maze(7) = "#.####.#####.##.#####.####.#"                                                    ' Следующая строка той же геометрии.
+    maze(8) = "#.####.#####.##.#####.####.#"                                                    ' Ещё одна строка верхней геометрии.
+    maze(9) = "#..........................#"                                                    ' Длинный свободный верхний горизонтальный проход.
+    maze(10) = "#.####.##.########.##.####.#"                                                   ' Коридоры вокруг верхнего центрального блока.
+    maze(11) = "#.####.##.########.##.####.#"                                                   ' Повтор геометрии предыдущей строки.
+    maze(12) = "#......##....##....##......#"                                                   ' Несколько разветвлений перед домиком.
+    maze(13) = "######.#####.##.#####.######"                                                   ' Верхняя рамка вокруг центральной зоны.
+    maze(14) = "######.#####.##.#####.######"                                                   ' Ещё одна строка рамки центральной зоны.
+    maze(15) = "######.##..........##.######"                                                   ' Коридор над центральным домиком.
+    maze(16) = "######.##.########.##.######"                                                   ' Верхняя стенка домика призраков.
+    maze(17) = "######.##.########.##.######"                                                   ' Нижняя стенка домика призраков.
+    maze(18) = "..........########.........."                                                   ' Горизонтальный туннель сквозь середину карты.
+    maze(19) = "######.##.########.##.######"                                                   ' Симметричная нижняя часть после туннеля.
+    maze(20) = "######.##.########.##.######"                                                   ' Повтор геометрии над стартовой зоной призрака.
+    maze(21) = "######.##.....G....##.######"                                                   ' Строка со стартом призрака.
+    maze(22) = "######.##.########.##.######"                                                   ' Нижняя часть центральной зоны.
+    maze(23) = "######.##.########.##.######"                                                   ' Повтор этой геометрии.
+    maze(24) = "#............##............#"                                                   ' Длинный средний горизонтальный коридор.
+    maze(25) = "#.####.#####.##.#####.####.#"                                                   ' Нижний блок развилок.
+    maze(26) = "#.####.#####.##.#####.####.#"                                                   ' Повтор нижнего блока развилок.
+    maze(27) = "#o..##.......P........##..o#"                                                   ' Строка старта героя и крупных нижних точек.
+    maze(28) = "###.##.##.########.##.##.###"                                                   ' Нижние узкие коридоры и центральный блок.
+    maze(29) = "###.##.##.########.##.##.###"                                                   ' Повтор предыдущей строки.
+    maze(30) = "#......##....##....##......#"                                                   ' Нижние разветвления перед последним коридором.
+    maze(31) = "#.##########.##.##########.#"                                                   ' Предпоследняя рамка нижней части.
+    maze(32) = "#.##########.##.##########.#"                                                   ' Повтор предпоследней рамки.
+    maze(33) = "#..........................#"                                                   ' Нижний длинный коридор с точками.
+    maze(34) = "############################"                                                   ' Нижняя рамка лабиринта.
+    maze(35) = "############################"                                                   ' Предпоследняя строка нижней рамки.
+    maze(36) = "############################"                                                   ' Последняя строка нижней рамки.
+
+    IF NOT ValidateMaze() THEN                                                                  ' Проверяем строки до подсчёта точек и чтения маркеров.
+        RETURN                                                                                  ' Не индексируем карту, если проверка завершилась ошибкой.
+    END IF                                                                                      ' Продолжаем только с корректной схемой.
+    pelletsLeft = 0                                                                             ' Перед пересчётом начинаем с нуля точек.
+
+    DIM tileText AS STRING                                                                      ' Символ текущей клетки карты.
+
+    FOR rowIndex = 1 TO MAZE_ROWS                                                               ' Проходим все строки карты.
+        FOR columnIndex = 1 TO MAZE_COLUMNS                                                     ' Проходим все столбцы в текущей строке.
+            tileText = MID(maze(rowIndex), columnIndex, 1)                                      ' Берём один символ из текущей клетки карты.
+
+            IF tileText = "." OR tileText = "o" THEN                                            ' Если клетка содержит обычную или крупную точку...
+                pelletsLeft = pelletsLeft + 1                                                   ' ...увеличиваем общий счётчик точек.
+            END IF                                                                              ' Завершаем подсчёт точки.
+
+            IF tileText = "P" THEN                                                              ' Если нашли старт героя...
+                playerStartCol = columnIndex                                                    ' ...запоминаем его столбец.
+                playerStartRowValue = rowIndex                                                       ' ...запоминаем его строку.
+                maze(rowIndex) = ReplaceCell(maze(rowIndex), columnIndex, " ")                  ' ...и очищаем клетку, чтобы герой не считался стеной или точкой.
+            END IF                                                                              ' Завершаем обработку старта героя.
+
+            IF tileText = "G" THEN                                                              ' Если нашли старт призрака...
+                ghostStartCol = columnIndex                                                     ' ...запоминаем его столбец.
+                ghostStartRowValue = rowIndex                                                        ' ...запоминаем его строку.
+                maze(rowIndex) = ReplaceCell(maze(rowIndex), columnIndex, " ")                  ' ...и очищаем логическую клетку карты.
+            END IF                                                                              ' Завершаем обработку старта призрака.
+        NEXT                                                                                    ' Переходим к следующему столбцу.
+    NEXT                                                                                        ' Переходим к следующей строке.
+END SUB                                                                                         ' Завершаем инициализацию карты.
+' ValidateMaze — Функция проверяет размеры, символы и стартовые метки карты.
+PRIVATE FUNCTION ValidateMaze() AS BOOLEAN                                                             ' Функция проверяет размеры, символы и стартовые метки карты.
+    DIM rowLength AS INTEGER                                                                    ' Фактическая ширина текущей строки.
+    DIM playerCount AS INTEGER = 0                                                              ' Число меток старта героя.
+    DIM ghostCount AS INTEGER = 0                                                               ' Число меток старта призрака.
+    DIM tileText AS STRING                                                                      ' Символ текущей клетки.
+
+    mazeErrorMessage = ""                                                                      ' Перед проверкой убираем возможную старую ошибку.
+    mazeCols = LEN(maze(1))                                                                     ' Фиксируем ширину первой строки.
+    IF mazeCols <> MAZE_COLUMNS THEN                                                            ' Константа размеров должна совпадать с картой.
+        mazeErrorMessage = "ожидалось " + STR(MAZE_COLUMNS) + " столбцов, найдено " + STR(mazeCols) + "."
+        RETURN FALSE                                                                            ' Не запускаем логику на карте неверной ширины.
+    END IF                                                                                      ' Завершаем проверку ширины первой строки.
+
+    FOR rowIndex = 1 TO MAZE_ROWS                                                               ' Проверяем все строки до обхода клеток.
+        rowLength = LEN(maze(rowIndex))                                                         ' Получаем фактическую длину строки.
+        IF rowLength <> MAZE_COLUMNS THEN                                                       ' Все строки должны иметь одну ширину.
+            mazeErrorMessage = "строка " + STR(rowIndex) + " имеет ширину " + STR(rowLength) + "."
+            RETURN FALSE                                                                        ' Возвращаем ошибку до индексирования клетки.
+        END IF                                                                                  ' Завершаем проверку длины строки.
+
+        FOR columnIndex = 1 TO MAZE_COLUMNS                                                     ' Проверяем каждый символ строки.
+            tileText = MID(maze(rowIndex), columnIndex, 1)                                      ' Читаем одну клетку карты.
+            IF tileText = "P" THEN
+                playerCount = playerCount + 1                                                   ' Считаем старт героя.
+            END IF
+            IF tileText = "G" THEN
+                ghostCount = ghostCount + 1                                                     ' Считаем старт призрака.
+            END IF
+            IF tileText <> "#" AND tileText <> "." AND tileText <> "o" AND tileText <> "P" AND tileText <> "G" AND tileText <> " " THEN
+                mazeErrorMessage = "неизвестный символ в строке " + STR(rowIndex) + ", столбце " + STR(columnIndex) + "."
+                RETURN FALSE                                                                    ' Неизвестные знаки нельзя считать проходимыми клетками.
+            END IF                                                                              ' Завершаем проверку допустимого символа.
+        NEXT                                                                                    ' Переходим к следующему столбцу.
+    NEXT                                                                                        ' Переходим к следующей строке.
+
+    IF playerCount <> 1 THEN                                                                    ' Для запуска нужна ровно одна метка игрока.
+        mazeErrorMessage = "карта должна содержать ровно одну метку P; найдено " + STR(playerCount) + "."
+        RETURN FALSE                                                                            ' Не выбираем произвольную стартовую клетку.
+    END IF                                                                                      ' Завершаем проверку старта героя.
+    IF ghostCount <> 1 THEN                                                                     ' Для запуска нужна ровно одна метка призрака.
+        mazeErrorMessage = "карта должна содержать ровно одну метку G; найдено " + STR(ghostCount) + "."
+        RETURN FALSE                                                                            ' Не выбираем произвольную стартовую клетку.
+    END IF                                                                                      ' Завершаем проверку старта призрака.
+
+    RETURN TRUE                                                                                 ' Карта имеет ожидаемую форму и символы.
+END FUNCTION                                                                                    ' Завершаем проверку карты.
+
+' #endregion
+
+' #region Чтение и изменение клеток
+
+' MazeColumns возвращает значение для чтения; состояние карты остаётся закрытым.
+PUBLIC FUNCTION MazeColumns() AS INTEGER
+    RETURN mazeCols
+END FUNCTION
+
+' MazeError возвращает значение для чтения; состояние карты остаётся закрытым.
+PUBLIC FUNCTION MazeError() AS STRING
+    RETURN mazeErrorMessage
+END FUNCTION
+
+' PlayerStartColumn возвращает значение для чтения; состояние карты остаётся закрытым.
+PUBLIC FUNCTION PlayerStartColumn() AS INTEGER
+    RETURN playerStartCol
+END FUNCTION
+
+' PlayerStartRow возвращает значение для чтения; состояние карты остаётся закрытым.
+PUBLIC FUNCTION PlayerStartRow() AS INTEGER
+    RETURN playerStartRowValue
+END FUNCTION
+
+' GhostStartColumn возвращает значение для чтения; состояние карты остаётся закрытым.
+PUBLIC FUNCTION GhostStartColumn() AS INTEGER
+    RETURN ghostStartCol
+END FUNCTION
+
+' GhostStartRow возвращает значение для чтения; состояние карты остаётся закрытым.
+PUBLIC FUNCTION GhostStartRow() AS INTEGER
+    RETURN ghostStartRowValue
+END FUNCTION
+
+' PelletsRemaining возвращает значение для чтения; состояние карты остаётся закрытым.
+PUBLIC FUNCTION PelletsRemaining() AS INTEGER
+    RETURN pelletsLeft
+END FUNCTION
+
+' WorldWidthPixels возвращает значение для чтения; состояние карты остаётся закрытым.
+PUBLIC FUNCTION WorldWidthPixels() AS INTEGER
+    RETURN mazeCols*TILE
+END FUNCTION
+
+' WorldHeightPixels возвращает значение для чтения; состояние карты остаётся закрытым.
+PUBLIC FUNCTION WorldHeightPixels() AS INTEGER
+    RETURN MAZE_ROWS*TILE
+END FUNCTION
+
+
+' TakePellet принимает строку и столбец клетки. Только этот модуль изменяет карту.
+' Возвращает 10/50 очков за снятую точку, либо 0; повторный сбор не уменьшает остаток.
+PUBLIC FUNCTION TakePellet(rowIndex AS INTEGER, columnIndex AS INTEGER) AS INTEGER
+    DIM cell AS STRING = CellAt(rowIndex, columnIndex)
+    DIM points AS INTEGER = 0
+    IF cell = "." THEN points = 10
+    IF cell = "o" THEN points = 50
+    IF points <> 0 THEN
+        maze(rowIndex) = ReplaceCell(maze(rowIndex), columnIndex, " ")
+        pelletsLeft = pelletsLeft - 1
+    END IF
+    RETURN points
+END FUNCTION
+' CellAt — Функция безопасно читает символ клетки карты.
+PUBLIC FUNCTION CellAt(rowIndex AS INTEGER, columnIndex AS INTEGER) AS STRING                          ' Функция безопасно читает символ клетки карты.
+    IF rowIndex < 1 OR rowIndex > MAZE_ROWS THEN                                                 ' Если строка вышла за карту...
+        RETURN "#"                                                                              ' ...возвращаем стену как безопасный барьер.
+    END IF                                                                                      ' Завершаем проверку строки.
+
+    IF columnIndex < 1 OR columnIndex > mazeCols THEN                                           ' Если столбец вышел за карту...
+        RETURN "#"                                                                              ' ...тоже возвращаем стену.
+    END IF                                                                                      ' Завершаем проверку столбца.
+
+    RETURN MID(maze(rowIndex), columnIndex, 1)                                                  ' Возвращаем один символ из нужной клетки карты.
+END FUNCTION                                                                                    ' Завершаем чтение клетки.
+' ReplaceCell — Функция заменяет один символ в строке карты.
+PRIVATE FUNCTION ReplaceCell(lineText AS STRING, position AS INTEGER, replacement AS STRING) AS STRING  ' Функция заменяет один символ в строке карты.
+    DIM leftPart AS STRING = ""                                                                 ' Левая часть строки до изменяемой позиции.
+    DIM rightPart AS STRING = ""                                                                ' Правая часть строки после изменяемой позиции.
+
+    IF position > 1 THEN                                                                        ' Если слева что-то есть...
+        leftPart = LEFT(lineText, position - 1)                                                 ' ...берём левую часть строки.
+    END IF                                                                                      ' Завершаем выделение левой части.
+
+    IF position < LEN(lineText) THEN                                                            ' Если справа что-то есть...
+        rightPart = MID(lineText, position + 1, LEN(lineText) - position)                       ' ...берём правую часть строки.
+    END IF                                                                                      ' Завершаем выделение правой части.
+
+    RETURN leftPart + replacement + rightPart                                                   ' Склеиваем обновлённую строку обратно.
+END FUNCTION                                                                                    ' Завершаем замену символа.
+
+' #endregion
+
+' #region Проходы и туннели
+
+' CanMove — Функция проверяет, можно ли сделать шаг из клетки в данном направлении.
+PUBLIC FUNCTION CanMove(tileCol AS INTEGER, tileRow AS INTEGER, dir AS INTEGER) AS BOOLEAN            ' Функция проверяет, можно ли сделать шаг из клетки в данном направлении.
+    DIM nextCol AS INTEGER = tileCol + DirX(dir)                                                ' Вычисляем столбец следующей клетки.
+    DIM nextRow AS INTEGER = tileRow + DirY(dir)                                                ' Вычисляем строку следующей клетки.
+
+    IF dir = DIR_LEFT AND tileCol = 1 AND IsTunnelPassageRow(tileRow) THEN                      ' Если идём влево из левого края туннеля...
+        RETURN CellAt(tileRow, mazeCols) <> "#"                                                 ' ...смотрим на правый край той же туннельной строки.
+    END IF                                                                                      ' Завершаем специальную проверку левого телепорта.
+
+    IF dir = DIR_RIGHT AND tileCol = mazeCols AND IsTunnelPassageRow(tileRow) THEN              ' Если идём вправо из правого края туннеля...
+        RETURN CellAt(tileRow, 1) <> "#"                                                        ' ...смотрим на левый край той же строки.
+    END IF                                                                                      ' Завершаем специальную проверку правого телепорта.
+
+    RETURN CellAt(nextRow, nextCol) <> "#"                                                      ' В обычном случае достаточно проверить, что впереди не стена.
+END FUNCTION                                                                                    ' Завершаем проверку возможности движения.
+
+' IsTunnelPassageRow — Функция проверяет, является ли строка сквозным туннелем.
+PUBLIC FUNCTION IsTunnelPassageRow(rowIndex AS INTEGER) AS BOOLEAN                                     ' Функция проверяет, является ли строка сквозным туннелем.
+    IF rowIndex < 1 OR rowIndex > MAZE_ROWS THEN                                                 ' Если строка вне карты...
+        RETURN FALSE                                                                            ' ...туннелем она быть не может.
+    END IF                                                                                      ' Завершаем проверку диапазона строки.
+
+    RETURN CellAt(rowIndex, 1) <> "#" AND CellAt(rowIndex, mazeCols) <> "#"                    ' Туннельная строка открыта и слева, и справа.
+END FUNCTION                                                                                    ' Завершаем проверку туннельной строки.
+
+' WrapTunnelColumn — Функция переносит актёра через боковой туннель.
+PUBLIC FUNCTION WrapTunnelColumn(tileCol AS INTEGER, tileRow AS INTEGER) AS INTEGER                    ' Функция переносит актёра через боковой туннель.
+    IF NOT IsTunnelPassageRow(tileRow) THEN                                                     ' Если строка не является туннелем...
+        RETURN tileCol                                                                          ' ...ничего не переносим и оставляем столбец как есть.
+    END IF                                                                                      ' Завершаем проверку туннеля.
+
+    IF tileCol < 1 THEN                                                                         ' Если актёр вышел левее карты...
+        RETURN mazeCols                                                                         ' ...переносим его на правый край.
+    END IF                                                                                      ' Завершаем обработку выхода слева.
+
+    IF tileCol > mazeCols THEN                                                                  ' Если актёр вышел правее карты...
+        RETURN 1                                                                                ' ...переносим его на левый край.
+    END IF                                                                                      ' Завершаем обработку выхода справа.
+
+    RETURN tileCol                                                                              ' Если столбец в норме, возвращаем его без изменений.
+END FUNCTION                                                                                    ' Завершаем перенос через туннель.
+
+' #endregion

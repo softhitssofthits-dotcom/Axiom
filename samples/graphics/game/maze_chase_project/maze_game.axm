@@ -1,0 +1,110 @@
+' maze_game — очки, жизни, столкновения и порядок игрового шага.
+' Единую программу запускает main.axm; этот файл не запускает игровой цикл при импорте.
+' PUBLIC обозначает договор с соседними модулями; PRIVATE сохраняет внутреннее состояние.
+
+IMPORT maze_config
+IMPORT maze_world
+IMPORT maze_calibration
+IMPORT maze_motion
+IMPORT maze_player
+IMPORT maze_ghost
+
+' #region Закрытое состояние партии
+
+PRIVATE DIM score AS INTEGER                                                                            ' Сколько очков уже набрал игрок.
+PRIVATE DIM lives AS INTEGER = 3                                                                        ' Сколько жизней осталось у игрока.
+PRIVATE DIM finished AS BOOLEAN = FALSE                                                                 ' Флаг завершения партии по победе или проигрышу.
+PRIVATE DIM statusText AS STRING = "Стрелки ведут героя. SPACE пауза. ESC выход."                      ' Текст подсказки и игровых сообщений в HUD.
+
+' #endregion
+
+' #region Запуск и чтение состояния
+
+' InitGame вызывается после проверки карты и калибровки, до первого шага симуляции.
+PUBLIC SUB InitGame()
+    score = 0
+    lives = 3
+    finished = FALSE
+    statusText = "Стрелки ведут героя. SPACE пауза. ESC выход."
+    IF CalibrationError() <> "" THEN statusText = "Калибровка не загружена: " + CalibrationError()
+    ResetActors()
+END SUB
+
+' GameFinished возвращает снимок значения; менять правила партии может только этот модуль.
+PUBLIC FUNCTION GameFinished() AS BOOLEAN
+    RETURN finished
+END FUNCTION
+
+' GameScore возвращает снимок значения; менять правила партии может только этот модуль.
+PUBLIC FUNCTION GameScore() AS INTEGER
+    RETURN score
+END FUNCTION
+
+' GameLives возвращает снимок значения; менять правила партии может только этот модуль.
+PUBLIC FUNCTION GameLives() AS INTEGER
+    RETURN lives
+END FUNCTION
+
+' GameStatus возвращает снимок значения; менять правила партии может только этот модуль.
+PUBLIC FUNCTION GameStatus() AS STRING
+    RETURN statusText
+END FUNCTION
+
+' #endregion
+
+' #region Игровой шаг
+
+' UpdateGameStep — Процедура выполняет один фиксированный шаг игровой логики.
+PUBLIC SUB UpdateGameStep()                                                                            ' Процедура выполняет один фиксированный шаг игровой логики.
+    StepPlayer()
+    EatPelletIfNeeded()                                                                         ' Проверяем, стоит ли герой на точке, и съедаем её.
+    StepGhost(GetPlayer())                                                        ' Двигаем призрака и выбираем путь в каждом центре клетки.
+
+    IF EntitiesOverlap() THEN                                                                   ' Если герой и призрак подошли слишком близко...
+        lives = lives - 1                                                                       ' ...уменьшаем число жизней.
+        IF lives <= 0 THEN                                                                      ' Если жизней больше не осталось...
+            finished = TRUE                                                                     ' ...завершаем партию поражением.
+            statusText = "Жизни закончились. Нажмите ESC."                                     ' Показываем сообщение о проигрыше.
+        ELSE                                                                                    ' Иначе у игрока ещё есть шанс продолжить.
+            statusText = "Призрак догнал героя. Позиции сброшены."                             ' Сообщаем о столкновении и новом старте.
+            ResetActors()                                                                       ' Возвращаем обоих персонажей на стартовые позиции.
+        END IF                                                                                  ' Завершаем обработку потери жизни.
+    END IF                                                                                      ' Завершаем проверку столкновения.
+
+    IF PelletsRemaining() = 0 THEN                                                                     ' Если на карте не осталось точек...
+        finished = TRUE                                                                         ' ...завершаем партию победой.
+        statusText = "Все точки собраны. Нажмите ESC."                                         ' Показываем сообщение о победе.
+    END IF                                                                                      ' Завершаем проверку победы.
+END SUB                                                                                         ' Завершаем один шаг симуляции.
+
+' EatPelletIfNeeded изменяет очки только в центре клетки и только после успешного сбора.
+PRIVATE SUB EatPelletIfNeeded()
+    DIM actor AS Walker = GetPlayer()
+    IF actor.travel <> 0 THEN RETURN
+    DIM points AS INTEGER = TakePellet(actor.tileRow, actor.tileCol)
+    score = score + points
+    IF points = 50 THEN statusText = "Крупная точка принесла больше очков."
+END SUB
+
+' ResetActors сбрасывает оба независимых владельца состояния после столкновения.
+PRIVATE SUB ResetActors()
+    ResetPlayer()
+    ResetGhost()
+END SUB
+' EntitiesOverlap — Функция проверяет близость героев с учётом перехода через туннель.
+PRIVATE FUNCTION EntitiesOverlap() AS BOOLEAN
+    DIM playerView AS Walker = GetPlayer()
+    DIM ghostView AS Walker = GetGhost()                                                           ' Функция проверяет близость героев с учётом перехода через туннель.
+    DIM horizontalDistance AS INTEGER = ABS(EntityPixelX(playerView.tileCol, playerView.tileRow, playerView.dir, playerView.travel) - EntityPixelX(ghostView.tileCol, ghostView.tileRow, ghostView.dir, ghostView.travel))                     ' Сначала сравниваем обычное расстояние центров.
+    DIM verticalDistance AS INTEGER = ABS(EntityPixelY(playerView.tileCol, playerView.tileRow, playerView.dir, playerView.travel) - EntityPixelY(ghostView.tileCol, ghostView.tileRow, ghostView.dir, ghostView.travel))                       ' Вертикальная координата не заворачивается.
+
+    IF horizontalDistance >= WorldWidthPixels() THEN
+        horizontalDistance = horizontalDistance - WorldWidthPixels()                             ' Нормализуем координаты, вышедшие за боковой край.
+    END IF
+    IF horizontalDistance > WorldWidthPixels() \ 2 THEN
+        horizontalDistance = WorldWidthPixels() - horizontalDistance                             ' Берём короткую дугу между сторонами туннеля.
+    END IF
+    RETURN horizontalDistance < 12 AND verticalDistance < 12                                    ' Столкновение определяется расстоянием по обеим осям.
+END FUNCTION                                                                                    ' Завершаем проверку столкновения.
+
+' #endregion

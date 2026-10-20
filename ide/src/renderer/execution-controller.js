@@ -84,8 +84,10 @@ class ExecutionController {
       }
       case 'debug.paused':
         this.debugRequest=null;this.debugBusy=false;this.debugError=null;
-        this.callDepth=payload.callDepth;this.line=payload.line;this.sourceFilePath=payload.sourceFilePath;this.ide.trace?.mark(payload);
+        // Защита открытия закрытой зависимости сравнивает именно новую остановку.
+        // Публикуем её до mark: иначе корректное чтение отменяется как устаревшее.
         this.stopId = payload.stopId; this.canStepBack = payload.canStepBack;
+        this.callDepth=payload.callDepth;this.line=payload.line;this.sourceFilePath=payload.sourceFilePath;this.ide.trace?.mark(payload);
         this.outputText = payload.outputText; this.outputLineCount = payload.outputLineCount ?? (payload.outputText ? payload.outputText.split(/\r?\n/).length : 0); this.renderOutput();
         this.ide.setStatus(I18N.t('trace.paused',payload.line ?? '—'));
         if (payload.line && !this.ide.trace?.mark) { this.ide.editor.revealLineInCenter(payload.line); this.ide.editor.setPosition({ lineNumber: payload.line, column: payload.column || 1 }); }

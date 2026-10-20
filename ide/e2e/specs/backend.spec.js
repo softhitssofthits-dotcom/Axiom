@@ -9,16 +9,18 @@ async function open(S, source, tag) {
   return file;
 }
 module.exports = [
-  { id: 'backend-maze-chase-controls', name: 'Настоящий Maze Chase: движение героя и единственное окно', async fn({ S, C }) {
-    const file = path.join(ROOT, 'samples/graphics/game/maze_chase.axm');
+  { id: 'backend-maze-chase-controls', name: 'Настоящий Maze Chase: движение героя и единственное окно', async fn({ S, C }, relativePath='samples/graphics/game/maze_chase.axm') {
+    const file = path.join(ROOT, relativePath);
     await S.launch(); await S.stubOpenDialog([file]);
     await S.page.evaluate(() => window.__ide.handleAction('open'));
     await S.page.waitForFunction(p => window.__ide.activeFile === p, file);
     await S.page.evaluate(() => window.__ide.run());
     const page = await nativeCanvas(S);
     C.eq(page.width, 1024, 'Maze Chase открыл нативную логическую поверхность');
-    const playerX = () => {
-      const frame = page.capture(), bounds = page.bounds(frame), d=frame.data;
+    // Снимок Windows дорогой: замораживаем игру, чтобы призрак не завершил партию до ввода.
+    page.pressKey('Space');
+    const playerX = heldKey => {
+      const frame = page.capture(undefined, heldKey), bounds = page.bounds(frame), d=frame.data;
       let sum=0, count=0;
       for(let y=bounds.y;y<bounds.y+bounds.height;y++) for(let x=bounds.x;x<bounds.x+bounds.width;x++) {
         const logicalY=(y-bounds.y)*page.height/bounds.height, i=(y*frame.width+x)*4;
@@ -30,8 +32,14 @@ module.exports = [
     for(let i=0;i<30;i++){before=playerX();if(before!==null)break;await S.page.waitForTimeout(50);}
     C.ok(before!==null, 'Герой найден по жёлтым пикселям в стартовом коридоре');
     page.key('down', 'ArrowRight');
+    page.pressKey('Space');
     let after=before;
-    for(let i=0;i<30;i++){after=playerX();if(after!==null && after>before+12)break;await S.page.waitForTimeout(50);}
+    for(let i=0;i<30;i++){after=playerX('ArrowRight');if(after!==null && after>before+12)break;await S.page.waitForTimeout(50);}
+    if(after===null || after<=before+12) {
+      const shot=path.join(ROOT,'.artifacts/maze-chase-modules',relativePath.includes('maze_chase_project')?'module-native-failure.png':'legacy-native-failure.png');
+      require('node:fs').mkdirSync(path.dirname(shot),{recursive:true});
+      page.capture(shot);C.note('Нативный кадр отказа: '+shot);
+    }
     page.key('up', 'ArrowRight');
     C.ok(after!==null && after>before+12, `Стрелка переместила героя: ${before} → ${after}`);
     await page.close(); await S.waitIdle(); await S.page.waitForTimeout(300);
@@ -109,3 +117,10 @@ module.exports = [
     await S.waitIdle(); await S.waitConsole('5'); C.ok(true, 'продолжение выводит ожидаемое значение');
   } },
 ];
+
+// Тот же договор нативного управления проверяет обе версии игры.
+module.exports.push({
+  id:'maze-project-native-controls',
+  name:'Модульный Maze Chase: нативное движение героя и закрытие окна',
+  fn(context) { return module.exports.find(t=>t.id==='backend-maze-chase-controls').fn(context,'samples/graphics/game/maze_chase_project/main.axm'); }
+});

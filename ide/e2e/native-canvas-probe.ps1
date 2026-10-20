@@ -82,7 +82,11 @@ $rect = [CanvasProbe+Rect]::new()
 [void][CanvasProbe]::GetClientRect($hwnd, [ref]$rect)
 $position = (($Y -band 65535) -shl 16) -bor ($X -band 65535)
 switch ($Action) {
-    'capture' { [void][CanvasProbe]::Focus($hwnd); Start-Sleep -Milliseconds 40
+    'capture' { [void][CanvasProbe]::Focus($hwnd)
+        # Активация окна сбрасывает удержание при потере фокуса. Для проверки движения
+        # подаём удерживаемую клавишу после Focus в том же процессе, что делает снимок.
+        if ($Key -gt 0) { [CanvasProbe]::Message($hwnd, 0x100, $Key, 0) }
+        Start-Sleep -Milliseconds 40
         $data = [CanvasProbe]::Capture($hwnd, $rect.Right, $rect.Bottom)
         if ($OutputPath) { [CanvasProbe]::Save($data, $rect.Right, $rect.Bottom, $OutputPath) }
         [pscustomobject]@{ width=$rect.Right; height=$rect.Bottom; bgra=[Convert]::ToBase64String($data) } | ConvertTo-Json -Compress; exit }

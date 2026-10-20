@@ -2838,10 +2838,11 @@ public sealed class AcceptanceProgramTests
         Assert.Equal(["Игра завершена: выход по ESC"], inputProvider.GraphicsOutput);
     }
 
-    [Fact]
-    public void MazeChaseAcceptanceSample_RunsOnBytecodeVm()
+    [Theory]
+    [InlineData("samples/graphics/game/maze_chase.axm")]
+    [InlineData("samples/graphics/game/maze_chase_project/main.axm")]
+    public void MazeChaseAcceptanceSample_RunsOnBytecodeVm(string relativePath)
     {
-        var relativePath = "samples/graphics/game/maze_chase.axm";
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["ESC"]);
 
@@ -2871,10 +2872,11 @@ public sealed class AcceptanceProgramTests
         Assert.Equal(435L, playerSprite.Y);
     }
 
-    [Fact]
-    public void MazeChaseAcceptanceSample_SpaceShowsPauseHud()
+    [Theory]
+    [InlineData("samples/graphics/game/maze_chase.axm")]
+    [InlineData("samples/graphics/game/maze_chase_project/main.axm")]
+    public void MazeChaseAcceptanceSample_SpaceShowsPauseHud(string relativePath)
     {
-        var relativePath = "samples/graphics/game/maze_chase.axm";
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "ESC"]);
 
@@ -2888,10 +2890,11 @@ public sealed class AcceptanceProgramTests
             text => text.Text.Contains("Пауза. Нажмите SPACE, чтобы продолжить.", StringComparison.Ordinal));
     }
 
-    [Fact]
-    public void MazeChaseAcceptanceSample_LowerKShowsCalibrationHints()
+    [Theory]
+    [InlineData("samples/graphics/game/maze_chase.axm")]
+    [InlineData("samples/graphics/game/maze_chase_project/main.axm")]
+    public void MazeChaseAcceptanceSample_LowerKShowsCalibrationHints(string relativePath)
     {
-        var relativePath = "samples/graphics/game/maze_chase.axm";
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, ["k", "", "", "", "", "", "", "", "ESC"]);
 
@@ -2909,10 +2912,11 @@ public sealed class AcceptanceProgramTests
         Assert.True(inputProvider.CanvasDrawLines.Count > 70);
     }
 
-    [Fact]
-    public void MazeChaseAcceptanceSample_TWritesAllCalibrationValues()
+    [Theory]
+    [InlineData("samples/graphics/game/maze_chase.axm")]
+    [InlineData("samples/graphics/game/maze_chase_project/main.axm")]
+    public void MazeChaseAcceptanceSample_TWritesAllCalibrationValues(string relativePath)
     {
-        var relativePath = "samples/graphics/game/maze_chase.axm";
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var calibrationDirectory = CreateArtifactsTestDirectory("maze-chase-calibration-");
         var inputProvider = CreateGraphicsModernSampleInputProvider(
@@ -2922,7 +2926,16 @@ public sealed class AcceptanceProgramTests
 
         try
         {
-            var result = RunFromWorkingDirectory(calibrationDirectory, sourceText, inputProvider);
+            // Файловый сценарий работает с собственной копией всего проекта.
+            string? sourcePath = null;
+            if (relativePath.Contains("maze_chase_project", StringComparison.Ordinal))
+            {
+                var project = Path.Combine(FindRepositoryRoot(), "samples/graphics/game/maze_chase_project");
+                foreach (var module in Directory.EnumerateFiles(project, "*.axm"))
+                    File.Copy(module, Path.Combine(calibrationDirectory, Path.GetFileName(module)));
+                sourcePath = Path.Combine(calibrationDirectory, "main.axm");
+            }
+            var result = RunFromWorkingDirectory(calibrationDirectory, sourceText, inputProvider, sourcePath);
 
             Assert.True(result.Succeeded, FormatDiagnostics(result));
             Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
@@ -2991,10 +3004,10 @@ public sealed class AcceptanceProgramTests
     }
 
     [Theory]
-    [InlineData(ExecutionEngineKind.BytecodeVm)]
-    public void MazeChaseAcceptanceSample_MovesPlayerInBytecodeVm(ExecutionEngineKind expectedEngine)
+    [InlineData("samples/graphics/game/maze_chase.axm")]
+    [InlineData("samples/graphics/game/maze_chase_project/main.axm")]
+    public void MazeChaseAcceptanceSample_MovesPlayerInBytecodeVm(string relativePath)
     {
-        var relativePath = "samples/graphics/game/maze_chase.axm";
         var sourceText = TestProgramLoader.LoadText(relativePath);
         var inputProvider = CreateGraphicsModernSampleInputProvider(relativePath, keys: ["", "", "", "", "ESC"], pressedKeys: ["RIGHT"]);
 
@@ -3002,7 +3015,7 @@ public sealed class AcceptanceProgramTests
 
         Assert.True(result.Succeeded, FormatDiagnostics(result));
         Assert.DoesNotContain(result.Diagnostics, static d => d.Severity != DiagnosticSeverity.Warning);
-        Assert.Equal(expectedEngine, result.ActualEngine);
+        Assert.Equal(ExecutionEngineKind.BytecodeVm, result.ActualEngine);
 
         var playerDraws = inputProvider.DrawSprites
             .Where((_, index) => index % 2 == 0)
@@ -3523,7 +3536,7 @@ public sealed class AcceptanceProgramTests
     {
         var fullPath = Path.Combine(FindRepositoryRoot(), relativePath.Replace('/', Path.DirectorySeparatorChar));
         var sampleDirectory = Path.GetDirectoryName(fullPath) ?? FindRepositoryRoot();
-        return RunFromWorkingDirectory(sampleDirectory, sourceText, inputProvider);
+        return RunFromWorkingDirectory(sampleDirectory, sourceText, inputProvider, fullPath);
     }
 
     private static ExecutionResult RunFromWorkingDirectory(

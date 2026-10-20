@@ -1,0 +1,98 @@
+' maze_motion — общий шаг BYREF-персонажа и перевод клеток в пиксели.
+' Единую программу запускает main.axm; этот файл не запускает игровой цикл при импорте.
+' PUBLIC обозначает договор с соседними модулями; PRIVATE сохраняет внутреннее состояние.
+
+IMPORT maze_config
+IMPORT maze_world
+IMPORT maze_calibration
+
+' #region Открытые операции движения
+
+' chooseDirection вызывается на каждой новой клетке; переданная функция не создаёт обратный IMPORT.
+' speed — число пикселей за шаг; при speed <= 0 движение не выполняется.
+' walker изменяется по BYREF, включая клетку, направление и продвижение внутри клетки.
+' StepWalker — Общая процедура двигает персонажа и при необходимости выбирает путь.
+PUBLIC SUB StepWalker(BYREF walker AS Walker, speed AS INTEGER, chasePlayer AS BOOLEAN, chooseDirection AS FUNCTION() AS INTEGER)               ' Общая процедура двигает персонажа и при необходимости выбирает путь.
+    DIM remaining AS INTEGER = speed                                                            ' Сколько пикселей ещё нужно пройти в этом шаге.
+    DIM chunk AS INTEGER                                                                        ' Размер текущего куска движения внутри одной клетки.
+
+    DO WHILE remaining > 0                                                                      ' Пока в шаге ещё остались пиксели движения...
+        IF walker.travel = 0 THEN                                                               ' ...и мы находимся ровно в центре клетки...
+            IF chasePlayer THEN                                                                 ' Для призрака пересчитываем маршрут в каждом узле.
+                walker.wantedDir = chooseDirection()                                       ' Выбор происходит и при переносе остатка скорости через границу.
+                IF walker.wantedDir = 0 THEN
+                    walker.dir = 0                                                              ' Без пути призрак останавливается.
+                END IF
+            END IF                                                                              ' Завершаем выбор поведения персонажа.
+            IF walker.wantedDir <> 0 THEN                                                      ' ...сначала пробуем повернуть в желаемую сторону.
+                IF CanMove(walker.tileCol, walker.tileRow, walker.wantedDir) THEN              ' Если поворот возможен по карте...
+                    walker.dir = walker.wantedDir                                               ' ...принимаем новое направление.
+                END IF                                                                          ' Завершаем проверку поворота.
+            END IF                                                                              ' Завершаем обработку желаемого направления.
+
+            IF walker.dir <> 0 THEN                                                             ' Если у шага есть текущее направление...
+                IF NOT CanMove(walker.tileCol, walker.tileRow, walker.dir) THEN                ' ...но впереди неожиданно стена...
+                    walker.dir = 0                                                              ' ...останавливаем движение в этом шаге.
+                END IF                                                                          ' Завершаем проверку стены.
+            END IF                                                                              ' Завершаем проверку текущего направления.
+        END IF                                                                                  ' Завершаем блок работы в узле сетки.
+
+        IF walker.dir = 0 THEN                                                                  ' Если направление всё ещё равно нулю...
+            remaining = 0                                                                       ' ...прекращаем остаток движения в шаге.
+        ELSE                                                                                    ' Иначе можно продвигаться дальше по коридору.
+            chunk = TILE - walker.travel                                                        ' Считаем, сколько пикселей осталось до следующей клетки.
+            IF chunk > remaining THEN                                                           ' Если до узла дальше, чем осталось шагов в шаге...
+                chunk = remaining                                                               ' ...ограничиваем шаг остатком этого кадра.
+            END IF                                                                              ' Завершаем ограничение размера шага.
+
+            walker.travel = walker.travel + chunk                                               ' Увеличиваем внутриклеточный пройденный путь.
+            remaining = remaining - chunk                                                       ' Уменьшаем остаток шагов в текущем кадре.
+
+            IF walker.travel >= TILE THEN                                                       ' Если дошли до следующей клетки...
+                walker.tileCol = walker.tileCol + DirX(walker.dir)                              ' ...смещаем столбец по направлению движения.
+                walker.tileRow = walker.tileRow + DirY(walker.dir)                              ' ...смещаем строку по направлению движения.
+                walker.tileCol = WrapTunnelColumn(walker.tileCol, walker.tileRow)               ' ...обрабатываем телепорт в боковом туннеле.
+                walker.travel = 0                                                               ' ...и начинаем следующий отрезок с нулевого смещения.
+            END IF                                                                              ' Завершаем переход между клетками.
+        END IF                                                                                  ' Завершаем движение в пределах текущего кадра.
+    LOOP                                                                                        ' Продолжаем, пока не израсходуем скорость шага.
+END SUB                                                                                         ' Завершаем общую процедуру движения героя и призрака.
+
+' #endregion
+
+' #region Координаты персонажа
+
+' EntityPixelX — Функция переводит положение актёра в реальную X-координату тоннеля.
+PUBLIC FUNCTION EntityPixelX(tileCol AS INTEGER, tileRow AS INTEGER, dir AS INTEGER, travel AS INTEGER) AS INTEGER ' Функция переводит положение актёра в реальную X-координату тоннеля.
+    DIM startX AS INTEGER = PelletPixelX(tileCol)                                               ' Начинаем не из математического центра клетки, а из центра точки в этом столбце.
+    DIM nextCol AS INTEGER = WrapTunnelColumn(tileCol + DirX(dir), tileRow + DirY(dir))        ' Считаем следующий столбец и учитываем боковой туннель.
+    DIM targetX AS INTEGER = PelletPixelX(nextCol)                                              ' Берём реальный центр следующего столбца.
+
+    IF dir = 0 OR travel = 0 THEN                                                               ' Если актёр стоит или ещё не начал шаг...
+        RETURN startX                                                                           ' ...возвращаем точный центр текущего тоннеля.
+    END IF                                                                                      ' Завершаем быстрый возврат для неподвижного актёра.
+
+    IF dir = DIR_LEFT AND tileCol = 1 AND IsTunnelPassageRow(tileRow) THEN                      ' Если актёр уходит влево через крайний туннель...
+        RETURN startX - travel                                                                  ' ...рисуем его движущимся за левый край, а не через всю карту.
+    END IF                                                                                      ' Завершаем специальный случай левого туннеля.
+
+    IF dir = DIR_RIGHT AND tileCol = MazeColumns() AND IsTunnelPassageRow(tileRow) THEN              ' Если актёр уходит вправо через крайний туннель...
+        RETURN startX + travel                                                                  ' ...рисуем его движущимся за правый край.
+    END IF                                                                                      ' Завершаем специальный случай правого туннеля.
+
+    RETURN startX + ((targetX - startX) * travel) \ TILE                                        ' Плавно идём от одного реального центра тоннеля к следующему.
+END FUNCTION                                                                                    ' Завершаем вычисление мировой X-координаты.
+' EntityPixelY — Функция переводит положение актёра в реальную Y-координату тоннеля.
+PUBLIC FUNCTION EntityPixelY(tileCol AS INTEGER, tileRow AS INTEGER, dir AS INTEGER, travel AS INTEGER) AS INTEGER ' Функция переводит положение актёра в реальную Y-координату тоннеля.
+    DIM startY AS INTEGER = PelletPixelY(tileRow)                                               ' Начинаем из реального центра точки в текущей строке.
+    DIM nextRow AS INTEGER = ClampInt(tileRow + DirY(dir), 1, MAZE_ROWS)                         ' Считаем следующую строку и не выпускаем её за карту.
+    DIM targetY AS INTEGER = PelletPixelY(nextRow)                                              ' Берём реальный центр следующей строки.
+
+    IF dir = 0 OR travel = 0 THEN                                                               ' Если актёр стоит или шаг ещё не начат...
+        RETURN startY                                                                           ' ...возвращаем точный центр текущего тоннеля.
+    END IF                                                                                      ' Завершаем быстрый возврат для неподвижного актёра.
+
+    RETURN startY + ((targetY - startY) * travel) \ TILE                                        ' Плавно идём от одного реального центра строки к следующему.
+END FUNCTION                                                                                    ' Завершаем вычисление мировой Y-координаты.
+
+' #endregion

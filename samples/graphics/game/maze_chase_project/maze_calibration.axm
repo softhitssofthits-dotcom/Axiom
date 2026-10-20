@@ -1,0 +1,600 @@
+' maze_calibration — проверяемая таблица поправок, клавиши и панель настройки.
+' Единую программу запускает main.axm; этот файл не запускает игровой цикл при импорте.
+' PUBLIC обозначает договор с соседними модулями; PRIVATE сохраняет внутреннее состояние.
+
+IMPORT maze_config
+IMPORT maze_world
+
+' #region Закрытое состояние калибровки
+
+PRIVATE DIM HUD_BACKGROUND_COLOR AS INTEGER = RGB(4, 8, 18)                                            ' Фон информационной панели сверху.
+PRIVATE DIM HUD_STATUS_COLOR AS INTEGER = RGB(210, 228, 255)                                           ' Цвет строки статуса с подсказками игроку.
+PRIVATE DIM CALIBRATION_LINE_COLOR AS INTEGER = RGB(255, 80, 80)                                      ' Цвет яркой направляющей линии в режиме ручной калибровки.
+PRIVATE DIM CALIBRATION_TEXT_COLOR AS INTEGER = RGB(255, 230, 130)                                     ' Цвет текста калибровки, чтобы он отличался от обычного HUD.
+PRIVATE DIM CALIBRATION_GRID_COLOR AS INTEGER = RGB(10, 34, 52)                                        ' Цвет тонкой сетки сделан более приглушённым, чтобы она меньше спорила с лабиринтом.
+PRIVATE DIM CALIBRATION_PANEL_X AS INTEGER = 8                                                         ' Левая координата боковой панели калибровки.
+PRIVATE DIM CALIBRATION_PANEL_Y AS INTEGER = 88                                                        ' Верхняя координата боковой панели, чтобы она не закрывала верх поля.
+PRIVATE DIM CALIBRATION_PANEL_WIDTH AS INTEGER = 264                                                    ' Ширина боковой панели с подсказками.
+PRIVATE DIM CALIBRATION_PANEL_HEIGHT AS INTEGER = 172                                                   ' Высота боковой панели увеличена, чтобы длинный статус помещался в две строки.
+PRIVATE DIM pelletRowOffset(1 TO MAZE_ROWS) AS INTEGER                                                  ' Вертикальная поправка к началу клетки для выравнивания с картинкой.
+PRIVATE DIM pelletColOffset(1 TO MAZE_COLUMNS) AS INTEGER                                               ' Горизонтальная поправка к началу клетки для выравнивания с картинкой.
+PRIVATE DIM parsedRowValues(1 TO MAZE_ROWS) AS INTEGER                                                 ' Проверенные значения смещения строк из внешнего файла.
+PRIVATE DIM parsedColValues(1 TO MAZE_COLUMNS) AS INTEGER                                              ' Проверенные значения смещения столбцов из внешнего файла.
+PRIVATE DIM parsedRowSeen(1 TO MAZE_ROWS) AS INTEGER                                                   ' Флаги найденных строк таблицы калибровки.
+PRIVATE DIM parsedColSeen(1 TO MAZE_COLUMNS) AS INTEGER                                                ' Флаги найденных столбцов таблицы калибровки.
+PRIVATE DIM calibrationText AS STRING = ""                                                            ' Текст внешнего снимка калибровки.
+PRIVATE DIM calibrationLines() AS STRING                                                               ' Строки внешнего снимка калибровки.
+PRIVATE DIM calibrationParseError AS STRING = ""                                                      ' Ошибка разбора внешней таблицы калибровки.
+PRIVATE DIM calibrationMode AS BOOLEAN = FALSE                                                         ' Флаг ручной калибровки: TRUE означает, что стрелки двигают точки, а не героя.
+PRIVATE DIM calibrationTarget AS INTEGER = CALIBRATION_ROW_MODE                                        ' Что сейчас калибруем: строку точек или столбец точек.
+PRIVATE DIM calibrationRow AS INTEGER = 5                                                              ' Номер выбранной строки точек; по умолчанию берём первый видимый верхний ряд.
+PRIVATE DIM calibrationCol AS INTEGER = 1                                                              ' Номер выбранного столбца точек; его можно переключить клавишами W и S.
+PRIVATE DIM calibrationFilePath AS STRING = ""                                                         ' Путь к файлу рядом с игрой, куда по R записываются готовые строки настройки.
+PRIVATE DIM calibrationStatusText AS STRING = "Готово к калибровке."                                   ' Первая строка текущего статуса режима калибровки.
+PRIVATE DIM calibrationStatusTextLine2 AS STRING = "r линия. t вся таблица."                           ' Вторая строка статуса нужна для длинных сообщений без наползания на поле.
+
+' #endregion
+
+' #region Открытые сведения и режим
+
+' CalibrationError возвращает причину отказа загрузки без частичного применения таблицы.
+PUBLIC FUNCTION CalibrationError() AS STRING
+    RETURN calibrationParseError
+END FUNCTION
+
+' IsCalibrationActive позволяет циклу приостановить симуляцию на время настройки.
+PUBLIC FUNCTION IsCalibrationActive() AS BOOLEAN
+    RETURN calibrationMode
+END FUNCTION
+
+' ToggleCalibration меняет только режим и его подсказки; паузой игры управляет main.
+PUBLIC SUB ToggleCalibration()
+    calibrationMode = NOT calibrationMode
+    IF calibrationMode THEN
+        SetCalibrationStatusText("Калибровка включена.", "t запишет всю таблицу.")
+    ELSE
+        SetCalibrationStatusText("Калибровка выключена.", "K включает её снова.")
+    END IF
+END SUB
+
+' #endregion
+
+' #region Встроенные значения
+
+' InitPelletAlignment — Процедура задаёт реальные центры тоннелей на фоне лабиринта.
+PUBLIC SUB InitPelletAlignment()                                                                       ' Процедура задаёт реальные центры тоннелей на фоне лабиринта.
+    ' Здесь мы задаём высоту точек по строкам карты.                                            ' Больше число = точка ниже. Меньше число = точка выше.
+    ' Эти числа удобно крутить вручную и сразу смотреть результат в IDE.                        ' Так проще попасть в центр тоннеля по картинке.
+    pelletRowOffset(1) = -37                                                                   ' Значение строки 1 полностью перенесено из файла калибровки.
+    pelletRowOffset(2) = -37                                                                   ' Значение строки 2 полностью перенесено из файла калибровки.
+    pelletRowOffset(3) = -37                                                                   ' Значение строки 3 полностью перенесено из файла калибровки.
+    pelletRowOffset(4) = -34                                                                   ' Значение строки 4 полностью перенесено из файла калибровки.
+    pelletRowOffset(5) = -33                                                                   ' Значение строки 5 полностью перенесено из файла калибровки.
+    pelletRowOffset(6) = -23                                                                   ' Значение строки 6 полностью перенесено из файла калибровки.
+    pelletRowOffset(7) = -19                                                                   ' Значение строки 7 полностью перенесено из файла калибровки.
+    pelletRowOffset(8) = -16                                                                   ' Значение строки 8 полностью перенесено из файла калибровки.
+    pelletRowOffset(9) = -15                                                                   ' Значение строки 9 полностью перенесено из файла калибровки.
+    pelletRowOffset(10) = -8                                                                   ' Значение строки 10 полностью перенесено из файла калибровки.
+    pelletRowOffset(11) = -3                                                                   ' Значение строки 11 полностью перенесено из файла калибровки.
+    pelletRowOffset(12) = 1                                                                   ' Значение строки 12 полностью перенесено из файла калибровки.
+    pelletRowOffset(13) = 2                                                                   ' Значение строки 13 полностью перенесено из файла калибровки.
+    pelletRowOffset(14) = 1                                                                   ' Значение строки 14 полностью перенесено из файла калибровки.
+    pelletRowOffset(15) = 2                                                                   ' Значение строки 15 полностью перенесено из файла калибровки.
+    pelletRowOffset(16) = 7                                                                   ' Значение строки 16 полностью перенесено из файла калибровки.
+    pelletRowOffset(17) = 10                                                                   ' Значение строки 17 полностью перенесено из файла калибровки.
+    pelletRowOffset(18) = 15                                                                   ' Значение строки 18 полностью перенесено из файла калибровки.
+    pelletRowOffset(19) = 14                                                                   ' Значение строки 19 полностью перенесено из файла калибровки.
+    pelletRowOffset(20) = 14                                                                   ' Значение строки 20 полностью перенесено из файла калибровки.
+    pelletRowOffset(21) = 13                                                                   ' Значение строки 21 полностью перенесено из файла калибровки.
+    pelletRowOffset(22) = 20                                                                   ' Значение строки 22 полностью перенесено из файла калибровки.
+    pelletRowOffset(23) = 21                                                                   ' Значение строки 23 полностью перенесено из файла калибровки.
+    pelletRowOffset(24) = 26                                                                   ' Значение строки 24 полностью перенесено из файла калибровки.
+    pelletRowOffset(25) = 26                                                                   ' Значение строки 25 полностью перенесено из файла калибровки.
+    pelletRowOffset(26) = 24                                                                   ' Значение строки 26 полностью перенесено из файла калибровки.
+    pelletRowOffset(27) = 27                                                                   ' Значение строки 27 полностью перенесено из файла калибровки.
+    pelletRowOffset(28) = 33                                                                   ' Значение строки 28 полностью перенесено из файла калибровки.
+    pelletRowOffset(29) = 40                                                                   ' Значение строки 29 полностью перенесено из файла калибровки.
+    pelletRowOffset(30) = 42                                                                   ' Значение строки 30 полностью перенесено из файла калибровки.
+    pelletRowOffset(31) = 42                                                                   ' Значение строки 31 полностью перенесено из файла калибровки.
+    pelletRowOffset(32) = 40                                                                   ' Значение строки 32 полностью перенесено из файла калибровки.
+    pelletRowOffset(33) = 38                                                                   ' Значение строки 33 полностью перенесено из файла калибровки.
+    pelletRowOffset(34) = -37                                                                   ' Значение строки 34 полностью перенесено из файла калибровки.
+    pelletRowOffset(35) = -37                                                                   ' Значение строки 35 полностью перенесено из файла калибровки.
+    pelletRowOffset(36) = -37                                                                   ' Значение строки 36 полностью перенесено из файла калибровки.
+
+    ' Здесь мы задаём положение точек по столбцам карты.                                        ' Больше число = точка правее. Меньше число = точка левее.
+    pelletColOffset(1) = 11                                                                    ' Значение столбца 1 полностью перенесено из файла калибровки.
+    pelletColOffset(2) = 11                                                                    ' Значение столбца 2 полностью перенесено из файла калибровки.
+    pelletColOffset(3) = 13                                                                    ' Значение столбца 3 полностью перенесено из файла калибровки.
+    pelletColOffset(4) = 18                                                                    ' Значение столбца 4 полностью перенесено из файла калибровки.
+    pelletColOffset(5) = 15                                                                    ' Значение столбца 5 полностью перенесено из файла калибровки.
+    pelletColOffset(6) = 14                                                                    ' Значение столбца 6 полностью перенесено из файла калибровки.
+    pelletColOffset(7) = 16                                                                    ' Значение столбца 7 полностью перенесено из файла калибровки.
+    pelletColOffset(8) = 14                                                                    ' Значение столбца 8 полностью перенесено из файла калибровки.
+    pelletColOffset(9) = 11                                                                    ' Значение столбца 9 полностью перенесено из файла калибровки.
+    pelletColOffset(10) = 12                                                                    ' Значение столбца 10 полностью перенесено из файла калибровки.
+    pelletColOffset(11) = 11                                                                    ' Значение столбца 11 полностью перенесено из файла калибровки.
+    pelletColOffset(12) = 12                                                                    ' Значение столбца 12 полностью перенесено из файла калибровки.
+    pelletColOffset(13) = 11                                                                    ' Значение столбца 13 полностью перенесено из файла калибровки.
+    pelletColOffset(14) = 11                                                                    ' Значение столбца 14 полностью перенесено из файла калибровки.
+    pelletColOffset(15) = 7                                                                    ' Значение столбца 15 полностью перенесено из файла калибровки.
+    pelletColOffset(16) = 6                                                                    ' Значение столбца 16 полностью перенесено из файла калибровки.
+    pelletColOffset(17) = 6                                                                    ' Значение столбца 17 полностью перенесено из файла калибровки.
+    pelletColOffset(18) = 3                                                                    ' Значение столбца 18 полностью перенесено из файла калибровки.
+    pelletColOffset(19) = 4                                                                    ' Значение столбца 19 полностью перенесено из файла калибровки.
+    pelletColOffset(20) = 3                                                                    ' Значение столбца 20 полностью перенесено из файла калибровки.
+    pelletColOffset(21) = 2                                                                    ' Значение столбца 21 полностью перенесено из файла калибровки.
+    pelletColOffset(22) = -1                                                                    ' Значение столбца 22 полностью перенесено из файла калибровки.
+    pelletColOffset(23) = 0                                                                    ' Значение столбца 23 полностью перенесено из файла калибровки.
+    pelletColOffset(24) = -2                                                                    ' Значение столбца 24 полностью перенесено из файла калибровки.
+    pelletColOffset(25) = -3                                                                    ' Значение столбца 25 полностью перенесено из файла калибровки.
+    pelletColOffset(26) = 0                                                                    ' Значение столбца 26 полностью перенесено из файла калибровки.
+    pelletColOffset(27) = 5                                                                    ' Значение столбца 27 полностью перенесено из файла калибровки.
+    pelletColOffset(28) = 6                                                                    ' Значение столбца 28 полностью перенесено из файла калибровки.
+END SUB                                                                                         ' Завершаем настройку центров точек.
+
+' #endregion
+
+' #region Чтение и проверка калибровки
+
+' InitCalibrationFile — Процедура готовит путь для файла ручной калибровки рядом с игрой.
+PUBLIC SUB InitCalibrationFile()                                                                       ' Процедура готовит путь для файла ручной калибровки рядом с игрой.
+    calibrationFilePath = COMBINEPATH(CURRENTDIR(), "maze_chase_pellet_calibration.txt")       ' Запоминаем файл рядом с main.axm, куда R дописывает значения.
+END SUB                                                                                         ' Завершаем подготовку файла калибровки.
+
+' LoadPelletAlignment — Процедура загружает только полный и проверенный снимок калибровки.
+PUBLIC SUB LoadPelletAlignment()                                                                       ' Процедура загружает только полный и проверенный снимок калибровки.
+    IF NOT FILEEXISTS(calibrationFilePath) THEN
+        RETURN                                                                                  ' При отсутствии файла остаются встроенные значения.
+    END IF
+
+    calibrationText = READFILE(calibrationFilePath)                                             ' Читаем внешний файл, не изменяя исходник игры.
+    ParseCalibrationText(calibrationText)                                                        ' Проверяем структуру, диапазоны и полноту таблиц.
+    IF calibrationParseError <> "" THEN
+        RETURN                                                                                  ' Частичная или повреждённая таблица не применяется.
+    END IF
+
+    FOR rowIndex = 1 TO MAZE_ROWS                                                               ' Применяем только прошедшие полную проверку смещения.
+        pelletRowOffset(rowIndex) = parsedRowValues(rowIndex)
+    NEXT
+    FOR colIndex = 1 TO MAZE_COLUMNS
+        pelletColOffset(colIndex) = parsedColValues(colIndex)
+    NEXT
+END SUB                                                                                         ' Завершаем чтение внешней калибровки.
+
+' ResetParsedCalibration — Процедура очищает таблицы перед новым разбором файла.
+PRIVATE SUB ResetParsedCalibration()                                                                    ' Процедура очищает таблицы перед новым разбором файла.
+    calibrationParseError = ""                                                                  ' Сбрасываем прежнюю ошибку.
+    FOR rowIndex = 1 TO MAZE_ROWS                                                               ' Очищаем значения и признаки строк.
+        parsedRowValues(rowIndex) = 0
+        parsedRowSeen(rowIndex) = 0
+    NEXT
+    FOR colIndex = 1 TO MAZE_COLUMNS                                                            ' Очищаем значения и признаки столбцов.
+        parsedColValues(colIndex) = 0
+        parsedColSeen(colIndex) = 0
+    NEXT
+END SUB                                                                                         ' Завершаем очистку служебных таблиц.
+
+' ParseCalibrationText — Процедура разбирает снимок построчно и отвергает неизвестные записи.
+PRIVATE SUB ParseCalibrationText(sourceText AS STRING)                                                  ' Процедура разбирает снимок построчно и отвергает неизвестные записи.
+    DIM currentCalibrationLine AS STRING = ""
+    calibrationLines = SPLIT(sourceText, CHR(10))                                               ' Поддерживаем обычные файлы с переводом строк LF или CRLF.
+    ResetParsedCalibration()                                                                    ' Каждое чтение начинает проверку с чистого состояния.
+
+    FOR lineIndex = 1 TO ARRAYLENGTH(calibrationLines)                                          ' Идём по всем строкам файла.
+        currentCalibrationLine = TRIM(TrimTrailingCr(calibrationLines(lineIndex)))             ' Убираем пробелы и CR в конце CRLF.
+        IF currentCalibrationLine <> "" AND LEFT(currentCalibrationLine, 1) <> "'" THEN       ' Пропускаем пустые строки и комментарии.
+            IF STARTSWITH(currentCalibrationLine, "pelletRowOffset(") THEN                    ' Разбираем смещение каждой строки карты.
+                ApplyCalibrationLine(currentCalibrationLine, MAZE_ROWS, TRUE)
+            ELSEIF STARTSWITH(currentCalibrationLine, "pelletColOffset(") THEN                ' Разбираем смещение каждого столбца карты.
+                ApplyCalibrationLine(currentCalibrationLine, MAZE_COLUMNS, FALSE)
+            ELSE                                                                                ' Любая другая запись может скрывать опечатку.
+                calibrationParseError = "неизвестная строка: " + currentCalibrationLine
+            END IF
+        END IF
+        IF calibrationParseError <> "" THEN
+            RETURN                                                                              ' После первой ошибки дальнейший разбор не нужен.
+        END IF
+    NEXT
+
+    FOR rowIndex = 1 TO MAZE_ROWS                                                               ' Полный файл обязан содержать каждую строку ровно один раз.
+        IF parsedRowSeen(rowIndex) = 0 THEN
+            calibrationParseError = "нет pelletRowOffset(" + TRIM(STR(rowIndex)) + ")."
+            RETURN
+        END IF
+    NEXT
+    FOR colIndex = 1 TO MAZE_COLUMNS                                                            ' Полный файл обязан содержать каждый столбец ровно один раз.
+        IF parsedColSeen(colIndex) = 0 THEN
+            calibrationParseError = "нет pelletColOffset(" + TRIM(STR(colIndex)) + ")."
+            RETURN
+        END IF
+    NEXT
+END SUB                                                                                         ' Завершаем строгий разбор файла.
+
+' ApplyCalibrationLine — Служебная операция модуля.
+PRIVATE SUB ApplyCalibrationLine(lineText AS STRING, maxIndex AS INTEGER, isRowLine AS BOOLEAN)
+    DIM openPos AS INTEGER = INSTR(lineText, "(")
+    DIM closePos AS INTEGER = INSTR(lineText, ")")
+    DIM equalPos AS INTEGER = INSTR(lineText, "=")
+    DIM indexText AS STRING = ""
+    DIM valueText AS STRING = ""
+    DIM indexNumber AS DOUBLE = 0
+    DIM valueNumber AS DOUBLE = 0
+    DIM parsedIndex AS INTEGER = 0
+
+    IF openPos = 0 OR closePos <= openPos OR equalPos <= closePos THEN
+        calibrationParseError = "повреждённая строка: " + lineText
+        RETURN
+    END IF
+    indexText = TRIM(MID(lineText, openPos + 1, closePos - openPos - 1))
+    valueText = TRIM(MID(lineText, equalPos + 1, LEN(lineText) - equalPos))
+    IF NOT ISNUMERIC(indexText) OR NOT ISNUMERIC(valueText) THEN
+        calibrationParseError = "ожидались целые числа: " + lineText
+        RETURN
+    END IF
+
+    indexNumber = VAL(indexText)
+    valueNumber = VAL(valueText)
+    IF indexNumber < 1 OR indexNumber > maxIndex THEN
+        calibrationParseError = "индекс вне диапазона: " + lineText
+        RETURN
+    END IF
+    IF valueNumber < -2147483647 OR valueNumber > 2147483647 THEN
+        calibrationParseError = "смещение слишком велико: " + lineText
+        RETURN
+    END IF
+    IF indexNumber <> INT(indexNumber) OR valueNumber <> INT(valueNumber) THEN
+        calibrationParseError = "ожидались целые числа: " + lineText
+        RETURN
+    END IF
+
+    parsedIndex = INT(indexNumber)
+    IF isRowLine THEN
+        IF parsedRowSeen(parsedIndex) <> 0 THEN
+            calibrationParseError = "повтор pelletRowOffset(" + TRIM(STR(parsedIndex)) + ")."
+            RETURN
+        END IF
+        parsedRowSeen(parsedIndex) = 1
+        parsedRowValues(parsedIndex) = INT(valueNumber)
+    ELSE
+        IF parsedColSeen(parsedIndex) <> 0 THEN
+            calibrationParseError = "повтор pelletColOffset(" + TRIM(STR(parsedIndex)) + ")."
+            RETURN
+        END IF
+        parsedColSeen(parsedIndex) = 1
+        parsedColValues(parsedIndex) = INT(valueNumber)
+    END IF
+END SUB                                                                                         ' Завершаем проверку одной строки.
+
+' TrimTrailingCr — Функция убирает CR после разбиения CRLF по LF.
+PRIVATE FUNCTION TrimTrailingCr(inputText AS STRING) AS STRING                                         ' Функция убирает CR после разбиения CRLF по LF.
+    IF LEN(inputText) > 0 THEN
+        IF ASC(RIGHT(inputText, 1)) = 13 THEN
+            RETURN LEFT(inputText, LEN(inputText) - 1)
+        END IF
+    END IF
+    RETURN inputText
+END FUNCTION                                                                                    ' Завершаем удаление хвостового CR.
+
+' #endregion
+
+' #region Управление калибровкой
+
+' HandleCalibrationInput — Процедура читает клавиши ручной калибровки точек.
+PUBLIC SUB HandleCalibrationInput()                                                                    ' Процедура читает клавиши ручной калибровки точек.
+    IF CalibrationHotKeyPressed("C") THEN                                                       ' Если нажали C или c...
+        IF calibrationTarget = CALIBRATION_ROW_MODE THEN                                        ' Если сейчас выбрана строка...
+            calibrationTarget = CALIBRATION_COL_MODE                                            ' ...переключаемся на столбец.
+            SetCalibrationStatusText("Выбран столбец.", "LEFT/RIGHT двигают.")                  ' Обновляем подсказку прямо в калибровочном режиме и не растягиваем строку.
+        ELSE                                                                                    ' Иначе сейчас выбран столбец.
+            calibrationTarget = CALIBRATION_ROW_MODE                                            ' ...переключаемся обратно на строку.
+            SetCalibrationStatusText("Выбрана строка.", "UP/DOWN двигают.")                    ' Обновляем подсказку для строк и держим её короткой.
+        END IF                                                                                  ' Завершаем переключение строки и столбца.
+    END IF                                                                                      ' Завершаем обработку клавиши C.
+
+    IF CalibrationHotKeyPressed("W") THEN                                                       ' Если нажали W или w...
+        IF calibrationTarget = CALIBRATION_ROW_MODE THEN                                        ' Если калибруем строки...
+            calibrationRow = ClampInt(calibrationRow - 1, 1, MAZE_ROWS)                          ' ...выбираем строку выше.
+        ELSE                                                                                    ' Иначе калибруем столбцы.
+            calibrationCol = ClampInt(calibrationCol - 1, 1, MazeColumns())                          ' ...выбираем столбец левее по номеру.
+        END IF                                                                                  ' Завершаем выбор предыдущего номера.
+        SetCalibrationStatusText("Выбран другой номер.", CalibrationSelectionText())            ' Показываем, что именно теперь выбрано, но разбиваем статус на две строки.
+    END IF                                                                                      ' Завершаем обработку клавиши W.
+
+    IF CalibrationHotKeyPressed("S") THEN                                                       ' Если нажали S или s...
+        IF calibrationTarget = CALIBRATION_ROW_MODE THEN                                        ' Если калибруем строки...
+            calibrationRow = ClampInt(calibrationRow + 1, 1, MAZE_ROWS)                          ' ...выбираем строку ниже.
+        ELSE                                                                                    ' Иначе калибруем столбцы.
+            calibrationCol = ClampInt(calibrationCol + 1, 1, MazeColumns())                          ' ...выбираем столбец правее по номеру.
+        END IF                                                                                  ' Завершаем выбор следующего номера.
+        SetCalibrationStatusText("Выбран другой номер.", CalibrationSelectionText())            ' Показываем текущий выбор, но не даём строке наползать на поле.
+    END IF                                                                                      ' Завершаем обработку клавиши S.
+
+    IF calibrationTarget = CALIBRATION_ROW_MODE THEN                                            ' Если сейчас двигаем строку точек...
+        IF KEYPRESS("UP") THEN                                                                  ' Если нажали стрелку вверх...
+            pelletRowOffset(calibrationRow) = pelletRowOffset(calibrationRow) - 1              ' ...поднимаем выбранную строку на один пиксель.
+            SetCalibrationStatusText("Строка поднята.", CalibrationAssignmentText())            ' Показываем новое значение в две строки.
+        END IF                                                                                  ' Завершаем обработку стрелки вверх.
+
+        IF KEYPRESS("DOWN") THEN                                                                ' Если нажали стрелку вниз...
+            pelletRowOffset(calibrationRow) = pelletRowOffset(calibrationRow) + 1              ' ...опускаем выбранную строку на один пиксель.
+            SetCalibrationStatusText("Строка опущена.", CalibrationAssignmentText())            ' Показываем новое значение в две строки.
+        END IF                                                                                  ' Завершаем обработку стрелки вниз.
+    ELSE                                                                                        ' Иначе сейчас двигаем столбец точек.
+        IF KEYPRESS("LEFT") THEN                                                                ' Если нажали стрелку влево...
+            pelletColOffset(calibrationCol) = pelletColOffset(calibrationCol) - 1              ' ...сдвигаем выбранный столбец на один пиксель влево.
+            SetCalibrationStatusText("Столбец влево.", CalibrationAssignmentText())             ' Показываем новое значение и сохраняем короткий статус.
+        END IF                                                                                  ' Завершаем обработку стрелки влево.
+
+        IF KEYPRESS("RIGHT") THEN                                                               ' Если нажали стрелку вправо...
+            pelletColOffset(calibrationCol) = pelletColOffset(calibrationCol) + 1              ' ...сдвигаем выбранный столбец на один пиксель вправо.
+            SetCalibrationStatusText("Столбец вправо.", CalibrationAssignmentText())            ' Показываем новое значение и сохраняем короткий статус.
+        END IF                                                                                  ' Завершаем обработку стрелки вправо.
+    END IF                                                                                      ' Завершаем обработку сдвига выбранной линии.
+
+    IF CalibrationLowerHotKeyPressed("T") THEN                                                   ' Если нажали обычную t или русскую е...
+        SaveAllCalibrationValues()                                                              ' ...перезаписываем файл рядом с игрой полной таблицей центров.
+    END IF                                                                                      ' Завершаем обработку полной записи таблицы.
+
+    IF CalibrationLowerHotKeyPressed("R") THEN                                                   ' Если нажали обычную r или русскую к...
+        SaveCalibrationValue()                                                                  ' ...дописываем текущее присваивание в файл рядом с игрой.
+    END IF                                                                                      ' Завершаем обработку одиночной записи.
+END SUB                                                                                         ' Завершаем обработку калибровочных клавиш.
+
+' SetCalibrationStatusText — Процедура разбивает статус калибровки на две короткие строки.
+PRIVATE SUB SetCalibrationStatusText(line1 AS STRING, line2 AS STRING)                                 ' Процедура разбивает статус калибровки на две короткие строки.
+    calibrationStatusText = line1                                                               ' Сохраняем первую строку статуса.
+    calibrationStatusTextLine2 = line2                                                          ' Сохраняем вторую строку статуса.
+END SUB                                                                                         ' Завершаем обновление двухстрочного статуса.
+
+' CalibrationSelectionText — Функция возвращает человекочитаемое описание текущего выбора.
+PRIVATE FUNCTION CalibrationSelectionText() AS STRING                                                   ' Функция возвращает человекочитаемое описание текущего выбора.
+    IF calibrationTarget = CALIBRATION_ROW_MODE THEN                                            ' Если выбрана строка...
+        RETURN "строка " + TRIM(STR(calibrationRow)) + ", значение " + TRIM(STR(pelletRowOffset(calibrationRow))) ' Возвращаем номер строки и её Y-сдвиг.
+    END IF                                                                                      ' Завершаем строковый режим.
+
+    RETURN "столбец " + TRIM(STR(calibrationCol)) + ", значение " + TRIM(STR(pelletColOffset(calibrationCol))) ' Возвращаем номер столбца и его X-сдвиг.
+END FUNCTION                                                                                    ' Завершаем описание текущего выбора.
+
+' CalibrationAssignmentText — Функция собирает точную строку присваивания для файла калибровки.
+PRIVATE FUNCTION CalibrationAssignmentText() AS STRING                                                  ' Функция собирает точную строку присваивания для файла калибровки.
+    IF calibrationTarget = CALIBRATION_ROW_MODE THEN                                            ' Если сейчас выбрана строка...
+        RETURN CalibrationRowAssignmentText(calibrationRow)                                     ' Возвращаем готовую строку для таблицы строк.
+    END IF                                                                                      ' Завершаем ветку строки.
+
+    RETURN CalibrationColAssignmentText(calibrationCol)                                         ' Возвращаем готовую строку для таблицы столбцов.
+END FUNCTION                                                                                    ' Завершаем сборку строки присваивания.
+
+' CalibrationHotKeyPressed — Функция проверяет буквенную клавишу калибровки в обоих регистрах.
+PUBLIC FUNCTION CalibrationHotKeyPressed(keyName AS STRING) AS BOOLEAN                                 ' Функция проверяет буквенную клавишу калибровки в обоих регистрах.
+    IF CalibrationUpperHotKeyPressed(keyName) THEN                                               ' Если в очередь пришла заглавная латинская или русская буква...
+        RETURN TRUE                                                                             ' ...сразу считаем горячую клавишу нажатой.
+    END IF                                                                                      ' Завершаем проверку заглавной буквы.
+
+    IF CalibrationLowerHotKeyPressed(keyName) THEN                                               ' Если Windows прислал маленькую латинскую или русскую букву...
+        RETURN TRUE                                                                             ' ...тоже принимаем её как ту же команду калибровки.
+    END IF                                                                                      ' Завершаем проверку маленькой буквы.
+
+    RETURN FALSE                                                                                ' Если ни один вариант не найден, клавиша не нажата.
+END FUNCTION                                                                                    ' Завершаем проверку буквенной горячей клавиши.
+
+' CalibrationUpperHotKeyPressed — Функция проверяет именно заглавную букву команды.
+PRIVATE FUNCTION CalibrationUpperHotKeyPressed(keyName AS STRING) AS BOOLEAN                            ' Функция проверяет именно заглавную букву команды.
+    IF KEYPRESS(keyName) THEN                                                                   ' Если пришла заглавная латинская буква...
+        RETURN TRUE                                                                             ' ...возвращаем TRUE и расходуем это событие.
+    END IF                                                                                      ' Завершаем проверку латинской заглавной буквы.
+
+    DIM altUpper AS STRING = CalibrationRussianHotKeyUpper(keyName)                             ' Для русской раскладки получаем букву на той же физической клавише.
+    IF altUpper <> "" THEN                                                                      ' Если для этой команды есть русская пара...
+        IF KEYPRESS(altUpper) THEN                                                              ' ...и в очередь пришла заглавная русская буква...
+            RETURN TRUE                                                                         ' ...тоже считаем горячую клавишу нажатой.
+        END IF                                                                                  ' Завершаем проверку заглавной русской буквы.
+    END IF                                                                                      ' Завершаем обработку русской пары в верхнем регистре.
+
+    RETURN FALSE                                                                                ' Если заглавная буква не найдена, возвращаем FALSE.
+END FUNCTION                                                                                    ' Завершаем проверку заглавной горячей клавиши.
+
+' CalibrationLowerHotKeyPressed — Функция проверяет именно маленькую букву команды.
+PRIVATE FUNCTION CalibrationLowerHotKeyPressed(keyName AS STRING) AS BOOLEAN                            ' Функция проверяет именно маленькую букву команды.
+    IF KEYPRESS(LCASE(keyName)) THEN                                                            ' Если пришла маленькая латинская буква...
+        RETURN TRUE                                                                             ' ...возвращаем TRUE и расходуем это событие.
+    END IF                                                                                      ' Завершаем проверку латинской маленькой буквы.
+
+    DIM altLower AS STRING = CalibrationRussianHotKeyLower(keyName)                             ' Получаем маленькую русскую букву с той же клавиши.
+    IF altLower <> "" THEN                                                                      ' Если русская маленькая пара существует...
+        IF KEYPRESS(altLower) THEN                                                              ' ...и в очередь пришла маленькая русская буква...
+            RETURN TRUE                                                                         ' ...принимаем её как ту же команду калибровки.
+        END IF                                                                                  ' Завершаем проверку маленькой русской буквы.
+    END IF                                                                                      ' Завершаем обработку русской пары в нижнем регистре.
+
+    RETURN FALSE                                                                                ' Если маленькая буква не найдена, возвращаем FALSE.
+END FUNCTION                                                                                    ' Завершаем проверку маленькой горячей клавиши.
+
+' CalibrationRussianHotKeyUpper — Функция возвращает русскую заглавную букву с той же физической клавиши.
+PRIVATE FUNCTION CalibrationRussianHotKeyUpper(keyName AS STRING) AS STRING                             ' Функция возвращает русскую заглавную букву с той же физической клавиши.
+    IF keyName = "K" THEN                                                                       ' Если нужна команда калибровки по клавише K...
+        RETURN "Л"                                                                              ' ...в русской раскладке на этой клавише стоит буква Л.
+    END IF                                                                                      ' Завершаем проверку команды K.
+
+    IF keyName = "C" THEN                                                                       ' Если нужна команда по клавише C...
+        RETURN "С"                                                                              ' ...в русской раскладке это буква С.
+    END IF                                                                                      ' Завершаем проверку команды C.
+
+    IF keyName = "W" THEN                                                                       ' Если нужна команда по клавише W...
+        RETURN "Ц"                                                                              ' ...в русской раскладке это буква Ц.
+    END IF                                                                                      ' Завершаем проверку команды W.
+
+    IF keyName = "S" THEN                                                                       ' Если нужна команда по клавише S...
+        RETURN "Ы"                                                                              ' ...в русской раскладке это буква Ы.
+    END IF                                                                                      ' Завершаем проверку команды S.
+
+    IF keyName = "R" THEN                                                                       ' Если нужна команда записи по клавише R...
+        RETURN "К"                                                                              ' ...в русской раскладке это буква К.
+    END IF                                                                                      ' Завершаем проверку команды R.
+
+    IF keyName = "T" THEN                                                                       ' Если нужна команда полной записи по клавише T...
+        RETURN "Е"                                                                              ' ...в русской раскладке это буква Е.
+    END IF                                                                                      ' Завершаем проверку команды T.
+
+    RETURN ""                                                                                   ' Для остальных клавиш русскую пару не задаём.
+END FUNCTION                                                                                    ' Завершаем выбор русской заглавной пары.
+
+' CalibrationRussianHotKeyLower — Функция возвращает русскую маленькую букву с той же физической клавиши.
+PRIVATE FUNCTION CalibrationRussianHotKeyLower(keyName AS STRING) AS STRING                             ' Функция возвращает русскую маленькую букву с той же физической клавиши.
+    IF keyName = "K" THEN                                                                       ' Если нужна команда калибровки по клавише K...
+        RETURN "л"                                                                              ' ...в русской раскладке на этой клавише стоит буква л.
+    END IF                                                                                      ' Завершаем проверку команды K.
+
+    IF keyName = "C" THEN                                                                       ' Если нужна команда по клавише C...
+        RETURN "с"                                                                              ' ...в русской раскладке это буква с.
+    END IF                                                                                      ' Завершаем проверку команды C.
+
+    IF keyName = "W" THEN                                                                       ' Если нужна команда по клавише W...
+        RETURN "ц"                                                                              ' ...в русской раскладке это буква ц.
+    END IF                                                                                      ' Завершаем проверку команды W.
+
+    IF keyName = "S" THEN                                                                       ' Если нужна команда по клавише S...
+        RETURN "ы"                                                                              ' ...в русской раскладке это буква ы.
+    END IF                                                                                      ' Завершаем проверку команды S.
+
+    IF keyName = "R" THEN                                                                       ' Если нужна команда записи по клавише R...
+        RETURN "к"                                                                              ' ...в русской раскладке это буква к.
+    END IF                                                                                      ' Завершаем проверку команды R.
+
+    IF keyName = "T" THEN                                                                       ' Если нужна команда полной записи по клавише T...
+        RETURN "е"                                                                              ' ...в русской раскладке это буква е.
+    END IF                                                                                      ' Завершаем проверку команды T.
+
+    RETURN ""                                                                                   ' Для остальных клавиш маленькую русскую пару не задаём.
+END FUNCTION                                                                                    ' Завершаем выбор русской маленькой пары.
+
+' #endregion
+
+' #region Сохранение калибровки
+
+' SaveCalibrationValue — Процедура дописывает текущее значение калибровки в файл рядом с игрой.
+PRIVATE SUB SaveCalibrationValue()                                                                      ' Процедура дописывает текущее значение калибровки в файл рядом с игрой.
+    DIM lineText AS STRING = CalibrationAssignmentText()                                        ' Собираем строку присваивания, которую потом можно вставить в InitPelletAlignment.
+    DIM ok AS BOOLEAN = APPENDFILE(calibrationFilePath, lineText + CHR(13) + CHR(10))           ' Дописываем строку в файл с переводом строки Windows.
+
+    IF ok THEN                                                                                  ' Если запись прошла успешно...
+        SetCalibrationStatusText("Записано в файл.", lineText)                                  ' ...показываем, какая строка ушла в файл, но не растягиваем её в одну длинную ленту.
+    ELSE                                                                                        ' Иначе файловая функция вернула FALSE.
+        SetCalibrationStatusText("Ошибка записи.", "Файл калибровки.")                          ' Сообщаем о проблеме записи короткими строками.
+    END IF                                                                                      ' Завершаем обработку результата записи.
+END SUB                                                                                         ' Завершаем запись значения калибровки.
+
+' SaveAllCalibrationValues — Процедура перезаписывает файл свежим полным снимком всех координат точек.
+PRIVATE SUB SaveAllCalibrationValues()                                                                  ' Процедура перезаписывает файл свежим полным снимком всех координат точек.
+    DIM ok AS BOOLEAN = TRUE                                                                    ' Общий флаг успеха полной записи.
+    DIM snapshotText AS STRING = "' Полный снимок текущей калибровки maze_chase" + CHR(13) + CHR(10) ' Начинаем текст файла с понятного заголовка снимка.
+
+    FOR rowIndex = 1 TO MAZE_ROWS                                                                ' Проходим все строки таблицы центров.
+        snapshotText = snapshotText + CalibrationRowAssignmentText(rowIndex) + CHR(13) + CHR(10) ' Добавляем в снимок одну строку `pelletRowOffset`.
+    NEXT                                                                                        ' Переходим к следующей строке.
+
+    FOR colIndex = 1 TO MazeColumns()                                                                ' Проходим все столбцы таблицы центров.
+        snapshotText = snapshotText + CalibrationColAssignmentText(colIndex) + CHR(13) + CHR(10) ' Добавляем в снимок одну строку `pelletColOffset`.
+    NEXT                                                                                        ' Переходим к следующему столбцу.
+
+    ok = WRITEFILE(calibrationFilePath, snapshotText)                                            ' Полностью заменяем старый журнал новым чистым снимком таблицы.
+
+    IF ok THEN                                                                                  ' Если все строки записались...
+        SetCalibrationStatusText("Записана вся таблица.", "Строки и столбцы.")                  ' ...сообщаем об успешной страховочной записи двумя строками.
+    ELSE                                                                                        ' Иначе хотя бы одна запись вернула FALSE.
+        SetCalibrationStatusText("Не удалось записать.", "Всю таблицу.")                        ' Сообщаем о частичной ошибке записи короткими строками.
+    END IF                                                                                      ' Завершаем обработку результата полной записи.
+END SUB                                                                                         ' Завершаем полную запись координат.
+
+' CalibrationRowAssignmentText — Функция собирает строку присваивания для одной строки точек.
+PRIVATE FUNCTION CalibrationRowAssignmentText(rowIndex AS INTEGER) AS STRING                            ' Функция собирает строку присваивания для одной строки точек.
+    RETURN "pelletRowOffset(" + TRIM(STR(rowIndex)) + ") = " + TRIM(STR(pelletRowOffset(rowIndex))) ' Возвращаем готовую строку `pelletRowOffset`.
+END FUNCTION                                                                                    ' Завершаем сборку строки для вертикального центра.
+
+' CalibrationColAssignmentText — Функция собирает строку присваивания для одного столбца точек.
+PRIVATE FUNCTION CalibrationColAssignmentText(colIndex AS INTEGER) AS STRING                            ' Функция собирает строку присваивания для одного столбца точек.
+    RETURN "pelletColOffset(" + TRIM(STR(colIndex)) + ") = " + TRIM(STR(pelletColOffset(colIndex))) ' Возвращаем готовую строку `pelletColOffset`.
+END FUNCTION                                                                                    ' Завершаем сборку строки для горизонтального центра.
+
+' #endregion
+
+' #region Координаты и наложение
+
+' PelletPixelX — Функция возвращает реальную X-координату точки внутри клетки.
+PUBLIC FUNCTION PelletPixelX(tileCol AS INTEGER) AS INTEGER                                            ' Функция возвращает реальную X-координату точки внутри клетки.
+    RETURN (tileCol - 1) * TILE + pelletColOffset(tileCol)                                    ' Добавляем к клетке не математический центр, а измеренный центр тоннеля.
+END FUNCTION                                                                                    ' Завершаем вычисление X точки.
+
+' PelletPixelY — Функция возвращает реальную Y-координату точки внутри клетки.
+PUBLIC FUNCTION PelletPixelY(tileRow AS INTEGER) AS INTEGER                                            ' Функция возвращает реальную Y-координату точки внутри клетки.
+    RETURN (tileRow - 1) * TILE + pelletRowOffset(tileRow)                                    ' Берём верх мира и добавляем к строке измеренный центр прохода.
+END FUNCTION                                                                                    ' Завершаем вычисление Y точки.
+
+' WorldViewportLeft — Функция вычисляет левую экранную границу viewport мира.
+PUBLIC FUNCTION WorldViewportLeft() AS INTEGER                                                         ' Функция вычисляет левую экранную границу viewport мира.
+    RETURN MaxInt(0, (VIEW_WIDTH - WorldWidthPixels()) \ 2)                                       ' Центрируем лабиринт по ширине окна, если свободное место есть.
+END FUNCTION                                                                                    ' Завершаем вычисление левой границы viewport.
+
+' WorldViewportTop — Функция вычисляет верхнюю экранную границу viewport мира.
+PUBLIC FUNCTION WorldViewportTop() AS INTEGER                                                          ' Функция вычисляет верхнюю экранную границу viewport мира.
+    RETURN HUD_HEIGHT                                                                           ' Мир начинается сразу под HUD без дополнительного ручного сдвига.
+END FUNCTION                                                                                    ' Завершаем вычисление верхней границы viewport.
+
+' WorldViewportRight — Функция вычисляет правую исключающую границу viewport мира.
+PUBLIC FUNCTION WorldViewportRight() AS INTEGER                                                        ' Функция вычисляет правую исключающую границу viewport мира.
+    RETURN WorldViewportLeft() + WorldWidthPixels()                                               ' Правая граница равна левой плюс полная ширина мира.
+END FUNCTION                                                                                    ' Завершаем вычисление правой границы viewport.
+
+' WorldViewportBottom — Функция вычисляет нижнюю исключающую границу viewport мира.
+PUBLIC FUNCTION WorldViewportBottom() AS INTEGER                                                       ' Функция вычисляет нижнюю исключающую границу viewport мира.
+    RETURN WorldViewportTop() + WorldHeightPixels()                                               ' Нижняя граница равна верху плюс полная высота мира.
+END FUNCTION                                                                                    ' Завершаем вычисление нижней границы viewport.
+
+' DrawCalibrationOverlay — Процедура рисует подсказки и направляющую линию калибровки.
+PUBLIC SUB DrawCalibrationOverlay()                                                                    ' Процедура рисует подсказки и направляющую линию калибровки.
+    RESETCAMERA                                                                                 ' Рисуем оверлей в экранных координатах, чтобы он не зависел от камеры.
+    VIEWPORT (WorldViewportLeft(), WorldViewportTop()) - (WorldViewportRight(), WorldViewportBottom()) ' Ограничиваем сетку и направляющие только областью игрового поля.
+    DrawCalibrationGrid()                                                                       ' Сначала рисуем тонкую сетку поверх поля для точной ручной подгонки.
+
+    IF calibrationTarget = CALIBRATION_ROW_MODE THEN                                            ' Если выбрана строка...
+        DIM selectedY AS INTEGER = PelletPixelY(calibrationRow)                                  ' Считаем фактическую Y-координату выбранного ряда точек.
+        DRAWLINE 0, selectedY, WorldWidthPixels() - 1, selectedY, CALIBRATION_LINE_COLOR         ' Проводим горизонтальную линию через выбранный ряд внутри viewport.
+    ELSE                                                                                        ' Иначе выбран столбец.
+        DIM selectedX AS INTEGER = PelletPixelX(calibrationCol)                                  ' Считаем фактическую X-координату выбранного столбца точек.
+        DRAWLINE selectedX, 0, selectedX, WorldHeightPixels() - 1, CALIBRATION_LINE_COLOR        ' Проводим вертикальную линию через выбранный столбец по тем же границам, что и сетка.
+    END IF                                                                                      ' Завершаем рисование направляющей.
+
+    VIEWPORT                                                                                     ' Возвращаем полный холст, чтобы боковая панель не обрезалась viewport-ом мира.
+    FILLRECT CALIBRATION_PANEL_X, CALIBRATION_PANEL_Y, CALIBRATION_PANEL_WIDTH, CALIBRATION_PANEL_HEIGHT, HUD_BACKGROUND_COLOR ' Рисуем боковую плашку в пустом поле слева от лабиринта.
+    DRAWRECT CALIBRATION_PANEL_X, CALIBRATION_PANEL_Y, CALIBRATION_PANEL_WIDTH, CALIBRATION_PANEL_HEIGHT, CALIBRATION_LINE_COLOR ' Обводим боковую плашку, чтобы она читалась как отдельный режим.
+    DRAWTEXT "КАЛИБРОВКА", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 8, CALIBRATION_TEXT_COLOR ' Заголовок режима калибровки.
+    DRAWTEXT "K/k: вкл/выкл", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 24, HUD_STATUS_COLOR ' Подсказка по входу и выходу из режима.
+    DRAWTEXT "C/c: строка/столбец", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 40, HUD_STATUS_COLOR ' Подсказка по переключению типа линии.
+    DRAWTEXT "W/S: выбрать номер", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 56, HUD_STATUS_COLOR ' Подсказка по выбору строки или столбца.
+    DRAWTEXT "Стрелки: двигать", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 72, HUD_STATUS_COLOR ' Подсказка по сдвигу выбранной линии.
+    DRAWTEXT "r: записать линию", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 88, HUD_STATUS_COLOR ' Подсказка по записи текущей линии.
+    DRAWTEXT "t: записать всё", CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 104, HUD_STATUS_COLOR ' Подсказка по полной страховочной записи таблицы.
+    DRAWTEXT CalibrationSelectionText(), CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 120, CALIBRATION_TEXT_COLOR ' Показываем текущий выбор и числовое значение.
+    DRAWTEXT calibrationStatusText, CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 136, HUD_STATUS_COLOR ' Показываем первую строку последнего действия.
+    DRAWTEXT calibrationStatusTextLine2, CALIBRATION_PANEL_X + 8, CALIBRATION_PANEL_Y + 152, HUD_STATUS_COLOR ' Показываем вторую строку статуса, чтобы длинные сообщения не наползали на поле.
+END SUB                                                                                         ' Завершаем рисование калибровочного оверлея.
+
+' DrawCalibrationGrid — Процедура рисует мелкую сетку поверх игрового поля.
+PRIVATE SUB DrawCalibrationGrid()                                                                       ' Процедура рисует мелкую сетку поверх игрового поля.
+    DIM gridX AS INTEGER = 0                                                                    ' Текущая X-координата вертикальной линии сетки в мировых координатах viewport.
+    DIM gridY AS INTEGER = 0                                                                    ' Текущая Y-координата горизонтальной линии сетки стартует от верха мира.
+    DIM gridRight AS INTEGER = WorldWidthPixels() - 1                                             ' Правая граница сетки по ширине лабиринта.
+    DIM gridBottom AS INTEGER = WorldHeightPixels() - 1                                           ' Нижняя граница сетки по высоте мира.
+
+    DO WHILE gridX <= gridRight                                                                 ' Идём по всем вертикальным линиям сетки.
+        DRAWLINE gridX, 0, gridX, gridBottom, CALIBRATION_GRID_COLOR                            ' Рисуем одну тонкую вертикальную линию по точным границам игрового поля.
+        gridX = gridX + CALIBRATION_GRID_STEP                                                   ' Переходим к следующей вертикальной линии с постоянным шагом.
+    LOOP                                                                                        ' Завершаем вертикальные линии сетки.
+
+    DO WHILE gridY <= gridBottom                                                                ' Идём по всем горизонтальным линиям сетки.
+        DRAWLINE 0, gridY, gridRight, gridY, CALIBRATION_GRID_COLOR                             ' Рисуем одну тонкую горизонтальную линию.
+        gridY = gridY + CALIBRATION_GRID_STEP                                                   ' Переходим к следующей горизонтальной линии с постоянным шагом.
+    LOOP                                                                                        ' Завершаем горизонтальные линии сетки.
+END SUB                                                                                         ' Завершаем рисование мелкой сетки.
+
+' #endregion
