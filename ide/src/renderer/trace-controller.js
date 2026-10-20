@@ -31,8 +31,11 @@ class TraceController {
   }
   mark(payload) {
     this.clearMarker();
-    const target=payload.sourceFilePath || this.ide._runFile;
-    const file=this.ide.openFiles.get(target);
+    const sourcePath=payload.sourceFilePath || this.ide._runFile;
+    const snapshot=this.ide.execution.snapshotForFile?.(sourcePath);
+    const entry=snapshot?.documentId && [...this.ide.openFiles.values()].find(item=>item.documentId===snapshot.documentId);
+    const target=entry?.path || sourcePath;
+    const file=entry || this.ide.openFiles.get(target);
     if(!file && payload.sourceFilePath && this.ide.openFile) {
       return this.ide.openFile(target).then(()=>{
         if(this.ide.execution.stopId===payload.stopId) this.mark(payload);
@@ -40,7 +43,6 @@ class TraceController {
     }
     if(!file || file.model.isDisposed()) return;
     this.ide.switchToFile(target);
-    const snapshot=this.ide.execution.snapshotForFile?.(target);
     if(snapshot && file.model.getValue()!==snapshot.sourceText) return;
     if(payload.line) this.marker={model:file.model,ids:file.model.deltaDecorations([], [{
       range:new this.ide.monaco.Range(payload.line,1,payload.line,1),

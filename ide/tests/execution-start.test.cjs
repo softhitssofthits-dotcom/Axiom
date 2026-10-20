@@ -134,3 +134,14 @@ test('Позднее исключение старого запуска не с�
   assert.equal(ide.running, true);
   assert.deepEqual(calls.problems, []);
 });
+
+test('Раннее графическое окно без INPUT не получает поздний фокус терминала', async () => {
+  const { controller, requests, calls } = setup();
+  const pending = controller.start('file');
+  assert.equal(calls.focus, 1, 'Консоль получает фокус до ответа службы');
+  calls.focus = 0;
+  controller.event({ sessionId: 'run', event: 'graphics.surface', payload: { kind: 'screen', state: 'open', windowVisible: true, windowHandle: '123' } });
+  requests[0].resolve({ ok: true, payload: { sessionId: 'run' } });
+  await pending;
+  assert.equal(calls.focus, 0);
+});

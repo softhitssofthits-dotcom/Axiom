@@ -17,7 +17,8 @@ public static class CanvasProbe {
     [DllImport("user32.dll")] public static extern bool ClientToScreen(IntPtr hwnd, ref Point point);
     [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hwnd);
     [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
-    [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
+    [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
+    [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr hwnd, System.Text.StringBuilder text, int length);
     [DllImport("kernel32.dll")] static extern uint GetCurrentThreadId();
     [DllImport("user32.dll")] static extern bool AttachThreadInput(uint first, uint second, bool attach);
     [DllImport("user32.dll")] static extern IntPtr SetFocus(IntPtr hwnd);
@@ -100,7 +101,16 @@ switch ($Action) {
     'close' { [CanvasProbe]::Message($hwnd, 0x10, 0, 0) }
     'resize' { if (-not [CanvasProbe]::SetWindowPos($hwnd, [IntPtr]::Zero, 20, 20, $Width, $Height, 0x14)) { throw 'Resize failed' } }
     'size' { }
-    'state' { [pscustomobject]@{ focused=([CanvasProbe]::GetForegroundWindow() -eq $hwnd) } | ConvertTo-Json -Compress; exit }
+    'state' {
+        $foreground = [CanvasProbe]::GetForegroundWindow()
+        [uint32]$foregroundProcess = 0
+        [void][CanvasProbe]::GetWindowThreadProcessId($foreground, [ref]$foregroundProcess)
+        $title = [System.Text.StringBuilder]::new(512)
+        [void][CanvasProbe]::GetWindowText($foreground, $title, $title.Capacity)
+        [pscustomobject]@{ focused=($foreground -eq $hwnd); windowHandle=$WindowHandle.ToString()
+            foregroundWindowHandle=$foreground.ToInt64().ToString(); foregroundProcessId=$foregroundProcess
+            foregroundTitle=$title.ToString() } | ConvertTo-Json -Compress; exit
+    }
     default { throw 'Unknown native CANVAS action' }
 }
 [pscustomobject]@{ width=$rect.Right; height=$rect.Bottom; ok=$true } | ConvertTo-Json -Compress

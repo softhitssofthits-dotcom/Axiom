@@ -64,6 +64,8 @@ class AxiomIDE {
     window.addEventListener('error', (e) => this.log('window.error', { message: e.message, source: e.filename, line: e.lineno, col: e.colno }, 'error'));
     window.addEventListener('unhandledrejection', (e) => this.log('window.unhandledrejection', { reason: String(e.reason?.stack || e.reason || '') }, 'error'));
     try {
+      this.fileDrop = new window.EditorFileDrop(this, API);
+      this.fileDrop.setup(document);
       await this.loadSettings();
       if (!window.AxiomThemes.has(this.settings.theme)) this.settings.theme = window.AxiomThemes.defaultId;
       this.applyDocumentTheme(this.settings.theme);
@@ -947,8 +949,13 @@ class AxiomIDE {
       UIControls.setEnabled(left, tabs.scrollLeft > 1);
       UIControls.setEnabled(right, tabs.scrollLeft + tabs.clientWidth < tabs.scrollWidth - 1);
     };
-    left.addEventListener('click', () => tabs.scrollBy({ left: -Math.max(100, tabs.clientWidth * 0.7) }));
-    right.addEventListener('click', () => tabs.scrollBy({ left: Math.max(100, tabs.clientWidth * 0.7) }));
+    const scrollBy = (left) => {
+      tabs.scrollBy({ left });
+      update();
+    };
+    this.updateDocumentTabControls = update;
+    left.addEventListener('click', () => scrollBy(-Math.max(100, tabs.clientWidth * 0.7)));
+    right.addEventListener('click', () => scrollBy(Math.max(100, tabs.clientWidth * 0.7)));
     tabs.addEventListener('scroll', update);
     this.tabResizeObserver = new ResizeObserver(update);
     this.tabResizeObserver.observe(tabs);
@@ -980,6 +987,7 @@ class AxiomIDE {
       else if (tabBounds.left < bounds.left) tabs.scrollLeft += tabBounds.left - bounds.left;
       else if (tabBounds.right > bounds.right) tabs.scrollLeft += tabBounds.right - bounds.right;
     }
+    this.updateDocumentTabControls?.();
     document.querySelectorAll('.project-file').forEach((t) => t.classList.toggle('active', t.dataset.path === p || t.title === p));
     this.renderMiscellaneousFiles();
     this.updateSaveButton();

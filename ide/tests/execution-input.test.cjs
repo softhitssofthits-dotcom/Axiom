@@ -37,7 +37,7 @@ test('Ранний запрос SCREEN в очереди запуска не п�
   Object.assign(ide, { clearDiagnostics() {}, showPanel() {}, switchPanel() {}, ensureConsole: () => true,
     openFiles: new Map([['file', { documentId: 'document', revision: 1, model: { getValue: () => 'SCREEN 1' } }]]) });
   ide.term.reset = () => {};
-  api.startExecution = async () => { request('1'); return { ok: true, payload: { sessionId: 'session' } }; };
+  api.startExecution = async () => { calls.focus = 0; request('1'); return { ok: true, payload: { sessionId: 'session' } }; };
   await controller.start('file');
   assert.equal(controller.inputRequestId, '1');
   assert.equal(calls.focus, 0);

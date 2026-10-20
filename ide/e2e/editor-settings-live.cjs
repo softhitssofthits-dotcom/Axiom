@@ -12,16 +12,13 @@ async function nativeWheel(S){
  const b=await S.page.locator('.view-line').first().boundingBox();
  await new Promise((resolve,reject)=>execFile('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',path.join(__dirname,'native-wheel.ps1'),'-WindowHandle',handle,'-TargetProcessId',String(pid),'-X',String(Math.round(b.x+100)),'-Y',String(Math.round(b.y+8)),'-Delta','-25','-Count','20'],{windowsHide:true},(err,out,stderr)=>err?reject(Error(stderr)):resolve()));
 }
-async function nativeDrop(S,file){
- const {spawn}=require('child_process');const window=await S.electronApp.browserWindow(S.page);
- const handle=await window.evaluate(w=>w.getNativeWindowHandle().readBigUInt64LE().toString());
- const html=path.join(fixtureRoot,'drag-source.html');fs.writeFileSync(html,'<!doctype html><html><body><a draggable="true" style="display:block;padding:20px" href="'+require('url').pathToFileURL(file).href+'">Axiom — настоящий файл</a></body></html>');
- const target=await S.page.locator('.view-line').first().boundingBox();
- const source=await S.electronApp.evaluate(async({BrowserWindow},html)=>{const w=new BrowserWindow({x:100,y:100,width:280,height:150,autoHideMenuBar:true});w.removeMenu();await w.loadFile(html);global.__dragSource=w;return{handle:w.getNativeWindowHandle().readBigUInt64LE().toString(),pid:process.pid};},html);
- try{
- const child=spawn('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',path.join(__dirname,'native-drag.ps1'),'-WindowHandle',handle,'-TargetProcessId',String(source.pid),'-X',String(Math.round(target.x+80)),'-Y',String(Math.round(target.y+8)),'-SourceHandle',source.handle,'-SourceX','80','-SourceY','30'],{windowsHide:true,stdio:['ignore','pipe','pipe']});
- let err='';child.stderr.on('data',b=>err+=b);const code=await new Promise(r=>child.once('exit',r));if(code!==0)throw Error(err);await S.page.waitForTimeout(900);
- }finally{await S.electronApp.evaluate(()=>global.__dragSource?.destroy());await S.page.bringToFront();}
+async function linkDrop(S,file){
+ await require('./editor-file-drop.cjs').dispatchDrop(S,{items:[
+  {mimeType:'text/uri-list',data:require('url').pathToFileURL(file).href},
+  {mimeType:'text/plain',data:file}
+ ],dragOperationsMask:1});
+ if(await S.page.evaluate(()=>window.__ide.editor.getRawOptions().dropIntoEditor?.enabled!==false))
+  await S.page.waitForFunction(()=>window.__ide.editor.getValue().endsWith('dropped.axm'));
 }
 async function systemContrast(S){
  const {spawn}=require('child_process');
@@ -289,7 +286,7 @@ async function action(S,key,mode,value){
  }
  else if(mode==='drop'){
   const file=path.join(shotRoot,'dropped.axm');fs.writeFileSync(file,'Print 123');
-  await nativeDrop(S,file);
+  await linkDrop(S,file);
  }
  else if(mode==='paste-selector'){
   if(key==='pasteAs.enabled'){await text(S,'Print 123');await select([1,1,1,10]);await S.electronApp.evaluate(({clipboard})=>clipboard.clear());await S.page.keyboard.press('Control+C');return;}

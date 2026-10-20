@@ -130,6 +130,8 @@ function createWindow() {
     show: false,
   });
   const createdWindow = mainWindow;
+  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  mainWindow.webContents.on('will-navigate', event => event.preventDefault());
 
   if (state.maximized) mainWindow.maximize();
 

@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 contextBridge.exposeInMainWorld('axiom', {
   backendReady: () => ipcRenderer.invoke('backend-ready'),
@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('axiom', {
   onBackendFrame: cb => { const listener = (_e, data) => cb(data); ipcRenderer.on('backend-frame', listener); return () => ipcRenderer.removeListener('backend-frame', listener); },
   onBackendFault: cb => { const listener = (_e, data) => cb(data); ipcRenderer.on('backend-fault', listener); return () => ipcRenderer.removeListener('backend-fault', listener); },
   // files
+  getDroppedFilePath: file => webUtils.getPathForFile(file),
   readFileContent: (p) => ipcRenderer.invoke('read-file-content', p),
   fileReadonly: (p) => ipcRenderer.invoke('file-readonly', p),
   writeFile: (p, content, expectedText) => ipcRenderer.invoke('write-file', p, content, expectedText),

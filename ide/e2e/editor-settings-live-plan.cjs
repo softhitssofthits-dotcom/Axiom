@@ -48,7 +48,7 @@ add('comments.insertSpace comments.ignoreEmptyLines',[false,true],'comment','Р�
 add('emptySelectionClipboard',[false,true],'copy-line','Результат копирования без выделения');
 add('copyWithSyntaxHighlighting',[false,true],'copy-html','Формат HTML в системном буфере после копирования');
 add('dragAndDrop',[false,true],'drag-text','Перемещение выделенного текста мышью');
-add('dropIntoEditor.enabled dropIntoEditor.showDropSelector',null,'drop','Системное перетаскивание ссылки на настоящий файл в редактор');
+add('dropIntoEditor.enabled dropIntoEditor.showDropSelector',null,'drop','Перетаскивание ссылки и настоящих файлов: события Chromium, вкладки и сохранность правок');
 add('pasteAs.enabled pasteAs.showPasteSelector',null,'paste-selector','Доступность способов штатной вставки');
 add('quickSuggestions.other quickSuggestions.comments quickSuggestions.strings',null,'quick','Появление штатного списка после набора');
 add('quickSuggestionsDelay',[50,800],'quick-delay','Время появления списка после набора');

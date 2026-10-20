@@ -15,7 +15,8 @@ class ExecutionController {
     ide._stopRequested = false; ide.clearDiagnostics(); ide.showPanel(); ide.switchPanel('console');
     ide.setStatus(I18N.t('trace.preparing'));
     if (!ide.ensureConsole()) { ide.running = false; this.starting = false; this.startRequest = null; ide.trace?.finished(); return; }
-    ide.term.reset(); this.startedAt = performance.now();
+    // Фокус консоли устанавливается до запуска: поздний focus может скрыть уже открытое окно программы.
+    ide.term.reset(); ide.term.focus(); this.startedAt = performance.now();
     const document = ide.openFiles.get(file);
     const project=ide.openFiles.captureProject?.(file);
     const snapshot = this.sourceSnapshot = { documentId: document.documentId, sourceText: document.model.getValue(), file,
@@ -41,7 +42,7 @@ class ExecutionController {
     for (const event of this.pendingEvents) this.event(event);
     this.pendingEvents = [];
     if (this.pendingStop && this.sessionId) await this.stop();
-    if(this.stopId) ide.editor.focus(); else if (this.inputTarget !== 'screen') ide.term.focus();
+    if(this.stopId) ide.editor.focus();
   }
   event(message) {
     if (this.starting) { this.pendingEvents.push(message); return; }

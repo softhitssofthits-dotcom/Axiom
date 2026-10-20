@@ -12,6 +12,8 @@ module.exports = [{
   name: 'SCREEN: нативный INPUT сохраняет фокус, закрывает запрос и повторяет неверное число',
   async fn({ S, C }) {
     await S.launch();
+    const ideHwnd = await (await S.electronApp.browserWindow(S.page))
+      .evaluate(w => w.getNativeWindowHandle().readBigUInt64LE().toString());
     for (const mode of [1, 0]) {
       const file = mode === 1 ? path.resolve(__dirname, '../../../samples/operators/input/screen_lifecycle.axm') :
         writeAxm(testWorkspace('graphics-input'), 'text.axm',
@@ -22,19 +24,30 @@ module.exports = [{
         execution.event = message => { window.__nativeInputEvents.push(message); return original(message); };
       });
       await S.page.bringToFront();
-      await S.page.evaluate(async p => { await window.__ide.openFile(p); await window.__ide.run(); }, file);
+      await S.page.evaluate(p => window.__ide.openFile(p), file);
+      // bringToFront не гарантирует нативный foreground: это условие подготовки, не активация SCREEN.
+      const focused = probe(ideHwnd, 'focus');
+      const before = probe(ideHwnd, 'state');
+      C.note(JSON.stringify({ mode, stage: 'before-run', focused, native: before }));
+      if (!focused.focused || !before.focused) throw new Error('Не удалось подготовить активное окно IDE: ' + JSON.stringify(before));
+      await S.page.locator('#tb-run').click();
       await S.page.waitForFunction(() => window.__ide.execution.inputRequestId && window.__ide.execution.surface?.windowVisible);
       const state = () => S.page.evaluate(() => ({ id: window.__ide.execution.inputRequestId,
         target: window.__ide.execution.inputTarget, running: window.__ide.running, prompt: window.__ide.execution.inputPrompt }));
       const hwnd = await S.page.evaluate(() => window.__ide.execution.surface.windowHandle);
+      const checkFocus = (stage, message) => {
+        const native = probe(hwnd, 'state');
+        C.note(JSON.stringify({ mode, stage, native }));
+        C.ok(native.focused, message, JSON.stringify(native));
+      };
       const first = await state();
       C.eq(first.target, 'screen', `SCREEN ${mode}: запрос относится к нативному окну`);
-      C.eq(probe(hwnd, 'state').focused, true, `SCREEN ${mode}: INPUT не переключил активное окно на IDE`);
+      checkFocus('first-input', `SCREEN ${mode}: INPUT не переключил активное окно на IDE`);
       enter(hwnd, 'x');
       await S.page.waitForFunction(id => window.__ide.execution.inputRequestId && window.__ide.execution.inputRequestId !== id, first.id);
       const retry = await state();
       C.eq(retry.target, 'screen', 'Повтор после неверного числа остаётся в SCREEN');
-      C.eq(probe(hwnd, 'state').focused, true, 'Повторный ввод сохраняет активное окно');
+      checkFocus('retry-input', 'Повторный ввод сохраняет активное окно');
       enter(hwnd, '42');
       await S.page.waitForFunction(() => window.__ide.execution.inputRequestId === null);
       const completed = await state();
@@ -45,7 +58,7 @@ module.exports = [{
       await S.page.waitForFunction(() => window.__ide.execution.inputRequestId !== null);
       const second = await state();
       C.ok(second.id !== retry.id, 'Следующий INPUT получил новый идентификатор');
-      C.eq(probe(hwnd, 'state').focused, true, 'Следующий INPUT сохраняет фокус SCREEN');
+      checkFocus('second-input', 'Следующий INPUT сохраняет фокус SCREEN');
       enter(hwnd, 'Тест');
       await S.page.waitForFunction(() => window.__ide.execution.inputRequestId === null);
       C.eq((await state()).running, true, 'Русский ответ принят без завершения программы');
