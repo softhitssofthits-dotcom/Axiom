@@ -4,6 +4,7 @@
    styles.css, so controls keep the same event handlers and keyboard behaviour. */
 
 :root {
+  --xs-select-padding: 3px 8px 3px 7px;
   --xs-canvas: #141922;
   --xs-surface: #1c2330;
   --xs-surface-raised: #252e3e;
@@ -350,6 +351,10 @@ button:disabled, [aria-disabled="true"] { opacity: var(--xs-disabled-opacity); c
 
 /* Общие раскрывающиеся списки: геометрия и поведение едины, цвета задаёт палитра. */
 select, select::picker(select) { appearance:base-select; }
+select { min-width:0; display:flex; align-items:center; gap:4px; padding:var(--xs-select-padding); white-space:nowrap; }
+select>button { min-width:0; flex:1; display:block; border:0; padding:0; background:transparent; color:inherit; font:inherit; text-align:left; overflow:hidden; }
+select selectedcontent { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+select::picker-icon { flex:none; margin:0; }
 select::picker(select) {
   color:var(--xs-select-text); background:var(--xs-select-bg); border:1px solid var(--xs-select-border);
   border-radius:var(--xs-radius-sm); box-shadow:var(--xs-shadow-menu); padding:2px; font:inherit;
@@ -378,6 +383,10 @@ select option:is(:checked,:hover,:focus) { color:var(--xs-select-highlight-text)
 }
 #project-title.project-open { color: var(--xs-accent); }
 #project-title.project-open:hover { background: var(--xs-accent-wash); }
+#project-files-toggle { flex:none; width:22px; height:28px; padding:0; margin-left:4px; border:0; background:transparent; color:inherit; }
+#project-files-toggle[hidden], #project-files[hidden] { display:none; }
+#project-files-toggle .codicon { font-size:14px; }
+#project-files-toggle:not([hidden]) + #project-title { padding-left:2px; }
 .project-explorer-control, .project-explorer-close {
   width: 30px;
   height: 30px;
@@ -675,3 +684,10 @@ body > .context-view > .monaco-menu .action-label {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: .01ms !important; }
 }
+
+/* Явная точка входа папки проекта; общая палитра сохраняется во всех темах. */
+#project-entry-controls { padding: 8px 12px; border-bottom: 1px solid var(--xs-border-subtle); }
+#project-entry-controls label { display: block; margin-bottom: 5px; color: var(--xs-text-muted); font-size: 11px; }
+#project-entry { width: 100%; min-height: 28px; color: var(--xs-text); background: var(--xs-surface); border: 1px solid var(--xs-border-subtle); }
+.project-file.project-entry-file { font-weight: 650; }
+#project-entry-controls.hidden { display: none; }

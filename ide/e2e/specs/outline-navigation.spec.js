@@ -253,3 +253,38 @@ module.exports = [{
     C.eq(S.pageErrors.length,0,'Нет ошибок страницы');
   },
 }];
+
+module.exports.push({id:'outline-close-document-clears-state',name:'Закрытие документов и проекта очищает объявления и сохраняет структуру оставшегося файла',async fn({S,C}){
+  const fs=require('node:fs'),path=require('node:path'),{TMP}=require('../helpers');
+  const root=path.join(TMP,'outline-close-state');fs.mkdirSync(root,{recursive:true});
+  const a=path.join(root,'main.axm'),b=path.join(root,'helper.axm'),external=path.join(TMP,'outline-external.axm');
+  fs.writeFileSync(a,'PRINT 1\nSUB MainProc()\nEND SUB\n');
+  fs.writeFileSync(b,"' #region Раздел модуля\nSUB HelperProc()\nEND SUB\n' #endregion\n");
+  fs.writeFileSync(external,'SUB ExternalProc()\nEND SUB\n');
+  await S.launch({settings:{smartIdentifierEnabled:false,formatOnBlur:false,checkOnChange:false}});
+  await S.page.evaluate(p=>window.__ide.openProject(p),root);
+  C.eq((await S.page.locator('.outline-name').allTextContents()).join(','),'MainProc','Первый файл представлен');
+  await S.page.evaluate(p=>window.__ide.openFile(p),b);
+  await S.page.evaluate(p=>window.__ide.closeFile(p),a);
+  C.eq((await S.page.locator('.outline-name').allTextContents()).join(','),'HelperProc','Закрытие неактивного файла сохраняет текущий список');
+  await S.page.evaluate(async p=>{window.__ide.scheduleOutlineRebuild();window.__ide._formatBusy=1;try{await window.__ide.closeFile(p);}finally{window.__ide._formatBusy=0;}},b);
+  C.eq(await S.page.locator('.outline-item').count(),0,'Закрытие последнего файла очищает объявления сразу, даже при занятом форматировании');
+  C.eq(await S.page.locator('.outline-group').count(),0,'Группы закрытого файла удалены');
+  C.eq(await S.page.evaluate(()=>window.__ide.outlinePanel.items.length),0,'Внутренний список также пуст');
+  C.contains(await S.page.locator('#outline-count').textContent(),'0 из 0','Счётчик очищен');
+  await S.sleep(350);
+  C.eq(await S.page.locator('.outline-item').count(),0,'Отложенное обновление не возвращает закрытые объявления');
+  await S.page.evaluate(p=>window.__ide.openProject(p),root);
+  await S.page.evaluate(p=>window.__ide.openFile(p),external);
+  await S.page.evaluate(p=>window.__ide.openFile(p),b);
+  await S.page.evaluate(()=>window.__ide.closeProject());
+  C.eq((await S.page.locator('.outline-name').allTextContents()).join(','),'ExternalProc','После закрытия проекта показан оставшийся внешний файл');
+  await S.page.evaluate(p=>window.__ide.closeFile(p),external);
+  C.eq(await S.page.locator('.outline-item').count(),0,'Закрытие внешнего файла снова очищает панель');
+  await S.page.evaluate(p=>window.__ide.openProject(p),root);
+  await S.page.evaluate(p=>window.__ide.openFile(p),b);
+  await S.page.evaluate(()=>window.__ide.closeProject());
+  C.eq(await S.page.locator('.outline-item').count(),0,'Закрытие проекта без внешних вкладок очищает панель');
+  C.eq(await S.page.evaluate(()=>window.__ide.activeFile),null,'Активного файла нет');
+  C.eq(S.pageErrors.length,0,'Нет ошибок страницы');
+}});

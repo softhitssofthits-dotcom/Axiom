@@ -80,7 +80,8 @@
       const result = await this.api.captureProjectFile(root, path, cut);
       if (this.ide.projectDir !== root) return;
       if (!result.ok) { this.ide.setStatus(I18N.t('files.status.failed')); alert(result.error); return; }
-      this.clipboard = result;
+      // Main проверяет канонический путь, вкладки сохраняют путь выбранной папки.
+      this.clipboard = { ...result, displaySource: path };
       const name = path.split(/[/\\]/).pop();
       this.ide.setStatus(I18N.t(cut ? 'files.status.cut' : 'files.status.copied', name));
     }
@@ -88,7 +89,8 @@
       const root = this.ide.projectDir;
       if (!root || !this.clipboard) return;
       const clip = this.clipboard;
-      const affected = clip.cut ? this.affected(clip.source, clip.directory) : [];
+      const displaySource=clip.displaySource||clip.source;
+      const affected = clip.cut ? this.affected(displaySource, clip.directory) : [];
       if (affected.some(p => this.ide.running && p.toLowerCase() === this.ide._runFile?.toLowerCase())) {
         alert(I18N.t('files.runningBlocked'));
         return;
@@ -97,8 +99,11 @@
       if (this.ide.projectDir !== root) return;
       if (!result.ok) { this.ide.setStatus(I18N.t('files.status.failed')); alert(result.error); await this.ide.refreshProjectFiles(); return; }
       if (result.cut) {
+        const paths=requirePath();
+        const displayTarget=clip.root&&this.contains(clip.root,result.target)
+          ? paths.join(root,paths.relative(clip.root,result.target)) : result.target;
         for (const oldPath of affected) {
-          const newPath = this.movedPath(result.source, result.target, result.directory, oldPath);
+          const newPath = this.movedPath(displaySource, displayTarget, result.directory, oldPath);
           await this.ide.renameActive(newPath, oldPath);
         }
         this.clipboard = null;

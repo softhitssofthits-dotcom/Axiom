@@ -183,8 +183,8 @@ const LangFeatures = (() => {
   // ---- registration ----
 
   // Structural templates in the BASIC block style. Labels/details go through I18N.
-  function snippets() {
-    return [
+  function snippets(visibility) {
+    const templates = [
       { label: '#region', insert: "' #region ${1:" + I18N.t('outline.regionName') + "}\n$0\n' #endregion", detail: I18N.t('outline.regionSnippet') },
       { label: I18N.t('snippet.if'), insert: 'IF ${1:condition} THEN\n\t$0\nEND IF', detail: I18N.t('snippet.if.d') },
       { label: I18N.t('snippet.ifsingle'), insert: 'IF ${1:condition} THEN ${2:PRINT "yes"}$0', detail: I18N.t('snippet.ifsingle.d') },
@@ -199,6 +199,14 @@ const LangFeatures = (() => {
       { label: I18N.t('snippet.trycatch'), insert: 'TRY\n\t$1\nCATCH\n\t$0\nEND TRY', detail: I18N.t('snippet.trycatch.d') },
       { label: I18N.t('snippet.input'), insert: 'INPUT "${1:Введите значение: }"; ${2:x}', detail: I18N.t('snippet.input.d') },
     ];
+    return templates.flatMap(template => {
+      if (!/^(?:SUB|FUNCTION|TYPE)\s/.test(template.insert)) return [template];
+      // Уже введённый модификатор остаётся вне диапазона замены Monaco.
+      if (visibility) return [{ ...template, label: visibility + ' ' + template.label }];
+      return [template, ...['PUBLIC', 'PRIVATE'].map(modifier => ({
+        ...template, label: modifier + ' ' + template.label, insert: modifier + ' ' + template.insert,
+      }))];
+    });
   }
 
   function register(monaco, ide) {
@@ -250,7 +258,9 @@ const LangFeatures = (() => {
         for (const t of doc.types) add(t.name, 'Struct', t.name, false, I18N.t('hover.userType'), '2');
         for (const t of (meta && meta.typeNames) || fallbackNames('typeNames')) add(t, 'Type', t, false, '', '2');
         for (const kw of (meta && meta.keywords) || fallbackNames('keywords')) add(kw, 'Keyword', kw, false, '', '3');
-        for (const s of snippets()) add(s.label, 'Snippet', s.insert, true, s.detail || '', '4');
+        const prefix = model.getLineContent(line).slice(0, word.startColumn - 1);
+        const visibility = /^[ \t]*(PUBLIC|PRIVATE)[ \t]+$/i.exec(prefix)?.[1].toUpperCase();
+        for (const s of snippets(visibility)) add(s.label, 'Snippet', s.insert, true, s.detail || '', '4');
         return { suggestions: items.map((i) => ({ ...i, range })) };
       },
     };

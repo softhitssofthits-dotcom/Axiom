@@ -73,8 +73,7 @@ class OutlinePanel {
       [this.sort, [['source', 'source'], ['name', 'alphabet']], this.ide.settings.outlineSort || 'source', 'sort'],
     ]) {
       select.replaceChildren(...entries.map(([v, k]) => { const o = document.createElement('option'); o.value = v; o.textContent = this.t(k); return o; }));
-      const selected = document.createElement('button'); selected.type = 'button';
-      selected.append(document.createElement('selectedcontent')); select.prepend(selected);
+      UIControls.prepareSelect(select);
       select.value = value; if (select.selectedIndex < 0) select.selectedIndex = 0;
       UIControls.setLabel(select,this.t(label),{tooltip:false}); select.title = this.t(label) + ': ' + select.selectedOptions[0].textContent;
     }

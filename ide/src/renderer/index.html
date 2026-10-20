@@ -155,7 +155,7 @@
     </div>
 
     <div id="workspace">
-      <aside id="project-explorer"><div id="project-explorer-header"><button id="project-title" class="project-open" data-i18n="project.open">Открыть проект</button><button id="project-new-file" class="project-explorer-control" title="Добавить файл в проект" aria-label="Добавить файл в проект"><span class="codicon codicon-new-file"></span></button><button id="project-explorer-close" class="project-explorer-close" title="Закрыть" aria-label="Закрыть"><span class="codicon codicon-close"></span></button></div><div id="project-files"></div><div id="external-files" class="hidden"><div id="external-files-header" data-i18n="project.miscellaneous">Прочие файлы</div><div id="external-files-list"></div></div></aside>
+      <aside id="project-explorer"><div id="project-explorer-header"><button id="project-files-toggle" type="button" hidden aria-expanded="true" aria-controls="project-files"><span class="codicon codicon-chevron-down" aria-hidden="true"></span></button><button id="project-title" class="project-open" data-i18n="project.open">Открыть проект</button><button id="project-new-file" class="project-explorer-control" title="Добавить файл в проект" aria-label="Добавить файл в проект"><span class="codicon codicon-new-file"></span></button><button id="project-explorer-close" class="project-explorer-close" title="Закрыть" aria-label="Закрыть"><span class="codicon codicon-close"></span></button></div><div id="project-entry-controls" class="hidden"><label for="project-entry" data-i18n="project.entry">Файл запуска</label><select id="project-entry"></select></div><div id="project-files"></div><div id="external-files" class="hidden"><div id="external-files-header" data-i18n="project.miscellaneous">Прочие файлы</div><div id="external-files-list"></div></div></aside>
       <div id="main-content">
         <div id="editor-container">
           <div id="document-tab-bar">
@@ -216,6 +216,7 @@
   <script src="trace-controller.js"></script>
   <script src="documents.js"></script>
   <script src="project-file-controller.js"></script>
+  <script src="project-session.js"></script>
   <script src="edited-lines.js"></script>
   <script src="document-services.js"></script>
   <script src="document-save.js"></script>

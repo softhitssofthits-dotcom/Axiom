@@ -102,4 +102,4 @@ html[data-theme="borland"] .editor-settings-dialog .settings-button-default-text
 html[data-theme="borland"] .editor-settings-dialog .settings-footer .settings-primary { border-color:#000000!important; }
 html[data-theme="borland"] .editor-settings-dialog ::selection { background:#00aa00; color:#ffffff; }
 
-.editor-settings-dialog select { color:var(--xs-select-field-text); background:var(--xs-select-field-bg); border-color:var(--xs-select-border); }
+.editor-settings-dialog select { color:var(--xs-select-field-text); background:var(--xs-select-field-bg); border-color:var(--xs-select-border); padding:var(--xs-select-padding); }

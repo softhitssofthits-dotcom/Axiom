@@ -12,11 +12,12 @@ class AxiomIDE {
       this.assistant?.invalidate();
     });
     this.editedLines = new window.EditedLines();
-    this.documentServices = new window.DocumentServices(this.openFiles, API);
+    this.documentServices = new window.DocumentServices(this.openFiles, API, () => this.projectSession?.entry);
     this.documentSaver = new window.DocumentSaver(this.openFiles, API);
     this.dirty = new Set();
     this.activeFile = null;
     this.projectDir = null;
+    this.projectSession = new window.ProjectSession(this, API);
     this.untitled = 0;
     this.running = false;
     this.term = null; // xterm.js Terminal — created lazily by ensureConsole()
@@ -390,7 +391,6 @@ class AxiomIDE {
       if (this.settings.smartIdentifierEnabled) this.formatWholeDocument('ax-smart-blur', this.activeFile, 'document.normalizeIdentifiers');
     });
     this.editor.onDidChangeModelContent((event) => {
-      this.closeDiagnosticPeek();
       this.clearUsageAdvice();
       this.refreshExecutionDiagnostics(this.editor.getModel());
       this.editedLines.record(this.editor.getModel(),event.changes,!this._autoFormatting);
@@ -744,16 +744,11 @@ class AxiomIDE {
     if (dir) await this.openProject(dir);
   }
 
-  // Проект в Axiom — это просто папка: конвенции main-файла нет, запускается активный
-  // сохранённый файл.
+  // Сеанс проекта открывает документы и хранит выбранную точку входа.
   async openProject(dir) {
-    const files = await API.listProjectFiles(dir);
-    this.projectDir = dir;
-    this.projectFiles.reset();
-    this.saveSettings({ lastProjectDir: dir });
-    this.renderProjectFiles(files);
-    this.renderMiscellaneousFiles();
-    if (!this.activeFile && files.length) await this.openFile(files[0]);
+    if(this.running){this.setStatus(I18N.t('project.stopFirst'));return false;}
+    try { return await this.projectSession.open(dir); }
+    catch(error){this.showIdeProblem('project.failed',error.message||String(error));return false;}
   }
 
   async newProjectFile() {
@@ -777,20 +772,16 @@ class AxiomIDE {
   async restoreProject() {
     const dir = this.settings.lastProjectDir;
     if (typeof dir !== 'string' || !dir) return false;
-    const files = await API.listProjectFiles(dir);
-    this.projectDir = dir;
-    this.renderProjectFiles(files);
-    // Tabs were restored before the project: the Miscellaneous Files group can only be
-    // derived once the project folder is known.
-    this.renderMiscellaneousFiles();
-    return true;
+    return this.projectSession.open(dir,{restore:true});
   }
 
   renderProjectFiles(files) {
+    this.projectSession?.refresh(files);
     const title = document.getElementById('project-title');
     const list = document.getElementById('project-files');
     title.textContent = this.projectDir.split(/[/\\]/).pop() || this.projectDir;
     title.classList.remove('project-open');
+    this.setProjectFilesExpanded(!this.projectFilesCollapsed);
     list.innerHTML = '';
     for (const file of files) {
       const button = document.createElement('button');
@@ -801,6 +792,32 @@ class AxiomIDE {
       button.onclick = () => this.openFile(file);
       list.appendChild(button);
     }
+    this.projectSession?.render();
+  }
+
+  renderProjectEntry(files,entry,loading=false) {
+    const container=document.getElementById('project-entry-controls');
+    const select=document.getElementById('project-entry');
+    if(!container||!select)return;
+    container.classList.toggle('hidden',!this.projectDir);
+    const toggle=document.getElementById('project-files-toggle');
+    if(toggle){toggle.hidden=!this.projectDir;UIControls.setLabel(toggle,I18N.t('project.files'));}
+    select.replaceChildren();
+    const empty=document.createElement('option');empty.value='';empty.textContent=I18N.t(files.length?'project.chooseEntry':'project.empty');select.appendChild(empty);
+    for(const file of files){
+      const option=document.createElement('option');option.value=file;
+      option.textContent=this.projectSession.relative(file);select.appendChild(option);
+    }
+    UIControls.prepareSelect(select);
+    select.value=entry||'';UIControls.setEnabled(select,!loading&&files.length>0);
+    document.querySelectorAll('#project-files .project-file').forEach(button=>{
+      button.classList.toggle('project-entry-file',!!entry&&button.dataset.path.toLowerCase()===entry.toLowerCase());
+    });
+  }
+
+  promptProjectEntry() {
+    this.setStatus(I18N.t(this.projectSession?.loading?'project.loading':this.projectSession?.files.length?'project.chooseEntry':'project.empty'));
+    document.getElementById('project-entry')?.focus();
   }
 
   // The "Прочие файлы" section under the project tree: the open saved documents that
@@ -824,12 +841,26 @@ class AxiomIDE {
   }
 
   setupProjectExplorer() {
+    document.getElementById('project-files-toggle').onclick = () => this.setProjectFilesExpanded(!!this.projectFilesCollapsed);
+    document.getElementById('project-entry').addEventListener('change',event=>this.projectSession.select(event.target.value));
     document.getElementById('project-title').onclick = () => {
       if (!this.projectDir) this.openProjectDialog();
+      else this.setProjectFilesExpanded(!!this.projectFilesCollapsed);
     };
     document.getElementById('project-explorer-close').onclick = () => this.setProjectExplorerVisible(false);
     document.getElementById('project-new-file').onclick = () => this.newProjectFile();
     this.projectFiles.setup();
+  }
+
+  setProjectFilesExpanded(expanded) {
+    this.projectFilesCollapsed=!expanded;
+    const toggle=document.getElementById('project-files-toggle');
+    if(!toggle)return;
+    toggle.hidden=!this.projectDir;
+    UIControls.setExpanded(toggle,expanded);
+    UIControls.setLabel(toggle,I18N.t('project.files'));
+    toggle.innerHTML=window.ShellIcons.markup(expanded?'chevron-down':'chevron-right');
+    document.getElementById('project-files').hidden=!expanded;
   }
 
   isProjectFile(p) {
@@ -847,7 +878,7 @@ class AxiomIDE {
   }
 
   async closeProject() {
-    if (!this.projectDir) return;
+    if (!this.projectDir) { this.projectSession?.reset(); return; }
     // Take the membership snapshot before clearing projectDir: after closure the remaining
     // documents are no longer classified as project files. Confirm every dirty project
     // document first, so cancelling one confirmation leaves the project and all its tabs intact.
@@ -861,6 +892,7 @@ class AxiomIDE {
     }
     if (this.projectDir !== closingProjectDir || [...approved].some(([entry, text]) => this.openFiles.get(entry.path) !== entry || entry.model.getValue() !== text)) return;
     this.projectDir = null;
+    this.projectSession?.reset();
     this.projectFiles.reset();
     this.saveSettings({ lastProjectDir: null });
     const title = document.getElementById('project-title');
@@ -895,10 +927,10 @@ class AxiomIDE {
     setTimeout(() => this.editor?.layout(), 0);
   }
 
-  async openFile(p, isCurrent = () => true) {
+  async openFile(p, isCurrent = () => true, {activate=true} = {}) {
     if (!isCurrent()) return;
     if (this.openFiles.has(p)) {
-      this.switchToFile(this.openFiles.get(p).path);
+      if(activate)this.switchToFile(this.openFiles.get(p).path);
       // Re-opening an already-open file still bumps recency.
       if (!p.startsWith('untitled')) {
         API.addRecentFile(p).then((recent) => { this.settings.recentFiles = recent; this.renderRecentFiles(); }).catch(() => {});
@@ -909,10 +941,16 @@ class AxiomIDE {
     try { content = await API.readFileContent(p); readonly = await API.fileReadonly(p); }
     catch { if (isCurrent()) alert(I18N.t('dialog.openFailed', p)); return; }
     if (!isCurrent()) return;
+    // Пока читался файл, другая команда могла открыть его и получить правки.
+    // Сохраняем уже созданную модель, не заменяя её повторным чтением с диска.
+    if(this.openFiles.has(p)) {
+      if(activate)this.switchToFile(this.openFiles.get(p).path);
+      return;
+    }
     const model = this.monaco.editor.createModel(content.replace(/^\uFEFF/, ''), /\.axm$/i.test(p) ? 'axiom' : 'plaintext', this.monaco.Uri.file(p));
     this.openFiles.set(p, { model, viewState: null, readonly });
     this.createTab(p);
-    this.switchToFile(p);
+    if(activate)this.switchToFile(p);
     // A freshly opened document is diagnosed right away (same debounced live check as
     // typing) — its squiggles must not wait for the first keystroke.
     this.scheduleLiveCheck();
@@ -1023,7 +1061,13 @@ class AxiomIDE {
     if (this.activeFile === p) {
       const rest = [...this.openFiles.keys()];
       if (rest.length) this.switchToFile(rest[rest.length - 1]);
-      else { this.activeFile = null; this.editor.setModel(null); document.getElementById('status-file-path').textContent = ''; }
+      else {
+        this.activeFile = null;
+        this.editor.setModel(null);
+        document.getElementById('status-file-path').textContent = '';
+        // Последняя вкладка не проходит через switchToFile: очищаем её структуру явно.
+        this.rebuildOutline();
+      }
     }
     if (this.projectDir) this.refreshProjectFiles();
     this.renderMiscellaneousFiles();
@@ -1033,7 +1077,9 @@ class AxiomIDE {
 
   async refreshProjectFiles() {
     if (!this.projectDir) return;
-    const files = await API.listProjectFiles(this.projectDir);
+    const root=this.projectDir,request=this.projectSession?.sequence;
+    const files = await API.listProjectFiles(root);
+    if(this.projectDir!==root||this.projectSession?.sequence!==request)return;
     this.renderProjectFiles(files);
   }
 
@@ -1139,6 +1185,7 @@ class AxiomIDE {
     const f = this.openFiles.get(old) || this.openFiles.get(newPath);
     if (!f) return;
     if (this.openFiles.has(old)) this.openFiles.rename(old, newPath);
+    this.projectSession?.renamed(old,newPath);
     if (this._runFile === old) this._runFile = newPath;
     this.dirty.delete(old);
     this.dirty.delete(newPath);
@@ -1324,7 +1371,7 @@ class AxiomIDE {
   // using the same document scan the completion provider uses. Clicking an item jumps to
   // its line. The panel is rebuilt on content change (debounced) and when switching tabs.
   rebuildOutline() {
-    if (this._formatBusy) { this.log('outline.skipped-format', { busy: this._formatBusy }); return; }
+    if (this._formatBusy && this.editor.getModel()) { this.log('outline.skipped-format', { busy: this._formatBusy }); return; }
     if (!this.outlinePanel) this.outlinePanel = new window.OutlinePanel(this);
     this.outlinePanel.rebuild();
   }
@@ -1342,10 +1389,9 @@ class AxiomIDE {
 
   // ================= run / check / format / stop =================
 
-  // The Run/Check target: the ACTIVE SAVED file. Axiom has no main-file convention —
-  // An open project folder only groups files.
+  // Внутри проекта запускается выбранная точка входа; отдельный файл запускается сам.
   runTarget() {
-    return this.activeFile;
+    return this.projectSession?.target() ?? (this.projectDir ? null : this.activeFile);
   }
 
   async check(explicit = false) {
@@ -1382,7 +1428,13 @@ class AxiomIDE {
   async run(launchKind = 'run', stopFirst = true) {
     if (this.running) return;
     let target = this.runTarget();
-    if (!target) return;
+    if (!target) { this.promptProjectEntry(); return; }
+    if(!this.openFiles.has(target)) {
+      const origin=this.editor?.getModel();
+      await this.openFile(target,()=>this.runTarget()===target&&this.editor?.getModel()===origin);
+      if(this.runTarget()!==target)return;
+      this.projectSession?.navigation();
+    }
     const entry = this.openFiles.get(target);
     if (!entry) return;
     if (target.startsWith('untitled') || this.dirty.has(target)) {
@@ -1742,21 +1794,7 @@ class AxiomIDE {
     return null;
   }
 
-  closeDiagnosticPeek() {
-    // Карточка относится к предыдущему тексту; новый результат проверки обновит маркеры.
-    const editorNode = this.editor.getDomNode();
-    const widget = editorNode?.querySelector('.marker-widget');
-    if (!widget || widget.getClientRects().length === 0) return;
-    // Команда Monaco закрывает карточку и сама переводит фокус в редактор.
-    // При INPUT или работе с другим полем сохраняем выбранный пользователем фокус.
-    const focused = document.activeElement;
-    const restoreFocus = focused && focused !== document.body && !editorNode.contains(focused);
-    this.editor.trigger('axiom.diagnostics', 'closeMarkersNavigation', {});
-    if (restoreFocus && focused.isConnected) focused.focus();
-  }
-
   clearDiagnostics() {
-    this.closeDiagnosticPeek();
     this.log('diagnostics.clear');
     document.getElementById('diagnostics-content').innerHTML = '';
     this._lastDiagnostics = [];
@@ -1811,7 +1849,6 @@ class AxiomIDE {
   }
 
   applyDiagnostics(diags, onlyActive = false, targetFile = null) {
-    this.closeDiagnosticPeek();
     this.log('diagnostics.apply.start', { count: Array.isArray(diags) ? diags.length : 0, onlyActive, focus: this.focusState() });
     const monaco = this.monaco;
     const byModel = new Map();
@@ -2079,6 +2116,7 @@ class AxiomIDE {
 
   applyLocale() {
     I18N.apply();
+    this.projectSession?.render();
     this.assistant?.localize();
     UIControls.setLabel(document.getElementById('menu-settings'), I18N.t('menu.settings'));
     this.applyMenuMnemonics();

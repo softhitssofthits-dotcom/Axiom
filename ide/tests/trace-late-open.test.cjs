@@ -145,3 +145,19 @@ for (const previousStop of [null, 'previous']) {
     assert.equal(trace.marker.model, ide.openFiles.get('helper.axm').model);
   });
 }
+
+test('Фоновое открытие проекта и щелчок по файлу не создают вторую модель и не теряют правки',async()=>{
+  const {context,ide}=setup();const pending=[];
+  context.window.axiom.readFileContent=()=>new Promise(resolve=>pending.push(resolve));
+  const background=ide.openFile('helper.axm',()=>true,{activate:false});
+  const foreground=ide.openFile('helper.axm');
+  pending[0]('PRINT 1');await background;
+  assert.equal(ide.activeFile,'main.axm','Фоновая вкладка не перехватывает активный редактор');
+  // В настоящем DocumentStore путь добавляется при set; этот стенд использует Map.
+  ide.openFiles.get('helper.axm').path='helper.axm';
+  const model=ide.openFiles.get('helper.axm').model;
+  model.getValue=()=> 'PRINT 99';
+  pending[1]('PRINT 1');await foreground;
+  assert.equal(ide.openFiles.get('helper.axm').model,model);
+  assert.equal(model.getValue(),'PRINT 99');assert.equal(ide.activeFile,'helper.axm');
+});

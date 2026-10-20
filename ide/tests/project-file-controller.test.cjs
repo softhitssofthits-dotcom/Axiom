@@ -50,6 +50,17 @@ test('Успешное вырезание переносит открытую з
   assert.equal(controller.clipboard, null);
 });
 
+test('Перемещение через Junction сохраняет путь открытой вкладки и несохранённую модель',async()=>{
+  const {ide,api,calls,controller}=setup();
+  const source='C:\\Проект\\папка\\a.axm',target='C:\\Проект\\a.axm';
+  ide.openFiles.set(source,{});
+  api.captureProjectFile=async()=>({ok:true,root:'F:\\Данные',source:'F:\\Данные\\папка\\a.axm',cut:true,directory:false});
+  api.pasteProjectFile=async()=>({ok:true,source:'F:\\Данные\\папка\\a.axm',target:'F:\\Данные\\a.axm',cut:true,directory:false});
+  globalThis.I18N={t:key=>key};
+  await controller.capture(source,true);await controller.paste();
+  assert.deepEqual(calls.rename,[[source,target]]);
+});
+
 test('Перемещение папки переносит всех открытых потомков с сохранением относительных путей', async () => {
   const { ide, api, calls, controller } = setup();
   const folder = 'C:\\Проект\\вложенная', target = 'C:\\Проект\\вложенная-копия';

@@ -156,3 +156,53 @@ module.exports = [
     },
   },
 ];
+
+module.exports.push({id:'project-advice-cross-module-reads',name:'Советы учитывают чтения из main и несохранённые правки проекта',async fn({S,C}){
+ const root=testWorkspace('project-advice');
+ const main=writeAxm(root,'main.axm','IMPORT helper\nPRINT SharedValue + SharedLimit\n');
+ const helper=writeAxm(root,'helper.axm','PUBLIC DIM SharedValue AS INTEGER = 1\nPUBLIC CONST SharedLimit AS INTEGER = 2\nPRIVATE DIM LocalUnused AS INTEGER = 3\n');
+ await S.launch({settings:{smartIdentifierEnabled:false}});await S.page.evaluate(p=>window.__ide.openProject(p),root);
+ await S.page.evaluate(p=>window.__ide.openFile(p),helper);await S.page.evaluate(()=>window.__ide.runLiveCheck());
+ require('node:fs').writeFileSync(path.join(require('../helpers').ROOT,'.artifacts/project-open-20261020/advice-initial.json'),JSON.stringify(await S.page.evaluate(()=>window.__ide._lastDiagnostics),null,2));
+ C.eq(await S.page.evaluate(()=>window.__ide._lastDiagnostics.filter(d=>d.severity==='error').length),0,'Пример не содержит ошибок компиляции');
+ const advice=()=>S.page.evaluate(()=>window.__ide._lastDiagnostics.filter(d=>d.code==='MB2047').map(d=>d.message).join('\n'));
+ C.ok(!(await advice()).includes("'SharedValue'"),'Импортированная переменная читается в main');
+ C.ok(!(await advice()).includes("'SharedLimit'"),'Импортированная константа читается в main');
+ C.contains(await advice(),'LocalUnused','Действительно неиспользуемая переменная не скрыта');
+ await S.page.evaluate(()=>window.__ide.check());
+ C.ok(!(await advice()).includes("'SharedValue'"),'Явная проверка также учитывает main');
+ await S.page.evaluate(p=>window.__ide.closeFile(p),main);await S.page.evaluate(()=>window.__ide.runLiveCheck());
+ C.ok(!(await advice()).includes("'SharedValue'"),'Закрытая вкладка main читается с диска');
+ await S.page.evaluate(p=>window.__ide.openFile(p),main);await S.page.evaluate(p=>window.__ide.openFile(p),helper);
+ await S.page.evaluate(p=>window.__ide.openFiles.get(p).model.setValue('IMPORT helper\nPRINT 0\n'),main);
+ await S.page.evaluate(()=>window.__ide.runLiveCheck());
+ C.contains(await advice(),'SharedValue','Удалённое несохранённое чтение учтено');
+ C.contains(await advice(),'SharedLimit','Удалённое чтение константы учтено');
+ const orphan=writeAxm(root,'orphan.axm','DIM UnusedOrphan AS INTEGER\n');await S.page.evaluate(p=>window.__ide.openFile(p),orphan);await S.page.evaluate(()=>window.__ide.runLiveCheck());
+ C.contains(await advice(),'UnusedOrphan','Не включённый в IMPORT файл проверяется самостоятельно');
+ C.eq(S.pageErrors.length,0,'Нет ошибок страницы');
+}},{id:'diagnostic-peek-survives-live-analysis',name:'Карточка ошибки остаётся после проверки и редактирования до явного закрытия',async fn({S,C}){
+ const file=writeAxm(testWorkspace('peek-persistent'),'bad.axm','PRINT MissingValue\n');
+ await S.launch({settings:{smartIdentifierEnabled:false}});await S.page.evaluate(p=>window.__ide.openFile(p),file);await S.page.evaluate(()=>window.__ide.runLiveCheck());
+ await S.page.locator('.diagnostic-item').first().click();await S.page.locator('.marker-widget').waitFor({state:'visible'});
+ await S.page.evaluate(()=>window.__ide.scheduleLiveCheck());await S.sleep(1100);
+ C.eq(await S.page.locator('.marker-widget:visible').count(),1,'Фоновая проверка не закрывает карточку');
+ await S.page.evaluate(()=>window.__ide.editor.getModel().setValue('PRINT 1\n'));await S.page.evaluate(()=>window.__ide.runLiveCheck());
+ C.eq(await S.page.locator('.marker-widget:visible').count(),1,'Исправление текста оставляет карточку доступной для чтения');
+ await S.page.locator('.peekview-widget .action-label.codicon-close').click();
+ C.eq(await S.page.locator('.marker-widget:visible').count(),0,'Крестик закрывает карточку');
+ await S.page.evaluate(()=>window.__ide.runLiveCheck());
+ C.eq(await S.page.locator('.marker-widget:visible').count(),0,'Закрытая карточка не появляется от проверки');
+ C.eq(S.pageErrors.length,0,'Нет ошибок страницы');
+}});
+
+module.exports.push({id:'project-advice-maze-config',name:'Константы Maze Chase учитываются во всех девяти модулях',async fn({S,C}){
+ const folder=path.join(require('../helpers').ROOT,'samples/graphics/game/maze_chase_project');
+ await S.launch({settings:{smartIdentifierEnabled:false}});await S.page.evaluate(p=>window.__ide.openProject(p),folder);
+ await S.page.evaluate(p=>window.__ide.openFile(p),path.join(folder,'maze_config.axm'));await S.page.evaluate(()=>window.__ide.runLiveCheck());
+ const diagnostics=await S.page.evaluate(()=>window.__ide._lastDiagnostics);
+ C.eq(diagnostics.filter(d=>d.severity==='error').length,0,'Проект успешно анализируется');
+ for(const name of ['TILE','VIEW_WIDTH','VIEW_HEIGHT','HUD_HEIGHT','PLAYER_SPEED','GHOST_SPEED'])
+  C.ok(!diagnostics.some(d=>d.code==='MB2047'&&d.message.includes("'"+name+"'")),'Нет ложного совета для '+name);
+ C.eq(S.pageErrors.length,0,'Нет ошибок страницы');
+}});

@@ -23,22 +23,24 @@ internal static class DocumentCommands
             throw new ArgumentException("Некорректный снимок документа.");
         var projectDocuments = ProjectSnapshot.Validate(snapshot.SourceFilePath,snapshot.ProjectDocuments,snapshot.DocumentId);
         var openDocuments = projectDocuments.Select(document=>new SourceDocument(document.SourceFilePath,document.SourceText)).ToArray();
+        var entryText = snapshot.SourceText;
+        var entryPath = snapshot.SourceFilePath;
+        var navigationDocuments = openDocuments.ToList();
+        if (entryPath is not null) navigationDocuments.Add(new SourceDocument(entryPath, entryText));
+        if (method is "document.navigation" or "document.analyse" or "document.compile" && snapshot.NavigationEntryPath is { } selected)
+        {
+            if (!Path.IsPathFullyQualified(selected) || entryPath is null ||
+                !string.Equals(Path.GetDirectoryName(Path.GetFullPath(selected)), Path.GetDirectoryName(Path.GetFullPath(entryPath)), StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(Path.GetExtension(selected), ".axm", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Точка входа навигации должна быть файлом .axm в той же папке.");
+            var entry = navigationDocuments.FirstOrDefault(d => string.Equals(Path.GetFullPath(d.Name), Path.GetFullPath(selected), StringComparison.OrdinalIgnoreCase));
+            if (entry is null && method == "document.navigation")
+                throw new ArgumentException("Откройте точку входа навигации в редакторе.");
+            entry ??= new SourceDocument(selected, File.ReadAllText(selected));
+            entryPath = entry.Name; entryText = entry.Text;
+        }
         if (method == "document.navigation")
         {
-            var entryText = snapshot.SourceText;
-            var entryPath = snapshot.SourceFilePath;
-            var navigationDocuments = openDocuments.ToList();
-            if (entryPath is not null) navigationDocuments.Add(new SourceDocument(entryPath, entryText));
-            if (snapshot.NavigationEntryPath is { } selected)
-            {
-                if (!Path.IsPathFullyQualified(selected) || entryPath is null ||
-                    !string.Equals(Path.GetDirectoryName(Path.GetFullPath(selected)), Path.GetDirectoryName(Path.GetFullPath(entryPath)), StringComparison.OrdinalIgnoreCase) ||
-                    !string.Equals(Path.GetExtension(selected), ".axm", StringComparison.OrdinalIgnoreCase))
-                    throw new ArgumentException("Точка входа навигации должна быть файлом .axm в той же папке.");
-                var entry = navigationDocuments.FirstOrDefault(d => string.Equals(Path.GetFullPath(d.Name), Path.GetFullPath(selected), StringComparison.OrdinalIgnoreCase))
-                    ?? throw new ArgumentException("Откройте точку входа навигации в редакторе.");
-                entryPath = entry.Name; entryText = entry.Text;
-            }
             var graph = EditorCallGraph.Analyse(entryText, entryPath,
                 SourceProject.LoadDependencies(entryText, entryPath, navigationDocuments));
             if (!graph.SourceDocuments.Any(d => string.Equals(d.SourceFilePath, snapshot.SourceFilePath, StringComparison.OrdinalIgnoreCase)))
@@ -85,9 +87,16 @@ internal static class DocumentCommands
                 edits = resultText != snapshot.SourceText ? new[] { new TextEdit(prefix, snapshot.SourceText.Length - prefix - suffix, resultText.Substring(prefix, resultText.Length - prefix - suffix)) } : [],
                 plan.NewCaretOffset };
         }
-        var result = new AxiomExecutionPipeline().Compile(new CompilationRequest(snapshot.SourceText, includeUsageWarnings: true,
-            sourceName: snapshot.SourceFilePath,
-            additionalDocuments: SourceProject.LoadDependencies(snapshot.SourceText, snapshot.SourceFilePath,openDocuments)));
+        var dependencies = SourceProject.LoadDependencies(entryText, entryPath, navigationDocuments);
+        // Файл вне графа выбранного запуска остаётся самостоятельным документом.
+        if (!string.Equals(entryPath, snapshot.SourceFilePath, StringComparison.OrdinalIgnoreCase) &&
+            !dependencies.Any(d => string.Equals(d.Name, snapshot.SourceFilePath, StringComparison.OrdinalIgnoreCase)))
+        {
+            entryText = snapshot.SourceText; entryPath = snapshot.SourceFilePath;
+            dependencies = SourceProject.LoadDependencies(entryText, entryPath, openDocuments);
+        }
+        var result = new AxiomExecutionPipeline().Compile(new CompilationRequest(entryText, includeUsageWarnings: true,
+            sourceName: entryPath, additionalDocuments: dependencies));
         var diagnostics = result.Diagnostics.Concat(result.BackendDiagnostics)
             .DistinctBy(d => (d.Code, d.Location.Document, d.Location.Span, d.Message))
             .Select(d => {

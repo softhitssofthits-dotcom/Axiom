@@ -41,6 +41,13 @@
   }
 
   const contextMenus = new WeakMap();
+  // Общая видимая часть select: длинные имена сокращаются, стрелка не вытесняется.
+  function prepareSelect(select) {
+    if (!select || select.querySelector('selectedcontent')) return;
+    const doc = select.ownerDocument;
+    const button = doc.createElement('button'); button.type = 'button';
+    button.append(doc.createElement('selectedcontent')); select.prepend(button);
+  }
   function createContextMenu(menu, {translate, onAction, onClose}, doc = root.document) {
     const close = (restoreFocus = true) => {
       if (menu.hidden) return;
@@ -109,7 +116,7 @@
     const api = {show, close}; contextMenus.set(menu, api); return api;
   }
 
-  const api = Object.freeze({ setPressed, setExpanded, setEnabled, setLabel, setMenuChecked, createIconButton, createContextMenu });
+  const api = Object.freeze({ setPressed, setExpanded, setEnabled, setLabel, setMenuChecked, createIconButton, createContextMenu, prepareSelect });
   if (typeof module === 'object' && module.exports) module.exports = api;
   root.UIControls = api;
 })(typeof window === 'undefined' ? globalThis : window);

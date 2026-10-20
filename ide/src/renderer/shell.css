@@ -96,10 +96,8 @@ html[data-theme="borland"] .about-dialog .about-button-hotkey { color:#ffff55; }
 .outline-controls{flex:none;padding:4px;white-space:normal}
 .outline-controls input{width:100%;box-sizing:border-box;min-width:0;background:var(--xs-surface);color:var(--xs-text);border:1px solid var(--xs-border);padding:5px}
 .outline-options{display:flex;gap:3px;margin-top:4px}
-.outline-options select{min-width:0;flex:1;width:0;display:flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px 3px 7px;white-space:nowrap}
-.outline-options select>button{min-width:0;flex:1;display:block;border:0;padding:0;background:transparent;color:inherit;font:inherit;text-align:left;overflow:hidden}
-.outline-options selectedcontent{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.outline-options select::picker-icon{flex:none;margin:0}
+.outline-options select{flex:1;width:0;font-size:11px}
+.outline-options select>button{width:auto;flex:1}
 .outline-options button{flex:none;width:26px}
 #outline-count{font-size:11px;color:var(--xs-text-muted);padding:5px 0 1px}
 #outline-list .outline-item{padding:0;gap:0;border-radius:0;min-height:28px}

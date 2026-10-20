@@ -64,3 +64,24 @@ test('Регистр пути Windows не мешает применению п�
  const service=new DocumentServices(store,{documentCommand:async(_method,s)=>({ok:true,payload:{...s,diagnostics:[]}})});
  assert.ok(await service.request('c:\\папка\\a.axm','document.analyse'));
 });
+
+test('Анализ и проверка используют выбранный запуск и отклоняют ответ после смены запуска',async()=>{
+ for(const method of ['document.analyse','document.compile']){
+  const store=new DocumentStore();store.set('C:/project/main.axm',{model:model('IMPORT helper')});store.set('C:/project/helper.axm',{model:model('PUBLIC DIM Shared AS INTEGER')});
+  let selected='C:/project/main.axm',respond,snapshot;
+  const service=new DocumentServices(store,{documentCommand:(_method,s)=>{snapshot=s;return new Promise(resolve=>respond=resolve);}},()=>selected);
+  const pending=service.request('C:/project/helper.axm',method);
+  assert.equal(snapshot.navigationEntryPath,selected);
+  selected='C:/project/other.axm';respond({ok:true,payload:{...snapshot,diagnostics:[]}});
+  assert.equal(await pending,null);
+ }
+});
+
+test('Закрытый выбранный запуск передаётся анализу, а внешняя папка не получает его',async()=>{
+ const store=new DocumentStore();store.set('C:/project/helper.axm',{model:model('PRINT 1')});store.set('C:/other/file.axm',{model:model('PRINT 2')});
+ const snapshots=[];const service=new DocumentServices(store,{documentCommand:async(_method,s)=>{snapshots.push(s);return {ok:true,payload:{...s,diagnostics:[]}};}},()=> 'C:/project/main.axm');
+ assert.ok(await service.request('C:/project/helper.axm','document.analyse'));
+ assert.equal(snapshots[0].navigationEntryPath,'C:/project/main.axm');
+ assert.ok(await service.request('C:/other/file.axm','document.analyse'));
+ assert.equal(snapshots[1].navigationEntryPath,undefined);
+});

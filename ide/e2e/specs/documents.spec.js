@@ -197,3 +197,35 @@ module.exports.push({ id: 'document-structural-delivery-retry', name: 'Теку�
   await S.page.evaluate(() => window.__ide.editor.trigger('test', 'undo', null));
   C.eq(await S.page.evaluate(() => window.__ide.editor.getValue()), before, 'Undo отменяет структурную правку');
 } });
+
+module.exports.push({id:'document-visibility-block-endings',name:'PUBLIC и PRIVATE: закрытие всех допустимых блоков и готовые шаблоны',async fn({S,C}){
+ await document(S,'','visibility-endings');
+ await S.page.evaluate(()=>{window.__ide.settings.smartIdentifierEnabled=false;});
+ for(const style of ['Classic','Modern'])for(const modifier of ['PUBLIC','PRIVATE'])for(const [block,header] of [['SUB','Work()'],['FUNCTION','Work() AS INTEGER'],['TYPE','Box']]){
+  const opening=modifier+' '+block+' '+header;
+  await S.page.evaluate(({style})=>{const i=window.__ide;i.settings.formattingStyle=style;i.editor.getModel().setValue('');i.editor.setPosition({lineNumber:1,column:1});i.editor.focus();},{style});
+  await S.page.keyboard.type(opening);await S.page.keyboard.press('Escape');await S.page.keyboard.press('Enter');
+  await S.page.waitForFunction(block=>window.__ide.editor.getValue().toUpperCase().includes('END '+block),block,{timeout:3000});
+  C.eq(await S.page.evaluate(block=>(window.__ide.editor.getValue().toUpperCase().match(new RegExp('END '+block,'g'))||[]).length,block),1,'Один END '+modifier+' '+block+' '+style);
+  C.eq(await S.page.evaluate(()=>window.__ide.editor.getPosition().column),5,'Каретка внутри блока');
+ }
+ for(const modifier of ['PUBLIC','PRIVATE'])for(const [block,header] of [['SUB','Work()'],['FUNCTION','Work() AS INTEGER'],['TYPE','Box']]){
+  await S.page.evaluate(block=>{const i=window.__ide;i.editor.getModel().setValue('\n\nEND '+block);i.editor.setPosition({lineNumber:1,column:1});i.editor.focus();},block);
+  await S.page.keyboard.type(modifier.toLowerCase()+' '+block.toLowerCase()+' '+header+" ' комментарий");
+  await S.page.keyboard.press('Escape');await S.page.keyboard.press('Enter');
+  await S.page.waitForFunction(()=>window.__ide.editor.getPosition().column===5);
+  C.eq((await S.editorValue()).toUpperCase().split('END '+block).length-1,1,'Готовое завершение не дублируется: '+modifier+' '+block);
+ }
+ for(const modifier of ['PUBLIC','PRIVATE'])for(const block of ['SUB','FUNCTION','TYPE']){
+  await S.page.evaluate(()=>{const i=window.__ide;i.editor.getModel().setValue('');i.editor.setPosition({lineNumber:1,column:1});i.editor.focus();});
+  await S.page.keyboard.type(modifier+' '+block.slice(0,2));
+  await S.page.keyboard.press('Control+Space');
+  const row=S.page.locator('.suggest-widget.visible .monaco-list-row').filter({hasText:modifier+' '+block+' —'}).first();
+  await row.waitFor({state:'visible',timeout:3000});await row.click();await S.page.keyboard.press('Tab');
+  C.ok((await S.editorValue()).startsWith(modifier+' '+block+' '),'Шаблон сохраняет начало '+modifier+' '+block);
+  C.eq((await S.editorValue()).split(new RegExp('END '+block,'i')).length-1,1,'Шаблон вставил одно завершение');
+  await S.page.keyboard.press('Escape');
+  await S.page.evaluate(()=>window.__ide.editor.getContribution('snippetController2')?.cancel());
+ }
+ C.eq(S.pageErrors.length,0,'Нет ошибок страницы');
+}});

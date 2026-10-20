@@ -140,7 +140,7 @@ public sealed class IdentifierNormalizationService
         var replacements = new List<IdentifierReplacement>();
         var rangeEnd = rangeStart + rangeLength;
 
-        foreach (var node in EnumerateNodes(program))
+        foreach (var node in EnumerateNodes(program, skipTypeNames: true))
         {
             if (node is not SyntaxToken token ||
                 token.Kind != SyntaxKind.IdentifierToken ||
@@ -170,7 +170,7 @@ public sealed class IdentifierNormalizationService
         canonicalNames.TryAdd(identifier.Text, identifier.Text);
     }
 
-    private static IEnumerable<SyntaxNode> EnumerateNodes(SyntaxNode root)
+    private static IEnumerable<SyntaxNode> EnumerateNodes(SyntaxNode root, bool skipTypeNames = false)
     {
         var stack = new Stack<SyntaxNode>();
         stack.Push(root);
@@ -180,9 +180,15 @@ public sealed class IdentifierNormalizationService
             var current = stack.Pop();
             yield return current;
 
+            // Имена типов не принадлежат таблице переменных и параметров.
+            // В BYREF walker AS Walker нельзя заменять тип написанием параметра.
+            if (skipTypeNames && current is NamedTypeSyntax) continue;
+
             var children = GetChildren(current);
             for (var index = children.Count - 1; index >= 0; index--)
             {
+                if (skipTypeNames && current is TypeDeclarationSyntax type &&
+                    ReferenceEquals(children[index], type.Identifier)) continue;
                 stack.Push(children[index]);
             }
         }

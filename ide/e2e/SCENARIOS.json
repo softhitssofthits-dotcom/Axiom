@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 511,
+  "count": 520,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -236,6 +236,11 @@
       "id": "document-structural-delivery-retry",
       "spec": "documents.spec.js",
       "name": "Текущий отказ структурной правки виден, повтор вставляет блок и сохраняет Undo"
+    },
+    {
+      "id": "document-visibility-block-endings",
+      "spec": "documents.spec.js",
+      "name": "PUBLIC и PRIVATE: закрытие всех допустимых блоков и готовые шаблоны"
     },
     {
       "id": "editor-settings-all-appearance",
@@ -1783,6 +1788,26 @@
       "name": "Открытый дескриптор другого процесса препятствует сохранению без потери текста"
     },
     {
+      "id": "project-open-maze-tabs-entry",
+      "spec": "files.spec.js",
+      "name": "Открыть проект из меню: девять вкладок Maze Chase и запуск main из модуля"
+    },
+    {
+      "id": "project-open-manual-entry-restore",
+      "spec": "files.spec.js",
+      "name": "Выбор файла запуска без main, повторное открытие и восстановление"
+    },
+    {
+      "id": "project-sidebar-controls",
+      "spec": "files.spec.js",
+      "name": "Единая геометрия списков и сворачивание файлов проекта"
+    },
+    {
+      "id": "project-open-does-not-edit-source",
+      "spec": "files.spec.js",
+      "name": "Открытие Maze Chase с умными именами не меняет исходники и не помечает вкладки"
+    },
+    {
       "id": "format-delivery-stale-failures",
       "spec": "format-delivery.spec.js",
       "name": "Поздний отказ форматирования сохраняет исправленный, другой, закрытый и исполняемый документ"
@@ -2213,6 +2238,11 @@
       "name": "Компактные общие значки навигатора и спокойная палитра групп в Pascal"
     },
     {
+      "id": "outline-close-document-clears-state",
+      "spec": "outline-navigation.spec.js",
+      "name": "Закрытие документов и проекта очищает объявления и сохраняет структуру оставшегося файла"
+    },
+    {
       "id": "panels-visibility-persistence",
       "spec": "panels.spec.js",
       "name": "Боковая панель закрывается и восстанавливается через меню, кнопку и профиль"
@@ -2251,6 +2281,21 @@
       "id": "circle-text-mode-check-run-diagnostic",
       "spec": "problems.spec.js",
       "name": "Check находит графику в SCREEN 0 и блокирует Run; сообщение сохраняется при смене языка"
+    },
+    {
+      "id": "project-advice-cross-module-reads",
+      "spec": "problems.spec.js",
+      "name": "Советы учитывают чтения из main и несохранённые правки проекта"
+    },
+    {
+      "id": "diagnostic-peek-survives-live-analysis",
+      "spec": "problems.spec.js",
+      "name": "Карточка ошибки остаётся после проверки и редактирования до явного закрытия"
+    },
+    {
+      "id": "project-advice-maze-config",
+      "spec": "problems.spec.js",
+      "name": "Константы Maze Chase учитываются во всех девяти модулях"
     },
     {
       "id": "assistant-module-navigation",

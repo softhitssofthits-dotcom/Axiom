@@ -3,7 +3,7 @@
   else Object.assign(root, factory());
 })(typeof window !== 'undefined' ? window : globalThis, function() {
   class DocumentServices {
-    constructor(store, api) { this.store = store; this.api = api; this.requests = new WeakMap(); }
+    constructor(store, api, entryPath = () => null) { this.store = store; this.api = api; this.entryPath = entryPath; this.requests = new WeakMap(); }
     async request(path, method, options = {}) {
       const document = this.store.get(path);
       if (!document || document.model.isDisposed?.()) return null;
@@ -15,15 +15,19 @@
       const projectOperation=['document.compile','document.analyse','document.hover','document.navigation'].includes(method);
       const project=projectOperation ? this.store.captureProject?.(canonicalPath) : null;
       const entryId=this.store.navigationEntryId;
-      const entry=method==='document.navigation'&&entryId ? [...this.store.values()].find(d=>d.documentId===entryId) : null;
-      const sameFolder=entry&&!entry.path.startsWith('untitled')&&String(entry.path).replace(/\\/g,'/').split('/').slice(0,-1).join('/').toLowerCase()===String(canonicalPath).replace(/\\/g,'/').split('/').slice(0,-1).join('/').toLowerCase();
+      const usesEntry=['document.navigation','document.analyse','document.compile'].includes(method);
+      const entry=usesEntry&&entryId ? [...this.store.values()].find(d=>d.documentId===entryId) : null;
+      const selected=usesEntry&&method!=='document.navigation' ? this.entryPath() : null;
+      const entryPath=selected||entry?.path;
+      const sameFolder=entryPath&&!entryPath.startsWith('untitled')&&String(entryPath).replace(/\\/g,'/').split('/').slice(0,-1).join('/').toLowerCase()===String(canonicalPath).replace(/\\/g,'/').split('/').slice(0,-1).join('/').toLowerCase();
       const snapshot = { ...options, documentId: document.documentId, documentRevision: revision,
         sourceText: document.model.getValue(), sourceFilePath: document.path.startsWith('untitled') ? null : document.path,
         ...(project ? {projectDocuments:project.documents} : {}),
-        ...(sameFolder ? {navigationEntryPath:entry.path} : {}) };
+        ...(sameFolder ? {navigationEntryPath:entryPath} : {}) };
       const current = () => methods.get(method) === token && this.store.get(canonicalPath) === document && document.path === canonicalPath &&
           document.documentId === snapshot.documentId && document.revision === revision && !document.model.isDisposed?.() &&
-          (!project || project.isCurrent()) && (method!=='document.navigation'||this.store.navigationEntryId===entryId);
+          (!project || project.isCurrent()) && (!usesEntry||this.store.navigationEntryId===entryId) &&
+          (!usesEntry||method==='document.navigation'||this.entryPath()===selected);
       let response;
       try { response = await this.api.documentCommand(method, snapshot); }
       catch (error) { if (!current()) return null; throw error; }

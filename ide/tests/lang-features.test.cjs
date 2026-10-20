@@ -288,3 +288,25 @@ test('Отказ без объекта ошибки не ломает подск
   assert.match((await hover()).contents[0].value, /STRING/);
   assert.equal(calls, 2); assert.equal(logs.length, 1);
 });
+
+test('Шаблоны всех блоков с PUBLIC и PRIVATE сохраняют модификатор и закрывают блок',()=>{
+ for(const modifier of ['PUBLIC','PRIVATE'])for(const block of ['SUB','FUNCTION','TYPE']){
+  const p=providers('');
+  const items=p.features._completionProvider.provideCompletionItems(p.model,{lineNumber:1,column:1}).suggestions;
+  const item=items.find(s=>s.insertText.startsWith(modifier+' '+block+' '));
+  assert.ok(item,modifier+' '+block);
+  assert.match(item.insertText,new RegExp('\\nEND '+block+'$'));
+  assert.ok(item.label.startsWith(modifier+' '+block));
+ }
+});
+
+test('Шаблон после уже введённого модификатора не дублирует его и заменяет только слово',()=>{
+ for(const modifier of ['public','PRIVATE'])for(const block of ['SUB','FUNCTION','TYPE']){
+  const source='    '+modifier+' '+block.slice(0,2),p=providers(source);
+  const items=p.features._completionProvider.provideCompletionItems(p.model,{lineNumber:1,column:source.length+1}).suggestions;
+  const item=items.find(s=>s.label.startsWith(modifier.toUpperCase()+' '+block+' —'));
+  assert.ok(item);assert.ok(item.insertText.startsWith(block+' '));
+  assert.equal(item.range.insert.startColumn,6+modifier.length);
+  assert.ok(!items.some(s=>s.insertText.startsWith('PUBLIC ')||s.insertText.startsWith('PRIVATE ')));
+ }
+});

@@ -46,7 +46,8 @@
     "trace-restart.test.cjs",
     "trace-saveas.test.cjs",
     "ui-controls.test.cjs",
-    "window-recovery.test.cjs"
+    "window-recovery.test.cjs",
+    "project-session.test.cjs"
   ],
   "ide-unit-main": [
     "backend-client.test.cjs",
@@ -78,7 +79,8 @@
     "status-time-locale.test.cjs",
     "string-tokenization.test.cjs",
     "themes.test.cjs",
-    "ui-controls.test.cjs"
+    "ui-controls.test.cjs",
+    "project-session.test.cjs"
   ],
   "ide-unit-delivery": [
     "debug-command-failure.test.cjs",
@@ -99,6 +101,7 @@
     "structural-delivery.test.cjs",
     "trace-late-open.test.cjs",
     "trace-restart.test.cjs",
-    "trace-saveas.test.cjs"
+    "trace-saveas.test.cjs",
+    "project-session.test.cjs"
   ]
 }
