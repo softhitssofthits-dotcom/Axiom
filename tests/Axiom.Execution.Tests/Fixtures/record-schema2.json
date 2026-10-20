@@ -1,0 +1,301 @@
+{
+  "ArtifactSchemaVersion": 2,
+  "Header": {
+    "FormatVersion": "V1",
+    "LanguageVersion": "Axiom language vNext",
+    "Flags": 1,
+    "CompatibilityToken": "axiom-bytecode-v1"
+  },
+  "ConstantPool": [
+    {
+      "Index": 0,
+      "Kind": "RoutineName",
+      "Value": "\u003Cglobal\u003E"
+    },
+    {
+      "Index": 1,
+      "Kind": "String",
+      "Value": "Box"
+    },
+    {
+      "Index": 2,
+      "Kind": "Integer",
+      "Value": 17
+    },
+    {
+      "Index": 3,
+      "Kind": "String",
+      "Value": "Item"
+    }
+  ],
+  "Routines": [
+    {
+      "Id": 0,
+      "Name": "\u003Cglobal\u003E",
+      "Location": {
+        "SpanStart": 5,
+        "SpanLength": 3,
+        "Line": 1,
+        "Column": 6
+      },
+      "ResultType": "VOID",
+      "ParameterCount": 0,
+      "LocalSlotCount": 2,
+      "IsEntryPoint": true,
+      "ParameterVariables": [],
+      "LocalVariables": [
+        {
+          "SymbolId": 0,
+          "Name": "value",
+          "Type": "Box",
+          "IsReadOnly": false,
+          "IsGlobal": false
+        },
+        {
+          "SymbolId": 1,
+          "Name": "__record_literal_1_Box",
+          "Type": "Box",
+          "IsReadOnly": false,
+          "IsGlobal": false
+        }
+      ],
+      "CapturedVariables": [],
+      "Instructions": [
+        {
+          "Index": 0,
+          "Opcode": "CreateRecord",
+          "Operands": [
+            1
+          ]
+        },
+        {
+          "Index": 1,
+          "Opcode": "StoreLocal",
+          "Operands": [
+            1
+          ]
+        },
+        {
+          "Index": 2,
+          "Opcode": "PushConst",
+          "Operands": [
+            2
+          ]
+        },
+        {
+          "Index": 3,
+          "Opcode": "LoadLocal",
+          "Operands": [
+            1
+          ]
+        },
+        {
+          "Index": 4,
+          "Opcode": "StoreField",
+          "Operands": [
+            3
+          ]
+        },
+        {
+          "Index": 5,
+          "Opcode": "LoadLocal",
+          "Operands": [
+            1
+          ]
+        },
+        {
+          "Index": 6,
+          "Opcode": "StoreLocal",
+          "Operands": [
+            0
+          ]
+        },
+        {
+          "Index": 7,
+          "Opcode": "LoadLocal",
+          "Operands": [
+            0
+          ]
+        },
+        {
+          "Index": 8,
+          "Opcode": "LoadField",
+          "Operands": [
+            3
+          ]
+        },
+        {
+          "Index": 9,
+          "Opcode": "PrintValue",
+          "Operands": []
+        },
+        {
+          "Index": 10,
+          "Opcode": "PrintLine",
+          "Operands": []
+        },
+        {
+          "Index": 11,
+          "Opcode": "Return",
+          "Operands": []
+        }
+      ]
+    }
+  ],
+  "Globals": [],
+  "Builtins": [],
+  "TypeDefinitions": [
+    {
+      "Name": "Box",
+      "Fields": [
+        {
+          "Name": "Item",
+          "Type": "INTEGER",
+          "HasDefaultValue": false
+        }
+      ]
+    }
+  ],
+  "DebugInfo": {
+    "InstructionMap": [
+      {
+        "RoutineId": 0,
+        "InstructionIndex": 0,
+        "Location": {
+          "SpanStart": 51,
+          "SpanLength": 3,
+          "Line": 4,
+          "Column": 18
+        }
+      },
+      {
+        "RoutineId": 0,
+        "InstructionIndex": 1,
+        "Location": {
+          "SpanStart": 51,
+          "SpanLength": 3,
+          "Line": 4,
+          "Column": 18
+        }
+      },
+      {
+        "RoutineId": 0,
+        "InstructionIndex": 2,
+        "Location": {
+          "SpanStart": 55,
+          "SpanLength": 2,
+          "Line": 4,
+          "Column": 22
+        }
+      },
+      {
+        "RoutineId": 0,
+        "InstructionIndex": 3,
+        "Location": {
+          "SpanStart": 51,
+          "SpanLength": 3,
+          "Line": 4,
+          "Column": 18
+        }
+      },
+      {
+        "RoutineId": 0,
+        "InstructionIndex": 4,
+        "Location": {
+          "SpanStart": 51,
+          "SpanLength": 3,
+          "Line": 4,
+          "Column": 18
+        }
+      },
+      {
+        "RoutineId": 0,
+        "InstructionIndex": 5,
+        "Location": {
+          "SpanStart": 51,
+          "SpanLength": 3,
+          "Line": 4,
+          "Column": 18
+        }
+      },
+      {
+        "RoutineId": 0,
+        "InstructionIndex": 6,
+        "Location": {
+          "SpanStart": 34,
+          "SpanLength": 3,
+          "Line": 4,
+          "Column": 1
+        }
+      },
+      {
+        "RoutineId": 0,
+        "InstructionIndex": 7,
+        "Location": {
+          "SpanStart": 65,
+          "SpanLength": 5,
+          "Line": 5,
+          "Column": 7
+        }
+      },
+      {
+        "RoutineId": 0,
+        "InstructionIndex": 8,
+        "Location": {
+          "SpanStart": 71,
+          "SpanLength": 4,
+          "Line": 5,
+          "Column": 13
+        }
+      },
+      {
+        "RoutineId": 0,
+        "InstructionIndex": 9,
+        "Location": {
+          "SpanStart": 71,
+          "SpanLength": 4,
+          "Line": 5,
+          "Column": 13
+        }
+      },
+      {
+        "RoutineId": 0,
+        "InstructionIndex": 10,
+        "Location": {
+          "SpanStart": 59,
+          "SpanLength": 5,
+          "Line": 5,
+          "Column": 1
+        }
+      },
+      {
+        "RoutineId": 0,
+        "InstructionIndex": 11,
+        "Location": {
+          "SpanStart": 5,
+          "SpanLength": 3,
+          "Line": 1,
+          "Column": 6
+        }
+      }
+    ],
+    "Routines": [
+      {
+        "RoutineId": 0,
+        "ParameterNames": {},
+        "LocalNames": {
+          "0": "value",
+          "1": "__record_literal_1_Box"
+        },
+        "BlockRanges": [
+          {
+            "Name": "body",
+            "StartInstructionIndex": 0,
+            "EndInstructionIndexExclusive": 12
+          }
+        ]
+      }
+    ]
+  },
+  "EntryPointRoutineId": 0
+}

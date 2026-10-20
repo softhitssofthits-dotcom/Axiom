@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 506,
+  "count": 508,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -2166,6 +2166,16 @@
       "id": "modules-closed-debug-snapshot",
       "spec": "modules.spec.js",
       "name": "Модули: шаг в закрытую зависимость не отмечает изменённый текст"
+    },
+    {
+      "id": "modules-private-type-identities",
+      "spec": "modules.spec.js",
+      "name": "Модули: независимые закрытые TYPE в рабочем примере"
+    },
+    {
+      "id": "modules-hover-with-entry-error",
+      "spec": "modules.spec.js",
+      "name": "Модули: подсказка импорта сохраняется при ошибке точки входа"
     },
     {
       "id": "navigation-keeps-saved-document",

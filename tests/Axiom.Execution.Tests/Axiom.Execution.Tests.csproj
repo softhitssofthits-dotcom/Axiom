@@ -26,4 +26,7 @@
   <ItemGroup>
     <Compile Include="../../src/Axiom.ManualChecks/BytecodeCoverageAudit.cs" Link="Audit/BytecodeCoverageAudit.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Fixtures/record-schema2.json" />
+  </ItemGroup>
 </Project>

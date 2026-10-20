@@ -33,13 +33,27 @@ public sealed class EditorSymbolIndexTests
     [Fact]
     public void FieldsConstantsAndLoopCountersUseTheirDeclarations()
     {
-        var tree=Parser.Parse("TYPE Box\nvalue AS INTEGER\nEND TYPE\nCONST amount AS INTEGER = 2\nDIM boxValue AS Box\nboxValue.value = amount\nFOR counter = 1 TO 2\nPRINT counter\nNEXT counter",out _,"main.axm");
+        const string source="TYPE Box\nvalue AS INTEGER\nEND TYPE\nCONST amount AS INTEGER = 2\nDIM boxValue AS Box\nboxValue.value = amount\nFOR counter = 1 TO 2\nPRINT counter\nNEXT counter";
+        var tree=Parser.Parse(source,out _,"main.axm");
         var program=Binder.BindModules([new("main",tree)],"main",out var errors,checkGraphicsModes:false,collectEditorSymbols:true);
         Assert.DoesNotContain(errors,d=>d.Severity==Axiom.Core.DiagnosticSeverity.Error);
         foreach(var name in new[]{"value","amount","counter"})
         {
             var declaration=Assert.Single(program.EditorSymbols,s=>s.Symbol.Name==name&&s.IsDeclaration);
-            Assert.Contains(program.EditorSymbols,s=>!s.IsDeclaration&&ReferenceEquals(s.Symbol,declaration.Symbol));
+            var expected = name switch
+            {
+                "value" => new[] { (6,10) },
+                "amount" => new[] { (6,18) },
+                _ => new[] { (8,7), (9,6) }
+            };
+            var uses=program.EditorSymbols.Where(s=>!s.IsDeclaration&&ReferenceEquals(s.Symbol,declaration.Symbol))
+                .OrderBy(s=>s.Location.Line).ThenBy(s=>s.Location.Column).ToArray();
+            Assert.Equal(expected,uses.Select(s=>(s.Location.Line,s.Location.Column)));
+            foreach(var use in uses)
+            {
+                Assert.Equal("main.axm",use.Location.Document);
+                Assert.Equal(name,source.Substring(use.Location.Span.Start,use.Location.Span.Length));
+            }
         }
     }
 

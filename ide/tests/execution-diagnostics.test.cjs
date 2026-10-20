@@ -100,3 +100,42 @@ test('Фоновая проверка заменяет ошибку исполн
   assert.equal(ide._lastDiagnostics.map(d => d.code).join(','), 'MB2003');
   assert.equal(markers.get(first.model).map(m => m.code).join(','), 'MB2003');
 });
+
+test('Фоновая проверка активного main сохраняет ошибку исполнения helper', async () => {
+  const { ide, first, other, markers, diagnostic } = setup();
+  ide.activeFile = 'b.axm';
+  other.model.getLanguageId = () => 'axiom';
+  liveCheck(ide, other.model);
+  ide.applyDiagnostics([diagnostic], false, 'a.axm');
+  await ide.runLiveCheck(1);
+  assert.ok(ide._lastDiagnostics.some(d => d.code === 'MB3001'), 'ошибка исполнения helper потеряна');
+  assert.equal(markers.get(first.model).length, 1);
+});
+
+test('Правка helper снимает его ошибку исполнения и она не возвращается проверкой main', async () => {
+  const { ide, first, other, markers, diagnostic, edit } = setup();
+  ide.activeFile = 'a.axm';
+  first.model.getLanguageId = () => 'axiom';
+  liveCheck(ide, first.model);
+  ide.applyDiagnostics([diagnostic], false, 'a.axm');
+  edit('PRINT "Исправлено"');
+  ide.refreshExecutionDiagnostics(first.model);
+  ide.activeFile = 'b.axm';
+  other.model.getLanguageId = () => 'axiom';
+  liveCheck(ide, other.model);
+  await ide.runLiveCheck(1);
+  assert.deepEqual(ide._lastDiagnostics, []);
+  assert.equal(markers.get(first.model).length, 0);
+});
+
+test('Повторно открытый helper не получает прежнюю ошибку исполнения', async () => {
+  const { ide, other, diagnostic } = setup();
+  ide.applyDiagnostics([diagnostic], false, 'a.axm');
+  // Повторное открытие создаёт новую запись документа: прежний снимок к ней не относится.
+  ide.openFiles.set('a.axm', { path: 'a.axm', documentId: 'a-id-2', model: { getValue: () => 'PRINT 1 / 0', isDisposed: () => false } });
+  ide.activeFile = 'b.axm';
+  other.model.getLanguageId = () => 'axiom';
+  liveCheck(ide, other.model);
+  await ide.runLiveCheck(1);
+  assert.deepEqual(ide._lastDiagnostics, []);
+});

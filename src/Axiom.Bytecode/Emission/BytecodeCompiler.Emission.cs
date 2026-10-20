@@ -643,7 +643,13 @@ public sealed partial class BytecodeCompiler
 
     private BytecodeInstruction EmitCreateRecord(LoweredInstruction instruction)
     {
-        return new BytecodeInstruction(Opcode.CreateRecord, [RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName)]);
+        // Идентичность типа, а не короткое имя: закрытые TYPE разных модулей
+        // могут называться одинаково, и словарь по имени потерял бы различие.
+        var typeIdentity = instruction.ValueType is UserDefinedTypeSymbol userDefinedType
+            ? userDefinedType.TypeIdentity
+            : instruction.DisplayName;
+
+        return new BytecodeInstruction(Opcode.CreateRecord, [RegisterConstant(BytecodeConstantKind.String, typeIdentity)]);
     }
 
     private BytecodeInstruction EmitValidateTypeInvariant(LoweredInstruction instruction)

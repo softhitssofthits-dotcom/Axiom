@@ -90,4 +90,10 @@ public static class DiagnosticCodes
     public const string BytecodeCoverage = "MB4001";
     public const string BytecodeCapture = "MB4002";
     public const string BytecodeJsonSnapshot = "MB4003";
+
+    /// <summary>
+    /// Зависимость точки входа не прочитана. Это отказ файловой системы, а не
+    /// языковая ошибка: отсутствующий модуль по-прежнему даёт MB2049.
+    /// </summary>
+    public const string DependencyReadFailure = "MB4004";
 }

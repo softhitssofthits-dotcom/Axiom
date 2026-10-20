@@ -1,0 +1,3 @@
+' Общий модуль печатает сообщение один раз за запуск.
+PRINT "shared init"
+PUBLIC DIM amount AS INTEGER = 9

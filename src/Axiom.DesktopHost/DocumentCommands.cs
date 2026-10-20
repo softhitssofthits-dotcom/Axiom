@@ -47,18 +47,14 @@ internal static class DocumentCommands
         }
         if (method == "document.hover")
         {
-            var syntax = Parser.Parse(snapshot.SourceText, out _);
             var identifiers = Lexer.Lex(snapshot.SourceText, out _)
                 .Where(token => token.Kind == TokenKind.IdentifierToken)
                 .Select(token => new EditorIdentifier(token.Text, token.Location.Span)).ToArray();
-            var compilation = new AxiomExecutionPipeline().Compile(new CompilationRequest(snapshot.SourceText,
-                sourceName: snapshot.SourceFilePath,
-                additionalDocuments: SourceProject.LoadDependencies(snapshot.SourceText, snapshot.SourceFilePath,openDocuments)));
-            var modules = compilation.CompiledProgram?.BoundProgram.Modules;
-            var imports = syntax.Members.OfType<Axiom.Syntax.ImportStatementSyntax>()
-                .Where(import => modules?.ContainsKey(import.ModuleName) == true)
-                .Select(import => modules![import.ModuleName]).ToArray();
-            var hovers = Binder.GetEditorHovers(syntax, identifiers, imports);
+            // Редакторские метаданные строятся на терпимом модульном связывании:
+            // посторонняя ошибка в main не должна удалять корректные импорты.
+            var binding = EditorModuleBindingService.Bind(snapshot.SourceText, snapshot.SourceFilePath,
+                SourceProject.LoadDependencies(snapshot.SourceText, snapshot.SourceFilePath, openDocuments));
+            var hovers = Binder.GetEditorHovers(binding.Syntax, identifiers, binding.ImportedModules);
             return new { snapshot.DocumentId, snapshot.DocumentRevision, hovers };
         }
         var formatter = new AxiomCodeFormattingService();

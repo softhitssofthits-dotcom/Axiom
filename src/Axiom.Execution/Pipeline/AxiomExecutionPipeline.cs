@@ -149,11 +149,12 @@ public sealed class AxiomExecutionPipeline
             }
 
             progressReporter?.Report(55);
-            boundProgram = Binder.Bind(syntax, out var semanticDiagnostics, initialGraphicsContext: initialGraphicsContext);
+            boundProgram = Binder.Bind(syntax, out var semanticDiagnostics, initialGraphicsContext: initialGraphicsContext,
+                entryModuleName: GetEntryModuleName(sourceName));
             return ContinueCompilation(sourceText, syntax, boundProgram, semanticDiagnostics);
         }
 
-        var entryModuleName = Path.GetFileNameWithoutExtension(sourceName ?? "main");
+        var entryModuleName = GetEntryModuleName(sourceName) ?? "main";
         syntax = Parser.Parse(sourceText, out syntaxDiagnostics, sourceName);
         var allSyntaxDiagnostics = new DiagnosticBag();
         allSyntaxDiagnostics.AddRange(syntaxDiagnostics);
@@ -299,6 +300,17 @@ public sealed class AxiomExecutionPipeline
                 loweringDuration: loweringDuration,
                 bytecodeEmissionDuration: bytecodeEmissionDuration);
         }
+    }
+
+    /// <summary>
+    /// Имя модуля для именованной точки входа. Для безымянного вызова API
+    /// возвращается null: там модуль остаётся синтетическим.
+    /// </summary>
+    private static string? GetEntryModuleName(string? sourceName)
+    {
+        return string.IsNullOrWhiteSpace(sourceName)
+            ? null
+            : Path.GetFileNameWithoutExtension(sourceName);
     }
 
     private static bool TryWriteBytecodeSnapshot(

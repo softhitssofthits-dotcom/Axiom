@@ -36,7 +36,9 @@ public sealed partial class Binder
         {
             if (symbol.IsBuiltIn) return; // Все перегрузки берутся из реестра языка.
             if (symbol.ReturnType == TypeSymbol.Error || symbol.Parameters.Any(p => p.Type == TypeSymbol.Error)) return;
-            var parameters = symbol.Parameters.Where(p => !p.Name.Equals("THIS", StringComparison.OrdinalIgnoreCase)).Select(p =>
+            // Скрывается только настоящий неявный получатель метода, а не любой
+            // параметр с именем THIS или SELF.
+            var parameters = symbol.VisibleParameters.Select(p =>
                 (p.IsByRef ? "BYREF " : "") + p.Name + " AS " + p.Type.Name).ToArray();
             var signature = (symbol.IsSub ? "SUB " : "FUNCTION ") + symbol.ShortName +
                 "(" + string.Join(", ", parameters) + ")" + (symbol.IsSub ? "" : " AS " + symbol.ReturnType.Name);

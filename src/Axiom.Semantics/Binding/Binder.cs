@@ -59,14 +59,18 @@ public sealed partial class Binder
     public DiagnosticBag Diagnostics => _diagnostics;
 
     public static BoundProgram Bind(ProgramSyntax program, out DiagnosticBag diagnostics,
-        bool checkGraphicsModes = true, InitialGraphicsContext initialGraphicsContext = InitialGraphicsContext.None)
+        bool checkGraphicsModes = true, InitialGraphicsContext initialGraphicsContext = InitialGraphicsContext.None,
+        string? entryModuleName = null)
     {
         ArgumentNullException.ThrowIfNull(program);
 
         if (program.Members.Any(member => member is ImportStatementSyntax or ModuleStatementSyntax))
         {
-            const string singleModuleName = "<single>";
-            return BindModules([new ModuleSyntax(singleModuleName, program)], singleModuleName, out diagnostics,
+            // Именованная точка входа сохраняет своё настоящее имя и без
+            // зависимостей: иначе самоимпорт выглядел бы неизвестным модулем.
+            // Безымянный вызов API остаётся на синтетическом имени.
+            var moduleName = string.IsNullOrWhiteSpace(entryModuleName) ? SingleModuleName : entryModuleName;
+            return BindModules([new ModuleSyntax(moduleName, program)], moduleName, out diagnostics,
                 checkGraphicsModes, initialGraphicsContext);
         }
 
@@ -77,49 +81,22 @@ public sealed partial class Binder
         return boundProgram;
     }
 
+    // Однофайловый путь использует те же проходы, что и BindModules, и отличается
+    // только политикой экспорта: таблица экспорта здесь не строится, поэтому
+    // доступность глобальных имён не регистрируется.
     private BoundProgram BindProgram(ProgramSyntax program)
     {
-        DeclareTypeNames(program.Members);
-        PrepareTypeDeclarations(program.Members);
-        DeclareFunctions(program.Members);
-        DeclareTypeMethods(program.Members);
+        DeclareModule(program);
 
         // Проход A: связываем все глобальные операторы (DIM/CONST и др.) раньше,
         // чем тела процедур, чтобы процедуры и методы TYPE видели глобальные
         // имена независимо от порядка их объявления в исходнике.
-        foreach (var member in program.Members)
-        {
-            if (member is GlobalStatementSyntax globalStatement)
-            {
-                _globalStatements.Add(BindStatement(globalStatement.Statement));
-            }
-            else if (member is ModuleStatementSyntax moduleStatement)
-            {
-                _globalStatements.Add(BindStatement(moduleStatement.Statement));
-            }
-        }
+        BindModuleGlobals(program, registerVariableVisibility: false);
 
         // Проход B: связываем тела процедур и методы TYPE.
-        foreach (var member in program.Members)
-        {
-            switch (member)
-            {
-                case TypeDeclarationSyntax typeDeclaration:
-                    BindTypeMethods(typeDeclaration);
-                    break;
+        BindModuleBodies(program);
 
-                case SubDeclarationSyntax subDeclaration:
-                    _routines.Add(BindRoutine(subDeclaration, _declaredFunctions[subDeclaration]));
-                    break;
-
-                case FunctionDeclarationSyntax functionDeclaration:
-                    _routines.Add(BindRoutine(functionDeclaration, _declaredFunctions[functionDeclaration]));
-                    break;
-            }
-        }
-
-        var boundProgram = new BoundProgram(GetProgramLocation(program), _globalStatements, _routines);
-        return boundProgram;
+        return new BoundProgram(GetProgramLocation(program), _globalStatements, _routines);
     }
 }
 

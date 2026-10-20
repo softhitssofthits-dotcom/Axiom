@@ -894,7 +894,8 @@ public sealed partial class Binder
                 ParameterPassingModes.FromKeyword(parameter.PassingKeyword)));
         }
 
-        return new FunctionSymbol($"{ownerType.Name}.{methodName}", methodName, parameterSymbols, returnType);
+        return new FunctionSymbol($"{ownerType.Name}.{methodName}", methodName, parameterSymbols, returnType,
+            hasImplicitSelfReceiver: true);
     }
 
     private FunctionSymbol CreateFunctionSymbol(

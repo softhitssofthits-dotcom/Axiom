@@ -113,7 +113,7 @@ PUBLIC SUB Second()
 END SUB
 """));
 
-        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == DiagnosticCodes.CyclicModuleImport);
+        Assert.Single(diagnostics.Where(diagnostic => diagnostic.Code == DiagnosticCodes.CyclicModuleImport));
     }
 
     [Fact]

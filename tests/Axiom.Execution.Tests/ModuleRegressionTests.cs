@@ -96,6 +96,44 @@ public sealed class ModuleRegressionTests
         sourceName: "main.axm", additionalDocuments: [new SourceDocument("shapes.axm", shapes)]));
 
     [Fact]
+    public void SelfImportOfNamedSingleFileIsReportedAsCyclicImport()
+    {
+        var pipeline = new AxiomExecutionPipeline();
+        var compilation = pipeline.Compile(new CompilationRequest("IMPORT main\nPRINT 1", sourceName: "main.axm"));
+        Assert.Equal(CompilationStatus.SemanticFailure, compilation.Status);
+        var diagnostic = Assert.Single(compilation.Diagnostics);
+        Assert.Equal("MB2052", diagnostic.Code);
+        Assert.Contains("main", diagnostic.Message);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void SelfImportKeepsTheSameDiagnosticWithOrWithoutAdditionalDocuments(bool withUnusedDocument)
+    {
+        var pipeline = new AxiomExecutionPipeline();
+        var documents = withUnusedDocument ? new[] { new SourceDocument("unused.axm", "PRINT 0") } : [];
+        var result = pipeline.Run(new ExecutionRequest("IMPORT main\nPRINT 1",
+            sourceName: "main.axm",
+            additionalDocuments: documents));
+
+        Assert.Equal(ExecutionStatus.SemanticFailure, result.Status);
+        var diagnostic = Assert.Single(result.Diagnostics);
+        Assert.Equal("MB2052", diagnostic.Code);
+    }
+
+    [Fact]
+    public void UnnamedSingleFileApiStillBindsWithoutEntryName()
+    {
+        // Безымянный вызов API сохраняет прежнее поведение: модуль остаётся
+        // синтетическим, поэтому самоимпорт сообщается как неизвестный модуль.
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("IMPORT main\nPRINT 1"));
+
+        Assert.Equal(ExecutionStatus.SemanticFailure, result.Status);
+        Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "MB2049");
+    }
+
+    [Fact]
     public void StepIntoRecognizesTheSameLineInAnotherDocument()
     {
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("IMPORT shapes\nPRINT Answer()",

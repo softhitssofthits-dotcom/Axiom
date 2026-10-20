@@ -1311,8 +1311,10 @@ class AxiomIDE {
     r.diagnostics.forEach((d) => { d.file = d.sourceFilePath || filePath; d.col = d.column; });
     // Ошибки исполнения относятся к тому же неизменённому снимку: фоновая
     // проверка, поставленная в очередь до запуска, не должна их стирать.
+    // Действующая ошибка сохраняется независимо от файла происхождения: снимок
+    // проверяется по документу самой диагностики, а не по активному файлу.
     const runtime = (this._lastDiagnostics || []).filter((d) =>
-      d.executionSnapshot && d.file === filePath && this.diagnosticMatchesSnapshot(d));
+      d.executionSnapshot && this.diagnosticMatchesSnapshot(d));
     const diagnostics = runtime.length ? [...r.diagnostics, ...runtime] : r.diagnostics;
     this.applyDiagnostics(diagnostics, true);
     this.log('check.live.applied', { seq, diagnostics: diagnostics.length, runtime: runtime.length });

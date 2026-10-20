@@ -37,8 +37,20 @@ class TraceController {
     const target=entry?.path || sourcePath;
     const file=entry || this.ide.openFiles.get(target);
     if(!file && payload.sourceFilePath && this.ide.openFile) {
-      return this.ide.openFile(target).then(()=>{
-        if(this.ide.execution.stopId===payload.stopId) this.mark(payload);
+      // Переход принадлежит конкретной остановке: Stop, новая остановка или
+      // намеренно открытый пользователем документ отменяют запоздалое открытие.
+      // Проверка выполняется до чтения файла и повторно после него.
+      const origin=this.ide.editor?.getModel?.();
+      const effectiveStopId=payload.stopId ?? this.ide.execution.stopId;
+      const paused=()=>!!effectiveStopId && this.ide.execution.stopId===effectiveStopId;
+      const isCurrent=()=>paused() && this.ide.editor?.getModel?.()===origin;
+      return this.ide.openFile(target,isCurrent).then(()=>{
+        // Собственное открытие меняет модель. Продолжаем только если цель
+        // действительно открыта и всё ещё активна; отмена и ошибка чтения
+        // не должны запускать новую попытку открытия.
+        const opened=this.ide.openFiles.get(target);
+        if(paused() && opened && !opened.model.isDisposed() && this.ide.editor?.getModel?.()===opened.model)
+          return this.mark({...payload,stopId:effectiveStopId});
       }).catch(error=>this.ide.log('trace.document.failed',{message:error.message}));
     }
     if(!file || file.model.isDisposed()) return;

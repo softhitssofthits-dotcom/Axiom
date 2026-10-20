@@ -1,5 +1,6 @@
 const { testWorkspace, writeAxm } = require('../helpers');
 const fs=require('node:fs');
+const path=require('node:path');
 module.exports = [{
   id: 'modules-keywords-formatting',
   name: 'Модули: ключевые слова, объявления и форматирование в редакторе',
@@ -224,5 +225,32 @@ module.exports.push({
     }
     await S.page.waitForFunction(()=>!window.__ide.running);
     C.contains(await S.page.evaluate(()=>window.__ide.execution.outputText),'1','Выполнение сохранило исходный снимок');
+  }
+});
+
+module.exports.push({
+  id:'modules-private-type-identities',
+  name:'Модули: независимые закрытые TYPE в рабочем примере',
+  async fn({S,C}) {
+    const file=path.resolve(__dirname,'../../../samples/operators/import/private_types_same_name/main.axm');
+    await S.launch();
+    await S.page.evaluate(async file=>{await window.__ide.openFile(file);await window.__ide.run();},file);
+    await S.page.waitForFunction(()=>!window.__ide.running&&window.__ide.execution.outputText.includes('hello'));
+    const output=await S.page.evaluate(()=>window.__ide.execution.outputText);
+    C.contains(output,'11','Числовая запись первого модуля сохраняет значение');
+    C.contains(output,'hello','Строковая запись второго модуля сохраняет значение');
+  }
+},{
+  id:'modules-hover-with-entry-error',
+  name:'Модули: подсказка импорта сохраняется при ошибке точки входа',
+  async fn({S,C}) {
+    const folder=testWorkspace('modules-hover-error');
+    const file=writeAxm(folder,'main.axm','IMPORT helper\nDIM localCount AS INTEGER\nPRINT missingValue\nPRINT Answer()');
+    writeAxm(folder,'helper.axm','PUBLIC FUNCTION Answer() AS INTEGER\nRETURN 42\nEND FUNCTION');
+    await S.launch();
+    await S.page.evaluate(file=>window.__ide.openFile(file),file);
+    const response=await S.page.evaluate(()=>window.__ide.documentServices.request(window.__ide.activeFile,'document.hover'));
+    C.ok(response.hovers.some(h=>h.name==='Answer'&&h.kind==='function'),'Подсказка открытой функции доступна при ошибке main');
+    C.ok(response.hovers.some(h=>h.name==='localCount'&&h.kind==='variable'),'Локальные подсказки сохранены');
   }
 });

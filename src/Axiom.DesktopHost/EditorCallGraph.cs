@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Reflection;
 using System.IO;
 using Axiom.Core;
 using Axiom.Execution;
@@ -12,7 +9,6 @@ namespace Axiom.DesktopHost;
 // Только редакторская проекция уже связанного дерева; правила связывания не дублируются.
 internal static class EditorCallGraph
 {
-    private static readonly ConcurrentDictionary<Type, PropertyInfo[]> Properties = new();
     internal sealed record Routine(string Id, string Name, string Kind, int Line, int Column,
         int Start, bool IsBuiltin, string Signature, string? SourceFilePath);
     internal sealed record Edge(string Caller, string Callee, int Start, int Length, int Line, int Column, string Kind, string? SourceFilePath);
@@ -66,14 +62,14 @@ internal static class EditorCallGraph
         }
         void Visit(string caller, IEnumerable<BoundStatement> statements)
         {
-            var pending = new Stack<object>(statements.Cast<object>());
-            var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
-            while (pending.TryPop(out var value))
+            // Цель прямого вызова и зарегистрированный обработчик уже описаны
+            // отдельным ребром: повторная ссылка на ту же функцию не создаётся.
+            var described = new HashSet<object>(ReferenceEqualityComparer.Instance);
+            foreach (var value in BoundTreeTraversal.Descendants(statements))
             {
-                if (!visited.Add(value)) continue;
                 if (value is BoundCallExpression call)
                 {
-                    if (call.Target is BoundFunctionExpression target) { Add(caller, target, "call"); visited.Add(target); }
+                    if (call.Target is BoundFunctionExpression target) { Add(caller, target, "call"); described.Add(target); }
                     else
                     {
                         var location = call.Location;
@@ -81,24 +77,9 @@ internal static class EditorCallGraph
                     }
                 }
                 // Регистрация обработчика является связью, но не немедленным вызовом.
-                if (value is BoundOnKeyStatement { HandlerExpression: not null } key) { Add(caller, key.HandlerExpression, "handler"); visited.Add(key.HandlerExpression); }
-                if (value is BoundOnMouseStatement { HandlerExpression: not null } mouse) { Add(caller, mouse.HandlerExpression, "handler"); visited.Add(mouse.HandlerExpression); }
-                if (value is BoundFunctionExpression reference) Add(caller, reference, "reference");
-                if (value is IEnumerable sequence && value is not string)
-                {
-                    foreach (var child in sequence) if (child is not null) pending.Push(child);
-                    continue;
-                }
-                var type = value.GetType();
-                // Включает контейнеры CASE, PRINT, инициализаторы полей и части интерполяции.
-                // Символы, типы, значения и прочие объекты не являются детьми дерева.
-                if (type.Namespace != typeof(BoundNode).Namespace || !type.Name.StartsWith("Bound", StringComparison.Ordinal)) continue;
-                foreach (var property in Properties.GetOrAdd(type, t => t.GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                    .Where(p => p.GetIndexParameters().Length == 0).ToArray()))
-                {
-                    if (property.GetValue(value) is { } child && child is not string && !child.GetType().IsValueType)
-                        pending.Push(child);
-                }
+                if (value is BoundOnKeyStatement { HandlerExpression: not null } key) { Add(caller, key.HandlerExpression, "handler"); described.Add(key.HandlerExpression); }
+                if (value is BoundOnMouseStatement { HandlerExpression: not null } mouse) { Add(caller, mouse.HandlerExpression, "handler"); described.Add(mouse.HandlerExpression); }
+                if (value is BoundFunctionExpression reference && !described.Contains(reference)) Add(caller, reference, "reference");
             }
         }
         foreach (var group in program.GlobalStatements.GroupBy(s => s.Location.Document)) Visit(MainId(group.Key), group);
@@ -119,7 +100,7 @@ internal static class EditorCallGraph
         var names = new Stack<string>();
         for (FunctionSymbol? current = symbol; current is not null; current = current.ContainingRoutine) names.Push(current.Name);
         var name = string.Join(".", names);
-        var parameters = symbol.Parameters.Where(p => !(symbol.Name.Contains('.') && p.Ordinal == 0 && p.Name.Equals("SELF", StringComparison.OrdinalIgnoreCase)))
+        var parameters = symbol.VisibleParameters
             .Select(p => (p.IsByRef ? "BYREF " : "") + p.Name + " AS " + p.Type.Name);
         var signature = (symbol.IsSub ? "SUB " : "FUNCTION ") + name + "(" + string.Join(", ", parameters) + ")" +
             (symbol.IsSub ? "" : " AS " + symbol.ReturnType.Name);

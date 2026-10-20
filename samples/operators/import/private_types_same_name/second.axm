@@ -1,0 +1,15 @@
+' Закрытый TYPE Box этого модуля: поле Item хранит строку.
+' Имя совпадает с типом из first.axm, но это другой тип.
+TYPE Box
+    Item AS STRING
+END TYPE
+
+' Открытая функция возвращает запись закрытого типа.
+PUBLIC FUNCTION SecondMake() AS Box
+    RETURN Box("hello")
+END FUNCTION
+
+' Открытая функция принимает запись закрытого типа и читает поле.
+PUBLIC FUNCTION SecondRead(x AS Box) AS STRING
+    RETURN x.Item
+END FUNCTION

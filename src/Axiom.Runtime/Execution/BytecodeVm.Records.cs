@@ -8,8 +8,8 @@ public sealed partial class BytecodeVm
 {
     private void ExecuteCreateRecord(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
-        var typeName = ReadDebugName(instruction.GetOperand(0));
-        var recordType = ResolveRecordType(typeName, frame.Routine.Id, instructionIndex);
+        var typeIdentity = ReadDebugName(instruction.GetOperand(0));
+        var recordType = ResolveRecordType(typeIdentity, frame.Routine.Id, instructionIndex);
         frame.EvaluationStack.Push(RuntimeValue.FromRecord(recordType, RuntimeRecordValue.CreateDefault(recordType)));
     }
 
@@ -74,9 +74,9 @@ public sealed partial class BytecodeVm
             ResolveLocation(routineId, instructionIndex));
     }
 
-    private UserDefinedTypeSymbol ResolveRecordType(string typeName, int routineId, int instructionIndex)
+    private UserDefinedTypeSymbol ResolveRecordType(string typeIdentity, int routineId, int instructionIndex)
     {
-        if (_recordTypeCache.TryGetValue(typeName, out var cachedType))
+        if (_recordTypeCache.TryGetValue(typeIdentity, out var cachedType))
         {
             return cachedType;
         }
@@ -85,58 +85,58 @@ public sealed partial class BytecodeVm
 
         foreach (var global in _module.Globals)
         {
-            if (TryResolveRecordType(global.Type, typeName, visited) is { } globalType)
+            if (TryResolveRecordType(global.Type, typeIdentity, visited) is { } globalType)
             {
-                _recordTypeCache[typeName] = globalType;
+                _recordTypeCache[typeIdentity] = globalType;
                 return globalType;
             }
         }
 
         foreach (var routine in _module.Routines)
         {
-            if (TryResolveRecordType(routine.ResultType, typeName, visited) is { } resultType)
+            if (TryResolveRecordType(routine.ResultType, typeIdentity, visited) is { } resultType)
             {
-                _recordTypeCache[typeName] = resultType;
+                _recordTypeCache[typeIdentity] = resultType;
                 return resultType;
             }
 
             foreach (var variable in routine.ParameterVariables)
             {
-                if (TryResolveRecordType(variable.Type, typeName, visited) is { } parameterType)
+                if (TryResolveRecordType(variable.Type, typeIdentity, visited) is { } parameterType)
                 {
-                    _recordTypeCache[typeName] = parameterType;
+                    _recordTypeCache[typeIdentity] = parameterType;
                     return parameterType;
                 }
             }
 
             foreach (var variable in routine.LocalVariables)
             {
-                if (TryResolveRecordType(variable.Type, typeName, visited) is { } localType)
+                if (TryResolveRecordType(variable.Type, typeIdentity, visited) is { } localType)
                 {
-                    _recordTypeCache[typeName] = localType;
+                    _recordTypeCache[typeIdentity] = localType;
                     return localType;
                 }
             }
 
             foreach (var variable in routine.CapturedVariables)
             {
-                if (TryResolveRecordType(variable.Type, typeName, visited) is { } capturedType)
+                if (TryResolveRecordType(variable.Type, typeIdentity, visited) is { } capturedType)
                 {
-                    _recordTypeCache[typeName] = capturedType;
+                    _recordTypeCache[typeIdentity] = capturedType;
                     return capturedType;
                 }
             }
         }
 
         return ReportInvalidRuntimeState<UserDefinedTypeSymbol>(
-            $"Не удалось разрешить TYPE '{typeName}' для инструкции CreateRecord.",
+            $"Не удалось разрешить TYPE '{typeIdentity}' для инструкции CreateRecord.",
             ResolveLocation(routineId, instructionIndex));
     }
 
-    private static UserDefinedTypeSymbol? TryResolveRecordType(TypeSymbol type, string typeName, HashSet<TypeSymbol> visited)
+    private static UserDefinedTypeSymbol? TryResolveRecordType(TypeSymbol type, string typeIdentity, HashSet<TypeSymbol> visited)
     {
         ArgumentNullException.ThrowIfNull(type);
-        ArgumentException.ThrowIfNullOrWhiteSpace(typeName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(typeIdentity);
         ArgumentNullException.ThrowIfNull(visited);
 
         if (!visited.Add(type))
@@ -146,14 +146,14 @@ public sealed partial class BytecodeVm
 
         if (type is UserDefinedTypeSymbol userType)
         {
-            if (string.Equals(userType.Name, typeName, StringComparison.OrdinalIgnoreCase))
+            if (MatchesTypeIdentity(userType, typeIdentity))
             {
                 return userType;
             }
 
             foreach (var field in userType.Fields)
             {
-                if (TryResolveRecordType(field.Type, typeName, visited) is { } nestedType)
+                if (TryResolveRecordType(field.Type, typeIdentity, visited) is { } nestedType)
                 {
                     return nestedType;
                 }
@@ -163,8 +163,17 @@ public sealed partial class BytecodeVm
         }
 
         return type is ArrayTypeSymbol arrayType
-            ? TryResolveRecordType(arrayType.ElementType, typeName, visited)
+            ? TryResolveRecordType(arrayType.ElementType, typeIdentity, visited)
             : null;
+    }
+
+    /// <summary>
+    /// Сравнивается полная идентичность. У типов из старых снимков без модуля
+    /// она совпадает с коротким именем; квалифицированные типы им не подменяются.
+    /// </summary>
+    private static bool MatchesTypeIdentity(UserDefinedTypeSymbol type, string typeIdentity)
+    {
+        return TypeIdentityFormat.Equals(type.TypeIdentity, typeIdentity);
     }
 
     private void BuildRecordTypeCache(BytecodeModule module)
@@ -208,7 +217,7 @@ public sealed partial class BytecodeVm
 
         if (type is UserDefinedTypeSymbol userType)
         {
-            _recordTypeCache.TryAdd(userType.Name, userType);
+            _recordTypeCache.TryAdd(userType.TypeIdentity, userType);
 
             foreach (var field in userType.Fields)
             {

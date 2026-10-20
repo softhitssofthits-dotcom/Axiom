@@ -343,6 +343,18 @@ public sealed class UserDefinedTypeSymbol : TypeSymbol
     {
     }
 
+    public UserDefinedTypeSymbol(string name, string? containingModule)
+        : base(name)
+    {
+        ContainingModule = containingModule;
+    }
+
+    /// <summary>
+    /// Устойчивая идентичность типа: короткое имя для программы без модулей и
+    /// имя с модулем для типа, объявленного в файле-модуле.
+    /// </summary>
+    public string TypeIdentity => TypeIdentityFormat.Format(Name, ContainingModule);
+
     public IReadOnlyList<TypeFieldSymbol> Fields => _fields;
 
     public IReadOnlyList<FunctionSymbol> Methods => _methods;
@@ -687,7 +699,8 @@ public sealed class FunctionSymbol : Symbol
         TypeSymbol returnType,
         FunctionSymbol? containingRoutine = null,
         bool isBuiltIn = false,
-        BuiltinFunctionId? builtInId = null)
+        BuiltinFunctionId? builtInId = null,
+        bool hasImplicitSelfReceiver = false)
         : base(name)
     {
         ArgumentNullException.ThrowIfNull(parameters);
@@ -709,6 +722,7 @@ public sealed class FunctionSymbol : Symbol
         ContainingRoutine = containingRoutine;
         IsBuiltIn = isBuiltIn;
         BuiltinId = builtInId;
+        HasImplicitSelfReceiver = hasImplicitSelfReceiver;
     }
 
     public FunctionSymbol(
@@ -717,12 +731,28 @@ public sealed class FunctionSymbol : Symbol
         TypeSymbol returnType,
         FunctionSymbol? containingRoutine = null,
         bool isBuiltIn = false,
-        BuiltinFunctionId? builtInId = null)
-        : this(name, shortName: name, parameters, returnType, containingRoutine, isBuiltIn, builtInId)
+        BuiltinFunctionId? builtInId = null,
+        bool hasImplicitSelfReceiver = false)
+        : this(name, shortName: name, parameters, returnType, containingRoutine, isBuiltIn, builtInId, hasImplicitSelfReceiver)
     {
     }
 
     public IReadOnlyList<ParameterSymbol> Parameters { get; }
+
+    /// <summary>
+    /// Признак неявного получателя метода TYPE: первый параметр SELF создан
+    /// связыванием, а не написан пользователем. Только он скрывается в
+    /// пользовательской сигнатуре; параметр с именем THIS или SELF, объявленный
+    /// вручную, остаётся видимым.
+    /// </summary>
+    public bool HasImplicitSelfReceiver { get; }
+
+    /// <summary>
+    /// Параметры без неявного получателя — та форма, которую видит пользователь.
+    /// </summary>
+    public IReadOnlyList<ParameterSymbol> VisibleParameters => HasImplicitSelfReceiver && Parameters.Count > 0
+        ? Parameters.Skip(1).ToArray()
+        : Parameters;
 
     public string ShortName { get; }
 

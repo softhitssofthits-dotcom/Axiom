@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Reflection;
 using Axiom.Core;
 using Axiom.Syntax;
 
@@ -38,7 +36,9 @@ public sealed partial class Binder
         foreach (var token in _editorGlobalConstantReferences ?? [])
             if (_scope.TryLookupVariable(token.Text, out var constant) && constant is { IsReadOnly: true })
                 Add(constant, token.Location);
-        foreach (var node in EditorTree(_globalStatements.Cast<object>().Concat(_routines)))
+        // Обход общий с редакторскими проекциями Host: правила посещения узлов
+        // заданы в BoundTreeTraversal, а не повторяются отражением в двух местах.
+        foreach (var node in BoundTreeTraversal.Descendants(_globalStatements.Cast<object>().Concat(_routines)))
         {
             switch (node)
             {
@@ -67,26 +67,5 @@ public sealed partial class Binder
             }
         }
         return result.Distinct().ToArray();
-    }
-
-    // Обход ограничен контейнерами синтаксического/связанного дерева, не символами и типами.
-    private static IEnumerable<object> EditorTree(object root)
-    {
-        var pending = new Stack<object>(); pending.Push(root);
-        var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
-        while (pending.TryPop(out var value))
-        {
-            if (!visited.Add(value)) continue;
-            yield return value;
-            if (value is IEnumerable sequence && value is not string)
-            {
-                foreach (var child in sequence) if (child is not null) pending.Push(child);
-                continue;
-            }
-            var type = value.GetType();
-            if (value is not SyntaxNode && !(type.Namespace == typeof(BoundNode).Namespace && type.Name.StartsWith("Bound", StringComparison.Ordinal))) continue;
-            foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(p => p.GetIndexParameters().Length == 0))
-                if (property.GetValue(value) is { } child && child is not string && !child.GetType().IsValueType) pending.Push(child);
-        }
     }
 }

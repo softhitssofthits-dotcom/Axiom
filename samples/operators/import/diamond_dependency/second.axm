@@ -1,0 +1,4 @@
+IMPORT shared
+PUBLIC FUNCTION SecondValue() AS INTEGER
+    RETURN amount
+END FUNCTION

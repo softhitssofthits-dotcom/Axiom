@@ -21,6 +21,7 @@
     MB3006:'Function completed without returning a value.', MB3007:'Invalid built-in argument.', MB3008:'Numeric overflow.', MB3009:'Function value is empty.', MB3010:'Required graphics mode is not active.', MB3011:'Call stack overflow.', MB3012:'Argument is outside the numeric domain.',
     MB3013:'Failed to allocate array: the element count exceeds the supported limit.', MB3014:'Array view refers to released storage.',
     MB4001:'Bytecode does not support this construct.', MB4002:'Cannot capture the value in bytecode.', MB4003:'Cannot create a bytecode JSON snapshot.',
+    MB4004:'Cannot read an imported dependency file.',
   };
   const specific = [
     [/^Имя счётчика после NEXT '(.+)' должно совпадать с именем счётчика FOR '(.+)'\.$/, (_m,actual,expected) => "NEXT counter '"+actual+"' must match FOR counter '"+expected+"'."],

@@ -7,7 +7,14 @@ namespace Axiom.Bytecode;
 
 public static class BytecodeModuleSerializer
 {
-    public const int CurrentArtifactSchemaVersion = 2;
+    public const int CurrentArtifactSchemaVersion = 3;
+
+    /// <summary>
+    /// Снимок версии 2 не содержал идентичности TYPE и восстанавливается по
+    /// коротким именам. Версия 3 добавляет идентичность, поэтому два закрытых
+    /// TYPE с одинаковым именем из разных модулей не сливаются.
+    /// </summary>
+    private const int LegacyArtifactSchemaVersion = 2;
 
     private const string SupportedCompatibilityToken = "axiom-bytecode-v1";
 
@@ -71,7 +78,7 @@ public static class BytecodeModuleSerializer
 
         var functionSymbols = new Dictionary<string, FunctionSymbol>(StringComparer.Ordinal);
         var variableSymbols = new Dictionary<string, VariableSymbol>(StringComparer.Ordinal);
-        var userDefinedTypes = CreateUserDefinedTypes(artifact.TypeDefinitions);
+        var userDefinedTypes = CreateUserDefinedTypes(artifact.TypeDefinitions, artifact.ArtifactSchemaVersion is null or <= LegacyArtifactSchemaVersion);
 
         return new BytecodeModule(
             FromArtifact(artifact.Header),
@@ -85,10 +92,12 @@ public static class BytecodeModuleSerializer
 
     private static void ValidateArtifactCompatibility(BytecodeModuleArtifact artifact)
     {
-        if (artifact.ArtifactSchemaVersion is int schemaVersion && schemaVersion != CurrentArtifactSchemaVersion)
+        if (artifact.ArtifactSchemaVersion is int schemaVersion
+            && schemaVersion != CurrentArtifactSchemaVersion
+            && schemaVersion != LegacyArtifactSchemaVersion)
         {
             throw new InvalidOperationException(
-                $"JSON-снимок байткода имеет неподдерживаемую версию схемы {schemaVersion}. Поддерживается версия {CurrentArtifactSchemaVersion}.");
+                $"JSON-снимок байткода имеет неподдерживаемую версию схемы {schemaVersion}. Поддерживаются версии {LegacyArtifactSchemaVersion} и {CurrentArtifactSchemaVersion}.");
         }
 
         if (artifact.Header is null)
@@ -237,21 +246,57 @@ public static class BytecodeModuleSerializer
 
     private static BytecodeTypeDefinitionArtifact ToArtifact(UserDefinedTypeSymbol type)
     {
+        // Идентичность записывается только когда она отличается от короткого
+        // имени: снимок программы без модулей остаётся прежним.
+        var identity = TypeIdentityFormat.Equals(type.TypeIdentity, type.Name)
+            ? null
+            : type.TypeIdentity;
+
         return new BytecodeTypeDefinitionArtifact(
             type.Name,
-            type.Fields.Select(ToArtifact).ToArray());
+            type.Fields.Select(ToArtifact).ToArray(),
+            identity);
     }
 
     private static BytecodeTypeFieldArtifact ToArtifact(TypeFieldSymbol field)
     {
         return new BytecodeTypeFieldArtifact(
             field.Name,
-            field.Type.Name,
+            TypeReference(field.Type),
             field.FixedStringLength,
             field.FixedArrayLowerBounds,
             field.FixedArrayUpperBounds,
             field.HasDefaultValue,
             NormalizeTypeFieldDefaultValue(field));
+    }
+
+    /// <summary>
+    /// Текстовая ссылка на тип для снимка. Пользовательский TYPE записывается
+    /// идентичностью, поэтому два закрытых TYPE с одинаковым именем не
+    /// сливаются; массивы и функциональные типы сохраняют идентичность элемента.
+    /// </summary>
+    private static string TypeReference(TypeSymbol type)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+
+        return type switch
+        {
+            UserDefinedTypeSymbol userDefinedType => userDefinedType.TypeIdentity,
+            ArrayTypeSymbol { ElementType: FunctionTypeSymbol } arrayType => $"({TypeReference(arrayType.ElementType)})({new string(',', arrayType.Rank - 1)})",
+            ArrayTypeSymbol arrayType => $"{TypeReference(arrayType.ElementType)}({new string(',', arrayType.Rank - 1)})",
+            FunctionTypeSymbol functionType => CreateFunctionTypeReference(functionType),
+            _ => type.Name
+        };
+    }
+
+    private static string CreateFunctionTypeReference(FunctionTypeSymbol functionType)
+    {
+        var parameters = functionType.ParameterTypes
+            .Select((parameterType, index) => functionType.ParameterPassingModes[index] == ParameterPassingMode.ByRef
+                ? $"BYREF {TypeReference(parameterType)}"
+                : TypeReference(parameterType));
+
+        return $"FUNCTION({string.Join(", ", parameters)}) AS {TypeReference(functionType.ReturnType)}";
     }
 
     private static BytecodeConstantArtifact ToArtifact(BytecodeConstant constant, int index)
@@ -270,7 +315,7 @@ public static class BytecodeModuleSerializer
             Id: routine.Id,
             Name: routine.Name,
             Location: ToArtifact(routine.Location),
-            ResultType: routine.ResultType.Name,
+            ResultType: TypeReference(routine.ResultType),
             ParameterCount: routine.ParameterCount,
             LocalSlotCount: routine.LocalSlotCount,
             IsEntryPoint: routine.IsEntryPoint,
@@ -296,7 +341,7 @@ public static class BytecodeModuleSerializer
         return new BytecodeGlobalArtifact(
             Slot: global.Slot,
             Name: global.Name,
-            Type: global.Type.Name,
+            Type: TypeReference(global.Type),
             IsReadOnly: global.IsReadOnly,
             InitializationStrategy: global.InitializationStrategy.ToString(),
             FixedStringLength: global.FixedStringLength);
@@ -318,12 +363,13 @@ public static class BytecodeModuleSerializer
         return new BytecodeFunctionSymbolArtifact(
             SymbolId: context.GetFunctionId(function),
             Name: function.Name,
-            ReturnType: function.ReturnType.Name,
+            ReturnType: TypeReference(function.ReturnType),
             IsBuiltIn: function.IsBuiltIn,
             BuiltinId: function.BuiltinId?.ToString(),
             ContainingRoutineSymbolId: function.ContainingRoutine is null ? null : context.GetFunctionId(function.ContainingRoutine),
             ContainingRoutineName: function.ContainingRoutine?.Name,
-            Parameters: function.Parameters.Select(parameter => ToArtifact(parameter, context)).ToArray());
+            Parameters: function.Parameters.Select(parameter => ToArtifact(parameter, context)).ToArray(),
+            HasImplicitSelfReceiver: function.HasImplicitSelfReceiver);
     }
 
     private static BytecodeVariableSymbolArtifact ToArtifact(VariableSymbol variable, SerializationContext context)
@@ -331,7 +377,7 @@ public static class BytecodeModuleSerializer
         return new BytecodeVariableSymbolArtifact(
             SymbolId: context.GetVariableId(variable),
             Name: variable.Name,
-            Type: variable.Type.Name,
+            Type: TypeReference(variable.Type),
             IsReadOnly: variable.IsReadOnly,
             IsGlobal: variable.IsGlobal,
             FixedStringLength: variable.FixedStringLength,
@@ -462,7 +508,8 @@ public static class BytecodeModuleSerializer
             ResolveType(function.ReturnType, userDefinedTypes),
             containingRoutine,
             function.IsBuiltIn,
-            function.BuiltinId is null ? null : Enum.Parse<BuiltinFunctionId>(function.BuiltinId));
+            function.BuiltinId is null ? null : Enum.Parse<BuiltinFunctionId>(function.BuiltinId),
+            function.HasImplicitSelfReceiver);
 
         functionSymbols[key] = symbol;
         return symbol;
@@ -577,7 +624,7 @@ public static class BytecodeModuleSerializer
             switch (type)
             {
                 case UserDefinedTypeSymbol userDefinedType:
-                    if (!_userDefinedTypes.TryAdd(userDefinedType.Name, userDefinedType))
+                    if (!_userDefinedTypes.TryAdd(userDefinedType.TypeIdentity, userDefinedType))
                     {
                         return;
                     }
@@ -603,19 +650,31 @@ public static class BytecodeModuleSerializer
         }
     }
 
-    private static Dictionary<string, UserDefinedTypeSymbol> CreateUserDefinedTypes(
-        IReadOnlyList<BytecodeTypeDefinitionArtifact>? definitions)
+    private sealed class TypeResolutionContext(bool legacy) : Dictionary<string, UserDefinedTypeSymbol>(StringComparer.OrdinalIgnoreCase)
     {
-        var types = new Dictionary<string, UserDefinedTypeSymbol>(StringComparer.Ordinal);
+        public bool IsLegacy { get; } = legacy;
+    }
 
+    private static Dictionary<string, UserDefinedTypeSymbol> CreateUserDefinedTypes(
+        IReadOnlyList<BytecodeTypeDefinitionArtifact>? definitions, bool legacy)
+    {
+        var types = new TypeResolutionContext(legacy);
+
+        // Ключ словаря — идентичность типа. Снимок версии 2 не содержал
+        // идентичности, поэтому там ключом остаётся короткое имя.
         foreach (var definition in definitions ?? [])
         {
-            types.TryAdd(definition.Name, new UserDefinedTypeSymbol(definition.Name));
+            var identity = GetTypeIdentity(definition);
+            TypeIdentityFormat.TrySplit(identity, out var name, out var containingModule);
+            if (!types.TryAdd(identity, new UserDefinedTypeSymbol(name, containingModule)))
+            {
+                throw new InvalidOperationException($"Идентичность TYPE '{identity}' объявлена несколько раз.");
+            }
         }
 
         foreach (var definition in definitions ?? [])
         {
-            var type = types[definition.Name];
+            var type = types[GetTypeIdentity(definition)];
             if (type.IsCompleted)
             {
                 continue;
@@ -636,10 +695,26 @@ public static class BytecodeModuleSerializer
         return types;
     }
 
+    private static string GetTypeIdentity(BytecodeTypeDefinitionArtifact definition)
+    {
+        return string.IsNullOrWhiteSpace(definition.Identity)
+            ? definition.Name
+            : definition.Identity;
+    }
+
     private static TypeSymbol ResolveType(
         string name,
         IReadOnlyDictionary<string, UserDefinedTypeSymbol> userDefinedTypes)
     {
+        // Старый формат проверял окончание массива первым. Схема 3 явно
+        // группирует массивы функций и отличает их от функции, возвращающей массив.
+        if (userDefinedTypes is TypeResolutionContext { IsLegacy: true }
+            && TryResolveArrayType(name, userDefinedTypes, out var legacyArray)) return legacyArray;
+        if (name.StartsWith("FUNCTION(", StringComparison.Ordinal))
+        {
+            return ResolveFunctionType(name, userDefinedTypes);
+        }
+
         if (TryResolveArrayType(name, userDefinedTypes, out var arrayType))
         {
             return arrayType;
@@ -654,12 +729,62 @@ public static class BytecodeModuleSerializer
             "STRING" => TypeSymbol.String,
             "BOOLEAN" => TypeSymbol.Boolean,
             "FILE" => TypeSymbol.File,
+            "DATE" => TypeSymbol.Date,
+            "TIME" => TypeSymbol.Time,
+            "DATETIME" => TypeSymbol.DateTime,
+            "UTCDATETIME" => TypeSymbol.UtcDateTime,
+            "IMAGE" => TypeSymbol.Image,
+            "SPRITE" => TypeSymbol.Sprite,
+            "TILEMAP" => TypeSymbol.Tilemap,
+            "TILESET" => TypeSymbol.Tileset,
+            "ERROR" => TypeSymbol.RuntimeError,
             "VOID" => TypeSymbol.Void,
             "<error>" => TypeSymbol.Error,
-            _ when userDefinedTypes.TryGetValue(name, out var userDefinedType) => userDefinedType,
-            _ when name.StartsWith("FUNCTION(", StringComparison.Ordinal) => ResolveFunctionType(name, userDefinedTypes),
-            _ => new UserDefinedTypeSymbol(name)
+            _ when TryResolveUserDefinedType(name, userDefinedTypes, out var userDefinedType) => userDefinedType,
+            _ => throw new InvalidOperationException($"Неизвестная или неоднозначная ссылка на тип '{name}'.")
         };
+    }
+
+    /// <summary>
+    /// Сначала ссылка разрешается по идентичности. Короткое имя остаётся
+    /// совместимым путём для снимков версии 2 и для ручной сборки модуля, но
+    /// применяется только при однозначном совпадении.
+    /// </summary>
+    private static bool TryResolveUserDefinedType(
+        string name,
+        IReadOnlyDictionary<string, UserDefinedTypeSymbol> userDefinedTypes,
+        out UserDefinedTypeSymbol userDefinedType)
+    {
+        if (userDefinedTypes.TryGetValue(name, out userDefinedType!))
+        {
+            return true;
+        }
+
+        if (name.Contains(TypeIdentityFormat.Separator, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        UserDefinedTypeSymbol? match = null;
+        foreach (var candidate in userDefinedTypes.Values)
+        {
+            if (!TypeIdentityFormat.Equals(candidate.Name, name))
+            {
+                continue;
+            }
+
+            if (match is not null)
+            {
+                // Два закрытых TYPE с одинаковым коротким именем: выбор наугад
+                // потерял бы различие, поэтому ссылка считается неоднозначной.
+                return false;
+            }
+
+            match = candidate;
+        }
+
+        userDefinedType = match!;
+        return match is not null;
     }
 
     private static bool TryResolveArrayType(
@@ -682,6 +807,8 @@ public static class BytecodeModuleSerializer
         }
 
         var elementTypeName = name[..openParenIndex];
+        if (elementTypeName.StartsWith('(') && elementTypeName.EndsWith(')'))
+            elementTypeName = elementTypeName[1..^1];
         var elementType = ResolveType(elementTypeName, userDefinedTypes);
         var rank = rankToken.Length + 1;
         type = ArrayTypeSymbol.Create(elementType, rank);
@@ -694,35 +821,40 @@ public static class BytecodeModuleSerializer
     {
         const string prefix = "FUNCTION(";
         const string separator = ") AS ";
-
-        var separatorIndex = name.LastIndexOf(separator, StringComparison.Ordinal);
-        if (separatorIndex < prefix.Length)
+        var depth = 1;
+        var closing = prefix.Length;
+        for (; closing < name.Length; closing++)
         {
-            return TypeSymbol.Error;
+            if (name[closing] == '(') depth++;
+            else if (name[closing] == ')' && --depth == 0) break;
         }
+        if (closing >= name.Length || !name.AsSpan(closing).StartsWith(separator, StringComparison.Ordinal))
+            throw new InvalidOperationException($"Неверная ссылка на функциональный тип '{name}'.");
 
-        var parameterText = name[prefix.Length..separatorIndex];
-        var returnText = name[(separatorIndex + separator.Length)..];
-        var parameterSegments = string.IsNullOrWhiteSpace(parameterText)
-            ? Array.Empty<string>()
-            : parameterText.Split(',', StringSplitOptions.TrimEntries);
-        var parameters = new List<TypeSymbol>(parameterSegments.Length);
-        var passingModes = new List<ParameterPassingMode>(parameterSegments.Length);
-
-        foreach (var segment in parameterSegments)
+        var parameterText = name[prefix.Length..closing];
+        var returnText = name[(closing + separator.Length)..];
+        var segments = new List<string>();
+        var start = 0;
+        depth = 0;
+        for (var index = 0; index < parameterText.Length; index++)
         {
-            if (segment.StartsWith("BYREF ", StringComparison.Ordinal))
+            if (parameterText[index] == '(') depth++;
+            else if (parameterText[index] == ')') depth--;
+            else if (parameterText[index] == ',' && depth == 0)
             {
-                passingModes.Add(ParameterPassingMode.ByRef);
-                parameters.Add(ResolveType(segment["BYREF ".Length..], userDefinedTypes));
-            }
-            else
-            {
-                passingModes.Add(ParameterPassingMode.ByVal);
-                parameters.Add(ResolveType(segment, userDefinedTypes));
+                segments.Add(parameterText[start..index].Trim());
+                start = index + 1;
             }
         }
-
+        if (!string.IsNullOrWhiteSpace(parameterText)) segments.Add(parameterText[start..].Trim());
+        var parameters = new List<TypeSymbol>(segments.Count);
+        var passingModes = new List<ParameterPassingMode>(segments.Count);
+        foreach (var segment in segments)
+        {
+            var byRef = segment.StartsWith("BYREF ", StringComparison.Ordinal);
+            passingModes.Add(byRef ? ParameterPassingMode.ByRef : ParameterPassingMode.ByVal);
+            parameters.Add(ResolveType(byRef ? segment["BYREF ".Length..] : segment, userDefinedTypes));
+        }
         return FunctionTypeSymbol.Create(parameters, ResolveType(returnText, userDefinedTypes), passingModes);
     }
 

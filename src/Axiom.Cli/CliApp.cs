@@ -86,6 +86,13 @@ internal static class CliApp
         var sink = new CollectingDiagnosticSink();
         var pipeline = new AxiomExecutionPipeline();
 
+        // Чтение зависимостей общее с check: отказ файловой системы даёт
+        // контролируемое сообщение и код 2, а не выброшенное исключение.
+        if (!TryLoadDependencies(source, path, stderr, out var dependencies))
+        {
+            return 2;
+        }
+
         // Ctrl+C в реальной консоли превращается в штатную отмену исполнения, а не в обрыв процесса.
         ConsoleCancelEventHandler? cancelHandler = null;
         if (ReferenceEquals(stdin, Console.In))
@@ -110,7 +117,7 @@ internal static class CliApp
                 runtimeRandom: host,
                 cancellationProvider: host,
                 sourceName: Path.GetFullPath(path),
-                additionalDocuments: SourceProject.LoadDependencies(source, path)));
+                additionalDocuments: dependencies));
             exitCode = result.Status == ExecutionStatus.Success ? 0 : 1;
         }
         catch (ConsoleGraphicsNotSupportedException error)
@@ -181,7 +188,19 @@ internal static class CliApp
             return 2;
         }
 
-        var (checkDiagnostics, checkHasError) = CheckSource(source, path);
+        // При внешнем отказе зависимости контракт машинного ответа сохраняется:
+        // --json всё равно получает объект с ok=false и диагностикой отказа.
+        if (!TryLoadDependencies(source, path, stderr, out var dependencies, out var dependencyFailure))
+        {
+            if (wantsJson)
+            {
+                stdout.Write(DiagnosticsJson([dependencyFailure], ok: false, path));
+            }
+
+            return 2;
+        }
+
+        var (checkDiagnostics, checkHasError) = CheckSource(source, path, dependencies);
         if (wantsJson)
         {
             stdout.Write(DiagnosticsJson(checkDiagnostics, !checkHasError, path));
@@ -191,12 +210,16 @@ internal static class CliApp
         return checkHasError ? 1 : 0;
     }
 
-    private static (List<Diagnostic> Diagnostics, bool HasError) CheckSource(string source, string? path = null)
+    private static (List<Diagnostic> Diagnostics, bool HasError) CheckSource(
+        string source,
+        string? path = null,
+        IReadOnlyList<SourceDocument>? dependencies = null)
     {
         var sink = new CollectingDiagnosticSink();
         var pipeline = new AxiomExecutionPipeline();
         var compilation = pipeline.Compile(new CompilationRequest(source, diagnosticSink: sink,
-            sourceName: path is null ? null : Path.GetFullPath(path), additionalDocuments: SourceProject.LoadDependencies(source, path)));
+            sourceName: path is null ? null : Path.GetFullPath(path),
+            additionalDocuments: dependencies ?? SourceProject.LoadDependencies(source, path)));
 
         // Диагностики Axiom не делятся на ошибки/предупреждения: любая диагностика — ошибка.
         var diagnostics = sink.Diagnostics
@@ -298,6 +321,50 @@ internal static class CliApp
         }
 
         return path;
+    }
+
+    /// <summary>
+    /// Общая загрузка зависимостей для check и run. Отказ файловой системы
+    /// возвращает false и уже выведенное сообщение; неизвестный модуль остаётся
+    /// языковой диагностикой MB2049 и проходит обычным путём компиляции.
+    /// </summary>
+    private static bool TryLoadDependencies(
+        string source,
+        string? path,
+        TextWriter stderr,
+        out IReadOnlyList<SourceDocument> dependencies)
+    {
+        return TryLoadDependencies(source, path, stderr, out dependencies, out _);
+    }
+
+    private static bool TryLoadDependencies(
+        string source,
+        string? path,
+        TextWriter stderr,
+        out IReadOnlyList<SourceDocument> dependencies,
+        out Diagnostic failure)
+    {
+        failure = null!;
+
+        try
+        {
+            dependencies = SourceProject.LoadDependencies(source, path);
+            return true;
+        }
+        catch (Exception error) when (error is IOException
+            or UnauthorizedAccessException
+            or ArgumentException
+            or NotSupportedException
+            or System.Security.SecurityException)
+        {
+            dependencies = [];
+            failure = new Diagnostic(
+                DiagnosticCodes.DependencyReadFailure,
+                $"Не удалось прочитать зависимость точки входа: {error.Message}",
+                new TextLocation(new TextSpan(0, 0), 1, 1, path));
+            stderr.WriteLine($"axiom: не удалось прочитать зависимость '{path}': {error.Message}");
+            return false;
+        }
     }
 
     private static string? ReadSource(string path, TextWriter stderr)

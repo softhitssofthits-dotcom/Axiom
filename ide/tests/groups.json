@@ -42,6 +42,7 @@
     "string-tokenization.test.cjs",
     "structural-delivery.test.cjs",
     "themes.test.cjs",
+    "trace-late-open.test.cjs",
     "trace-restart.test.cjs",
     "trace-saveas.test.cjs",
     "ui-controls.test.cjs",
@@ -96,6 +97,7 @@
     "run-document.test.cjs",
     "stop-failure.test.cjs",
     "structural-delivery.test.cjs",
+    "trace-late-open.test.cjs",
     "trace-restart.test.cjs",
     "trace-saveas.test.cjs"
   ]

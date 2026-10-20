@@ -3,77 +3,15 @@ using Axiom.Syntax;
 
 namespace Axiom.Semantics;
 
-/// <summary>
-/// Исходная единица модуля: имя модуля и разобранное дерево файла.
-/// Имя модуля — имя файла без расширения; сравнение регистронезависимое.
-/// </summary>
-public sealed class ModuleSyntax
-{
-    public ModuleSyntax(string name, ProgramSyntax syntax)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            throw new ArgumentException("Module name must be provided.", nameof(name));
-        }
-
-        ArgumentNullException.ThrowIfNull(syntax);
-
-        Name = name;
-        Syntax = syntax;
-    }
-
-    public string Name { get; }
-
-    public ProgramSyntax Syntax { get; }
-
-    public IReadOnlyList<ImportStatementSyntax> Imports =>
-        Syntax.Members.OfType<ImportStatementSyntax>().ToArray();
-}
-
-/// <summary>
-/// Связанный модуль: имя, объявленные символы и их доступность.
-/// </summary>
-public sealed class ModuleSymbol
-{
-    public ModuleSymbol(
-        string name,
-        IReadOnlyDictionary<string, FunctionSymbol> publicFunctions,
-        IReadOnlyDictionary<string, UserDefinedTypeSymbol> publicTypes,
-        IReadOnlyDictionary<string, VariableSymbol> publicVariables,
-        IReadOnlySet<string> privateNames,
-        IReadOnlyDictionary<string, long>? publicIntegralConstants = null)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentNullException.ThrowIfNull(publicFunctions);
-        ArgumentNullException.ThrowIfNull(publicTypes);
-        ArgumentNullException.ThrowIfNull(publicVariables);
-        ArgumentNullException.ThrowIfNull(privateNames);
-
-        Name = name;
-        PublicFunctions = publicFunctions;
-        PublicTypes = publicTypes;
-        PublicVariables = publicVariables;
-        PrivateNames = privateNames;
-        PublicIntegralConstants = publicIntegralConstants ?? new Dictionary<string, long>();
-    }
-
-    public string Name { get; }
-
-    public IReadOnlyDictionary<string, FunctionSymbol> PublicFunctions { get; }
-
-    public IReadOnlyDictionary<string, UserDefinedTypeSymbol> PublicTypes { get; }
-
-    public IReadOnlyDictionary<string, VariableSymbol> PublicVariables { get; }
-
-    public IReadOnlySet<string> PrivateNames { get; }
-
-    public IReadOnlyDictionary<string, long> PublicIntegralConstants { get; }
-
-    public bool IsPrivateName(string name) => PrivateNames.Contains(name);
-}
-
+// Координация модульного связывания: таблица модулей, порядок проходов и общие
+// помощники. Публичные модели — ModuleModels.cs, граф импортов, порядок и циклы —
+// Binder.Modules.Graph.cs, импорт, экспорт и приватность — Binder.Modules.Exports.cs.
 public sealed partial class Binder
 {
+    /// <summary>
+    /// Имя синтетического модуля для безымянного однофайлового вызова API.
+    /// </summary>
+    public const string SingleModuleName = "<single>";
     private readonly IReadOnlyList<ModuleSymbol> _imports;
     private readonly TextLocation _moduleLocation;
     private readonly Dictionary<string, UserDefinedTypeSymbol> _importedTypes = new(StringComparer.OrdinalIgnoreCase);
@@ -124,72 +62,8 @@ public sealed partial class Binder
             return new BoundProgram(new TextLocation(new TextSpan(0, 0), 1, 1), [], []);
         }
 
-        var importGraph = new Dictionary<string, IReadOnlyList<ModuleSyntax>>(StringComparer.OrdinalIgnoreCase);
-        foreach (var module in modulesByName.Values)
-        {
-            var resolved = new List<ModuleSyntax>();
-            foreach (var import in module.Imports)
-            {
-                if (string.Equals(import.ModuleName, module.Name, StringComparison.OrdinalIgnoreCase))
-                {
-                    result.Report(
-                        DiagnosticCodes.CyclicModuleImport,
-                        $"Модуль '{module.Name}' импортирует сам себя.",
-                        import.NameToken.Location);
-                    continue;
-                }
-
-                if (!modulesByName.TryGetValue(import.ModuleName, out var imported))
-                {
-                    result.Report(
-                        DiagnosticCodes.UnknownModule,
-                        $"Модуль '{module.Name}' импортирует несуществующий модуль '{import.ModuleName}'.",
-                        import.NameToken.Location);
-                    continue;
-                }
-
-                if (!resolved.Contains(imported))
-                {
-                    resolved.Add(imported);
-                }
-            }
-
-            importGraph[module.Name] = resolved;
-        }
-
-        var order = new List<ModuleSyntax>();
-        var states = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        Visit(entryModule);
-        var reachableModules = order.Select(module => module.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        foreach (var module in modulesByName.Values)
-        {
-            Visit(module);
-        }
-
-        void Visit(ModuleSyntax module)
-        {
-            if (states.TryGetValue(module.Name, out var state))
-            {
-                if (state == 1)
-                {
-                    result.Report(
-                        DiagnosticCodes.CyclicModuleImport,
-                        $"Циклический импорт модулей: '{module.Name}' уже находится в цепочке инициализации.",
-                        GetModuleLocation(module));
-                }
-
-                return;
-            }
-
-            states[module.Name] = 1;
-            foreach (var dependency in importGraph[module.Name])
-            {
-                Visit(dependency);
-            }
-
-            states[module.Name] = 2;
-            order.Add(module);
-        }
+        var importGraph = BuildImportGraph(modulesByName, result);
+        var order = OrderModules(entryModule, modulesByName, importGraph, result, out var reachableModules);
 
         var allGlobalStatements = new List<BoundStatement>();
         var allRoutines = new List<BoundRoutine>();
@@ -248,6 +122,65 @@ public sealed partial class Binder
         return boundProgram;
     }
 
+    private void DeclareModule(ProgramSyntax program)
+    {
+        DeclareTypeNames(program.Members);
+        PrepareTypeDeclarations(program.Members);
+        DeclareFunctions(program.Members);
+        DeclareTypeMethods(program.Members);
+    }
+
+    /// <summary>
+    /// Проход глобальных операторов модуля. Модульный путь регистрирует
+    /// доступность глобальных переменных для таблицы экспорта, однофайловый
+    /// путь не вычисляет экспорт и оставляет регистрацию выключенной.
+    /// </summary>
+    private void BindModuleGlobals(ProgramSyntax program, bool registerVariableVisibility = true)
+    {
+        foreach (var member in program.Members)
+        {
+            switch (member)
+            {
+                case GlobalStatementSyntax globalStatement:
+                {
+                    var bound = BindStatement(globalStatement.Statement);
+                    _globalStatements.Add(bound);
+                    if (registerVariableVisibility) RegisterGlobalVariableVisibility(bound, isPublic: false);
+                    break;
+                }
+
+                case ModuleStatementSyntax moduleStatement:
+                {
+                    var bound = BindStatement(moduleStatement.Statement);
+                    _globalStatements.Add(bound);
+                    if (registerVariableVisibility) RegisterGlobalVariableVisibility(bound, moduleStatement.IsPublic);
+                    break;
+                }
+            }
+        }
+    }
+
+    private void BindModuleBodies(ProgramSyntax program)
+    {
+        foreach (var member in program.Members)
+        {
+            switch (member)
+            {
+                case TypeDeclarationSyntax typeDeclaration:
+                    BindTypeMethods(typeDeclaration);
+                    break;
+
+                case SubDeclarationSyntax subDeclaration:
+                    _routines.Add(BindRoutine(subDeclaration, _declaredFunctions[subDeclaration]));
+                    break;
+
+                case FunctionDeclarationSyntax functionDeclaration:
+                    _routines.Add(BindRoutine(functionDeclaration, _declaredFunctions[functionDeclaration]));
+                    break;
+            }
+        }
+    }
+
     private static TextLocation GetModuleLocation(ModuleSyntax module)
     {
         foreach (var member in module.Syntax.Members)
@@ -277,231 +210,6 @@ public sealed partial class Binder
             ConstStatementSyntax constant => constant.Declaration.Identifier.Location,
             _ => new TextLocation(new TextSpan(0, 0), 1, 1)
         };
-    }
-
-    private void InjectImportedSymbols()
-    {
-        foreach (var import in _imports)
-        {
-            foreach (var (name, function) in import.PublicFunctions)
-            {
-                if (!_injectedFunctionNames.Add(name))
-                {
-                    Report(
-                        DiagnosticCodes.AmbiguousModuleMember,
-                        $"Имя '{name}' экспортируется несколькими импортированными модулями. Уточните модуль или переименуйте объявление.",
-                        _moduleLocation);
-                    continue;
-                }
-
-                if (!_globalScope.TryDeclareFunction(function))
-                {
-                    Report(
-                        DiagnosticCodes.ImportedNameConflict,
-                        $"Импортируемое имя '{name}' из модуля '{import.Name}' конфликтует с уже доступным именем.",
-                        _moduleLocation);
-                }
-            }
-
-            foreach (var (name, variable) in import.PublicVariables)
-            {
-                if (!_injectedVariableNames.Add(name))
-                {
-                    Report(
-                        DiagnosticCodes.AmbiguousModuleMember,
-                        $"Имя '{name}' экспортируется несколькими импортированными модулями. Уточните модуль или переименуйте объявление.",
-                        _moduleLocation);
-                    continue;
-                }
-
-                if (!_globalScope.TryDeclareVariable(variable))
-                {
-                    Report(
-                        DiagnosticCodes.ImportedNameConflict,
-                        $"Импортируемое имя '{name}' из модуля '{import.Name}' конфликтует с уже доступным именем.",
-                        _moduleLocation);
-                }
-            }
-
-            foreach (var (name, type) in import.PublicTypes)
-            {
-                if (!_importedTypes.TryAdd(name, type))
-                {
-                    Report(
-                        DiagnosticCodes.AmbiguousModuleMember,
-                        $"Тип '{name}' экспортируется несколькими импортированными модулями. Уточните модуль или переименуйте объявление.",
-                        _moduleLocation);
-                }
-            }
-
-            foreach (var (name, value) in import.PublicIntegralConstants)
-            {
-                _globalIntegralConstants.TryAdd(name, value);
-            }
-        }
-    }
-
-    private void DeclareModule(ProgramSyntax program)
-    {
-        DeclareTypeNames(program.Members);
-        PrepareTypeDeclarations(program.Members);
-        DeclareFunctions(program.Members);
-        DeclareTypeMethods(program.Members);
-    }
-
-    private void BindModuleGlobals(ProgramSyntax program)
-    {
-        foreach (var member in program.Members)
-        {
-            switch (member)
-            {
-                case GlobalStatementSyntax globalStatement:
-                {
-                    var bound = BindStatement(globalStatement.Statement);
-                    _globalStatements.Add(bound);
-                    RegisterGlobalVariableVisibility(bound, isPublic: false);
-                    break;
-                }
-
-                case ModuleStatementSyntax moduleStatement:
-                {
-                    var bound = BindStatement(moduleStatement.Statement);
-                    _globalStatements.Add(bound);
-                    RegisterGlobalVariableVisibility(bound, moduleStatement.IsPublic);
-                    break;
-                }
-            }
-        }
-    }
-
-    private void RegisterGlobalVariableVisibility(BoundStatement statement, bool isPublic)
-    {
-        switch (statement)
-        {
-            case BoundVariableDeclarationStatement declaration:
-                _globalVariableVisibility[declaration.Variable] = isPublic;
-                break;
-
-            case BoundVariableDeclarationsStatement declarations:
-                foreach (var declaration in declarations.Declarations)
-                {
-                    _globalVariableVisibility[declaration.Variable] = isPublic;
-                }
-
-                break;
-        }
-    }
-
-    private void BindModuleBodies(ProgramSyntax program)
-    {
-        foreach (var member in program.Members)
-        {
-            switch (member)
-            {
-                case TypeDeclarationSyntax typeDeclaration:
-                    BindTypeMethods(typeDeclaration);
-                    break;
-
-                case SubDeclarationSyntax subDeclaration:
-                    _routines.Add(BindRoutine(subDeclaration, _declaredFunctions[subDeclaration]));
-                    break;
-
-                case FunctionDeclarationSyntax functionDeclaration:
-                    _routines.Add(BindRoutine(functionDeclaration, _declaredFunctions[functionDeclaration]));
-                    break;
-            }
-        }
-    }
-
-    private ModuleSymbol CreateModuleSymbol(ModuleSyntax module)
-    {
-        var publicFunctions = new Dictionary<string, FunctionSymbol>(StringComparer.OrdinalIgnoreCase);
-        var privateNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var publicTypes = new Dictionary<string, UserDefinedTypeSymbol>(StringComparer.OrdinalIgnoreCase);
-        var publicVariables = new Dictionary<string, VariableSymbol>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var member in module.Syntax.Members)
-        {
-            switch (member)
-            {
-                case SubDeclarationSyntax subDeclaration:
-                    RegisterFunction(subDeclaration.VisibilityKeyword, _declaredFunctions[subDeclaration]);
-                    break;
-
-                case FunctionDeclarationSyntax functionDeclaration:
-                    RegisterFunction(functionDeclaration.VisibilityKeyword, _declaredFunctions[functionDeclaration]);
-                    break;
-
-                case TypeDeclarationSyntax typeDeclaration:
-                {
-                    if (!_declaredTypes.TryGetValue(typeDeclaration.Identifier.Text, out var type))
-                    {
-                        break;
-                    }
-
-                    if (IsPublic(typeDeclaration.VisibilityKeyword))
-                    {
-                        publicTypes[type.Name] = type;
-                    }
-                    else
-                    {
-                        privateNames.Add(type.Name);
-                    }
-
-                    break;
-                }
-            }
-        }
-
-        foreach (var (variable, isPublic) in _globalVariableVisibility)
-        {
-            if (isPublic)
-            {
-                publicVariables[variable.Name] = variable;
-            }
-            else
-            {
-                privateNames.Add(variable.Name);
-            }
-        }
-
-        var constants = _boundIntegralConstants.Where(pair => publicVariables.ContainsKey(pair.Key.Name))
-            .ToDictionary(pair => pair.Key.Name, pair => pair.Value, StringComparer.OrdinalIgnoreCase);
-        return new ModuleSymbol(module.Name, publicFunctions, publicTypes, publicVariables, privateNames, constants);
-
-        void RegisterFunction(SyntaxToken? visibilityKeyword, FunctionSymbol function)
-        {
-            if (IsPublic(visibilityKeyword))
-            {
-                publicFunctions[function.Name] = function;
-            }
-            else
-            {
-                privateNames.Add(function.Name);
-            }
-        }
-    }
-
-    private static bool IsPublic(SyntaxToken? visibilityKeyword)
-    {
-        return visibilityKeyword?.Kind == SyntaxKind.PublicKeyword;
-    }
-
-    private bool TryReportPrivateModuleMember(string name, TextLocation location)
-    {
-        foreach (var import in _imports)
-        {
-            if (import.IsPrivateName(name))
-            {
-                Report(
-                    DiagnosticCodes.PrivateModuleMember,
-                    $"Имя '{name}' объявлено в модуле '{import.Name}' как PRIVATE и недоступно снаружи. Объявите его как PUBLIC.",
-                    location);
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private void Report(string code, string message, TextLocation location)

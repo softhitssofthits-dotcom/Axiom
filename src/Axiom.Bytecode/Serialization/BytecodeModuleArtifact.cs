@@ -67,7 +67,8 @@ public sealed record BytecodeFunctionSymbolArtifact(
     string? BuiltinId,
     int? ContainingRoutineSymbolId,
     string? ContainingRoutineName,
-    IReadOnlyList<BytecodeVariableSymbolArtifact> Parameters);
+    IReadOnlyList<BytecodeVariableSymbolArtifact> Parameters,
+    bool HasImplicitSelfReceiver = false);
 
 public sealed record BytecodeVariableSymbolArtifact(
     int? SymbolId,
@@ -80,7 +81,8 @@ public sealed record BytecodeVariableSymbolArtifact(
 
 public sealed record BytecodeTypeDefinitionArtifact(
     string Name,
-    IReadOnlyList<BytecodeTypeFieldArtifact> Fields);
+    IReadOnlyList<BytecodeTypeFieldArtifact> Fields,
+    string? Identity = null);
 
 public sealed record BytecodeTypeFieldArtifact(
     string Name,

@@ -45,4 +45,46 @@ public sealed class ModuleCallGraphTests
         Assert.All(hidden, declaration => Assert.All(graph.Symbols.Where(s => s.SymbolId == declaration.SymbolId),
             site => Assert.Equal(declaration.SourceFilePath, site.SourceFilePath)));
     }
+
+    [Fact]
+    public void SharedTraversalFindsCallsInNestedContainersAndHandlerEdges()
+    {
+        const string source = """
+            TYPE Box
+                value AS INTEGER
+            END TYPE
+            FUNCTION ComputeOne() AS INTEGER
+                RETURN 1
+            END FUNCTION
+            FUNCTION ComputeTwo() AS INTEGER
+                RETURN 2
+            END FUNCTION
+            FUNCTION ComputeThree() AS INTEGER
+                RETURN 3
+            END FUNCTION
+            SUB HandleLeft()
+                PRINT "нажата клавиша"
+            END SUB
+            DIM item AS Box = Box(value := ComputeOne())
+            PRINT ComputeTwo()
+            PRINT $"итог {ComputeTwo()}"
+            SELECT CASE ComputeThree()
+                CASE 3
+                    PRINT item.value
+            END SELECT
+            ON KEY("LEFT"), HandleLeft
+            """;
+        var graph = EditorCallGraph.Analyse(source, "main.axm");
+        Assert.True(graph.Complete);
+        var first = Assert.Single(graph.Routines, r => r.Name == "ComputeOne");
+        var second = Assert.Single(graph.Routines, r => r.Name == "ComputeTwo");
+        var third = Assert.Single(graph.Routines, r => r.Name == "ComputeThree");
+        var handler = Assert.Single(graph.Routines, r => r.Name == "HandleLeft");
+        Assert.Single(graph.Calls, c => c.Callee == first.Id && c.Kind == "call");
+        Assert.Equal(2, graph.Calls.Count(c => c.Callee == second.Id && c.Kind == "call"));
+        Assert.Single(graph.Calls, c => c.Callee == third.Id && c.Kind == "call");
+        // Обработчик описан отдельным ребром и не повторяется как ссылка.
+        Assert.Single(graph.Calls, c => c.Callee == handler.Id && c.Kind == "handler");
+        Assert.DoesNotContain(graph.Calls, c => c.Kind == "reference");
+    }
 }

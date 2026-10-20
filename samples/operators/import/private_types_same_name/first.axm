@@ -1,0 +1,14 @@
+' Закрытый TYPE Box этого модуля: поле Item хранит целое число.
+TYPE Box
+    Item AS INTEGER
+END TYPE
+
+' Открытая функция возвращает запись закрытого типа.
+PUBLIC FUNCTION FirstMake() AS Box
+    RETURN Box(11)
+END FUNCTION
+
+' Открытая функция принимает запись закрытого типа и читает поле.
+PUBLIC FUNCTION FirstRead(x AS Box) AS INTEGER
+    RETURN x.Item
+END FUNCTION
