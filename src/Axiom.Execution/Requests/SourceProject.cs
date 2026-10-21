@@ -7,7 +7,7 @@ namespace Axiom.Execution;
 public static class SourceProject
 {
     public static IReadOnlyList<SourceDocument> LoadDependencies(string entryText, string? entryPath,
-        IEnumerable<SourceDocument>? openDocuments = null)
+        IEnumerable<SourceDocument>? openDocuments = null, IReadOnlySet<string>? allowedFiles = null)
     {
         ArgumentNullException.ThrowIfNull(entryText);
         if (string.IsNullOrWhiteSpace(entryPath))
@@ -52,6 +52,8 @@ public static class SourceProject
 
             foreach (var modulePath in files[name])
             {
+                if(allowedFiles is not null && !allowedFiles.Contains(Path.GetFullPath(modulePath)))
+                    throw new ArgumentException("IMPORT обращается к исключённому исходнику: " + modulePath);
                 var text = replacements.TryGetValue(modulePath, out var document) ? document.Text : File.ReadAllText(modulePath);
                 documents.Add(new SourceDocument(modulePath, text));
                 EnqueueImports(text);

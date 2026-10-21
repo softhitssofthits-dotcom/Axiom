@@ -181,14 +181,20 @@ module.exports.push({id:'project-advice-cross-module-reads',name:'Советы �
  const orphan=writeAxm(root,'orphan.axm','DIM UnusedOrphan AS INTEGER\n');await S.page.evaluate(p=>window.__ide.openFile(p),orphan);await S.page.evaluate(()=>window.__ide.runLiveCheck());
  C.contains(await advice(),'UnusedOrphan','Не включённый в IMPORT файл проверяется самостоятельно');
  C.eq(S.pageErrors.length,0,'Нет ошибок страницы');
-}},{id:'diagnostic-peek-survives-live-analysis',name:'Карточка ошибки остаётся после проверки и редактирования до явного закрытия',async fn({S,C}){
+}},{id:'diagnostic-peek-survives-live-analysis',name:'Карточка ошибки сохраняется при проверке и закрывается после устранения диагностики',async fn({S,C}){
  const file=writeAxm(testWorkspace('peek-persistent'),'bad.axm','PRINT MissingValue\n');
  await S.launch({settings:{smartIdentifierEnabled:false}});await S.page.evaluate(p=>window.__ide.openFile(p),file);await S.page.evaluate(()=>window.__ide.runLiveCheck());
  await S.page.locator('.diagnostic-item').first().click();await S.page.locator('.marker-widget').waitFor({state:'visible'});
  await S.page.evaluate(()=>window.__ide.scheduleLiveCheck());await S.sleep(1100);
  C.eq(await S.page.locator('.marker-widget:visible').count(),1,'Фоновая проверка не закрывает карточку');
  await S.page.evaluate(()=>window.__ide.editor.getModel().setValue('PRINT 1\n'));await S.page.evaluate(()=>window.__ide.runLiveCheck());
- C.eq(await S.page.locator('.marker-widget:visible').count(),1,'Исправление текста оставляет карточку доступной для чтения');
+ C.eq(await S.page.locator('.marker-widget:visible').count(),0,'Исправление ошибки автоматически закрывает карточку');
+ C.eq(await S.page.locator('.diagnostic-item').count(),0,'Панель и карточка согласованы');
+ await S.page.evaluate(()=>window.__ide.editor.getModel().setValue('PRINT FirstMissing\nPRINT OtherMissing\n'));await S.page.evaluate(()=>window.__ide.runLiveCheck());
+ await S.page.locator('.diagnostic-item').first().click();await S.page.locator('.marker-widget').waitFor({state:'visible'});
+ await S.page.evaluate(()=>window.__ide.editor.getModel().setValue('PRINT 1\nPRINT OtherMissing\n'));await S.page.evaluate(()=>window.__ide.runLiveCheck());
+ C.eq(await S.page.locator('.marker-widget:visible').count(),0,'Исправленная карточка закрывается даже при другой ошибке');
+ await S.page.locator('.diagnostic-item').first().click();await S.page.locator('.marker-widget').waitFor({state:'visible'});
  await S.page.locator('.peekview-widget .action-label.codicon-close').click();
  C.eq(await S.page.locator('.marker-widget:visible').count(),0,'Крестик закрывает карточку');
  await S.page.evaluate(()=>window.__ide.runLiveCheck());
@@ -198,7 +204,7 @@ module.exports.push({id:'project-advice-cross-module-reads',name:'Советы �
 
 module.exports.push({id:'project-advice-maze-config',name:'Константы Maze Chase учитываются во всех девяти модулях',async fn({S,C}){
  const folder=path.join(require('../helpers').ROOT,'samples/graphics/game/maze_chase_project');
- await S.launch({settings:{smartIdentifierEnabled:false}});await S.page.evaluate(p=>window.__ide.openProject(p),folder);
+ await S.launch({settings:{smartIdentifierEnabled:false}});await S.page.evaluate(p=>window.__ide.openProject(p),path.join(folder,'maze_chase.axproj'));
  await S.page.evaluate(p=>window.__ide.openFile(p),path.join(folder,'maze_config.axm'));await S.page.evaluate(()=>window.__ide.runLiveCheck());
  const diagnostics=await S.page.evaluate(()=>window.__ide._lastDiagnostics);
  C.eq(diagnostics.filter(d=>d.severity==='error').length,0,'Проект успешно анализируется');

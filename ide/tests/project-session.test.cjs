@@ -104,3 +104,26 @@ test('Закрытая вкладка запуска остаётся выбра
 test('Пустой проект не получает выдуманную точку входа',async()=>{
   const {session,models}=setup([]);await session.open('C:/game');assert.equal(models.size,0);assert.equal(session.target(),null);
 });
+
+function description(){return {projectFilePath:'C:/game/game.axproj',rootDirectory:'C:/game',name:'Game',sourceFiles:['C:/game/main.axm','C:/game/helper.axm'],assetFiles:['C:/game/art/pixel.png'],entryPath:'C:/game/main.axm',entryError:null,contentHash:'first',text:'{}'};}
+test('axproj открывает одну точку входа и запускает её независимо от внешней вкладки',async()=>{
+ const {session,ide,api,models,settings}=setup();const project=description();api.projectCommand=async()=>({ok:true,payload:project});
+ await session.open(project.projectFilePath);assert.equal(models.size,1);assert.equal(session.descriptor,project);assert.equal(settings.lastProjectFile,project.projectFilePath);
+ ide.activeFile='C:/outside.axm';assert.equal(session.target(),project.entryPath);assert.equal(session.contains(project.assetFiles[0]),true);assert.equal(session.contains('C:/game/not-included.axm'),false);
+});
+test('axproj позднее чтение состава не отменяет новую сохранённую entry',async()=>{
+ const {session,api}=setup();const initial=description();api.projectCommand=async()=>({ok:true,payload:initial});await session.open(initial.projectFilePath);
+ let complete;api.projectCommand=async(method)=>method==='project.open'?await new Promise(resolve=>complete=resolve):({ok:true,payload:{...initial,entryPath:'C:/game/helper.axm',contentHash:'second'}});
+ const old=session.reload();await session.select('C:/game/helper.axm');complete({ok:true,payload:initial});await old;
+ assert.equal(session.entry,'C:/game/helper.axm');assert.equal(session.descriptor.contentHash,'second');
+});
+
+test('Save As за корень проекта не меняет его точку входа',async()=>{
+ const {session,api}=setup();const project=description();api.projectCommand=async()=>({ok:true,payload:project});await session.open(project.projectFilePath);
+ api.projectCommand=async()=>{throw new Error('Не должно быть записи проекта');};await session.renamed(project.entryPath,'C:/other/copy.axm');assert.equal(session.entry,project.entryPath);
+});
+
+test('axproj сохраняет одну файловую идентичность при другом регистре entry Windows',async()=>{
+ const {session,api}=setup();const project=description();project.entryPath='C:/GAME/MAIN.axm';api.projectCommand=async()=>({ok:true,payload:project});
+ await session.open(project.projectFilePath);assert.equal(session.entry,'C:/game/main.axm');assert.equal(session.isSource('C:/GAME/HELPER.axm'),true);
+});

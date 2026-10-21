@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Функции: графика — Справочник Axiom</title>
+<link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="graphics-functions">
+<a class="skip" href="#content">К содержанию</a>
+<header class="topbar">
+<a class="brand" href="index.html">Axiom<span>справочник</span></a>
+<form class="search" role="search" action="search.html" method="get">
+<label class="sr" for="q">Поиск по справочнику</label>
+<input id="q" name="q" type="search" placeholder="Имя функции, оператора или тема" autocomplete="off">
+<button type="submit">Найти</button>
+</form>
+<button class="menu-btn" type="button" aria-expanded="false" aria-controls="side">Оглавление</button>
+</header>
+<div class="shell">
+<aside id="side" class="side"><nav id="nav" aria-label="Оглавление"></nav></aside>
+<main id="content">
+<nav class="crumbs" aria-label="Путь"><a href="index.html">Справочник</a> / Функции: графика</nav>
+<h1>Функции: графика</h1>
+<p class="lead">59 функций раздела «Графика» — 62 зарегистрированных форм с типами аргументов и результата.</p>
+
+<section><h2>Общий договор</h2>
+<p>Функции читают состояние поверхности и ресурсов. Без выбранного SCREEN или CANVAS графические операции дают MB2046. Координаты измеряются в пикселях поверхности от левого верхнего угла; цвет задаётся индексом палитры или значением RGB.</p>
+<p>Все перечисленные аргументы обязательны; необязательный аргумент представлен отдельной формой. Объяснение типов и общего поведения находится в главе <a href="graphics.html">Графика</a>.</p>
+</section>
+<section><h2>Карточки</h2>
+<article class="card" id="fn-imageheight">
+<h3>IMAGEHEIGHT</h3>
+<div class="form">
+<pre><code class="language-axiom">IMAGEHEIGHT(IMAGE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>image</code></td><td><code>IMAGE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-imagewidth">
+<h3>IMAGEWIDTH</h3>
+<div class="form">
+<pre><code class="language-axiom">IMAGEWIDTH(IMAGE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>image</code></td><td><code>IMAGE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-inkey">
+<h3>INKEY</h3>
+<div class="form">
+<pre><code class="language-axiom">INKEY()</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<p class="muted">Аргументов нет.</p>
+</div>
+</article>
+<article class="card" id="fn-keydown">
+<h3>KEYDOWN</h3>
+<div class="form">
+<pre><code class="language-axiom">KEYDOWN(KEYTEXT)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>keyText</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-keypress">
+<h3>KEYPRESS</h3>
+<div class="form">
+<pre><code class="language-axiom">KEYPRESS(KEYTEXT)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>keyText</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-loadimage">
+<h3>LOADIMAGE</h3>
+<div class="form">
+<pre><code class="language-axiom">LOADIMAGE(PATH)</code></pre>
+<p class="result">Результат: <code>IMAGE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-loadsprite">
+<h3>LOADSPRITE</h3>
+<div class="form">
+<pre><code class="language-axiom">LOADSPRITE(PATH, FRAMEWIDTH, FRAMEHEIGHT)</code></pre>
+<p class="result">Результат: <code>SPRITE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr><tr><td><code>frameWidth</code></td><td><code>LONG</code></td></tr><tr><td><code>frameHeight</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-loadtilemap">
+<h3>LOADTILEMAP</h3>
+<div class="form">
+<pre><code class="language-axiom">LOADTILEMAP(PATH)</code></pre>
+<p class="result">Результат: <code>TILEMAP</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-loadtileset">
+<h3>LOADTILESET</h3>
+<div class="form">
+<pre><code class="language-axiom">LOADTILESET(PATH, TILEWIDTH, TILEHEIGHT)</code></pre>
+<p class="result">Результат: <code>TILESET</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr><tr><td><code>tileWidth</code></td><td><code>LONG</code></td></tr><tr><td><code>tileHeight</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">LOADTILESET(PATH, TILEWIDTH, TILEHEIGHT, MARGIN)</code></pre>
+<p class="result">Результат: <code>TILESET</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr><tr><td><code>tileWidth</code></td><td><code>LONG</code></td></tr><tr><td><code>tileHeight</code></td><td><code>LONG</code></td></tr><tr><td><code>margin</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">LOADTILESET(PATH, TILEWIDTH, TILEHEIGHT, MARGIN, SPACING)</code></pre>
+<p class="result">Результат: <code>TILESET</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr><tr><td><code>tileWidth</code></td><td><code>LONG</code></td></tr><tr><td><code>tileHeight</code></td><td><code>LONG</code></td></tr><tr><td><code>margin</code></td><td><code>LONG</code></td></tr><tr><td><code>spacing</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mapcolumn">
+<h3>MAPCOLUMN</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPCOLUMN(TILEMAP, ORIGINX, WORLDX)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>originX</code></td><td><code>DOUBLE</code></td></tr><tr><td><code>worldX</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mapheight">
+<h3>MAPHEIGHT</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPHEIGHT(TILEMAP)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-maplayercount">
+<h3>MAPLAYERCOUNT</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPLAYERCOUNT(TILEMAP)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-maplayername">
+<h3>MAPLAYERNAME</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPLAYERNAME(TILEMAP, LAYERINDEX)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>layerIndex</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-maplayerproperty">
+<h3>MAPLAYERPROPERTY</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPLAYERPROPERTY(TILEMAP, LAYERINDEX, NAME)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>layerIndex</code></td><td><code>LONG</code></td></tr><tr><td><code>name</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-maplayertype">
+<h3>MAPLAYERTYPE</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPLAYERTYPE(TILEMAP, LAYERINDEX)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>layerIndex</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-maplayervisible">
+<h3>MAPLAYERVISIBLE</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPLAYERVISIBLE(TILEMAP, LAYERINDEX)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>layerIndex</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mapobjectclass">
+<h3>MAPOBJECTCLASS</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPOBJECTCLASS(TILEMAP, LAYERINDEX, OBJECTINDEX)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>layerIndex</code></td><td><code>LONG</code></td></tr><tr><td><code>objectIndex</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mapobjectcount">
+<h3>MAPOBJECTCOUNT</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPOBJECTCOUNT(TILEMAP, LAYERINDEX)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>layerIndex</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mapobjectheight">
+<h3>MAPOBJECTHEIGHT</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPOBJECTHEIGHT(TILEMAP, LAYERINDEX, OBJECTINDEX)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>layerIndex</code></td><td><code>LONG</code></td></tr><tr><td><code>objectIndex</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mapobjectkind">
+<h3>MAPOBJECTKIND</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPOBJECTKIND(TILEMAP, LAYERINDEX, OBJECTINDEX)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>layerIndex</code></td><td><code>LONG</code></td></tr><tr><td><code>objectIndex</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mapobjectname">
+<h3>MAPOBJECTNAME</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPOBJECTNAME(TILEMAP, LAYERINDEX, OBJECTINDEX)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>layerIndex</code></td><td><code>LONG</code></td></tr><tr><td><code>objectIndex</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mapobjectproperty">
+<h3>MAPOBJECTPROPERTY</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPOBJECTPROPERTY(TILEMAP, LAYERINDEX, OBJECTINDEX, NAME)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>layerIndex</code></td><td><code>LONG</code></td></tr><tr><td><code>objectIndex</code></td><td><code>LONG</code></td></tr><tr><td><code>name</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mapobjectvisible">
+<h3>MAPOBJECTVISIBLE</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPOBJECTVISIBLE(TILEMAP, LAYERINDEX, OBJECTINDEX)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>layerIndex</code></td><td><code>LONG</code></td></tr><tr><td><code>objectIndex</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mapobjectwidth">
+<h3>MAPOBJECTWIDTH</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPOBJECTWIDTH(TILEMAP, LAYERINDEX, OBJECTINDEX)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>layerIndex</code></td><td><code>LONG</code></td></tr><tr><td><code>objectIndex</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mapobjectx">
+<h3>MAPOBJECTX</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPOBJECTX(TILEMAP, LAYERINDEX, OBJECTINDEX)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>layerIndex</code></td><td><code>LONG</code></td></tr><tr><td><code>objectIndex</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mapobjecty">
+<h3>MAPOBJECTY</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPOBJECTY(TILEMAP, LAYERINDEX, OBJECTINDEX)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>layerIndex</code></td><td><code>LONG</code></td></tr><tr><td><code>objectIndex</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mappixelheight">
+<h3>MAPPIXELHEIGHT</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPPIXELHEIGHT(TILEMAP)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mappixelwidth">
+<h3>MAPPIXELWIDTH</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPPIXELWIDTH(TILEMAP)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mapproperty">
+<h3>MAPPROPERTY</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPPROPERTY(TILEMAP, NAME)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>name</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-maprow">
+<h3>MAPROW</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPROW(TILEMAP, ORIGINY, WORLDY)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>originY</code></td><td><code>DOUBLE</code></td></tr><tr><td><code>worldY</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-maptile">
+<h3>MAPTILE</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPTILE(TILEMAP, LAYERINDEX, COLUMN, ROW)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>layerIndex</code></td><td><code>LONG</code></td></tr><tr><td><code>column</code></td><td><code>LONG</code></td></tr><tr><td><code>row</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-maptileflags">
+<h3>MAPTILEFLAGS</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPTILEFLAGS(TILEMAP, LAYERINDEX, COLUMN, ROW)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>layerIndex</code></td><td><code>LONG</code></td></tr><tr><td><code>column</code></td><td><code>LONG</code></td></tr><tr><td><code>row</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-maptileheight">
+<h3>MAPTILEHEIGHT</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPTILEHEIGHT(TILEMAP)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-maptileproperty">
+<h3>MAPTILEPROPERTY</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPTILEPROPERTY(TILEMAP, LAYERINDEX, COLUMN, ROW, NAME)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>layerIndex</code></td><td><code>LONG</code></td></tr><tr><td><code>column</code></td><td><code>LONG</code></td></tr><tr><td><code>row</code></td><td><code>LONG</code></td></tr><tr><td><code>name</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-maptileset">
+<h3>MAPTILESET</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPTILESET(TILEMAP, LAYERINDEX, COLUMN, ROW)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>layerIndex</code></td><td><code>LONG</code></td></tr><tr><td><code>column</code></td><td><code>LONG</code></td></tr><tr><td><code>row</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-maptilesetcount">
+<h3>MAPTILESETCOUNT</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPTILESETCOUNT(TILEMAP)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-maptilewidth">
+<h3>MAPTILEWIDTH</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPTILEWIDTH(TILEMAP)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mapwidth">
+<h3>MAPWIDTH</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPWIDTH(TILEMAP)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mapworldx">
+<h3>MAPWORLDX</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPWORLDX(TILEMAP, ORIGINX, COLUMN)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>originX</code></td><td><code>DOUBLE</code></td></tr><tr><td><code>column</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mapworldy">
+<h3>MAPWORLDY</h3>
+<div class="form">
+<pre><code class="language-axiom">MAPWORLDY(TILEMAP, ORIGINY, ROW)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tilemap</code></td><td><code>TILEMAP</code></td></tr><tr><td><code>originY</code></td><td><code>DOUBLE</code></td></tr><tr><td><code>row</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mousebutton">
+<h3>MOUSEBUTTON</h3>
+<div class="form">
+<pre><code class="language-axiom">MOUSEBUTTON(BUTTONNUMBER)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>buttonNumber</code></td><td><code>INTEGER</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mousepress">
+<h3>MOUSEPRESS</h3>
+<div class="form">
+<pre><code class="language-axiom">MOUSEPRESS(BUTTONNUMBER)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>buttonNumber</code></td><td><code>INTEGER</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-mousex">
+<h3>MOUSEX</h3>
+<div class="form">
+<pre><code class="language-axiom">MOUSEX()</code></pre>
+<p class="result">Результат: <code>LONG</code>.</p>
+<p class="muted">Аргументов нет.</p>
+</div>
+</article>
+<article class="card" id="fn-mousey">
+<h3>MOUSEY</h3>
+<div class="form">
+<pre><code class="language-axiom">MOUSEY()</code></pre>
+<p class="result">Результат: <code>LONG</code>.</p>
+<p class="muted">Аргументов нет.</p>
+</div>
+</article>
+<article class="card" id="fn-pmap">
+<h3>PMAP</h3>
+<div class="form">
+<pre><code class="language-axiom">PMAP(COORDINATE, SELECTOR)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>coordinate</code></td><td><code>DOUBLE</code></td></tr><tr><td><code>selector</code></td><td><code>INTEGER</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-point">
+<h3>POINT</h3>
+<div class="form">
+<pre><code class="language-axiom">POINT(NUMBER)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>number</code></td><td><code>INTEGER</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">POINT(X, Y)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>x</code></td><td><code>LONG</code></td></tr><tr><td><code>y</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-rgb">
+<h3>RGB</h3>
+<div class="form">
+<pre><code class="language-axiom">RGB(RED, GREEN, BLUE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>red</code></td><td><code>LONG</code></td></tr><tr><td><code>green</code></td><td><code>LONG</code></td></tr><tr><td><code>blue</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-screenheight">
+<h3>SCREENHEIGHT</h3>
+<div class="form">
+<pre><code class="language-axiom">SCREENHEIGHT()</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<p class="muted">Аргументов нет.</p>
+</div>
+</article>
+<article class="card" id="fn-screenisactive">
+<h3>SCREENISACTIVE</h3>
+<div class="form">
+<pre><code class="language-axiom">SCREENISACTIVE()</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<p class="muted">Аргументов нет.</p>
+</div>
+</article>
+<article class="card" id="fn-screenmode">
+<h3>SCREENMODE</h3>
+<div class="form">
+<pre><code class="language-axiom">SCREENMODE()</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<p class="muted">Аргументов нет.</p>
+</div>
+</article>
+<article class="card" id="fn-screenwidth">
+<h3>SCREENWIDTH</h3>
+<div class="form">
+<pre><code class="language-axiom">SCREENWIDTH()</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<p class="muted">Аргументов нет.</p>
+</div>
+</article>
+<article class="card" id="fn-spritecount">
+<h3>SPRITECOUNT</h3>
+<div class="form">
+<pre><code class="language-axiom">SPRITECOUNT(SPRITE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>sprite</code></td><td><code>SPRITE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-spriteheight">
+<h3>SPRITEHEIGHT</h3>
+<div class="form">
+<pre><code class="language-axiom">SPRITEHEIGHT(SPRITE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>sprite</code></td><td><code>SPRITE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-spritewidth">
+<h3>SPRITEWIDTH</h3>
+<div class="form">
+<pre><code class="language-axiom">SPRITEWIDTH(SPRITE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>sprite</code></td><td><code>SPRITE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-textheight">
+<h3>TEXTHEIGHT</h3>
+<div class="form">
+<pre><code class="language-axiom">TEXTHEIGHT(TEXT)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>text</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-textwidth">
+<h3>TEXTWIDTH</h3>
+<div class="form">
+<pre><code class="language-axiom">TEXTWIDTH(TEXT)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>text</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-tilecount">
+<h3>TILECOUNT</h3>
+<div class="form">
+<pre><code class="language-axiom">TILECOUNT(TILESET)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tileset</code></td><td><code>TILESET</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-tileheight">
+<h3>TILEHEIGHT</h3>
+<div class="form">
+<pre><code class="language-axiom">TILEHEIGHT(TILESET)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tileset</code></td><td><code>TILESET</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-tilewidth">
+<h3>TILEWIDTH</h3>
+<div class="form">
+<pre><code class="language-axiom">TILEWIDTH(TILESET)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>tileset</code></td><td><code>TILESET</code></td></tr></tbody></table>
+</div>
+</article>
+</section>
+<nav class="pager"><a class="prev" href="regex-functions.html">← Функции: RegEx</a><a class="next" href="tilemaps-functions.html">Функции: тайловые карты →</a></nav>
+</main>
+</div>
+<script src="scripts/navigation.js"></script>
+<script src="scripts/search-index.js"></script>
+<script src="scripts/highlight.js"></script>
+<script src="scripts/app.js"></script>
+</body>
+</html>

@@ -93,8 +93,8 @@ test('Перестройка возвращает меню из переполн
   assert.equal(overflow.children.length, 0);
   assert.equal(bar.querySelector('[data-menu="trace"]').parent, bar);
   const actions = name => bar.querySelector('[data-menu="' + name + '"]').querySelectorAll('.menu-dropdown-item[data-action]').map(node => node.dataset.action);
-  assert.deepEqual(actions('run'), ['check', 'run', 'stop']);
-  assert.deepEqual(actions('project'), ['create-project', 'open-project', 'close-project', 'new-project-file', 'refresh-project', 'choose-project-entry', 'use-current-entry']);
+  assert.deepEqual(actions('run'), ['check', 'run', 'run-current-file', 'stop']);
+  assert.deepEqual(actions('project'), ['create-project', 'create-project-descriptor', 'open-project-file', 'open-project', 'close-project', 'project-properties', 'new-project-file', 'add-existing-project-file', 'refresh-project', 'choose-project-entry', 'use-current-entry']);
   assert.deepEqual(actions('tools'), ['editor-settings', 'theme-light', 'theme-dark', 'theme-basic', 'theme-borland', 'lang-ru', 'lang-en', 'format-classic', 'format-modern', 'format', 'smart-identifier', 'event-log', 'open-log-folder']);
   for (const check of ['projectVisible', 'outlineVisible', 'panelConsole', 'panelDiagnostics', 'panelAssistant']) assert.ok(bar.querySelector('[data-check="' + check + '"]'), check);
 });

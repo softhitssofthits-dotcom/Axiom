@@ -1,0 +1,10 @@
+{
+  "formatVersion": 1,
+  "name": "Сумма двух чисел",
+  "entry": "main.axm",
+  "sources": [
+    "*.axm"
+  ],
+  "assets": [],
+  "exclude": []
+}

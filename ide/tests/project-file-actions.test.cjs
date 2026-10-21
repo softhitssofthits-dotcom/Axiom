@@ -134,3 +134,15 @@ test('Ожидающая файловая операция не допускае
   release({ ok: false, error: 'Отказ' }); await first; assert.equal(actions.pending, false);
   actions.capture(w.source, file, false); assert.equal(actions.clipboard.cut, false);
 });
+test('Переименование сохраняет содержимое и отказывает при конфликте и выходе из папки', async t => {
+ const w=workspace(t),file=path.join(w.source,'222.axm');fs.writeFileSync(file,'RETURN 42');const actions=new ProjectFileActions();
+ assert.equal((await actions.rename(w.source,file,'../escape.axm')).ok,false);
+ fs.writeFileSync(path.join(w.source,'keep.axm'),'keep');assert.equal((await actions.rename(w.source,file,'keep.axm')).ok,false);
+ const result=await actions.rename(w.source,file,'arithmetic.axm');assert.equal(result.ok,true);assert.equal(fs.existsSync(file),false);assert.equal(fs.readFileSync(result.target,'utf8'),'RETURN 42');assert.equal(fs.readFileSync(path.join(w.source,'keep.axm'),'utf8'),'keep');
+});
+test('Числовые имена исходников проекта запрещены до записи и переименования',async t=>{
+ const w=workspace(t),file=path.join(w.source,'module.axm');fs.writeFileSync(file,'keep');
+ const actions=new ProjectFileActions();assert.equal((await actions.rename(w.source,file,'222.axm')).ok,false);assert.equal(fs.readFileSync(file,'utf8'),'keep');
+ const {createProjectFile}=require('../src/main/file-service');assert.throws(()=>createProjectFile(w.source,path.join(w.source,'123.axm'),''),/цифр/);assert.equal(fs.existsSync(path.join(w.source,'123.axm')),false);
+ assert.doesNotThrow(()=>createProjectFile(w.source,path.join(w.source,'sum2.axm'),''));
+});

@@ -305,6 +305,10 @@ function setupIpc(logger, options = {}) {
     try { return { ok: true, path: require('./file-service').createProjectFile(root, target, text) }; }
     catch (error) { return { ok: false, message: error.message }; }
   });
+  ipcMain.handle('rename-project-file', (event, root, item, name) => {
+    if(!fromMainFrame(event))return invalidSource();
+    return projectFileActions.rename(root,item,name);
+  });
   ipcMain.handle('capture-project-file', (event, root, item, cut) => {
     if (!fromMainFrame(event)) return invalidSource();
     if (!projectPath(root) || !projectPath(item) || typeof cut !== 'boolean') return { ok: false, error: 'Неверные аргументы файловой операции.' };
@@ -521,7 +525,7 @@ function setupIpc(logger, options = {}) {
     const r = await dialog.showOpenDialog(owner, {
       defaultPath,
       properties: ['openFile'],
-      filters: [{ name: 'Axiom Sources', extensions: ['axm'] }, { name: 'All Files', extensions: ['*'] }],
+      filters: [{ name: 'Axiom Sources and Projects', extensions: ['axm','axproj'] }, { name: 'All Files', extensions: ['*'] }],
     });
     const picked = r.filePaths[0] || null;
     const dir = dirOfPickedFile(picked);
@@ -532,15 +536,28 @@ function setupIpc(logger, options = {}) {
     return picked;
   });
 
-  ipcMain.handle('open-project-dialog', async event => {
+  ipcMain.handle('open-project-file-dialog', async event => {
+    const owner=BrowserWindow.fromWebContents(event.sender);if(!owner||owner.isDestroyed())return null;
+    const settings=loadSettings();
+    const defaultPath=[settings.lastProjectFileDir,settings.lastProjectDir,dirOfPickedFile(settings.lastProjectFile)]
+      .map(folder=>resolveDefaultDir(folder,p=>fs.existsSync(p))).find(Boolean);
+    const result=await dialog.showOpenDialog(owner,{defaultPath,properties:['openFile'],filters:[{name:'Axiom Project',extensions:['axproj']}]});
+    const picked=result.filePaths[0]||null;
+    const folder=dirOfPickedFile(picked);
+    if(folder&&folder!==settings.lastProjectFileDir){settings.lastProjectFileDir=folder;saveSettings();}
+    return picked;
+  });
+
+  ipcMain.handle('open-project-dialog', async (event, suggestedPath) => {
     const owner = BrowserWindow.fromWebContents(event.sender);
     if (!owner || owner.isDestroyed()) return null;
     const settings = loadSettings();
-    const defaultPath = resolveDefaultDir(settings.lastProjectDir, (p) => fs.existsSync(p));
+    const defaultPath = [suggestedPath,settings.lastProjectFolderDir,settings.lastProjectDir,settings.lastProjectFileDir]
+      .map(p=>resolveDefaultDir(p,dir=>fs.statSync(dir).isDirectory())).find(Boolean);
     const r = await dialog.showOpenDialog(owner, { defaultPath, properties: ['openDirectory'] });
     const picked = r.filePaths[0] || null;
-    if (picked && picked !== settings.lastProjectDir) {
-      settings.lastProjectDir = picked;
+    if (picked && picked !== settings.lastProjectFolderDir) {
+      settings.lastProjectFolderDir = picked;
       saveSettings();
     }
     return picked;

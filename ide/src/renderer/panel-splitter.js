@@ -5,9 +5,10 @@
   }
   function clamp(value, limits) { return Math.max(limits.min, Math.min(Number.isFinite(value) ? value : limits.min, limits.max)); }
   class PanelSplitter {
-    constructor({handle, panel, container, axis, minimum, reserve, maximum, defaultSize, savedSize, onCommit}) {
+    constructor({handle, panel, container, axis, minimum, reserve, maximum, defaultSize, savedSize, onCommit, direction}) {
       Object.assign(this, {handle, panel, container, axis, minimum, reserve, maximum, defaultSize, onCommit});
       this.preferred = Number.isFinite(savedSize) && savedSize > 0 ? savedSize : defaultSize;
+      this.direction = direction ?? (axis === 'x' ? 1 : -1);
       this.drag = null; this.frame = null; this.lastExtent = this.extent();
       handle.tabIndex = 0; handle.setAttribute('role', 'separator');
       handle.setAttribute('aria-orientation', axis === 'x' ? 'vertical' : 'horizontal');
@@ -51,7 +52,7 @@
     }
     move(e) {
       if (!this.drag || this.drag.id !== e.pointerId) return;
-      this.drag.value = this.drag.size + (this.coordinate(e) - this.drag.coordinate) * (this.axis === 'x' ? 1 : -1);
+      this.drag.value = this.drag.size + (this.coordinate(e) - this.drag.coordinate) * this.direction;
       if (this.frame === null) this.frame = requestAnimationFrame(() => { this.frame = null; if (this.drag) this.apply(this.drag.value); });
     }
     finish(e) {
@@ -70,7 +71,7 @@
     key(e) {
       if (e.key === 'Escape') { this.cancel(); return; }
       if (e.key === 'Enter') { e.preventDefault(); this.reset(); return; }
-      const sign = this.axis === 'x' ? {ArrowLeft: -1, ArrowRight: 1}[e.key] : {ArrowUp: 1, ArrowDown: -1}[e.key];
+      const sign = this.axis === 'x' ? {ArrowLeft: -1, ArrowRight: 1}[e.key] : {ArrowUp: -this.direction, ArrowDown: this.direction}[e.key];
       if (sign === undefined && !['Home', 'End'].includes(e.key)) return;
       e.preventDefault(); this.cancel(); const limits = this.limits();
       const value = e.key === 'Home' ? limits.min : e.key === 'End' ? limits.max : this.current() + sign * (e.shiftKey ? 40 : 10);

@@ -6,7 +6,7 @@ class ExecutionController {
     this.disposers = [api.onBackendEvent(message => this.event(message)),
       api.onBackendFault(fault => this.fault(fault.message))];
   }
-  async start(file, launchKind = 'run', breakpoints = [], stopFirst = true) {
+  async start(file, launchKind = 'run', breakpoints = [], stopFirst = true, projectFilePath = this.ide.projectSession?.descriptor?.projectFilePath || null) {
     this.inputSubmission = null;
     const ide = this.ide;
     const request = this.startRequest = {};
@@ -26,6 +26,7 @@ class ExecutionController {
       response = await this.api.startExecution({ documentId: document.documentId,
         documentRevision: document.revision, sourceText: snapshot.sourceText, sourceFilePath: file,
         projectDocuments:snapshot.documents,
+        projectFilePath,
         launchKind, breakpointLines: breakpoints,
         sourceBreakpoints: launchKind === 'debug' ? [...ide.openFiles].flatMap(([path,entry]) =>
           path.startsWith('untitled') ? [] : (ide.trace?.lines?.(entry.model) || []).map(line=>({sourceFilePath:path,line}))) : [],

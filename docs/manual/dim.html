@@ -7,19 +7,94 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор DIM</span></nav>
-<p class="eyebrow">Глава 2 · Переменные и значения</p><h1 class="page-title">Оператор DIM</h1><p class="lead">DIM — оператор языка Axiom, который объявляет переменную, задаёт её тип и начальное значение. Тем же оператором объявляют массивы и строки фиксированной длины.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-<section class="article-section"><h2>Назначение и контекст</h2><p>Объявление сообщает компилятору, какие данные будут храниться под указанным именем. После объявления переменную можно читать в выражениях и изменять присваиванием. Оператор DIM разрешён на верхнем уровне программы, внутри подпрограммы и внутри блока, например IF или FOR. Место объявления определяет, где доступно имя; см. <a href="variables-scope.html">области видимости</a>.</p><p>Оператор DIM нужен для обычных переменных. Параметр подпрограммы, счётчик FOR и переменная после CATCH объявляются соответствующей конструкцией и не требуют отдельного DIM.</p></section><section class="article-section" id="syntax"><h2>Синтаксис</h2><h3>Одна переменная</h3><pre><code class="language-axiom">DIM &lt;имя&gt; AS &lt;тип&gt;</code></pre><pre><code class="language-axiom">DIM &lt;имя&gt; AS &lt;тип&gt; = &lt;выражение&gt;</code></pre><pre><code class="language-axiom">DIM &lt;имя&gt; = &lt;выражение&gt;</code></pre><h3>Несколько переменных</h3><pre><code class="language-axiom">DIM &lt;имя1&gt;, &lt;имя2&gt; AS &lt;тип&gt;</code></pre><pre><code class="language-axiom">DIM &lt;имя1&gt; AS &lt;тип1&gt;, &lt;имя2&gt; AS &lt;тип2&gt;</code></pre><h3>Массив с заданными границами</h3><pre><code class="language-axiom">DIM &lt;имя&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;) AS &lt;тип элемента&gt;</code></pre><pre><code class="language-axiom">DIM &lt;имя&gt;(&lt;нижняя1&gt; TO &lt;верхняя1&gt;, &lt;нижняя2&gt; TO &lt;верхняя2&gt;) AS &lt;тип элемента&gt;</code></pre><h3>Динамический массив</h3><pre><code class="language-axiom">DIM &lt;имя&gt;() AS &lt;тип элемента&gt;</code></pre><pre><code class="language-axiom">DIM &lt;имя&gt;(,) AS &lt;тип элемента&gt;</code></pre><h3>Строка фиксированной длины</h3><pre><code class="language-axiom">DIM &lt;имя&gt; AS STRING * &lt;длина&gt;</code></pre></section><section class="article-section"><h2>Части объявления</h2><ul><li><code>&lt;имя&gt;</code> — новое пользовательское имя. Оно должно соответствовать <a href="variables-scope.html#names">правилам записи имён</a>.</li><li><code>&lt;тип&gt;</code> — тип хранимого значения: встроенный тип, ранее объявленный пользовательский TYPE или функциональный тип.</li><li><code>&lt;выражение&gt;</code> — выражение, задающее начальное значение. Его тип должен быть совместим с типом переменной.</li><li><code>&lt;тип элемента&gt;</code> — тип каждого элемента массива.</li><li><code>&lt;нижняя граница&gt;</code> и <code>&lt;верхняя граница&gt;</code> — первый и последний допустимые индексы измерения. Обе границы включаются в диапазон.</li><li><code>&lt;длина&gt;</code> — число кодовых единиц UTF-16 в фиксированной строке. Требуется целочисленная константа от 1 до 65535.</li></ul><p>Часть <code>AS &lt;тип&gt;</code> задаёт тип явно. Если она опущена, компилятор определяет тип по начальному выражению. Если выражения нет, явный тип обязателен.</p></section><section class="article-section"><h2>Начальное значение</h2><p>При выполнении DIM переменная получает указанное начальное значение. Если выражение опущено, используется значение по умолчанию:</p><table><thead><tr><th>Тип</th><th>Начальное значение</th></tr></thead><tbody><tr><td>INTEGER, LONG, DOUBLE, DECIMAL</td><td>0</td></tr><tr><td>BOOLEAN</td><td>FALSE</td></tr><tr><td>Обычная STRING</td><td>Пустая строка</td></tr><tr><td>DATE</td><td>0001-01-01</td></tr><tr><td>TIME</td><td>00:00:00</td></tr><tr><td>DATETIME</td><td>0001-01-01 00:00:00</td></tr></tbody></table><p>Поля пользовательской записи получают свои значения по умолчанию. Правила фиксированных строк, файлов и графических ресурсов объясняются на страницах соответствующих типов. Если DIM выполняется повторно, например на следующем проходе цикла, начальное значение задаётся снова.</p></section><section class="article-section"><h2>Групповые объявления</h2><p>Общая часть AS задаёт тип ближайшей группе имён слева:</p><pre><code class="language-axiom">DIM enabled, visible AS BOOLEAN, title AS STRING = "Отчёт"
-PRINT enabled, visible, title</code></pre><p>Программа выводит:</p><pre><code>FALSE FALSE Отчёт</code></pre><p>Здесь <code>enabled</code> и <code>visible</code> имеют тип BOOLEAN, а <code>title</code> — STRING. Если у группы имён есть общее начальное выражение, оно вычисляется отдельно для каждого имени. Общая запись не означает, что выражение будет вычислено только один раз. </p></section><section class="article-section"><h2>Массивы и фиксированные строки</h2><p>В объявлении массива скобки относятся к имени. Для каждого измерения нужно указать обе границы и слово TO; форма только с верхней границей не поддерживается. Число диапазонов задаёт количество измерений.</p><p>Границы вычисляются при выполнении объявления. Они могут иметь тип INTEGER, LONG, DOUBLE или DECIMAL. Дробная часть DOUBLE и DECIMAL отбрасывается к нулю; полученное значение должно помещаться в INTEGER. Нижняя граница −2147483648 запрещена. Другие ограничения диапазонов и выделения элементов описаны в <a href="arrays.html">главе массивов</a>.</p><p>Пустые скобки <code>()</code> объявляют одномерный динамический массив без выделенных элементов. Запись <code>(,)</code> объявляет двухмерный массив; каждое дополнительное измерение обозначается ещё одной запятой. Для выделения элементов используется <a href="redim.html">REDIM</a>.</p><p>Запись <code>STRING * &lt;длина&gt;</code> объявляет строку фиксированной длины. Она отличается от обычной STRING правилами дополнения и обрезки; см. <a href="data-types-strings-and-files.html">строковый тип</a>.</p></section><section class="article-section"><h2>Диагностика</h2><ul><li><code>MB2017</code> — в DIM не указаны ни тип, ни начальное выражение.</li><li><code>MB2002</code> — имя уже объявлено в той же области.</li><li><code>MB2016</code> — новое имя совпадает с доступным именем внешней области.</li><li><code>MB2001</code> — выражение обращается к неизвестному или недоступному имени.</li><li><code>MB2003</code> — начальное значение несовместимо с указанным типом.</li><li><code>MB2026</code> — длина фиксированной строки недопустима.</li><li><code>MB3007</code> — при выполнении получен недопустимый диапазон массива, в том числе запрещённая нижняя граница.</li><li><code>MB3005</code> — программа обращается к динамическому массиву до выделения элементов. Само объявление без элементов допустимо.</li></ul></section><section class="article-section"><h2>Пример</h2><p>Переменная получает начальное значение 3, затем присваивание заменяет его результатом сложения:</p><pre><code class="language-axiom">DIM count AS INTEGER = 3
+<p class="eyebrow">Глава 2 · Переменные и значения</p><h1 class="page-title">Оператор DIM</h1><p class="lead">DIM объявляет переменную с заданным или выведенным из выражения типом и устанавливает её начальное значение. В объявлении массива указывается также число измерений; если заданы границы, DIM выделяет элементы.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="syntax"><h2>Формы объявления</h2>
+<h3>Переменная с явным типом</h3>
+<pre><code class="language-axiom">DIM &lt;имя&gt; AS &lt;тип&gt;</code></pre>
+<pre><code class="language-axiom">DIM &lt;имя&gt; AS &lt;тип&gt; = &lt;выражение&gt;</code></pre>
+<p><code>&lt;имя&gt;</code> выбирается по <a href="variables-scope.html#names">правилам записи имён</a>. Часть после AS задаёт встроенный или пользовательский тип, в том числе <a href="arrays.html">массивный</a> или <a href="procedures-and-functions.html">функциональный</a>. Если указано начальное выражение, его результат должен быть совместим с объявленным типом. В объявлении без выражения используется значение по умолчанию.</p>
+<h3>Тип по начальному значению</h3>
+<pre><code class="language-axiom">DIM &lt;имя&gt; = &lt;выражение&gt;</code></pre>
+<p>Без AS компилятор выводит тип переменной из выражения справа от знака <code>=</code>. Такое объявление обязательно содержит начальное выражение. Выведенный тип сохраняется при всех последующих присваиваниях.</p>
+<pre><code class="language-axiom">DIM count = 3
 count = count + 2
-PRINT count</code></pre><p>Программа выводит:</p><pre><code>5</code></pre></section><section class="article-section"><h2>Запускаемые примеры</h2><p>Примеры можно открыть в IDE и выполнить. Файлы с ожидаемой ошибкой показывают соответствующее сообщение и причину отказа.</p><ul class="resource-list">
-                <li><a href="../../samples/operators/dim/basic_declaration.axm">DIM: базовое объявление</a></li>
-                <li><a href="../../samples/operators/dim/inferred_type_from_initializer.axm">DIM: вывод типа из инициализатора</a></li>
-                <li><a href="../../samples/operators/dim/multiple_declarations.axm">DIM: несколько объявлений в одной инструкции</a></li>
-                <li><a href="../../samples/operators/dim/long_inference.axm">DIM: вывод типа LONG</a></li>
-                <li><a href="../../samples/operators/dim/decimal_explicit_declaration.axm">DIM: явный DECIMAL</a></li>
-                <li><a href="../../samples/operators/dim/array_declaration.axm">DIM: массив с диапазоном</a></li>
-                <li><a href="../../samples/operators/dim/dynamic_array_declaration.axm">DIM: динамический массив</a></li>
-                <li><a href="../../samples/operators/dim/fixed_string.axm">DIM: фиксированная строка STRING * N</a></li>
-                <li><a href="../../samples/operators/dim/minimum_lower_bound_error.axm">Ошибка: запрещённая нижняя граница массива</a></li>
-            </ul></section><section class="article-section"><h2>См. также</h2><ul><li><a href="assignment.html">Присваивание</a></li><li><a href="const.html">Константы CONST</a></li><li><a href="variables-scope.html">Имена и области видимости</a></li><li><a href="arrays.html">Массивы</a></li><li><a href="data-types-strings-and-files.html">Строки фиксированной длины</a></li></ul></section><section class="article-section" id="module-visibility"><h2>Доступность в модуле</h2><p>Перед объявлением верхнего уровня можно указать <code>PUBLIC</code> или <code>PRIVATE</code>. Без модификатора имя закрыто внутри файла. Модификатор PUBLIC открывает имя для файлов, которые явно импортируют текущий модуль. Он не меняет остальные правила объявления.</p><pre><code>PUBLIC DIM name AS dataType</code></pre><pre><code>PRIVATE DIM name AS dataType</code></pre><p>Вложенные объявления не получают модификатора. Подробнее: <a href="visibility.html">PUBLIC и PRIVATE</a> и <a href="import.html">IMPORT</a>.</p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+PRINT count</code></pre>
+<p>Переменная <code>count</code> имеет тип INTEGER. Результат программы:</p>
+<pre><code>5</code></pre>
+<h3>Несколько переменных</h3>
+<pre><code class="language-axiom">DIM &lt;имя1&gt;, &lt;имя2&gt; AS &lt;тип&gt;</code></pre>
+<pre><code class="language-axiom">DIM &lt;имя1&gt;, &lt;имя2&gt; AS &lt;тип&gt; = &lt;выражение&gt;</code></pre>
+<pre><code class="language-axiom">DIM &lt;имя1&gt; AS &lt;тип1&gt;, &lt;имя2&gt; AS &lt;тип2&gt;</code></pre>
+<p>В группе имён перед общей частью AS все переменные получают один тип. Через запятую можно продолжить объявление следующей группой со своим типом и начальным выражением. Если у группы нет AS, компилятор выводит её тип по начальному выражению.</p>
+<pre><code class="language-axiom">DIM enabled, visible AS BOOLEAN, title AS STRING = "Отчёт"
+PRINT enabled, visible, title</code></pre>
+<p>Обе логические переменные получают FALSE, строковая переменная получает текст заголовка:</p>
+<pre><code>FALSE FALSE Отчёт</code></pre>
+<p>Общее начальное выражение вычисляется отдельно для каждого имени, в порядке их записи. Например, вызов функции в объявлении двух переменных выполняется дважды.</p>
+<h3>Массив с границами</h3>
+<pre><code class="language-axiom">DIM &lt;имя&gt;(&lt;нижняя граница&gt; TO &lt;верхняя граница&gt;) AS &lt;тип элемента&gt;</code></pre>
+<pre><code class="language-axiom">DIM &lt;имя&gt;(&lt;нижняя1&gt; TO &lt;верхняя1&gt;, &lt;нижняя2&gt; TO &lt;верхняя2&gt;) AS &lt;тип элемента&gt;</code></pre>
+<p>Каждый диапазон в скобках после имени задаёт нижнюю и верхнюю границы одного измерения массива. Обе границы входят в диапазон допустимых индексов; диапазоны разных измерений разделяются запятыми. Запись только с верхней границей, например <code>DIM items(3) AS INTEGER</code>, не поддерживается.</p>
+<p>DIM вычисляет границы во время выполнения. Выражения границ могут иметь тип INTEGER, LONG, DOUBLE или DECIMAL, однако каждое значение должно быть целым и помещаться в INTEGER. Дробная часть не отбрасывается: при её наличии возникает ошибка. Нижняя граница <code>-2147483648</code> запрещена. Правила пустого диапазона <code>1 TO 0</code> и предел выделения описаны в <a href="arrays.html">главе массивов</a>.</p>
+<p>Объявление со скобками после имени не принимает начальное выражение массива. После выделения элементы заполняются значениями по умолчанию; нужные данные записываются присваиванием элементов.</p>
+<h3>Динамический массив без элементов</h3>
+<pre><code class="language-axiom">DIM &lt;имя&gt;() AS &lt;тип элемента&gt;</code></pre>
+<pre><code class="language-axiom">DIM &lt;имя&gt;(,) AS &lt;тип элемента&gt;</code></pre>
+<p>Пустые скобки объявляют одномерный массив; одна запятая в скобках задаёт два измерения, а каждая следующая добавляет ещё одно. Объявление определяет тип элемента и число измерений, но не выделяет элементы. Для выделения используется <a href="redim.html">REDIM</a>.</p>
+<pre><code class="language-axiom">DIM grid(,) AS INTEGER
+PRINT ARRAYISALLOCATED(grid)
+REDIM grid(1 TO 2, 1 TO 3)
+PRINT ARRAYRANK(grid), ARRAYLENGTH(grid)</code></pre>
+<p>До REDIM массив не выделен. После REDIM массив содержит шесть элементов и имеет два измерения:</p>
+<pre><code>FALSE
+2 6</code></pre>
+<h3>Строка фиксированной длины</h3>
+<pre><code class="language-axiom">DIM &lt;имя&gt; AS STRING * &lt;длина&gt;</code></pre>
+<pre><code class="language-axiom">DIM &lt;имя&gt; AS STRING * &lt;длина&gt; = &lt;выражение&gt;</code></pre>
+<p>Длина задаётся целочисленной константой от 1 до 65535 и измеряется в кодовых единицах UTF-16. Короткое значение дополняется пробелами справа, длинное обрезается. Без начального выражения строка состоит из пробелов. Подробности: <a href="data-types-strings-and-files.html">STRING и фиксированная длина</a>.</p></section>
+<section class="article-section" id="initial-value"><h2>Начальные значения</h2>
+<p>Начальное выражение вычисляется каждый раз, когда выполняется объявление. Если DIM обычной переменной находится в теле цикла, при следующем проходе значение переменной устанавливается заново.</p>
+<p>При отсутствии выражения используются следующие значения:</p>
+<table><thead><tr><th>Тип</th><th>Начальное значение</th></tr></thead><tbody>
+<tr><td>INTEGER, LONG, DOUBLE, DECIMAL</td><td>0</td></tr>
+<tr><td>BOOLEAN</td><td>FALSE</td></tr>
+<tr><td>Обычная STRING</td><td>Пустая строка</td></tr>
+<tr><td>DATE</td><td>0001-01-01</td></tr>
+<tr><td>TIME</td><td>00:00:00</td></tr>
+<tr><td>DATETIME</td><td>0001-01-01 00:00:00</td></tr>
+<tr><td>UTCDATETIME</td><td>0001-01-01T00:00:00Z</td></tr>
+</tbody></table>
+<p>Поля пользовательской записи получают значения по умолчанию согласно <a href="type.html">правилам TYPE</a>. Начальное состояние файлов и графических ресурсов описано на страницах соответствующих типов в <a href="data-types.html">карте типов данных</a>.</p></section>
+<section class="article-section" id="scope"><h2>Место объявления</h2>
+<p>DIM разрешён на верхнем уровне файла, в подпрограмме и внутри блока, например IF или FOR. Место объявления определяет <a href="variables-scope.html">область видимости</a> имени. Повторное объявление в той же области и перекрытие доступного внешнего имени запрещены.</p>
+<p>Параметр подпрограммы, счётчик FOR и переменная CATCH объявляются соответствующей конструкцией. Отдельный DIM для них не нужен.</p></section>
+<section class="article-section" id="module-visibility"><h2>Доступность в модуле</h2>
+<pre><code class="language-axiom">PUBLIC DIM &lt;часть объявления после DIM&gt;</code></pre>
+<pre><code class="language-axiom">PRIVATE DIM &lt;часть объявления после DIM&gt;</code></pre>
+<p>Перед DIM верхнего уровня можно указать PUBLIC или PRIVATE; далее используется одна из форм объявления, приведённых выше. С PUBLIC имя доступно файлам, которые явно импортируют этот модуль. С PRIVATE или без модификатора имя доступно только внутри файла. Для вложенного объявления модификатор недопустим. Правила доступности и импорта описаны в статьях <a href="visibility.html">PUBLIC и PRIVATE</a> и <a href="import.html">IMPORT</a>.</p></section>
+<section class="article-section" id="diagnostics"><h2>Диагностика</h2>
+<ul><li><code>MB2017</code>: опущены и тип, и начальное выражение.</li>
+<li><code>MB2002</code>: имя уже объявлено в той же области.</li>
+<li><code>MB2016</code>: новое имя перекрывает доступное имя внешней области.</li>
+<li><code>MB2001</code>: начальное выражение обращается к неизвестному или недоступному имени.</li>
+<li><code>MB2003</code>: начальное значение несовместимо с типом либо начальное выражение задано для объявления со скобками массива.</li>
+<li><code>MB2026</code>: недопустимая длина или форма объявления фиксированной строки.</li>
+<li><code>MB3007</code>: граница массива имеет дробную часть либо равна запрещённой нижней границе.</li>
+<li><code>MB3008</code>: значение границы не помещается в INTEGER.</li>
+<li><code>MB3005</code>: недопустимое соотношение границ массива. Этот же код выдаётся при обращении к элементу массива до выделения; само динамическое объявление без элементов допустимо.</li>
+<li><code>MB3013</code>: превышен предел выделения массива или не удалось выделить память.</li></ul></section>
+<section class="article-section" id="samples"><h2>Запускаемые примеры</h2>
+<ul class="resource-list">
+<li><a href="../../samples/operators/dim/basic_declaration.axm">Объявление переменной</a></li>
+<li><a href="../../samples/operators/dim/inferred_type_from_initializer.axm">Определение типа по выражению</a></li>
+<li><a href="../../samples/operators/dim/multiple_declarations.axm">Групповые объявления</a></li>
+<li><a href="../../samples/operators/dim/long_inference.axm">Определение типа LONG</a></li>
+<li><a href="../../samples/operators/dim/decimal_explicit_declaration.axm">Явное объявление DECIMAL</a></li>
+<li><a href="../../samples/operators/dim/array_declaration.axm">Массив с границами</a></li>
+<li><a href="../../samples/operators/dim/dynamic_array_declaration.axm">Динамический массив</a></li>
+<li><a href="../../samples/operators/dim/fixed_string.axm">Фиксированная строка</a></li>
+<li><a href="../../samples/operators/dim/minimum_lower_bound_error.axm">Ошибка запрещённой нижней границы</a></li>
+</ul></section>
+<section class="article-section" id="related"><h2>См. также</h2>
+<p><a href="assignment.html">Присваивание</a> изменяет значение объявленной переменной. <a href="const.html">CONST</a> объявляет именованное значение, защищённое от записи. <a href="arrays.html">Глава массивов</a> описывает размещение элементов и ограничения формы.</p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
 <script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

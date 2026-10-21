@@ -1,0 +1,10 @@
+{
+  "formatVersion": 1,
+  "name": "maze_chase_project",
+  "entry": "main.axm",
+  "sources": [
+    "**/*.axm"
+  ],
+  "assets": [],
+  "exclude": []
+}

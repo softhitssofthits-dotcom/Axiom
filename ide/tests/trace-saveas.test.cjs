@@ -6,7 +6,7 @@ const { DocumentStore } = require('../src/renderer/documents');
 
 function setup() {
   const api = { unwatchFile: async () => {}, watchFile: async () => {}, addRecentFile: async () => [] };
-  const context = { window: { axiom: api }, document: { getElementById: () => ({}), querySelectorAll: () => [] } };
+  const context = { I18N:{t:(_key,value)=>value}, window: { axiom: api }, document: { getElementById: () => ({}), querySelectorAll: () => [] } };
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(require.resolve('../src/renderer/app.js'), 'utf8')
     .replace('window.__ide = new AxiomIDE();', 'window.AxiomIDE = AxiomIDE;'), context);
@@ -46,4 +46,12 @@ test('Несуществующий документ не меняет путь �
   const { ide } = setup();
   await ide.renameActive('copy.axm', 'missing.axm');
   assert.equal(ide._runFile, 'a.axm');
+});
+
+test('Отказ записи проекта не разрывает связь сохранённой вкладки с новым путём',async()=>{
+ const {ide,store}=setup();ide.projectSession={renamed:async()=>{throw new Error('conflict');}};let failure=false;ide.showIdeProblem=()=>{failure=true;};
+ // Реальный DocumentSaver уже перенёс запись перед renameActive.
+ store.rename('a.axm','copy.axm');
+ await ide.renameActive('copy.axm','a.axm');
+ assert.equal(ide.activeFile,'copy.axm');assert.ok(store.has('copy.axm'));assert.equal(store.has('a.axm'),false);assert.equal(failure,true);
 });

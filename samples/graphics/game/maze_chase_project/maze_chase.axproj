@@ -1,0 +1,13 @@
+{
+  "formatVersion": 1,
+  "name": "Maze Chase",
+  "entry": "main.axm",
+  "sources": [
+    "*.axm"
+  ],
+  "assets": [
+    "art/**",
+    "maze_chase_pellet_calibration.txt"
+  ],
+  "exclude": []
+}

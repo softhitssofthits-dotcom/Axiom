@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Клавиатура и мышь — Справочник Axiom</title>
+<link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="events">
+<a class="skip" href="#content">К содержанию</a>
+<header class="topbar">
+<a class="brand" href="index.html">Axiom<span>справочник</span></a>
+<form class="search" role="search" action="search.html" method="get">
+<label class="sr" for="q">Поиск по справочнику</label>
+<input id="q" name="q" type="search" placeholder="Имя функции, оператора или тема" autocomplete="off">
+<button type="submit">Найти</button>
+</form>
+<button class="menu-btn" type="button" aria-expanded="false" aria-controls="side">Оглавление</button>
+</header>
+<div class="shell">
+<aside id="side" class="side"><nav id="nav" aria-label="Оглавление"></nav></aside>
+<main id="content">
+<nav class="crumbs" aria-label="Путь"><a href="index.html">Справочник</a> / Клавиатура и мышь</nav>
+<h1>Клавиатура и мышь</h1>
+<p class="lead">Программа может опрашивать состояние клавиатуры и мыши или регистрировать обработчики, которые вызываются при событии.</p>
+
+<section><h2>Клавиатура</h2>
+<pre><code class="language-axiom">DIM key AS INTEGER
+key = INKEY()
+IF KEYDOWN(&quot;ESC&quot;) THEN
+    PRINT &quot;Выход&quot;
+END IF</code></pre>
+<p><code>INKEY</code> возвращает код ближайшей нажатой клавиши или 0. <code>KEYDOWN</code> проверяет удержание клавиши, <code>KEYPRESS</code> — нажатие с момента предыдущего опроса. Имена клавиш не зависят от регистра.</p>
+</section>
+
+<section><h2>Мышь</h2>
+<p><code>MOUSEX</code> и <code>MOUSEY</code> возвращают координаты в пикселях поверхности, <code>MOUSEBUTTON</code> — состояние кнопки, <code>MOUSEPRESS</code> — ближайшее событие нажатия. Опрос требует выбранного режима: без SCREEN или CANVAS обращение даёт MB2046.</p>
+<pre><code class="language-axiom">SCREEN 1
+PRINT MOUSEX(), MOUSEY()
+IF MOUSEBUTTON(1) THEN
+    PRINT &quot;Кнопка нажата&quot;
+END IF</code></pre>
+</section>
+
+<section><h2>Обработчики</h2>
+<pre><code class="language-axiom">SUB OnEscape()
+    PRINT &quot;Нажата ESC&quot;
+END SUB
+
+ON KEY(&quot;ESC&quot;), OnEscape
+ON MOUSE(1, &quot;DOWN&quot;), OnClick</code></pre>
+<p>Обработчик регистрируется командой <code>ON KEY</code> или <code>ON MOUSE</code> и снимается словом <code>OFF</code>. <code>STOP</code> приостанавливает вызов, сохраняя регистрацию. Обработчик выполняется между инструкциями программы и не прерывает текущую инструкцию посередине.</p>
+</section>
+
+<section><h2>Пауза</h2>
+<p><code>SLEEP</code> приостанавливает программу. Без аргумента она ждёт нажатия клавиши, с числовым аргументом — указанное число миллисекунд: <code>SLEEP 10</code> задерживает выполнение на 10 мс.</p>
+</section>
+<nav class="pager"><a class="prev" href="graphics.html">← Экран и графика</a><a class="next" href="errors.html">Обработка ошибок →</a></nav>
+</main>
+</div>
+<script src="scripts/navigation.js"></script>
+<script src="scripts/search-index.js"></script>
+<script src="scripts/highlight.js"></script>
+<script src="scripts/app.js"></script>
+</body>
+</html>

@@ -7,11 +7,46 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Присваивание</span></nav>
-<p class="eyebrow">Глава 2 · Переменные и значения</p><h1 class="page-title">Присваивание</h1><p class="lead">Присваивание — инструкция языка Axiom, которая записывает результат выражения в переменную, элемент массива или поле записи.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-<section class="article-section"><h2>Назначение и контекст</h2><p>Присваивание изменяет сохранённое значение, сохраняя тип назначения. Инструкция разрешена на верхнем уровне программы, внутри подпрограмм и блоков. Назначение должно быть доступно в текущей области видимости и допускать запись.</p></section><section class="article-section" id="syntax"><h2>Синтаксис</h2><pre><code class="language-axiom">&lt;цель&gt; = &lt;выражение&gt;</code></pre></section><section class="article-section"><h2>Цель и новое значение</h2><p><code>&lt;цель&gt;</code> — изменяемое назначение: объявленная переменная, индексируемый элемент массива или поле записи. Примеры: <code>count</code>, <code>items(1)</code>, <code>point.X</code>.</p><p><code>&lt;выражение&gt;</code> — выражение, вычисляющее новое значение. Его тип должен быть совместим с типом цели. Допустимые переходы описаны в <a href="data-types-conversions.html">статье преобразований типов</a>.</p></section><section class="article-section"><h2>Вычисление значения</h2><pre><code class="language-axiom">DIM total AS INTEGER = 4
+<p class="eyebrow">Глава 2 · Переменные и значения</p><h1 class="page-title">Присваивание</h1><p class="lead">Присваивание вычисляет выражение и записывает его результат в объявленную переменную, элемент массива или поле записи. Значение цели меняется, а её тип сохраняется.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="syntax"><h2>Запись инструкции</h2>
+<pre><code class="language-axiom">&lt;цель&gt; = &lt;выражение&gt;</code></pre>
+<p>Цель слева от знака равенства должна допускать запись. Ею может быть имя переменной, элемент массива или поле записи, например <code>count</code>, <code>items(1)</code>, <code>point.X</code>. Выражение справа задаёт новое значение, совместимое с типом цели. Допустимые преобразования перечислены в <a href="data-types-conversions.html">статье о преобразованиях типов</a>.</p>
+<p>Присваивание допустимо на верхнем уровне программы, в подпрограммах и блоках. Переменная должна быть объявлена заранее, а её имя доступно в текущей <a href="variables-scope.html">области видимости</a>: само присваивание нового имени не вводит.</p></section>
+<section class="article-section" id="value"><h2>Замена сохранённого значения</h2>
+<p>Правая часть вычисляется до записи результата. Поэтому в ней можно использовать прежнее значение той же переменной:</p>
+<pre><code class="language-axiom">DIM total AS INTEGER = 4
 total = total + 3
-PRINT total</code></pre><p>Программа выводит:</p><pre><code>7</code></pre><p>Правая часть использует прежнее значение <code>total</code>; результат 7 становится новым значением переменной.</p><p>В качестве цели можно указать отдельный элемент массива или поле записи. Это изменит выбранный элемент или поле; правила обращения к ним приведены в статьях <a href="arrays-indexing.html">индексирования</a> и <a href="type.html">пользовательских типов</a>.</p></section><section class="article-section"><h2>Ограничения и похожие записи</h2><p>Присваивание не объявляет имя. Если переменная ещё не объявлена, компилятор сообщает об ошибке. Прямое присваивание константе или переменной только для чтения запрещено.</p><p>Знак <code>=</code> в условии или другом выражении проверяет равенство. Например, <code>PRINT total = 7</code> выводит TRUE или FALSE и не меняет total. Различие определяется местом знака в программе.</p><p>Запись <code>&lt;поле&gt; := &lt;значение&gt;</code> используется в литерале записи для указания именованного поля. Она не заменяет обычное присваивание.</p><p>Файловые значения FILE нельзя присваивать друг другу общей инструкцией присваивания. Правила копирования записей и связь массивных представлений с исходным массивом описаны в соответствующих разделах.</p></section><section class="article-section"><h2>Диагностика</h2><ul><li><code>MB2001</code> — цель или выражение обращается к необъявленному имени.</li><li><code>MB2003</code> — вычисленное значение несовместимо с типом цели.</li><li><code>MB2010</code> — цель является константой или доступна только для чтения.</li><li><code>MB3005</code> — элементы массива ещё не выделены.</li><li><code>MB3002</code> — индекс выходит за границы массива.</li></ul></section><section class="article-section"><h2>Пример</h2><p>Объявление создаёт переменную. Два следующих присваивания последовательно изменяют её:</p><pre><code class="language-axiom">DIM count AS INTEGER = 2
+PRINT total</code></pre>
+<p>Результат:</p><pre><code>7</code></pre>
+<p>Следующее присваивание использует значение, сохранённое предыдущим. Здесь сначала счётчик увеличивается на единицу, затем полученное значение удваивается:</p>
+<pre><code class="language-axiom">DIM count AS INTEGER = 2
 count = count + 1
 count = count * 2
-PRINT count</code></pre><p>Программа выводит:</p><pre><code>6</code></pre></section><section class="article-section"><h2>См. также</h2><ul><li><a href="dim.html">Объявление DIM</a></li><li><a href="const.html">Константы</a></li><li><a href="data-types-conversions.html">Преобразования типов</a></li><li><a href="type.html">Поля записи</a></li><li><a href="arrays-slices.html">Массивные представления</a></li></ul></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+PRINT count</code></pre>
+<pre><code>6</code></pre></section>
+<section class="article-section" id="elements-and-fields"><h2>Элементы и поля</h2>
+<p>Для записи в отдельный элемент массива после имени указывается индекс, для записи в поле после точки указывается имя поля:</p>
+<pre><code class="language-axiom">TYPE Position
+    X AS INTEGER
+END TYPE
+
+DIM point AS Position
+DIM items(1 TO 2) AS INTEGER
+items(1) = 8
+point.X = items(1) + 1
+PRINT items(1), point.X</code></pre>
+<p>Результат:</p><pre><code>8 9</code></pre>
+<p>Запись в элемент массива требует выделенных элементов и индекса в допустимых границах. Подробности обращения к элементам и полям приведены в статьях <a href="arrays-indexing.html">об индексировании массивов</a> и <a href="type.html">о полях TYPE</a>. Присваивание массива целиком или записи подчиняется правилам копирования и совместного использования памяти, описанным в статьях <a href="arrays-slices.html">о массивных представлениях</a> и <a href="type.html">о пользовательских типах</a>.</p></section>
+<section class="article-section" id="restrictions"><h2>Ограничения и другие значения знака равенства</h2>
+<p>Константа и переменная только для чтения не могут быть целью присваивания. Значения FILE также нельзя присваивать общей инструкцией: для открытия и закрытия файла предусмотрены <a href="open.html">OPEN</a> и <a href="close.html">CLOSE</a>.</p>
+<p>В выражениях знак <code>=</code> обозначает сравнение. Поэтому <code>PRINT total = 7</code> выводит TRUE или FALSE и оставляет <code>total</code> без изменения. Запись <code>&lt;поле&gt; := &lt;значение&gt;</code> задаёт значение именованного поля в литерале записи; как инструкция присваивания она не используется.</p></section>
+<section class="article-section" id="diagnostics"><h2>Диагностика</h2>
+<ul><li><code>MB2001</code>: цель или выражение обращается к необъявленному либо недоступному имени.</li>
+<li><code>MB2003</code>: значение несовместимо с типом цели либо выполняется прямое присваивание FILE.</li>
+<li><code>MB2010</code>: цель является константой или доступна только для чтения.</li>
+<li><code>MB3005</code>: элементы массива ещё не выделены.</li>
+<li><code>MB3002</code>: индекс выходит за границы массива.</li></ul>
+<p>Ошибки вычисления правой части описаны в статьях соответствующих операций и функций.</p></section>
+<section class="article-section" id="related"><h2>См. также</h2>
+<p><a href="dim.html">DIM</a> объявляет переменную и задаёт её тип; <a href="const.html">CONST</a> защищает имя от записи. <a href="data-types-conversions.html">Преобразования типов</a> определяют, какие значения можно записать в цель другого типа.</p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
 <script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

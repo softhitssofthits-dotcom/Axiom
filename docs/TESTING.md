@@ -117,3 +117,8 @@ node ide/e2e/runner.js --list
 - Полный прогон Electron пишет `ide/e2e/evidence/results.json` только в конце; для длинных прогонов используйте `-Out` и `--from`, чтобы не потерять результат.
 - `samples/*.axm` — запускаемые приёмочные программы, а не автоматические тесты. Их проверяют через `axiom check`, ручной запуск в IDE или существующие сценарии.
 - `.artifacts/` и локальные снимки `FAIL_*` не публикуются в Git.
+
+
+### 2026-10-21 — самостоятельные проекты
+
+Проверки формата находятся в AxiomProjectTests и SourceProjectTests (Axiom.Execution.Tests), команды CLI — в AxprojCliTests и общем Axiom.Cli.Tests. Сценарии projects.spec.js включены в e2e-documents и e2e-all. Нативная приёмка описанного Maze Chase — axproj-maze-native-controls в backend.spec.js. Выбирать адресные сценарии либо соответствующую область; не запускать весь язык из-за правки дерева проекта. Результаты конкретного этапа записаны в WORKLOG5.

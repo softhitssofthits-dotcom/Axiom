@@ -11,7 +11,7 @@ function normalize(value) {
   const settings = { theme: 'dark', language: 'ru', ...value };
   settings.recentFiles = Array.isArray(settings.recentFiles) ? settings.recentFiles.filter(file => typeof file === 'string' && file) : [];
   settings.openTabs = Array.isArray(settings.openTabs) ? settings.openTabs.filter(tab => isRecord(tab) && typeof tab.path === 'string') : [];
-  for (const key of ['lastOpenDir', 'lastProjectDir']) if (typeof settings[key] !== 'string' || !settings[key]) delete settings[key];
+  for (const key of ['lastOpenDir', 'lastProjectDir', 'lastProjectFile', 'lastProjectFileDir', 'lastProjectFolderDir']) if (typeof settings[key] !== 'string' || !settings[key]) delete settings[key];
   return settings;
 }
 

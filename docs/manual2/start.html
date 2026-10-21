@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Начало работы — Справочник Axiom</title>
+<link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="start">
+<a class="skip" href="#content">К содержанию</a>
+<header class="topbar">
+<a class="brand" href="index.html">Axiom<span>справочник</span></a>
+<form class="search" role="search" action="search.html" method="get">
+<label class="sr" for="q">Поиск по справочнику</label>
+<input id="q" name="q" type="search" placeholder="Имя функции, оператора или тема" autocomplete="off">
+<button type="submit">Найти</button>
+</form>
+<button class="menu-btn" type="button" aria-expanded="false" aria-controls="side">Оглавление</button>
+</header>
+<div class="shell">
+<aside id="side" class="side"><nav id="nav" aria-label="Оглавление"></nav></aside>
+<main id="content">
+<nav class="crumbs" aria-label="Путь"><a href="index.html">Справочник</a> / Начало работы</nav>
+<h1>Начало работы</h1>
+<p class="lead">Программа Axiom — это файл .axm с объявлениями и инструкциями. Его можно проверить, запустить и отладить в Axiom IDE.</p>
+
+<section><h2>Первая программа</h2>
+<p>Инструкции выполняются сверху вниз. Объявление DIM вводит переменную, задаёт её тип и начальное значение. PRINT выводит текст и значения.</p>
+<pre><code class="language-axiom">DIM name AS STRING = "Анна"
+DIM age AS INTEGER = 27
+PRINT "Имя: "; name
+PRINT "Возраст: "; age</code></pre>
+<p>Результат:</p>
+<pre><code>Имя: Анна
+Возраст: 27</code></pre>
+<p>Точка с запятой соединяет части вывода без добавочного пробела; пробел после двоеточия входит в строку. Запятая добавляет один пробел. Без завершающего разделителя PRINT заканчивает строку.</p>
+</section>
+<section><h2>Проверка и запуск</h2>
+<p>«Запуск → Проверить» (Ctrl+Shift+C) анализирует исходник, но не выполняет его. «Запуск → Запустить» (Ctrl+F5) проверяет программу и запускает её. «Запуск → Остановить» (Shift+F5) прерывает выполнение, в том числе ожидание INPUT. Команда «Файл → Сохранить» записывает файл на диск.</p>
+<p>Найденные проблемы собраны в панели «Проблемы». Каждая запись содержит код, описание и место в исходнике. Ошибка не позволяет запустить программу. Предупреждение и совет на запуск не влияют.</p>
+</section>
+<section><h2>Комментарии</h2>
+<p>Апостроф начинает комментарий и действует до конца строки. Слово REM делает то же самое, если за ним следует пробельный символ. Комментарий может занимать отдельную строку или стоять после инструкции.</p>
+<pre><code class="language-axiom">' Имя и возраст.
+DIM name AS STRING = "Анна"
+PRINT name  ' Комментарий после инструкции.
+REM Ещё один комментарий.</code></pre>
+<p>Перевод строки разделяет инструкции. Двоеточие разделителем не является: запись <code>PRINT 1: PRINT 2</code> даёт MB0001.</p>
+</section>
+<section><h2>Разделы исходника</h2>
+<p>Строки <code>' #region Название</code> и <code>' #endregion</code> отмечают участки для панели «Структура программы» и для сворачивания кода. На выполнение они не влияют. Название раздела обязательно и может быть на русском.</p>
+<pre><code class="language-axiom">' #region Приветствие
+PRINT "Привет"
+' #endregion</code></pre>
+</section>
+<section><h2>Имена и регистр</h2>
+<p>Имя начинается с латинской буквы или подчёркивания; далее допустимы латинские буквы, цифры и подчёркивание. Регистр не различается: <code>count</code> и <code>Count</code> — одно имя. Ключевые слова зарезервированы, кроме LINE: как имя оно допустимо, если не стоит в начале инструкции.</p>
+</section>
+<nav class="pager"><span></span><a class="next" href="language.html">Основы языка →</a></nav>
+</main>
+</div>
+<script src="scripts/navigation.js"></script>
+<script src="scripts/search-index.js"></script>
+<script src="scripts/highlight.js"></script>
+<script src="scripts/app.js"></script>
+</body>
+</html>

@@ -42,13 +42,14 @@ module.exports.push({ id: 'files-project-external-open', name: 'Файл вне 
   await S.page.evaluate(() => window.__ide.handleAction('open'));
   await S.page.waitForFunction(p => window.__ide.activeFile === p, outside);
   await S.page.evaluate(p => window.__ide.switchToFile(p), inside);
-  C.ok(await S.page.evaluate(p => { const section = document.getElementById('external-files'); return !section.classList.contains('hidden') && [...section.querySelectorAll('.project-file')].some(item => item.title === p); }, outside), 'Открытый внешний файл показан в отдельном разделе');
-  await S.page.locator('#external-files-list .project-file').click();
-  C.eq(await S.page.evaluate(() => window.__ide.activeFile), outside, 'Нажатие внешнего файла возвращает его вкладку');
+  C.eq(await S.page.locator('#external-files').count(),0,'Раздел прочих файлов отсутствует');
+  C.eq(await S.page.locator('#project-files .project-file').count(),1,'В дереве только файл проекта');
+  await S.page.evaluate(p => window.__ide.switchToFile(p), outside);
+  C.eq(await S.page.evaluate(() => window.__ide.activeFile), outside, 'Внешний документ остаётся доступен во вкладках');
   C.eq(await S.editorValue(), 'PRINT "Вне проекта"\n', 'Текст внешнего файла доступен в редакторе');
   await S.page.evaluate(() => window.__ide.closeProject());
   C.ok(await S.page.evaluate(paths => window.__ide.openFiles.has(paths.outside) && !window.__ide.openFiles.has(paths.inside), { outside, inside }), 'Закрытие проекта оставляет внешний файл и закрывает внутренний');
-  C.ok(await S.page.evaluate(() => document.getElementById('external-files').classList.contains('hidden')), 'Внешняя группа скрывается после закрытия проекта');
+  C.eq(await S.page.locator('#external-files').count(),0,'Закрытие проекта не создаёт внешнюю группу');
 } });
 module.exports.push({ id: 'files-project-hides-windows-hidden-and-system-items', name: 'Дерево проекта исключает скрытые и системные файлы и папки Windows', async fn({ S, C }) {
   const fs = require('node:fs'); const path = require('node:path');
@@ -372,15 +373,15 @@ module.exports.push({ id: 'files-save-open-writer', name: 'Открытый де
 } });
 
 module.exports.push({
-  id:'project-open-maze-tabs-entry',name:'Открыть проект из меню: девять вкладок Maze Chase и запуск main из модуля',
+  id:'project-open-maze-tabs-entry',name:'Открыть проект Maze Chase из меню: дерево, точка входа и запуск main из модуля',
   async fn({S,C}) {
     const path=require('node:path');const {ROOT}=require('../helpers');
     const folder=path.join(ROOT,'samples/graphics/game/maze_chase_project'),main=path.join(folder,'main.axm');
     await S.launch({settings:{smartIdentifierEnabled:false}});await S.stubOpenDialog([folder]);
     await S.page.evaluate(()=>window.__ide.handleAction('open-project'));
     await S.page.waitForFunction(folder=>window.__ide.projectDir===folder&&!window.__ide.projectSession.loading,folder);
-    C.eq(await S.page.locator('.editor-tab').count(),9,'Открыты ровно девять вкладок без пустой стартовой');
-    C.eq(await S.page.locator('#project-entry').inputValue(),main,'main выбран явно видимым файлом запуска');
+    C.eq(await S.page.locator('.editor-tab').count(),1,'Открыта точка входа без остальных восьми вкладок');
+    C.eq(await S.page.evaluate(()=>window.__ide.projectSession.entry),main,'main выбран описанием проекта');
     C.eq(await S.page.evaluate(()=>window.__ide.activeFile),main,'Точка входа активна после открытия');
     C.eq(await S.page.evaluate(main=>window.__ide.openFiles.navigationEntryId===window.__ide.openFiles.get(main).documentId,main),true,'Помощник получил ту же точку входа');
     await S.page.evaluate(p=>window.__ide.openFile(p),path.join(folder,'maze_player.axm'));
@@ -391,7 +392,7 @@ module.exports.push({
     await S.page.evaluate(()=>window.__ide.stop());await S.waitIdle();
     for(const theme of ['dark','light','basic','borland']){
       await S.page.evaluate(t=>window.__ide.setTheme(t),theme);
-      C.eq(await S.page.locator('#project-entry').isVisible(),true,'Выбор запуска доступен: '+theme);
+      C.eq(await S.page.locator('#project-entry').isVisible(),false,'Точка входа задаётся свойством проекта: '+theme);
     }
     C.eq(S.pageErrors.length,0,'Открытие проекта без ошибок страницы');
   }
@@ -485,6 +486,10 @@ module.exports.push({id:'project-sidebar-controls',name:'Единая геоме
   const main=writeAxm(root,'main.axm','PRINT 1\n');
   const long=writeAxm(root,'очень_длинное_название_вспомогательного_модуля_для_проверки_границ.axm','PRINT 2\n');
   await S.launch();await S.page.evaluate(p=>window.__ide.openProject(p),root);
+  for(const language of ['en','ru']){
+    await S.page.evaluate(l=>{window.__ide.setLanguage(l);window.I18N.apply();},language);
+    C.eq(await S.page.locator('#project-title').textContent(),require('node:path').basename(root),'Имя папки сохраняется при переводе: '+language);
+  }
   await S.page.locator('#project-entry').selectOption(long);
   for(const theme of ['dark','light','basic','borland']){
     await S.page.evaluate(t=>window.__ide.setTheme(t),theme);
@@ -505,15 +510,20 @@ module.exports.push({id:'project-sidebar-controls',name:'Единая геоме
   const tabs=await S.page.locator('.editor-tab').count();
   await toggle.click();
   C.eq(await S.page.locator('#project-files').isVisible(),false,'Треугольник скрывает файлы');
-  C.eq(await S.page.locator('#project-entry').isVisible(),true,'Файл запуска остаётся доступен');
+  C.eq(await S.page.locator('#project-entry').isVisible(),false,'Файл запуска скрывается вместе с проектом');
   await S.page.evaluate(()=>window.__ide.refreshProjectFiles());
   C.eq(await toggle.getAttribute('aria-expanded'),'false','Обновление перечня не раскрывает проект');
+  C.eq(await S.page.locator('#project-entry-controls').isVisible(),false,'Обновление не возвращает подпись и список запуска');
+  C.eq(await S.page.locator('#project-resizer').isVisible(),false,'У свёрнутого проекта нет лишней высоты и разделителя');
   await toggle.focus();await S.page.keyboard.press('Enter');
   C.eq(await S.page.locator('#project-files').isVisible(),true,'Клавиатура раскрывает файлы');
+  C.eq(await S.page.locator('#project-entry').isVisible(),true,'Выбор запуска снова доступен');
   C.eq(await S.page.locator('.editor-tab').count(),tabs,'Вкладки сохранены');
   C.eq(await S.page.evaluate(()=>window.__ide.runTarget()),main,'Точка входа сохранена');
   await S.page.evaluate(()=>window.__ide.closeProject());
   C.eq(await toggle.isVisible(),false,'Без проекта треугольника нет');
+  await S.page.evaluate(()=>window.__ide.setLanguage('en'));
+  C.eq(await S.page.locator('#project-title').textContent(),'Open Project','После закрытия переводится команда открытия');
   C.eq(S.pageErrors.length,0,'Ошибок страницы нет');
 }});
 
@@ -522,6 +532,7 @@ module.exports.push({id:'project-open-does-not-edit-source',name:'Открыти
  const folder=path.join(ROOT,'samples/graphics/game/maze_chase_project');
  const disk=new Map(fs.readdirSync(folder).filter(f=>f.endsWith('.axm')).map(f=>[path.join(folder,f),fs.readFileSync(path.join(folder,f),'utf8')]));
  await S.launch({settings:{smartIdentifierEnabled:true}});await S.page.evaluate(p=>window.__ide.openProject(p),folder);
+ for(const file of disk.keys())await S.page.evaluate(p=>window.__ide.openFile(p),file);
  const state=await S.page.evaluate(()=>[...window.__ide.openFiles.values()].map(d=>({path:d.path,text:d.model.getValue(),saved:d.savedText,dirty:window.__ide.openFiles.isDirty(d.path)})));
  const differences=state.filter(d=>d.text!==d.saved).map(d=>({file:path.basename(d.path),changes:d.text.split('\n').flatMap((line,i)=>line!==d.saved.split('\n')[i]?[{line:i+1,before:d.saved.split('\n')[i],after:line}]:[])}));
  fs.writeFileSync(path.join(ROOT,'.artifacts/project-open-20261020/open-source-differences.json'),JSON.stringify(differences,null,2));

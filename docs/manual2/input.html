@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>INPUT — Справочник Axiom</title>
+<link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="input">
+<a class="skip" href="#content">К содержанию</a>
+<header class="topbar">
+<a class="brand" href="index.html">Axiom<span>справочник</span></a>
+<form class="search" role="search" action="search.html" method="get">
+<label class="sr" for="q">Поиск по справочнику</label>
+<input id="q" name="q" type="search" placeholder="Имя функции, оператора или тема" autocomplete="off">
+<button type="submit">Найти</button>
+</form>
+<button class="menu-btn" type="button" aria-expanded="false" aria-controls="side">Оглавление</button>
+</header>
+<div class="shell">
+<aside id="side" class="side"><nav id="nav" aria-label="Оглавление"></nav></aside>
+<main id="content">
+<nav class="crumbs" aria-label="Путь"><a href="index.html">Справочник</a> / INPUT</nav>
+<h1>INPUT</h1>
+<p class="lead">INPUT запрашивает у пользователя данные и записывает их в переменные. Он разбирает ответ по типу каждой цели и отклоняет неверное значение целиком.</p>
+
+<section><h2>Один получатель</h2>
+<pre><code class="language-axiom">DIM name AS STRING
+INPUT &quot;Как вас зовут&quot;; name
+PRINT &quot;Привет, &quot;; name</code></pre>
+<p>Приглашение — необязательная строка, за которой следует точка с запятой или запятая. После точки с запятой к приглашению добавляется вопрос и пробел; запятая сохраняет текст как есть. Без приглашения выводится только вопрос.</p>
+</section>
+
+<section><h2>Несколько получателей</h2>
+<pre><code class="language-axiom">DIM name AS STRING
+DIM age AS INTEGER
+INPUT &quot;Имя и возраст&quot;; name, age
+PRINT name; &quot; — &quot;; age</code></pre>
+<p>Несколько целей перечисляются через запятую. Поля ответа разбираются все сразу, до записи: если одно значение неверное, ни один получатель не меняется, и возникает MB3003.</p>
+</section>
+
+<section><h2>Типы значений</h2>
+<p>INPUT принимает числа, строки, BOOLEAN и временные значения. BOOLEAN распознаёт только слова TRUE и FALSE без учёта регистра; число — запись INTEGER, LONG, DOUBLE или DECIMAL; временные значения — канонический текст своего типа. Строка получает остаток строки без разбора.</p>
+<p>Строковое значение принимается в канонической форме: для DATE это <code>yyyy-MM-dd</code>, для TIME — <code>HH:mm:ss</code>, для DATETIME — <code>yyyy-MM-dd HH:mm:ss</code>. Региональные записи и формат с разделителем T не принимаются.</p>
+</section>
+
+<section><h2>Место ввода</h2>
+<p>В обычной программе ответ набирается в консоли IDE. При активном SCREEN ввод выполняется в экранном окне; CANVAS не перенаправляет INPUT из консоли. Неверный ответ возвращает ошибку, которую программа может перехватить и повторить запрос.</p>
+</section>
+<nav class="pager"><a class="prev" href="print.html">← PRINT и PRINT USING</a><a class="next" href="files.html">Файлы →</a></nav>
+</main>
+</div>
+<script src="scripts/navigation.js"></script>
+<script src="scripts/search-index.js"></script>
+<script src="scripts/highlight.js"></script>
+<script src="scripts/app.js"></script>
+</body>
+</html>

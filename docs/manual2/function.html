@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Функции FUNCTION — Справочник Axiom</title>
+<link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="function">
+<a class="skip" href="#content">К содержанию</a>
+<header class="topbar">
+<a class="brand" href="index.html">Axiom<span>справочник</span></a>
+<form class="search" role="search" action="search.html" method="get">
+<label class="sr" for="q">Поиск по справочнику</label>
+<input id="q" name="q" type="search" placeholder="Имя функции, оператора или тема" autocomplete="off">
+<button type="submit">Найти</button>
+</form>
+<button class="menu-btn" type="button" aria-expanded="false" aria-controls="side">Оглавление</button>
+</header>
+<div class="shell">
+<aside id="side" class="side"><nav id="nav" aria-label="Оглавление"></nav></aside>
+<main id="content">
+<nav class="crumbs" aria-label="Путь"><a href="index.html">Справочник</a> / Функции FUNCTION</nav>
+<h1>Функции FUNCTION</h1>
+<p class="lead">Функция похожа на процедуру, но возвращает значение. Её вызов — это выражение, результат которого можно сохранить, напечатать или передать дальше.</p>
+
+<section><h2>Объявление и вызов</h2>
+<pre><code class="language-axiom">FUNCTION Square(value AS INTEGER) AS INTEGER
+    RETURN value * value
+END FUNCTION
+
+PRINT Square(7)</code></pre>
+<pre><code class="language-output">49</code></pre>
+<p>После заголовка указывается тип результата. <code>RETURN</code> с выражением завершает функцию и возвращает значение; <code>RETURN</code> без выражения в функции — ошибка MB2007.</p>
+</section>
+
+<section><h2>Значение по умолчанию</h2>
+<p>Если выполнение дошло до <code>END FUNCTION</code>, не встретив RETURN, функция возвращает значение по умолчанию для своего типа: 0 для чисел, FALSE для BOOLEAN, пустую строку для STRING. Опираться на это поведение стоит только осознанно — обычно функцию завершают явным RETURN.</p>
+</section>
+
+<section><h2>Параметры</h2>
+<p>Правила те же, что у процедур: по значению по умолчанию, <code>BYREF</code> для изменяемого параметра. Функция с параметром <code>BYREF</code> не может использоваться как значение.</p>
+<pre><code class="language-axiom">FUNCTION NextId(BYREF counter AS INTEGER) AS INTEGER
+    counter = counter + 1
+    RETURN counter
+END FUNCTION
+
+DIM current AS INTEGER = 0
+PRINT NextId(current)
+PRINT current</code></pre>
+<pre><code class="language-output">1
+1</code></pre>
+</section>
+
+<section><h2>Функции как значения</h2>
+<p>Тип <code>FUNCTION(INTEGER) AS INTEGER</code> описывает функцию с одним целочисленным параметром. Такое значение можно сохранить, передать аргументом и вызвать через него.</p>
+<pre><code class="language-axiom">FUNCTION Twice(value AS INTEGER) AS INTEGER
+    RETURN value * 2
+END FUNCTION
+
+DIM f AS FUNCTION(INTEGER) AS INTEGER
+f = Twice
+PRINT f(5)</code></pre>
+<pre><code class="language-output">10</code></pre>
+<p>Процедура SUB как значение не используется (MB2019). Имя функции в выражении без скобок — это сама функция, а не её вызов.</p>
+</section>
+
+<section><h2>Замыкания</h2>
+<p>Вложенная функция видит переменные внешней и может вернуть их вместе с собой. Такая функция сохраняет доступ к захваченным значениям даже после того, как внешний вызов завершился.</p>
+<pre><code class="language-axiom">FUNCTION MakeReader() AS FUNCTION() AS INTEGER
+    DIM value AS INTEGER = 41
+    FUNCTION Read() AS INTEGER
+        RETURN value + 1
+    END FUNCTION
+    RETURN Read
+END FUNCTION
+
+DIM reader AS FUNCTION() AS INTEGER
+reader = MakeReader()
+PRINT reader()</code></pre>
+<pre><code class="language-output">42</code></pre>
+<p><code>MakeReader</code> возвращает вложенную <code>Read</code>, которая держит переменную <code>value</code>. После возврата внешней функции переменная продолжает жить внутри замыкания.</p>
+</section>
+<nav class="pager"><a class="prev" href="sub.html">← Процедуры SUB</a><a class="next" href="print.html">PRINT и PRINT USING →</a></nav>
+</main>
+</div>
+<script src="scripts/navigation.js"></script>
+<script src="scripts/search-index.js"></script>
+<script src="scripts/highlight.js"></script>
+<script src="scripts/app.js"></script>
+</body>
+</html>

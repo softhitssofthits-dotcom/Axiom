@@ -172,7 +172,8 @@
     updateExecution() {
       byId('studio-debug-tools').hidden=!this.ide.running&&!this.ide.execution?.starting;
       for(const id of ['project-create','project-refresh','project-collapse'])UIControls.setEnabled(byId(id),!!this.ide.projectDir);
-      for(const action of ['refresh-project','choose-project-entry','close-project','new-project-file'])UIControls.setEnabled(document.querySelector('[data-action="'+action+'"]'),!!this.ide.projectDir);
+      for(const action of ['refresh-project','choose-project-entry','close-project','new-project-file','add-existing-project-file'])UIControls.setEnabled(document.querySelector('[data-action="'+action+'"]'),!!this.ide.projectDir);
+      UIControls.setEnabled(document.querySelector('[data-action="project-properties"]'),!!this.ide.projectDir&&!this.ide.running);
       UIControls.setEnabled(document.querySelector('[data-action="use-current-entry"]'),!!this.ide.projectDir&&this.ide.projectSession.files.includes(this.ide.activeFile));
     }
     bottomVisible(visible){

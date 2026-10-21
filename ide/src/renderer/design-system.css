@@ -16,6 +16,7 @@
   /* Линия обеих полос изменения размера (консоль и боковая панель). По умолчанию
      совпадает с тонкой границей; тема может задать свой, лучше различимый цвет. */
   --xs-splitter: var(--xs-border-subtle);
+  --xs-splitter-depth: color-mix(in srgb, var(--xs-canvas), black 22%);
   --xs-text: #e4ebf5;
   --xs-text-muted: #99a8bc;
   --xs-text-faint: #768296;
@@ -419,10 +420,6 @@ select option:is(:checked,:hover,:focus) { color:var(--xs-select-highlight-text)
   opacity: .8;
 }
 .project-file:hover { background: var(--xs-surface-hover); color: var(--xs-hover-text); }
-#external-files { border-top-color: var(--xs-border-subtle); }
-#external-files-header { padding: 13px 12px 5px; color: var(--xs-text-faint); }
-#external-files-list .project-file.active { background: var(--xs-accent-wash); color: var(--xs-hover-text); }
-#external-files-list .project-file.active::before { border-color: var(--xs-accent); }
 
 /* Editors and tabs */
 #editor-tabs {
@@ -476,15 +473,20 @@ select option:is(:checked,:hover,:focus) { color:var(--xs-select-highlight-text)
 .tab-close:hover { color: var(--xs-text); background: var(--xs-surface-active); }
 .dirty-indicator { color: var(--xs-accent); }
 
-/* Resizer and lower panel. Обе линии изменения размера рисуются одинаково —
-   тонкая линия 1px из общей палитры; тема не добавляет собственных полос. */
-#panel-resizer::before, #sidebar-resizer::before {
+/* Общая впадина разделителей: затемнение поперёк полосы и линия палитры. */
+#panel-resizer, #project-resizer, #sidebar-resizer {
+  --splitter-direction: to bottom;
+  background-image: linear-gradient(var(--splitter-direction), var(--xs-surface), var(--xs-splitter-depth) 40%, var(--xs-splitter-depth) 60%, var(--xs-surface));
+}
+#sidebar-resizer { --splitter-direction: to right; }
+#panel-resizer::before, #sidebar-resizer::before, #project-resizer::before {
   content: "";
   position: absolute;
   background: var(--xs-splitter);
 }
-#panel-resizer::before { left: 0; right: 0; top: 4px; height: 1px; }
+#panel-resizer::before, #project-resizer::before { left: 0; right: 0; top: 4px; height: 1px; }
 #sidebar-resizer::before { top: 0; bottom: 0; left: 4px; width: 1px; }
+#project-resizer:hover::before, #project-resizer:focus-visible::before,
 #panel-resizer:hover::before, #sidebar-resizer:hover::before,
 #panel-resizer:focus-visible::before, #sidebar-resizer:focus-visible::before,
 [role="separator"].dragging::before { background: var(--xs-accent); }
@@ -691,3 +693,18 @@ body > .context-view > .monaco-menu .action-label {
 #project-entry { width: 100%; min-height: 28px; color: var(--xs-text); background: var(--xs-surface); border: 1px solid var(--xs-border-subtle); }
 .project-file.project-entry-file { font-weight: 650; }
 #project-entry-controls.hidden { display: none; }
+
+/* Свойства переносимого проекта используют общую палитру оболочки. */
+.project-properties { margin:auto; padding:20px; box-sizing:border-box; width:min(520px,85vw); max-height:85vh; overflow:auto; background:var(--xs-surface); color:var(--xs-text); border:1px solid var(--xs-border); border-radius:var(--xs-radius-md); }
+.project-properties::backdrop { background:rgb(0 0 0 / .45); }
+.project-properties h2 { margin:0; font-size:18px; }
+.project-properties form { display:flex; flex-direction:column; gap:12px; }
+.project-properties label { display:flex; flex-direction:column; gap:4px; }
+.project-properties input,.project-properties textarea { box-sizing:border-box; width:100%; background:var(--xs-editor); color:var(--xs-text); border:1px solid var(--xs-border); padding:6px; }
+.project-properties textarea { min-height:60px; resize:vertical; }
+.project-properties-actions { display:flex; justify-content:flex-end; gap:8px; }
+.project-properties button,.project-description { background:var(--xs-surface-raised); color:var(--xs-text); border:1px solid var(--xs-border); padding:6px 10px; cursor:pointer; }
+.project-description { width:100%; text-align:left; }
+.project-directory { padding-left:12px; }
+.project-directory summary { cursor:pointer; padding:5px 0; }
+.project-entry-error { color:var(--xs-danger); white-space:normal; padding:6px; }

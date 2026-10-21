@@ -34,3 +34,13 @@ test('Отмена конфликта не объявляет текст сох�
   assert.equal(await saver.save('C:\\a.axm'), null);
   assert.equal(expected, 'старый'); assert.equal(store.isDirty('C:\\a.axm'), true); assert.equal(model.getValue(), 'новый');
 });
+
+test('Создание проекта предлагает путь черновика в явно выбранной папке',async()=>{
+ const {store}=fixture();let proposed;
+ const saver=new DocumentSaver(store,{saveFileDialog:async path=>{proposed=path;return path;},writeFile:async()=>true});
+ const result=await saver.save('untitled1',true,'C:/new/main.axm');assert.equal(proposed,'C:/new/main.axm');assert.equal(result.path,'C:/new/main.axm');
+});
+test('Отклонённое имя не записывает файл и сохраняет черновик',async()=>{
+ const {store}=fixture();let writes=0;const saver=new DocumentSaver(store,{saveFileDialog:async()=> 'C:\\project\\222.axm',writeFile:async()=>{writes++;return true;}});
+ await assert.rejects(saver.save('untitled1',false,null,()=>{throw new Error('numeric name');}),/numeric name/);assert.equal(writes,0);assert.equal(store.has('untitled1'),true);assert.equal(store.isDirty('untitled1'),true);
+});

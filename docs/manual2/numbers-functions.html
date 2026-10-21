@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Функции: числа — Справочник Axiom</title>
+<link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="numbers-functions">
+<a class="skip" href="#content">К содержанию</a>
+<header class="topbar">
+<a class="brand" href="index.html">Axiom<span>справочник</span></a>
+<form class="search" role="search" action="search.html" method="get">
+<label class="sr" for="q">Поиск по справочнику</label>
+<input id="q" name="q" type="search" placeholder="Имя функции, оператора или тема" autocomplete="off">
+<button type="submit">Найти</button>
+</form>
+<button class="menu-btn" type="button" aria-expanded="false" aria-controls="side">Оглавление</button>
+</header>
+<div class="shell">
+<aside id="side" class="side"><nav id="nav" aria-label="Оглавление"></nav></aside>
+<main id="content">
+<nav class="crumbs" aria-label="Путь"><a href="index.html">Справочник</a> / Функции: числа</nav>
+<h1>Функции: числа</h1>
+<p class="lead">39 функций раздела «Числа» — 39 зарегистрированных форм с типами аргументов и результата.</p>
+
+<section><h2>Общий договор</h2>
+<p>Числовые функции принимают INTEGER, LONG, DOUBLE или DECIMAL, если карточка не ограничивает тип. ABS, SGN, FLOOR, CEIL, ROUND, FIX и SETSIGN сохраняют тип аргумента; MIN, MAX и CLAMP возвращают общий числовой тип; тригонометрия, логарифмы, корни и POW возвращают DOUBLE. CDBL, CINT, CLNG и CDEC выполняют явное преобразование, VAL разбирает текст, STR строит текст. Переполнение результата даёт MB3008, недопустимый аргумент — MB3012.</p>
+<p>Все перечисленные аргументы обязательны; необязательный аргумент представлен отдельной формой. Объяснение типов и общего поведения находится в главе <a href="numbers.html">Числа</a>.</p>
+</section>
+<section><h2>Карточки</h2>
+<article class="card" id="fn-abs">
+<h3>ABS</h3>
+<div class="form">
+<pre><code class="language-axiom">ABS(VALUE)</code></pre>
+<p class="result">Результат: <code>тот же тип, что у первого аргумента</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-acos">
+<h3>ACOS</h3>
+<div class="form">
+<pre><code class="language-axiom">ACOS(VALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-acosh">
+<h3>ACOSH</h3>
+<div class="form">
+<pre><code class="language-axiom">ACOSH(VALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-asin">
+<h3>ASIN</h3>
+<div class="form">
+<pre><code class="language-axiom">ASIN(VALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-asinh">
+<h3>ASINH</h3>
+<div class="form">
+<pre><code class="language-axiom">ASINH(VALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-atanh">
+<h3>ATANH</h3>
+<div class="form">
+<pre><code class="language-axiom">ATANH(VALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-atn">
+<h3>ATN</h3>
+<div class="form">
+<pre><code class="language-axiom">ATN(VALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-atn2">
+<h3>ATN2</h3>
+<div class="form">
+<pre><code class="language-axiom">ATN2(Y, X)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>y</code></td><td><code>DOUBLE</code></td></tr><tr><td><code>x</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-cbrt">
+<h3>CBRT</h3>
+<div class="form">
+<pre><code class="language-axiom">CBRT(VALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-cdbl">
+<h3>CDBL</h3>
+<div class="form">
+<pre><code class="language-axiom">CDBL(VALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-cdec">
+<h3>CDEC</h3>
+<div class="form">
+<pre><code class="language-axiom">CDEC(VALUE)</code></pre>
+<p class="result">Результат: <code>DECIMAL</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-ceil">
+<h3>CEIL</h3>
+<div class="form">
+<pre><code class="language-axiom">CEIL(VALUE)</code></pre>
+<p class="result">Результат: <code>тот же тип, что у первого аргумента</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-cint">
+<h3>CINT</h3>
+<div class="form">
+<pre><code class="language-axiom">CINT(VALUE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-clamp">
+<h3>CLAMP</h3>
+<div class="form">
+<pre><code class="language-axiom">CLAMP(VALUE, LOW, HIGH)</code></pre>
+<p class="result">Результат: <code>общий числовой тип аргументов</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr><tr><td><code>low</code></td><td><code>DOUBLE</code></td></tr><tr><td><code>high</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-clng">
+<h3>CLNG</h3>
+<div class="form">
+<pre><code class="language-axiom">CLNG(VALUE)</code></pre>
+<p class="result">Результат: <code>LONG</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-cos">
+<h3>COS</h3>
+<div class="form">
+<pre><code class="language-axiom">COS(VALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-cosh">
+<h3>COSH</h3>
+<div class="form">
+<pre><code class="language-axiom">COSH(VALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-exp">
+<h3>EXP</h3>
+<div class="form">
+<pre><code class="language-axiom">EXP(VALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-fix">
+<h3>FIX</h3>
+<div class="form">
+<pre><code class="language-axiom">FIX(VALUE)</code></pre>
+<p class="result">Результат: <code>тот же тип, что у первого аргумента</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-floor">
+<h3>FLOOR</h3>
+<div class="form">
+<pre><code class="language-axiom">FLOOR(VALUE)</code></pre>
+<p class="result">Результат: <code>тот же тип, что у первого аргумента</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-int">
+<h3>INT</h3>
+<div class="form">
+<pre><code class="language-axiom">INT(VALUE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-isnumeric">
+<h3>ISNUMERIC</h3>
+<div class="form">
+<pre><code class="language-axiom">ISNUMERIC(TEXT)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>text</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-log">
+<h3>LOG</h3>
+<div class="form">
+<pre><code class="language-axiom">LOG(VALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-log10">
+<h3>LOG10</h3>
+<div class="form">
+<pre><code class="language-axiom">LOG10(VALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-log2">
+<h3>LOG2</h3>
+<div class="form">
+<pre><code class="language-axiom">LOG2(VALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-max">
+<h3>MAX</h3>
+<div class="form">
+<pre><code class="language-axiom">MAX(LEFT, RIGHT)</code></pre>
+<p class="result">Результат: <code>общий числовой тип аргументов</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>left</code></td><td><code>DOUBLE</code></td></tr><tr><td><code>right</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-min">
+<h3>MIN</h3>
+<div class="form">
+<pre><code class="language-axiom">MIN(LEFT, RIGHT)</code></pre>
+<p class="result">Результат: <code>общий числовой тип аргументов</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>left</code></td><td><code>DOUBLE</code></td></tr><tr><td><code>right</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-pow">
+<h3>POW</h3>
+<div class="form">
+<pre><code class="language-axiom">POW(VALUE, POWER)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr><tr><td><code>power</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-rnd">
+<h3>RND</h3>
+<div class="form">
+<pre><code class="language-axiom">RND()</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<p class="muted">Аргументов нет.</p>
+</div>
+</article>
+<article class="card" id="fn-round">
+<h3>ROUND</h3>
+<div class="form">
+<pre><code class="language-axiom">ROUND(VALUE)</code></pre>
+<p class="result">Результат: <code>тот же тип, что у первого аргумента</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-setsign">
+<h3>SETSIGN</h3>
+<div class="form">
+<pre><code class="language-axiom">SETSIGN(VALUE, SIGNFROM)</code></pre>
+<p class="result">Результат: <code>тот же тип, что у первого аргумента</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr><tr><td><code>signFrom</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-sgn">
+<h3>SGN</h3>
+<div class="form">
+<pre><code class="language-axiom">SGN(VALUE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-sin">
+<h3>SIN</h3>
+<div class="form">
+<pre><code class="language-axiom">SIN(VALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-sinh">
+<h3>SINH</h3>
+<div class="form">
+<pre><code class="language-axiom">SINH(VALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-sqr">
+<h3>SQR</h3>
+<div class="form">
+<pre><code class="language-axiom">SQR(VALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-str">
+<h3>STR</h3>
+<div class="form">
+<pre><code class="language-axiom">STR(VALUE)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-tan">
+<h3>TAN</h3>
+<div class="form">
+<pre><code class="language-axiom">TAN(VALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-tanh">
+<h3>TANH</h3>
+<div class="form">
+<pre><code class="language-axiom">TANH(VALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DOUBLE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-val">
+<h3>VAL</h3>
+<div class="form">
+<pre><code class="language-axiom">VAL(TEXT)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>text</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+</section>
+<nav class="pager"><a class="prev" href="modules.html">← Модули и IMPORT</a><a class="next" href="strings-functions.html">Функции: строки →</a></nav>
+</main>
+</div>
+<script src="scripts/navigation.js"></script>
+<script src="scripts/search-index.js"></script>
+<script src="scripts/highlight.js"></script>
+<script src="scripts/app.js"></script>
+</body>
+</html>

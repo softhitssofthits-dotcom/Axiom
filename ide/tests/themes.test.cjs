@@ -109,7 +109,7 @@ test('линия полос изменения размера задана об�
   while ((match = re.exec(css))) blocks[match[1]] = match[2];
   assert.match(blocks[':root'], /--xs-splitter\s*:\s*var\(--xs-border-subtle\)/, 'общая полоса по умолчанию совпадает с тонкой границей');
   assert.match(blocks['html[data-theme="borland"]'], /--xs-splitter\s*:\s*#00aaaa/i, 'Borland использует различимую бирюзовую полосу');
-  const rule = css.match(/#panel-resizer::before,\s*#sidebar-resizer::before\s*\{[^}]*\}/);
+  const rule = css.match(/#panel-resizer::before,\s*#sidebar-resizer::before,\s*#project-resizer::before\s*\{[^}]*\}/);
   assert.ok(rule && /background:\s*var\(--xs-splitter\)/.test(rule[0]), 'обе полосы берут цвет из общей переменной');
 });
 

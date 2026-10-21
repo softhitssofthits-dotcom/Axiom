@@ -88,6 +88,24 @@ class ProjectFileActions {
     } catch (error) { return { ok: false, error: error.message }; }
     finally { this.pending = false; }
   }
+  async rename(root,item,name) {
+    if(this.pending)return {ok:false,error:'Файловая операция уже выполняется.'};
+    this.pending=true;
+    try {
+      if(typeof name!=='string'||!name.trim()||name!==name.trim()||/[<>:"/\\|?*\x00-\x1f]/.test(name)||/[. ]$/.test(name)||/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(name))throw new Error('Недопустимое имя файла.');
+      require('./file-service').validateProjectSourceName(name);
+      const source=this.existing(root,item);
+      if(!fs.statSync(source).isFile())throw new Error('Переименование доступно только для файла.');
+      const target=path.join(path.dirname(source),name);
+      if(source===target)return {ok:true,source,target};
+      if(fs.existsSync(target))throw new Error('Файл с таким именем уже существует.');
+      const result=await this.transfer(source,target,true,false);
+      if(!result?.ok)throw new Error(result?.error||'Не удалось переименовать файл.');
+      if(this.clipboard?.source===source)this.clipboard=null;
+      return {ok:true,source,target};
+    }catch(error){return {ok:false,error:error.message};}
+    finally{this.pending=false;}
+  }
   properties(root, item) {
     const fullPath = this.existing(root, item, true), stat = fs.statSync(fullPath);
     return { name: path.basename(fullPath), path: fullPath, kind: stat.isDirectory() ? 'directory' : 'file',

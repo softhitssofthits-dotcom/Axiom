@@ -34,13 +34,15 @@
       const hasClipboard = !!this.clipboard;
       if (!path) return [
         { id: 'new-project-file', translation: 'menu.file.newProjectFile', icon: 'codicon-file-add', enabled: !!this.ide.projectDir },
+        ...(this.ide.projectSession?.descriptor?[{id:'project-properties',translation:'project.properties',icon:'codicon-settings-gear',enabled:!this.ide.running}]:[]),
         { id: 'paste', translation: 'files.paste', icon: 'codicon-files', enabled: hasClipboard },
         { id: 'refresh-project', translation: 'studio.refreshProject', icon: 'codicon-refresh', enabled: !!this.ide.projectDir },
       ];
       return [
         { id: 'open', translation: 'files.open', icon: 'codicon-go-to-file' },
-        { id: 'use-as-entry', translation: 'studio.useCurrentEntry', icon: 'codicon-run', enabled: !!this.ide.projectSession?.files?.includes(path) },
+        { id: 'use-as-entry', translation: 'studio.useCurrentEntry', icon: 'codicon-run', enabled: !this.ide.running && !!this.ide.projectSession?.files?.includes(path) },
         { separator: true },
+        { id: 'rename', translation: 'files.rename', icon: 'codicon-edit', enabled: !this.ide.running },
         { id: 'copy', translation: 'files.copy', icon: 'codicon-copy' },
         { id: 'cut', translation: 'files.cut', icon: 'codicon-screen-cut' },
         { id: 'paste', translation: 'files.paste', icon: 'codicon-files', enabled: hasClipboard },
@@ -72,10 +74,13 @@
     }
     async action(id) {
       const path = this.path;
-      if (id === 'open') return this.ide.openFile(path);
+      if(id==='refresh'){try{await this.ide.refreshProjectFiles();}catch(error){alert(error.message);}return;}
+      if(id==='project-properties')return window.ProjectView.properties(this.ide);
+      if (id === 'rename') return this.rename(path);
+      if (id === 'open') return /\.axm$/i.test(path)?this.ide.openFile(path):this.properties(path);
       if (id === 'use-as-entry') {
         const session=this.ide.projectSession,external=this.ide.activeFile&&!session?.contains(this.ide.activeFile);
-        const selected=session?.select(path);
+        const selected=await session?.select(path);
         if(selected&&external)this.ide.switchToFile(path);
         return selected;
       }
@@ -85,6 +90,35 @@
       if (id === 'paste') return this.paste();
       if (id === 'trash') return this.trash(path);
       if (id === 'properties') return this.properties(path);
+    }
+    async rename(path) {
+      if(this.ide.running)return;
+      const root=this.ide.projectDir;
+      const name=await this.renameDialog(path.split(/[/\\]/).pop());
+      if(!name||this.ide.projectDir!==root||this.ide.running)return;
+      try {
+      const result=await this.api.renameProjectFile(root,path,name);
+      if(!result.ok){alert(result.error);return;}
+      const target=path.slice(0,path.length-path.split(/[/\\]/).pop().length)+name;
+      if(this.ide.projectDir!==root)return;
+      if(this.ide.openFiles.has(path))await this.ide.renameActive(target,path);
+      else await this.ide.projectSession?.renamed(path,target);
+      await this.ide.refreshProjectFiles();
+      this.ide.scheduleLiveCheck();
+      }catch(error){this.ide.showIdeProblem('project.failed',error.message);await this.ide.refreshProjectFiles().catch(()=>{});}
+    }
+    renameDialog(name) {
+      return new Promise(resolve=>{
+        const dialog=document.createElement('dialog');dialog.id='project-rename-dialog';dialog.className='project-properties';
+        const form=document.createElement('form');form.method='dialog';dialog.append(form);
+        const title=document.createElement('h2');title.textContent=I18N.t('files.rename');form.append(title);
+        const input=document.createElement('input');input.value=name;input.required=true;UIControls.setLabel(input,I18N.t('files.newName'));form.append(input);
+        const actions=document.createElement('div');actions.className='project-properties-actions';form.append(actions);
+        const cancel=document.createElement('button');cancel.type='button';cancel.textContent=I18N.t('project.cancel');cancel.onclick=()=>dialog.close();actions.append(cancel);
+        const save=document.createElement('button');save.type='submit';save.textContent=I18N.t('files.rename');actions.append(save);
+        let result=null;form.onsubmit=event=>{event.preventDefault();result=input.value;dialog.close();};
+        dialog.onclose=()=>{dialog.remove();resolve(result);};document.body.append(dialog);dialog.showModal();input.focus();input.setSelectionRange(0,Math.max(0,name.lastIndexOf('.'))||name.length);
+      });
     }
     async capture(path, cut) {
       const root = this.ide.projectDir;

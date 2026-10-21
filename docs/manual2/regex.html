@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Регулярные выражения — Справочник Axiom</title>
+<link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="regex">
+<a class="skip" href="#content">К содержанию</a>
+<header class="topbar">
+<a class="brand" href="index.html">Axiom<span>справочник</span></a>
+<form class="search" role="search" action="search.html" method="get">
+<label class="sr" for="q">Поиск по справочнику</label>
+<input id="q" name="q" type="search" placeholder="Имя функции, оператора или тема" autocomplete="off">
+<button type="submit">Найти</button>
+</form>
+<button class="menu-btn" type="button" aria-expanded="false" aria-controls="side">Оглавление</button>
+</header>
+<div class="shell">
+<aside id="side" class="side"><nav id="nav" aria-label="Оглавление"></nav></aside>
+<main id="content">
+<nav class="crumbs" aria-label="Путь"><a href="index.html">Справочник</a> / Регулярные выражения</nav>
+<h1>Регулярные выражения</h1>
+<p class="lead">Шаблоны Axiom используют синтаксис .NET. Восемь функций проверяют текст, извлекают совпадения, разбивают строку, заменяют фрагменты и считают их.</p>
+
+<section><h2>Проверка и извлечение</h2>
+<pre><code class="language-axiom">PRINT REGEXISMATCH(&quot;abc123&quot;, &quot;\d+&quot;)
+PRINT REGEXEXTRACT(&quot;abc123&quot;, &quot;(\d+)&quot;, 1)
+PRINT REGEXREPLACE(&quot;a-b-c&quot;, &quot;-&quot;, &quot;+&quot;)
+PRINT REGEXCOUNT(&quot;a1b22&quot;, &quot;\d+&quot;)</code></pre>
+<pre><code class="language-output">TRUE
+123
+a+b+c
+2</code></pre>
+<p><code>REGEXEXTRACT</code> принимает номер группы: 0 — всё совпадение, 1 и далее — группы. <code>REGEXMATCH</code> возвращает первое совпадение, <code>REGEXMATCHES</code> — массив всех, <code>REGEXEXTRACTALL</code> — массив выбранной группы.</p>
+</section>
+
+<section><h2>Режимы</h2>
+<p>Необязательный аргумент modes задаёт режимы буквами: <code>i</code> — без учёта регистра, <code>m</code> — многострочный, <code>s</code> — точка совпадает с переводом строки, <code>x</code> — пробелы шаблона игнорируются. Буквы можно сочетать.</p>
+<pre><code class="language-axiom">PRINT REGEXISMATCH(&quot;ABC&quot;, &quot;abc&quot;, &quot;i&quot;)</code></pre>
+<pre><code class="language-output">TRUE</code></pre>
+<p>Неизвестная буква режима даёт MB3007 с перечнем допустимых.</p>
+</section>
+
+<section><h2>Ошибки и пределы</h2>
+<p>Неверный шаблон сообщает смещение и вид ошибки. Один синхронный поиск ограничен пятью секундами: превышение даёт MB3007. Отмена между совпадениями завершает запуск как Cancelled и не попадает в пользовательский CATCH. Кэш хранит до 128 сочетаний шаблона и режимов.</p>
+</section>
+
+<section><h2>Функции</h2>
+<p>Полный каталог — <a href="regex-functions.html">функции регулярных выражений</a>.</p>
+</section>
+<nav class="pager"><a class="prev" href="files.html">← Файлы</a><a class="next" href="graphics.html">Экран и графика →</a></nav>
+</main>
+</div>
+<script src="scripts/navigation.js"></script>
+<script src="scripts/search-index.js"></script>
+<script src="scripts/highlight.js"></script>
+<script src="scripts/app.js"></script>
+</body>
+</html>

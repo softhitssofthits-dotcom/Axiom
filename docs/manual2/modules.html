@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Модули и IMPORT — Справочник Axiom</title>
+<link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="modules">
+<a class="skip" href="#content">К содержанию</a>
+<header class="topbar">
+<a class="brand" href="index.html">Axiom<span>справочник</span></a>
+<form class="search" role="search" action="search.html" method="get">
+<label class="sr" for="q">Поиск по справочнику</label>
+<input id="q" name="q" type="search" placeholder="Имя функции, оператора или тема" autocomplete="off">
+<button type="submit">Найти</button>
+</form>
+<button class="menu-btn" type="button" aria-expanded="false" aria-controls="side">Оглавление</button>
+</header>
+<div class="shell">
+<aside id="side" class="side"><nav id="nav" aria-label="Оглавление"></nav></aside>
+<main id="content">
+<nav class="crumbs" aria-label="Путь"><a href="index.html">Справочник</a> / Модули и IMPORT</nav>
+<h1>Модули и IMPORT</h1>
+<p class="lead">Файл Axiom является модулем. IMPORT подключает объявления соседнего файла, а PUBLIC и PRIVATE управляют доступностью имён между файлами.</p>
+
+<section><h2>IMPORT</h2>
+<pre><code class="language-axiom">IMPORT tools
+
+PRINT Add(2, 3)</code></pre>
+<p><code>IMPORT</code> записывается в начале файла; имя модуля — имя файла без расширения. Поиск выполняется в папке точки входа. Цикл импортов и импорт самого себя запрещены (MB2052); отсутствующий модуль даёт MB2049.</p>
+</section>
+
+<section><h2>Доступность</h2>
+<pre><code class="language-axiom">PUBLIC FUNCTION Add(a AS INTEGER, b AS INTEGER) AS INTEGER
+    RETURN a + b
+END FUNCTION
+
+PRIVATE DIM cache AS INTEGER</code></pre>
+<p>Объявления верхнего уровня по умолчанию закрыты. <code>PUBLIC</code> открывает имя для импортирующих модулей, <code>PRIVATE</code> задаёт закрытость явно. Обращение к закрытому имени даёт MB2053; неоднозначный импорт — MB2054, конфликт имён — MB2055. Модификатор допустим только на верхнем уровне и только перед DIM, CONST, SUB, FUNCTION или TYPE.</p>
+</section>
+
+<section><h2>Выполнение модулей</h2>
+<p>Выполняются только модули, достижимые от точки входа, в порядке зависимостей. Общая зависимость инициализируется один раз. Ошибка инициализации останавливает запуск до точки входа.</p>
+</section>
+<nav class="pager"><a class="prev" href="errors.html">← Обработка ошибок</a><a class="next" href="numbers-functions.html">Функции: числа →</a></nav>
+</main>
+</div>
+<script src="scripts/navigation.js"></script>
+<script src="scripts/search-index.js"></script>
+<script src="scripts/highlight.js"></script>
+<script src="scripts/app.js"></script>
+</body>
+</html>
