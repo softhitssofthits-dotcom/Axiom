@@ -1,4 +1,6 @@
 const { testWorkspace, writeAxm } = require('../helpers');
+const fs = require('node:fs');
+const path = require('node:path');
 async function open(S, tag) {
   const directory = testWorkspace(tag);
   const first = writeAxm(directory, 'первый.axm', 'print 1\nprint 2\n');
@@ -85,3 +87,71 @@ module.exports = [{
     await S.page.evaluate(() => window.__ide.stop()); await S.waitIdle();
   },
 }];
+
+
+for (const descriptor of [false, true]) module.exports.push({
+  id: 'format-delivery-style-save-' + (descriptor ? 'axproj' : 'folder'),
+  name: 'Смена стиля сохраняет чистый документ и восстанавливает прежние правки: ' + (descriptor ? 'axproj' : 'папка'),
+  async fn({S,C}) {
+    const root = testWorkspace('style-save-' + (descriptor ? 'axproj' : 'folder'));
+    const main = writeAxm(root, 'main.axm', 'PRINT 1\n');
+    const dirty = writeAxm(root, 'dirty.axm', 'PRINT 2\n');
+    const project = path.join(root, 'style.axproj');
+    if (descriptor) fs.writeFileSync(project, JSON.stringify({formatVersion:1,name:'Стиль',entry:'main.axm',sources:['*.axm']}));
+    await S.launch({settings:{smartIdentifierEnabled:false}});
+    C.eq(await S.page.evaluate(p=>window.__ide.openProject(p), descriptor ? project : root), true, 'Проект открыт');
+    const draft = await S.page.evaluate(async ({main,dirty})=>{
+      const i=window.__ide; await i.openFile(dirty); i.editor.setValue('PRINT 22\n');
+      i.newFile(); const draft=i.activeFile; i.editor.setValue('PRINT 33\n'); i.switchToFile(main); return draft;
+    }, {main,dirty});
+    await S.page.locator('[data-menu="tools"] .menu-label').click();
+    await S.page.locator('#formatting-submenu .submenu-trigger').hover();
+    await S.page.locator('[data-action="format-modern"]').click();
+    await S.page.waitForFunction(()=>window.__ide.settings.formattingStyle==='Modern'&&!window.__ide._styleSwitchPending);
+    C.eq(fs.readFileSync(main,'utf8').replace(/\r/g,''),'Print 1\n','Чистая вкладка записана в новом стиле');
+    C.eq(fs.readFileSync(dirty,'utf8'),'PRINT 2\n','Прежние правки не записаны');
+    const state = await S.page.evaluate(paths=>paths.map(p=>{const i=window.__ide,e=i.openFiles.get(p);return {text:e.model.getValue().replace(/\r/g,''),dirty:i.openFiles.isDirty(p)};}),[main,dirty,draft]);
+    C.eq(state[0].dirty,false,'Звёздочка чистого документа снята');
+    C.eq(state[1].text,'Print 22\n','Несохранённый документ отформатирован'); C.eq(state[1].dirty,true,'Его звёздочка сохранена');
+    C.eq(state[2].text,'Print 33\n','Черновик отформатирован'); C.eq(state[2].dirty,true,'Черновик не объявлен сохранённым');
+    const profile=S.userData, pid=await S.electronApp.evaluate(()=>process.pid);
+    const closed=S.electronApp.waitForEvent('close'); process.kill(pid); await closed; await S.close();
+    await S.launch({userData:profile});
+    const restored=await S.page.evaluate(paths=>({project:window.__ide.projectSession.descriptor?.projectFilePath||window.__ide.projectDir,entries:paths.map(p=>{const i=window.__ide,e=i.openFiles.get(p);return e&&{text:e.model.getValue().replace(/\r/g,''),dirty:i.openFiles.isDirty(p)};})}),[main,dirty,draft]);
+    C.eq(restored.project,descriptor?project:root,'Проект восстановлен');
+    C.eq(restored.entries[0].dirty,false,'Сохранённое форматирование осталось чистым');
+    C.eq(restored.entries[1].text,'Print 22\n','Правки восстановлены после аварии'); C.eq(restored.entries[1].dirty,true,'Правки остаются несохранёнными');
+    C.eq(restored.entries[2].text,'Print 33\n','Черновик восстановлен'); C.eq(S.pageErrors.length,0,'Ошибок страницы нет');
+  }
+});
+
+module.exports.push({
+  id:'format-delivery-style-external-conflict',name:'Смена стиля не перезаписывает внешнее изменение после отмены конфликта',
+  async fn({S,C}) {
+    const root=testWorkspace('style-conflict'),file=writeAxm(root,'main.axm','PRINT 1\n');
+    await S.launch({settings:{smartIdentifierEnabled:false}});await S.page.evaluate(p=>window.__ide.openFile(p),file);
+    await S.page.evaluate(p=>window.axiom.unwatchFile(p),file);
+    fs.writeFileSync(file,'PRINT 99\n');
+    await S.electronApp.evaluate(({dialog})=>{dialog.showMessageBox=async()=>({response:1});});
+    await S.page.evaluate(()=>window.__ide.setFormattingStyle('Modern'));
+    C.eq(fs.readFileSync(file,'utf8'),'PRINT 99\n','Внешний текст не перезаписан');
+    C.eq(await S.page.evaluate(p=>window.__ide.openFiles.isDirty(p),file),true,'Отмена не снимает звёздочку');
+    C.eq((await S.editorValue()).replace(/\r/g,''),'Print 1\n','Форматирование осталось в буфере');
+    C.eq(S.pageErrors.length,0,'Конфликт обработан без ошибки страницы');
+  }
+});
+
+
+module.exports.push({
+  id:'format-delivery-plaintext-restore',name:'Восстановленный текстовый файл не превращается в Axiom и не форматируется',
+  async fn({S,C}) {
+    const root=testWorkspace('plaintext-restore'),file=writeAxm(root,'заметки.txt','print 1\n');
+    await S.launch({settings:{smartIdentifierEnabled:false}});await S.page.evaluate(p=>window.__ide.openFile(p),file);
+    C.eq(await S.page.evaluate(p=>window.__ide.openFiles.get(p).model.getLanguageId(),file),'plaintext','Изначально это обычный текст');
+    const profile=S.userData;await S.close();await S.launch({userData:profile});
+    C.eq(await S.page.evaluate(p=>window.__ide.openFiles.get(p).model.getLanguageId(),file),'plaintext','Восстановление сохраняет вид документа');
+    await S.page.evaluate(()=>window.__ide.setFormattingStyle('Modern'));
+    C.eq(fs.readFileSync(file,'utf8'),'print 1\n','Смена стиля не переписывает текстовый файл');
+    C.eq(S.pageErrors.length,0,'Ошибок страницы нет');
+  }
+});

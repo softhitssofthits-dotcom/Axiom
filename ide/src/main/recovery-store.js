@@ -15,6 +15,14 @@ function validTabs(tabs) {
 }
 class RecoveryStore {
   constructor(directory) { this.directory = directory; }
+  slotSignature() {
+    return [0, 1].map(slot => {
+      try {
+        const stat = fs.statSync(path.join(this.directory, 'documents-recovery-' + slot + '.json'), { bigint: true });
+        return [stat.dev, stat.ino, stat.size, stat.mtimeNs, stat.ctimeNs].join(':');
+      } catch { return 'missing'; }
+    }).join('|');
+  }
   load() {
     let latest = null;
     for (const slot of [0, 1]) {
@@ -29,8 +37,15 @@ class RecoveryStore {
   }
   save(tabs) {
     if (!validTabs(tabs)) throw new Error('Неверный снимок восстановления документов.');
-    const previous = this.load();
-    if (previous && checksum(previous.tabs) === checksum(tabs)) return previous.sequence;
+    const signature = this.slotSignature();
+    let previous = this.cachedSignature === signature ? this.cached : null;
+    if (!previous) {
+      const loaded = this.load();
+      if (loaded) previous = { sequence: loaded.sequence, tabs: loaded.tabs, tabsHash: checksum(loaded.tabs) };
+    }
+    const tabsJson = JSON.stringify(tabs);
+    const tabsHash = createHash('sha256').update(tabsJson).digest('hex');
+    if (previous && previous.tabsHash === tabsHash) return previous.sequence;
     const sequence = (previous?.sequence || 0) + 1;
     if (!Number.isSafeInteger(sequence)) throw new Error('Исчерпан счётчик восстановления.');
     fs.mkdirSync(this.directory, { recursive: true });
@@ -45,12 +60,17 @@ class RecoveryStore {
       const temporary = target + '.tmp';
       const fd = fs.openSync(temporary, 'w');
       try {
-        const data = { version: 1, sequence: number, tabs };
-        fs.writeFileSync(fd, JSON.stringify({ ...data, checksum: checksum(data) }), 'utf8');
+        const data = '{"version":1,"sequence":' + number + ',"tabs":' + tabsJson + '}';
+        const hash = createHash('sha256').update(data).digest('hex');
+        fs.writeFileSync(fd, data.slice(0, -1) + ',"checksum":"' + hash + '"}', 'utf8');
         fs.fsyncSync(fd);
       } finally { fs.closeSync(fd); }
       fs.renameSync(temporary, target);
     }
+    // В кэше нет изменяемых объектов вызывающей стороны. Загрузка при запуске
+    // по-прежнему полностью проверяет оба слота и их контрольные суммы.
+    this.cached = { sequence: last, tabsHash, tabs: tabs.map(t => ({ path: t.path, isDirty: t.isDirty })) };
+    this.cachedSignature = this.slotSignature();
     return last;
   }
 }

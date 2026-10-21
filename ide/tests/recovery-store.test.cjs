@@ -40,3 +40,31 @@ test('Отказ записи сохраняет предыдущий снимо
     assert.deepEqual(store.load().tabs, []);
   } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 });
+
+test('Повторная запись не перечитывает неизменённые большие слоты', () => {
+  const { directory, store } = fixture();
+  const read = fs.readFileSync;
+  try {
+    const tabs = [tab('Первый снимок')]; store.save(tabs);
+    let reads = 0;
+    fs.readFileSync = (...args) => { if (String(args[0]).startsWith(directory)) reads++; return read(...args); };
+    tabs[0].content = 'Следующая правка'; store.save(tabs);
+    assert.equal(reads, 0);
+    fs.readFileSync = read;
+    assert.equal(new RecoveryStore(directory).load().tabs[0].content, 'Следующая правка');
+  } finally { fs.readFileSync = read; fs.rmSync(directory, { recursive: true, force: true }); }
+});
+
+test('Внешняя порча слота отменяет кэш, изменяемый вход не меняет сохранённый снимок', () => {
+  const { directory, store } = fixture();
+  try {
+    const tabs = [tab('Ранний')]; store.save(tabs);
+    tabs[0].content = 'Поздний'; store.save(tabs);
+    fs.writeFileSync(path.join(directory, 'documents-recovery-0.json'), '{обрыв');
+    tabs[0].content = 'После порчи'; store.save(tabs);
+    assert.equal(store.load().tabs[0].content, 'После порчи');
+    assert.equal(store.load().sequence, 2);
+    tabs[0].content = 'Новая правка'; store.save(tabs);
+    assert.equal(new RecoveryStore(directory).load().tabs[0].content, 'Новая правка');
+  } finally { fs.rmSync(directory, { recursive: true, force: true }); }
+});

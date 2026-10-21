@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 544,
+  "count": 548,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -1831,6 +1831,26 @@
       "id": "format-delivery-running-success",
       "spec": "format-delivery.spec.js",
       "name": "Поздний успешный результат не меняет уже исполняемый снимок"
+    },
+    {
+      "id": "format-delivery-style-save-folder",
+      "spec": "format-delivery.spec.js",
+      "name": "Смена стиля сохраняет чистый документ и восстанавливает прежние правки: папка"
+    },
+    {
+      "id": "format-delivery-style-save-axproj",
+      "spec": "format-delivery.spec.js",
+      "name": "Смена стиля сохраняет чистый документ и восстанавливает прежние правки: axproj"
+    },
+    {
+      "id": "format-delivery-style-external-conflict",
+      "spec": "format-delivery.spec.js",
+      "name": "Смена стиля не перезаписывает внешнее изменение после отмены конфликта"
+    },
+    {
+      "id": "format-delivery-plaintext-restore",
+      "spec": "format-delivery.spec.js",
+      "name": "Восстановленный текстовый файл не превращается в Axiom и не форматируется"
     },
     {
       "id": "format-menu-triggers",

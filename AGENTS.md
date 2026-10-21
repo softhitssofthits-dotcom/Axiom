@@ -1,4 +1,4 @@
-﻿# AGENTS.md
+# AGENTS.md
 
 ## Purpose
 This repository must be developed in a structured, document-driven way.
@@ -198,10 +198,12 @@ Historical session continuity log:
 - read it only when older historical context is needed.
 
 ### `docs/archive/worklog/WORKLOG4.md`
-Historical fourth part of session continuity:
-- kept for sessions from 481 to 1031;
-- no new entries should be added there after `docs/WORKLOG5.md` is introduced;
-- read it when context from sessions 481-1031 is needed.
+Локальный исторический журнал:
+- исходная часть содержит Session 832–1031 и восстановлена из истории Git;
+- по прямому поручению автора 21 октября 2026 года сюда также перенесены 241 запись WORKLOG5 за 11–20 октября, от Session 1364 до Session 1592;
+- текст, порядок и исторические номера перенесённых записей сохраняются; пересекающиеся номера после объединения веток не перенумеровываются;
+- новые рабочие сеансы сюда не добавляются: действующий WORKLOG5 содержит записи с 21 октября 2026 года;
+- архив нужен только при обращении к истории и остаётся исключённым из Git.
 
 ### `docs/WORKLOG5.md`
 Active session continuity log:

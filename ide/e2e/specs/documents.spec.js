@@ -99,7 +99,8 @@ module.exports.push({ id: 'document-borland-theme-persistence', name: 'Borland P
     i.editor.getModel().setValue("' Проверка цветов Borland Pascal\nDIM value AS INTEGER = 42\nPRINT LEN(\"Строка\") + value\n");
     i.ensureConsole();
   });
-  await S.page.locator('[data-menu="view"] .menu-label').click();
+  await S.page.locator('[data-menu="tools"] .menu-label').click();
+  await S.page.locator('[data-menu="tools"] .submenu-trigger').filter({hasText:/Оформление|Appearance/}).hover();
   await S.page.locator('[data-action="theme-borland"]').click();
   await S.page.waitForFunction(() => getComputedStyle(document.querySelector('.monaco-editor')).backgroundColor === 'rgb(0, 0, 170)');
   await S.page.waitForFunction(() => [...document.querySelectorAll('.view-lines span')].some(el => el.textContent.trim() === 'DIM' && getComputedStyle(el).color === 'rgb(255, 255, 255)'));

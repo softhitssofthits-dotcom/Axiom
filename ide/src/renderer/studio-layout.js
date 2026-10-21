@@ -115,6 +115,7 @@
       byId('project-explorer').hidden=this.tab!=='project';
       byId('project-explorer').classList.remove('hidden');
       byId('structure-content').hidden=this.tab!=='outline';
+      this.ide.updateProjectSplitterVisibility();
       byId('sidebar-rail').hidden=visible;
       byId('shell-sidebar').classList.toggle('studio-unpinned',!this.pinned);
       for(const name of ['project','outline']){
@@ -136,11 +137,11 @@
       document.querySelectorAll('[data-studio-label]').forEach(el=>UIControls.setLabel(el,I18N.t(el.dataset.studioLabel)));
       document.querySelectorAll('[data-studio-text]').forEach(el=>{el.textContent=I18N.t(el.dataset.studioText);});
       UIControls.setLabel(byId('sidebar-pin'),I18N.t(this.pinned?'studio.unpin':'studio.pin'));
-      const rail=byId('sidebar-rail');rail.setAttribute('aria-label',I18N.t('studio.tools'));
-      byId('sidebar-tabs').setAttribute('aria-label',I18N.t('studio.tools'));
+      const rail=byId('sidebar-rail');UIControls.setLabel(rail,I18N.t('studio.tools'),{tooltip:false});
+      UIControls.setLabel(byId('sidebar-tabs'),I18N.t('studio.tools'),{tooltip:false});
       this.updateCommandLabels();
       text('studio-panel-return','studio.showPanel');
-      byId('panel-tabs').setAttribute('aria-label',I18N.t('studio.showPanel'));
+      UIControls.setLabel(byId('panel-tabs'),I18N.t('studio.showPanel'),{tooltip:false});
       this.updateDiagnostics();
       this.updateDocument();this.updateExecution();
     }

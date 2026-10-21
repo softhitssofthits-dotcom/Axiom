@@ -6,7 +6,7 @@ module.exports=[{id:'smart-identifier-legacy',name:'Умный идентифи�
  await S.launch();await S.stubOpenDialog([file]);await S.page.evaluate(()=>window.__ide.handleAction('open'));
  await S.page.waitForFunction(p=>window.__ide.activeFile===p,file);
  C.ok(!await S.page.evaluate(()=>!!window.__ide.settings.smartIdentifierEnabled),'По умолчанию выключен, как в прежней IDE');
- await S.page.locator('[data-menu="edit"] .menu-label').click();await S.page.locator('#formatting-submenu .submenu-trigger').hover();await S.page.locator('[data-action="smart-identifier"]').click();
+ await S.page.locator('[data-menu="tools"] .menu-label').click();await S.page.locator('[data-action="smart-identifier"]').click();
  C.ok(await S.page.evaluate(()=>window.__ide.settings.smartIdentifierEnabled),'Включён настоящим пунктом меню');
  for(const style of ['Classic','Modern']){
   await S.page.evaluate(async({source,style})=>{const i=window.__ide;await i.setFormattingStyle(style);i.editor.getModel().setValue(source);i.editor.setPosition({lineNumber:2,column:16});i.editor.focus();},{source,style});
@@ -16,12 +16,13 @@ module.exports=[{id:'smart-identifier-legacy',name:'Умный идентифи�
   await S.page.keyboard.press('Control+z');await S.page.waitForFunction(()=>window.__ide.editor.getValue().includes('playerspeed = 4'));
   C.ok(true,'Нормализация отменяется');
  }
+ const diskBeforeEditing=fs.readFileSync(file,'utf8');
  await S.page.evaluate(source=>{const i=window.__ide;i.editor.getModel().setValue(source);i.editor.setPosition({lineNumber:2,column:1});i.editor.focus();},source);
  await S.page.waitForTimeout(150);
  await S.page.keyboard.press('End');await S.page.keyboard.type(' ');
  await S.page.evaluate(()=>window.__ide.editor.setPosition({lineNumber:3,column:1}));
  await S.page.waitForFunction(()=>window.__ide.editor.getValue().includes('PlayerSpeed = 4'));C.ok(true,'Переход между строками нормализует имя');
- C.eq(fs.readFileSync(file,'utf8'),source,'Диск не меняется до сохранения');
+ C.eq(fs.readFileSync(file,'utf8'),diskBeforeEditing,'Нормализация при редактировании не сохраняет новые правки');
  await S.page.evaluate(()=>window.__ide.markDirty(window.__ide.activeFile,false));
  const userData=S.userData;await S.close();await S.launch({userData});
  C.ok(await S.page.evaluate(()=>window.__ide.settings.smartIdentifierEnabled),'Настройка переживает перезапуск');

@@ -1,5 +1,5 @@
 async function createProject(S,name){
- await S.page.evaluate(()=>{window.__createProjectDone=false;window.__ide.handleAction('create-project').finally(()=>window.__createProjectDone=true);});
+ await S.page.evaluate(()=>{window.__createProjectDone=false;window.__ide.handleAction('create-project-descriptor').finally(()=>window.__createProjectDone=true);});
  await S.page.locator('#project-create-dialog').waitFor();
  await S.page.locator('#project-create-dialog button').filter({hasText:/Выбрать папку|Choose folder/}).click();
  if(name)await S.page.locator('#project-create-name').fill(name);
@@ -21,7 +21,8 @@ module.exports=[{id:'axproj-open-run-check',name:'axproj: дерево, одна
  const f=fixture('run');await S.launch();C.eq(await S.page.evaluate(p=>window.__ide.openProject(p),f.project),true,'Проект открыт');
  C.eq(await S.page.locator('#project-title').textContent(),'Проверочный проект','Постоянное имя проекта');
  C.eq(await S.page.locator('.editor-tab').count(),1,'Открыта только точка входа');
- C.eq(await S.page.locator('#project-entry-controls').isVisible(),false,'Постоянный список запуска заменён свойством проекта');
+ C.eq(await S.page.locator('#project-entry-controls').isVisible(),true,'Точка запуска показана в общей панели');
+ C.eq(await S.page.locator('#project-entry').inputValue(),f.main,'Панель показывает entry проекта');
  C.contains(await S.page.locator('#project-files').innerText(),'art','Дерево содержит папку ресурсов');
  C.contains(await S.page.locator('#project-files').innerText(),'pixel.txt','Ресурс виден в дереве');
  await S.page.evaluate(p=>window.__ide.openFile(p),f.helper);
@@ -106,7 +107,7 @@ module.exports.push({id:'axproj-create-from-draft-after-close',name:'Закры�
  const old=fixture('old-create'),folder=testWorkspace('axproj-sum-new');
  await S.launch({settings:{smartIdentifierEnabled:false}});await S.page.evaluate(p=>window.__ide.openProject(p),old.project);
  await S.page.evaluate(async()=>{for(const file of [...window.__ide.openFiles.keys()])await window.__ide.closeFile(file);});
- await S.page.locator('#project-explorer-close').click();await S.page.waitForFunction(()=>window.__ide.projectDir===null);
+ await S.clickMenuItem('project','close-project');await S.page.waitForFunction(()=>window.__ide.projectDir===null);
  C.eq(await S.page.evaluate(()=>window.__ide.projectSession.descriptor),null,'Крестик закрывает сеанс проекта');
  C.eq(await S.page.evaluate(()=>window.__ide.settings.lastProjectFile),null,'Старый проект не остаётся для восстановления');
  const helper=path.join(folder,'arithmetic.axm'),main=path.join(folder,'main.axm');
@@ -130,9 +131,9 @@ module.exports.push({id:'axproj-create-empty-existing-cancel',name:'Создан
  C.ok(fs.existsSync(project)&&fs.existsSync(main),'В пустой папке создаются описание и main.axm');C.eq(await S.page.evaluate(()=>window.__ide.activeFile),main,'Пустой главный файл открыт для набора');
  await createProject(S);C.eq(fs.readdirSync(folder).filter(f=>f.endsWith('.axproj')).length,1,'Повтор открывает существующий проект без дубликата');
  await S.page.evaluate(()=>window.__ide.editor.setValue('PRINT 42'));
- await S.electronApp.evaluate(({dialog})=>{dialog.showMessageBox=async()=>({response:2});});await S.page.locator('#project-explorer-close').click();
+ await S.electronApp.evaluate(({dialog})=>{dialog.showMessageBox=async()=>({response:2});});await S.clickMenuItem('project','close-project');
  C.eq(await S.page.evaluate(()=>window.__ide.projectDir),folder,'Отмена закрытия сохраняет сеанс');C.eq(await S.editorValue(),'PRINT 42','Отмена сохраняет несохранённый текст');
- await S.electronApp.evaluate(({dialog})=>{dialog.showMessageBox=async()=>({response:1});});await S.page.locator('#project-explorer-close').click();await S.page.waitForFunction(()=>window.__ide.projectDir===null);
+ await S.electronApp.evaluate(({dialog})=>{dialog.showMessageBox=async()=>({response:1});});await S.clickMenuItem('project','close-project');await S.page.waitForFunction(()=>window.__ide.projectDir===null);
  C.eq(await S.page.locator('#project-resizer').isVisible(),false,'Закрытие убирает ненужный регулятор');await S.close();await S.launch();C.eq(await S.page.evaluate(()=>window.__ide.projectDir),null,'Закрытый проект не восстанавливается');C.eq(S.pageErrors.length,0,'Нет ошибок страницы');
 }});
 module.exports.push({id:'axproj-create-cancel-restoration',name:'Отмена создания не восстанавливает выбранную папку как проект',async fn({S,C}){
@@ -161,7 +162,7 @@ module.exports.push({id:'axproj-save-add-second-source',name:'Второй ис�
  C.ok(await S.page.locator('.project-file').evaluateAll((items,p)=>items.some(i=>i.dataset.path===p),second),'Сохранённый новый исходник сразу в дереве');
  const third=writeAxm(f.root,'third.axm','PRINT 33');await S.stubOpenDialog([third]);
  await S.electronApp.evaluate(({dialog})=>{dialog.showSaveDialog=async()=>{throw new Error('Неожиданный диалог сохранения');};});
- await S.page.locator('#project-new-file').click();await S.page.waitForFunction(p=>window.__ide.activeFile===p,third);
+ await S.clickMenuItem('project','add-existing-project-file');await S.page.waitForFunction(p=>window.__ide.activeFile===p,third);
  C.eq(fs.readFileSync(third,'utf8'),'PRINT 33','Добавление существующего не меняет содержимое');
  C.ok(await S.page.locator('.project-file').evaluateAll((items,p)=>items.some(i=>i.dataset.path===p),third),'Существующий исходник появился в дереве');
  const external=writeAxm(testWorkspace('axproj-external-add'),'outside.axm','PRINT 44');await S.stubOpenDialog([external]);await S.page.evaluate(()=>window.__ide.addExistingProjectFile());

@@ -20,7 +20,7 @@ function testWorkspace(tag) {
   const dir = workspacePath(TMP, tag);
   fs.rmSync(dir, { recursive: true, force: true });
   fs.mkdirSync(dir, { recursive: true });
-  return dir;
+  return fs.realpathSync(dir);
 }
 
 function writeAxm(dir, name, content) {

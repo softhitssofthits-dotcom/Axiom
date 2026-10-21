@@ -39,6 +39,7 @@ module.exports = [{
     await S.launch({settings:{checkOnChange:false,smartIdentifierEnabled:false}});
     await S.page.evaluate(p => window.__ide.openFile(p),writeAxm(testWorkspace('outline-acceptance'),'структура.axm',source));
     C.eq((await S.page.locator('.outline-name').allTextContents()).join(','),'Item,Work,Twice','Только реальные объявления в порядке исходника');
+    await S.page.evaluate(()=>window.__ide.studio.select('outline'));
     for (const [name,line] of [['Item',4],['Work',7],['Twice',10]]) {
       await S.page.locator('.outline-item').filter({hasText:name}).click();
       C.eq(await S.page.evaluate(() => window.__ide.editor.getPosition().lineNumber),line,'Переход к '+name);

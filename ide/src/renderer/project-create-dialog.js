@@ -40,7 +40,7 @@
         event.preventDefault(); if (this.busy) return;
         this.error.textContent = '';
         this.busy = true;
-        const controls = [...form.querySelectorAll('input,button')]; controls.forEach(node => { node.disabled = true; });
+        const controls = [...form.querySelectorAll('input,button')]; controls.forEach(node => root.UIControls.setEnabled(node, false));
         try {
           if (this.ide.running) throw new Error(root.I18N.t('project.stopFirst'));
           const result = await root.axiom.createProject(this.parent.value, this.name.value);
@@ -48,7 +48,7 @@
           if (!await this.ide.openProject(result.path)) throw new Error(this.text('openFailed') + ' ' + result.path);
           this.busy = false; this.close(); this.ide.focusEditor();
         } catch (error) { this.error.textContent = error.message || this.text('failed'); }
-        finally { this.busy = false; controls.forEach(node => { node.disabled = false; }); }
+        finally { this.busy = false; controls.forEach(node => root.UIControls.setEnabled(node, true)); }
       };
       overlay.onkeydown = event => {
         if (event.key === 'Escape') { event.preventDefault(); this.close(); }

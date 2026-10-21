@@ -20,7 +20,7 @@ module.exports=[{
   C.eq(fs.readFileSync(path.join(target,'main.axm'),'utf8'),'','Создан пустой main.axm');
   C.eq(await S.page.locator('#project-entry').inputValue(),path.join(target,'main.axm'),'main выбран запускным');
   C.eq(await S.page.locator('#project-title').textContent(),'Мой проект','Заголовок показывает имя новой папки');
-  C.eq(await S.page.evaluate(p=>window.__ide.openFiles.get(p)?.model.getValue(),old),'PRINT 42\n','Прежний несохранённый документ сохранён');
+  C.eq(await S.page.evaluate(p=>window.__ide.openFiles.get(p)?.model.getValue().replace(/\r\n/g,'\n'),old),'PRINT 42\n','Прежний несохранённый документ сохранён');
   C.eq(await S.page.locator('#project-create-dialog').count(),0,'Успешное создание закрывает диалог');
   const profile=S.userData;await S.close();await S.launch({userData:profile});
   C.eq(await S.page.evaluate(()=>window.__ide.projectDir),target,'Новый проект восстанавливается после перезапуска');

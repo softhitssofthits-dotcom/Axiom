@@ -170,7 +170,7 @@ html[data-theme='borland'] #app.studio-shell { --studio-toolbar-ink: var(--xs-ch
 .studio-shell .sidebar-return { writing-mode: vertical-rl; min-height: 75px; padding: 10px 6px; border: 0; border-left: 2px solid transparent; background: transparent; color: var(--studio-muted); font: 12px 'Segoe UI', sans-serif; cursor: pointer; }
 .studio-shell .sidebar-return:hover { border-left-color: var(--xs-accent); background: var(--xs-surface-hover); color: var(--xs-hover-text); }
 .studio-shell :is(#editor-tabs, #document-tab-bar) { min-height: 33px; background: var(--xs-tab-strip-bg); padding-top: 0; }
-.studio-shell .editor-tab { min-height: 33px; border-radius: 0; padding: 0 10px; gap: 7px; font-family: 'Segoe UI', sans-serif; }
+.studio-shell .editor-tab { height: 100%; min-height: 0; margin-top: 0; border-radius: 0; padding: 0 10px; gap: 7px; font-family: 'Segoe UI', sans-serif; }
 .studio-shell .editor-tab.active::after { left: 0; right: 0; border-radius: 0; }
 .studio-shell #panel-tabs { min-height: 33px; padding: 0 6px; align-items: center; background: var(--xs-output-header-bg, var(--studio-chrome)); }
 .studio-shell .panel-tab { min-height: 32px; font: 12px 'Segoe UI', sans-serif; letter-spacing: 0; text-transform: none; }

@@ -1,4 +1,10 @@
 const { testWorkspace, writeAxm } = require('../helpers');
+function mazeWorkspace(tag, descriptor = false) {
+  const fs = require('node:fs'), path = require('node:path'), { ROOT } = require('../helpers');
+  const root = testWorkspace(tag), source = path.join(ROOT, 'samples/graphics/game/maze_chase_project');
+  fs.cpSync(source, root, { recursive: true, filter: file => !file.endsWith('.axproj') || (descriptor && path.basename(file) === 'maze_chase.axproj') });
+  return root;
+}
 module.exports = [{ id: 'files-create-without-overwrite', name: 'Создание файла не перезаписывает существующий и сохраняет открытую модель', async fn({ S, C }) {
   const root = testWorkspace('project-create'); const old = writeAxm(root, 'существующий.axm', 'PRINT 123\n');
   await S.launch(); await S.page.evaluate(p => window.__ide.openProject(p), root);
@@ -376,7 +382,7 @@ module.exports.push({
   id:'project-open-maze-tabs-entry',name:'Открыть проект Maze Chase из меню: дерево, точка входа и запуск main из модуля',
   async fn({S,C}) {
     const path=require('node:path');const {ROOT}=require('../helpers');
-    const folder=path.join(ROOT,'samples/graphics/game/maze_chase_project'),main=path.join(folder,'main.axm');
+    const folder=mazeWorkspace('maze-project-entry',true),main=path.join(folder,'main.axm');
     await S.launch({settings:{smartIdentifierEnabled:false}});await S.stubOpenDialog([folder]);
     await S.page.evaluate(()=>window.__ide.handleAction('open-project'));
     await S.page.waitForFunction(folder=>window.__ide.projectDir===folder&&!window.__ide.projectSession.loading,folder);
@@ -392,7 +398,7 @@ module.exports.push({
     await S.page.evaluate(()=>window.__ide.stop());await S.waitIdle();
     for(const theme of ['dark','light','basic','borland']){
       await S.page.evaluate(t=>window.__ide.setTheme(t),theme);
-      C.eq(await S.page.locator('#project-entry').isVisible(),false,'Точка входа задаётся свойством проекта: '+theme);
+      C.eq(await S.page.locator('#project-entry').isVisible(),true,'Панель показывает точку входа проекта: '+theme);
     }
     C.eq(S.pageErrors.length,0,'Открытие проекта без ошибок страницы');
   }
@@ -510,10 +516,10 @@ module.exports.push({id:'project-sidebar-controls',name:'Единая геоме
   const tabs=await S.page.locator('.editor-tab').count();
   await toggle.click();
   C.eq(await S.page.locator('#project-files').isVisible(),false,'Треугольник скрывает файлы');
-  C.eq(await S.page.locator('#project-entry').isVisible(),false,'Файл запуска скрывается вместе с проектом');
+  C.eq(await S.page.locator('#project-entry').isVisible(),true,'Файл запуска остаётся на общей панели');
   await S.page.evaluate(()=>window.__ide.refreshProjectFiles());
   C.eq(await toggle.getAttribute('aria-expanded'),'false','Обновление перечня не раскрывает проект');
-  C.eq(await S.page.locator('#project-entry-controls').isVisible(),false,'Обновление не возвращает подпись и список запуска');
+  C.eq(await S.page.locator('#project-entry-controls').isVisible(),true,'Обновление сохраняет общую панель запуска');
   C.eq(await S.page.locator('#project-resizer').isVisible(),false,'У свёрнутого проекта нет лишней высоты и разделителя');
   await toggle.focus();await S.page.keyboard.press('Enter');
   C.eq(await S.page.locator('#project-files').isVisible(),true,'Клавиатура раскрывает файлы');
@@ -529,7 +535,7 @@ module.exports.push({id:'project-sidebar-controls',name:'Единая геоме
 
 module.exports.push({id:'project-open-does-not-edit-source',name:'Открытие Maze Chase с умными именами не меняет исходники и не помечает вкладки',async fn({S,C}){
  const path=require('node:path'),fs=require('node:fs'),{ROOT}=require('../helpers');
- const folder=path.join(ROOT,'samples/graphics/game/maze_chase_project');
+ const folder=mazeWorkspace('maze-source-preservation');
  const disk=new Map(fs.readdirSync(folder).filter(f=>f.endsWith('.axm')).map(f=>[path.join(folder,f),fs.readFileSync(path.join(folder,f),'utf8')]));
  await S.launch({settings:{smartIdentifierEnabled:true}});await S.page.evaluate(p=>window.__ide.openProject(p),folder);
  for(const file of disk.keys())await S.page.evaluate(p=>window.__ide.openFile(p),file);

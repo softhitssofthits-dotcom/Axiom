@@ -12,7 +12,7 @@ module.exports = [
     await open(S, source, 'format-smooth');
     for (const [style, on, off, print] of [['Classic','SMOOTH ON','SMOOTH OFF','PRINT'], ['Modern','Smooth On','Smooth Off','Print']]) {
       await S.page.evaluate(source => window.__ide.editor.getModel().setValue(source), source);
-      await S.page.locator('[data-menu="edit"] .menu-label').click();
+      await S.page.locator('[data-menu="tools"] .menu-label').click();
       await S.page.locator('#formatting-submenu .submenu-trigger').hover();
       await S.page.locator('[data-action="format-' + style.toLowerCase() + '"]').click();
       await S.page.waitForFunction(({style, on}) => window.__ide.settings.formattingStyle === style &&
@@ -236,7 +236,7 @@ module.exports = [
   } },
   { id: 'format-one-enter-two-styles', name: 'Один Enter форматирует строку и создаёт цикл в Classic и Modern', async fn({ S, C }) {
     await open(S, 'PRINT 1\n', 'format-enter');
-    await S.page.locator('[data-menu="edit"] .menu-label').click();
+    await S.page.locator('[data-menu="tools"] .menu-label').click();
     await S.page.locator('#formatting-submenu .submenu-trigger').hover();
     await S.page.locator('[data-action="format-modern"]').click();
     await S.page.waitForFunction(() => window.__ide.settings.formattingStyle === 'Modern' && !window.__ide._formatBusy);

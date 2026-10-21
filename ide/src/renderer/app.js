@@ -937,7 +937,7 @@ class AxiomIDE {
     const separator=document.getElementById('project-resizer');
     if(!project||!separator)return;
     this.projectSplitter?.cancel();
-    separator.hidden=project.classList.contains('hidden')||project.classList.contains('project-collapsed');
+    separator.hidden=!!this.studio||project.classList.contains('hidden')||project.classList.contains('project-collapsed');
     if(!separator.hidden)this.projectSplitter?.layout();
   }
 
@@ -1151,7 +1151,6 @@ class AxiomIDE {
       }
     }
     if (this.projectDir) this.refreshProjectFiles();
-    this.renderMiscellaneousFiles();
     this.projectSession?.render();
     this.studio?.updateDocument();
     return true;
@@ -2405,6 +2404,16 @@ class AxiomIDE {
 
   persistRecovery(excluded = null) {
     if (!this._recoveryEnabled) return true;
+    const state = [];
+    for (const [p, f] of this.openFiles) {
+      if (excluded?.has(f)) continue;
+      const discarded = !!this._discardedOnExit?.has(f);
+      if (discarded && p.startsWith('untitled')) continue;
+      state.push([f, p, f.documentId, f.revision, f.savedText, !!f.missing, !!f.readonly, p === this.activeFile, discarded]);
+    }
+    const previous = this._recoverySnapshotState;
+    if (!this._recoveryFailed && previous?.length === state.length &&
+        state.every((row, index) => row.every((value, column) => value === previous[index][column]))) return true;
     const tabs = [];
     for (const [p, f] of this.openFiles) {
       if (excluded?.has(f)) continue;
@@ -2414,10 +2423,12 @@ class AxiomIDE {
         savedText: f.savedText, isDirty: !discarded && (p.startsWith('untitled') ? f.model.getValue().length > 0 : this.openFiles.isDirty(p)),
         missing: !!f.missing, readonly: !!f.readonly });
     }
-    const result = API.saveRecoverySync(tabs);
-    if (!result.ok) { this._recoveryFailed = true; this.setStatus('Не удалось сохранить данные восстановления: ' + result.message); }
-    else this._recoveryFailed = false;
-    return result.ok;
+    let result;
+    try { result = API.saveRecoverySync(tabs); }
+    catch (error) { result = { ok: false, message: error.message }; }
+    if (!result?.ok) { this._recoveryFailed = true; this.setStatus('Не удалось сохранить данные восстановления: ' + (result?.message || 'Нет ответа')); }
+    else { this._recoveryFailed = false; this._recoverySnapshotState = state; }
+    return !!result?.ok;
   }
 
   saveOpenTabs(useSync = false) {
@@ -2446,7 +2457,7 @@ class AxiomIDE {
           try {
             const disk = await API.readFileContent(tab.path);
             const restored = typeof tab.content === 'string' && (recovery ? tab.isDirty : tab.content !== disk);
-            const model = this.monaco.editor.createModel(restored ? tab.content : disk.replace(/^\uFEFF/, ''), 'axiom', this.monaco.Uri.file(tab.path));
+            const model = this.monaco.editor.createModel(restored ? tab.content : disk.replace(/^\uFEFF/, ''), /\.axm$/i.test(tab.path) ? 'axiom' : 'plaintext', this.monaco.Uri.file(tab.path));
             this.openFiles.set(tab.path, { model, viewState: null, readonly: !!tab.readonly });
             this.openFiles.get(tab.path).savedText = restored ? (tab.savedText ?? disk.replace(/^\uFEFF/, '').replace(/\r\n?/g, model.getEOL())) : model.getValue();
             this.openFiles.get(tab.path).missing = !!(restored && tab.missing);
@@ -2455,7 +2466,7 @@ class AxiomIDE {
             if (tab.isActive) this.switchToFile(tab.path);
           } catch {
             if (typeof tab.content !== 'string') continue;
-            const model = this.monaco.editor.createModel(tab.content, 'axiom', this.monaco.Uri.file(tab.path));
+            const model = this.monaco.editor.createModel(tab.content, /\.axm$/i.test(tab.path) ? 'axiom' : 'plaintext', this.monaco.Uri.file(tab.path));
             this.openFiles.set(tab.path, { model, viewState: null, readonly: !!tab.readonly });
             const entry = this.openFiles.get(tab.path); entry.savedText = tab.savedText ?? tab.content; entry.missing = true;
             this.createTab(tab.path); this.markDirty(tab.path, true);
