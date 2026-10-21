@@ -1,5 +1,6 @@
 using System.Globalization;
 using Axiom.Semantics;
+using Axiom.Core;
 
 namespace Axiom.Runtime.Builtins;
 
@@ -62,28 +63,28 @@ internal static class BuiltinIOHelpers
         // строку не угадывают, поэтому пользователь вводит точную запись.
         if (type == TypeSymbol.Date)
         {
-            return DateOnly.TryParseExact(text, "yyyy-MM-dd".AsSpan(), CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+            return CanonicalTemporalText.TryParseDate(text, out var date)
                 ? RuntimeValue.FromDate(date)
                 : null;
         }
 
         if (type == TypeSymbol.Time)
         {
-            return TimeOnly.TryParseExact(text, ["HH:mm:ss", "HH:mm:ss.FFFFFFF"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var time)
+            return CanonicalTemporalText.TryParseTime(text, out var time)
                 ? RuntimeValue.FromTime(time)
                 : null;
         }
 
         if (type == TypeSymbol.DateTime)
         {
-            return DateTime.TryParseExact(text, ["yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm:ss.FFFFFFF"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTime)
+            return CanonicalTemporalText.TryParseDateTime(text, out var dateTime)
                 ? RuntimeValue.FromDateTime(dateTime)
                 : null;
         }
 
         if (type == TypeSymbol.UtcDateTime)
         {
-            return BuiltinDateTimeHelpers.TryParseCanonicalInstant(text.ToString(), out var instant)
+            return CanonicalTemporalText.TryParseInstant(text, out var instant)
                 ? RuntimeValue.FromUtcDateTime(instant)
                 : null;
         }

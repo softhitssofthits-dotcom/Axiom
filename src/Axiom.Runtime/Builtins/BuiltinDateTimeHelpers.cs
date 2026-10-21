@@ -147,38 +147,8 @@ internal static class BuiltinDateTimeHelpers
             : utc.ToString(CanonicalInstantFormatWithFraction, DateTimeCulture);
     }
 
-    private static readonly string[] CanonicalInstantFormats =
-    [
-        CanonicalInstantFormat,
-        CanonicalInstantFormatWithFraction
-    ];
-
-    /// <summary>
-    /// Разбор момента принимает только запись с признаком Z. Смещение вида +03:00
-    /// не принимается: для момента смещение допустимо, но в языке пока нет формы,
-    /// которая бы его сохраняла, и молчаливое приведение скрыло бы потерю.
-    /// </summary>
-    internal static bool TryParseCanonicalInstant(string value, out DateTime utcValue)
-    {
-        // Проверка дробной части смотрит на конец строки, поэтому признак Z
-        // отрезается до неё: иначе «.125Z» считалось бы нецифровым хвостом.
-        var body = value.EndsWith('Z') ? value[..^1] : value;
-        if (!HasValidFractionalPart(body))
-        {
-            utcValue = default;
-            return false;
-        }
-
-        if (DateTime.TryParseExact(value, CanonicalInstantFormats, DateTimeCulture,
-                DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var parsed))
-        {
-            utcValue = DateTime.SpecifyKind(parsed, DateTimeKind.Utc);
-            return true;
-        }
-
-        utcValue = default;
-        return false;
-    }
+    internal static bool TryParseCanonicalInstant(string value, out DateTime utcValue) =>
+        CanonicalTemporalText.TryParseInstant(value, out utcValue);
 
     internal static DateTime TruncateToSecond(DateTime value)
     {
@@ -327,102 +297,17 @@ internal static class BuiltinDateTimeHelpers
         return false;
     }
 
-    internal static bool TryParseCanonicalDateOnly(string value, out DateOnly date)
-    {
-        return DateOnly.TryParseExact(value, CanonicalDateFormat, DateTimeCulture, DateTimeStyles.None, out date);
-    }
+    internal static bool TryParseCanonicalDateOnly(string value, out DateOnly date) =>
+        CanonicalTemporalText.TryParseDate(value, out date);
 
-    /// <summary>
-    /// Разбор принимает и краткую форму, и запись с долями секунды. Договор
-    /// обратимый: любой текст, который выдаёт FormatCanonicalTime/FormatCanonicalDateTime,
-    /// читается обратно в то же значение.
-    /// </summary>
-    private static readonly string[] CanonicalTimeFormats =
-    [
-        CanonicalTimeFormat,
-        CanonicalTimeFormatWithFraction
-    ];
+    internal static bool TryParseCanonicalTimeOnly(string value, out TimeOnly time) =>
+        CanonicalTemporalText.TryParseTime(value, out time);
 
-    private static readonly string[] CanonicalDateTimeFormats =
-    [
-        CanonicalDateTimeFormat,
-        CanonicalDateTimeFormatWithFraction
-    ];
+    internal static bool TryParseCanonicalDateTime(string value, out DateTime dateTime) =>
+        CanonicalTemporalText.TryParseDateTime(value, out dateTime);
 
-    internal static bool TryParseCanonicalTimeOnly(string value, out TimeOnly time)
-    {
-        if (!HasValidFractionalPart(value))
-        {
-            time = default;
-            return false;
-        }
-
-        return TimeOnly.TryParseExact(value, CanonicalTimeFormats, DateTimeCulture, DateTimeStyles.None, out time);
-    }
-
-    internal static bool TryParseCanonicalDateTime(string value, out DateTime dateTime)
-    {
-        if (!HasValidFractionalPart(value))
-        {
-            dateTime = default;
-            return false;
-        }
-
-        return DateTime.TryParseExact(value, CanonicalDateTimeFormats, DateTimeCulture, DateTimeStyles.None, out dateTime);
-    }
-
-    /// <summary>
-    /// Формат обмена отличается от канонической записи только разделителем T между
-    /// датой и временем. Смещение и суффикс Z здесь не принимаются: DATETIME не
-    /// хранит часовой пояс, и молча отбрасывать смещение значило бы потерять
-    /// информацию о моменте. Для момента нужен отдельный тип (DTA-005).
-    /// </summary>
-    private static readonly string[] ExchangeDateTimeFormats =
-    [
-        "yyyy-MM-dd'T'HH:mm:ss",
-        "yyyy-MM-dd'T'HH:mm:ss.FFFFFFF"
-    ];
-
-    internal static bool TryParseExchangeDateTime(string value, out DateTime dateTime)
-    {
-        if (!HasValidFractionalPart(value))
-        {
-            dateTime = default;
-            return false;
-        }
-
-        return DateTime.TryParseExact(value, ExchangeDateTimeFormats, DateTimeCulture, DateTimeStyles.None, out dateTime);
-    }
-
-    /// <summary>
-    /// Точка без цифр не является дробной частью. Платформа принимает такую запись,
-    /// поэтому договор проверяется здесь явно: после точки должно быть от одной до
-    /// семи цифр, иначе текст считается недопустимым целиком.
-    /// </summary>
-    private static bool HasValidFractionalPart(string value)
-    {
-        var dot = value.LastIndexOf('.');
-        if (dot < 0)
-        {
-            return true;
-        }
-
-        var digits = value.Length - dot - 1;
-        if (digits is < 1 or > 7)
-        {
-            return false;
-        }
-
-        for (var index = dot + 1; index < value.Length; index++)
-        {
-            if (!char.IsAsciiDigit(value[index]))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
+    internal static bool TryParseExchangeDateTime(string value, out DateTime dateTime) =>
+        CanonicalTemporalText.TryParseExchangeDateTime(value, out dateTime);
 
     internal static bool TryParseCanonicalTemporal(string value, out CanonicalTemporalValue temporal)
     {

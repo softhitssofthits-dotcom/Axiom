@@ -1,14 +1,5 @@
 {
-  "language": "0.2.2",
-  "compiler": "0.3.0",
-  "ide": "0.8.8",
-  "compilerOnlyChange": {
-    "version": "0.3.0",
-    "reason": "Добавлен формат проекта и его команды CLI; синтаксис, типы и выполнение отдельного исходника не меняются. Сохранена редакторская нормализация регистра из предыдущей задачи.",
-    "paths": [
-      "src/Axiom.Execution/Projects/AxiomProject.cs",
-      "src/Axiom.Execution/IdentifierNormalizationService.cs",
-      "src/Axiom.Execution/Requests/SourceProject.cs"
-    ]
-  }
+  "language": "0.2.3",
+  "compiler": "0.3.2",
+  "ide": "0.8.8"
 }

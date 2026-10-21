@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 548,
+  "count": 549,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -2078,6 +2078,11 @@
       "name": "INPUT: разделители приглашения, пустая строка и пунктуация"
     },
     {
+      "id": "input-temporal-strict-fraction",
+      "spec": "input-prompts.spec.js",
+      "name": "Временной INPUT: пустая дробь отклоняется атомарно, семь цифр принимаются"
+    },
+    {
       "id": "input-submit-active-failure",
       "spec": "input-submit-failure.spec.js",
       "name": "Непринятый INPUT сохраняет приглашение и русский текст для редактирования и повтора"
@@ -2295,7 +2300,7 @@
     {
       "id": "panels-project-height",
       "spec": "panels.spec.js",
-      "name": "Высота проекта: мышь, отмена, клавиатура, темы и сохранение"
+      "name": "Проект и структура: полная высота без прежнего разделителя"
     },
     {
       "id": "live-check-marks-syntax-error",

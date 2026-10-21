@@ -343,7 +343,7 @@ public sealed partial class Binder
 
         if (fieldType == TypeSymbol.Date)
         {
-            if (DateOnly.TryParseExact(text, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+            if (CanonicalTemporalText.TryParseDate(text, out var date))
             {
                 value = date;
                 return true;
@@ -354,7 +354,7 @@ public sealed partial class Binder
 
         if (fieldType == TypeSymbol.Time)
         {
-            if (TimeOnly.TryParseExact(text, ["HH:mm:ss", "HH:mm:ss.FFFFFFF"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var time))
+            if (CanonicalTemporalText.TryParseTime(text, out var time))
             {
                 value = time;
                 return true;
@@ -365,7 +365,7 @@ public sealed partial class Binder
 
         if (fieldType == TypeSymbol.DateTime)
         {
-            if (DateTime.TryParseExact(text, ["yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm:ss.FFFFFFF"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTime))
+            if (CanonicalTemporalText.TryParseDateTime(text, out var dateTime))
             {
                 value = dateTime;
                 return true;
@@ -378,12 +378,7 @@ public sealed partial class Binder
         {
             // Момент записывается только с признаком Z: без него текст означал бы
             // календарную запись и требовал бы пояса для перевода.
-            if (DateTime.TryParseExact(
-                    text,
-                    ["yyyy-MM-dd'T'HH:mm:ss'Z'", "yyyy-MM-dd'T'HH:mm:ss.FFFFFFF'Z'"],
-                    CultureInfo.InvariantCulture,
-                    DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal,
-                    out var instant))
+            if (CanonicalTemporalText.TryParseInstant(text, out var instant))
             {
                 value = DateTime.SpecifyKind(instant, DateTimeKind.Utc);
                 return true;

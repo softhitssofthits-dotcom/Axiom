@@ -1,6 +1,5 @@
 using Axiom.Core;
 using Axiom.Syntax;
-using System.Globalization;
 
 namespace Axiom.Semantics;
 
@@ -69,10 +68,7 @@ public sealed partial class Binder
     /// </summary>
     private static bool IsCanonicalDateTimeText(string text)
     {
-        return text.Length >= 19
-            && text[10] == ' '
-            && DateOnly.TryParseExact(text.AsSpan(0, 10), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _)
-            && TimeOnly.TryParseExact(text.AsSpan(11), "HH:mm:ss.FFFFFFF", CultureInfo.InvariantCulture, DateTimeStyles.None, out _);
+        return CanonicalTemporalText.TryParseDateTime(text, out _);
     }
 
     /// <summary>

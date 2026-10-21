@@ -12,40 +12,43 @@ namespace Axiom.Execution.Tests;
 public sealed class ElapsedSecondsContractTests
 {
     [Fact]
-    public void CounterMeasuresElapsedTime()
+    public void CounterUsesInjectedMonotonicSequence()
     {
-        const string source = """
-DIM start AS DOUBLE = ELAPSEDSECONDS()
-SLEEP 150
-DIM spent AS DOUBLE = ELAPSEDSECONDS() - start
-PRINT spent >= 0.1
-PRINT spent < 5
-""";
+        var clock = new SequenceClock(1000, 1010, 1020);
+        var result = Run("PRINT ELAPSEDSECONDS()\nPRINT ELAPSEDSECONDS()", clock);
 
-        var result = Run(source, new SteppingClock());
-
-        Assert.Equal(["TRUE", "TRUE"], result.Output);
+        Assert.Equal(["10", "20"], result.Output);
+        Assert.Equal(3, clock.MonotonicReads);
+        Assert.Equal(0, clock.CalendarReads);
     }
 
     [Fact]
     public void CounterIgnoresCalendarClockChanges()
     {
-        // Календарные часы сначала идут назад, затем прыгают вперёд: монотонный
-        // счётчик обязан расти ровно, поэтому разность остаётся положительной.
         const string source = """
-DIM start AS DOUBLE = ELAPSEDSECONDS()
-SLEEP 20
-DIM middle AS DOUBLE = ELAPSEDSECONDS()
-SLEEP 20
-DIM finish AS DOUBLE = ELAPSEDSECONDS()
-PRINT middle >= start
-PRINT finish >= middle
-PRINT finish - start >= 0
+PRINT NOW()
+PRINT ELAPSEDSECONDS()
+PRINT NOW()
+PRINT ELAPSEDSECONDS()
 """;
+        var clock = new SequenceClock(1000, 1010, 1020);
+        var result = Run(source, clock);
 
-        var result = Run(source, new JumpingClock());
+        Assert.Equal(["2024-03-01 11:30:00", "10", "2024-03-01 17:00:00", "20"], result.Output);
+        Assert.Equal(2, clock.CalendarReads);
+        Assert.Equal(3, clock.MonotonicReads);
+    }
 
-        Assert.Equal(["TRUE", "TRUE", "TRUE"], result.Output);
+    [Fact]
+    public void ProfilingHostForwardsInjectedMonotonicSequence()
+    {
+        var clock = new SequenceClock(1000, 1010, 1020);
+        IRuntimeHost host = new ProfilingRuntimeHost(NullRuntimeHost.Instance, clock, NullRuntimeHost.Instance);
+
+        Assert.Equal(1000, host.GetMonotonicSeconds());
+        Assert.Equal(1010, host.GetMonotonicSeconds());
+        Assert.Equal(1020, host.GetMonotonicSeconds());
+        Assert.Equal(3, clock.MonotonicReads);
     }
 
     [Fact]
@@ -122,13 +125,31 @@ PRINT ELAPSEDSECONDS(first, second)
     [Fact]
     public void CounterStartsAtZeroForEachRun()
     {
-        const string source = """
-PRINT ELAPSEDSECONDS() < 1
-""";
+        const string source = "PRINT ELAPSEDSECONDS()\nPRINT ELAPSEDSECONDS()";
+        var clock = new SequenceClock(1000, 1010, 1020, 1030, 1040, 1050);
+        var pipeline = new AxiomExecutionPipeline();
+        for (var run = 0; run < 2; run++)
+        {
+            var result = pipeline.Run(new ExecutionRequest(source, runtimeClock: clock));
+            Assert.True(result.Succeeded);
+            Assert.Equal(["10", "20"], result.Output);
+        }
+        Assert.Equal(6, clock.MonotonicReads);
+    }
 
-        var result = Run(source, new SteppingClock());
-
-        Assert.Equal(["TRUE"], result.Output);
+    private sealed class SequenceClock(params double[] seconds) : IRuntimeClock
+    {
+        public int MonotonicReads { get; private set; }
+        public int CalendarReads { get; private set; }
+        public double GetMonotonicSeconds() => seconds[MonotonicReads++];
+        public DateTimeOffset GetLocalNow() => new DateTimeOffset(2024, 3, 1, 12, 0, 0, TimeSpan.Zero)
+            + (++CalendarReads == 1 ? TimeSpan.FromMinutes(-30) : TimeSpan.FromHours(5));
+        public TimeZoneInfo GetLocalTimeZone() => TimeZoneInfo.Utc;
+        public bool TryResolveTimeZone(string id, out TimeZoneInfo timeZone)
+        {
+            timeZone = TimeZoneInfo.Utc;
+            return id.Equals("UTC", StringComparison.OrdinalIgnoreCase) || id.Equals("LOCAL", StringComparison.OrdinalIgnoreCase);
+        }
     }
 
     private sealed class SteppingClock : IRuntimeClock
@@ -151,35 +172,6 @@ PRINT ELAPSEDSECONDS() < 1
         // Каждое чтение счётчика сдвигает время на 0,1 с: так проверка не зависит
         // от реальной длительности SLEEP на конкретной машине.
         public double GetMonotonicSeconds() => _seconds += 0.1;
-    }
-
-    private sealed class JumpingClock : IRuntimeClock
-    {
-        private readonly TimeZoneInfo zone = TimeZoneInfo.Utc;
-        private double _seconds;
-
-        public DateTimeOffset GetLocalNow()
-        {
-            // Календарные часы намеренно нестабильны: назад, затем далеко вперёд.
-            var offset = _seconds switch
-            {
-                < 1 => TimeSpan.FromMinutes(-30),
-                < 2 => TimeSpan.FromHours(5),
-                _ => TimeSpan.Zero
-            };
-            return new DateTimeOffset(2024, 3, 1, 12, 0, 0, TimeSpan.Zero) + offset;
-        }
-
-        public TimeZoneInfo GetLocalTimeZone() => zone;
-
-        public bool TryResolveTimeZone(string id, out TimeZoneInfo timeZone)
-        {
-            timeZone = TimeZoneInfo.Utc;
-            return id.Equals("UTC", StringComparison.OrdinalIgnoreCase)
-                || id.Equals("LOCAL", StringComparison.OrdinalIgnoreCase);
-        }
-
-        public double GetMonotonicSeconds() => _seconds += 0.05;
     }
 
     private static ExecutionResult Run(string source, IRuntimeClock clock)

@@ -153,3 +153,24 @@ module.exports.push({
     C.eq((await S.diagnosticItems()).length, 0, 'Ввод всех форм завершён без диагностики');
   }
 });
+
+module.exports.push({id:'input-temporal-strict-fraction',name:'Временной INPUT: пустая дробь отклоняется атомарно, семь цифр принимаются',async fn({S,C}){
+ const source='DIM first AS INTEGER = 7\nDIM clock AS TIME\nDIM moment AS DATETIME\nDIM instant AS UTCDATETIME\nTRY\nINPUT first, clock\nCATCH err\nPRINT "time-error=" + err.Code\nEND TRY\nPRINT first\nPRINT clock\nTRY\nINPUT first, moment\nCATCH err\nPRINT "datetime-error=" + err.Code\nEND TRY\nPRINT first\nPRINT moment\nINPUT instant\nPRINT instant\nPRINT "strict-finished"';
+ const file=writeAxm(testWorkspace('temporal-strict-input'),'strict.axm',source);
+ await S.launch();await S.stubOpenDialog([file]);await S.page.evaluate(()=>window.__ide.handleAction('open'));
+ await S.page.waitForFunction(p=>window.__ide.activeFile===p,file);
+ await S.page.evaluate(()=>window.__ide.run());
+ await S.page.waitForFunction(()=>window.__ide.execution.inputRequestId!==null);
+ let id=await S.page.evaluate(()=>window.__ide.execution.inputRequestId);
+ await S.typeConsole('99,12:34:56.');
+ await S.page.waitForFunction(old=>window.__ide.execution.inputRequestId!==null&&window.__ide.execution.inputRequestId!==old,id);
+ id=await S.page.evaluate(()=>window.__ide.execution.inputRequestId);
+ await S.typeConsole('99,2024-02-29 12:34:56.');
+ await S.page.waitForFunction(old=>window.__ide.execution.inputRequestId!==null&&window.__ide.execution.inputRequestId!==old,id);
+ await S.typeConsole('2024-02-29T12:34:56.1234567Z');await S.waitIdle();await S.waitConsole('strict-finished');
+ const out=await S.consoleText();
+ C.contains(out,'time-error=MB3003\n7\n00:00:00','Неверный TIME оставляет оба значения');
+ C.contains(out,'datetime-error=MB3003\n7\n0001-01-01 00:00:00','Неверный DATETIME оставляет оба значения');
+ C.contains(out,'2024-02-29T12:34:56.1234567Z','Семь цифр сохраняются');
+ C.eq(S.pageErrors.length,0,'Нет ошибок страницы');
+}});

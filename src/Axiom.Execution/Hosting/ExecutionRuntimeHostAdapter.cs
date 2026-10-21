@@ -536,6 +536,8 @@ internal sealed class ExecutionRuntimeHostAdapter : IRuntimeHost, IReversibleOut
 
     public DateTimeOffset GetLocalNow() => _runtimeClock.GetLocalNow();
 
+    public double GetMonotonicSeconds() => _runtimeClock.GetMonotonicSeconds();
+
     public TimeZoneInfo GetLocalTimeZone() => _runtimeClock.GetLocalTimeZone();
 
     public bool TryResolveTimeZone(string id, out TimeZoneInfo timeZone) => _runtimeClock.TryResolveTimeZone(id, out timeZone);
