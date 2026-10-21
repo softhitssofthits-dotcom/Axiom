@@ -1825,14 +1825,16 @@ public sealed class BytecodeModuleValidatorTests
         Assert.Empty(result.Diagnostics);
     }
 
-    [Fact]
-    public void Validate_TypeStructuralEquality_Succeeds()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Validate_TypeStructuralEquality_Succeeds(bool utcField)
     {
         var recordType = new UserDefinedTypeSymbol("Point");
         recordType.Complete(
         [
             new TypeFieldSymbol("X", TypeSymbol.Integer),
-            new TypeFieldSymbol("Name", TypeSymbol.String)
+            new TypeFieldSymbol("Name", utcField ? TypeSymbol.UtcDateTime : TypeSymbol.String)
         ]);
 
         var routine = new BytecodeRoutine(

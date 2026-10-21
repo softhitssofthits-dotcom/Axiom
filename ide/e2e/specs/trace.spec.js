@@ -93,3 +93,31 @@ await S.page.keyboard.press('Shift+F5');await S.waitIdle();await S.page.keyboard
 await S.page.keyboard.press('Control+F5');await S.waitIdle();await S.waitConsole('10');C.ok(true,'Обычный запуск завершён без остановки');
 }}
 ];
+
+async function temporalAdvance(S,command){
+ const previous=await S.page.evaluate(()=>window.__ide.execution.stopId);
+ await S.page.evaluate(c=>window.__ide.trace.command(c),command);
+ await S.page.waitForFunction(id=>window.__ide.execution.stopId&&window.__ide.execution.stopId!==id&&!window.__ide.execution.debugBusy,previous);
+ return S.page.evaluate(()=>window.__ide.execution.line);
+}
+module.exports.push({id:'trace-temporal-stepback',name:'Временное значение восстанавливается перед повторным вызовом',async fn({S,C}){
+ const source='DIM value AS UTCDATETIME = "2024-02-29T12:34:56.0000001Z"\nvalue = Change(value)\nPRINT value\nFUNCTION Change(argument AS UTCDATETIME) AS UTCDATETIME\nPRINT argument\nRETURN "2024-02-29T12:34:56.0000002Z"\nEND FUNCTION';
+ const file=writeAxm(testWorkspace('trace-temporal'),'temporal.axm',source);
+ await S.launch();await S.page.evaluate(p=>window.__ide.openFile(p),file);await S.page.evaluate(()=>window.__ide.run('debug'));await paused(S,1);
+ C.eq(await temporalAdvance(S,'stepOver'),2,'Инициализация выполнена');
+ C.eq(await temporalAdvance(S,'stepOver'),3,'Изменение выполнено');
+ C.ok(await S.page.evaluate(()=>window.__ide.execution.canStepBack),'Временной скаляр не уничтожает историю');
+ C.eq(await temporalAdvance(S,'stepBack'),2,'Откат вернул строку изменения');
+ C.eq(await temporalAdvance(S,'stepOver'),3,'Повтор выполнен');
+ await S.page.evaluate(()=>window.__ide.execution.debug('continue'));await S.waitIdle();
+ const out=await S.consoleText();C.contains(out,'2024-02-29T12:34:56.0000001Z\n2024-02-29T12:34:56.0000002Z','Повтор получил прежний аргумент и сохранил точность');
+ C.eq((out.match(/2024-02-29T12:34:56.0000001Z/g)||[]).length,1,'Вывод откачен без дублирования');C.eq(S.pageErrors.length,0,'Нет ошибок страницы');
+}});
+module.exports.push({id:'trace-temporal-clock-boundary',name:'Последовательные откаты не пересекают чтение часов',async fn({S,C}){
+ const file=writeAxm(testWorkspace('trace-clock-boundary'),'clock.axm','DIM count AS INTEGER = 0\nDIM observed AS UTCDATETIME = NOWINSTANT()\ncount = count + 1\ncount = count + 1\nPRINT count');
+ await S.launch();await S.page.evaluate(p=>window.__ide.openFile(p),file);await S.page.evaluate(()=>window.__ide.run('debug'));await paused(S,1);
+ for(const expected of [2,3,4,5])C.eq(await temporalAdvance(S,'stepOver'),expected,'Шаг к строке '+expected);
+ for(const expected of [4,3,2])C.eq(await temporalAdvance(S,'stepBack'),expected,'Откат к строке '+expected);
+ C.eq(await S.page.evaluate(()=>window.__ide.execution.canStepBack),false,'Чтение часов ограничивает историю');
+ await S.page.evaluate(()=>window.__ide.execution.debug('continue'));await S.waitIdle();C.contains(await S.consoleText(),'2','После отката программа продолжилась');C.eq(S.pageErrors.length,0,'Нет ошибок страницы');
+}});

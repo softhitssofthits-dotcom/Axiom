@@ -127,3 +127,18 @@ test('axproj сохраняет одну файловую идентичност
  const {session,api}=setup();const project=description();project.entryPath='C:/GAME/MAIN.axm';api.projectCommand=async()=>({ok:true,payload:project});
  await session.open(project.projectFilePath);assert.equal(session.entry,'C:/game/main.axm');assert.equal(session.isSource('C:/GAME/HELPER.axm'),true);
 });
+
+test('Смена запуска и восстановление требуют нового анализа активного документа',async()=>{
+ const {session,ide}=setup();let checks=0,clears=0;
+ ide.scheduleLiveCheck=()=>checks++;ide.clearUsageAdvice=()=>clears++;
+ await session.open('C:/game');checks=0;clears=0;
+ session.select('C:/game/helper.axm');assert.ok(checks>0);assert.ok(clears>0);
+ checks=0;clears=0;await session.open('C:/game',{restore:true});assert.ok(checks>0);assert.ok(clears>0);
+ checks=0;session.reset();assert.ok(checks>0);
+});
+
+test('Возврат к прежнему запуску не возвращает прежнее поколение анализа',async()=>{
+ const {session}=setup();await session.open('C:/game');const before=session.analysisContext();
+ session.select('C:/game/helper.axm');session.select('C:/game/main.axm');
+ assert.notEqual(session.analysisContext(),before);
+});

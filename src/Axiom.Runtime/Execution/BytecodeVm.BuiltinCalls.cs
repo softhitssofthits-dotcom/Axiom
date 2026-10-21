@@ -678,6 +678,11 @@ public sealed partial class BytecodeVm
                 callSiteLocation);
         }
 
+        if (!IsBuiltinReverseExecutionSafe(builtin.CanonicalId))
+        {
+            InvalidateReverseExecutionHistory();
+        }
+
         return ExecuteBuiltinFromArguments(builtin, arguments, callSiteLocation);
     }
 

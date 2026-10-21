@@ -163,7 +163,6 @@ module.exports.push({id:'project-advice-cross-module-reads',name:'Советы �
  const helper=writeAxm(root,'helper.axm','PUBLIC DIM SharedValue AS INTEGER = 1\nPUBLIC CONST SharedLimit AS INTEGER = 2\nPRIVATE DIM LocalUnused AS INTEGER = 3\n');
  await S.launch({settings:{smartIdentifierEnabled:false}});await S.page.evaluate(p=>window.__ide.openProject(p),root);
  await S.page.evaluate(p=>window.__ide.openFile(p),helper);await S.page.evaluate(()=>window.__ide.runLiveCheck());
- require('node:fs').writeFileSync(path.join(require('../helpers').ROOT,'.artifacts/project-open-20261020/advice-initial.json'),JSON.stringify(await S.page.evaluate(()=>window.__ide._lastDiagnostics),null,2));
  C.eq(await S.page.evaluate(()=>window.__ide._lastDiagnostics.filter(d=>d.severity==='error').length),0,'Пример не содержит ошибок компиляции');
  const advice=()=>S.page.evaluate(()=>window.__ide._lastDiagnostics.filter(d=>d.code==='MB2047').map(d=>d.message).join('\n'));
  C.ok(!(await advice()).includes("'SharedValue'"),'Импортированная переменная читается в main');
@@ -175,9 +174,12 @@ module.exports.push({id:'project-advice-cross-module-reads',name:'Советы �
  C.ok(!(await advice()).includes("'SharedValue'"),'Закрытая вкладка main читается с диска');
  await S.page.evaluate(p=>window.__ide.openFile(p),main);await S.page.evaluate(p=>window.__ide.openFile(p),helper);
  await S.page.evaluate(p=>window.__ide.openFiles.get(p).model.setValue('IMPORT helper\nPRINT 0\n'),main);
- await S.page.evaluate(()=>window.__ide.runLiveCheck());
+ await S.page.waitForFunction(()=>window.__ide._lastDiagnostics.some(d=>d.code==='MB2047'&&d.message.includes("'SharedValue'")));
  C.contains(await advice(),'SharedValue','Удалённое несохранённое чтение учтено');
  C.contains(await advice(),'SharedLimit','Удалённое чтение константы учтено');
+ await S.page.evaluate(p=>window.__ide.openFiles.get(p).model.setValue('IMPORT helper\nPRINT SharedValue + SharedLimit\n'),main);
+ await S.page.waitForFunction(()=>!window.__ide._lastDiagnostics.some(d=>d.code==='MB2047'&&(d.message.includes("'SharedValue'")||d.message.includes("'SharedLimit'"))));
+ C.ok(true,'Несохранённое чтение в фоновой вкладке автоматически снимает советы');
  const orphan=writeAxm(root,'orphan.axm','DIM UnusedOrphan AS INTEGER\n');await S.page.evaluate(p=>window.__ide.openFile(p),orphan);await S.page.evaluate(()=>window.__ide.runLiveCheck());
  C.contains(await advice(),'UnusedOrphan','Не включённый в IMPORT файл проверяется самостоятельно');
  C.eq(S.pageErrors.length,0,'Нет ошибок страницы');
@@ -203,12 +205,48 @@ module.exports.push({id:'project-advice-cross-module-reads',name:'Советы �
 }});
 
 module.exports.push({id:'project-advice-maze-config',name:'Константы Maze Chase учитываются во всех девяти модулях',async fn({S,C}){
- const folder=path.join(require('../helpers').ROOT,'samples/graphics/game/maze_chase_project');
+ const fs=require('node:fs');const folder=testWorkspace('advice-maze-copy');
+ fs.cpSync(path.join(require('../helpers').ROOT,'samples/graphics/game/maze_chase_project'),folder,{recursive:true,filter:file=>!file.endsWith('.axproj')||path.basename(file)==='maze_chase.axproj'});
  await S.launch({settings:{smartIdentifierEnabled:false}});await S.page.evaluate(p=>window.__ide.openProject(p),path.join(folder,'maze_chase.axproj'));
  await S.page.evaluate(p=>window.__ide.openFile(p),path.join(folder,'maze_config.axm'));await S.page.evaluate(()=>window.__ide.runLiveCheck());
  const diagnostics=await S.page.evaluate(()=>window.__ide._lastDiagnostics);
  C.eq(diagnostics.filter(d=>d.severity==='error').length,0,'Проект успешно анализируется');
  for(const name of ['TILE','VIEW_WIDTH','VIEW_HEIGHT','HUD_HEIGHT','PLAYER_SPEED','GHOST_SPEED'])
   C.ok(!diagnostics.some(d=>d.code==='MB2047'&&d.message.includes("'"+name+"'")),'Нет ложного совета для '+name);
+ C.eq(S.pageErrors.length,0,'Нет ошибок страницы');
+}});
+
+module.exports.push({id:'project-advice-entry-live',name:'Смена файла запуска обновляет советы без правки и переключения вкладки',async fn({S,C}){
+ const folder=testWorkspace('advice-entry-live');
+ const main=writeAxm(folder,'main.axm','IMPORT helper\nPRINT SharedValue\n');
+ const other=writeAxm(folder,'other.axm','IMPORT helper\nPRINT 0\n');
+ const helper=writeAxm(folder,'helper.axm','PUBLIC DIM SharedValue AS INTEGER = 1\n');
+ await S.launch({settings:{smartIdentifierEnabled:false}});await S.page.evaluate(p=>window.__ide.openProject(p),folder);
+ await S.page.evaluate(p=>window.__ide.openFile(p),helper);await S.page.evaluate(()=>window.__ide.runLiveCheck());
+ C.eq(await S.page.evaluate(()=>window.__ide._lastDiagnostics.some(d=>d.code==='MB2047'&&d.message.includes('SharedValue'))),false,'Чтение из main учтено');
+ await S.page.locator('#project-entry').selectOption(other);
+ await S.page.waitForFunction(()=>window.__ide._lastDiagnostics.some(d=>d.code==='MB2047'&&d.message.includes('SharedValue')),null,{timeout:5000});
+ C.ok(true,'Совет появился после смены entry без правки текста');
+ await S.page.locator('#project-entry').selectOption(main);
+ await S.page.waitForFunction(()=>!window.__ide._lastDiagnostics.some(d=>d.code==='MB2047'&&d.message.includes('SharedValue')),null,{timeout:5000});
+ C.ok(true,'Возврат читающего entry снял совет');C.eq(S.pageErrors.length,0,'Нет ошибок страницы');
+}});
+
+for(const descriptor of [false,true])module.exports.push({id:'project-advice-maze-restore-'+(descriptor?'axproj':'folder'),name:'Maze: контекст анализа и запуск после восстановления '+(descriptor?'axproj':'папки'),async fn({S,C}){
+ const fs=require('node:fs');const folder=testWorkspace('advice-maze-restore-'+descriptor);
+ fs.cpSync(path.join(require('../helpers').ROOT,'samples/graphics/game/maze_chase_project'),folder,{recursive:true,filter:file=>!file.endsWith('.axproj')||(descriptor&&path.basename(file)==='maze_chase.axproj')});
+ const entry=path.join(folder,'main.axm'),config=path.join(folder,'maze_config.axm');
+ await S.launch({settings:{smartIdentifierEnabled:false}});await S.page.evaluate(p=>window.__ide.openProject(p),descriptor?path.join(folder,'maze_chase.axproj'):folder);
+ await S.page.evaluate(p=>window.__ide.openFile(p),config);await S.page.evaluate(()=>window.__ide.runLiveCheck());
+ const userData=S.userData;await S.close();await S.launch({userData});
+ await S.page.evaluate(p=>window.__ide.switchToFile(p),config);
+ await S.page.evaluate(()=>{const i=window.__ide,api=i.documentServices.api;window.__adviceRequests=[];i.documentServices.api={documentCommand:(method,snapshot)=>{window.__adviceRequests.push({method,snapshot});return api.documentCommand(method,snapshot);}};});
+ await S.page.evaluate(()=>window.__ide.runLiveCheck());
+ const state=await S.page.evaluate(()=>({projectDir:window.__ide.projectDir,entry:window.__ide.projectSession.entry,selected:document.getElementById('project-entry').value,diagnostics:window.__ide._lastDiagnostics,requests:window.__adviceRequests}));
+ C.eq(state.projectDir,folder,'Восстановлена папка');C.eq(state.entry,entry,'Восстановлена точка входа');C.eq(state.selected,entry,'Панель показывает выбранный main');
+ const evidence=path.join(require('../helpers').ROOT,'.artifacts/stability-project-advice-20261021');fs.mkdirSync(evidence,{recursive:true});fs.writeFileSync(path.join(evidence,'restored-'+(descriptor?'axproj':'folder')+'.json'),JSON.stringify(state,null,2));
+ const request=state.requests.find(r=>r.method==='document.analyse').snapshot;C.eq(request.navigationEntryPath,entry,'Анализ действительно получил main');
+ C.eq(!!request.projectFilePath,descriptor,'Контекст axproj передан согласно режиму');C.eq(state.diagnostics.filter(d=>d.severity==='error').length,0,'Нет ошибок компиляции');
+ for(const name of ['TILE','VIEW_WIDTH','VIEW_HEIGHT','HUD_HEIGHT','PLAYER_SPEED','GHOST_SPEED'])C.ok(!state.diagnostics.some(d=>d.code==='MB2047'&&d.message.includes("'"+name+"'")),'Нет ложного совета '+name);
  C.eq(S.pageErrors.length,0,'Нет ошибок страницы');
 }});

@@ -430,6 +430,10 @@ public sealed partial class BytecodeVm
             || value.Type == TypeSymbol.Decimal
             || value.Type == TypeSymbol.String
             || value.Type == TypeSymbol.Boolean
+            || value.Type == TypeSymbol.Date
+            || value.Type == TypeSymbol.Time
+            || value.Type == TypeSymbol.DateTime
+            || value.Type == TypeSymbol.UtcDateTime
             || value.Type == TypeSymbol.Void)
         {
             snapshot = value.CopyForStorage(fixedStringLength);

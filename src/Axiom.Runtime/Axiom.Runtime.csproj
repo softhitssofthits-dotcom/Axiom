@@ -13,4 +13,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Axiom.Runtime.Tests" />
+  </ItemGroup>
+
 </Project>

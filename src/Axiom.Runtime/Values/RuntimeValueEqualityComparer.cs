@@ -21,7 +21,8 @@ internal sealed class RuntimeValueEqualityComparer : IEqualityComparer<RuntimeVa
             || elementType == TypeSymbol.Boolean
             || elementType == TypeSymbol.Date
             || elementType == TypeSymbol.Time
-            || elementType == TypeSymbol.DateTime;
+            || elementType == TypeSymbol.DateTime
+            || elementType == TypeSymbol.UtcDateTime;
     }
 
     public bool Equals(RuntimeValue? left, RuntimeValue? right)
@@ -85,6 +86,11 @@ internal sealed class RuntimeValueEqualityComparer : IEqualityComparer<RuntimeVa
         if (value.Type == TypeSymbol.DateTime)
         {
             return value.AsDateTime().GetHashCode();
+        }
+
+        if (value.Type == TypeSymbol.UtcDateTime)
+        {
+            return value.AsUtcDateTime().GetHashCode();
         }
 
         return 0;

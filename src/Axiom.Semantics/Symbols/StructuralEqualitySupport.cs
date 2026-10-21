@@ -48,7 +48,8 @@ public static class StructuralEqualitySupport
             || type == TypeSymbol.Boolean
             || type == TypeSymbol.Date
             || type == TypeSymbol.Time
-            || type == TypeSymbol.DateTime;
+            || type == TypeSymbol.DateTime
+            || type == TypeSymbol.UtcDateTime;
     }
 
     private static bool Visit(UserDefinedTypeSymbol root, Dictionary<UserDefinedTypeSymbol, bool> cache)

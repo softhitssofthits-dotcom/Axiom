@@ -85,3 +85,13 @@ test('Закрытый выбранный запуск передаётся ан
  assert.ok(await service.request('C:/other/file.axm','document.analyse'));
  assert.equal(snapshots[1].navigationEntryPath,undefined);
 });
+
+test('Повторное открытие того же проекта отклоняет прежний ответ анализа',async()=>{
+ const store=new DocumentStore();store.set('C:/project/helper.axm',{model:model('PUBLIC DIM Shared AS INTEGER')});
+ for(const method of ['document.analyse','document.compile','document.hover','document.navigation']){
+  let generation=1,respond,snapshot;
+  const service=new DocumentServices(store,{documentCommand:(_method,s)=>{snapshot=s;return new Promise(r=>respond=r);}},()=> 'C:/project/main.axm',()=> 'C:/project/demo.axproj',()=>generation);
+  const pending=service.request('C:/project/helper.axm',method);generation++;
+  respond({ok:true,payload:{...snapshot,diagnostics:[]}});assert.equal(await pending,null);
+ }
+});

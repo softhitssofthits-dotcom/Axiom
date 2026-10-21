@@ -460,3 +460,18 @@ DTR-001 исправлен в ExecutionRuntimeHostAdapter и ProfilingRuntimeHos
 ### Общий разбор канонического временного текста — 2026-10-21
 
 Независимый от семантики и VM CanonicalTemporalText помещён в Axiom.Core. Он разбирает DateOnly, TimeOnly и DateTime по инвариантным форматам и отдельно проверяет длину, NUL и непустую дробную часть из одной–семи цифр. Runtime не вызывается из Binder: оба слоя используют общий нижний слой. BuiltinDateTimeHelpers, BuiltinIOHelpers и Binder.Declarations используют один разбор; проверка полного DATETIME для диагностики потери компонента в Binder.TemporalConversions также использует его. Форматы пользовательского FORMAT/PARSE не переписывались. Нормализация INPUT и атомарная запись получателей не изменены. Язык 0.2.3, компилятор/CLI 0.3.2, IDE 0.8.8.
+
+
+### Допуск UTC-моментов к структурному сравнению и хешированию — 2026-10-21
+
+StructuralEqualitySupport включает TypeSymbol.UtcDateTime среди скаляров. Общий договор используется связыванием и проверкой байткода; повторная реализация в этих слоях не добавлялась. RuntimeValueEqualityComparer вычисляет хеш UTC-момента через DateTime.GetHashCode, согласованный с существующим ValuesEqual. SupportsElementType включает UTCDATETIME и выбирает уже существующую ветвь HashSet в ARRAYDISTINCT. Runtime.Tests получает доступ к внутреннему компаратору через InternalsVisibleTo для прямого подтверждения договора. Нового пользовательского API нет.
+
+
+### Снимки временных скаляров и классификация косвенных вызовов — 2026-10-21
+
+BytecodeVm.Debug.TryCreateValueSnapshot включает четыре временных скаляра и использует существующий CopyForStorage. RuntimeSnapshotFactory продолжает копировать графы записей и массивов. Формат внутренних снимков не изменён. Общая IsBuiltinReverseExecutionSafe пополнена чтениями момента, монотонных часов, текущего UTC-смещения и UTC-метаданных. InvokeBuiltinFunctionValue теперь также применяет её перед внешним вызовом через значение функции; прямой вызов использует существующий BuiltinExecutionInfo. Чистые функции сохраняют историю. Исходный код интерфейса IDE не менялся; исправления получает DesktopHost через общую VM.
+
+
+### Поколение проектного анализа IDE — 2026-10-21
+
+ProjectSession.analysisRevision увеличивается при invalidateAnalysis; старые советы активной модели снимаются через существующий clearUsageAdvice и назначается scheduleLiveCheck. Контекст analysisContext включает sequence, analysisRevision, projectDir, entry, contentHash описания и loading. DocumentServices получает поставщик контекста пятым аргументом конструктора и проверяет его после ожидания ответа для analyse/compile/hover/navigation вместе с прежними проверками документов и зависимостей. Протокол DesktopHost не расширялся, второй анализатор не вводился. Логика VariableUsageAnalysis осталась без изменения.

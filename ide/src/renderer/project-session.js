@@ -7,7 +7,7 @@
   const key=value=>String(value||'').replace(/\//g,'\\').replace(/\\+$/,'').toLowerCase();
   const record=value=>value&&typeof value==='object'&&!Array.isArray(value)?value:{};
   class ProjectSession {
-    constructor(ide,api){this.ide=ide;this.api=api;this.files=[];this.entry=null;this.descriptor=null;this.descriptorRequest=0;this.sequence=0;this.loading=false;}
+    constructor(ide,api){this.ide=ide;this.api=api;this.files=[];this.entry=null;this.descriptor=null;this.descriptorRequest=0;this.sequence=0;this.analysisRevision=0;this.loading=false;}
     contains(file){if(this.descriptor)return [...this.descriptor.sourceFiles,...this.descriptor.assetFiles].some(p=>key(p)===key(file));return !!this.ide.projectDir&&key(file).startsWith(key(this.ide.projectDir)+'\\');}
     isSource(file){return this.descriptor?this.descriptor.sourceFiles.some(p=>key(p)===key(file)):this.contains(file);}
     relative(file){return file.slice(this.ide.projectDir.replace(/[\\/]+$/,'').length+1).replace(/\\/g,'/');}
@@ -27,10 +27,13 @@
       this.ide.saveSettings({projectEntries:{...record(this.ide.settings.projectEntries),
         [key(this.ide.projectDir)]:this.entry?this.relative(this.entry):null}});
     }
+    analysisContext(){return JSON.stringify([this.sequence,this.analysisRevision,this.ide.projectDir,this.entry,this.descriptor?.contentHash,this.loading]);}
+    invalidateAnalysis(){this.analysisRevision++;this.ide.clearUsageAdvice?.();this.ide.scheduleLiveCheck?.();}
     navigation(){
       const document=this.entry&&this.ide.openFiles.get(this.entry);
       this.ide.openFiles.navigationEntryId=document?.documentId||null;
       this.ide.assistant?.invalidate();
+      this.invalidateAnalysis();
     }
     select(file){
       if(this.descriptor)return this.setDescriptorEntry(file||null);
@@ -46,7 +49,7 @@
     refresh(files){
       this.files=files.filter(file=>this.contains(file)&&/\.axm$/i.test(file));
       if(this.entry&&!this.files.some(file=>key(file)===key(this.entry))){
-        this.entry=null;this.persist();
+        this.entry=null;this.persist();this.navigation();
       }
       this.render();
     }
@@ -64,6 +67,7 @@
       const selected=this.entry&&this.ide.openFiles.get(this.entry);
       if(selected?.documentId===this.ide.openFiles.navigationEntryId)this.ide.openFiles.navigationEntryId=null;
       this.sequence++;this.files=[];this.entry=null;this.descriptor=null;this.loading=false;this.render();
+      this.invalidateAnalysis();
     }
     target(){
       if(this.loading)return null;
@@ -146,7 +150,7 @@
           if(active)this.ide.switchToFile(active);
         }
         this.navigation();this.persist();return true;
-      }finally{if(current()){this.loading=false;this.render();}}
+      }finally{if(current()){this.loading=false;this.render();this.invalidateAnalysis();}}
     }
   }
   return {ProjectSession};

@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 549,
+  "count": 554,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -2343,6 +2343,21 @@
       "name": "Константы Maze Chase учитываются во всех девяти модулях"
     },
     {
+      "id": "project-advice-entry-live",
+      "spec": "problems.spec.js",
+      "name": "Смена файла запуска обновляет советы без правки и переключения вкладки"
+    },
+    {
+      "id": "project-advice-maze-restore-folder",
+      "spec": "problems.spec.js",
+      "name": "Maze: контекст анализа и запуск после восстановления папки"
+    },
+    {
+      "id": "project-advice-maze-restore-axproj",
+      "spec": "problems.spec.js",
+      "name": "Maze: контекст анализа и запуск после восстановления axproj"
+    },
+    {
       "id": "assistant-module-navigation",
       "spec": "program-assistant.spec.js",
       "name": "Межфайловые связи: снимок, переход в зависимость и возврат"
@@ -2746,6 +2761,16 @@
       "id": "trace-breakpoints-restart-language",
       "spec": "trace.spec.js",
       "name": "Точки остановки, продолжение, перезапуск и перевод"
+    },
+    {
+      "id": "trace-temporal-stepback",
+      "spec": "trace.spec.js",
+      "name": "Временное значение восстанавливается перед повторным вызовом"
+    },
+    {
+      "id": "trace-temporal-clock-boundary",
+      "spec": "trace.spec.js",
+      "name": "Последовательные откаты не пересекают чтение часов"
     }
   ]
 }

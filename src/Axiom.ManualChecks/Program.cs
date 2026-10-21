@@ -633,6 +633,7 @@ static BenchmarkCase[] GetBenchmarkCases()
         new BenchmarkCase("Скалярный слой и присваивания: expression mesh", @"samples/smoke/engine-compare/scalar_assignment_expression_mesh.axm"),
         new BenchmarkCase("Числовые built-in: плотный проход", @"samples/smoke/engine-compare/numeric_function_sweep.axm"),
         new BenchmarkCase("RND: deterministic stream", @"samples/smoke/engine-compare/random_stream_snapshot.axm", Array.Empty<string>(), null, static () => new SeededRuntimeRandom(24681357)),
+        new BenchmarkCase("Массивы: уникальные моменты UTC", @"samples/smoke/engine-compare/array_distinct_utc_unique.axm"),
         new BenchmarkCase("Дата и время: календарный конвейер", @"samples/smoke/engine-compare/date_time_calendar_pipeline.axm"),
         new BenchmarkCase("Дата и время: current-time снимок", @"samples/smoke/engine-compare/current_time_snapshot.axm", Array.Empty<string>(), CreateCurrentTimeBenchmarkClock()),
         // Три отдельные нагрузки: разбор и печать текста, поиск пояса и чистая

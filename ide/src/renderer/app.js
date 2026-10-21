@@ -12,7 +12,7 @@ class AxiomIDE {
       this.assistant?.invalidate();
     });
     this.editedLines = new window.EditedLines();
-    this.documentServices = new window.DocumentServices(this.openFiles, API, () => this.projectSession?.entry, path => this.projectSession?.descriptor?.sourceFiles.some(p=>p.toLowerCase()===path.toLowerCase()) ? this.projectSession.descriptor.projectFilePath : null);
+    this.documentServices = new window.DocumentServices(this.openFiles, API, () => this.projectSession?.entry, path => this.projectSession?.descriptor?.sourceFiles.some(p=>p.toLowerCase()===path.toLowerCase()) ? this.projectSession.descriptor.projectFilePath : null, () => this.projectSession?.analysisContext());
     this.documentSaver = new window.DocumentSaver(this.openFiles, API);
     this.dirty = new Set();
     this.activeFile = null;

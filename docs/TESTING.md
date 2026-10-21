@@ -137,3 +137,13 @@ node ide/e2e/runner.js --list
 ## Проверки временных договоров — 21 октября 2026 года
 
 DTR-001: ElapsedSecondsContractTests 8/8, с соседними договорами 135/135. DTR-003: TemporalStrictParsingTests 97 случаев входят в адресный набор Execution 346/346; Semantics 29/29; Runtime 1221/1221. Фильтр Runtime включил весь проект из-за совпадения с именем пространства имён; этот результат не назван узкой выборкой. Новый сценарий input-temporal-strict-fraction прошёл через Electron/DesktopHost: 1/1, 4 проверки. Каталог обновлён: 549 сценариев, e2e-execution теперь 48, e2e-all 549. Полный каталог Electron и все проекты .NET не запускались. Сборки DesktopHost Debug/Release и CLI Release успешны; ManualChecks проверен после выделения ProfilingRuntimeHost в пункте 2.
+
+
+## Временные снимки и обратный шаг — 21 октября 2026 года
+
+TemporalStepBackTests (27 случаев) и TemporalStackSnapshotTests (4) входят в адресные регрессии Execution 74/74 и Runtime 37/37. Electron: trace-temporal-stepback (8 проверок), trace-temporal-clock-boundary (10), прежний trace-type-self-stepback (9) — 3/3 сценария. Каталог обновлён до 551 сценария, e2e-debug 19; полнота регистрации Node 3/3. Целые наборы .NET и Electron не запускались. [Условия приёмки и измерений](plans/TEMPORAL_STEPBACK_RESULTS_2026-10-21.md).
+
+
+## Проектные советы MB2047 — 21 октября 2026 года
+
+ProjectVariableUsageTests: 8/8 без изменения анализатора. ide-unit-delivery 191/191, ide-unit-renderer 118/118; наборы пересекаются. Адресные document-services/project-session 33/33 включены в эти результаты. Electron: пять project-advice-сценариев 5/5, 49 проверок; два восстановления повторены с сохранением запросов. Каталог теперь 554 сценария, e2e-editor 59; регистрация Node 3/3. Полные .NET/Electron не запускались. [Отчёт](plans/PROJECT_USAGE_ADVICE_RESULTS_2026-10-21.md).
