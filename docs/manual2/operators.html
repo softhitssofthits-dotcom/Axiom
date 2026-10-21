@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Операции и выражения — Справочник Axiom</title>
+<link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="operators">
+<a class="skip" href="#content">К содержанию</a>
+<header class="topbar">
+<a class="brand" href="index.html">Axiom<span>справочник</span></a>
+<form class="search" role="search" action="search.html" method="get">
+<label class="sr" for="q">Поиск по справочнику</label>
+<input id="q" name="q" type="search" placeholder="Имя функции, оператора или тема" autocomplete="off">
+<button type="submit">Найти</button>
+</form>
+<button class="menu-btn" type="button" aria-expanded="false" aria-controls="side">Оглавление</button>
+</header>
+<div class="shell">
+<aside id="side" class="side"><nav id="nav" aria-label="Оглавление"></nav></aside>
+<main id="content">
+<nav class="crumbs" aria-label="Путь"><a href="index.html">Справочник</a> / Операции и выражения</nav>
+<h1>Операции и выражения</h1>
+<p class="lead">Выражение вычисляет значение, соединяя операнды операциями. Тип результата зависит от типов операндов: сравнение даёт BOOLEAN, арифметика — число, амперсанд — строку.</p>
+
+<section><h2>Приоритет</h2>
+<p>Операция с большим приоритетом выполняется раньше. Скобки меняют порядок. Справа налево связывается только возведение в степень; остальные операции одного уровня — слева направо.</p>
+<table><thead><tr><th>Уровень</th><th>Операции</th><th>Действие</th></tr></thead><tbody>
+<tr><td>11</td><td>^</td><td>возведение в степень</td></tr>
+<tr><td>10</td><td>-, NOT</td><td>смена знака, отрицание</td></tr>
+<tr><td>9</td><td>*, /, \, MOD</td><td>умножение, деление, целочисленное деление, остаток</td></tr>
+<tr><td>8</td><td>+, -, &amp;</td><td>сложение, вычитание, соединение строк</td></tr>
+<tr><td>7</td><td>&lt;&lt;, &gt;&gt;</td><td>сдвиг целого числа</td></tr>
+<tr><td>6</td><td>=, &lt;&gt;, &lt;, &lt;=, &gt;, &gt;=</td><td>сравнение</td></tr>
+<tr><td>5</td><td>AND, ANDALSO</td><td>конъюнкция</td></tr>
+<tr><td>4</td><td>XOR</td><td>исключающее ИЛИ</td></tr>
+<tr><td>3</td><td>OR, ORELSE</td><td>дизъюнкция</td></tr>
+<tr><td>2</td><td>EQV</td><td>эквивалентность</td></tr>
+<tr><td>1</td><td>IMP</td><td>импликация</td></tr>
+</tbody></table>
+</section>
+
+<section><h2>Арифметика</h2>
+<p>Деление <code>/</code> возвращает DOUBLE или DECIMAL по правилам типов. Целочисленное деление <code>\</code> работает с INTEGER и LONG, а <code>MOD</code> возвращает остаток.</p>
+<pre><code class="language-axiom">PRINT 7 / 2
+PRINT 7 \ 2
+PRINT 7 MOD 2
+PRINT 2 ^ 10</code></pre>
+<pre><code class="language-output">3.5
+3
+1
+1024</code></pre>
+<p>Деление на ноль — ошибка времени выполнения MB3001. Переполнение целого результата, например <code>2147483647 + 1</code>, даёт MB3008.</p>
+</section>
+
+<section><h2>Сравнение</h2>
+<p>Сравнение возвращает BOOLEAN. Числа сравниваются по значению, строки — по кодовым единицам UTF-16 без языковой сортировки. Логические значения допускают только равенство и неравенство.</p>
+<pre><code class="language-axiom">PRINT 3 &lt; 4
+PRINT &quot;А&quot; &lt; &quot;Б&quot;
+PRINT TRUE &lt;&gt; FALSE</code></pre>
+<pre><code class="language-output">TRUE
+TRUE
+TRUE</code></pre>
+</section>
+
+<section><h2>Логические операции</h2>
+<p><code>NOT</code>, <code>AND</code>, <code>OR</code>, <code>XOR</code>, <code>EQV</code> и <code>IMP</code> применяются к BOOLEAN либо к целым числам. Для BOOLEAN результат логический, для целых — целочисленный; смешивать логическое и числовое значения в одной операции нельзя.</p>
+<pre><code class="language-axiom">PRINT TRUE AND FALSE
+PRINT FALSE OR TRUE
+PRINT NOT FALSE
+PRINT 5 AND 3</code></pre>
+<pre><code class="language-output">FALSE
+TRUE
+TRUE
+1</code></pre>
+<p><code>ANDALSO</code> и <code>ORELSE</code> принимают только BOOLEAN и вычисляют второй операнд не всегда: <code>ANDALSO</code> пропускает его при FALSE слева, <code>ORELSE</code> — при TRUE слева. Обычные <code>AND</code> и <code>OR</code> вычисляют оба операнда всегда.</p>
+<pre><code class="language-axiom">PRINT FALSE ANDALSO (1 / 0 &gt; 0)
+PRINT FALSE AND (1 / 0 &gt; 0)</code></pre>
+<p>Первая строка печатает <code>FALSE</code>: деление не выполняется. Вторая завершается ошибкой MB3001, потому что правый операнд вычисляется.</p>
+</section>
+
+<section><h2>Соединение строк</h2>
+<p>Амперсанд <code>&amp;</code> соединяет текстовые представления значений, включая числа, BOOLEAN и моменты времени. Операция <code>+</code> строки с числами не соединяет.</p>
+<pre><code class="language-axiom">PRINT &quot;Количество: &quot; &amp; 3
+PRINT &quot;Готово: &quot; &amp; TRUE</code></pre>
+<pre><code class="language-output">Количество: 3
+Готово: TRUE</code></pre>
+</section>
+<nav class="pager"><a class="prev" href="loops.html">← Циклы: FOR, WHILE, DO</a><a class="next" href="numbers.html">Числа →</a></nav>
+</main>
+</div>
+<script src="scripts/navigation.js"></script>
+<script src="scripts/search-index.js"></script>
+<script src="scripts/highlight.js"></script>
+<script src="scripts/app.js"></script>
+</body>
+</html>

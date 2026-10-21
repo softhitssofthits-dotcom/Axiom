@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Функции: дата и время — Справочник Axiom</title>
+<link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="dates-functions">
+<a class="skip" href="#content">К содержанию</a>
+<header class="topbar">
+<a class="brand" href="index.html">Axiom<span>справочник</span></a>
+<form class="search" role="search" action="search.html" method="get">
+<label class="sr" for="q">Поиск по справочнику</label>
+<input id="q" name="q" type="search" placeholder="Имя функции, оператора или тема" autocomplete="off">
+<button type="submit">Найти</button>
+</form>
+<button class="menu-btn" type="button" aria-expanded="false" aria-controls="side">Оглавление</button>
+</header>
+<div class="shell">
+<aside id="side" class="side"><nav id="nav" aria-label="Оглавление"></nav></aside>
+<main id="content">
+<nav class="crumbs" aria-label="Путь"><a href="index.html">Справочник</a> / Функции: дата и время</nav>
+<h1>Функции: дата и время</h1>
+<p class="lead">40 функций раздела «Дата и время» — 58 зарегистрированных форм с типами аргументов и результата.</p>
+
+<section><h2>Общий договор</h2>
+<p>DATE хранит календарный день, TIME — время суток, DATETIME — дату и время без пояса, UTCDATETIME — момент UTC. TIME и DATETIME сохраняют доли секунды. Неявное сужение DATETIME до DATE или TIME запрещено; явное извлечение выполняют DATEVALUE и TIMEVALUE.</p>
+<p>Все перечисленные аргументы обязательны; необязательный аргумент представлен отдельной формой. Объяснение типов и общего поведения находится в главе <a href="dates.html">Дата и время</a>.</p>
+</section>
+<section><h2>Карточки</h2>
+<article class="card" id="fn-date">
+<h3>DATE</h3>
+<div class="form">
+<pre><code class="language-axiom">DATE()</code></pre>
+<p class="result">Результат: <code>DATE</code>.</p>
+<p class="muted">Аргументов нет.</p>
+</div>
+<div class="form">
+<pre><code class="language-axiom">DATE(TIMEZONE)</code></pre>
+<p class="result">Результат: <code>DATE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>timeZone</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-dateadd">
+<h3>DATEADD</h3>
+<div class="form">
+<pre><code class="language-axiom">DATEADD(INTERVAL, NUMBER, VALUE)</code></pre>
+<p class="result">Результат: <code>DATE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>interval</code></td><td><code>STRING</code></td></tr><tr><td><code>number</code></td><td><code>INTEGER</code></td></tr><tr><td><code>value</code></td><td><code>DATE</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">DATEADD(INTERVAL, NUMBER, VALUE)</code></pre>
+<p class="result">Результат: <code>TIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>interval</code></td><td><code>STRING</code></td></tr><tr><td><code>number</code></td><td><code>INTEGER</code></td></tr><tr><td><code>value</code></td><td><code>TIME</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">DATEADD(INTERVAL, NUMBER, VALUE)</code></pre>
+<p class="result">Результат: <code>DATETIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>interval</code></td><td><code>STRING</code></td></tr><tr><td><code>number</code></td><td><code>INTEGER</code></td></tr><tr><td><code>value</code></td><td><code>DATETIME</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-datediff">
+<h3>DATEDIFF</h3>
+<div class="form">
+<pre><code class="language-axiom">DATEDIFF(INTERVAL, FROMVALUE, TOVALUE)</code></pre>
+<p class="result">Результат: <code>LONG</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>interval</code></td><td><code>STRING</code></td></tr><tr><td><code>fromValue</code></td><td><code>DATE</code></td></tr><tr><td><code>toValue</code></td><td><code>DATE</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">DATEDIFF(INTERVAL, FROMVALUE, TOVALUE)</code></pre>
+<p class="result">Результат: <code>LONG</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>interval</code></td><td><code>STRING</code></td></tr><tr><td><code>fromValue</code></td><td><code>TIME</code></td></tr><tr><td><code>toValue</code></td><td><code>TIME</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">DATEDIFF(INTERVAL, FROMVALUE, TOVALUE)</code></pre>
+<p class="result">Результат: <code>LONG</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>interval</code></td><td><code>STRING</code></td></tr><tr><td><code>fromValue</code></td><td><code>DATETIME</code></td></tr><tr><td><code>toValue</code></td><td><code>DATETIME</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-datepart">
+<h3>DATEPART</h3>
+<div class="form">
+<pre><code class="language-axiom">DATEPART(PART, VALUE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>part</code></td><td><code>STRING</code></td></tr><tr><td><code>value</code></td><td><code>DATE</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">DATEPART(PART, VALUE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>part</code></td><td><code>STRING</code></td></tr><tr><td><code>value</code></td><td><code>TIME</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">DATEPART(PART, VALUE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>part</code></td><td><code>STRING</code></td></tr><tr><td><code>value</code></td><td><code>DATETIME</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-dateserial">
+<h3>DATESERIAL</h3>
+<div class="form">
+<pre><code class="language-axiom">DATESERIAL(YEAR, MONTH, DAY)</code></pre>
+<p class="result">Результат: <code>DATE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>year</code></td><td><code>INTEGER</code></td></tr><tr><td><code>month</code></td><td><code>INTEGER</code></td></tr><tr><td><code>day</code></td><td><code>INTEGER</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-datetimeserial">
+<h3>DATETIMESERIAL</h3>
+<div class="form">
+<pre><code class="language-axiom">DATETIMESERIAL(DATE, TIME)</code></pre>
+<p class="result">Результат: <code>DATETIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>date</code></td><td><code>DATE</code></td></tr><tr><td><code>time</code></td><td><code>TIME</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-datetimevalue">
+<h3>DATETIMEVALUE</h3>
+<div class="form">
+<pre><code class="language-axiom">DATETIMEVALUE(VALUE)</code></pre>
+<p class="result">Результат: <code>DATETIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-datevalue">
+<h3>DATEVALUE</h3>
+<div class="form">
+<pre><code class="language-axiom">DATEVALUE(VALUE)</code></pre>
+<p class="result">Результат: <code>DATE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">DATEVALUE(VALUE)</code></pre>
+<p class="result">Результат: <code>DATE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DATETIME</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-day">
+<h3>DAY</h3>
+<div class="form">
+<pre><code class="language-axiom">DAY(VALUE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DATE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-daysinmonth">
+<h3>DAYSINMONTH</h3>
+<div class="form">
+<pre><code class="language-axiom">DAYSINMONTH(YEAR, MONTH)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>year</code></td><td><code>INTEGER</code></td></tr><tr><td><code>month</code></td><td><code>INTEGER</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-elapsedseconds">
+<h3>ELAPSEDSECONDS</h3>
+<div class="form">
+<pre><code class="language-axiom">ELAPSEDSECONDS()</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<p class="muted">Аргументов нет.</p>
+</div>
+<div class="form">
+<pre><code class="language-axiom">ELAPSEDSECONDS(FROMVALUE, TOVALUE)</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>fromValue</code></td><td><code>UTCDATETIME</code></td></tr><tr><td><code>toValue</code></td><td><code>UTCDATETIME</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-endofmonth">
+<h3>ENDOFMONTH</h3>
+<div class="form">
+<pre><code class="language-axiom">ENDOFMONTH(VALUE)</code></pre>
+<p class="result">Результат: <code>DATE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DATE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-endofyear">
+<h3>ENDOFYEAR</h3>
+<div class="form">
+<pre><code class="language-axiom">ENDOFYEAR(VALUE)</code></pre>
+<p class="result">Результат: <code>DATE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DATE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-frominstant">
+<h3>FROMINSTANT</h3>
+<div class="form">
+<pre><code class="language-axiom">FROMINSTANT(VALUE)</code></pre>
+<p class="result">Результат: <code>DATETIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>UTCDATETIME</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">FROMINSTANT(VALUE, TIMEZONE)</code></pre>
+<p class="result">Результат: <code>DATETIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>UTCDATETIME</code></td></tr><tr><td><code>timeZone</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-fromutc">
+<h3>FROMUTC</h3>
+<div class="form">
+<pre><code class="language-axiom">FROMUTC(VALUE)</code></pre>
+<p class="result">Результат: <code>DATETIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DATETIME</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">FROMUTC(VALUE, TIMEZONE)</code></pre>
+<p class="result">Результат: <code>DATETIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DATETIME</code></td></tr><tr><td><code>timeZone</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-hour">
+<h3>HOUR</h3>
+<div class="form">
+<pre><code class="language-axiom">HOUR(VALUE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>TIME</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-instantvalue">
+<h3>INSTANTVALUE</h3>
+<div class="form">
+<pre><code class="language-axiom">INSTANTVALUE(VALUE)</code></pre>
+<p class="result">Результат: <code>UTCDATETIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-isdate">
+<h3>ISDATE</h3>
+<div class="form">
+<pre><code class="language-axiom">ISDATE(VALUE)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-isleapyear">
+<h3>ISLEAPYEAR</h3>
+<div class="form">
+<pre><code class="language-axiom">ISLEAPYEAR(YEAR)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>year</code></td><td><code>INTEGER</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-minute">
+<h3>MINUTE</h3>
+<div class="form">
+<pre><code class="language-axiom">MINUTE(VALUE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>TIME</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-month">
+<h3>MONTH</h3>
+<div class="form">
+<pre><code class="language-axiom">MONTH(VALUE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DATE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-monthname">
+<h3>MONTHNAME</h3>
+<div class="form">
+<pre><code class="language-axiom">MONTHNAME(MONTH)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>month</code></td><td><code>INTEGER</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-now">
+<h3>NOW</h3>
+<div class="form">
+<pre><code class="language-axiom">NOW()</code></pre>
+<p class="result">Результат: <code>DATETIME</code>.</p>
+<p class="muted">Аргументов нет.</p>
+</div>
+<div class="form">
+<pre><code class="language-axiom">NOW(TIMEZONE)</code></pre>
+<p class="result">Результат: <code>DATETIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>timeZone</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-nowinstant">
+<h3>NOWINSTANT</h3>
+<div class="form">
+<pre><code class="language-axiom">NOWINSTANT()</code></pre>
+<p class="result">Результат: <code>UTCDATETIME</code>.</p>
+<p class="muted">Аргументов нет.</p>
+</div>
+</article>
+<article class="card" id="fn-second">
+<h3>SECOND</h3>
+<div class="form">
+<pre><code class="language-axiom">SECOND(VALUE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>TIME</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-startofmonth">
+<h3>STARTOFMONTH</h3>
+<div class="form">
+<pre><code class="language-axiom">STARTOFMONTH(VALUE)</code></pre>
+<p class="result">Результат: <code>DATE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DATE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-startofyear">
+<h3>STARTOFYEAR</h3>
+<div class="form">
+<pre><code class="language-axiom">STARTOFYEAR(VALUE)</code></pre>
+<p class="result">Результат: <code>DATE</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DATE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-time">
+<h3>TIME</h3>
+<div class="form">
+<pre><code class="language-axiom">TIME()</code></pre>
+<p class="result">Результат: <code>TIME</code>.</p>
+<p class="muted">Аргументов нет.</p>
+</div>
+<div class="form">
+<pre><code class="language-axiom">TIME(TIMEZONE)</code></pre>
+<p class="result">Результат: <code>TIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>timeZone</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-timer">
+<h3>TIMER</h3>
+<div class="form">
+<pre><code class="language-axiom">TIMER()</code></pre>
+<p class="result">Результат: <code>DOUBLE</code>.</p>
+<p class="muted">Аргументов нет.</p>
+</div>
+</article>
+<article class="card" id="fn-timeserial">
+<h3>TIMESERIAL</h3>
+<div class="form">
+<pre><code class="language-axiom">TIMESERIAL(HOUR, MINUTE, SECOND)</code></pre>
+<p class="result">Результат: <code>TIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>hour</code></td><td><code>INTEGER</code></td></tr><tr><td><code>minute</code></td><td><code>INTEGER</code></td></tr><tr><td><code>second</code></td><td><code>INTEGER</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-timevalue">
+<h3>TIMEVALUE</h3>
+<div class="form">
+<pre><code class="language-axiom">TIMEVALUE(VALUE)</code></pre>
+<p class="result">Результат: <code>TIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">TIMEVALUE(VALUE)</code></pre>
+<p class="result">Результат: <code>TIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DATETIME</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-toinstant">
+<h3>TOINSTANT</h3>
+<div class="form">
+<pre><code class="language-axiom">TOINSTANT(VALUE)</code></pre>
+<p class="result">Результат: <code>UTCDATETIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DATETIME</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">TOINSTANT(VALUE, TIMEZONE)</code></pre>
+<p class="result">Результат: <code>UTCDATETIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DATETIME</code></td></tr><tr><td><code>timeZone</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-toutc">
+<h3>TOUTC</h3>
+<div class="form">
+<pre><code class="language-axiom">TOUTC(VALUE)</code></pre>
+<p class="result">Результат: <code>DATETIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DATETIME</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">TOUTC(VALUE, TIMEZONE)</code></pre>
+<p class="result">Результат: <code>DATETIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DATETIME</code></td></tr><tr><td><code>timeZone</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-utcdate">
+<h3>UTCDATE</h3>
+<div class="form">
+<pre><code class="language-axiom">UTCDATE()</code></pre>
+<p class="result">Результат: <code>DATE</code>.</p>
+<p class="muted">Аргументов нет.</p>
+</div>
+</article>
+<article class="card" id="fn-utcnow">
+<h3>UTCNOW</h3>
+<div class="form">
+<pre><code class="language-axiom">UTCNOW()</code></pre>
+<p class="result">Результат: <code>DATETIME</code>.</p>
+<p class="muted">Аргументов нет.</p>
+</div>
+</article>
+<article class="card" id="fn-utcoffset">
+<h3>UTCOFFSET</h3>
+<div class="form">
+<pre><code class="language-axiom">UTCOFFSET()</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<p class="muted">Аргументов нет.</p>
+</div>
+<div class="form">
+<pre><code class="language-axiom">UTCOFFSET(VALUE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DATETIME</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">UTCOFFSET(VALUE, TIMEZONE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DATETIME</code></td></tr><tr><td><code>timeZone</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-utctime">
+<h3>UTCTIME</h3>
+<div class="form">
+<pre><code class="language-axiom">UTCTIME()</code></pre>
+<p class="result">Результат: <code>TIME</code>.</p>
+<p class="muted">Аргументов нет.</p>
+</div>
+</article>
+<article class="card" id="fn-weekday">
+<h3>WEEKDAY</h3>
+<div class="form">
+<pre><code class="language-axiom">WEEKDAY(VALUE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DATE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-weekdayname">
+<h3>WEEKDAYNAME</h3>
+<div class="form">
+<pre><code class="language-axiom">WEEKDAYNAME(WEEKDAY)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>weekday</code></td><td><code>INTEGER</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-year">
+<h3>YEAR</h3>
+<div class="form">
+<pre><code class="language-axiom">YEAR(VALUE)</code></pre>
+<p class="result">Результат: <code>INTEGER</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>value</code></td><td><code>DATE</code></td></tr></tbody></table>
+</div>
+</article>
+</section>
+<nav class="pager"><a class="prev" href="arrays-functions.html">← Функции: массивы</a><a class="next" href="files-functions.html">Функции: файлы →</a></nav>
+</main>
+</div>
+<script src="scripts/navigation.js"></script>
+<script src="scripts/search-index.js"></script>
+<script src="scripts/highlight.js"></script>
+<script src="scripts/app.js"></script>
+</body>
+</html>

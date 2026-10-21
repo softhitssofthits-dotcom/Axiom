@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Типы данных — Справочник Axiom</title>
+<link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="types">
+<a class="skip" href="#content">К содержанию</a>
+<header class="topbar">
+<a class="brand" href="index.html">Axiom<span>справочник</span></a>
+<form class="search" role="search" action="search.html" method="get">
+<label class="sr" for="q">Поиск по справочнику</label>
+<input id="q" name="q" type="search" placeholder="Имя функции, оператора или тема" autocomplete="off">
+<button type="submit">Найти</button>
+</form>
+<button class="menu-btn" type="button" aria-expanded="false" aria-controls="side">Оглавление</button>
+</header>
+<div class="shell">
+<aside id="side" class="side"><nav id="nav" aria-label="Оглавление"></nav></aside>
+<main id="content">
+<nav class="crumbs" aria-label="Путь"><a href="index.html">Справочник</a> / Типы данных</nav>
+<h1>Типы данных</h1>
+<p class="lead">Тип определяет, какие значения можно хранить и какие операции к ним применимы. Тип переменной задаётся при объявлении и не меняется при присваивании.</p>
+
+<section><h2>Встроенные типы</h2>
+<table><thead><tr><th>Тип</th><th>Что хранит</th><th>Где описан</th></tr></thead><tbody>
+<tr><td>BOOLEAN</td><td>TRUE или FALSE</td><td><a href="operators.html">операции</a></td></tr>
+<tr><td>INTEGER</td><td>32-разрядное целое</td><td><a href="numbers.html">числа</a></td></tr>
+<tr><td>LONG</td><td>64-разрядное целое</td><td><a href="numbers.html">числа</a></td></tr>
+<tr><td>DOUBLE</td><td>двоичная плавающая точка</td><td><a href="numbers.html">числа</a></td></tr>
+<tr><td>DECIMAL</td><td>десятичное число</td><td><a href="numbers.html">числа</a></td></tr>
+<tr><td>STRING</td><td>текст UTF-16</td><td><a href="strings.html">строки</a></td></tr>
+<tr><td>DATE</td><td>календарный день</td><td><a href="dates.html">дата и время</a></td></tr>
+<tr><td>TIME</td><td>время суток</td><td><a href="dates.html">дата и время</a></td></tr>
+<tr><td>DATETIME</td><td>дата и время без пояса</td><td><a href="dates.html">дата и время</a></td></tr>
+<tr><td>UTCDATETIME</td><td>момент на шкале UTC</td><td><a href="dates.html">дата и время</a></td></tr>
+<tr><td>FILE</td><td>открытый текстовый файл</td><td><a href="files.html">файлы</a></td></tr>
+<tr><td>IMAGE, SPRITE, TILESET, TILEMAP</td><td>графические ресурсы</td><td><a href="graphics.html">графика</a></td></tr>
+</tbody></table>
+</section>
+
+<section><h2>Совместимость типов</h2>
+<p>От совместимости типов зависит, можно ли записать значение в переменную или передать его параметру. Строка не становится числом автоматически: <code>DIM n AS INTEGER = &quot;12&quot;</code> — ошибка MB2003. Для разбора текста предусмотрены функции вроде <code>VAL</code> и <code>DATEVALUE</code>. Допустимые переходы между типами описаны в главе о преобразованиях.</p>
+</section>
+
+<section><h2>Фиксированная строка</h2>
+<p>Запись <code>STRING * N</code> хранит ровно N кодовых единиц UTF-16, где N — целая константа от 1 до 65535. Короткое значение дополняется пробелами справа, длинное обрезается.</p>
+<pre><code class="language-axiom">DIM code AS STRING * 4 = &quot;АБ&quot;
+PRINT &quot;[&quot; &amp; code &amp; &quot;]&quot;
+code = &quot;АБВГД&quot;
+PRINT code</code></pre>
+<pre><code class="language-output">[АБ  ]
+АБВГ</code></pre>
+<p>Первая строка показывает значение, дополненное до четырёх единиц; вторая — результат обрезки пятисимвольной строки.</p>
+</section>
+
+<section><h2>Составные данные</h2>
+<p>Массив хранит набор элементов одного типа с явными границами измерений. Пользовательский тип <code>TYPE</code> объединяет поля и методы. Функциональный тип <code>FUNCTION(...) AS ...</code> позволяет передать функцию как значение. Каждый вид данных описан в своей главе.</p>
+</section>
+<nav class="pager"><a class="prev" href="constants.html">← Константы</a><a class="next" href="branching.html">Ветвление: IF и SELECT CASE →</a></nav>
+</main>
+</div>
+<script src="scripts/navigation.js"></script>
+<script src="scripts/search-index.js"></script>
+<script src="scripts/highlight.js"></script>
+<script src="scripts/app.js"></script>
+</body>
+</html>

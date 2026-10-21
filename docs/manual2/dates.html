@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Дата и время — Справочник Axiom</title>
+<link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="dates">
+<a class="skip" href="#content">К содержанию</a>
+<header class="topbar">
+<a class="brand" href="index.html">Axiom<span>справочник</span></a>
+<form class="search" role="search" action="search.html" method="get">
+<label class="sr" for="q">Поиск по справочнику</label>
+<input id="q" name="q" type="search" placeholder="Имя функции, оператора или тема" autocomplete="off">
+<button type="submit">Найти</button>
+</form>
+<button class="menu-btn" type="button" aria-expanded="false" aria-controls="side">Оглавление</button>
+</header>
+<div class="shell">
+<aside id="side" class="side"><nav id="nav" aria-label="Оглавление"></nav></aside>
+<main id="content">
+<nav class="crumbs" aria-label="Путь"><a href="index.html">Справочник</a> / Дата и время</nav>
+<h1>Дата и время</h1>
+<p class="lead">Четыре временных типа хранят календарный день, время суток, дату-время и однозначный момент UTC. Их нельзя смешивать неявно — это защищает от потери части значения.</p>
+
+<section><h2>Типы</h2>
+<table><thead><tr><th>Тип</th><th>Смысл</th><th>Каноническая запись</th></tr></thead><tbody>
+<tr><td>DATE</td><td>календарный день</td><td>2024-02-29</td></tr>
+<tr><td>TIME</td><td>время суток</td><td>12:34:56</td></tr>
+<tr><td>DATETIME</td><td>дата и время без пояса</td><td>2024-02-29 12:34:56</td></tr>
+<tr><td>UTCDATETIME</td><td>момент на шкале UTC</td><td>2024-02-29T12:34:56Z</td></tr>
+</tbody></table>
+<p>TIME и DATETIME сохраняют доли секунды. Печать использует краткую форму при нулевой дробной части и добавляет до семи цифр после точки при ненулевой.</p>
+</section>
+
+<section><h2>Создание и разбор</h2>
+<pre><code class="language-axiom">DIM d AS DATE = DATEVALUE(&quot;2024-02-29&quot;)
+PRINT d
+PRINT YEAR(d), MONTH(d), DAY(d)
+DIM t AS TIME = TIMEVALUE(&quot;12:34:56&quot;)
+PRINT t</code></pre>
+<pre><code class="language-output">2024-02-29
+2024 2 29
+12:34:56</code></pre>
+<p><code>DATEVALUE</code> и <code>TIMEVALUE</code> принимают канонический текст и DATETIME. <code>DATETIMESERIAL</code> собирает DATETIME из готовых DATE и TIME без промежуточного текста.</p>
+</section>
+
+<section><h2>Запрет неявного сужения</h2>
+<p>DATETIME нельзя неявно записать в DATE или TIME: такое присваивание, аргумент, RETURN или сравнение даёт MB2003. Явное извлечение части выполняют <code>DATEVALUE</code> и <code>TIMEVALUE</code>.</p>
+</section>
+
+<section><h2>Текущее время и пояса</h2>
+<p><code>NOW</code> и <code>UTCDATE</code> читают системные часы с точностью до секунды; <code>TIMER</code> возвращает секунды от местной полуночи. <code>TOUTC</code> и <code>FROMUTC</code> переводят DATETIME между местным временем и UTC. UTCDATETIME сравнивается и хранится как момент: два разных момента, дающие одинаковую местную запись при переводе часов, остаются разными значениями. <code>ELAPSEDSECONDS</code> измеряет прошедшее время.</p>
+</section>
+
+<section><h2>Функции</h2>
+<p>Полный каталог — <a href="dates-functions.html">функции даты и времени</a>.</p>
+</section>
+<nav class="pager"><a class="prev" href="strings.html">← Строки</a><a class="next" href="arrays.html">Массивы →</a></nav>
+</main>
+</div>
+<script src="scripts/navigation.js"></script>
+<script src="scripts/search-index.js"></script>
+<script src="scripts/highlight.js"></script>
+<script src="scripts/app.js"></script>
+</body>
+</html>

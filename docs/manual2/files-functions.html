@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Функции: файлы — Справочник Axiom</title>
+<link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="files-functions">
+<a class="skip" href="#content">К содержанию</a>
+<header class="topbar">
+<a class="brand" href="index.html">Axiom<span>справочник</span></a>
+<form class="search" role="search" action="search.html" method="get">
+<label class="sr" for="q">Поиск по справочнику</label>
+<input id="q" name="q" type="search" placeholder="Имя функции, оператора или тема" autocomplete="off">
+<button type="submit">Найти</button>
+</form>
+<button class="menu-btn" type="button" aria-expanded="false" aria-controls="side">Оглавление</button>
+</header>
+<div class="shell">
+<aside id="side" class="side"><nav id="nav" aria-label="Оглавление"></nav></aside>
+<main id="content">
+<nav class="crumbs" aria-label="Путь"><a href="index.html">Справочник</a> / Функции: файлы</nav>
+<h1>Функции: файлы</h1>
+<p class="lead">66 функций раздела «Файлы» — 75 зарегистрированных форм с типами аргументов и результата.</p>
+
+<section><h2>Общий договор</h2>
+<p>OPEN связывает путь с переменной FILE и режимом INPUT, OUTPUT или APPEND. Операции чтения и записи требуют открытого файла подходящего режима; ошибка режима даёт MB3005. Пути разрешаются относительно рабочей папки запуска. Функции каталогов не создают отсутствующие родительские папки, если это не указано в карточке.</p>
+<p>Все перечисленные аргументы обязательны; необязательный аргумент представлен отдельной формой. Объяснение типов и общего поведения находится в главе <a href="files.html">Файлы</a>.</p>
+</section>
+<section><h2>Карточки</h2>
+<article class="card" id="fn-appendfile">
+<h3>APPENDFILE</h3>
+<div class="form">
+<pre><code class="language-axiom">APPENDFILE(PATH, TEXT)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr><tr><td><code>text</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">APPENDFILE(PATH, TEXT, ENCODING)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr><tr><td><code>text</code></td><td><code>STRING</code></td></tr><tr><td><code>encoding</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-changedir">
+<h3>CHANGEDIR</h3>
+<div class="form">
+<pre><code class="language-axiom">CHANGEDIR(PATH)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-combinepath">
+<h3>COMBINEPATH</h3>
+<div class="form">
+<pre><code class="language-axiom">COMBINEPATH(LEFT, RIGHT)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>left</code></td><td><code>STRING</code></td></tr><tr><td><code>right</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-copydir">
+<h3>COPYDIR</h3>
+<div class="form">
+<pre><code class="language-axiom">COPYDIR(SOURCE, DESTINATION)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>source</code></td><td><code>STRING</code></td></tr><tr><td><code>destination</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">COPYDIR(SOURCE, DESTINATION, OVERWRITE)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>source</code></td><td><code>STRING</code></td></tr><tr><td><code>destination</code></td><td><code>STRING</code></td></tr><tr><td><code>overwrite</code></td><td><code>BOOLEAN</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-copyfile">
+<h3>COPYFILE</h3>
+<div class="form">
+<pre><code class="language-axiom">COPYFILE(SOURCE, DESTINATION)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>source</code></td><td><code>STRING</code></td></tr><tr><td><code>destination</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">COPYFILE(SOURCE, DESTINATION, OVERWRITE)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>source</code></td><td><code>STRING</code></td></tr><tr><td><code>destination</code></td><td><code>STRING</code></td></tr><tr><td><code>overwrite</code></td><td><code>BOOLEAN</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-currentdir">
+<h3>CURRENTDIR</h3>
+<div class="form">
+<pre><code class="language-axiom">CURRENTDIR()</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<p class="muted">Аргументов нет.</p>
+</div>
+</article>
+<article class="card" id="fn-deletedir">
+<h3>DELETEDIR</h3>
+<div class="form">
+<pre><code class="language-axiom">DELETEDIR(PATH)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-deletedirrecursive">
+<h3>DELETEDIRRECURSIVE</h3>
+<div class="form">
+<pre><code class="language-axiom">DELETEDIRRECURSIVE(PATH)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-deletefile">
+<h3>DELETEFILE</h3>
+<div class="form">
+<pre><code class="language-axiom">DELETEFILE(PATH)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-dirdate">
+<h3>DIRDATE</h3>
+<div class="form">
+<pre><code class="language-axiom">DIRDATE(PATH)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-dirdateutc">
+<h3>DIRDATEUTC</h3>
+<div class="form">
+<pre><code class="language-axiom">DIRDATEUTC(PATH)</code></pre>
+<p class="result">Результат: <code>UTCDATETIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-direxists">
+<h3>DIREXISTS</h3>
+<div class="form">
+<pre><code class="language-axiom">DIREXISTS(PATH)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-dirname">
+<h3>DIRNAME</h3>
+<div class="form">
+<pre><code class="language-axiom">DIRNAME(PATH)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-dirsize">
+<h3>DIRSIZE</h3>
+<div class="form">
+<pre><code class="language-axiom">DIRSIZE(PATH)</code></pre>
+<p class="result">Результат: <code>LONG</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-driveformat">
+<h3>DRIVEFORMAT</h3>
+<div class="form">
+<pre><code class="language-axiom">DRIVEFORMAT(PATH)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-drivename">
+<h3>DRIVENAME</h3>
+<div class="form">
+<pre><code class="language-axiom">DRIVENAME(PATH)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-drivetype">
+<h3>DRIVETYPE</h3>
+<div class="form">
+<pre><code class="language-axiom">DRIVETYPE(PATH)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-eof">
+<h3>EOF</h3>
+<div class="form">
+<pre><code class="language-axiom">EOF(FILE)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>file</code></td><td><code>FILE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-extname">
+<h3>EXTNAME</h3>
+<div class="form">
+<pre><code class="language-axiom">EXTNAME(PATH)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-fileaccesseddate">
+<h3>FILEACCESSEDDATE</h3>
+<div class="form">
+<pre><code class="language-axiom">FILEACCESSEDDATE(PATH)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-fileaccesseddateutc">
+<h3>FILEACCESSEDDATEUTC</h3>
+<div class="form">
+<pre><code class="language-axiom">FILEACCESSEDDATEUTC(PATH)</code></pre>
+<p class="result">Результат: <code>UTCDATETIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-filecreatedate">
+<h3>FILECREATEDATE</h3>
+<div class="form">
+<pre><code class="language-axiom">FILECREATEDATE(PATH)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-filecreatedateutc">
+<h3>FILECREATEDATEUTC</h3>
+<div class="form">
+<pre><code class="language-axiom">FILECREATEDATEUTC(PATH)</code></pre>
+<p class="result">Результат: <code>UTCDATETIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-filedate">
+<h3>FILEDATE</h3>
+<div class="form">
+<pre><code class="language-axiom">FILEDATE(PATH)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-filedateutc">
+<h3>FILEDATEUTC</h3>
+<div class="form">
+<pre><code class="language-axiom">FILEDATEUTC(PATH)</code></pre>
+<p class="result">Результат: <code>UTCDATETIME</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-fileexists">
+<h3>FILEEXISTS</h3>
+<div class="form">
+<pre><code class="language-axiom">FILEEXISTS(PATH)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-filelength">
+<h3>FILELENGTH</h3>
+<div class="form">
+<pre><code class="language-axiom">FILELENGTH(FILE)</code></pre>
+<p class="result">Результат: <code>LONG</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>file</code></td><td><code>FILE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-filemode">
+<h3>FILEMODE</h3>
+<div class="form">
+<pre><code class="language-axiom">FILEMODE(FILE)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>file</code></td><td><code>FILE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-filename">
+<h3>FILENAME</h3>
+<div class="form">
+<pre><code class="language-axiom">FILENAME(PATH)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-filepath">
+<h3>FILEPATH</h3>
+<div class="form">
+<pre><code class="language-axiom">FILEPATH(FILE)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>file</code></td><td><code>FILE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-filepos">
+<h3>FILEPOS</h3>
+<div class="form">
+<pre><code class="language-axiom">FILEPOS(FILE)</code></pre>
+<p class="result">Результат: <code>LONG</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>file</code></td><td><code>FILE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-filesize">
+<h3>FILESIZE</h3>
+<div class="form">
+<pre><code class="language-axiom">FILESIZE(PATH)</code></pre>
+<p class="result">Результат: <code>LONG</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-flush">
+<h3>FLUSH</h3>
+<div class="form">
+<pre><code class="language-axiom">FLUSH(FILE)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>file</code></td><td><code>FILE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-freespace">
+<h3>FREESPACE</h3>
+<div class="form">
+<pre><code class="language-axiom">FREESPACE(PATH)</code></pre>
+<p class="result">Результат: <code>LONG</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-fullpath">
+<h3>FULLPATH</h3>
+<div class="form">
+<pre><code class="language-axiom">FULLPATH(PATH)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-getdirs">
+<h3>GETDIRS</h3>
+<div class="form">
+<pre><code class="language-axiom">GETDIRS(PATH)</code></pre>
+<p class="result">Результат: <code>STRING()</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">GETDIRS(PATH, PATTERN)</code></pre>
+<p class="result">Результат: <code>STRING()</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr><tr><td><code>pattern</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-getfiles">
+<h3>GETFILES</h3>
+<div class="form">
+<pre><code class="language-axiom">GETFILES(PATH)</code></pre>
+<p class="result">Результат: <code>STRING()</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">GETFILES(PATH, PATTERN)</code></pre>
+<p class="result">Результат: <code>STRING()</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr><tr><td><code>pattern</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-isabsolutepath">
+<h3>ISABSOLUTEPATH</h3>
+<div class="form">
+<pre><code class="language-axiom">ISABSOLUTEPATH(PATH)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-ishidden">
+<h3>ISHIDDEN</h3>
+<div class="form">
+<pre><code class="language-axiom">ISHIDDEN(PATH)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-isopen">
+<h3>ISOPEN</h3>
+<div class="form">
+<pre><code class="language-axiom">ISOPEN(FILE)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>file</code></td><td><code>FILE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-isreadonly">
+<h3>ISREADONLY</h3>
+<div class="form">
+<pre><code class="language-axiom">ISREADONLY(PATH)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-linenumber">
+<h3>LINENUMBER</h3>
+<div class="form">
+<pre><code class="language-axiom">LINENUMBER(FILE)</code></pre>
+<p class="result">Результат: <code>LONG</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>file</code></td><td><code>FILE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-makedir">
+<h3>MAKEDIR</h3>
+<div class="form">
+<pre><code class="language-axiom">MAKEDIR(PATH)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-maketempdir">
+<h3>MAKETEMPDIR</h3>
+<div class="form">
+<pre><code class="language-axiom">MAKETEMPDIR(PREFIX)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>prefix</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-maketempfile">
+<h3>MAKETEMPFILE</h3>
+<div class="form">
+<pre><code class="language-axiom">MAKETEMPFILE(PREFIX)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>prefix</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-movedir">
+<h3>MOVEDIR</h3>
+<div class="form">
+<pre><code class="language-axiom">MOVEDIR(SOURCE, DESTINATION)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>source</code></td><td><code>STRING</code></td></tr><tr><td><code>destination</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-movefile">
+<h3>MOVEFILE</h3>
+<div class="form">
+<pre><code class="language-axiom">MOVEFILE(SOURCE, DESTINATION)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>source</code></td><td><code>STRING</code></td></tr><tr><td><code>destination</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">MOVEFILE(SOURCE, DESTINATION, OVERWRITE)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>source</code></td><td><code>STRING</code></td></tr><tr><td><code>destination</code></td><td><code>STRING</code></td></tr><tr><td><code>overwrite</code></td><td><code>BOOLEAN</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-newline">
+<h3>NEWLINE</h3>
+<div class="form">
+<pre><code class="language-axiom">NEWLINE(FILE)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>file</code></td><td><code>FILE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-pathexists">
+<h3>PATHEXISTS</h3>
+<div class="form">
+<pre><code class="language-axiom">PATHEXISTS(PATH)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-pathroot">
+<h3>PATHROOT</h3>
+<div class="form">
+<pre><code class="language-axiom">PATHROOT(PATH)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-readalllines">
+<h3>READALLLINES</h3>
+<div class="form">
+<pre><code class="language-axiom">READALLLINES(PATH)</code></pre>
+<p class="result">Результат: <code>STRING()</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">READALLLINES(PATH, ENCODING)</code></pre>
+<p class="result">Результат: <code>STRING()</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr><tr><td><code>encoding</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-readfile">
+<h3>READFILE</h3>
+<div class="form">
+<pre><code class="language-axiom">READFILE(PATH)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">READFILE(PATH, ENCODING)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr><tr><td><code>encoding</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-readline">
+<h3>READLINE</h3>
+<div class="form">
+<pre><code class="language-axiom">READLINE(FILE)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>file</code></td><td><code>FILE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-readlines">
+<h3>READLINES</h3>
+<div class="form">
+<pre><code class="language-axiom">READLINES(FILE, COUNT)</code></pre>
+<p class="result">Результат: <code>STRING()</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>file</code></td><td><code>FILE</code></td></tr><tr><td><code>count</code></td><td><code>INTEGER</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-readtext">
+<h3>READTEXT</h3>
+<div class="form">
+<pre><code class="language-axiom">READTEXT(FILE, COUNT)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>file</code></td><td><code>FILE</code></td></tr><tr><td><code>count</code></td><td><code>INTEGER</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-readtoend">
+<h3>READTOEND</h3>
+<div class="form">
+<pre><code class="language-axiom">READTOEND(FILE)</code></pre>
+<p class="result">Результат: <code>STRING</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>file</code></td><td><code>FILE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-renamedir">
+<h3>RENAMEDIR</h3>
+<div class="form">
+<pre><code class="language-axiom">RENAMEDIR(PATH, NEWNAME)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr><tr><td><code>newName</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-renamefile">
+<h3>RENAMEFILE</h3>
+<div class="form">
+<pre><code class="language-axiom">RENAMEFILE(PATH, NEWNAME)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr><tr><td><code>newName</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-rewind">
+<h3>REWIND</h3>
+<div class="form">
+<pre><code class="language-axiom">REWIND(FILE)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>file</code></td><td><code>FILE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-seekfile">
+<h3>SEEKFILE</h3>
+<div class="form">
+<pre><code class="language-axiom">SEEKFILE(FILE, POSITION)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>file</code></td><td><code>FILE</code></td></tr><tr><td><code>position</code></td><td><code>LONG</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-skipline">
+<h3>SKIPLINE</h3>
+<div class="form">
+<pre><code class="language-axiom">SKIPLINE(FILE)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>file</code></td><td><code>FILE</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-totalfreespace">
+<h3>TOTALFREESPACE</h3>
+<div class="form">
+<pre><code class="language-axiom">TOTALFREESPACE(PATH)</code></pre>
+<p class="result">Результат: <code>LONG</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-totalspace">
+<h3>TOTALSPACE</h3>
+<div class="form">
+<pre><code class="language-axiom">TOTALSPACE(PATH)</code></pre>
+<p class="result">Результат: <code>LONG</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-write">
+<h3>WRITE</h3>
+<div class="form">
+<pre><code class="language-axiom">WRITE(FILE, TEXT)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>file</code></td><td><code>FILE</code></td></tr><tr><td><code>text</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-writefile">
+<h3>WRITEFILE</h3>
+<div class="form">
+<pre><code class="language-axiom">WRITEFILE(PATH, TEXT)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr><tr><td><code>text</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+<div class="form">
+<pre><code class="language-axiom">WRITEFILE(PATH, TEXT, ENCODING)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>path</code></td><td><code>STRING</code></td></tr><tr><td><code>text</code></td><td><code>STRING</code></td></tr><tr><td><code>encoding</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+<article class="card" id="fn-writeline">
+<h3>WRITELINE</h3>
+<div class="form">
+<pre><code class="language-axiom">WRITELINE(FILE, TEXT)</code></pre>
+<p class="result">Результат: <code>BOOLEAN</code>.</p>
+<table class="args"><thead><tr><th>Аргумент</th><th>Тип</th></tr></thead><tbody><tr><td><code>file</code></td><td><code>FILE</code></td></tr><tr><td><code>text</code></td><td><code>STRING</code></td></tr></tbody></table>
+</div>
+</article>
+</section>
+<nav class="pager"><a class="prev" href="dates-functions.html">← Функции: дата и время</a><a class="next" href="regex-functions.html">Функции: RegEx →</a></nav>
+</main>
+</div>
+<script src="scripts/navigation.js"></script>
+<script src="scripts/search-index.js"></script>
+<script src="scripts/highlight.js"></script>
+<script src="scripts/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Файлы — Справочник Axiom</title>
+<link rel="stylesheet" href="styles/manual.css">
+</head>
+<body data-page="files">
+<a class="skip" href="#content">К содержанию</a>
+<header class="topbar">
+<a class="brand" href="index.html">Axiom<span>справочник</span></a>
+<form class="search" role="search" action="search.html" method="get">
+<label class="sr" for="q">Поиск по справочнику</label>
+<input id="q" name="q" type="search" placeholder="Имя функции, оператора или тема" autocomplete="off">
+<button type="submit">Найти</button>
+</form>
+<button class="menu-btn" type="button" aria-expanded="false" aria-controls="side">Оглавление</button>
+</header>
+<div class="shell">
+<aside id="side" class="side"><nav id="nav" aria-label="Оглавление"></nav></aside>
+<main id="content">
+<nav class="crumbs" aria-label="Путь"><a href="index.html">Справочник</a> / Файлы</nav>
+<h1>Файлы</h1>
+<p class="lead">Программа открывает текстовые файлы через OPEN, читает и записывает их, а также работает с путями, каталогами и метаданными.</p>
+
+<section><h2>Открытие и режимы</h2>
+<pre><code class="language-axiom">DIM f AS FILE
+OPEN &quot;data.txt&quot; FOR OUTPUT AS f
+WRITE(f, &quot;строка&quot;)
+CLOSE f
+
+OPEN &quot;data.txt&quot; FOR INPUT AS f
+PRINT READLINE(f)
+CLOSE f</code></pre>
+<pre><code class="language-output">строка</code></pre>
+<p>Режим <code>INPUT</code> открывает файл для чтения, <code>OUTPUT</code> создаёт или перезаписывает, <code>APPEND</code> добавляет в конец. Использование операции не по режиму даёт MB3005. Необязательная часть <code>USING</code> задаёт кодировку.</p>
+</section>
+
+<section><h2>Чтение и запись</h2>
+<p><code>READLINE</code> читает строку, <code>READLINES</code> — несколько строк, <code>READTOEND</code> — остаток до конца. <code>WRITELINE</code> добавляет перевод строки, <code>WRITE</code> пишет текст без него. <code>EOF</code> проверяет досягаемость конца, <code>FILEPOS</code> и <code>SEEKFILE</code> работают с позицией.</p>
+</section>
+
+<section><h2>Файл целиком</h2>
+<pre><code class="language-axiom">DIM path AS STRING = &quot;manual2-demo.txt&quot;
+DIM ok AS BOOLEAN
+ok = WRITEFILE(path, &quot;строка&quot;)
+PRINT ok
+PRINT READFILE(path)
+PRINT DELETEFILE(path)</code></pre>
+<pre><code class="language-output">TRUE
+строка
+TRUE</code></pre>
+<p><code>READFILE</code>, <code>READALLLINES</code>, <code>WRITEFILE</code> и <code>APPENDFILE</code> работают без OPEN. <code>APPENDFILE</code> проверяет существующее содержимое перед изменением, поэтому для серии записей надёжнее держать файл открытым в режиме APPEND.</p>
+</section>
+
+<section><h2>Пути</h2>
+<p>Пути разрешаются относительно рабочей папки запуска. <code>COMBINEPATH</code> соединяет части, <code>FILENAME</code> и <code>EXTNAME</code> выделяют имя и расширение, <code>ISABSOLUTEPATH</code> проверяет абсолютность. <code>GETFILES</code> и <code>GETDIRS</code> принимают маску только для имени внутри указанного каталога.</p>
+</section>
+
+<section><h2>Каталоги</h2>
+<p><code>MAKEDIR</code> создаёт каталог, <code>DELETEDIR</code> удаляет пустой, <code>DELETEDIRRECURSIVE</code> — вместе с содержимым. <code>MOVEDIR</code>, <code>RENAMEDIR</code> и <code>COPYDIR</code> изменяют каталоги. Копирование не является транзакцией: уже выполненная часть сохраняется при ошибке.</p>
+</section>
+
+<section><h2>Функции</h2>
+<p>Полный каталог — <a href="files-functions.html">функции файлов</a>.</p>
+</section>
+<nav class="pager"><a class="prev" href="input.html">← INPUT</a><a class="next" href="regex.html">Регулярные выражения →</a></nav>
+</main>
+</div>
+<script src="scripts/navigation.js"></script>
+<script src="scripts/search-index.js"></script>
+<script src="scripts/highlight.js"></script>
+<script src="scripts/app.js"></script>
+</body>
+</html>

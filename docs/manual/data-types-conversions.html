@@ -7,25 +7,49 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Преобразования типов</span></nav>
-<p class="eyebrow">Справочная статья</p><h1 class="page-title">Преобразования типов</h1><p class="lead">Раздел преобразований описывает допустимые переходы между типами Axiom. Автоматическое преобразование выполняется только в поддержанном контексте; оно не разрешает произвольное смешение данных.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-<section class="article-section"><h2>Вывод типа и преобразование</h2><p>Вывод типа выбирает тип нового объявления по инициализатору. Преобразование переводит уже имеющее тип значение в требуемый тип. Например, целочисленный литерал можно присвоить переменной <code>LONG</code>, а дробный литерал сам по себе имеет тип <code>DOUBLE</code>.</p><div class="link-list"><a href="dim.html">Вывод типа в DIM</a><a href="data-type-limits.html">Типы и диапазоны литералов</a></div></section>
-<section class="article-section"><h2>Числовые переходы</h2><table><thead><tr><th>Исходный тип</th><th>Разрешённые целевые типы</th></tr></thead><tbody><tr><td><code>INTEGER</code></td><td><code>LONG</code>, <code>DOUBLE</code>, <code>DECIMAL</code></td></tr><tr><td><code>LONG</code></td><td><code>DOUBLE</code>, <code>DECIMAL</code></td></tr><tr><td><code>DECIMAL</code></td><td><code>DOUBLE</code></td></tr></tbody></table><p>Таблица описывает допустимость перехода, а не сохранение всех разрядов: двоичное представление <code>DOUBLE</code> может округлить исходное значение. Обратные переходы требуют предусмотренного явного преобразования.</p></section>
-<section class="article-section"><h2>Особенности контекста</h2><p>Обычная арифметика с DECIMAL и DOUBLE преобразует DECIMAL в DOUBLE. При этом возможна потеря десятичной точности. Отдельное автоматическое присваивание DECIMAL переменной DOUBLE также допустимо. Числовые встроенные функции MIN, MAX и CLAMP проверяют смешение DECIMAL с DOUBLE иначе и отклоняют такое сочетание аргументов. Числовой литерал в объявлении, присваивании или аргументе, где ожидается числовой тип, разбирается с учётом этого типа. Например, десятичный литерал для DECIMAL читается непосредственно как десятичное значение. Такое чтение литерала отличается от преобразования уже сохранённой переменной.</p>
+<p class="eyebrow">Глава 3 · Выражения и операции</p><h1 class="page-title">Преобразования типов</h1><p class="lead">Преобразование получает значение одного типа и представляет его в другом типе. Одни переходы выполняются автоматически при присваивании или передаче аргумента, другие требуют вызова функции. Допустимость перехода и сохранение точности являются разными свойствами.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="inference"><h2>Тип объявления и преобразование значения</h2>
+<p>При выводе типа компилятор выбирает тип новой переменной по начальному выражению. Например, <code>DIM count = 3</code> объявляет INTEGER. При преобразовании тип исходного значения уже известен: запись этого числа в переменную LONG представляет его как LONG. Формы объявления находятся в <a href="dim.html">статье DIM</a>; типы литералов и их пределы приведены в <a href="data-type-limits.html">таблице диапазонов</a>.</p></section><section class="article-section" id="numeric"><h2>Автоматические числовые переходы</h2>
+<p>Для уже типизированных числовых значений разрешены следующие переходы:</p>
+<table><thead><tr><th>Исходный тип</th><th>Целевые типы</th></tr></thead><tbody>
+<tr><td>INTEGER</td><td>LONG, DOUBLE, DECIMAL</td></tr>
+<tr><td>LONG</td><td>DOUBLE, DECIMAL</td></tr>
+<tr><td>DECIMAL</td><td>DOUBLE</td></tr></tbody></table>
+<p>Переход в DOUBLE может округлить исходное значение. Обратный переход, например из переменной LONG в INTEGER или из DOUBLE в DECIMAL, автоматически не выполняется. Для него нужна предусмотренная функция преобразования.</p>
+<pre><code class="language-axiom">DIM count AS INTEGER = 3
+DIM wide AS LONG = count
+DIM exact AS DECIMAL = wide
+DIM approximate AS DOUBLE = exact
+PRINT count, wide, exact, approximate</code></pre>
+<p>Результат:</p><pre><code>3 3 3 3</code></pre>
+<p>Обычная арифметика также приводит совместимые операнды к общему типу. Если участвует DOUBLE, DECIMAL преобразуется в DOUBLE. Функции MIN, MAX и CLAMP имеют более строгий договор: сочетание DECIMAL и DOUBLE в их аргументах отклоняется. Тип результата деления и общая последовательность числового продвижения описаны в <a href="arithmetic-and-logic.html">статье операций</a>.</p></section><section class="article-section" id="literal-context"><h2>Литерал в ожидаемом числовом типе</h2>
+<p>Непосредственный числовой литерал в объявлении, присваивании или аргументе проверяется с учётом ожидаемого типа. Так же обрабатывается минус непосредственно перед литералом. Литерал с десятичной точкой, помещённый в DECIMAL, читается как десятичное число без промежуточного значения DOUBLE:</p>
 <pre><code class="language-axiom">DIM amount AS DECIMAL = 10.50
 DIM extra AS DECIMAL = 0.20
-PRINT amount + extra</code></pre><p>Результат:</p>
-<pre><code>10.70</code></pre><p>Правило результата деления и числового продвижения для операций находится в статье операций; оно не дублируется здесь.</p></section>
-<section class="article-section"><h2>Явные преобразования</h2><p>Числовые преобразования выполняют <code>CINT</code>, <code>CLNG</code>, <code>CDBL</code> и <code>CDEC</code>. Для разбора числового текста служит <code>VAL</code>, для получения текстового представления — <code>STR</code>. У каждой функции есть собственные правила округления, диапазона и некорректного аргумента.</p><div class="link-list"><a href="numeric-functions-conversion-and-legacy.html">Функции преобразования чисел</a></div></section>
-<section class="article-section"><span class="legacy-anchor" id="temporal-conversions"></span><h2>Прочие типы</h2><p>Преобразования между BOOLEAN и числами не предусмотрены ни автоматическим присваиванием, ни функциями CINT, CLNG, CDBL и CDEC. Встроенной функции CBOOL нет. Для числа используйте явное сравнение, а для выбора числового результата по логическому значению — IF. Примеры приведены в <a href="boolean.html#conversions">статье BOOLEAN</a>. Для соединения числа и строки через <code>+</code> требуется строковое преобразование; операция <code>&amp;</code> имеет собственный договор текстового представления.</p><p>Временные типы поддерживают специальные переходы и разбор канонических строк. Их полный договор, включая запрет неявного отбрасывания части даты-времени при присваивании, находится в главе даты и времени.</p><p>Открытый файл, массив, запись и функциональное значение не участвуют в общих скалярных преобразованиях. Для них действуют правила соответствующих сущностей.</p></section>
-<section class="article-section">
-            <h2>Диагностика</h2>
-            <ul>
-                <li><code>MB2003</code> — несовместимые типы, например попытка сложить строку и число через <code>+</code> или передать смешанные DOUBLE и DECIMAL в MIN, MAX или CLAMP.</li>
-                <li><code>MB2018</code> — константное числовое значение не помещается в явно указанный целевой тип.</li>
-                <li><code>MB3008</code> — арифметическое переполнение или неконечный результат <code>DOUBLE</code> во время выполнения.</li>
-            </ul>
-        </section>
-<section class="article-section"><h2>Запускаемые примеры</h2><p>Откройте нужный файл в IDE и запустите его. Примеры с ошибкой предназначены для проверки сообщения компилятора или выполнения.</p><ul class="resource-list">
+PRINT amount + extra</code></pre>
+<p>Результат:</p><pre><code>10.70</code></pre>
+<p>Ожидаемый тип не распространяется внутрь произвольного выражения. Скобки вокруг литерала также не сохраняют этот особый способ чтения: <code>DIM amount AS DECIMAL = (10.50)</code> получает выражение DOUBLE и отклоняется с MB2003. Тот же результат даёт <code>DIM amount AS DECIMAL = 10.50 + 0.20</code>, поскольку сложение сначала связывается как DOUBLE.</p>
+<p>У сохранённой переменной тип уже известен. Преобразовать такую переменную DOUBLE в DECIMAL автоматически нельзя; применяется обычный договор переходов.</p></section><section class="article-section" id="explicit"><h2>Функции преобразования</h2>
+<p>CINT, CLNG, CDBL и CDEC выполняют явные числовые преобразования. VAL разбирает числовой текст, STR получает текстовое представление числа. Типы аргументов, усечение, пределы и поведение при неверном тексте определяются договором каждой функции. Полные формы находятся в <a href="numeric-functions-conversion-and-legacy.html">главе преобразования чисел и текста</a>.</p>
+<pre><code class="language-axiom">DIM raw AS DOUBLE = -3.75
+PRINT CINT(raw)
+PRINT CLNG(raw)
+PRINT VAL("12.5")
+PRINT STR(12)</code></pre>
+<p>Результат:</p><pre><code>-3
+-3
+12.5
+12</code></pre>
+<p>В этом примере CINT и CLNG отбрасывают дробную часть к нулю. Это правило не заменяет проверку диапазона результата.</p></section><section class="article-section" id="other-types"><h2>Логические, строковые и составные значения</h2>
+<span class="legacy-anchor" id="temporal-conversions"></span>
+<p>BOOLEAN не преобразуется в число автоматически или функциями CINT, CLNG, CDBL и CDEC. Встроенной CBOOL нет. Число проверяется сравнением; для выбора числового результата по BOOLEAN используется IF. Примеры: <a href="boolean.html#conversions">преобразования логических значений</a>.</p>
+<p>Строка и число не складываются через <code>+</code>. Для получения строки служит явное преобразование; операция <code>&amp;</code> отдельно определяет, какие значения она переводит в текст.</p>
+<p>Временные типы имеют собственные переходы и правила разбора канонических строк. В частности, неявное отбрасывание части DATETIME при записи в DATE или TIME запрещено. Полный договор, включая отдельный тип момента UTCDATETIME, находится в <a href="date-time-functions.html">главе даты и времени</a>.</p>
+<p>FILE, массивы, пользовательские записи и функциональные значения не участвуют в общих скалярных преобразованиях. Их совместимость и способы передачи описываются на страницах соответствующих типов.</p></section><section class="article-section" id="diagnostics"><h2>Диагностика</h2>
+<ul><li><code>MB2003</code>: несовместимые типы, в том числе недопустимый автоматический переход, сложение строки с числом либо смешение DECIMAL и DOUBLE в MIN, MAX или CLAMP.</li>
+<li><code>MB2018</code>: непосредственный числовой литерал нельзя прочитать в ожидаемом типе из-за записи или диапазона. Например, <code>DIM n AS INTEGER = 1.0</code> отклоняется этим кодом, хотя величина 1 помещается в INTEGER: дробная запись не является целочисленной.</li>
+<li><code>MB3008</code>: числовое переполнение или неконечный результат во время выполнения.</li></ul>
+<p>Функции разбора и преобразования могут выдавать дополнительные диагностики по собственным правилам; они перечислены на страницах функций.</p></section><section class="article-section"><h2>Запускаемые примеры</h2><p>Откройте нужный файл в IDE и запустите его. Примеры с ошибкой предназначены для проверки сообщения компилятора или выполнения.</p><ul class="resource-list">
                 <li><a href="../../samples/operators/dim/inferred_type_from_initializer.axm">DIM: вывод типа из инициализатора</a></li>
                 <li><a href="../../samples/operators/dim/decimal_explicit_declaration.axm">DIM: явное объявление DECIMAL</a></li>
                 <li><a href="../../samples/expressions/conversions/automatic_numeric.axm">Автоматические числовые преобразования</a></li>
@@ -35,6 +59,5 @@ PRINT amount + extra</code></pre><p>Результат:</p>
                 <li><a href="../../samples/functions/datevalue/from_datetime.axm">DATEVALUE: дата из даты-времени</a></li>
                 <li><a href="../../samples/functions/datevalue/explicit_part_extraction.axm">Явное извлечение части DATE и TIME</a></li>
                 <li><a href="../../samples/functions/timevalue/from_datetime.axm">TIMEVALUE: время из даты-времени</a></li>
-            </ul></section>
-<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="data-types.html">Типы данных</a><a href="arithmetic-and-logic.html">Операции</a><a href="date-time-functions.html">Дата и время</a><a href="numeric-functions.html">Числа</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+            </ul></section><section class="article-section"><h2>См. также</h2><div class="link-list"><a href="data-types.html">Типы данных</a><a href="arithmetic-and-logic.html">Операции</a><a href="date-time-functions.html">Дата и время</a><a href="numeric-functions.html">Числа</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
 <script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>
