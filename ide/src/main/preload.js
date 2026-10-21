@@ -1,6 +1,8 @@
 const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 contextBridge.exposeInMainWorld('axiom', {
+  projectCommand: (method,payload) => ipcRenderer.invoke('backend-project', method,payload),
+  openProjectFileDialog: () => ipcRenderer.invoke('open-project-file-dialog'),
   backendReady: () => ipcRenderer.invoke('backend-ready'),
   documentCommand: (method, snapshot) => ipcRenderer.invoke('backend-document', method, snapshot),
   startExecution: document => ipcRenderer.invoke('backend-start', document),
@@ -19,12 +21,13 @@ contextBridge.exposeInMainWorld('axiom', {
   fileReadonly: (p) => ipcRenderer.invoke('file-readonly', p),
   writeFile: (p, content, expectedText) => ipcRenderer.invoke('write-file', p, content, expectedText),
   createProjectFile: (root, target, text) => ipcRenderer.invoke('create-project-file', root, target, text),
+  renameProjectFile: (root,item,name) => ipcRenderer.invoke('rename-project-file',root,item,name),
   captureProjectFile: (root, item, cut) => ipcRenderer.invoke('capture-project-file', root, item, cut),
   pasteProjectFile: (root, directory) => ipcRenderer.invoke('paste-project-file', root, directory),
   trashProjectFile: (root, item) => ipcRenderer.invoke('trash-project-file', root, item),
   projectFileProperties: (root, item) => ipcRenderer.invoke('project-file-properties', root, item),
   openFileDialog: () => ipcRenderer.invoke('open-file-dialog'),
-  openProjectDialog: () => ipcRenderer.invoke('open-project-dialog'),
+  openProjectDialog: defaultPath => ipcRenderer.invoke('open-project-dialog', defaultPath),
   listProjectFiles: (p) => ipcRenderer.invoke('list-project-files', p),
   saveFileDialog: (defaultPath) => ipcRenderer.invoke('save-file-dialog', defaultPath),
   confirmDocumentClose: name => ipcRenderer.invoke('confirm-document-close', name),

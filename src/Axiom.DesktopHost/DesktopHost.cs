@@ -240,6 +240,10 @@ internal sealed class DesktopHost : IDisposable
                         catch (Exception e) { Error(fileRequestId, "FILE_SAVE_FAILED", e.Message); }
                     });
                     break;
+                case "project.open": case "project.create": case "project.save": case "project.entry": case "project.check":
+                    var projectRequestId=id;
+                    _=Task.Run(()=>{try {Respond(projectRequestId,ProjectCommands.Execute(method,payload));}catch(Exception e){Error(projectRequestId,"INVALID_PROJECT",e.Message);}});
+                    break;
                 case "language.metadata":
                     using (var metadata = JsonDocument.Parse(Axiom.Semantics.AxiomLanguageMetadata.ToJson()))
                         Respond(id, metadata.RootElement.Clone());
@@ -275,6 +279,13 @@ internal sealed class DesktopHost : IDisposable
             ? projectSources.Deserialize<ProjectDocumentSnapshot[]>(new JsonSerializerOptions { PropertyNameCaseInsensitive=true }) : null;
         var openDocuments = ProjectSnapshot.Validate(file,projectDocuments,String(payload,"documentId"))
             .Select(document=>new SourceDocument(document.SourceFilePath,document.SourceText)).ToArray();
+        var projectPath=String(payload,"projectFilePath");
+        var project=projectPath is null?null:AxiomProject.Load(projectPath);
+        project?.RequireEntry();
+        if(project is not null) {
+            if(!AxiomProject.PathComparer.Equals(project.EntryPath,Path.GetFullPath(file))) throw new HostError("INVALID_PROJECT","Запуск проекта должен использовать его точку входа.");
+            openDocuments=project.Dependencies(source,file,openDocuments).ToArray();
+        }
         int[] breakpoints = payload.TryGetProperty("breakpointLines", out var points) ? points.EnumerateArray().Select(x => x.GetInt32()).ToArray() : [];
         var sourceBreakpoints = payload.TryGetProperty("sourceBreakpoints", out var sourcePoints)
             ? sourcePoints.EnumerateArray().Select(point => new BytecodeSourceBreakpoint(point.GetProperty("line").GetInt32(),
@@ -288,7 +299,7 @@ internal sealed class DesktopHost : IDisposable
         Volatile.Write(ref _cancellationRegistration, new CancellationRegistration(session, _cancel));
         Respond(id, new { accepted = true }); Event("execution.state", new { state = "Compiling" });
         Work(() => _runner.RunWithSourceBreakpoints(source, launch == "debug" ? sourceBreakpoints : [],
-            launch == "debug" ? breakpoints : [], stopFirst, file, cancellationProvider: _cancel,projectDocuments:openDocuments));
+            launch == "debug" ? breakpoints : [], stopFirst, file, cancellationProvider: _cancel,projectDocuments:openDocuments, resourceBaseDirectory:project?.RootDirectory));
     }
 
     private void Work(Func<ProgramRunResult> action)

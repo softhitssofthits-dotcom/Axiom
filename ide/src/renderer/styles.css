@@ -266,10 +266,6 @@ html[data-theme="light"] .logo-dark { display: none; }
    Studio's Miscellaneous Files) — a neutral secondary list with the same look as the
    project tree. Visible only while a project is open AND at least one such document
    is open — otherwise it would list every file and mean nothing. */
-#external-files { border-top: 1px solid var(--border-color); }
-#external-files.hidden { display: none; }
-#external-files-header { padding: 8px 10px 4px; font-size: 10px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--text-secondary); }
-#external-files-list .project-file.active { background: var(--bg-tertiary); }
 
 #main-content {
   flex: 1;
@@ -361,12 +357,12 @@ html[data-theme="light"] .logo-dark { display: none; }
   min-height: 0;
 }
 
-/* Both splitters keep pointer capture; only their own marker changes while dragging. */
-#panel-resizer { height: 9px; flex: 0 0 9px; cursor: row-resize; }
+/* Разделители удерживают указатель; подсвечивается только активная полоса. */
+#panel-resizer, #project-resizer { height: 9px; flex: 0 0 9px; cursor: row-resize; }
 #sidebar-resizer { width: 9px; flex: 0 0 9px; cursor: col-resize; }
-#panel-resizer, #sidebar-resizer { position: relative; background: transparent; touch-action: none; user-select: none; z-index: 5; }
-/* Тонкая линия-маркер задаётся общими правилами в design-system.css для обеих полос. */
-#panel-resizer:focus, #sidebar-resizer:focus { outline: none; }
+#panel-resizer, #sidebar-resizer, #project-resizer { position: relative; background: transparent; touch-action: none; user-select: none; z-index: 5; }
+/* Тонкая линия-маркер задаётся общими правилами в design-system.css для всех полос. */
+#panel-resizer:focus, #sidebar-resizer:focus, #project-resizer:focus { outline: none; }
 body.splitter-dragging { user-select: none; }
 body.splitter-x { cursor: col-resize; }
 body.splitter-y { cursor: row-resize; }

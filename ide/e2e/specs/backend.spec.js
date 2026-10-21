@@ -13,7 +13,7 @@ module.exports = [
     const file = path.join(ROOT, relativePath);
     await S.launch(); await S.stubOpenDialog([file]);
     await S.page.evaluate(() => window.__ide.handleAction('open'));
-    await S.page.waitForFunction(p => window.__ide.activeFile === p, file);
+    await S.page.waitForFunction(p => window.__ide.activeFile === p, /\.axproj$/i.test(file)?path.join(path.dirname(file),'main.axm'):file);
     await S.page.evaluate(() => window.__ide.run());
     const page = await nativeCanvas(S);
     C.eq(page.width, 1024, 'Maze Chase открыл нативную логическую поверхность');
@@ -124,3 +124,5 @@ module.exports.push({
   name:'Модульный Maze Chase: нативное движение героя и закрытие окна',
   fn(context) { return module.exports.find(t=>t.id==='backend-maze-chase-controls').fn(context,'samples/graphics/game/maze_chase_project/main.axm'); }
 });
+
+module.exports.push({id:'axproj-maze-native-controls',name:'Проект axproj Maze Chase: нативный запуск, ресурсы и управление',fn(context){return module.exports.find(t=>t.id==='backend-maze-chase-controls').fn(context,'samples/graphics/game/maze_chase_project/maze_chase.axproj');}});

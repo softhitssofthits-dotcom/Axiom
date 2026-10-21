@@ -58,6 +58,10 @@ function setupBackendIpc() {
     catch (error) { return { ok: false, error: { code: error.code || 'HOST_DISCONNECTED', message: error.message } }; }
   });
   handle('backend-ready', () => getClient().ready());
+  handle('backend-project', (method,payload) => {
+    if(!['project.open','project.create','project.save','project.entry','project.check'].includes(method)||!payload||typeof payload.path!=='string'||!path.isAbsolute(payload.path)) throw new Error('Некорректный запрос проекта.');
+    return getClient().request(method,payload);
+  });
   handle('backend-language-metadata', () => getClient().request('language.metadata'));
   handle('backend-document', (method, snapshot) => {
     if (!['document.compile', 'document.analyse', 'document.hover', 'document.navigation', 'document.format', 'document.editTransition', 'document.normalizeIdentifiers'].includes(method) ||

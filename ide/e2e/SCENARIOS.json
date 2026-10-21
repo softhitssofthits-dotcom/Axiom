@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 520,
+  "count": 534,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -41,6 +41,11 @@
       "id": "maze-project-native-controls",
       "spec": "backend.spec.js",
       "name": "Модульный Maze Chase: нативное движение героя и закрытие окна"
+    },
+    {
+      "id": "axproj-maze-native-controls",
+      "spec": "backend.spec.js",
+      "name": "Проект axproj Maze Chase: нативный запуск, ресурсы и управление"
     },
     {
       "id": "canvas-mouse-world-click",
@@ -1790,7 +1795,7 @@
     {
       "id": "project-open-maze-tabs-entry",
       "spec": "files.spec.js",
-      "name": "Открыть проект из меню: девять вкладок Maze Chase и запуск main из модуля"
+      "name": "Открыть проект Maze Chase из меню: дерево, точка входа и запуск main из модуля"
     },
     {
       "id": "project-open-manual-entry-restore",
@@ -2258,6 +2263,11 @@
       "name": "Размеры ограничены окном и возвращаются при его расширении"
     },
     {
+      "id": "panels-project-height",
+      "spec": "panels.spec.js",
+      "name": "Высота проекта: мышь, отмена, клавиатура, темы и сохранение"
+    },
+    {
       "id": "live-check-marks-syntax-error",
       "spec": "problems.spec.js",
       "name": "A syntax error squiggles while typing (live check, no save)"
@@ -2290,7 +2300,7 @@
     {
       "id": "diagnostic-peek-survives-live-analysis",
       "spec": "problems.spec.js",
-      "name": "Карточка ошибки остаётся после проверки и редактирования до явного закрытия"
+      "name": "Карточка ошибки сохраняется при проверке и закрывается после устранения диагностики"
     },
     {
       "id": "project-advice-maze-config",
@@ -2341,6 +2351,66 @@
       "id": "project-symbol-index-navigation",
       "spec": "project-symbols.spec.js",
       "name": "Индекс символов: точка входа, переменные, типы, поля и параметры"
+    },
+    {
+      "id": "axproj-open-run-check",
+      "spec": "projects.spec.js",
+      "name": "axproj: дерево, одна вкладка, несохранённый модуль, полный анализ и точка запуска"
+    },
+    {
+      "id": "axproj-properties-conflict-entry",
+      "spec": "projects.spec.js",
+      "name": "axproj: свойства, запись entry, конфликт внешней правки и исключённый IMPORT"
+    },
+    {
+      "id": "axproj-restore-relocate-create",
+      "spec": "projects.spec.js",
+      "name": "axproj: перенос папки, восстановление, создание и ремонт удалённой entry"
+    },
+    {
+      "id": "axproj-paths-resources-saveas",
+      "spec": "projects.spec.js",
+      "name": "axproj: корень ресурсов, пути, ссылки и сохранение за границы проекта"
+    },
+    {
+      "id": "axproj-dialog-remembers-directory",
+      "spec": "projects.spec.js",
+      "name": "Диалог axproj сохраняет последнюю папку при повторе, отмене и перезапуске"
+    },
+    {
+      "id": "axproj-create-from-draft-after-close",
+      "spec": "projects.spec.js",
+      "name": "Закрытие прежнего проекта и создание нового из черновика: два INPUT и сумма"
+    },
+    {
+      "id": "axproj-create-empty-existing-cancel",
+      "spec": "projects.spec.js",
+      "name": "Создание проекта до кода, существующее описание и отмена закрытия с правками"
+    },
+    {
+      "id": "axproj-create-cancel-restoration",
+      "spec": "projects.spec.js",
+      "name": "Отмена создания не восстанавливает выбранную папку как проект"
+    },
+    {
+      "id": "axproj-create-dialog-name-cancel",
+      "spec": "projects.spec.js",
+      "name": "Меню Создать проект: имя, папка, отмена и отсутствие неожиданных диалогов"
+    },
+    {
+      "id": "axproj-save-add-second-source",
+      "spec": "projects.spec.js",
+      "name": "Второй исходник появляется после сохранения; существующий добавляется без перезаписи"
+    },
+    {
+      "id": "axproj-rename-context-file",
+      "spec": "projects.spec.js",
+      "name": "Контекстное переименование файла сохраняет правки, вкладку и точку входа"
+    },
+    {
+      "id": "axproj-reject-numeric-source",
+      "spec": "projects.spec.js",
+      "name": "Числовое имя нового исходника отклоняется без потери черновика"
     },
     {
       "id": "regex-language-contract",

@@ -1,0 +1,4 @@
+' Функция возвращает сумму; ввод и печать находятся в main.axm.
+PUBLIC FUNCTION AddNumbers(a AS INTEGER, b AS INTEGER) AS INTEGER
+    RETURN a + b
+END FUNCTION

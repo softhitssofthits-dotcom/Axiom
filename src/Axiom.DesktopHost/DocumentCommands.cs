@@ -22,6 +22,8 @@ internal static class DocumentCommands
             snapshot.DocumentRevision < 0 || snapshot.SourceText is null)
             throw new ArgumentException("Некорректный снимок документа.");
         var projectDocuments = ProjectSnapshot.Validate(snapshot.SourceFilePath,snapshot.ProjectDocuments,snapshot.DocumentId);
+        var project=snapshot.ProjectFilePath is null?null:AxiomProject.Load(snapshot.ProjectFilePath);
+        IReadOnlyList<SourceDocument> Dependencies(string text,string? file,IEnumerable<SourceDocument> open) => project is not null && file is not null ? project.Dependencies(text,file,open) : SourceProject.LoadDependencies(text,file,open);
         var openDocuments = projectDocuments.Select(document=>new SourceDocument(document.SourceFilePath,document.SourceText)).ToArray();
         var entryText = snapshot.SourceText;
         var entryPath = snapshot.SourceFilePath;
@@ -42,7 +44,7 @@ internal static class DocumentCommands
         if (method == "document.navigation")
         {
             var graph = EditorCallGraph.Analyse(entryText, entryPath,
-                SourceProject.LoadDependencies(entryText, entryPath, navigationDocuments));
+                Dependencies(entryText, entryPath, navigationDocuments));
             if (!graph.SourceDocuments.Any(d => string.Equals(d.SourceFilePath, snapshot.SourceFilePath, StringComparison.OrdinalIgnoreCase)))
                 throw new ArgumentException("Текущий файл не входит в IMPORT выбранной точки входа. Выберите другую точку входа навигации.");
             return new { snapshot.DocumentId, snapshot.DocumentRevision, graph.Routines, graph.Calls, graph.IndirectCalls, graph.Complete, graph.SourceDocuments, graph.Symbols };
@@ -55,7 +57,7 @@ internal static class DocumentCommands
             // Редакторские метаданные строятся на терпимом модульном связывании:
             // посторонняя ошибка в main не должна удалять корректные импорты.
             var binding = EditorModuleBindingService.Bind(snapshot.SourceText, snapshot.SourceFilePath,
-                SourceProject.LoadDependencies(snapshot.SourceText, snapshot.SourceFilePath, openDocuments));
+                Dependencies(snapshot.SourceText, snapshot.SourceFilePath, openDocuments));
             var hovers = Binder.GetEditorHovers(binding.Syntax, identifiers, binding.ImportedModules);
             return new { snapshot.DocumentId, snapshot.DocumentRevision, hovers };
         }
@@ -87,13 +89,13 @@ internal static class DocumentCommands
                 edits = resultText != snapshot.SourceText ? new[] { new TextEdit(prefix, snapshot.SourceText.Length - prefix - suffix, resultText.Substring(prefix, resultText.Length - prefix - suffix)) } : [],
                 plan.NewCaretOffset };
         }
-        var dependencies = SourceProject.LoadDependencies(entryText, entryPath, navigationDocuments);
+        var dependencies = Dependencies(entryText, entryPath, navigationDocuments);
         // Файл вне графа выбранного запуска остаётся самостоятельным документом.
         if (!string.Equals(entryPath, snapshot.SourceFilePath, StringComparison.OrdinalIgnoreCase) &&
             !dependencies.Any(d => string.Equals(d.Name, snapshot.SourceFilePath, StringComparison.OrdinalIgnoreCase)))
         {
             entryText = snapshot.SourceText; entryPath = snapshot.SourceFilePath;
-            dependencies = SourceProject.LoadDependencies(entryText, entryPath, openDocuments);
+            dependencies = Dependencies(entryText, entryPath, openDocuments);
         }
         var result = new AxiomExecutionPipeline().Compile(new CompilationRequest(entryText, includeUsageWarnings: true,
             sourceName: entryPath, additionalDocuments: dependencies));

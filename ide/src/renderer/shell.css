@@ -145,3 +145,10 @@ html[data-theme="borland"] .about-dialog .about-button-hotkey { color:#ffff55; }
 .assistant-region-form input{display:block;box-sizing:border-box;width:100%;padding:7px;margin:12px 0;background:var(--xs-menu-bg);color:var(--xs-menu-text);border:1px solid var(--xs-menu-border)}
 .assistant-region-form button{margin:8px 8px 0 0;padding:5px 12px;color:var(--xs-menu-text);background:var(--xs-menu-bg);border:1px solid var(--xs-menu-border)}
 #assistant-region-error{font-size:12px}
+
+/* Высота проекта управляется общим разделителем панелей. */
+#shell-sidebar #project-explorer { flex:0 0 auto; min-height:0; max-height:none; }
+#shell-sidebar #project-explorer.project-collapsed { height:auto!important; }
+#shell-sidebar #structure-content { min-height:0; }
+
+@media(max-width:650px){#project-resizer{display:none!important}}

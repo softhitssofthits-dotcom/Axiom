@@ -4,17 +4,18 @@
 })(typeof window !== 'undefined' ? window : globalThis, function() {
   class DocumentSaver {
     constructor(store, api) { this.store = store; this.api = api; this.pending = new WeakSet(); }
-    async save(path, saveAs = false) {
+    async save(path, saveAs = false, defaultPath = null, validateTarget = null) {
       const entry = this.store.get(path);
       if (!entry || entry.readonly || this.pending.has(entry)) return null;
       this.pending.add(entry);
       try {
         let target = entry.path;
         if (saveAs || target.startsWith('untitled')) {
-          target = await this.api.saveFileDialog(target.startsWith('untitled') ? undefined : target);
+          target = await this.api.saveFileDialog(defaultPath || (target.startsWith('untitled') ? undefined : target));
           if (!target) return null;
         }
         if (this.store.get(path) !== entry || entry.path !== path) return null;
+        validateTarget?.(target, entry.path);
         const other = this.store.get(target);
         if (other && other !== entry) throw new Error('Этот файл уже открыт в другой вкладке.');
         const text = entry.model.getValue();

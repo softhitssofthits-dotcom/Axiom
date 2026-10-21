@@ -38,3 +38,33 @@ module.exports=[
  C.eq(await S.page.evaluate(()=>window.__ide.settings.sidebarWidth),preferred.w,'Сужение окна не затирает выбранную ширину');C.eq(await S.page.evaluate(()=>window.__ide.settings.consoleHeight),preferred.h,'Уменьшение окна не затирает выбранную высоту');
  await S.electronApp.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(1280,900));await S.sleep(300);C.eq(Math.round(await size(S,'shell-sidebar','width')),450,'Ширина возвращается');C.eq(Math.round(await size(S,'bottom-panel','height')),400,'Высота возвращается');
 }}];
+
+module.exports.push({id:'panels-project-height',name:'Высота проекта: мышь, отмена, клавиатура, темы и сохранение',async fn({S,C}){
+ await S.launch();const initial=await size(S,'project-explorer','height');
+ await drag(S,'project-resizer',0,50);C.eq(Math.round(await size(S,'project-explorer','height')),Math.round(initial+50),'Проект растёт вниз');
+ const saved=await S.page.evaluate(()=>window.__ide.settings.projectHeight);C.eq(saved,Math.round(initial+50),'Высота сохранена');
+ await drag(S,'project-resizer',0,-30,false);await S.page.keyboard.press('Escape');await S.page.mouse.up();C.eq(Math.round(await size(S,'project-explorer','height')),saved,'Escape отменяет жест');
+ await S.page.locator('#project-resizer').focus();await S.page.keyboard.press('ArrowDown');C.eq(Math.round(await size(S,'project-explorer','height')),saved+10,'Стрелка вниз увеличивает проект');
+ await S.page.locator('#tb-new').focus();await S.page.mouse.move(800,100);
+ for(const theme of ['dark','light','basic','borland']){
+  await S.page.evaluate(t=>window.__ide.setTheme(t),theme);
+  const colors=await S.page.evaluate(()=>['project-resizer','panel-resizer'].map(id=>getComputedStyle(document.getElementById(id),'::before').backgroundColor));C.eq(colors[0],colors[1],'Общий цвет полосы: '+theme);
+  const depth=await S.page.evaluate(()=>['project-resizer','panel-resizer','sidebar-resizer'].map(id=>getComputedStyle(document.getElementById(id)).backgroundImage));
+  C.ok(depth.every(value=>value.includes('linear-gradient')),'Объёмный фон всех разделителей: '+theme);
+  C.eq(depth[0],depth[1],'Общий горизонтальный переход: '+theme);
+ }
+ await S.close();await S.launch();C.eq(Math.round(await size(S,'project-explorer','height')),saved+10,'Высота восстановлена после перезапуска');
+ await S.page.locator('#project-resizer').dblclick();C.eq(Math.round(await size(S,'project-explorer','height')),240,'Сброс высоты');
+ const outlineHeight=await size(S,'structure-content','height');
+ await S.page.locator('#project-explorer-close').click();
+ C.eq(await S.page.locator('#project-resizer').isVisible(),false,'Закрытие области проекта скрывает разделитель');
+ C.ok(await size(S,'structure-content','height')>outlineHeight+200,'Структура занимает освободившуюся высоту');
+ await S.page.evaluate(()=>{window.__ide.setLanguage('en');window.__ide.setLanguage('ru');});
+ C.eq(await S.page.locator('#project-resizer').isVisible(),false,'Обновление интерфейса не возвращает разделитель');
+ await S.close();await S.launch();
+ C.eq(await S.page.locator('#project-resizer').isVisible(),false,'После перезапуска разделитель скрыт вместе с областью проекта');
+ await S.page.evaluate(()=>window.__ide.setProjectExplorerVisible(true));
+ C.eq(await S.page.locator('#project-resizer').isVisible(),true,'Возвращение области проекта возвращает разделитель');
+ C.eq(Math.round(await size(S,'project-explorer','height')),240,'Возвращение сохраняет высоту проекта');
+ C.eq(S.pageErrors.length,0,'Ошибок страницы нет');
+}});

@@ -2,9 +2,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { createHash } = require('node:crypto');
 
+function validateProjectSourceName(target) {
+  if(/^\d+\.axm$/i.test(path.basename(target)))throw new Error('Имя исходника проекта не может состоять только из цифр. Для IMPORT используйте имя модуля, например arithmetic.axm или sum2.axm.');
+}
 function createProjectFile(root, target, text) {
   if (typeof root !== 'string' || typeof target !== 'string' || typeof text !== 'string')
     throw new Error('Неверные параметры создания файла.');
+  validateProjectSourceName(target);
   const project = fs.realpathSync(root);
   const parent = fs.realpathSync(path.dirname(path.resolve(target)));
   const relative = path.relative(project, parent);
@@ -36,4 +40,4 @@ async function writeDocumentFile(target, text, expectedText, confirmOverwrite, a
     exact = true;
   }
 }
-module.exports = { createProjectFile, sameSourceText, writeDocumentFile };
+module.exports = { validateProjectSourceName, createProjectFile, sameSourceText, writeDocumentFile };

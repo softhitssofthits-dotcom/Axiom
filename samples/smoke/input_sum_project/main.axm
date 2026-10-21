@@ -1,0 +1,6 @@
+' Введите два целых числа; например, 8 и 13. Ожидаемая сумма — 21.
+IMPORT arithmetic
+DIM first AS INTEGER, second AS INTEGER
+INPUT "Первое число"; first
+INPUT "Второе число"; second
+PRINT "Сумма двух чисел равна "; AddNumbers(first, second)

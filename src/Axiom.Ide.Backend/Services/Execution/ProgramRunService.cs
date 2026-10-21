@@ -117,14 +117,14 @@ public sealed class ProgramRunService : IProgramRunService
         string? sourceFilePath = null,
         TimeSpan? timeout = null,
         IRuntimeCancellationProvider? cancellationProvider = null,
-        IEnumerable<SourceDocument>? projectDocuments = null)
+        IEnumerable<SourceDocument>? projectDocuments = null, string? resourceBaseDirectory = null)
     {
         ArgumentNullException.ThrowIfNull(sourceText);
         CurrentSourceDocuments = [];
 
         try
         {
-            var runBaseDirectory = ResolveResourceBaseDirectory(sourceFilePath);
+            var runBaseDirectory = resourceBaseDirectory ?? ResolveResourceBaseDirectory(sourceFilePath);
             _consoleService.ResourceBaseDirectory = runBaseDirectory;
             _consoleService.BeginSession();
             var inputProvider = new IdeInputProvider(_consoleService);

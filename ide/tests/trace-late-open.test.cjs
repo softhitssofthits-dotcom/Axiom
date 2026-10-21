@@ -32,7 +32,7 @@ function setup() {
     editor: { getModel: () => current, revealLineInCenter() {}, setPosition() {}, focus() {}, updateOptions() {},
       saveViewState() { return null; }, restoreViewState() {} },
     monaco: { Range: class { constructor(a, b, c, d) { Object.assign(this, { a, b, c, d }); } },
-      Uri: { file: p => p }, editor: { createModel: text => model(text) } },
+      Uri: { file: p => p }, editor: { getModel: () => null, createModel: text => model(text) } },
     execution: { stopId: 'one', snapshotForFile: file => ({
       'main.axm': { documentId: 'main-id', sourceText: 'PRINT 1' },
       'helper.axm': { documentId: 'helper-id', sourceText: 'PRINT 1' } })[file] },

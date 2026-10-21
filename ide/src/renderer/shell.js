@@ -68,6 +68,7 @@ const title=document.createElement('div');title.className='shell-section-title';
 const heading=document.createElement('span');heading.dataset.i18n='panel.structure';heading.textContent=I18N.t('panel.structure');title.append(heading);
 const close=document.createElement('button');close.id='sidebar-close';close.textContent='×';close.dataset.i18nTitle='sidebar.close';UIControls.setLabel(close,I18N.t('sidebar.close'));title.append(close);sidebar.prepend(title);
 const splitter=document.createElement('div');splitter.id='sidebar-resizer';splitter.dataset.i18nTitle='sidebar.resizeHint';splitter.title=I18N.t('sidebar.resizeHint');sidebar.after(splitter);
+const projectSplitter=document.createElement('div');projectSplitter.id='project-resizer';projectSplitter.dataset.i18nTitle='project.resizeHint';UIControls.setLabel(projectSplitter,I18N.t('project.resizeHint'));sidebar.append(projectSplitter);
 sidebar.append(document.getElementById('structure-content'));
 const structureTab=document.querySelector('[data-tab="structure"]');if(structureTab)structureTab.hidden=true;
 fit();

@@ -3,7 +3,7 @@
   else Object.assign(root, factory());
 })(typeof window !== 'undefined' ? window : globalThis, function() {
   class DocumentServices {
-    constructor(store, api, entryPath = () => null) { this.store = store; this.api = api; this.entryPath = entryPath; this.requests = new WeakMap(); }
+    constructor(store, api, entryPath = () => null, projectPath = () => null) { this.store = store; this.api = api; this.entryPath = entryPath; this.projectPath=projectPath; this.requests = new WeakMap(); }
     async request(path, method, options = {}) {
       const document = this.store.get(path);
       if (!document || document.model.isDisposed?.()) return null;
@@ -20,13 +20,14 @@
       const selected=usesEntry&&method!=='document.navigation' ? this.entryPath() : null;
       const entryPath=selected||entry?.path;
       const sameFolder=entryPath&&!entryPath.startsWith('untitled')&&String(entryPath).replace(/\\/g,'/').split('/').slice(0,-1).join('/').toLowerCase()===String(canonicalPath).replace(/\\/g,'/').split('/').slice(0,-1).join('/').toLowerCase();
-      const snapshot = { ...options, documentId: document.documentId, documentRevision: revision,
+      const projectFilePath=projectOperation?this.projectPath(canonicalPath):null;
+      const snapshot = { ...(projectFilePath?{projectFilePath}:{}), ...options, documentId: document.documentId, documentRevision: revision,
         sourceText: document.model.getValue(), sourceFilePath: document.path.startsWith('untitled') ? null : document.path,
         ...(project ? {projectDocuments:project.documents} : {}),
         ...(sameFolder ? {navigationEntryPath:entryPath} : {}) };
       const current = () => methods.get(method) === token && this.store.get(canonicalPath) === document && document.path === canonicalPath &&
           document.documentId === snapshot.documentId && document.revision === revision && !document.model.isDisposed?.() &&
-          (!project || project.isCurrent()) && (!usesEntry||this.store.navigationEntryId===entryId) &&
+          (!project || project.isCurrent()) && (!projectOperation||this.projectPath(canonicalPath)===projectFilePath) && (!usesEntry||this.store.navigationEntryId===entryId) &&
           (!usesEntry||method==='document.navigation'||this.entryPath()===selected);
       let response;
       try { response = await this.api.documentCommand(method, snapshot); }

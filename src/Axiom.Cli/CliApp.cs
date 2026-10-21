@@ -25,6 +25,7 @@ internal static class CliApp
         $"""
         usage: axiom <command> [options] <file>
           commands: run | check | fmt | metadata
+          projects: run/check принимают .axproj; fmt работает с исходниками .axm
           options:  --json    машинно-читаемые диагностки (check)
                     --stdin   читать источник из stdin (check, fmt)
                     --help    показать эту справку
@@ -46,6 +47,9 @@ internal static class CliApp
             return Usage(stderr);
         }
 
+        if(args[0] is "run" or "check" && args.Any(a=>a.EndsWith(".axproj",StringComparison.OrdinalIgnoreCase)))
+            return RunProject(args,stdout,stderr,stdin);
+
         switch (args[0])
         {
             case "--version":
@@ -66,9 +70,29 @@ internal static class CliApp
         }
     }
 
+    private static int RunProject(string[] args,TextWriter stdout,TextWriter stderr,TextReader stdin)
+    {
+        var json=args.Contains("--json");
+        var clean=args.Where(a=>a!="--json").ToArray();
+        if(clean.Length!=2 || (json&&args[0]!="check") || args.Length!=(json?3:2)) return Usage(stderr);
+        try {
+            var project=AxiomProject.Load(clean[1]);project.RequireEntry();
+            if(args[0]=="run") return RunProgram(["run",project.EntryPath!],stdout,stderr,stdin,project);
+            var diagnostics=project.Check();
+            var ok=!diagnostics.Any(d=>d.Severity==DiagnosticSeverity.Error);
+            if(json) stdout.Write(DiagnosticsJson(diagnostics,ok,project.ProjectFilePath));
+            PrintDiagnostics(diagnostics,stderr,project.ProjectFilePath);
+            return ok?0:1;
+        } catch(Exception error) when(error is IOException or UnauthorizedAccessException or ArgumentException or System.Text.Json.JsonException or InvalidOperationException) {
+            stderr.WriteLine("axiom: ошибка проекта: "+error.Message);
+            if(json) stdout.Write(System.Text.Json.JsonSerializer.Serialize(new {ok=false,diagnostics=new[]{new {code="AXPROJECT",message=error.Message,file=clean[1],severity="error"}}}));
+            return 2;
+        }
+    }
+
     // ---- "run" ----
 
-    private static int RunProgram(string[] args, TextWriter stdout, TextWriter stderr, TextReader stdin)
+    private static int RunProgram(string[] args, TextWriter stdout, TextWriter stderr, TextReader stdin, AxiomProject? project = null)
     {
         var path = ParseSingleFileArg(args);
         if (path is null)
@@ -88,10 +112,9 @@ internal static class CliApp
 
         // Чтение зависимостей общее с check: отказ файловой системы даёт
         // контролируемое сообщение и код 2, а не выброшенное исключение.
-        if (!TryLoadDependencies(source, path, stderr, out var dependencies))
-        {
-            return 2;
-        }
+        IReadOnlyList<SourceDocument> dependencies;
+        if(project is not null) dependencies=project.Dependencies(source,path);
+        else if (!TryLoadDependencies(source, path, stderr, out dependencies)) return 2;
 
         // Ctrl+C в реальной консоли превращается в штатную отмену исполнения, а не в обрыв процесса.
         ConsoleCancelEventHandler? cancelHandler = null;
@@ -117,7 +140,7 @@ internal static class CliApp
                 runtimeRandom: host,
                 cancellationProvider: host,
                 sourceName: Path.GetFullPath(path),
-                additionalDocuments: dependencies));
+                additionalDocuments: dependencies, resourceBaseDirectory:project?.RootDirectory));
             exitCode = result.Status == ExecutionStatus.Success ? 0 : 1;
         }
         catch (ConsoleGraphicsNotSupportedException error)

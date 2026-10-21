@@ -12,7 +12,7 @@ class AxiomIDE {
       this.assistant?.invalidate();
     });
     this.editedLines = new window.EditedLines();
-    this.documentServices = new window.DocumentServices(this.openFiles, API, () => this.projectSession?.entry);
+    this.documentServices = new window.DocumentServices(this.openFiles, API, () => this.projectSession?.entry, path => this.projectSession?.descriptor?.sourceFiles.some(p=>p.toLowerCase()===path.toLowerCase()) ? this.projectSession.descriptor.projectFilePath : null);
     this.documentSaver = new window.DocumentSaver(this.openFiles, API);
     this.dirty = new Set();
     this.activeFile = null;
@@ -562,6 +562,7 @@ class AxiomIDE {
     const {PanelSplitter} = window.PanelSplitters;
     this.bottomSplitter = new PanelSplitter({handle: document.getElementById('panel-resizer'), panel: document.getElementById('bottom-panel'), container: document.getElementById('main-content'), axis: 'y', minimum: 64, reserve: 140, defaultSize: 200, savedSize: this.settings.consoleHeight, onCommit: size => this.saveSettings({consoleHeight: size})});
     this.sidebarSplitter = new PanelSplitter({handle: document.getElementById('sidebar-resizer'), panel: document.getElementById('shell-sidebar'), container: document.getElementById('workspace'), axis: 'x', minimum: 160, reserve: 160, maximum: 480, defaultSize: 208, savedSize: this.settings.sidebarWidth, onCommit: size => this.saveSettings({sidebarWidth: size})});
+    this.projectSplitter = new PanelSplitter({handle: document.getElementById('project-resizer'), panel: document.getElementById('project-explorer'), container: document.getElementById('shell-sidebar'), axis: 'y', direction: 1, minimum: 40, reserve: 210, defaultSize: 240, savedSize: this.settings.projectHeight, onCommit: size => this.saveSettings({projectHeight: size})});
     document.getElementById('sidebar-close').onclick = () => this.setSidebarVisible(false);
     document.getElementById('tb-toggle-sidebar').onclick = () => this.setSidebarVisible(this.settings.sidebarVisible === false);
     this.setSidebarVisible(this.settings.sidebarVisible !== false);
@@ -570,6 +571,7 @@ class AxiomIDE {
 
   setSidebarVisible(visible) {
     this.sidebarSplitter?.cancel();
+    this.projectSplitter?.cancel();
     document.getElementById('shell-sidebar').hidden = !visible;
     document.getElementById('sidebar-resizer').hidden = !visible;
     this.saveSettings({sidebarVisible: visible});
@@ -681,6 +683,7 @@ class AxiomIDE {
     switch (action) {
       case 'new': this.newFile(); break;
       case 'new-project-file': this.newProjectFile(); break;
+      case 'add-existing-project-file': return this.addExistingProjectFile();
       case 'open': this.openDialog(); break;
       case 'open-project': this.openProjectDialog(); break;
       case 'close-project': this.closeProject(); break;
@@ -705,6 +708,10 @@ class AxiomIDE {
       case 'toggle-output': this.togglePanel(); break;
       case 'toggle-toolbar': this.setToolbarVisible(this.settings.toolbarVisible === false); break;
       case 'toggle-sidebar': this.setSidebarVisible(this.settings.sidebarVisible === false); break;
+      case 'run-current-file': return this.run('run',true,true);
+      case 'open-project-file': return API.openProjectFileDialog().then(file=>file&&this.openProject(file));
+      case 'create-project': return window.ProjectView.create(this);
+      case 'project-properties': return window.ProjectView.properties(this);
       case 'toggle-project-explorer': this.toggleProjectExplorer(); break;
       case 'toggle-statusbar': this.setStatusBarVisible(this.settings.statusBarVisible === false); break;
       case 'theme-light': this.setTheme('light'); break;
@@ -751,6 +758,33 @@ class AxiomIDE {
     catch(error){this.showIdeProblem('project.failed',error.message||String(error));return false;}
   }
 
+  projectFolderContains(file) {
+    const key=value=>String(value||'').replace(/\\/g,'/').replace(/\/$/,'').toLowerCase();
+    return !!this.projectDir&&key(file).startsWith(key(this.projectDir)+'/');
+  }
+
+  async addExistingProjectFile() {
+    if(!this.projectDir)return;
+    const folder=this.projectDir;
+    const selected=await API.openFileDialog();if(!selected||this.projectDir!==folder)return;
+    try {
+      if(/^\d+\.axm$/i.test(selected.split(/[/\\]/).pop()))throw new Error(I18N.t('project.numericSourceName'));
+      let target=selected;
+      if(!this.projectFolderContains(selected)){
+        target=folder+'/'+selected.split(/[/\\]/).pop();
+        const document=this.openFiles.get(selected);
+        const text=document?document.model.getValue():await API.readFileContent(selected);
+        if(this.projectDir!==folder)return;
+        const response=await API.createProjectFile(folder,target,text);
+        if(!response.ok)throw new Error(response.message);
+      }
+      if(this.projectDir!==folder)return;
+      await this.refreshProjectFiles();
+      if(!this.projectSession.isSource(target))throw new Error(I18N.t('project.fileExcluded'));
+      await this.openFile(target);
+    }catch(error){this.showIdeProblem('project.addFailed',error.message);}
+  }
+
   async newProjectFile() {
     if (!this.projectDir) {
       alert('Сначала откройте папку проекта.');
@@ -764,25 +798,28 @@ class AxiomIDE {
     if (this.openFiles.has(selectedPath)) { alert(I18N.t('dialog.alreadyOpen', selectedPath)); return; }
     const result = await API.createProjectFile(projectRoot, selectedPath, '');
     if (!result.ok) { alert(result.message); return; }
-    const files = await API.listProjectFiles(this.projectDir);
-    this.renderProjectFiles(files);
+    await this.refreshProjectFiles();
     await this.openFile(selectedPath);
   }
 
   async restoreProject() {
-    const dir = this.settings.lastProjectDir;
+    const dir = this.settings.lastProjectFile || this.settings.lastProjectDir;
     if (typeof dir !== 'string' || !dir) return false;
-    return this.projectSession.open(dir,{restore:true});
+    try{return await this.projectSession.open(dir,{restore:true});}
+    catch(error){this.showIdeProblem('project.failed',error.message||String(error));return false;}
   }
 
   renderProjectFiles(files) {
     this.projectSession?.refresh(files);
     const title = document.getElementById('project-title');
     const list = document.getElementById('project-files');
+    delete title.dataset.i18n;
     title.textContent = this.projectDir.split(/[/\\]/).pop() || this.projectDir;
+    if(this.projectSession?.descriptor)title.textContent=this.projectSession.descriptor.name;
     title.classList.remove('project-open');
     this.setProjectFilesExpanded(!this.projectFilesCollapsed);
     list.innerHTML = '';
+    if(this.projectSession?.descriptor){window.ProjectView.render(this,list);return;}
     for (const file of files) {
       const button = document.createElement('button');
       button.className = 'project-file' + (file === this.activeFile ? ' active' : '');
@@ -799,7 +836,7 @@ class AxiomIDE {
     const container=document.getElementById('project-entry-controls');
     const select=document.getElementById('project-entry');
     if(!container||!select)return;
-    container.classList.toggle('hidden',!this.projectDir);
+    container.classList.toggle('hidden',!this.projectDir||!!this.projectFilesCollapsed||!!this.projectSession?.descriptor);
     const toggle=document.getElementById('project-files-toggle');
     if(toggle){toggle.hidden=!this.projectDir;UIControls.setLabel(toggle,I18N.t('project.files'));}
     select.replaceChildren();
@@ -816,28 +853,10 @@ class AxiomIDE {
   }
 
   promptProjectEntry() {
+    if(this.projectSession?.descriptor)return window.ProjectView.properties(this);
+    this.setProjectFilesExpanded(true);
     this.setStatus(I18N.t(this.projectSession?.loading?'project.loading':this.projectSession?.files.length?'project.chooseEntry':'project.empty'));
     document.getElementById('project-entry')?.focus();
-  }
-
-  // The "Прочие файлы" section under the project tree: the open saved documents that
-  // live outside the current project — the ONLY surface where project membership is
-  // visible. Visible only while a project is open AND at least one such document exists.
-  renderMiscellaneousFiles() {
-    const wrap = document.getElementById('external-files');
-    const list = document.getElementById('external-files-list');
-    if (!wrap || !list) return;
-    list.innerHTML = '';
-    const files = [...this.openFiles.keys()].filter((p) => this.isMiscellaneousFile(p));
-    wrap.classList.toggle('hidden', !this.projectDir || files.length === 0);
-    for (const p of files) {
-      const button = document.createElement('button');
-      button.className = 'project-file' + (p === this.activeFile ? ' active' : '');
-      button.textContent = p.split(/[/\\]/).pop();
-      button.title = p;
-      button.onclick = () => this.switchToFile(p);
-      list.appendChild(button);
-    }
   }
 
   setupProjectExplorer() {
@@ -847,8 +866,12 @@ class AxiomIDE {
       if (!this.projectDir) this.openProjectDialog();
       else this.setProjectFilesExpanded(!!this.projectFilesCollapsed);
     };
-    document.getElementById('project-explorer-close').onclick = () => this.setProjectExplorerVisible(false);
-    document.getElementById('project-new-file').onclick = () => this.newProjectFile();
+    const close=document.getElementById('project-explorer-close');
+    close.dataset.i18nTitle='project.close';UIControls.setLabel(close,I18N.t('project.close'));
+    close.onclick = async () => {if(this.projectDir)await this.closeProject();if(!this.projectDir)this.setProjectExplorerVisible(false);};
+    const add=document.getElementById('project-new-file');
+    add.dataset.i18nTitle='project.addExisting';UIControls.setLabel(add,I18N.t('project.addExisting'));
+    add.onclick = () => this.addExistingProjectFile();
     this.projectFiles.setup();
   }
 
@@ -861,20 +884,26 @@ class AxiomIDE {
     UIControls.setLabel(toggle,I18N.t('project.files'));
     toggle.innerHTML=window.ShellIcons.markup(expanded?'chevron-down':'chevron-right');
     document.getElementById('project-files').hidden=!expanded;
+    document.getElementById('project-entry-controls').classList.toggle('hidden',!this.projectDir||!expanded||!!this.projectSession?.descriptor);
+    document.getElementById('project-explorer').classList.toggle('project-collapsed',!!this.projectDir&&!expanded);
+    this.updateProjectSplitterVisibility();
+  }
+
+  updateProjectSplitterVisibility() {
+    const project=document.getElementById('project-explorer');
+    const separator=document.getElementById('project-resizer');
+    if(!project||!separator)return;
+    this.projectSplitter?.cancel();
+    separator.hidden=project.classList.contains('hidden')||project.classList.contains('project-collapsed');
+    if(!separator.hidden)this.projectSplitter?.layout();
   }
 
   isProjectFile(p) {
+    if(this.projectSession?.descriptor)return this.projectSession.contains(p);
     if (!this.projectDir || typeof p !== 'string') return false;
     const root = this.projectDir.replace(/[\\/]+$/, '').toLowerCase();
     const file = p.toLowerCase();
     return file.startsWith(root + '\\') || file.startsWith(root + '/');
-  }
-
-  // A miscellaneous file: a saved document from OUTSIDE the current project. The
-  // distinction exists only while a project is open. Untitled buffers are NOT listed:
-  // they are new documents without a path, not disk files that live outside the folder.
-  isMiscellaneousFile(p) {
-    return !!this.projectDir && !!p && !p.startsWith('untitled') && !this.isProjectFile(p);
   }
 
   async closeProject() {
@@ -894,8 +923,9 @@ class AxiomIDE {
     this.projectDir = null;
     this.projectSession?.reset();
     this.projectFiles.reset();
-    this.saveSettings({ lastProjectDir: null });
+    this.saveSettings({ lastProjectDir: null, lastProjectFile:null });
     const title = document.getElementById('project-title');
+    title.dataset.i18n = 'project.open';
     title.textContent = I18N.t('project.open');
     title.classList.add('project-open');
     document.getElementById('project-files').innerHTML = '';
@@ -903,7 +933,6 @@ class AxiomIDE {
     // while files opened from elsewhere deliberately remain available as independent files.
     for (const entry of approved.keys()) await this.closeFile(entry.path, true);
     // Without a project the distinction does not exist: the section hides itself.
-    this.renderMiscellaneousFiles();
   }
 
   toggleProjectExplorer() {
@@ -913,6 +942,7 @@ class AxiomIDE {
 
   setProjectExplorerVisible(visible) {
     document.getElementById('project-explorer').classList.toggle('hidden', !visible);
+    this.updateProjectSplitterVisibility();
     this.saveSettings({ projectExplorer: visible });
     const check = document.querySelector('.menu-check[data-check="projectExplorer"]');
     UIControls.setMenuChecked(check, visible);
@@ -928,6 +958,7 @@ class AxiomIDE {
   }
 
   async openFile(p, isCurrent = () => true, {activate=true} = {}) {
+    if(/\.axproj$/i.test(p))return this.openProject(p);
     if (!isCurrent()) return;
     if (this.openFiles.has(p)) {
       if(activate)this.switchToFile(this.openFiles.get(p).path);
@@ -947,7 +978,10 @@ class AxiomIDE {
       if(activate)this.switchToFile(this.openFiles.get(p).path);
       return;
     }
-    const model = this.monaco.editor.createModel(content.replace(/^\uFEFF/, ''), /\.axm$/i.test(p) ? 'axiom' : 'plaintext', this.monaco.Uri.file(p));
+    // После Save As старая модель сохраняет свой URI; исходный файл можно открыть отдельно.
+    let uri=this.monaco.Uri.file(p);
+    while(this.monaco.editor.getModel(uri))uri=uri.with({query:'axiomDocument='+String(this._modelSerial=(this._modelSerial||0)+1)});
+    const model = this.monaco.editor.createModel(content.replace(/^\uFEFF/, ''), /\.axm$/i.test(p) ? 'axiom' : 'plaintext', uri);
     this.openFiles.set(p, { model, viewState: null, readonly });
     this.createTab(p);
     if(activate)this.switchToFile(p);
@@ -976,7 +1010,6 @@ class AxiomIDE {
       this.closeFile(tab.dataset.path);
     });
     document.getElementById('editor-tabs').appendChild(tab);
-    this.renderMiscellaneousFiles();
   }
 
   setupDocumentTabs() {
@@ -1027,7 +1060,6 @@ class AxiomIDE {
     }
     this.updateDocumentTabControls?.();
     document.querySelectorAll('.project-file').forEach((t) => t.classList.toggle('active', t.dataset.path === p || t.title === p));
-    this.renderMiscellaneousFiles();
     this.updateSaveButton();
     this.editor.focus();
     this.rebuildOutline();
@@ -1070,13 +1102,13 @@ class AxiomIDE {
       }
     }
     if (this.projectDir) this.refreshProjectFiles();
-    this.renderMiscellaneousFiles();
     return true;
     } finally { f.closing = false; }
   }
 
   async refreshProjectFiles() {
     if (!this.projectDir) return;
+    if(this.projectSession?.descriptor)return this.projectSession.reload();
     const root=this.projectDir,request=this.projectSession?.sequence;
     const files = await API.listProjectFiles(root);
     if(this.projectDir!==root||this.projectSession?.sequence!==request)return;
@@ -1104,15 +1136,20 @@ class AxiomIDE {
     this.persistRecovery();
   }
 
-  async save(path = this.activeFile, saveAs = false) {
+  async save(path = this.activeFile, saveAs = false, defaultPath = null) {
     const entry = this.openFiles.get(path);
     if (!entry) return false;
     path = entry.path;
     if (entry.readonly) { alert("Документ доступен только для чтения."); return false; }
     try {
-      const result = await this.documentSaver.save(path, saveAs);
+      const result = await this.documentSaver.save(path, saveAs, defaultPath, (target,original)=>{
+        if(target!==original&&this.projectFolderContains(target)&&/^\d+\.axm$/i.test(target.split(/[/\\]/).pop()))throw new Error(I18N.t('project.numericSourceName'));
+      });
       if (!result) return false;
       if (result.path !== result.oldPath) await this.renameActive(result.path, result.oldPath);
+      else if(this.projectFolderContains(result.path)){
+        try{await this.refreshProjectFiles();}catch(error){this.showIdeProblem('project.failed',error.message);}
+      }
       this.markDirty(result.path, this.openFiles.isDirty(result.path));
       this.setStatus(I18N.t('status.saved'));
       return !this.openFiles.isDirty(result.path);
@@ -1185,7 +1222,8 @@ class AxiomIDE {
     const f = this.openFiles.get(old) || this.openFiles.get(newPath);
     if (!f) return;
     if (this.openFiles.has(old)) this.openFiles.rename(old, newPath);
-    this.projectSession?.renamed(old,newPath);
+    let projectError=null;
+    try{await this.projectSession?.renamed(old,newPath);}catch(error){projectError=error;}
     if (this._runFile === old) this._runFile = newPath;
     this.dirty.delete(old);
     this.dirty.delete(newPath);
@@ -1206,13 +1244,15 @@ class AxiomIDE {
     this.markDirty(newPath, this.openFiles.isDirty(newPath));
     document.getElementById('status-file-path').textContent = this.activeFile || '';
     document.querySelectorAll('.editor-tab').forEach((t) => t.classList.toggle('active', t.dataset.path === this.activeFile));
-    this.renderMiscellaneousFiles();
     this.updateSaveButton();
     this.rebuildOutline();
     this.assistant?.invalidate();
     this.assistant?.updateHistory();
     API.addRecentFile(newPath).then((recent) => { this.settings.recentFiles = recent; this.renderRecentFiles(); }).catch(() => {});
-    if (this.projectDir && (this.isProjectFile(old) || this.isProjectFile(newPath))) await this.refreshProjectFiles();
+    if (this.projectDir && (this.projectFolderContains(old) || this.projectFolderContains(newPath))){
+      try{await this.refreshProjectFiles();}catch(error){projectError ||= error;}
+    }
+    if(projectError)this.showIdeProblem('project.failed',I18N.t('project.savedEntryFailed',projectError.message));
   }
 
   updateSaveButton() {
@@ -1395,6 +1435,7 @@ class AxiomIDE {
   }
 
   async check(explicit = false) {
+    if(this.projectSession?.descriptor)return window.ProjectView.check(this,explicit);
     const target = this.activeFile;
     if (!target) return;
     const startedAt = performance.now();
@@ -1425,9 +1466,10 @@ class AxiomIDE {
     if (explicit) this.focusEditor();
   }
 
-  async run(launchKind = 'run', stopFirst = true) {
+  async run(launchKind = 'run', stopFirst = true, currentFile = false) {
     if (this.running) return;
-    let target = this.runTarget();
+    if(this.projectSession?.descriptor&&!currentFile){try{await this.projectSession.reload();}catch(error){this.showIdeProblem('project.failed',error.message);return;}}
+    let target = currentFile?this.activeFile:this.runTarget();
     if (!target) { this.promptProjectEntry(); return; }
     if(!this.openFiles.has(target)) {
       const origin=this.editor?.getModel();
@@ -1449,7 +1491,7 @@ class AxiomIDE {
     // The integrated ConPTY console is the only run path: output, stderr and interactive
     // input all live in the terminal.
     document.getElementById('program-canvas')?.setAttribute('hidden', '');
-    await this.execution.start(target, launchKind, launchKind === 'debug' ? this.trace.lines(this.openFiles.get(target).model) : [], stopFirst);
+    await this.execution.start(target, launchKind, launchKind === 'debug' ? this.trace.lines(this.openFiles.get(target).model) : [], stopFirst, currentFile?null:this.projectSession?.descriptor?.projectFilePath||null);
   }
 
   stop() {
@@ -1829,6 +1871,7 @@ class AxiomIDE {
     if (!model || !this._lastDiagnostics?.some(d => d.code === 'MB2047' && d.file === this.activeFile)) return;
     const markers = this.monaco.editor.getModelMarkers({ owner: 'axiom', resource: model.uri });
     this.monaco.editor.setModelMarkers(model, 'axiom', markers.filter(m => m.code !== 'MB2047'));
+    this.reconcileDiagnosticPeek(new Map([[model, markers.filter(m => m.code !== 'MB2047')]]));
     this._lastDiagnostics = this._lastDiagnostics.filter(d => d.code !== 'MB2047' || d.file !== this.activeFile);
     document.querySelectorAll('#diagnostics-content .diagnostic-item').forEach(item => {
       if (item.dataset.code === 'MB2047' && item.dataset.file === this.activeFile) item.remove();
@@ -1846,6 +1889,19 @@ class AxiomIDE {
     const entry = this.openFiles.get(d.file);
     return !!entry && (d.executionSnapshot.documentId==null || entry.documentId === d.executionSnapshot.documentId) && !entry.model.isDisposed?.() &&
       entry.model.getValue() === d.executionSnapshot.sourceText;
+  }
+
+  reconcileDiagnosticPeek(byModel) {
+    const model=this.editor?.getModel();
+    if(!model||!byModel.has(model))return;
+    const controller=this.editor.getContribution?.('editor.contrib.markerController');
+    if(!controller?._widget)return;
+    const position=controller._widget.position;
+    if(!position){controller.close(false);return;}
+    const markers=byModel.get(model);
+    const present=markers.some(m=>(position.lineNumber>m.startLineNumber||position.lineNumber===m.startLineNumber&&position.column>=m.startColumn)&&
+      (position.lineNumber<m.endLineNumber||position.lineNumber===m.endLineNumber&&position.column<=m.endColumn));
+    if(!present)controller.close(false);
   }
 
   applyDiagnostics(diags, onlyActive = false, targetFile = null) {
@@ -1876,6 +1932,7 @@ class AxiomIDE {
 
     if (!diags.length) {
       for (const model of byModel.keys()) monaco.editor.setModelMarkers(model, 'axiom', []);
+      this.reconcileDiagnosticPeek(byModel);
       this.updateDiagnosticFilters();
       this.log('diagnostics.apply.end', { count: 0, focus: this.focusState() });
       return;
@@ -1922,6 +1979,7 @@ class AxiomIDE {
     }
 
     for (const [model, markers] of byModel) monaco.editor.setModelMarkers(model, 'axiom', markers);
+    this.reconcileDiagnosticPeek(byModel);
     if ([...byModel.values()].some(markers => markers.some(marker => marker.severity === monaco.MarkerSeverity.Error))) {
       // Показываем ошибки сразу, даже если панель скрыта или выбран другой фильтр.
       // Фокус редактора сохраняется, чтобы пользователь мог продолжить набор.
@@ -2133,7 +2191,6 @@ class AxiomIDE {
     this.rebuildOutline();
     this.setProjectExplorerVisible(this.settings.projectExplorer !== false);
     this.setStatusBarVisible(this.settings.statusBarVisible !== false);
-    this.renderMiscellaneousFiles();
   }
 
   setStatus(t) { document.getElementById('status-text').textContent = t; }
