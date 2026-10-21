@@ -63,7 +63,7 @@ module.exports=[{id:'retro-menu-palettes',name:'Borland и QuickBASIC: обща�
   C.eq(await recent.evaluate(el=>getComputedStyle(el).backgroundColor),bg,theme+': список недавних файлов');
   await S.screenshot(theme+'-reference-menu');
   await closeMenus();
-  await S.page.locator('[data-menu="view"] > .menu-label').dispatchEvent('mousedown');
+  await S.page.locator('[data-menu="tools"] > .menu-label').dispatchEvent('mousedown');
   await S.page.locator('#lang-submenu > .submenu-trigger').hover();
   C.eq(await S.page.locator('#lang-list').evaluate(el=>getComputedStyle(el).backgroundColor),bg,theme+': вложенное меню языка');
   await closeMenus();
@@ -89,7 +89,7 @@ module.exports=[{id:'retro-menu-palettes',name:'Borland и QuickBASIC: обща�
  ]) {
   const dialogBg=theme==='borland'?'rgb(170, 170, 170)':'rgb(192, 192, 192)';
   await S.page.evaluate(theme=>window.__ide.setTheme(theme),theme);
-  await S.page.locator('#menu-settings').click();await S.page.locator('#settings-tab-font').click();
+  await S.clickMenuItem('tools','editor-settings');await S.page.locator('#settings-tab-font').click();
   const dialog=S.page.locator('.editor-settings-dialog');
   await S.page.waitForFunction(theme=>document.querySelector('#settings-tab-font')?.getAttribute('aria-selected')==='true'&&document.documentElement.dataset.theme===theme,theme);
   C.eq(await dialog.evaluate(el=>getComputedStyle(el).backgroundColor),dialogBg,theme+': серый фон окна настроек');
@@ -121,7 +121,7 @@ module.exports=[{id:'retro-menu-palettes',name:'Borland и QuickBASIC: обща�
   ['borland','rgb(0, 170, 170)','rgb(0, 170, 0)','rgb(255, 255, 255)']
  ]) {
   await S.page.evaluate(theme=>window.__ide.setTheme(theme),theme);
-  await S.page.locator('#menu-settings').click();
+  await S.clickMenuItem('tools','editor-settings');
   await S.page.locator('#settings-tab-appearance').click();
   if(theme==='borland'){
    const rowColors=await S.page.locator('.settings-row:has(input[type="checkbox"])').evaluateAll(rows=>rows.map(el=>getComputedStyle(el).backgroundColor));

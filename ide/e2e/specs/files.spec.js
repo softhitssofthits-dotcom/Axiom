@@ -396,7 +396,7 @@ module.exports.push({
     C.eq(S.pageErrors.length,0,'Открытие проекта без ошибок страницы');
   }
 },{
-  id:'project-open-manual-entry-restore',name:'Выбор файла запуска без main, повторное открытие и восстановление',
+  id:'project-open-manual-entry-restore',name:'Выбор файла запуска, восстановление проекта и заголовок при смене языка',
   async fn({S,C}) {
     const root=testWorkspace('project-startup-choice');
     const a=writeAxm(root,'a.axm','PRINT "A"\n'),b=writeAxm(root,'b.axm','PRINT "B"\n');
@@ -414,11 +414,71 @@ module.exports.push({
     const profile=S.userData;await S.close();await S.launch({userData:profile});
     C.eq(await S.page.locator('#project-entry').inputValue(),b,'Выбор восстановлен после перезапуска IDE');
     C.eq(await S.page.locator('.editor-tab').count(),2,'Вкладки восстановлены без повторного открытия');
+    C.eq(await S.page.locator('#project-title').textContent(),require('node:path').basename(root),'После перезапуска заголовок показывает папку проекта');
+    for(const language of ['en','ru']){
+      await S.page.evaluate(lang=>window.__ide.setLanguage(lang),language);
+      C.eq(await S.page.locator('#project-title').textContent(),require('node:path').basename(root),'Перевод интерфейса сохраняет имя проекта: '+language);
+    }
     await S.page.evaluate(()=>window.__ide.closeProject());
-    C.eq(await S.page.locator('#project-entry-controls').isVisible(),false,'Закрытие проекта убирает выбор');
+    C.eq(await S.page.locator('#project-entry').isDisabled(),true,'Без проекта цель показывает текущий файл без выбора');
+    C.eq(await S.page.locator('#project-title').textContent(),'Открыть проект','После закрытия показана команда открытия');
+    await S.page.evaluate(()=>window.__ide.setLanguage('en'));
+    C.eq(await S.page.locator('#project-title').textContent(),'Open Project','После закрытия команда открытия переводится');
+    await S.close();await S.launch({userData:profile});
+    C.eq(await S.page.evaluate(()=>window.__ide.projectDir),null,'Явно закрытый проект не восстанавливается');
+    C.eq(await S.page.locator('#project-title').textContent(),'Open Project','После перезапуска без проекта показана переведённая команда');
     C.eq(S.pageErrors.length,0,'Восстановление без ошибок страницы');
   }
 });
+
+module.exports.push({id:'project-files-toolbar-toggle',name:'Кнопка возвращает скрытые файлы проекта без повторного открытия папки',async fn({S,C}){
+  const root=testWorkspace('project-files-toggle');
+  const main=writeAxm(root,'main.axm','PRINT "main"\n');
+  await S.launch({settings:{smartIdentifierEnabled:false}});
+  let button=S.page.locator('#tb-toggle-project');
+  C.eq(await button.count(),1,'Кнопка файлов проекта присутствует на панели');
+  if(!await button.count())return;
+  await S.page.evaluate(p=>window.__ide.openProject(p),root);
+  await S.page.evaluate(()=>window.__ide.editor.getModel().setValue('PRINT "changed"\n'));
+  C.eq(await button.getAttribute('aria-pressed'),'true','Показанный список отмечен на кнопке');
+  C.eq(await button.getAttribute('aria-controls'),'project-explorer','Кнопка связана с разделом проекта');
+  C.contains(await button.getAttribute('aria-label'),'Ctrl+Shift+E','Доступная подпись содержит сочетание клавиш');
+  await S.page.locator('#project-files-toggle').click();
+  await S.page.locator('#sidebar-close').click();
+  C.eq(await S.page.locator('#project-explorer').isVisible(),false,'Крестик скрывает раздел');
+  C.eq(await button.getAttribute('aria-pressed'),'false','Кнопка отражает скрытый раздел');
+  await S.page.locator('#toolbar-overflow > summary').click();await button.click();
+  C.eq(await S.page.locator('#project-explorer').isVisible(),true,'Кнопка возвращает раздел');
+  C.eq(await S.page.locator('#project-title').textContent(),require('node:path').basename(root),'Имя папки сохранено');
+  C.eq(await S.page.locator('#project-files').isVisible(),false,'Свёрнутое состояние списка сохранено');
+  C.eq(await S.page.evaluate(()=>window.__ide.projectDir),root,'Папка проекта сохранена');
+  C.eq(await S.page.evaluate(()=>window.__ide.runTarget()),main,'Файл запуска сохранён');
+  C.eq(await S.page.evaluate(()=>window.__ide.activeFile),main,'Активная вкладка сохранена');
+  C.eq(await S.page.evaluate(()=>window.__ide.editor.getValue()),'PRINT "changed"\n','Несохранённый текст сохранён');
+  C.eq(await S.page.evaluate(p=>window.__ide.openFiles.isDirty(p),main),true,'Признак правок сохранён');
+  await S.page.locator('#toolbar-overflow > summary').click();await button.focus();await S.page.keyboard.press('Space');
+  C.eq(await S.page.locator('#project-explorer').isVisible(),false,'Пробел нажимает кнопку');
+  await S.page.keyboard.press('Control+Shift+e');
+  C.eq(await button.getAttribute('aria-pressed'),'true','Сочетание клавиш обновляет кнопку');
+  await S.page.locator('#sidebar-close').click();await S.page.locator('[data-menu="view"] .menu-label').click();
+  await S.page.locator('[data-action="show-project"]').click();
+  C.eq(await button.getAttribute('aria-pressed'),'true','Меню возвращает проект и обновляет кнопку');
+  await S.page.evaluate(()=>window.__ide.setLanguage('en'));
+  C.eq(await button.getAttribute('aria-label'),'Project files (Ctrl+Shift+E)','Подпись переводится');
+  await S.page.evaluate(()=>window.__ide.save());await S.page.locator('#sidebar-close').click();
+  const profile=S.userData;await S.close();await S.launch({userData:profile});
+  button=S.page.locator('#tb-toggle-project');
+  C.eq(await S.page.locator('#project-explorer').isVisible(),false,'Скрытый раздел остаётся скрытым после перезапуска');
+  C.eq(await button.getAttribute('aria-pressed'),'false','Кнопка отражает восстановленную видимость');
+  await S.page.locator('#toolbar-overflow > summary').click();await button.click();
+  C.eq(await S.page.locator('#project-explorer').isVisible(),true,'Кнопка возвращает восстановленный проект');
+  await S.page.locator('#sidebar-close').click();
+  C.eq(await button.getAttribute('aria-pressed'),'false','Скрытая боковая панель отражена в состоянии кнопки');
+  await S.page.locator('#toolbar-overflow > summary').click();await button.click();
+  C.eq(await S.page.locator('#project-explorer').isVisible(),true,'Кнопка возвращает также скрытую боковую панель');
+  C.eq(await button.getAttribute('aria-pressed'),'true','После возврата кнопка нажата');
+  C.eq(S.pageErrors.length,0,'Ошибок страницы нет');
+}});
 
 module.exports.push({id:'project-sidebar-controls',name:'Единая геометрия списков и сворачивание файлов проекта',async fn({S,C}){
   const root=testWorkspace('sidebar-controls');

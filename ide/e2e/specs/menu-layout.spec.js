@@ -1,7 +1,7 @@
 module.exports = [{ id: 'menu-fixed-check-column', name: 'В меню только команды, названия не сдвигаются при включении галочек', async fn({ S, C }) {
   await S.launch();
   C.eq(await S.page.locator('#menubar .shell-brand').count(), 0, 'В строке меню нет надписи A / AXIOM');
-  await S.page.locator('[data-menu="edit"] .menu-label').click();
+  await S.page.locator('[data-menu="tools"] .menu-label').click();
   await S.page.locator('#formatting-submenu .submenu-trigger').hover();
   for (const key of ['formatClassic', 'formatModern']) {
     const layout = await S.page.evaluate(key => {

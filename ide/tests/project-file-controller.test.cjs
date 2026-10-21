@@ -26,6 +26,41 @@ function setup(overrides = {}) {
   return { ide, api, calls, controller: new ProjectFileController(ide, api) };
 }
 
+test('Файл проекта можно назначить запускным только из состава ProjectSession', async () => {
+  const source = 'C:\\Проект\\a.axm', selected = [];
+  const {controller} = setup({projectSession: {files: [source], select: path => selected.push(path)}});
+  const entry = controller.items(source).find(item => item.id === 'use-as-entry');
+  assert.equal(entry?.translation, 'studio.useCurrentEntry');
+  assert.equal(entry?.enabled, true);
+  assert.equal(controller.items('C:\\Проект\\папка').find(item => item.id === 'use-as-entry')?.enabled, false);
+  assert.equal(controller.items('C:\\Другой\\a.axm').find(item => item.id === 'use-as-entry')?.enabled, false);
+  controller.path = source;
+  await controller.action('use-as-entry');
+  assert.deepEqual(selected, [source]);
+  const old = setup().controller;
+  assert.equal(old.items(source).find(item => item.id === 'use-as-entry')?.enabled, false);
+  await old.action('use-as-entry');
+});
+
+test('Пустая область проекта создаёт файл, обновляет список и сохраняет вставку', async () => {
+  const calls = [];
+  const {controller, ide} = setup({newProjectFile: async () => calls.push('new'), refreshProjectFiles: async () => calls.push('refresh')});
+  let items = controller.items(null);
+  assert.deepEqual(items.filter(item => item.id).map(item => item.id), ['new-project-file', 'paste', 'refresh-project']);
+  assert.equal(items.find(item => item.id === 'new-project-file').enabled, true);
+  assert.equal(items.find(item => item.id === 'refresh-project').enabled, true);
+  assert.equal(items.find(item => item.id === 'paste').enabled, false);
+  controller.clipboard = {source: 'C:\\Проект\\a.axm'};
+  assert.equal(controller.items(null).find(item => item.id === 'paste').enabled, true);
+  await controller.action('new-project-file');
+  await controller.action('refresh-project');
+  assert.deepEqual(calls, ['new', 'refresh']);
+  ide.projectDir = null;
+  items = controller.items(null);
+  assert.equal(items.find(item => item.id === 'new-project-file').enabled, false);
+  assert.equal(items.find(item => item.id === 'refresh-project').enabled, false);
+});
+
 test('Перемещение запускаемой программы блокируется до файловой операции', async () => {
   const { ide, calls, controller } = setup({ running: true });
   const source = 'C:\\Проект\\a.axm';

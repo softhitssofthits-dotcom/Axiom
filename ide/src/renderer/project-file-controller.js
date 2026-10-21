@@ -33,10 +33,13 @@
     items(path) {
       const hasClipboard = !!this.clipboard;
       if (!path) return [
+        { id: 'new-project-file', translation: 'menu.file.newProjectFile', icon: 'codicon-file-add', enabled: !!this.ide.projectDir },
         { id: 'paste', translation: 'files.paste', icon: 'codicon-files', enabled: hasClipboard },
+        { id: 'refresh-project', translation: 'studio.refreshProject', icon: 'codicon-refresh', enabled: !!this.ide.projectDir },
       ];
       return [
         { id: 'open', translation: 'files.open', icon: 'codicon-go-to-file' },
+        { id: 'use-as-entry', translation: 'studio.useCurrentEntry', icon: 'codicon-run', enabled: !!this.ide.projectSession?.files?.includes(path) },
         { separator: true },
         { id: 'copy', translation: 'files.copy', icon: 'codicon-copy' },
         { id: 'cut', translation: 'files.cut', icon: 'codicon-screen-cut' },
@@ -70,6 +73,14 @@
     async action(id) {
       const path = this.path;
       if (id === 'open') return this.ide.openFile(path);
+      if (id === 'use-as-entry') {
+        const session=this.ide.projectSession,external=this.ide.activeFile&&!session?.contains(this.ide.activeFile);
+        const selected=session?.select(path);
+        if(selected&&external)this.ide.switchToFile(path);
+        return selected;
+      }
+      if (id === 'new-project-file') return this.ide.newProjectFile();
+      if (id === 'refresh-project') return this.ide.refreshProjectFiles();
       if (id === 'copy' || id === 'cut') return this.capture(path, id === 'cut');
       if (id === 'paste') return this.paste();
       if (id === 'trash') return this.trash(path);

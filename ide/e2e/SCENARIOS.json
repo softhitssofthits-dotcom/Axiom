@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 520,
+  "count": 530,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -1795,7 +1795,12 @@
     {
       "id": "project-open-manual-entry-restore",
       "spec": "files.spec.js",
-      "name": "Выбор файла запуска без main, повторное открытие и восстановление"
+      "name": "Выбор файла запуска, восстановление проекта и заголовок при смене языка"
+    },
+    {
+      "id": "project-files-toolbar-toggle",
+      "spec": "files.spec.js",
+      "name": "Кнопка возвращает скрытые файлы проекта без повторного открытия папки"
     },
     {
       "id": "project-sidebar-controls",
@@ -2243,6 +2248,11 @@
       "name": "Закрытие документов и проекта очищает объявления и сохраняет структуру оставшегося файла"
     },
     {
+      "id": "studio-workspace-layout",
+      "spec": "panels.spec.js",
+      "name": "Согласованная оболочка: боковые вкладки, общий запуск и сохранение состояния"
+    },
+    {
       "id": "panels-visibility-persistence",
       "spec": "panels.spec.js",
       "name": "Боковая панель закрывается и восстанавливается через меню, кнопку и профиль"
@@ -2336,6 +2346,21 @@
       "id": "maze-project-snapshots-debug",
       "spec": "program-assistant.spec.js",
       "name": "Модульный Maze Chase: несохранённые тексты, подсказки при ошибке и отладка закрытого файла"
+    },
+    {
+      "id": "project-create-new-folder",
+      "spec": "project-create.spec.js",
+      "name": "Создать проект: новая папка и пустой main без потери прежней вкладки"
+    },
+    {
+      "id": "project-create-conflict-and-retry",
+      "spec": "project-create.spec.js",
+      "name": "Существующая папка не перезаписывается, исправленное имя создаёт проект"
+    },
+    {
+      "id": "project-create-cancel",
+      "spec": "project-create.spec.js",
+      "name": "Отмена создания не меняет проект и не создаёт папку, диалог переводится"
     },
     {
       "id": "project-symbol-index-navigation",
@@ -2516,6 +2541,31 @@
       "id": "restart-late-stop-rejection",
       "spec": "stop-failure.spec.js",
       "name": "Поздний отказ доставки Stop после реального завершения не мешает новой программе или отмене Restart"
+    },
+    {
+      "id": "studio-panel-controls",
+      "spec": "studio.spec.js",
+      "name": "Панели Studio: узкая структура, закрепление, возврат и сброс размещения"
+    },
+    {
+      "id": "studio-layout-migration",
+      "spec": "studio.spec.js",
+      "name": "Повреждённая вкладка и старые настройки боковой области безопасно восстанавливаются"
+    },
+    {
+      "id": "studio-effective-run-target",
+      "spec": "studio.spec.js",
+      "name": "Общая цель запуска честно отражает внешний файл и явный выбор проекта"
+    },
+    {
+      "id": "studio-keyboard-menus",
+      "spec": "studio.spec.js",
+      "name": "Меню и дополнительные команды доступны с клавиатуры без скрытого фокуса"
+    },
+    {
+      "id": "studio-toolbar-theme-contrast",
+      "spec": "studio.spec.js",
+      "name": "Подписи основных действий читаются во всех четырёх темах"
     },
     {
       "id": "theme-registry-consistency",

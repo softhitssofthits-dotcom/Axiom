@@ -13,6 +13,9 @@ add('tb-save-all','all',I18N.t('menu.file.saveAll'),()=>window.__ide.saveAll()).
 for(const [command,key] of [['undo','discard'],['redo','redo']])
   add('tb-'+command,key,I18N.t('tb.'+command),()=>window.__ide.handleAction(command)).setAttribute('data-i18n-title','tb.'+command);
 add('tb-toggle-sidebar','sidebar',I18N.t('menu.view.sidebar'),()=>window.__ide.handleAction('toggle-sidebar')).setAttribute('data-i18n-title','menu.view.sidebar');
+const projectToggle=add('tb-toggle-project','list-tree',I18N.t('tb.project'),()=>window.__ide.handleAction('toggle-project-explorer'));
+projectToggle.setAttribute('data-i18n-title','tb.project');
+projectToggle.setAttribute('aria-controls','project-explorer');
 const shortcuts={start:'F5',stepOver:'F10',stepInto:'F11',stepOut:'Shift+F11',stepBack:'Ctrl+F10',stop:'Shift+F5',restart:'Ctrl+Shift+F5',breakpoint:'F9',clear:'Ctrl+Shift+F9'};
 const traceIcons={start:'debug',stepBack:'back',stepInto:'into',stepOver:'over',stepOut:'out',stop:'stop',restart:'restart',breakpoint:'point',clear:'clear-all'};
 for(const [command,key] of Object.entries(traceIcons)) {
@@ -41,22 +44,24 @@ document.querySelector('[data-i18n="menu.view"]').parentElement.before(traceMenu
 function translateTrace(){
  toolbar.querySelectorAll('[data-trace-command]').forEach(b=>UIControls.setLabel(b,I18N.t(b.dataset.traceCommand==='stop'?'menu.run.stop':'trace.'+b.dataset.traceCommand)+' ('+shortcuts[b.dataset.traceCommand]+')'));
  window.__ide?.trace?.update();
+ window.__ide?.studio?.updateCommandLabels();
 }
 new MutationObserver(translateTrace).observe(traceMenu.querySelector('.menu-label'),{childList:true});
 translateTrace();
-const groups=[['tb-new','tb-open','tb-save','tb-save-all'],['tb-undo','tb-redo'],['tb-check','tb-run'],Object.keys(traceIcons).map(command=>command==='start'?'tb-debug':'tb-'+command),['tb-format','tb-find','tb-toggle-sidebar','tb-toggle-output']];
+const groups=[['tb-new','tb-open','tb-save','tb-save-all'],['tb-undo','tb-redo'],['tb-check','tb-run'],Object.keys(traceIcons).map(command=>command==='start'?'tb-debug':'tb-'+command),['tb-format','tb-find','tb-toggle-sidebar','tb-toggle-project','tb-toggle-output']];
 toolbar.querySelectorAll('.toolbar-sep').forEach(s=>s.remove());groups.forEach(ids=>{const group=document.createElement('div');group.className='command-group';ids.forEach(id=>group.append(document.getElementById(id)));toolbar.append(group);});
 toolbar.querySelectorAll('button').forEach(b=>UIControls.setLabel(b,b.title));
-const bar=document.getElementById('menubar'),menus=[...bar.querySelectorAll(':scope > .menu-item')];
+const bar=document.getElementById('menubar');
 const settings=document.getElementById('menu-settings');
 const more=document.createElement('button');more.id='menu-overflow';more.textContent='•••';UIControls.setLabel(more,'Остальные меню');UIControls.setExpanded(more,false);bar.insertBefore(more,settings);
 const overflow=document.createElement('div');overflow.id='menu-overflow-content';overflow.hidden=true;bar.append(overflow);
 more.onclick=()=>{overflow.hidden=!overflow.hidden;UIControls.setExpanded(more,!overflow.hidden);};
-function fit(){overflow.hidden=true;UIControls.setExpanded(more,false);menus.forEach(m=>bar.insertBefore(m,more));more.hidden=true;
+function fit(){const menus=[...bar.querySelectorAll('.menu-item')].sort((a,b)=>Number(a.dataset.studioOrder||0)-Number(b.dataset.studioOrder||0));overflow.hidden=true;UIControls.setExpanded(more,false);menus.forEach(m=>bar.insertBefore(m,more));more.hidden=true;
 const available=bar.clientWidth-16-settings.offsetWidth-(menus.length+1)*2;let used=menus.reduce((n,m)=>n+m.offsetWidth,0);
 if(used>available){more.hidden=false;for(let i=menus.length-1;i>=0&&used>available-more.offsetWidth;i--){used-=menus[i].offsetWidth;overflow.prepend(menus[i]);}}
 }
 const menuResize=new ResizeObserver(fit);menuResize.observe(bar);menuResize.observe(settings);
+window.refreshShellMenus=fit;
 document.addEventListener('mousedown',e=>{if(!bar.contains(e.target)){overflow.hidden=true;UIControls.setExpanded(more,false);}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){overflow.hidden=true;UIControls.setExpanded(more,false);}});
 // Клавиши с модификаторами проверяются до прежнего обработчика F5.

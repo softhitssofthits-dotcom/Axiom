@@ -12,7 +12,7 @@ module.exports = [{ id: 'event-log-view-filter-copy-clear', name: 'Журнал 
     ipcMain.removeHandler('write-clipboard-text'); ipcMain.handle('write-clipboard-text', (_event, text) => { global.__logCopied = text; return true; });
   });
   const before = await S.page.evaluate(() => window.__ide.execution.outputText);
-  await S.page.locator('[data-menu="help"] > .menu-label').click(); await S.page.locator('[data-action="event-log"]').click();
+  await S.page.locator('[data-menu="tools"] > .menu-label').click(); await S.page.locator('[data-action="event-log"]').click();
   await S.page.waitForFunction(() => document.querySelector('.event-log-text')?.value.includes('acceptance.error'));
   C.ok(await S.page.evaluate(() => document.getElementById('app').inert), 'Диалог удерживает ввод внутри себя');
   C.eq(await S.page.evaluate(() => window.__logInjected), undefined, 'Содержимое журнала не исполняется как HTML');

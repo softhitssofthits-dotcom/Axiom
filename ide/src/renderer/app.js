@@ -88,6 +88,7 @@ class AxiomIDE {
       this.setupToolbar();
       this.setToolbarVisible(this.settings.toolbarVisible !== false);
       this.setupProjectExplorer();
+      this.studio = new window.StudioLayout(this);
       this.setupPanelTabs();
       document.querySelectorAll('[data-diagnostic-filter]').forEach(button => button.addEventListener('click', () => {
         this._diagnosticFilter = button.dataset.diagnosticFilter;
@@ -105,6 +106,7 @@ class AxiomIDE {
       this.persistRecovery();
       this.renderRecentFiles();
       this.applyLocale();
+      this.switchPanel(['console','diagnostics','assistant'].includes(this.settings.bottomPanelTab)?this.settings.bottomPanelTab:'console');
       API.onFileChanged((ev) => this.handleExternalChange(ev));
       document.getElementById('app')?.classList.add('ready');
       this.focusEditor();
@@ -489,13 +491,17 @@ class AxiomIDE {
       closeSubmenus();
       document.querySelectorAll('.menu-item.open').forEach(item => item.classList.remove('open'));
       openMenu = null;
+      document.querySelectorAll('.menu-item > .menu-label').forEach(label=>UIControls.setExpanded(label,false));
     };
-    const openMenuFor = item => { closeAll(); item.classList.add('open'); openMenu = item; };
+    const openMenuFor = item => { closeAll(); item.classList.add('open'); openMenu = item; UIControls.setExpanded(item.querySelector('.menu-label'),true); };
+    const rows=item=>[...item.querySelectorAll('.menu-dropdown-item')].filter(el=>el.offsetWidth&&el.getAttribute('aria-disabled')!=='true');
     document.getElementById('menu-settings').addEventListener('click', () => {
       closeAll(); this.handleAction('editor-settings');
     });
     document.querySelectorAll('.menu-item').forEach(item => {
       const label = item.querySelector('.menu-label'); if (!label) return;
+      label.tabIndex=0;label.setAttribute('role','button');label.setAttribute('aria-haspopup','menu');UIControls.setExpanded(label,false);
+      label.addEventListener('keydown',e=>{if(['Enter',' ','ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();openMenuFor(item);const items=rows(item);(e.key==='ArrowUp'?items.at(-1):items[0])?.focus();}});
       label.addEventListener('mousedown', e => { e.preventDefault(); item === openMenu ? closeAll() : openMenuFor(item); });
       label.addEventListener('mouseenter', () => { if (openMenu && openMenu !== item) openMenuFor(item); });
     });
@@ -512,12 +518,25 @@ class AxiomIDE {
       };
       trigger.addEventListener('mouseenter', open);
       trigger.addEventListener('click', e => { e.stopPropagation(); open(); });
-      trigger.addEventListener('keydown', e => { if (['Enter', ' ', 'ArrowRight'].includes(e.key)) { e.preventDefault(); open(); } });
+      trigger.addEventListener('keydown', e => { if (['Enter', ' ', 'ArrowRight'].includes(e.key)) { e.preventDefault(); open(); rows(dropdown)[0]?.focus(); } });
     });
-    document.querySelectorAll('.menu-dropdown-item').forEach(item => item.addEventListener('click', () => {
+    document.querySelectorAll('.menu-dropdown-item').forEach(item => {item.tabIndex=-1;if(!item.hasAttribute('role'))item.setAttribute('role','menuitem');item.addEventListener('click', () => {
+      if(item.getAttribute('aria-disabled')==='true')return;
       const action = item.dataset.action; if (!action) return;
       closeAll(); this.handleAction(action);
-    }));
+    });});
+    document.addEventListener('keydown',e=>{
+      if(e.defaultPrevented||!openMenu||!openMenu.contains(document.activeElement))return;
+      const active=document.activeElement,submenu=active.closest('.submenu-dropdown');
+      if(e.key==='Escape'){e.preventDefault();const label=openMenu.querySelector('.menu-label');closeAll();label.focus();return;}
+      if(e.key==='ArrowLeft'&&submenu){e.preventDefault();const parent=submenu.parentElement;parent.classList.remove('open');UIControls.setExpanded(parent.querySelector('.submenu-trigger'),false);parent.querySelector('.submenu-trigger').focus();return;}
+      if(['ArrowDown','ArrowUp','Home','End'].includes(e.key)){
+        e.preventDefault();const items=rows(submenu||openMenu),index=items.indexOf(active);
+        const next=e.key==='Home'?0:e.key==='End'?items.length-1:(index+(e.key==='ArrowDown'?1:-1)+items.length)%items.length;
+        items[next]?.focus();return;
+      }
+      if((e.key==='Enter'||e.key===' ')&&active.matches('.menu-dropdown-item')){e.preventDefault();active.click();if(!openMenu)this.focusEditor();}
+    });
     document.addEventListener('mousedown', e => { if (openMenu && !openMenu.contains(e.target)) closeAll(); });
     document.addEventListener('click', e => { if (openMenu?.contains(e.target) && e.target.closest('.recent-item')) closeAll(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
@@ -551,7 +570,7 @@ class AxiomIDE {
   setupPanelTabs() {
     document.querySelectorAll('.panel-tab').forEach((tab) => {
       tab.addEventListener('click', (e) => {
-        const name = (e.target).dataset.tab;
+          const name = tab.dataset.tab;
         if (name) this.switchPanel(name);
       });
     });
@@ -561,7 +580,7 @@ class AxiomIDE {
   setupPanelResizer() {
     const {PanelSplitter} = window.PanelSplitters;
     this.bottomSplitter = new PanelSplitter({handle: document.getElementById('panel-resizer'), panel: document.getElementById('bottom-panel'), container: document.getElementById('main-content'), axis: 'y', minimum: 64, reserve: 140, defaultSize: 200, savedSize: this.settings.consoleHeight, onCommit: size => this.saveSettings({consoleHeight: size})});
-    this.sidebarSplitter = new PanelSplitter({handle: document.getElementById('sidebar-resizer'), panel: document.getElementById('shell-sidebar'), container: document.getElementById('workspace'), axis: 'x', minimum: 160, reserve: 160, maximum: 480, defaultSize: 208, savedSize: this.settings.sidebarWidth, onCommit: size => this.saveSettings({sidebarWidth: size})});
+    this.sidebarSplitter = new PanelSplitter({handle: document.getElementById('sidebar-resizer'), panel: document.getElementById('shell-sidebar'), container: document.getElementById('workspace'), axis: 'x', minimum: 180, reserve: 160, maximum: 480, defaultSize: 300, savedSize: this.settings.sidebarWidth, onCommit: size => this.saveSettings({sidebarWidth: size})});
     document.getElementById('sidebar-close').onclick = () => this.setSidebarVisible(false);
     document.getElementById('tb-toggle-sidebar').onclick = () => this.setSidebarVisible(this.settings.sidebarVisible === false);
     this.setSidebarVisible(this.settings.sidebarVisible !== false);
@@ -569,13 +588,17 @@ class AxiomIDE {
   }
 
   setSidebarVisible(visible) {
+    if (!visible && document.getElementById('shell-sidebar').contains(document.activeElement)) this.focusEditor();
     this.sidebarSplitter?.cancel();
     document.getElementById('shell-sidebar').hidden = !visible;
     document.getElementById('sidebar-resizer').hidden = !visible;
     this.saveSettings({sidebarVisible: visible});
     UIControls.setMenuChecked(document.querySelector('[data-check="sidebarVisible"]'), visible);
     UIControls.setPressed(document.getElementById('tb-toggle-sidebar'), visible);
+    UIControls.setPressed(document.getElementById('tb-toggle-project'), visible && this.settings.projectExplorer !== false);
     this.sidebarSplitter?.layout();
+    this.studio?.render();
+    requestAnimationFrame(()=>this.editor?.layout());
   }
 
   setToolbarVisible(visible) {
@@ -590,7 +613,7 @@ class AxiomIDE {
     // bubble-phase listeners once xterm has focus, so F5 / Ctrl chords would never reach
     // the IDE while the console is focused.
     window.addEventListener('keydown', (e) => {
-      if (document.querySelector('.editor-settings-overlay')) return;
+      if (document.querySelector('.editor-settings-overlay, #project-create-dialog')) return;
       if ((e.ctrlKey || e.metaKey) && e.code === 'Comma') { e.preventDefault(); e.stopPropagation(); this.handleAction('editor-settings'); return; }
       const mod = e.ctrlKey || e.metaKey;
       const k = e.key.toLowerCase();
@@ -682,6 +705,7 @@ class AxiomIDE {
       case 'new': this.newFile(); break;
       case 'new-project-file': this.newProjectFile(); break;
       case 'open': this.openDialog(); break;
+      case 'create-project': (this.projectCreateDialog ||= new ProjectCreateDialog(this)).show(); break;
       case 'open-project': this.openProjectDialog(); break;
       case 'close-project': this.closeProject(); break;
       case 'save': this.save(); break;
@@ -706,6 +730,15 @@ class AxiomIDE {
       case 'toggle-toolbar': this.setToolbarVisible(this.settings.toolbarVisible === false); break;
       case 'toggle-sidebar': this.setSidebarVisible(this.settings.sidebarVisible === false); break;
       case 'toggle-project-explorer': this.toggleProjectExplorer(); break;
+      case 'show-project': this.studio.select('project'); break;
+      case 'show-outline': this.studio.select('outline'); break;
+      case 'panel-console': this.showPanel(); this.switchPanel('console'); break;
+      case 'panel-diagnostics': this.showPanel(); this.switchPanel('diagnostics'); break;
+      case 'panel-assistant': this.showPanel(); this.switchPanel('assistant'); break;
+      case 'reset-layout': this.studio.reset(); break;
+      case 'refresh-project': if(this.projectDir)this.refreshProjectFiles(); break;
+      case 'choose-project-entry': this.setToolbarVisible(true); document.getElementById('project-entry').focus(); break;
+      case 'use-current-entry': if(this.projectSession.contains(this.activeFile))this.projectSession.select(this.activeFile); break;
       case 'toggle-statusbar': this.setStatusBarVisible(this.settings.statusBarVisible === false); break;
       case 'theme-light': this.setTheme('light'); break;
       case 'theme-dark': this.setTheme('dark'); break;
@@ -779,6 +812,7 @@ class AxiomIDE {
     this.projectSession?.refresh(files);
     const title = document.getElementById('project-title');
     const list = document.getElementById('project-files');
+    title.removeAttribute('data-i18n');
     title.textContent = this.projectDir.split(/[/\\]/).pop() || this.projectDir;
     title.classList.remove('project-open');
     this.setProjectFilesExpanded(!this.projectFilesCollapsed);
@@ -799,20 +833,27 @@ class AxiomIDE {
     const container=document.getElementById('project-entry-controls');
     const select=document.getElementById('project-entry');
     if(!container||!select)return;
-    container.classList.toggle('hidden',!this.projectDir);
+    container.classList.remove('hidden');
     const toggle=document.getElementById('project-files-toggle');
     if(toggle){toggle.hidden=!this.projectDir;UIControls.setLabel(toggle,I18N.t('project.files'));}
     select.replaceChildren();
+    if(!this.projectDir){
+      const current=document.createElement('option');current.value=this.activeFile||'';current.textContent=I18N.t('studio.currentFile');select.append(current);
+      UIControls.prepareSelect(select);UIControls.setEnabled(select,false);this.studio?.updateExecution();return;
+    }
     const empty=document.createElement('option');empty.value='';empty.textContent=I18N.t(files.length?'project.chooseEntry':'project.empty');select.appendChild(empty);
     for(const file of files){
       const option=document.createElement('option');option.value=file;
       option.textContent=this.projectSession.relative(file);select.appendChild(option);
     }
+    const external=this.activeFile&&!this.projectSession.contains(this.activeFile)?this.activeFile:null;
+    if(external){const option=document.createElement('option');option.value=external;option.textContent=I18N.t('studio.currentFile')+': '+external.split(/[\\/]/).pop();select.append(option);}
     UIControls.prepareSelect(select);
-    select.value=entry||'';UIControls.setEnabled(select,!loading&&files.length>0);
+    select.value=external||entry||'';UIControls.setEnabled(select,!loading&&files.length>0);
     document.querySelectorAll('#project-files .project-file').forEach(button=>{
       button.classList.toggle('project-entry-file',!!entry&&button.dataset.path.toLowerCase()===entry.toLowerCase());
     });
+    this.studio?.updateExecution();
   }
 
   promptProjectEntry() {
@@ -842,7 +883,10 @@ class AxiomIDE {
 
   setupProjectExplorer() {
     document.getElementById('project-files-toggle').onclick = () => this.setProjectFilesExpanded(!!this.projectFilesCollapsed);
-    document.getElementById('project-entry').addEventListener('change',event=>this.projectSession.select(event.target.value));
+    document.getElementById('project-entry').addEventListener('change',event=>{
+      const value=event.target.value,external=this.activeFile&&!this.projectSession.contains(this.activeFile);
+      if(this.projectSession.select(value)&&value&&external)this.switchToFile(value);
+    });
     document.getElementById('project-title').onclick = () => {
       if (!this.projectDir) this.openProjectDialog();
       else this.setProjectFilesExpanded(!!this.projectFilesCollapsed);
@@ -896,6 +940,7 @@ class AxiomIDE {
     this.projectFiles.reset();
     this.saveSettings({ lastProjectDir: null });
     const title = document.getElementById('project-title');
+    title.setAttribute('data-i18n', 'project.open');
     title.textContent = I18N.t('project.open');
     title.classList.add('project-open');
     document.getElementById('project-files').innerHTML = '';
@@ -907,13 +952,17 @@ class AxiomIDE {
   }
 
   toggleProjectExplorer() {
-    const visible = !document.getElementById('project-explorer').classList.contains('hidden');
+    if(this.studio){this.studio.toggleProject();return;}
+    const visible = this.settings.sidebarVisible !== false && !document.getElementById('project-explorer').classList.contains('hidden');
+    if (!visible) this.setSidebarVisible(true);
     this.setProjectExplorerVisible(!visible);
   }
 
   setProjectExplorerVisible(visible) {
+    if(this.studio){if(visible)this.studio.select('project');else if(this.studio.tab==='project')this.setSidebarVisible(false);return;}
     document.getElementById('project-explorer').classList.toggle('hidden', !visible);
     this.saveSettings({ projectExplorer: visible });
+    UIControls.setPressed(document.getElementById('tb-toggle-project'), visible && this.settings.sidebarVisible !== false);
     const check = document.querySelector('.menu-check[data-check="projectExplorer"]');
     UIControls.setMenuChecked(check, visible);
     setTimeout(() => this.editor?.layout(), 0);
@@ -1032,6 +1081,8 @@ class AxiomIDE {
     this.editor.focus();
     this.rebuildOutline();
     this.persistRecovery();
+    this.projectSession?.render();
+    this.studio?.updateDocument();
   }
 
   async closeFile(p, approved = false) {
@@ -1071,6 +1122,8 @@ class AxiomIDE {
     }
     if (this.projectDir) this.refreshProjectFiles();
     this.renderMiscellaneousFiles();
+    this.projectSession?.render();
+    this.studio?.updateDocument();
     return true;
     } finally { f.closing = false; }
   }
@@ -1226,7 +1279,26 @@ class AxiomIDE {
 
   // ================= autoformat triggers =================
 
-  async formatWholeDocument(owner, path = this.activeFile, method = 'document.format') {
+  async formatWholeDocument(owner, path = this.activeFile, method = 'document.format', saveCleanDocument = false) {
+    const entry = this.openFiles.get(path);
+    // Сохраняем только документы, которые были чистыми до постановки в очередь.
+    const saveSnapshot = saveCleanDocument && entry && !entry.readonly && !entry.closing &&
+      !path.startsWith('untitled') && !this.openFiles.isDirty(path)
+      ? { entry, savedText: entry.savedText } : null;
+    const previous = this._formatDocumentPending;
+    let release;
+    const pending = new Promise(resolve => { release = resolve; });
+    this._formatDocumentPending = pending;
+    try {
+      if (previous) await previous;
+      return await this.performWholeDocumentFormat(owner, path, method, saveSnapshot);
+    } finally {
+      release();
+      if (this._formatDocumentPending === pending) this._formatDocumentPending = null;
+    }
+  }
+
+  async performWholeDocumentFormat(owner, path, method, saveSnapshot = null) {
     if (this.running && path === this._runFile) return false;
     const document = this.openFiles.get(path);
     const model = document?.model;
@@ -1238,6 +1310,10 @@ class AxiomIDE {
     }
     const sel = this.editor.getModel() === model ? this.editor.getSelection() : null;
     const text = model.getValue();
+    const saveFormatted = saveSnapshot?.entry === document && document.path === path &&
+      !document.closing && !document.missing && document.savedText === saveSnapshot.savedText &&
+      text === saveSnapshot.savedText;
+    const formattingStyle = this.settings.formattingStyle || 'Classic';
     const smartIdentifierEnabled = !!this.settings.smartIdentifierEnabled;
     const request = ++this._serviceSeq;
     clearTimeout(this._liveCheckTimer);
@@ -1246,9 +1322,10 @@ class AxiomIDE {
     this.log('format.document.start', { owner, length: text.length, request });
     try {
       let r;
-      try { r = await this.documentServices.request(path, method, { formattingStyle: this.settings.formattingStyle || 'Classic', smartIdentifierEnabled }); }
+      try { r = await this.documentServices.request(path, method, { formattingStyle, smartIdentifierEnabled }); }
       catch (error) {
         if (request !== this._serviceSeq || this.openFiles.get(path) !== document || model.isDisposed?.() || model.getValue() !== text ||
+            formattingStyle !== (this.settings.formattingStyle || 'Classic') ||
             smartIdentifierEnabled !== !!this.settings.smartIdentifierEnabled ||
             (this.running && this.openFiles.get(this._runFile)?.model === model)) return;
         throw error;
@@ -1256,6 +1333,7 @@ class AxiomIDE {
       if (!r || typeof r.sourceText !== 'string') { this.log('format.document.failed', { owner, request, reason: r?.reason }); return; }
       const m = this.openFiles.get(path)?.model;
       if (this.running && path === this._runFile) return;
+      if (formattingStyle !== (this.settings.formattingStyle || 'Classic')) return;
       if (smartIdentifierEnabled !== !!this.settings.smartIdentifierEnabled) return;
       if (request !== this._serviceSeq || !m || m !== model) { this.log('format.document.stale', { owner, request }); return; }
       if (m.getValue() !== text) { this.log('format.document.stale-edit', { owner, request }); return; } // the buffer changed while the request was in flight — stale, skip
@@ -1271,6 +1349,12 @@ class AxiomIDE {
       model.pushStackElement(); // the whole autoformat is a single undo step
       if (sel && this.editor.getModel() === model) this.editor.setSelection(sel);
       this.log('format.document.applied', { owner, request, edits: edits.length });
+      if (saveFormatted && this.openFiles.get(path) === document && document.path === path &&
+          !document.closing && document.savedText === saveSnapshot.savedText &&
+          model.getValue().replace(/\r\n?/g, '\n') === r.sourceText.replace(/\r\n?/g, '\n')) {
+        // save() записывает снимок; новые правки во время записи остаются несохранёнными.
+        if (!await this.save(path)) return false;
+      }
       return true;
     } catch (e) {
       this.log('format.document.exception', { owner, request, filePath: path, message: e?.message || String(e) }, 'error');
@@ -1315,7 +1399,17 @@ class AxiomIDE {
     if (!['Classic', 'Modern'].includes(style)) return;
     this.saveSettings({ formattingStyle: style });
     this.updateFormatMenuChecks();
-    for (const path of [...this.openFiles.keys()]) await this.formatWholeDocument('ax-style-switch', path);
+    const previous = this._styleSwitchPending;
+    let release;
+    const pending = new Promise(resolve => { release = resolve; });
+    this._styleSwitchPending = pending;
+    try {
+      if (previous) await previous;
+      for (const path of [...this.openFiles.keys()]) await this.formatWholeDocument('ax-style-switch', path, 'document.format', true);
+    } finally {
+      release();
+      if (this._styleSwitchPending === pending) this._styleSwitchPending = null;
+    }
   }
 
   updateFormatMenuChecks() {
@@ -1373,6 +1467,7 @@ class AxiomIDE {
   rebuildOutline() {
     if (this._formatBusy && this.editor.getModel()) { this.log('outline.skipped-format', { busy: this._formatBusy }); return; }
     if (!this.outlinePanel) this.outlinePanel = new window.OutlinePanel(this);
+    this.studio?.compactOutline();
     this.outlinePanel.rebuild();
   }
 
@@ -1871,6 +1966,7 @@ class AxiomIDE {
     const el = document.getElementById('diagnostics-content');
     el.innerHTML = '';
     this._lastDiagnostics = diags;
+    this.studio?.updateDiagnostics();
     this._lastDiagnosticsOnlyActive = onlyActive;
     this._lastDiagnosticsTargetFile = targetFile;
 
@@ -2046,6 +2142,7 @@ class AxiomIDE {
   }
 
   switchPanel(name) {
+    if(name==='structure'&&this.studio){this.studio.select('outline');return;}
     document.getElementById('diagnostic-filters').hidden = name !== 'diagnostics';
     this.log('panel.switch', { name, focus: this.focusState() });
     document.querySelectorAll('.panel-tab').forEach((t) => {
@@ -2057,6 +2154,8 @@ class AxiomIDE {
     // The terminal measures itself against a visible container: after the tab becomes
     // visible, refit so xterm and the pty agree on cols/rows.
     if (name === 'console') setTimeout(() => this.fitConsole(), 0);
+    this.saveSettings({bottomPanelTab:name});
+    this.studio?.updateBottomTabs(name);
   }
 
   togglePanel() { this.setBottomPanelVisible(document.getElementById('bottom-panel').style.display === 'none'); }
@@ -2067,6 +2166,7 @@ class AxiomIDE {
     document.getElementById('panel-resizer').hidden = !visible;
     this.saveSettings({bottomPanelVisible: visible});
     this.bottomSplitter?.layout(); this.updateOutputMenuCheck();
+    if(!visible&&document.getElementById('bottom-panel').contains(document.activeElement))this.focusEditor();
   }
 
   showPanel() { this.setBottomPanelVisible(true); }
@@ -2077,6 +2177,7 @@ class AxiomIDE {
     UIControls.setPressed(document.getElementById('tb-toggle-output'), visible);
     const check = document.querySelector('.menu-check[data-check="outputPanel"]');
     UIControls.setMenuChecked(check, visible);
+    this.studio?.bottomVisible(visible);
   }
 
   // ================= theme / language =================
@@ -2131,7 +2232,7 @@ class AxiomIDE {
       UIControls.setLabel(button, label);
     }
     this.rebuildOutline();
-    this.setProjectExplorerVisible(this.settings.projectExplorer !== false);
+    if(this.studio)this.studio.render();else this.setProjectExplorerVisible(this.settings.projectExplorer !== false);
     this.setStatusBarVisible(this.settings.statusBarVisible !== false);
     this.renderMiscellaneousFiles();
   }

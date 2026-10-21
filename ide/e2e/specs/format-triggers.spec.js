@@ -3,7 +3,7 @@ module.exports=[{id:'format-menu-triggers',name:'Проверка всегда �
  const file=writeAxm(testWorkspace('format-triggers'),'форматирование.axm','PRINT 1\n');await S.launch({settings:{checkOnChange:false,formatOnSave:true,formatOnBlur:true}});await S.stubOpenDialog([file]);await S.page.evaluate(()=>window.__ide.handleAction('open'));await S.page.waitForFunction(p=>window.__ide.activeFile===p,file);
  C.eq(await S.page.locator('[data-action="toggle-format-on-blur"], [data-action="toggle-format-on-save"], [data-action="toggle-check-on-change"]').count(),0,'Лишних пунктов нет');
  await S.page.evaluate(()=>{const i=window.__ide;i.settings.formattingStyle='Modern';i.editor.getModel().setValue('print 7\n');});
- await S.page.click('[data-menu="edit"] .menu-label'); await S.page.click('[data-action="format"]');
+ await S.page.click('[data-menu="tools"] .menu-label'); await S.page.click('[data-action="format"]');
  await S.page.waitForFunction(()=>window.__ide.editor.getValue().trim()==='Print 7'); C.ok(true,'Ручная команда оставлена и работает');
  C.eq(await S.page.evaluate(()=>window.axiom.readFileContent(window.__ide.activeFile)),'PRINT 1\n','Ручная команда не записывает диск');
  await S.page.evaluate(()=>{const i=window.__ide;i.editor.getModel().setValue('print 8\n');i.editor.focus();});

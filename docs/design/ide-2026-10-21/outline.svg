@@ -1,0 +1,171 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="960" viewBox="0 0 1600 960"><title>Axiom IDE — предлагаемый макет, вкладка Структура</title><style>text{font-family:'Segoe UI',sans-serif;fill:#d8dae0;font-size:13px} .mono{font-family:'Cascadia Mono',Consolas,monospace;font-size:15px} .small{font-size:12px}</style>
+<rect x="0" y="0" width="1600" height="960" rx="0" fill="#1e1f22"/>
+<rect x="0" y="0" width="1600" height="30" rx="0" fill="#202125"/>
+<rect x="10" y="7" width="17" height="17" rx="3" fill="#75a7db"/>
+<text x="13" y="20" class="" style="fill:#152033" font-weight="700">A</text>
+<text x="38" y="20" class="" style="fill:#d8dae0" >Axiom IDE</text>
+<text x="132" y="20" class="" style="fill:#a0a5af" >—  maze_chase_project</text>
+<text x="1380" y="20" class="small" style="fill:#a0a5af" >МАКЕТ</text>
+<text x="1490" y="20" class="" style="fill:#a0a5af" >─    □    ×</text>
+<rect x="0" y="30" width="1600" height="32" rx="0" fill="#25262a"/>
+<text x="16" y="51" class="" style="fill:#d8dae0" >Файл</text>
+<text x="73" y="51" class="" style="fill:#d8dae0" >Правка</text>
+<text x="143" y="51" class="" style="fill:#d8dae0" >Вид</text>
+<text x="192" y="51" class="" style="fill:#d8dae0" >Проект</text>
+<text x="264" y="51" class="" style="fill:#d8dae0" >Запуск</text>
+<text x="334" y="51" class="" style="fill:#d8dae0" >Отладка</text>
+<text x="414" y="51" class="" style="fill:#d8dae0" >Сервис</text>
+<text x="488" y="51" class="" style="fill:#d8dae0" >Справка</text>
+<rect x="0" y="62" width="1600" height="46" rx="0" fill="#2c2d32"/>
+<path d="M0 107H1600" stroke="#3a3c43"/>
+<path d="M3 1h7l4 4v12H3zM6 11h5M8.5 8.5v5" transform="translate(11 78)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1 4h6l2 2h8v10H1zM2 10h16l-3 6H1" transform="translate(43 78)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2 2h11l3 3v12H2zM5 2v5h7V2M5 17v-6h8v6" transform="translate(75 78)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M5 1h10l2 2v11H5zM1 5v13h11" transform="translate(107 78)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M6 5H1V1M1 5a7 7 0 1 1 2 10" transform="translate(158 78)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12 5h5V1M17 5a7 7 0 1 0-2 10" transform="translate(190 78)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M141 73v24M225 73v24M969 73v24" stroke="#3a3c43"/>
+<text x="242" y="89" class="" style="fill:#a0a5af" >Запуск:</text>
+<rect x="299" y="72" width="237" height="27" rx="3" fill="#25262a" stroke="#3a3c43"/>
+<path d="M3 1h7l4 4v12H3zM10 1v5h4" transform="translate(309 77)" fill="none" stroke="#80b9f8" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="334" y="90" class="" style="fill:#d8dae0" >main.axm</text>
+<path d="M5 7l4 4 4-4" transform="translate(509 76)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="550" y="72" width="124" height="27" rx="3" fill="#294738"/>
+<path d="M4 2l12 7-12 7z" transform="translate(559 78)" fill="none" stroke="#8bd4a4" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="584" y="91" class="" style="fill:#8bd4a4" >Запустить</text>
+<path d="M5 6h8v7a4 4 0 0 1-8 0V6M6 6V4a3 3 0 0 1 6 0v2M2 7h3M13 7h3M1 12h4M13 12h4M3 17l3-2M12 15l3 2" transform="translate(693 78)" fill="none" stroke="#d8dae0" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="718" y="91" class="" style="fill:#d8dae0" >Отладка</text>
+<path d="M2 9l5 5L16 3" transform="translate(826 78)" fill="none" stroke="#d8dae0" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="851" y="91" class="" style="fill:#d8dae0" >Проверить</text>
+<path d="M2 2h14v14H2zM7 2v14" transform="translate(1490 78)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2 2h14v14H2zM2 11h14" transform="translate(1527 78)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9 3v-2M9 17v-2M3 9H1M17 9h-2M4 4 2 2M14 14l2 2M4 14l-2 2M14 4l2-2M13 9a4 4 0 1 1-8 0 4 4 0 0 1 8 0" transform="translate(1567 78)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="0" y="108" width="300" height="826" rx="0" fill="#25262a"/>
+<path d="M299 108v826" stroke="#3a3c43"/>
+<rect x="0" y="108" width="299" height="34" rx="0" fill="#2c2d32"/>
+<text x="14" y="130" class="" style="fill:#d8dae0" font-weight="600">Структура файла</text>
+<path d="M6 2h6M7 2v5l3 3 3-3V2M10 10v7" transform="translate(242 116)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M4 4l10 10M14 4L4 14" transform="translate(273 116)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="14" y="165" class="" style="fill:#80b9f8" >maze_config.axm</text>
+<rect x="12" y="184" width="275" height="28" rx="3" fill="#1e1f22" stroke="#3a3c43"/>
+<path d="M12 12l5 5M13 7a6 6 0 1 1-12 0 6 6 0 0 1 12 0" transform="translate(20 190)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="46" y="203" class="" style="fill:#a0a5af" >Найти объявление…</text>
+<rect x="12" y="222" width="133" height="26" rx="3" fill="#25262a" stroke="#3a3c43"/>
+<text x="21" y="240" class="" style="fill:#d8dae0" >Все объявления</text>
+<path d="M5 7l4 4 4-4" transform="translate(121 225)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M3 2v12h12M3 7h12M8 2h7" transform="translate(164 227)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M14 5a7 7 0 1 0 2 7M14 1v5h-5" transform="translate(199 227)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="264" y="239" class="" style="fill:#a0a5af" >···</text>
+<text x="14" y="274" class="small" style="fill:#a0a5af" >Найдено 5 из 5</text>
+<path d="M0 286H299" stroke="#3a3c43"/>
+<path d="M5 7l4 4 4-4" transform="translate(9 301)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="32" y="315" class="" style="fill:#d8dae0" font-weight="600">Константы и общий тип</text>
+<text x="38" y="345" class="mono" style="fill:#69cbc2" >T</text>
+<text x="62" y="345" class="" style="fill:#d8dae0" >Walker</text>
+<text x="265" y="345" class="small" style="fill:#a0a5af" >26</text>
+<path d="M5 7l4 4 4-4" transform="translate(9 369)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="32" y="383" class="" style="fill:#d8dae0" font-weight="600">Направления и границы</text>
+<rect x="0" y="394" width="299" height="29" rx="0" fill="#284361"/>
+<text x="38" y="414" class="mono" style="fill:#c9a0da" >ƒ</text>
+<text x="62" y="414" class="" style="fill:#d8dae0" >DirX</text>
+<text x="265" y="414" class="small" style="fill:#a0a5af" >41</text>
+<text x="38" y="444" class="mono" style="fill:#c9a0da" >ƒ</text>
+<text x="62" y="444" class="" style="fill:#d8dae0" >DirY</text>
+<text x="265" y="444" class="small" style="fill:#a0a5af" >53</text>
+<text x="38" y="474" class="mono" style="fill:#c9a0da" >ƒ</text>
+<text x="62" y="474" class="" style="fill:#d8dae0" >MaxInt</text>
+<text x="265" y="474" class="small" style="fill:#a0a5af" >66</text>
+<text x="38" y="504" class="mono" style="fill:#c9a0da" >ƒ</text>
+<text x="62" y="504" class="" style="fill:#d8dae0" >ClampInt</text>
+<text x="265" y="504" class="small" style="fill:#a0a5af" >72</text>
+<text x="14" y="850" class="small" style="fill:#a0a5af" >Объявления активного файла</text>
+<text x="14" y="874" class="small" style="fill:#a0a5af" >Состав проекта — на вкладке «Проект»</text>
+<rect x="0" y="902" width="299" height="32" rx="0" fill="#2c2d32"/>
+<rect x="105" y="932" width="120" height="2" rx="0" fill="#80b9f8"/>
+<text x="16" y="923" class="" style="fill:#a0a5af" >Проект</text>
+<text x="118" y="923" class="" style="fill:#d8dae0" >Структура</text>
+<rect x="300" y="108" width="1300" height="36" rx="0" fill="#25262a"/>
+<rect x="300" y="108" width="148" height="36" rx="0" fill="#25262a"/>
+<path d="M3 1h7l4 4v12H3zM10 1v5h4" transform="translate(313 118)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="339" y="131" class="" style="fill:#d8dae0" >main.axm</text>
+<path d="M4 4l10 10M14 4L4 14" transform="translate(419 118)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M448 111v30" stroke="#3a3c43"/>
+<rect x="448" y="108" width="204" height="36" rx="0" fill="#1e1f22"/>
+<rect x="448" y="108" width="204" height="2" rx="0" fill="#80b9f8"/>
+<path d="M3 1h7l4 4v12H3zM10 1v5h4" transform="translate(461 118)" fill="none" stroke="#80b9f8" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="487" y="131" class="" style="fill:#d8dae0" >maze_config.axm</text>
+<path d="M4 4l10 10M14 4L4 14" transform="translate(623 118)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M652 111v30" stroke="#3a3c43"/>
+<rect x="652" y="108" width="208" height="36" rx="0" fill="#25262a"/>
+<path d="M3 1h7l4 4v12H3zM10 1v5h4" transform="translate(665 118)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="691" y="131" class="" style="fill:#d8dae0" >maze_motion.axm</text>
+<path d="M4 4l10 10M14 4L4 14" transform="translate(831 118)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M860 111v30" stroke="#3a3c43"/>
+<text x="1547" y="131" class="" style="fill:#a0a5af" >‹   ›</text>
+<path d="M300 144H1600" stroke="#3a3c43"/>
+<rect x="300" y="145" width="1300" height="27" rx="0" fill="#1e1f22"/>
+<text x="320" y="163" class="small" style="fill:#a0a5af" >maze_chase_project   ›   maze_config.axm</text>
+<text x="351" y="202" class="small" style="fill:#a0a5af" text-anchor="end">25</text>
+<text x="374" y="202" class="mono" xml:space="preserve"><tspan fill="#d8dae0"></tspan></text>
+<text x="351" y="224" class="small" style="fill:#a0a5af" text-anchor="end">26</text>
+<text x="374" y="224" class="mono" xml:space="preserve"><tspan fill="#d8dae0"></tspan><tspan fill="#89b7ef">PUBLIC</tspan><tspan fill="#d8dae0"> </tspan><tspan fill="#89b7ef">TYPE</tspan><tspan fill="#d8dae0"> Walker</tspan></text>
+<text x="351" y="246" class="small" style="fill:#a0a5af" text-anchor="end">27</text>
+<text x="374" y="246" class="mono" xml:space="preserve"><tspan fill="#d8dae0">    tileCol </tspan><tspan fill="#89b7ef">AS</tspan><tspan fill="#d8dae0"> </tspan><tspan fill="#89b7ef">INTEGER</tspan><tspan fill="#d8dae0"></tspan></text>
+<text x="351" y="268" class="small" style="fill:#a0a5af" text-anchor="end">28</text>
+<text x="374" y="268" class="mono" xml:space="preserve"><tspan fill="#d8dae0">    tileRow </tspan><tspan fill="#89b7ef">AS</tspan><tspan fill="#d8dae0"> </tspan><tspan fill="#89b7ef">INTEGER</tspan><tspan fill="#d8dae0"></tspan></text>
+<text x="351" y="290" class="small" style="fill:#a0a5af" text-anchor="end">29</text>
+<text x="374" y="290" class="mono" xml:space="preserve"><tspan fill="#d8dae0">    dir </tspan><tspan fill="#89b7ef">AS</tspan><tspan fill="#d8dae0"> </tspan><tspan fill="#89b7ef">INTEGER</tspan><tspan fill="#d8dae0"></tspan></text>
+<text x="351" y="312" class="small" style="fill:#a0a5af" text-anchor="end">30</text>
+<text x="374" y="312" class="mono" xml:space="preserve"><tspan fill="#d8dae0">    wantedDir </tspan><tspan fill="#89b7ef">AS</tspan><tspan fill="#d8dae0"> </tspan><tspan fill="#89b7ef">INTEGER</tspan><tspan fill="#d8dae0"></tspan></text>
+<text x="351" y="334" class="small" style="fill:#a0a5af" text-anchor="end">31</text>
+<text x="374" y="334" class="mono" xml:space="preserve"><tspan fill="#d8dae0">    facing </tspan><tspan fill="#89b7ef">AS</tspan><tspan fill="#d8dae0"> </tspan><tspan fill="#89b7ef">INTEGER</tspan><tspan fill="#d8dae0"></tspan></text>
+<text x="351" y="356" class="small" style="fill:#a0a5af" text-anchor="end">32</text>
+<text x="374" y="356" class="mono" xml:space="preserve"><tspan fill="#d8dae0">    travel </tspan><tspan fill="#89b7ef">AS</tspan><tspan fill="#d8dae0"> </tspan><tspan fill="#89b7ef">INTEGER</tspan><tspan fill="#d8dae0"></tspan></text>
+<text x="351" y="378" class="small" style="fill:#a0a5af" text-anchor="end">33</text>
+<text x="374" y="378" class="mono" xml:space="preserve"><tspan fill="#d8dae0">    animationStep </tspan><tspan fill="#89b7ef">AS</tspan><tspan fill="#d8dae0"> </tspan><tspan fill="#89b7ef">INTEGER</tspan><tspan fill="#d8dae0"></tspan></text>
+<text x="351" y="400" class="small" style="fill:#a0a5af" text-anchor="end">34</text>
+<text x="374" y="400" class="mono" xml:space="preserve"><tspan fill="#d8dae0"></tspan><tspan fill="#89b7ef">END</tspan><tspan fill="#d8dae0"> </tspan><tspan fill="#89b7ef">TYPE</tspan><tspan fill="#d8dae0"></tspan></text>
+<text x="351" y="422" class="small" style="fill:#a0a5af" text-anchor="end">35</text>
+<text x="374" y="422" class="mono" xml:space="preserve"><tspan fill="#d8dae0"></tspan></text>
+<text x="351" y="444" class="small" style="fill:#a0a5af" text-anchor="end">36</text>
+<text x="374" y="444" class="mono" xml:space="preserve"><tspan fill="#d8dae0"></tspan><tspan fill="#87a88a">' #endregion</tspan><tspan fill="#d8dae0"></tspan></text>
+<text x="351" y="466" class="small" style="fill:#a0a5af" text-anchor="end">37</text>
+<text x="374" y="466" class="mono" xml:space="preserve"><tspan fill="#d8dae0"></tspan></text>
+<text x="351" y="488" class="small" style="fill:#a0a5af" text-anchor="end">38</text>
+<text x="374" y="488" class="mono" xml:space="preserve"><tspan fill="#d8dae0"></tspan><tspan fill="#87a88a">' #region Направления и числовые границы</tspan><tspan fill="#d8dae0"></tspan></text>
+<text x="351" y="510" class="small" style="fill:#a0a5af" text-anchor="end">39</text>
+<text x="374" y="510" class="mono" xml:space="preserve"><tspan fill="#d8dae0"></tspan></text>
+<text x="351" y="532" class="small" style="fill:#a0a5af" text-anchor="end">40</text>
+<text x="374" y="532" class="mono" xml:space="preserve"><tspan fill="#d8dae0"></tspan><tspan fill="#87a88a">' DirX — Функция возвращает горизонтальную составляющую направления.</tspan><tspan fill="#d8dae0"></tspan></text>
+<rect x="300" y="537" width="1290" height="22" rx="0" fill="#272b32"/>
+<text x="351" y="554" class="small" style="fill:#a0a5af" text-anchor="end">41</text>
+<text x="374" y="554" class="mono" xml:space="preserve"><tspan fill="#d8dae0"></tspan><tspan fill="#89b7ef">PUBLIC</tspan><tspan fill="#d8dae0"> </tspan><tspan fill="#89b7ef">FUNCTION</tspan><tspan fill="#d8dae0"> DirX(dir </tspan><tspan fill="#89b7ef">AS</tspan><tspan fill="#d8dae0"> </tspan><tspan fill="#89b7ef">INTEGER</tspan><tspan fill="#d8dae0">) </tspan><tspan fill="#89b7ef">AS</tspan><tspan fill="#d8dae0"> </tspan><tspan fill="#89b7ef">INTEGER</tspan><tspan fill="#d8dae0"></tspan></text>
+<text x="351" y="576" class="small" style="fill:#a0a5af" text-anchor="end">42</text>
+<text x="374" y="576" class="mono" xml:space="preserve"><tspan fill="#d8dae0">    </tspan><tspan fill="#89b7ef">SELECT</tspan><tspan fill="#d8dae0"> </tspan><tspan fill="#89b7ef">CASE</tspan><tspan fill="#d8dae0"> dir</tspan></text>
+<text x="351" y="598" class="small" style="fill:#a0a5af" text-anchor="end">43</text>
+<text x="374" y="598" class="mono" xml:space="preserve"><tspan fill="#d8dae0">        </tspan><tspan fill="#89b7ef">CASE</tspan><tspan fill="#d8dae0"> DIR_LEFT</tspan></text>
+<text x="351" y="620" class="small" style="fill:#a0a5af" text-anchor="end">44</text>
+<text x="374" y="620" class="mono" xml:space="preserve"><tspan fill="#d8dae0">            </tspan><tspan fill="#89b7ef">RETURN</tspan><tspan fill="#d8dae0"> - </tspan><tspan fill="#c9a0da">1</tspan><tspan fill="#d8dae0"></tspan></text>
+<text x="351" y="642" class="small" style="fill:#a0a5af" text-anchor="end">45</text>
+<text x="374" y="642" class="mono" xml:space="preserve"><tspan fill="#d8dae0">        </tspan><tspan fill="#89b7ef">CASE</tspan><tspan fill="#d8dae0"> DIR_RIGHT</tspan></text>
+<text x="351" y="664" class="small" style="fill:#a0a5af" text-anchor="end">46</text>
+<text x="374" y="664" class="mono" xml:space="preserve"><tspan fill="#d8dae0">            </tspan><tspan fill="#89b7ef">RETURN</tspan><tspan fill="#d8dae0"> </tspan><tspan fill="#c9a0da">1</tspan><tspan fill="#d8dae0"></tspan></text>
+<rect x="1590" y="172" width="10" height="552" rx="0" fill="#25262a"/>
+<rect x="1592" y="245" width="6" height="160" rx="3" fill="#4a4d56"/>
+<path d="M300 724H1600" stroke="#3a3c43"/>
+<rect x="300" y="725" width="1300" height="209" rx="0" fill="#1e1f22"/>
+<rect x="300" y="725" width="1300" height="34" rx="0" fill="#25262a"/>
+<text x="321" y="747" class="" style="fill:#d8dae0" >Консоль</text>
+<text x="421" y="747" class="" style="fill:#a0a5af" >Проблемы</text>
+<text x="492" y="747" class="small" style="fill:#a0a5af" >0</text>
+<text x="533" y="747" class="" style="fill:#a0a5af" >Помощник</text>
+<rect x="313" y="757" width="76" height="2" rx="0" fill="#80b9f8"/>
+<path d="M4 4l10 10M14 4L4 14" transform="translate(1574 733)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M5 7l4 4 4-4" transform="translate(1543 733)" fill="none" stroke="#a0a5af" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="321" y="788" class="mono" style="fill:#a0a5af" >Готово к запуску main.axm</text>
+<text x="321" y="818" class="mono" style="fill:#a0a5af" >Здесь появятся вывод программы и запросы INPUT.</text>
+<rect x="0" y="934" width="1600" height="26" rx="0" fill="#263d55"/>
+<text x="13" y="952" class="small" style="fill:#d8dae0" >✓  Готово</text>
+<text x="113" y="952" class="small" style="fill:#d8dae0" >maze_config.axm</text>
+<text x="1275" y="952" class="small" style="fill:#d8dae0" >Строка 41, столбец 1     UTF-8     Axiom</text>
+</svg>

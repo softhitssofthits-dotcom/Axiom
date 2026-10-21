@@ -1,5 +1,6 @@
 {
   "ide-unit-all": [
+    "studio-menus.test.cjs",
     "backend-client.test.cjs",
     "canvas-window.test.cjs",
     "debug-command-failure.test.cjs",
@@ -47,7 +48,8 @@
     "trace-saveas.test.cjs",
     "ui-controls.test.cjs",
     "window-recovery.test.cjs",
-    "project-session.test.cjs"
+    "project-session.test.cjs",
+    "project-create.test.cjs"
   ],
   "ide-unit-main": [
     "backend-client.test.cjs",
@@ -63,9 +65,11 @@
     "project-file-actions.test.cjs",
     "recovery-store.test.cjs",
     "settings-store.test.cjs",
-    "window-recovery.test.cjs"
+    "window-recovery.test.cjs",
+    "project-create.test.cjs"
   ],
   "ide-unit-renderer": [
+    "studio-menus.test.cjs",
     "diagnostic-language.test.cjs",
     "editor-preferences.test.cjs",
     "event-log-dialog.test.cjs",

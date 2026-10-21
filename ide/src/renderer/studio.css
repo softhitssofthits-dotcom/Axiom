@@ -1,0 +1,218 @@
+/* Утверждённая компоновка Studio. Палитры Monaco остаются в themes.js. */
+#app.studio-shell {
+  --studio-chrome: var(--xs-surface);
+  --studio-raised: var(--xs-surface-raised);
+  --studio-border: var(--xs-border-subtle);
+  --studio-ink: var(--xs-text);
+  --studio-muted: var(--xs-text-muted);
+  --studio-toolbar-ink: var(--xs-text);
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 12px;
+  --tab-height: 33px;
+}
+html:not([data-theme]), html[data-theme='dark'] {
+  --studio-chrome-dark: #25262b;
+  --studio-raised-dark: #2e3036;
+  --studio-border-dark: #3c3e46;
+}
+html:not([data-theme]) #app.studio-shell, html[data-theme='dark'] #app.studio-shell {
+  --studio-chrome: var(--studio-chrome-dark);
+  --studio-raised: var(--studio-raised-dark);
+  --studio-border: var(--studio-border-dark);
+}
+html[data-theme='borland'] #app.studio-shell { --studio-toolbar-ink: var(--xs-chrome-text); }
+#app.studio-shell [hidden] { display: none !important; }
+#app.studio-shell #menubar {
+  height: 32px;
+  min-height: 32px;
+  padding: 0 8px;
+  background: var(--xs-chrome-bg, var(--studio-chrome));
+  border-bottom: 1px solid var(--studio-border);
+}
+.studio-shell .shell-brand { letter-spacing: .3px; padding-right: 12px; }
+.studio-shell .menu-label { height: 28px; padding: 0 9px; font-size: 12px; }
+#app.studio-shell #toolbar {
+  height: auto;
+  min-height: 42px;
+  box-sizing: border-box;
+  padding: 5px 8px;
+  gap: 5px;
+  align-items: center;
+  flex-wrap: wrap;
+  background: var(--xs-toolbar-bg, var(--studio-chrome));
+  border-bottom: 1px solid var(--studio-border);
+}
+.studio-shell .command-group {
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  gap: 3px;
+  padding-right: 7px;
+  border-color: var(--studio-border);
+  flex-wrap: wrap;
+}
+.studio-shell .toolbar-btn { width: 28px; height: 28px; border-radius: 3px; flex-shrink: 0; }
+.studio-shell .toolbar-btn :is(svg, .codicon) { width: 17px; height: 17px; font-size: 17px; }
+.studio-shell #toolbar :is(#tb-run, #tb-debug, #tb-check) { width: auto; gap: 6px; padding: 0 8px; }
+.studio-shell .studio-command-label { color: var(--studio-toolbar-ink); font-size: 12px; white-space: nowrap; }
+.studio-shell #project-entry-controls {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 5px 0 0;
+  border: 0;
+  min-width: 0;
+}
+.studio-shell #project-entry-controls.hidden { display: none; }
+.studio-shell #project-entry-controls label { margin: 0; display: inline; font-size: 12px; white-space: nowrap; color: var(--studio-toolbar-ink); }
+.studio-shell #project-entry { width: clamp(125px, 16vw, 240px); max-width: 100%; min-height: 28px; font: inherit; border-radius: 2px; }
+.studio-shell #toolbar-overflow { position: relative; margin-left: auto; flex-shrink: 0; }
+.studio-shell #toolbar-overflow > summary { list-style: none; cursor: pointer; }
+.studio-shell #toolbar-overflow > summary::-webkit-details-marker { display: none; }
+.studio-shell #toolbar-overflow[open] > :not(summary) {
+  position: absolute;
+  right: 0;
+  top: 32px;
+  z-index: 2000;
+  min-width: 200px;
+  padding: 5px;
+  background: var(--xs-menu-bg, var(--studio-raised));
+  color: var(--xs-menu-text, var(--studio-ink));
+  border: 1px solid var(--xs-menu-border, var(--studio-border));
+  box-shadow: var(--xs-shadow-menu);
+}
+#app.studio-shell #shell-sidebar { min-height: 0; overflow: hidden; background: var(--studio-chrome); border-color: var(--studio-border); container-type: inline-size; }
+#app.studio-shell .shell-section-title {
+  height: 34px;
+  min-height: 34px;
+  box-sizing: border-box;
+  padding: 0 7px 0 11px;
+  border-top: 0;
+  border-bottom: 1px solid var(--studio-border);
+  color: var(--studio-ink);
+  font: 600 12px 'Segoe UI', sans-serif;
+  letter-spacing: 0;
+}
+.studio-shell :is(#sidebar-pin, #sidebar-close, #studio-panel-close) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--studio-muted);
+  cursor: pointer;
+}
+.studio-shell :is(#sidebar-pin, #sidebar-close, #studio-panel-close):hover { background: var(--xs-surface-hover); color: var(--xs-hover-text); }
+#app.studio-shell #shell-sidebar #project-explorer,
+#app.studio-shell #shell-sidebar #structure-content {
+  display: flex !important;
+  flex-direction: column;
+  width: 100%;
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: none;
+  border: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--studio-chrome);
+}
+/* Перекрывает прежние принудительные display боковой области и узкого окна. */
+#app.studio-shell #shell-sidebar :is(#project-explorer, #structure-content)[hidden] { display: none !important; }
+.studio-shell #project-explorer-header { min-height: 33px; border-bottom: 0; }
+.studio-shell #project-title { padding: 7px 8px; font-size: 12px; font-weight: 600; color: var(--studio-ink); text-transform: none; letter-spacing: 0; }
+.studio-shell .studio-folder { font-size: 15px; color: var(--xs-warning); margin: 0 4px; }
+.studio-shell #project-title.project-open { color: var(--studio-ink); }
+.studio-shell #project-tools { display: flex; align-items: center; gap: 3px; padding: 3px 8px; border-bottom: 1px solid var(--studio-border); }
+.studio-shell #project-files { flex: 1; min-height: 0; overflow: auto; }
+.studio-shell .project-file { min-height: 28px; box-sizing: border-box; padding: 5px 9px 5px 37px; font: 12px 'Segoe UI', sans-serif; }
+.studio-shell .project-file.project-entry-file::after { content: '▷'; float: right; color: var(--xs-success); font-size: 15px; }
+.studio-shell #outline-more { position: relative; margin-left: auto; }
+.studio-shell #outline-more summary { cursor: pointer; list-style: none; padding: 4px; }
+.studio-shell #outline-more summary .codicon { font-size: 18px; }
+.studio-shell .studio-outline-extra { position: absolute; top: 28px; right: 0; z-index: 10; box-sizing: border-box; width: min(240px, calc(100cqw - 24px)); padding: 8px; background: var(--xs-menu-bg, var(--studio-raised)); border: 1px solid var(--studio-border); box-shadow: var(--xs-shadow-menu); }
+.studio-shell .studio-outline-extra label { display: block; width: 100%; margin-bottom: 5px; }
+.studio-shell .studio-outline-extra select { display: flex; width: 100%; margin-bottom: 5px; }
+.studio-shell .studio-outline-extra > button { display: flex; width: 100%; height: auto; min-height: 30px; padding: 5px; gap: 6px; text-align: left; }
+.studio-shell .studio-outline-extra > button::after { content: attr(aria-label); font: 12px 'Segoe UI', sans-serif; }
+.studio-shell .project-file.active { background: var(--xs-accent-wash); box-shadow: inset 2px 0 var(--xs-accent); }
+.studio-shell #external-files { flex: 0 1 auto; overflow: auto; }
+.studio-shell #external-files-header { padding: 9px 10px 5px; font-size: 11px; letter-spacing: 0; text-transform: none; }
+.studio-shell #structure-document-name { flex: none; padding: 8px 11px 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--studio-muted); }
+.studio-shell .outline-controls { padding: 4px 8px 7px; border-bottom: 1px solid var(--studio-border); }
+.studio-shell .outline-controls input { min-height: 28px; padding: 5px 7px; font: inherit; background: var(--xs-editor); border-radius: 2px; }
+.studio-shell .outline-options { gap: 4px; margin-top: 6px; }
+.studio-shell .outline-options select { min-height: 26px; font: inherit; }
+.studio-shell .outline-group-tools { margin-top: 5px; }
+.studio-shell #outline-count { padding-top: 6px; font-size: 11px; }
+.studio-shell #shell-sidebar #outline-list { flex: 1; min-height: 0; overflow: auto; padding: 4px 0; }
+.studio-shell .outline-group-toggle { padding: 6px 8px; min-height: 28px; font-size: 12px; }
+.studio-shell .outline-jump { min-height: 28px; padding: 4px 6px; font-size: 12px; }
+.studio-shell .outline-line { font-size: 11px; font-variant-numeric: tabular-nums; }
+.studio-shell #sidebar-tabs { display: flex; flex: none; min-height: 33px; border-top: 1px solid var(--studio-border); background: var(--studio-chrome); }
+.studio-shell #sidebar-tabs [role='tab'] {
+  flex: 1;
+  padding: 7px 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--studio-muted);
+  font: 12px 'Segoe UI', sans-serif;
+  cursor: pointer;
+}
+.studio-shell #sidebar-tabs [aria-selected='true'] { background: var(--studio-raised); color: var(--studio-ink); border-bottom-color: var(--xs-tab-active-stripe); }
+.studio-shell #sidebar-tabs [role='tab']:hover { color: var(--xs-hover-text); background: var(--xs-surface-hover); }
+.studio-shell #sidebar-rail { display: flex; flex-direction: column; flex: 0 0 30px; width: 30px; padding: 5px 0; gap: 5px; border-right: 1px solid var(--studio-border); background: var(--studio-chrome); }
+.studio-shell .sidebar-return { writing-mode: vertical-rl; min-height: 75px; padding: 10px 6px; border: 0; border-left: 2px solid transparent; background: transparent; color: var(--studio-muted); font: 12px 'Segoe UI', sans-serif; cursor: pointer; }
+.studio-shell .sidebar-return:hover { border-left-color: var(--xs-accent); background: var(--xs-surface-hover); color: var(--xs-hover-text); }
+.studio-shell :is(#editor-tabs, #document-tab-bar) { min-height: 33px; background: var(--xs-tab-strip-bg); padding-top: 0; }
+.studio-shell .editor-tab { min-height: 33px; border-radius: 0; padding: 0 10px; gap: 7px; font-family: 'Segoe UI', sans-serif; }
+.studio-shell .editor-tab.active::after { left: 0; right: 0; border-radius: 0; }
+.studio-shell #panel-tabs { min-height: 33px; padding: 0 6px; align-items: center; background: var(--xs-output-header-bg, var(--studio-chrome)); }
+.studio-shell .panel-tab { min-height: 32px; font: 12px 'Segoe UI', sans-serif; letter-spacing: 0; text-transform: none; }
+.studio-shell .studio-diagnostic-count { margin-left: 5px; color: var(--studio-muted); font-size: 11px; }
+.studio-shell #studio-panel-close { margin-left: auto; flex-shrink: 0; }
+.studio-shell #status-bar { min-height: 24px; font: 11px 'Segoe UI', sans-serif; }
+.studio-shell :is(button, summary, select, input):focus-visible { outline: 2px solid var(--xs-accent); outline-offset: -2px; }
+@media (max-width: 900px) {
+  .studio-shell #toolbar { gap: 3px; }
+  .studio-shell .command-group { padding-right: 4px; gap: 2px; }
+  .studio-shell #project-entry { width: 145px; }
+}
+@media (max-width: 650px) {
+  .studio-shell #toolbar .studio-command-label { display: none; }
+  .studio-shell #toolbar :is(#tb-run, #tb-debug, #tb-check) { width: 28px; padding: 0; }
+  .studio-shell #project-entry-controls { max-width: 100%; }
+  .studio-shell #project-entry { width: 130px; }
+}
+/* Подписанное меню дополнительных команд и возврат нижней панели. */
+.studio-shell #toolbar-overflow > summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 3px;
+  color: var(--studio-toolbar-ink);
+}
+.studio-shell #toolbar-overflow > summary svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; }
+.studio-shell #toolbar-overflow > summary:hover { background: var(--xs-surface-hover); }
+.studio-shell #toolbar-overflow .studio-extra-commands { display: flex; flex-direction: column; gap: 2px; }
+.studio-shell #toolbar-overflow .toolbar-btn { width: 100%; min-height: 30px; height: auto; padding: 6px 8px; gap: 9px; justify-content: flex-start; color: var(--xs-menu-text, var(--studio-ink)); text-align: left; }
+.studio-shell .studio-overflow-label { font: 12px 'Segoe UI', sans-serif; white-space: nowrap; }
+.studio-shell #toolbar-overflow .toolbar-btn:hover { background: var(--xs-menu-hover-bg, var(--xs-surface-hover)); color: var(--xs-menu-hover-text, var(--xs-hover-text)); }
+.studio-shell #studio-panel-return { align-self: flex-start; min-height: 28px; margin: 0 0 0 8px; padding: 4px 13px; border: 1px solid var(--studio-border); border-bottom: 0; background: var(--studio-chrome); color: var(--studio-ink); font: 12px 'Segoe UI', sans-serif; cursor: pointer; }
+.studio-shell #studio-panel-return:hover { background: var(--xs-surface-hover); color: var(--xs-hover-text); }
+.studio-shell #sidebar-pin[aria-pressed='true'] { color: var(--xs-accent); background: transparent; }
+.studio-shell #toolbar #menu-settings { width: 28px; height: 28px; margin: 0; padding: 0; }
+.studio-shell .studio-unpinned #sidebar-pin { transform: rotate(-35deg); }
+
+.project-create-dialog { width: min(540px, calc(100vw - 32px)); padding: 24px; display: grid; gap: 12px; }
+.project-create-dialog input { min-width: 0; padding: 8px; color: var(--xs-text); background: var(--xs-bg); border: 1px solid var(--xs-border); }
+.project-create-location { display: flex; gap: 8px; }
+.project-create-location input { flex: 1; }
+#project-create-error { color: var(--xs-text); white-space: pre-wrap; overflow-wrap: anywhere; }

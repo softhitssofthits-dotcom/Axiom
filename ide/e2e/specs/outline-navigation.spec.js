@@ -2,6 +2,17 @@ const path = require('path');
 const fs = require('fs');
 const {testWorkspace, writeAxm} = require('../helpers');
 
+async function openOutlineMore(S) {
+  if (!await S.page.locator('#outline-more').evaluate(element => element.open))
+    await S.page.locator('#outline-more > summary').click();
+}
+
+async function clickOutlineMore(S, id) {
+  await openOutlineMore(S);
+  await S.page.locator('#' + id).click();
+}
+
+
 module.exports = [{
   id: 'outline-maze-navigation',
   name: 'Навигатор Maze Chase: поиск, клавиатура, фильтры, закрепления, текущая процедура и профиль',
@@ -10,6 +21,7 @@ module.exports = [{
     const source = fs.readFileSync(maze, 'utf8');
     const expected = (source.match(/^\s*(SUB|FUNCTION|TYPE)\s+\w+/gm) || []).length;
     await S.launch({settings:{smartIdentifierEnabled:false,sidebarVisible:true,outlineFollow:false,outlineGrouped:false}});
+    await S.page.locator('#sidebar-tab-outline').click();
     await S.page.evaluate(p => window.__ide.openFile(p), maze);
     C.eq(await S.page.locator('.outline-item').count(), expected, 'Все объявления реального Maze Chase');
     const search = () => S.page.locator('#outline-search');
@@ -34,6 +46,7 @@ module.exports = [{
     C.eq(await S.page.locator('.outline-name').first().innerText(), 'StepWalker', 'Закрепление наверху');
     await S.page.locator('#outline-filter').selectOption('function');
     C.eq(await S.page.locator('.outline-item').count(), (source.match(/^FUNCTION\s/gm)||[]).length, 'Фильтр функций');
+    await openOutlineMore(S);
     await S.page.locator('#outline-sort').selectOption('name');
     const sorted = await S.page.locator('.outline-name').allTextContents();
     C.eq(sorted.join(','), [...sorted].sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'})).join(','), 'Алфавитный порядок');
@@ -63,8 +76,10 @@ module.exports = [{
     C.eq(await search().getAttribute('placeholder'),'Find a routine…','Элементы локализованы');
     C.eq(S.pageErrors.length,0,'Нет ошибок страницы');
     await S.close(); await S.launch();
+    C.eq(await S.page.locator('#sidebar-tab-outline').getAttribute('aria-selected'),'true','Выбранная структура восстановлена после перезапуска');
     await S.page.evaluate(p=>window.__ide.openFile(p),maze);
     C.eq(await S.page.locator('.outline-name').first().innerText(),'StepWalker','Закрепление пережило перезапуск');
+    await openOutlineMore(S);
     C.eq(await S.page.locator('#outline-sort').inputValue(),'name','Порядок сохранён в профиле');
     C.contains(await S.page.locator('#outline-follow').getAttribute('title'),'Automatically scroll','Подсказка объясняет действие кнопки');
     for (const theme of ['dark','light','basic','borland']) {
@@ -87,6 +102,7 @@ module.exports = [{
     const a=writeAxm(dir,'первый.axm','SUB Alpha()\nPRINT 1\nEND SUB\n\nSUB Beta()\nEND SUB\n');
     const b=writeAxm(dir,'второй.axm','FUNCTION Gamma() AS INTEGER\nRETURN 3\nEND FUNCTION\n');
     await S.launch({settings:{smartIdentifierEnabled:false,outlineFollow:false,outlineGrouped:false}});
+    await S.page.locator('#sidebar-tab-outline').click();
     await S.page.evaluate(p=>window.__ide.openFile(p),a);
     await S.page.locator('#outline-search').fill('Alpha');
     await S.page.evaluate(p=>window.__ide.openFile(p),b);
@@ -119,6 +135,7 @@ module.exports = [{
     const source="' #region Игра\n' #region Движение\nSUB Move()\nPRINT 1\nEND SUB\n' #endregion\nFUNCTION Read() AS INTEGER\nRETURN 2\nEND FUNCTION\n' #endregion\nSUB Tail()\nEND SUB\n";
     const file=writeAxm(testWorkspace('outline-regions'),'разделы.axm',source);
     await S.launch({settings:{smartIdentifierEnabled:false,outlineGrouped:true,outlineFollow:false}});
+    await S.page.locator('#sidebar-tab-outline').click();
     await S.page.evaluate(p=>window.__ide.openFile(p),file);
     C.eq(await S.page.locator('.outline-group-toggle').count(),2,'Два вложенных раздела');
     C.eq(await S.page.locator('.outline-name').count(),3,'Видны все объявления, включая внешнее');
@@ -149,11 +166,11 @@ module.exports = [{
     await S.page.locator('.outline-group-toggle').filter({hasText:'Движение'}).click();
     C.eq(await S.page.locator('#outline-group-all').getAttribute('title'),'Развернуть все группы','Частично свёрнутое дерево: предлагается раскрытие');
     C.eq(await S.page.locator('#outline-group-all .codicon-unfold').count(),1,'Значок раскрытия');
-    await S.page.locator('#outline-group-all').click();
+    await clickOutlineMore(S, 'outline-group-all');
     C.eq(await S.page.locator('#outline-group-all').getAttribute('title'),'Свернуть все группы','После раскрытия команда меняется обратно');
-    await S.page.locator('#outline-group-all').click();
+    await clickOutlineMore(S, 'outline-group-all');
     C.eq(await S.page.locator('.outline-name').count(),1,'Свернуть все сохраняет внешние объявления');
-    await S.page.locator('#outline-group-all').click();
+    await clickOutlineMore(S, 'outline-group-all');
     C.eq(await S.page.locator('.outline-name').count(),3,'Развернуть все возвращает объявления');
     const pin=S.page.locator('.outline-item').filter({hasText:'Move'}).locator('.outline-pin');
     await pin.click();
@@ -169,10 +186,12 @@ module.exports = [{
     C.ok(await S.page.evaluate(()=>window.monaco.editor.tokenize("' #region Игра",'axiom')[0][0].type.startsWith('comment')),'Метка остаётся комментарием в подсветке');
     await S.page.evaluate(()=>window.__ide.formatWholeDocument('region-check'));
     C.eq((await S.editorValue()).split(/\r?\n/).filter(l=>/#(?:end)?region/i.test(l)).join('\n'),source.split('\n').filter(l=>/#(?:end)?region/i.test(l)).join('\n'),'Форматирование сохраняет метки');
-    await S.page.locator('#outline-group-all').click();
-    await S.close();await S.launch();await S.page.evaluate(p=>window.__ide.openFile(p),file);
+    await clickOutlineMore(S, 'outline-group-all');
+    await S.close();await S.launch();
+    C.eq(await S.page.locator('#sidebar-tab-outline').getAttribute('aria-selected'),'true','Выбранная структура восстановлена после перезапуска');
+    await S.page.evaluate(p=>window.__ide.openFile(p),file);
     C.eq(await game().getAttribute('aria-expanded'),'false','Свёрнутость сохраняется после перезапуска');
-    await S.page.locator('#outline-group-all').click();
+    await clickOutlineMore(S, 'outline-group-all');
     await S.page.evaluate(()=>window.__ide.editor.executeEdits('region-check',[{range:new window.monaco.Range(1,1,1,1),text:"' Дополнительная строка\n"}]));
     await S.page.waitForFunction(()=>window.__ide.outlinePanel.regions[0].lineNo===2);
     C.eq(await S.page.locator('.outline-name').count(),3,'Сдвиг строк не теряет содержимое');
@@ -190,10 +209,11 @@ module.exports = [{
   async fn({S,C}) {
     const file=path.resolve(__dirname,'../../../samples/graphics/game/maze_chase.axm');
     await S.launch({settings:{smartIdentifierEnabled:false,outlineGrouped:true}});
+    await S.page.locator('#sidebar-tab-outline').click();
     await S.page.evaluate(p=>window.__ide.openFile(p),file);
     C.ok(await S.page.locator('.outline-group-toggle').count()>=10,'Тематические разделы Maze Chase');
     C.eq(await S.page.locator('.outline-item').count(),62,'Все 61 подпрограмма и тип доступны');
-    await S.page.locator('#outline-group-all').click();
+    await clickOutlineMore(S, 'outline-group-all');
     C.eq(await S.page.locator('.outline-item').count(),1,'Свёрнута логика, тип Walker остаётся снаружи');
     await S.page.locator('#outline-search').fill('Калибровка');
     C.ok(await S.page.locator('.outline-item').count()>10,'Поиск раскрывает подпрограммы калибровки');
@@ -210,8 +230,9 @@ module.exports = [{
   async fn({S,C}) {
     const file=path.resolve(__dirname,'../../../samples/graphics/game/maze_chase.axm');
     await S.launch({settings:{smartIdentifierEnabled:false,outlineGrouped:true,sidebarWidth:320}});
+    await S.page.locator('#sidebar-tab-outline').click();
     await S.page.evaluate(p=>window.__ide.openFile(p),file);
-    await S.page.locator('#outline-group-all').click();
+    await clickOutlineMore(S, 'outline-group-all');
     for(const [id,icon] of [['outline-groups','list-tree'],['outline-follow','target'],['outline-group-all','unfold']]) {
       C.eq(await S.page.locator('#'+id+' .codicon-'+icon).count(),1,'Значок из общего набора: '+id);
       C.ok(await S.page.locator('#'+id).evaluate((e,key)=>e.innerHTML===window.ShellIcons.markup(key),icon),'Общий источник значков: '+id);
@@ -221,12 +242,18 @@ module.exports = [{
       await S.page.mouse.move(750,450);
       await S.sleep(180);
       const state=await S.page.evaluate(()=>({
-        buttons:[...document.querySelectorAll('.outline-group-tools .toolbar-btn')].map(e=>({width:e.getBoundingClientRect().width,bg:getComputedStyle(e).backgroundColor,label:e.getAttribute('aria-label')})),
+        buttons:[...document.querySelectorAll('.outline-group-tools > .toolbar-btn, #outline-more > summary')].map(e=>({width:e.getBoundingClientRect().width,bg:getComputedStyle(e).backgroundColor,label:e.getAttribute('aria-label')})),
         groupBg:getComputedStyle(document.querySelector('.outline-group-toggle')).backgroundColor,
       }));
-      C.ok(state.buttons.length===4&&state.buttons.every(b=>b.width<=28&&b.width>=24),'Четыре компактные кнопки: '+theme);
-      C.ok(await S.page.locator('.outline-group-tools').evaluate(e=>Math.abs(e.getBoundingClientRect().right-e.lastElementChild.getBoundingClientRect().right)<1),'Значки выровнены справа: '+theme);
+      C.ok(state.buttons.length===3&&state.buttons.every(b=>b.width<=28&&b.width>=24),'Две компактные кнопки и дополнительные команды: '+theme);
+      C.ok(await S.page.locator('.outline-group-tools').evaluate(e=>Math.abs(e.getBoundingClientRect().right-e.querySelector('#outline-more > summary').getBoundingClientRect().right)<1),'Значки выровнены справа: '+theme);
       C.ok(state.buttons.every(b=>b.bg==='rgba(0, 0, 0, 0)'&&b.label),'Прозрачные кнопки с подписями: '+theme);
+      await openOutlineMore(S);
+      for (const id of ['outline-sort','outline-group-all','outline-assistant'])
+        C.ok(await S.page.locator('#'+id).isVisible(),'Дополнительная команда доступна: '+id+', '+theme);
+      for (const id of ['outline-group-all','outline-assistant'])
+        C.ok(await S.page.locator('#'+id).getAttribute('aria-label'),'Перенесённая команда сохраняет подпись: '+id+', '+theme);
+      await S.page.locator('#outline-more > summary').click();
       if(theme==='borland')C.eq(state.groupBg,'rgba(0, 0, 0, 0)','Группы Pascal без серых плашек');
       await S.screenshot('outline-sidebar-'+theme);
     }
@@ -244,9 +271,9 @@ module.exports = [{
     C.eq(await S.page.locator('.outline-group-toggle').count(),0,'Дерево переключает плоский список');
     await S.page.locator('#outline-groups').click();
     C.ok(await S.page.locator('.outline-group-toggle').count()>0,'Дерево возвращает группы');
-    await S.page.locator('#outline-group-all').click();
+    await clickOutlineMore(S, 'outline-group-all');
     C.eq(await S.page.locator('.outline-item').count(),62,'Новый значок разворачивает все');
-    await S.page.locator('#outline-group-all').click();
+    await clickOutlineMore(S, 'outline-group-all');
     C.eq(await S.page.locator('.outline-item').count(),1,'Новый значок сворачивает все');
     await S.page.evaluate(()=>window.__ide.setLanguage('en'));
     C.contains(await S.page.locator('#outline-groups').getAttribute('aria-label'),'Show sections','Подпись значка переводится');
@@ -262,7 +289,9 @@ module.exports.push({id:'outline-close-document-clears-state',name:'Закрыт
   fs.writeFileSync(b,"' #region Раздел модуля\nSUB HelperProc()\nEND SUB\n' #endregion\n");
   fs.writeFileSync(external,'SUB ExternalProc()\nEND SUB\n');
   await S.launch({settings:{smartIdentifierEnabled:false,formatOnBlur:false,checkOnChange:false}});
+  await S.page.locator('#sidebar-tab-outline').click();
   await S.page.evaluate(p=>window.__ide.openProject(p),root);
+  await S.page.locator('#sidebar-tab-outline').click();
   C.eq((await S.page.locator('.outline-name').allTextContents()).join(','),'MainProc','Первый файл представлен');
   await S.page.evaluate(p=>window.__ide.openFile(p),b);
   await S.page.evaluate(p=>window.__ide.closeFile(p),a);
@@ -275,6 +304,7 @@ module.exports.push({id:'outline-close-document-clears-state',name:'Закрыт
   await S.sleep(350);
   C.eq(await S.page.locator('.outline-item').count(),0,'Отложенное обновление не возвращает закрытые объявления');
   await S.page.evaluate(p=>window.__ide.openProject(p),root);
+  await S.page.locator('#sidebar-tab-outline').click();
   await S.page.evaluate(p=>window.__ide.openFile(p),external);
   await S.page.evaluate(p=>window.__ide.openFile(p),b);
   await S.page.evaluate(()=>window.__ide.closeProject());
@@ -282,6 +312,7 @@ module.exports.push({id:'outline-close-document-clears-state',name:'Закрыт
   await S.page.evaluate(p=>window.__ide.closeFile(p),external);
   C.eq(await S.page.locator('.outline-item').count(),0,'Закрытие внешнего файла снова очищает панель');
   await S.page.evaluate(p=>window.__ide.openProject(p),root);
+  await S.page.locator('#sidebar-tab-outline').click();
   await S.page.evaluate(p=>window.__ide.openFile(p),b);
   await S.page.evaluate(()=>window.__ide.closeProject());
   C.eq(await S.page.locator('.outline-item').count(),0,'Закрытие проекта без внешних вкладок очищает панель');

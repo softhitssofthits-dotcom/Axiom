@@ -70,7 +70,7 @@ module.exports.push({ id: 'startup-legacy-settings-import', name: 'Прежни�
   C.eq(await S.page.evaluate(() => window.__ide.settings.legacyImportVersion), 1, 'Импорт отмечен в новом профиле');
   C.eq(await S.page.evaluate(() => document.documentElement.dataset.theme), 'light', 'Перенесена светлая тема');
   C.eq(await S.page.evaluate(() => window.__ide.settings.language), 'en', 'Перенесён язык');
-  C.ok(await S.page.locator('#project-explorer').evaluate(el => el.classList.contains('hidden')), 'Файловая панель скрыта по прежней настройке');
+  C.ok(!await S.page.locator('#project-explorer').isVisible(), 'Файловая панель скрыта по прежней настройке');
   C.ok(await S.page.locator('#status-bar').evaluate(el => getComputedStyle(el).display === 'none'), 'Строка состояния скрыта по прежней настройке');
   C.ok(await S.electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isMaximized()), 'Максимизация перенесена до открытия окна');
   C.eq(fs.readFileSync(legacy, 'utf8'), original, 'Прежний файл не изменён');

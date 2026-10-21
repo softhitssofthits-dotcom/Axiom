@@ -70,6 +70,7 @@
     "trace.spec.js"
   ],
   "e2e-documents": [
+    "project-create.spec.js",
     "document-acceptance.spec.js",
     "document-delivery.spec.js",
     "documents.spec.js",
@@ -143,6 +144,7 @@
     "graphics-shutdown.spec.js"
   ],
   "e2e-shell": [
+    "studio.spec.js",
     "event-log.spec.js",
     "help.spec.js",
     "i18n.spec.js",

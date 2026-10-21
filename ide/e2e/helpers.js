@@ -291,19 +291,10 @@ class Session {
   }
 
   async clickLangAction(action) {
-    // The submenu reveals on CSS :hover, which is flaky under Playwright actionability
-    // (the item can be visibly rendered yet fail its hit-test). The click handler is a
-    // plain listener on .menu-dropdown-item, so a DOM-dispatched click exercises the
-    // same app path deterministically — the same discipline as clickTab.
-    await this.page.click('.menu-item[data-menu="view"] .menu-label');
-    await this.page.waitForFunction(
-      (a) => !!document.querySelector(`#lang-submenu .menu-dropdown-item[data-action="${a}"]`),
-      action, { timeout: 8000, polling: 100 }
-    );
-    await this.page.evaluate((a) => {
-      const item = document.querySelector(`#lang-submenu .menu-dropdown-item[data-action="${a}"]`);
-      item.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    }, action);
+    await this.page.click('.menu-item[data-menu="tools"] .menu-label');
+    await this.page.click('#lang-submenu .submenu-trigger');
+    await this.page.waitForSelector(`#lang-submenu .menu-dropdown-item[data-action="${action}"]`, {state: 'visible', timeout: 8000});
+    await this.page.click(`#lang-submenu .menu-dropdown-item[data-action="${action}"]`);
   }
 
   // Click a tab by its data-path via DOM lookup (immune to CSS escaping of Windows paths).

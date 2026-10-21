@@ -2,7 +2,7 @@ const {testWorkspace,writeAxm}=require('../helpers');
 module.exports=[{id:'shell-responsive-commands',name:'Утверждённая оболочка: темы, меню, размеры и команды',async fn({S,C}){
 const file=writeAxm(testWorkspace('shell'),'расчёт.axm','PRINT 42\n');await S.launch();await S.stubOpenDialog([file]);await S.page.evaluate(()=>window.__ide.handleAction('open'));await S.page.waitForFunction(p=>window.__ide.activeFile===p,file);
 C.eq(await S.page.locator('#shell-sidebar #outline-list').count(),1,'Структура расположена слева');
-for(const width of [320,520,800,1280]){await S.electronApp.evaluate(({BrowserWindow},w)=>{const b=BrowserWindow.getAllWindows()[0];b.setMinimumSize(0,0);b.setSize(w,800);},width);await S.page.waitForTimeout(150);for(const theme of ['light','dark','basic','borland']){await S.page.evaluate(t=>window.__ide.handleAction('theme-'+t),theme);const layout=await S.page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth,clipped:[...document.querySelectorAll('#toolbar button,#menubar > .menu-item')].filter(b=>b.getBoundingClientRect().width).some(b=>b.getBoundingClientRect().right>innerWidth),labels:[...document.querySelectorAll('#toolbar button')].every(b=>!b.textContent.trim()&&b.getAttribute('aria-label'))}));C.ok(!layout.overflow&&!layout.clipped&&layout.labels,theme+' '+width+' без обрезания и подписей',layout);}}
+for(const width of [320,520,800,1280]){await S.electronApp.evaluate(({BrowserWindow},w)=>{const b=BrowserWindow.getAllWindows()[0];b.setMinimumSize(0,0);b.setSize(w,800);},width);await S.page.waitForTimeout(150);for(const theme of ['light','dark','basic','borland']){await S.page.evaluate(t=>window.__ide.handleAction('theme-'+t),theme);const layout=await S.page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth,clipped:[...document.querySelectorAll('#toolbar button,#menubar > .menu-item')].filter(b=>b.getBoundingClientRect().width).some(b=>b.getBoundingClientRect().right>innerWidth),labels:[...document.querySelectorAll('#toolbar .toolbar-btn,#toolbar summary')].every(b=>!!b.getAttribute('aria-label'))}));C.ok(!layout.overflow&&!layout.clipped&&layout.labels,theme+' '+width+' без обрезания, с доступными подписями',JSON.stringify(layout));}}
 await S.page.locator('#menu-overflow').isVisible().then(async visible=>{if(visible){await S.page.locator('#menu-overflow').click();C.ok(await S.page.locator('#menu-overflow-content .menu-item').count()>0,'Лишние меню доступны');}});
 await S.electronApp.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(1280,900));await S.page.locator('#tb-run').click();await S.waitIdle();await S.waitConsole('42');C.ok(true,'Пиктограмма запуска исполняет VM');C.eq(S.pageErrors.length,0,'Ошибки страницы отсутствуют');await S.screenshot('shell-approved');
 }},
@@ -120,9 +120,9 @@ module.exports.push({
   C.eq(S.pageErrors.length,0,'Ранние события не вызывают ошибок страницы');
   const file=writeAxm(testWorkspace('trace-startup'),'ready.axm','PRINT 1\n');
   await S.page.evaluate(p=>window.__ide.openFile(p),file);
-  await S.page.locator('#tb-breakpoint').click();
+  await S.page.locator('#toolbar-overflow > summary').click();await S.page.locator('#tb-breakpoint').click();
   C.eq(await S.page.evaluate(()=>window.__ide.trace.lines(window.__ide.editor.getModel()).length),1,'После готовности команда ставит точку останова');
-  await S.page.locator('#tb-clear').click();
+  await S.page.locator('#toolbar-overflow > summary').click();await S.page.locator('#tb-clear').click();
   C.eq(await S.page.evaluate(()=>window.__ide.trace.lines(window.__ide.editor.getModel()).length),0,'Команда удаления точек также работает');
   C.eq(S.pageErrors.length,0,'Работа команд после запуска не вызывает ошибок страницы');
  }

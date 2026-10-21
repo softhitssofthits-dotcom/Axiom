@@ -281,6 +281,25 @@ function setupIpc(logger, options = {}) {
   // не является частью договора этих действий.
   const projectFileActions = new ProjectFileActions();
   const projectPath = value => typeof value === 'string' && value.length > 0 && value.length <= 32767 && path.isAbsolute(value);
+  const projectCreation = require('./project-create');
+  ipcMain.handle('project-creation-defaults', event => {
+    if (!fromMainFrame(event)) return { parent: null };
+    return { parent: projectCreation.projectCreationParent(loadSettings(), app.getPath('documents')) };
+  });
+  ipcMain.handle('choose-project-parent', async (event, currentParent) => {
+    if (!fromMainFrame(event)) return null;
+    const owner = BrowserWindow.fromWebContents(event.sender);
+    if (!owner || owner.isDestroyed()) return null;
+    const defaultPath = projectCreation.existingDirectory(currentParent) ||
+      projectCreation.projectCreationParent(loadSettings(), app.getPath('documents'));
+    const result = await dialog.showOpenDialog(owner, { defaultPath, properties: ['openDirectory'] });
+    return result.canceled ? null : result.filePaths[0] || null;
+  });
+  ipcMain.handle('create-project', (event, parent, name) => {
+    if (!fromMainFrame(event)) return { ok: false, message: 'Недопустимый источник команды.' };
+    try { return { ok: true, ...projectCreation.createProject(parent, name) }; }
+    catch (error) { return { ok: false, message: error.message }; }
+  });
   ipcMain.handle('create-project-file', (event, root, target, text) => {
     if (!fromMainFrame(event)) return { ok: false, message: 'Недопустимый источник команды.' };
     try { return { ok: true, path: require('./file-service').createProjectFile(root, target, text) }; }

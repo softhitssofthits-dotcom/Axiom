@@ -82,6 +82,7 @@ class TraceController {
   }
   update() {
     const ide=this.ide;
+    ide.studio?.updateExecution();
     if(this.marker?.sourceText!==undefined && !this.marker.model.isDisposed() && this.marker.model.getValue()!==this.marker.sourceText) this.clearMarker();
     for(const [model] of this.points) if(model.isDisposed()) this.points.delete(model);
     if(this.locale!==I18N.current) {
