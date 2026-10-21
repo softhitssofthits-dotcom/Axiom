@@ -84,6 +84,71 @@
   --status-bar-height: 25px;
   --tab-height: 38px;
   --panel-height: 200px;
+  --xs-workbench-bg: #25262b;
+  --xs-workbench-raised: #2e3036;
+  --xs-workbench-border: #3c3e46;
+  --xs-chrome-bg: var(--xs-workbench-bg);
+  --xs-chrome-text: var(--xs-text);
+  --xs-toolbar-bg: var(--xs-workbench-bg);
+  --xs-toolbar-text: var(--xs-text-muted);
+  --xs-toolbar-label: var(--xs-text);
+  --xs-chrome-hover-bg: var(--xs-surface-hover);
+  --xs-chrome-hover-text: var(--xs-text);
+  --xs-status-text: var(--xs-text);
+  --xs-output-header-bg: var(--xs-workbench-bg);
+  --xs-panel-selected-bg: transparent;
+  --xs-panel-selected-text: var(--xs-text);
+  --xs-panel-selected-border: var(--xs-accent);
+  --xs-menu-bg: var(--xs-workbench-raised);
+  --xs-menu-text: var(--xs-text);
+  --xs-menu-muted: var(--xs-text-muted);
+  --xs-menu-icon: var(--xs-text-faint);
+  --xs-menu-check: var(--xs-accent);
+  --xs-menu-border: var(--xs-workbench-border);
+  --xs-menu-hover-bg: var(--xs-surface-hover);
+  --xs-menu-hover-text: var(--xs-text);
+  --xs-menu-shadow: var(--xs-shadow-menu);
+  --xs-menu-mnemonic: inherit;
+  --xs-dialog-bg: var(--xs-surface);
+  --xs-dialog-text: var(--xs-text);
+  --xs-dialog-muted: var(--xs-text-muted);
+  --xs-dialog-label: var(--xs-accent);
+  --xs-dialog-field-bg: var(--xs-editor);
+  --xs-dialog-field-text: var(--xs-text);
+  --xs-dialog-border: var(--xs-border);
+  --xs-dialog-border-width: 1px;
+  --xs-dialog-frame: var(--xs-border);
+  --xs-dialog-radius: 5px;
+  --xs-dialog-shadow: var(--xs-shadow-menu);
+  --xs-dialog-content-bg: var(--xs-surface-raised);
+  --xs-dialog-group-bg: var(--xs-surface-hover);
+  --xs-dialog-button-bg: var(--xs-editor);
+  --xs-dialog-button-text: var(--xs-text);
+  --xs-dialog-button-hover-bg: var(--xs-surface-hover);
+  --xs-dialog-button-hover-text: var(--xs-text);
+  --xs-dialog-control-radius: 3px;
+  --xs-dialog-button-style: solid;
+  --xs-dialog-button-active-style: solid;
+  --xs-dialog-field-style: solid;
+  --xs-dialog-tab-bg: var(--xs-surface-raised);
+  --xs-dialog-tab-text: var(--xs-accent);
+  --xs-dialog-focus: var(--xs-accent);
+  --xs-dialog-hotkey: inherit;
+  --xs-dialog-default: inherit;
+  --xs-dialog-field-focus-bg: var(--xs-dialog-field-bg);
+  --xs-dialog-field-focus-text: var(--xs-dialog-field-text);
+  --xs-dialog-selection-bg: var(--xs-editor-selection);
+  --xs-dialog-selection-text: var(--xs-text);
+  --xs-dialog-warning: var(--xs-warning);
+  --xs-dialog-error: var(--xs-danger);
+  --xs-overlay-bg: rgba(8, 12, 18, .62);
+  --xs-overlay-filter: blur(3px);
+  --xs-logo-light-display: none;
+  --xs-logo-dark-display: inline;
+  --xs-toolbar-focus: var(--xs-accent);
+  --xs-raised-text: var(--xs-text);
+  --xs-active-file-text: var(--xs-text);
+  --xs-dialog-placeholder: var(--xs-dialog-muted);
 }
 
 [data-theme="light"] {
@@ -111,6 +176,12 @@
   --xs-console-scrollbar: #aeb8c6;
   --xs-status-bg: #e8eef7;
   --xs-shadow-menu: 0 14px 34px rgba(30, 41, 59, .16), 0 2px 8px rgba(30, 41, 59, .10);
+  --xs-workbench-bg: var(--xs-surface);
+  --xs-workbench-raised: var(--xs-surface-raised);
+  --xs-workbench-border: var(--xs-border-subtle);
+  --xs-logo-light-display: inline;
+  --xs-logo-dark-display: none;
+  --xs-dialog-selection-text: var(--xs-text);
 }
 
 html[data-theme="basic"] {
@@ -151,19 +222,56 @@ html[data-theme="basic"] {
   --xs-menu-hover-text: #ffffff;
   --xs-menu-shadow: inset 0 0 0 1px #ffffff, 7px 7px 0 #000000;
   --xs-shadow-menu: var(--xs-menu-shadow);
+  --xs-workbench-bg: var(--xs-surface);
+  --xs-workbench-raised: var(--xs-surface-raised);
+  --xs-workbench-border: var(--xs-border-subtle);
+  --xs-menu-icon: var(--xs-menu-text);
+  --xs-menu-check: var(--xs-menu-text);
+  --xs-chrome-hover-bg: var(--xs-menu-hover-bg);
+  --xs-chrome-hover-text: var(--xs-menu-hover-text);
+  --xs-dialog-bg: var(--xs-menu-bg);
+  --xs-dialog-text: var(--xs-menu-text);
+  --xs-dialog-muted: var(--xs-menu-muted);
+  --xs-dialog-border: #000000;
+  --xs-dialog-frame: #ffffff;
+  --xs-dialog-radius: 0;
+  --xs-dialog-control-radius: 0;
+  --xs-dialog-button-style: outset;
+  --xs-dialog-button-active-style: inset;
+  --xs-dialog-field-style: inset;
+  --xs-dialog-content-bg: var(--xs-dialog-bg);
+  --xs-dialog-selection-text: #ffffff;
+  --xs-overlay-bg: rgba(0,0,0,.58);
+  --xs-overlay-filter: none;
+  --xs-dialog-warning: #800000;
+  --xs-dialog-error: #800000;
+  --xs-toolbar-bg: var(--xs-workbench-bg);
+  --xs-status-text: var(--xs-text);
+  --xs-dialog-field-bg: var(--xs-dialog-bg);
+  --xs-dialog-field-text: #000000;
+  --xs-dialog-label: #000000;
+  --xs-dialog-group-bg: #000000;
+  --xs-dialog-border-width: 2px;
+  --xs-dialog-shadow: inset 0 0 0 1px #000000, inset 0 0 0 2px #ffffff, 7px 7px 0 #000000;
+  --xs-dialog-button-bg: var(--xs-dialog-bg);
+  --xs-dialog-button-text: #000000;
+  --xs-dialog-button-hover-bg: #808080;
+  --xs-dialog-button-hover-text: #ffffff;
+  --xs-dialog-tab-bg: #808080;
+  --xs-dialog-tab-text: #ffffff;
+  --xs-dialog-focus: #000000;
+  --xs-dialog-selection-bg: #000000;
+  --xs-dialog-placeholder: #333333;
 }
 
 html[data-theme="borland"] {
   /* Стандартная палитра VGA Borland; дополнительные поверхности используют те же роли. */
-  --xs-dialog-bg: #aaaaaa;
-  --xs-dialog-text: #000000;
-  --xs-dialog-label: #ffffff;
   --xs-dialog-field-bg: #aaaaaa;
   --xs-dialog-field-text: #000000;
   --xs-dialog-group-bg: #00aaaa;
   --xs-dialog-button-bg: #00aa00;
-  --xs-dialog-hotkey: #ffff55;
-  --xs-dialog-default: #55ffff;
+  --xs-dialog-hotkey: #000000;
+  --xs-dialog-default: #000000;
   --xs-diagnostic-hover-bg: #00aa00;
   --xs-diagnostic-hover-text: #000000;
   --xs-diagnostic-hover-location: #000000;
@@ -171,7 +279,7 @@ html[data-theme="borland"] {
   --xs-select-bg: #00aaaa;
   --xs-select-text: #000000;
   --xs-select-highlight-bg: #00aa00;
-  --xs-select-highlight-text: #ffffff;
+  --xs-select-highlight-text: #000000;
   --xs-select-border: #000000;
   --xs-toolbar-active-text: #000000;
   --xs-select-field-bg: var(--xs-dialog-field-bg);
@@ -230,6 +338,52 @@ html[data-theme="borland"] {
   --xs-menu-hover-text: #000000;
   --xs-menu-shadow: inset 0 0 0 3px #aaaaaa, inset 0 0 0 4px #000000, 7px 7px 0 #000000;
   --xs-shadow-menu: var(--xs-menu-shadow);
+  --xs-workbench-bg: var(--xs-surface);
+  --xs-workbench-raised: var(--xs-surface-raised);
+  --xs-workbench-border: var(--xs-border-subtle);
+  --xs-menu-icon: var(--xs-menu-text);
+  --xs-menu-check: var(--xs-menu-text);
+  --xs-chrome-hover-bg: var(--xs-menu-hover-bg);
+  --xs-chrome-hover-text: var(--xs-menu-hover-text);
+  --xs-dialog-bg: var(--xs-menu-bg);
+  --xs-dialog-text: var(--xs-menu-text);
+  --xs-dialog-muted: var(--xs-menu-muted);
+  --xs-dialog-border: #000000;
+  --xs-dialog-frame: #ffffff;
+  --xs-dialog-radius: 0;
+  --xs-dialog-control-radius: 0;
+  --xs-dialog-button-style: outset;
+  --xs-dialog-button-active-style: inset;
+  --xs-dialog-field-style: inset;
+  --xs-dialog-content-bg: var(--xs-dialog-bg);
+  --xs-dialog-selection-text: #ffffff;
+  --xs-overlay-bg: rgba(0,0,0,.58);
+  --xs-overlay-filter: none;
+  --xs-dialog-warning: #aa0000;
+  --xs-dialog-error: #aa0000;
+  --xs-toolbar-text: var(--xs-chrome-text);
+  --xs-toolbar-label: var(--xs-chrome-text);
+  --xs-toolbar-focus: #55ffff;
+  --xs-status-text: var(--xs-chrome-text);
+  --xs-panel-selected-bg: var(--xs-menu-hover-bg);
+  --xs-panel-selected-text: var(--xs-menu-hover-text);
+  --xs-panel-selected-border: var(--xs-border);
+  --xs-menu-mnemonic: #aa0000;
+  --xs-dialog-label: #0000aa;
+  --xs-dialog-border-width: 3px;
+  --xs-dialog-shadow: inset 0 0 0 1px #000000, inset 0 0 0 3px #ffffff, 7px 7px 0 #000000;
+  --xs-dialog-button-text: #000000;
+  --xs-dialog-button-hover-bg: var(--xs-dialog-button-bg);
+  --xs-dialog-button-hover-text: #000000;
+  --xs-dialog-tab-bg: var(--xs-dialog-button-bg);
+  --xs-dialog-tab-text: #000000;
+  --xs-dialog-focus: #ffff55;
+  --xs-dialog-field-focus-bg: var(--xs-dialog-button-bg);
+  --xs-dialog-field-focus-text: #000000;
+  --xs-dialog-selection-bg: #00aa00;
+  --xs-raised-text: #000000;
+  --xs-active-file-text: var(--xs-hover-text);
+  --xs-dialog-placeholder: #000000;
 }
 
 body {
@@ -542,7 +696,7 @@ select option:is(:checked,:hover,:focus) { color:var(--xs-select-highlight-text)
 /* Dialogs use the same elevated surface as menus. */
 .modal-overlay { background: rgba(8, 12, 18, .62); backdrop-filter: blur(3px); }
 .modal { background: var(--xs-surface-raised); border-color: var(--xs-border); border-radius: 10px; box-shadow: var(--xs-shadow-menu); }
-.modal h3 { color: var(--xs-text); }
+.modal h3 { color: var(--xs-dialog-label); }
 #about-close { border-color: var(--xs-border); border-radius: var(--xs-radius-sm); color: var(--xs-text); }
 #about-close:hover { background: var(--xs-surface-hover); }
 
@@ -550,11 +704,11 @@ select option:is(:checked,:hover,:focus) { color:var(--xs-select-highlight-text)
    palette therefore does not inherit the workbench surfaces unless we style it here. */
 .monaco-menu-container .monaco-menu {
   padding: 5px;
-  background: var(--xs-surface-raised) !important;
-  border: 1px solid var(--xs-border) !important;
+  background: var(--xs-menu-bg) !important;
+  border: 1px solid var(--xs-menu-border) !important;
   border-radius: var(--xs-radius-md);
   box-shadow: var(--xs-shadow-menu) !important;
-  color: var(--xs-text) !important;
+  color: var(--xs-menu-text) !important;
 }
 .monaco-menu-container .monaco-menu .monaco-action-bar.vertical .action-item {
   min-height: 28px;
@@ -566,22 +720,22 @@ select option:is(:checked,:hover,:focus) { color:var(--xs-select-highlight-text)
   align-items: center;
   gap: 9px;
   padding: 0 9px !important;
-  color: var(--xs-text) !important;
+  color: var(--xs-menu-text) !important;
   font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif !important;
   font-size: 12px !important;
 }
 .monaco-menu-container .monaco-menu .action-item.focused,
 .monaco-menu-container .monaco-menu .action-item:hover {
-  background: var(--xs-accent-wash) !important;
+  background: var(--xs-menu-hover-bg) !important;
 }
 .monaco-menu-container .monaco-menu .action-item.focused .action-label,
-.monaco-menu-container .monaco-menu .action-item:hover .action-label { color: var(--xs-text) !important; }
-.monaco-menu-container .monaco-menu .action-item .keybinding { color: var(--xs-text-faint) !important; }
-.monaco-menu-container .monaco-menu .action-item.separator { border-bottom-color: var(--xs-border-subtle) !important; }
+.monaco-menu-container .monaco-menu .action-item:hover .action-label { color: var(--xs-menu-hover-text) !important; }
+.monaco-menu-container .monaco-menu .action-item .keybinding { color: var(--xs-menu-muted) !important; }
+.monaco-menu-container .monaco-menu .action-item.separator { border-bottom-color: var(--xs-menu-border) !important; }
 .monaco-menu-container .monaco-menu .xs-context-icon {
   width: 16px;
   flex: 0 0 16px;
-  color: var(--xs-text-faint);
+  color: var(--xs-menu-muted);
   font-size: 15px;
   text-align: center;
 }
@@ -596,11 +750,11 @@ select option:is(:checked,:hover,:focus) { color:var(--xs-select-highlight-text)
 .context-view .monaco-menu {
   min-width: 252px;
   padding: 5px !important;
-  background: var(--xs-surface-raised) !important;
-  border: 1px solid var(--xs-border) !important;
+  background: var(--xs-menu-bg) !important;
+  border: 1px solid var(--xs-menu-border) !important;
   border-radius: var(--xs-radius-md) !important;
   box-shadow: var(--xs-shadow-menu) !important;
-  color: var(--xs-text) !important;
+  color: var(--xs-menu-text) !important;
 }
 .context-view .monaco-menu .monaco-action-bar.vertical .action-item {
   min-height: 28px;
@@ -612,18 +766,18 @@ select option:is(:checked,:hover,:focus) { color:var(--xs-select-highlight-text)
   align-items: center;
   gap: 9px;
   padding: 0 9px !important;
-  color: var(--xs-text) !important;
+  color: var(--xs-menu-text) !important;
   font-family: inherit !important;
   font-size: 12px !important;
 }
 .context-view .monaco-menu .action-item.focused,
 .context-view .monaco-menu .action-item:hover {
-  background: var(--xs-accent-wash) !important;
+  background: var(--xs-menu-hover-bg) !important;
 }
 .context-view .monaco-menu .action-item.focused .action-label,
-.context-view .monaco-menu .action-item:hover .action-label { color: var(--xs-text) !important; }
-.context-view .monaco-menu .action-item .keybinding { color: var(--xs-text-faint) !important; }
-.context-view .monaco-menu .xs-context-icon { color: var(--xs-text-faint); }
+.context-view .monaco-menu .action-item:hover .action-label { color: var(--xs-menu-hover-text) !important; }
+.context-view .monaco-menu .action-item .keybinding { color: var(--xs-menu-muted) !important; }
+.context-view .monaco-menu .xs-context-icon { color: var(--xs-menu-muted); }
 
 /* Fallback for Monaco builds which mount the menu directly under body. */
 body > .monaco-menu,
@@ -631,15 +785,15 @@ body > .context-view > .monaco-menu {
   font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif !important;
   min-width: 252px;
   padding: 5px !important;
-  background: var(--xs-surface-raised) !important;
-  border: 1px solid var(--xs-border) !important;
+  background: var(--xs-menu-bg) !important;
+  border: 1px solid var(--xs-menu-border) !important;
   border-radius: var(--xs-radius-md) !important;
   box-shadow: var(--xs-shadow-menu) !important;
 }
 body > .monaco-menu .action-label,
 body > .context-view > .monaco-menu .action-label {
   font-family: inherit !important;
-  color: var(--xs-text) !important;
+  color: var(--xs-menu-text) !important;
 }
 
 /* Общие меню редактора и консоли используют геометрию и палитру оболочки. */
@@ -648,12 +802,12 @@ body > .context-view > .monaco-menu .action-label {
   z-index: 10000;
   min-width: 252px;
   padding: 5px;
-  background: var(--xs-surface-raised);
-  border: 1px solid var(--xs-border);
+  background: var(--xs-menu-bg);
+  border: 1px solid var(--xs-menu-border);
   border-radius: var(--xs-radius-md);
   box-shadow: var(--xs-shadow-menu);
   font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
-  color: var(--xs-text);
+  color: var(--xs-menu-text);
 }
 .xs-context-menu[hidden] { display: none; }
 .xs-context-item {
@@ -666,21 +820,21 @@ body > .context-view > .monaco-menu .action-label {
   border: 0;
   border-radius: var(--xs-radius-sm);
   background: transparent;
-  color: var(--xs-text);
+  color: var(--xs-menu-text);
   font: inherit;
   font-size: 12px;
   text-align: left;
   cursor: default;
 }
 .xs-context-item:not(:disabled):hover, .xs-context-item:focus-visible {
-  background: var(--xs-accent-wash);
+  background: var(--xs-menu-hover-bg);
   outline: 0;
 }
-.xs-context-item:disabled { color: var(--xs-text-faint); opacity: var(--xs-disabled-opacity); }
+.xs-context-item:disabled { color: var(--xs-menu-muted); opacity: var(--xs-disabled-opacity); }
 .xs-context-item:disabled .xs-context-item-icon { color: inherit; }
-.xs-context-item-icon { width: 18px; color: var(--xs-text-faint); font-size: 15px; text-align: center; }
+.xs-context-item-icon { width: 18px; color: var(--xs-menu-muted); font-size: 15px; text-align: center; }
 .xs-context-item-label { flex: 1; }
-.xs-context-item-key { margin-left: 20px; color: var(--xs-text-faint); font-size: 11px; }
+.xs-context-item-key { margin-left: 20px; color: var(--xs-menu-muted); font-size: 11px; }
 .xs-context-separator { height: 1px; margin: 5px 4px; background: var(--xs-border-subtle); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -703,8 +857,48 @@ body > .context-view > .monaco-menu .action-label {
 .project-properties input,.project-properties textarea { box-sizing:border-box; width:100%; background:var(--xs-editor); color:var(--xs-text); border:1px solid var(--xs-border); padding:6px; }
 .project-properties textarea { min-height:60px; resize:vertical; }
 .project-properties-actions { display:flex; justify-content:flex-end; gap:8px; }
-.project-properties button,.project-description { background:var(--xs-surface-raised); color:var(--xs-text); border:1px solid var(--xs-border); padding:6px 10px; cursor:pointer; }
+.project-properties button,.project-description { background:var(--xs-surface-raised); color:var(--xs-raised-text); border:1px solid var(--xs-border); padding:6px 10px; cursor:pointer; }
 .project-description { width:100%; text-align:left; }
 .project-directory { padding-left:12px; }
 .project-directory summary { cursor:pointer; padding:5px 0; }
 .project-entry-error { color:var(--xs-danger); white-space:normal; padding:6px; }
+
+/* Общая поверхность меню: верхнее меню, контекстные меню и раскрываемые панели. */
+:is(.menu-dropdown,.submenu-dropdown,.xs-context-menu,.xs-menu-surface,#menu-overflow-content) {
+  background:var(--xs-menu-bg); color:var(--xs-menu-text); border-color:var(--xs-menu-border); box-shadow:var(--xs-menu-shadow);
+}
+:is(.menu-dropdown-item,.recent-item,.xs-context-item) { color:var(--xs-menu-text); }
+:is(.menu-icon,.menu-shortcut,.recent-icon,.recent-path,.submenu-arrow,.xs-context-item-icon,.xs-context-item-key) { color:var(--xs-menu-icon); }
+.menu-check { color:var(--xs-menu-check); }
+:is(.menu-separator,.xs-context-separator) { background:var(--xs-menu-border); }
+:is(.menu-dropdown-item,.recent-item,.xs-context-item):not(:disabled):not([aria-disabled='true']):is(:hover,:focus-visible) { background:var(--xs-menu-hover-bg); color:var(--xs-menu-hover-text); }
+:is(.menu-dropdown-item,.recent-item,.xs-context-item):is(:hover,:focus-visible) :is(.menu-icon,.menu-shortcut,.recent-icon,.recent-path,.submenu-arrow,.menu-check,.xs-context-item-icon,.xs-context-item-key) { color:inherit; }
+:is(.menu-dropdown-item,.xs-context-item):is(:disabled,[aria-disabled='true']) { color:var(--xs-menu-muted); opacity:1; }
+:is(.menu-dropdown-item,.xs-context-item):is(:disabled,[aria-disabled='true']) :is(.menu-icon,.menu-shortcut,.xs-context-item-icon) { color:inherit; }
+.menu-mnemonic { color:var(--xs-menu-mnemonic); }
+.monaco-menu :is(.action-item.focused,.action-item:hover) :is(.action-label,.keybinding,.xs-context-icon) { color:var(--xs-menu-hover-text)!important; }
+.studio-shell .xs-menu-surface .toolbar-btn { color:var(--xs-menu-text); }
+.studio-shell .xs-menu-surface .toolbar-btn:not(:disabled):not([aria-disabled='true']):is(:hover,:focus-visible) { background:var(--xs-menu-hover-bg); color:var(--xs-menu-hover-text); }
+.studio-shell .xs-menu-surface .toolbar-btn:is(:disabled,[aria-disabled='true']) { color:var(--xs-menu-muted); opacity:1; }
+.studio-shell .xs-menu-surface select { color:var(--xs-menu-text); background:var(--xs-menu-bg); border-color:var(--xs-menu-border); }
+/* Одни и те же правила рамки и кнопок для всех диалогов оболочки. */
+.modal-overlay { background:var(--xs-overlay-bg); backdrop-filter:var(--xs-overlay-filter); }
+:is(.modal,.project-properties) { color:var(--xs-dialog-text); background:var(--xs-dialog-bg); border:var(--xs-dialog-border-width) solid var(--xs-dialog-frame); border-radius:var(--xs-dialog-radius); box-shadow:var(--xs-dialog-shadow); }
+:is(.modal,.project-properties) :is(h2,h3) { color:var(--xs-dialog-label); }
+.about-dialog :is(.about-row,.about-row code) { color:var(--xs-dialog-text); }
+.about-dialog .about-row code { background:transparent; }
+:is(.modal,.project-properties) :is(button,#about-close) { color:var(--xs-dialog-button-text); background:var(--xs-dialog-button-bg); border:1px var(--xs-dialog-button-style) var(--xs-dialog-border); border-radius:var(--xs-dialog-control-radius); }
+:is(.modal,.project-properties) button:hover:not(:disabled) { color:var(--xs-dialog-button-hover-text); background:var(--xs-dialog-button-hover-bg); }
+:is(.modal,.project-properties) button:active { border-style:var(--xs-dialog-button-active-style); }
+:is(.modal,.project-properties) :focus-visible { outline:2px solid var(--xs-dialog-focus); outline-offset:1px; }
+:is(.about-button-hotkey,.settings-button-hotkey) { color:var(--xs-dialog-hotkey); }
+:is(.about-button-default-text,.settings-button-default-text) { color:var(--xs-dialog-default); }
+:is(.project-properties,.project-create-dialog) :is(input,textarea) { color:var(--xs-dialog-field-text); background:var(--xs-dialog-field-bg); border:1px var(--xs-dialog-field-style) var(--xs-dialog-border); }
+
+.brand-logo-lg.logo-light { display:var(--xs-logo-light-display); }
+.brand-logo-lg.logo-dark { display:var(--xs-logo-dark-display); }
+.project-description { color:var(--xs-raised-text); }
+
+.xs-menu-surface { border:1px solid var(--xs-menu-border); }
+
+:is(.modal,.project-properties) :is(input:not([type="checkbox"]),textarea):focus { color:var(--xs-dialog-field-focus-text); background:var(--xs-dialog-field-focus-bg); }

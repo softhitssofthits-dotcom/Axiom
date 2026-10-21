@@ -39,7 +39,11 @@ module.exports = [{
       // Консоль и нижняя панель продолжают синюю гамму рабочего поля, а не чёрный фон.
       const panelBg = await S.page.evaluate(() => getComputedStyle(document.getElementById('bottom-panel')).backgroundColor);
       if (theme === 'borland') C.eq(panelBg, 'rgb(0, 0, 128)', 'Borland Pascal: консоль и нижняя панель синие в тон рабочему полю');
-      else C.ok(panelBg !== 'rgb(0, 0, 128)', theme + ': фон панели не подменяется палитрой Pascal');
+      const expectedPanel = await S.page.evaluate(() => {
+        const probe=document.createElement('span');probe.style.color='var(--xs-console-bg)';document.body.append(probe);
+        const color=getComputedStyle(probe).color;probe.remove();return color;
+      });
+      C.eq(panelBg,expectedPanel,theme + ': фон панели соответствует собственной общей роли консоли');
     }
 
     for (const theme of ids) {

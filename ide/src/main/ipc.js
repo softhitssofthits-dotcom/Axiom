@@ -548,7 +548,7 @@ function setupIpc(logger, options = {}) {
     return picked;
   });
 
-  ipcMain.handle('open-project-dialog', async (event, suggestedPath) => {
+  ipcMain.handle('open-project-dialog', async (event, suggestedPath, chooseProject = false) => {
     const owner = BrowserWindow.fromWebContents(event.sender);
     if (!owner || owner.isDestroyed()) return null;
     const settings = loadSettings();
@@ -560,10 +560,24 @@ function setupIpc(logger, options = {}) {
       settings.lastProjectFolderDir = picked;
       saveSettings();
     }
+    if (picked && chooseProject === true) {
+      const candidates = fs.readdirSync(picked, { withFileTypes: true })
+        .filter(item => item.isFile() && /\.axproj$/i.test(item.name));
+      if (candidates.length > 1) {
+        const selection = await dialog.showOpenDialog(owner, {
+          title: settings.language === 'en' ? 'Select a project in this folder' : 'Выберите проект в этой папке',
+          defaultPath: picked, properties: ['openFile'],
+          filters: [{ name: 'Axiom Project', extensions: ['axproj'] }],
+        });
+        return selection.canceled ? null : selection.filePaths[0] || null;
+      }
+    }
     return picked;
   });
 
   ipcMain.handle('list-project-files', async (_e, projectDir) => {
+    if (typeof projectDir !== 'string' || !fs.statSync(projectDir).isDirectory())
+      throw new Error('Папка проекта недоступна.');
     return listProjectFiles(projectDir);
   });
 

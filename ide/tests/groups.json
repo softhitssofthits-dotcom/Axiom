@@ -50,7 +50,8 @@
     "window-recovery.test.cjs",
     "project-session.test.cjs",
     "project-create.test.cjs",
-    "recovery-renderer.test.cjs"
+    "recovery-renderer.test.cjs",
+    "theme-surfaces.test.cjs"
   ],
   "ide-unit-main": [
     "backend-client.test.cjs",
@@ -85,7 +86,8 @@
     "string-tokenization.test.cjs",
     "themes.test.cjs",
     "ui-controls.test.cjs",
-    "project-session.test.cjs"
+    "project-session.test.cjs",
+    "theme-surfaces.test.cjs"
   ],
   "ide-unit-delivery": [
     "debug-command-failure.test.cjs",

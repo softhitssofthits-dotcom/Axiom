@@ -189,9 +189,13 @@
       'editorSuggestWidget.selectedForeground': read('--xs-menu-hover-text') || read('--xs-text'),
     };
     if (read('--xs-menu-bg')) Object.assign(colors, {
+      'menu.background': read('--xs-menu-bg'), 'menu.foreground': read('--xs-menu-text'),
+      'menu.border': read('--xs-menu-border'), 'menu.separatorBackground': read('--xs-menu-border'),
+      'menu.selectionBackground': read('--xs-menu-hover-bg'), 'menu.selectionForeground': read('--xs-menu-hover-text'),
       'editorHoverWidget.background': read('--xs-menu-bg'), 'editorHoverWidget.foreground': read('--xs-menu-text'),
       'editorHoverWidget.border': read('--xs-menu-border'),
       'quickInput.background': read('--xs-menu-bg'), 'quickInput.foreground': read('--xs-menu-text'),
+      'list.hoverBackground': read('--xs-menu-hover-bg'), 'list.hoverForeground': read('--xs-menu-hover-text'),
       'list.focusBackground': read('--xs-menu-hover-bg'), 'list.focusForeground': read('--xs-menu-hover-text'),
       'list.activeSelectionBackground': read('--xs-menu-hover-bg'), 'list.activeSelectionForeground': read('--xs-menu-hover-text'),
     });

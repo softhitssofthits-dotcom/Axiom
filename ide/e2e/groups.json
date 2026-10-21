@@ -70,7 +70,8 @@
     "trace-partial-file.spec.js",
     "trace-points.spec.js",
     "trace-restart.spec.js",
-    "trace.spec.js"
+    "trace.spec.js",
+    "theme-surfaces.spec.js"
   ],
   "e2e-documents": [
     "project-create.spec.js",
@@ -158,6 +159,7 @@
     "retro-menu-palettes.spec.js",
     "shell.spec.js",
     "startup.spec.js",
-    "theme-registry.spec.js"
+    "theme-registry.spec.js",
+    "theme-surfaces.spec.js"
   ]
 }

@@ -59,7 +59,7 @@
       for(const id of ['tb-stop','tb-restart','tb-stepOver','tb-stepInto','tb-stepOut','tb-stepBack'])debugTools.append(byId(id));
       const more=document.createElement('details');more.id='toolbar-overflow';
       const summary=document.createElement('summary');summary.innerHTML=ShellIcons.markup('ellipsis');summary.dataset.studioLabel='studio.moreCommands';more.append(summary);
-      const other=document.createElement('div');other.className='studio-extra-commands';
+      const other=document.createElement('div');other.className='studio-extra-commands xs-menu-surface';
       for(const id of ['tb-format','tb-find','tb-toggle-project','tb-breakpoint','tb-clear']){
         const el=byId(id);const label=document.createElement('span');label.className='studio-overflow-label';el.append(label);other.append(el);
       }
@@ -149,7 +149,7 @@
       const file=this.ide.activeFile;
       byId('structure-document-name').textContent=file?file.split(/[\\/]/).pop():I18N.t('studio.noDocument');
       byId('structure-document-name').title=file||'';
-      byId('project-title').title=this.ide.projectDir||I18N.t('menu.file.openProject');
+      byId('project-title').title=this.ide.projectDir||I18N.t('project.open');
       this.compactOutline();
     }
     updateCommandLabels(){for(const el of document.querySelectorAll('.studio-extra-commands button'))el.querySelector('.studio-overflow-label').textContent=el.getAttribute('aria-label')||el.title;}
@@ -165,7 +165,7 @@
       if(!panel||byId('outline-more'))return;
       const more=document.createElement('details');more.id='outline-more';
       const summary=document.createElement('summary');summary.innerHTML=ShellIcons.markup('ellipsis');summary.dataset.studioLabel='studio.moreCommands';UIControls.setLabel(summary,I18N.t('studio.moreCommands'));more.append(summary);
-      const options=document.createElement('div');options.className='studio-outline-extra';
+      const options=document.createElement('div');options.className='studio-outline-extra xs-menu-surface';
       const label=document.createElement('label');label.htmlFor='outline-sort';label.dataset.i18n='outline.sort';label.textContent=I18N.t('outline.sort');
       options.append(label,panel.sort,panel.groupAll,panel.assistantButton);more.append(options);panel.controls.querySelector('.outline-group-tools').append(more);
       closeCommands(more,options);

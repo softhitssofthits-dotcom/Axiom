@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 554,
+  "count": 558,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -2686,6 +2686,26 @@
       "id": "theme-suggest-widget-palette",
       "spec": "theme-registry.spec.js",
       "name": "Список подсказок раскрашен ровно: совпадение и иконки берут цвета темы, а не Monaco"
+    },
+    {
+      "id": "theme-surfaces-dark",
+      "spec": "theme-surfaces.spec.js",
+      "name": "Общие поверхности и контраст оболочки: dark"
+    },
+    {
+      "id": "theme-surfaces-light",
+      "spec": "theme-surfaces.spec.js",
+      "name": "Общие поверхности и контраст оболочки: light"
+    },
+    {
+      "id": "theme-surfaces-basic",
+      "spec": "theme-surfaces.spec.js",
+      "name": "Общие поверхности и контраст оболочки: basic"
+    },
+    {
+      "id": "theme-surfaces-borland",
+      "spec": "theme-surfaces.spec.js",
+      "name": "Общие поверхности и контраст оболочки: borland"
     },
     {
       "id": "trace-stepback-file-write-boundary",

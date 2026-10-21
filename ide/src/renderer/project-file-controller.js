@@ -37,6 +37,8 @@
         ...(this.ide.projectSession?.descriptor?[{id:'project-properties',translation:'project.properties',icon:'codicon-settings-gear',enabled:!this.ide.running}]:[]),
         { id: 'paste', translation: 'files.paste', icon: 'codicon-files', enabled: hasClipboard },
         { id: 'refresh-project', translation: 'studio.refreshProject', icon: 'codicon-refresh', enabled: !!this.ide.projectDir },
+        { separator: true },
+        { id: 'close-project', translation: 'project.close', icon: 'codicon-close', enabled: !!this.ide.projectDir },
       ];
       return [
         { id: 'open', translation: 'files.open', icon: 'codicon-go-to-file' },
@@ -75,6 +77,7 @@
     async action(id) {
       const path = this.path;
       if(id==='refresh'){try{await this.ide.refreshProjectFiles();}catch(error){alert(error.message);}return;}
+      if(id==='close-project')return this.ide.closeProject();
       if(id==='project-properties')return window.ProjectView.properties(this.ide);
       if (id === 'rename') return this.rename(path);
       if (id === 'open') return /\.axm$/i.test(path)?this.ide.openFile(path):this.properties(path);

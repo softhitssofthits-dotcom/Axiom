@@ -46,7 +46,7 @@ test('Пустая область проекта создаёт файл, обн
   const calls = [];
   const {controller, ide} = setup({newProjectFile: async () => calls.push('new'), refreshProjectFiles: async () => calls.push('refresh')});
   let items = controller.items(null);
-  assert.deepEqual(items.filter(item => item.id).map(item => item.id), ['new-project-file', 'paste', 'refresh-project']);
+  assert.deepEqual(items.filter(item => item.id).map(item => item.id), ['new-project-file', 'paste', 'refresh-project', 'close-project']);
   assert.equal(items.find(item => item.id === 'new-project-file').enabled, true);
   assert.equal(items.find(item => item.id === 'refresh-project').enabled, true);
   assert.equal(items.find(item => item.id === 'paste').enabled, false);
@@ -142,4 +142,15 @@ test('После успешной корзины закрываются толь
   await controller.trash(source);
   assert.equal(calls.trash, 1);
   assert.deepEqual(calls.close, [[source, true]]);
+});
+
+
+test('Закрытие из контекстного меню использует общий closeProject', async () => {
+  let closed=0;
+  const {controller,ide}=setup({closeProject:async()=>{closed++;return false;}});
+  const item=controller.items(null).find(item=>item.id==='close-project');
+  assert.equal(item.translation,'project.close');assert.equal(item.enabled,true);
+  assert.equal(await controller.action('close-project'),false);
+  assert.equal(closed,1,'Отмена общего обработчика возвращается вызывающей стороне');
+  ide.projectDir=null;assert.equal(controller.items(null).find(item=>item.id==='close-project').enabled,false);
 });

@@ -1,27 +1,5 @@
 /* Утверждённое оформление Axiom; размеры не ограничивают ширину окна. */
-[data-theme=basic] #menubar{background:var(--xs-chrome-bg);color:var(--xs-chrome-text)}
-[data-theme=basic] #status-bar{background:var(--xs-status-bg);color:var(--xs-text)}
-[data-theme=basic] #menubar .menu-label,[data-theme=basic] #menu-overflow{color:var(--xs-chrome-text)}
-[data-theme=basic] #menubar .menu-dropdown{color:var(--xs-text)}
-[data-theme=basic] #menubar .menu-label:hover,[data-theme=basic] #menubar .menu-item.open>.menu-label{color:var(--xs-text)}
-[data-theme=basic] #status-bar span{color:var(--xs-text)}
-[data-theme=basic] #editor-tabs,[data-theme=basic] #document-tab-bar{border-color:var(--xs-border)}
-[data-theme=basic] .logo-light{display:none}
-[data-theme=borland] #menubar,[data-theme=borland] #toolbar,[data-theme=borland] #status-bar{background:var(--xs-chrome-bg);color:var(--xs-chrome-text)}
-[data-theme=borland] #toolbar{background:var(--xs-toolbar-bg)}
-[data-theme=borland] #menubar .menu-label,[data-theme=borland] #menu-overflow{color:var(--xs-chrome-text)}
-[data-theme=borland] #toolbar .toolbar-btn:not(.tb-run):not(.tb-stop):not([aria-pressed]){color:var(--xs-chrome-text)}
-[data-theme=borland] #toolbar .toolbar-btn:focus-visible{outline:2px solid #55ffff!important;outline-offset:1px}
-[data-theme=borland] #menubar .menu-label:hover,[data-theme=borland] #menubar .menu-item.open>.menu-label{background:var(--xs-menu-hover-bg);color:var(--xs-menu-hover-text)}
-[data-theme=borland] #status-bar span{color:var(--xs-chrome-text)}
-[data-theme=borland] #editor-tabs,[data-theme=borland] #document-tab-bar{border-color:var(--xs-border)}
-[data-theme=borland] .logo-light{display:none}
-[data-theme=borland] #document-tab-bar,[data-theme=borland] #editor-tabs{background:var(--xs-tab-strip-bg)}
-[data-theme=borland] #panel-tabs{background:var(--xs-output-header-bg)}
-[data-theme=borland] #bottom-panel{background:var(--xs-console-bg)}
-[data-theme=borland] .panel-tab{color:var(--xs-text-muted)}
-[data-theme=borland] .panel-tab:is(.active,:hover){background:var(--xs-menu-hover-bg);color:var(--xs-menu-hover-text);border-bottom-color:var(--xs-border)}
-[hidden]{display:none!important}#menubar{height:36px;min-width:0;gap:2px;padding:0 8px}.shell-brand{flex-shrink:0;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--xs-accent);padding-right:12px}.menu-item{flex-shrink:0}.menu-label{margin:0;padding:0 8px;height:30px}.menu-dropdown{min-width:min(240px,calc(100vw - 16px));max-width:calc(100vw - 16px)}#menu-overflow{border:0;background:none;color:var(--xs-text);padding:6px 10px;cursor:pointer;margin-left:auto}#menu-overflow-content{position:absolute;right:8px;top:36px;z-index:2100;min-width:150px;padding:5px;background:var(--xs-surface-raised);border:1px solid var(--xs-border);border-radius:var(--xs-radius-sm);box-shadow:var(--xs-shadow-menu)}#menu-overflow-content .menu-item{height:32px;display:block}#menu-overflow-content .menu-label{width:100%}#menu-overflow-content .menu-dropdown{position:fixed;top:72px;left:auto;right:165px}
+[hidden]{display:none!important}#menubar{height:36px;min-width:0;gap:2px;padding:0 8px}.shell-brand{flex-shrink:0;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--xs-accent);padding-right:12px}.menu-item{flex-shrink:0}.menu-label{margin:0;padding:0 8px;height:30px}.menu-dropdown{min-width:min(240px,calc(100vw - 16px));max-width:calc(100vw - 16px)}#menu-overflow{border:0;background:none;color:var(--xs-text);padding:6px 10px;cursor:pointer;margin-left:auto}#menu-overflow-content{position:absolute;right:8px;top:36px;z-index:2100;min-width:150px;padding:5px;background:var(--xs-menu-bg);border:1px solid var(--xs-menu-border);border-radius:var(--xs-radius-sm);box-shadow:var(--xs-menu-shadow)}#menu-overflow-content .menu-item{height:32px;display:block}#menu-overflow-content .menu-label{width:100%}#menu-overflow-content .menu-dropdown{position:fixed;top:72px;left:auto;right:165px}
 #toolbar{height:auto;min-height:44px;flex-wrap:wrap;padding:5px 8px;gap:5px;flex-shrink:0}.command-group{display:flex;gap:3px;border-right:1px solid var(--xs-border);padding-right:7px}.command-group:last-child{border-right:0}.toolbar-btn svg{width:var(--xs-icon-size);height:var(--xs-icon-size);fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}#tb-debug{color:var(--xs-accent)}#tb-run{color:var(--xs-success)}#tb-stop{color:var(--xs-danger)}#workspace,#main-content,#editor-container{min-width:0;min-height:0}#project-explorer{width:208px}#status-bar{min-width:0;overflow:hidden}#status-file-path{min-width:0;overflow:hidden;text-overflow:ellipsis}#panel-tabs{overflow-x:auto;white-space:nowrap}
 @media(max-width:650px){#project-explorer{display:none!important}#status-execution-time{display:none}.shell-brand{padding-right:4px}#menu-overflow-content .menu-dropdown{right:8px;top:calc(36px + 32px * 4)}}
 
@@ -44,53 +22,18 @@
 #menu-settings:focus-visible { outline:2px solid var(--accent-color); outline-offset:-2px; }
 #menu-overflow { margin-left:0; }
 
-/* Общая палитра всех выпадающих меню классических тем. */
-html[data-theme="basic"] #menubar .menu-label,html[data-theme="basic"] #menu-overflow { color:var(--xs-menu-text); }
-html[data-theme="basic"] #menubar .menu-label:hover,html[data-theme="basic"] #menubar .menu-item.open>.menu-label { background:var(--xs-menu-hover-bg); color:var(--xs-menu-hover-text); }
-html[data-chrome="classic"] :is(.menu-dropdown,.submenu-dropdown,.xs-context-menu,#menu-overflow-content,.monaco-menu) { box-shadow:var(--xs-menu-shadow)!important; }
-html[data-theme="basic"] :is(.menu-dropdown-item,.xs-context-item)[aria-disabled="true"] { color:var(--xs-menu-muted); opacity:1; }
-html[data-theme="basic"] :is(.menu-dropdown-item,.xs-context-item)[aria-disabled="true"] :is(.menu-icon,.menu-shortcut,.xs-context-item-icon,.xs-context-item-key) { color:inherit; }
-html[data-chrome="classic"] :is(.menu-dropdown,.submenu-dropdown,.xs-context-menu,#menu-overflow-content) {
-  background:var(--xs-menu-bg); color:var(--xs-menu-text); border-color:var(--xs-menu-border);
-}
-html[data-chrome="classic"] :is(.menu-dropdown-item,.recent-item,.xs-context-item) { color:var(--xs-menu-text); }
-html[data-chrome="classic"] #menu-overflow-content .menu-label { color:var(--xs-menu-text); }
-html[data-chrome="classic"] :is(.menu-icon,.menu-shortcut,.recent-icon,.recent-path,.submenu-arrow,.menu-check,.xs-context-item-icon,.xs-context-item-key) { color:var(--xs-menu-text); }
-html[data-chrome="classic"] :is(.menu-separator,.xs-context-separator) { background:var(--xs-menu-border); }
-html[data-chrome="classic"] :is(.menu-dropdown-item:hover,.recent-item:hover,.xs-context-item:not(:disabled):hover,.xs-context-item:not(:disabled):focus-visible,#menu-overflow-content .menu-label:hover,#menu-overflow-content .menu-item.open>.menu-label) {
-  background:var(--xs-menu-hover-bg); color:var(--xs-menu-hover-text);
-}
-html[data-chrome="classic"] :is(.menu-dropdown-item:hover,.recent-item:hover,.xs-context-item:not(:disabled):hover,.xs-context-item:not(:disabled):focus-visible) :is(.menu-icon,.menu-shortcut,.recent-icon,.recent-path,.submenu-arrow,.menu-check,.xs-context-item-icon,.xs-context-item-key) { color:var(--xs-menu-hover-text); }
-html[data-chrome="classic"] .xs-context-item:disabled { color:var(--xs-menu-muted); }
-html[data-chrome="classic"] .xs-context-item:disabled .xs-context-item-icon { color:inherit; }
-html[data-chrome="classic"] .monaco-menu {
-  background:var(--xs-menu-bg)!important; color:var(--xs-menu-text)!important; border-color:var(--xs-menu-border)!important;
-}
-html[data-chrome="classic"] .monaco-menu :is(.action-label,.keybinding,.xs-context-icon) { color:var(--xs-menu-text)!important; }
-html[data-chrome="classic"] .monaco-menu :is(.action-item.focused,.action-item:hover) { background:var(--xs-menu-hover-bg)!important; }
-html[data-chrome="classic"] .monaco-menu :is(.action-item.focused,.action-item:hover) :is(.action-label,.keybinding,.xs-context-icon) { color:var(--xs-menu-hover-text)!important; }
-
-/* Горячие буквы меню Turbo Vision остаются красными на обычном и выбранном пункте. */
-html[data-theme="borland"] .menu-mnemonic { color:#aa0000; }
-html[data-theme="borland"] :is(.menu-label:hover,.menu-item.open>.menu-label,.menu-dropdown-item:hover,.menu-dropdown-item:focus-visible,.recent-item:hover) .menu-mnemonic { color:#aa0000; }
-
-/* Окно «О программе» повторяет серый диалог Turbo Vision с зелёной кнопкой. */
-html[data-theme="borland"] .modal-overlay { background:rgba(0,0,0,.58); backdrop-filter:none; }
-html[data-theme="borland"] .modal.about-dialog {
-  color:var(--xs-dialog-text); background:var(--xs-dialog-bg); border:3px solid #fff; border-radius:0;
-  box-shadow:inset 0 0 0 1px #000, inset 0 0 0 3px #fff, 7px 7px 0 #000;
-}
-html[data-theme="borland"] .about-dialog h3,
-html[data-theme="borland"] .about-dialog .about-row { color:#000; }
-html[data-theme="borland"] .about-dialog .about-row code { color:#000; background:transparent; padding:0; }
-html[data-theme="borland"] .about-dialog #about-close {
-  color:#000; background:#00aa00; border:1px solid #000; border-radius:0;
-  border-style:outset;
-}
-html[data-theme="borland"] .about-dialog #about-close:hover { color:#fff; background:#00aa00; }
-html[data-theme="borland"] .about-dialog #about-close:focus-visible { outline:2px solid #55ffff; outline-offset:1px; }
-html[data-theme="borland"] .about-dialog .about-button-default-text { color:#55ffff; }
-html[data-theme="borland"] .about-dialog .about-button-hotkey { color:#ffff55; }
+/* Общие правила оболочки; палитры находятся в design-system.css. */
+#menubar { color:var(--xs-chrome-text); }
+#menubar .menu-label,#menu-overflow { color:var(--xs-chrome-text); }
+#menubar .menu-label:hover,#menubar .menu-item.open>.menu-label { background:var(--xs-chrome-hover-bg); color:var(--xs-chrome-hover-text); }
+#menu-overflow-content .menu-label { color:var(--xs-menu-text); }
+#menu-overflow-content .menu-label:hover { background:var(--xs-menu-hover-bg); color:var(--xs-menu-hover-text); }
+#toolbar > .command-group .toolbar-btn:not(.tb-run):not(.tb-stop):not([aria-pressed]) { color:var(--xs-toolbar-text); }
+#toolbar .toolbar-btn:focus-visible { outline:2px solid var(--xs-toolbar-focus); outline-offset:1px; }
+#status-bar,#status-bar span { color:var(--xs-status-text); }
+#document-tab-bar,#editor-tabs { background:var(--xs-tab-strip-bg); border-color:var(--xs-border); }
+#bottom-panel { background:var(--xs-console-bg); }
+.panel-tab:is(.active,:hover) { background:var(--xs-panel-selected-bg); color:var(--xs-panel-selected-text); border-bottom-color:var(--xs-panel-selected-border); }
 #shell-sidebar #structure-content{display:flex!important;flex-direction:column;overflow:hidden;min-height:160px}
 #shell-sidebar #outline-list{flex:1;min-height:0;overflow:auto}
 .outline-controls{flex:none;padding:4px;white-space:normal}

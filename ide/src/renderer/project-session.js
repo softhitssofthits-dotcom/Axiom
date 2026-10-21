@@ -109,13 +109,13 @@
       if(!response.ok)throw new Error(response.error?.message||'Не удалось сохранить точку входа.');
       this.applyDescriptor(response.payload);return true;
     }
-    async open(dir,{restore=false}={}){
+    async open(dir,{restore=false,folder=false}={}){
       if(this.ide.running)return false;
       const request=++this.sequence;
       const current=()=>request===this.sequence;
       this.loading=true;this.render();
       try{
-        if(this.api.projectCommand){
+        if(this.api.projectCommand&&!folder){
           const response=await this.api.projectCommand('project.open',{path:dir});
           if(!current())return false;
           if(!response.ok)throw new Error(response.error?.message||'Не удалось открыть проект.');

@@ -27,7 +27,7 @@ contextBridge.exposeInMainWorld('axiom', {
   trashProjectFile: (root, item) => ipcRenderer.invoke('trash-project-file', root, item),
   projectFileProperties: (root, item) => ipcRenderer.invoke('project-file-properties', root, item),
   openFileDialog: () => ipcRenderer.invoke('open-file-dialog'),
-  openProjectDialog: defaultPath => ipcRenderer.invoke('open-project-dialog', defaultPath),
+  openProjectDialog: (defaultPath, chooseProject = false) => ipcRenderer.invoke('open-project-dialog', defaultPath, chooseProject),
   getProjectCreationDefaults: () => ipcRenderer.invoke('project-creation-defaults'),
   chooseProjectParent: currentParent => ipcRenderer.invoke('choose-project-parent', currentParent),
   createProject: (parent, name) => ipcRenderer.invoke('create-project', parent, name),

@@ -105,8 +105,8 @@ module.exports=[{id:'retro-menu-palettes',name:'Borland и QuickBASIC: обща�
    await S.page.waitForFunction(()=>getComputedStyle(document.querySelector('#setting-fontSize')).backgroundColor==='rgb(0, 170, 0)');
    C.eq(await dialog.locator('#setting-fontSize').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(0, 170, 0)','Borland: поле ввода в фокусе зелёное');
    await dialog.locator('#settings-tab-font').click();
-   C.eq(await dialog.locator('.settings-footer .settings-primary .settings-button-default-text').evaluate(el=>getComputedStyle(el).color),'rgb(85, 255, 255)','Borland Pascal: основной текст кнопки бирюзовый');
-   C.eq(await dialog.locator('.settings-footer .settings-primary .settings-button-hotkey').evaluate(el=>getComputedStyle(el).color),'rgb(255, 255, 85)','Borland Pascal: клавиша кнопки выделена жёлтым');
+   C.eq(await dialog.locator('.settings-footer .settings-primary .settings-button-default-text').evaluate(el=>getComputedStyle(el).color),'rgb(0, 0, 0)','Borland Pascal: основной текст кнопки контрастный');
+   C.eq(await dialog.locator('.settings-footer .settings-primary .settings-button-hotkey').evaluate(el=>getComputedStyle(el).color),'rgb(0, 0, 0)','Borland Pascal: клавиша кнопки контрастна зелёному фону');
    }
   C.eq(await dialog.locator('.settings-preview').evaluate(el=>getComputedStyle(el).backgroundColor),previewBg,theme+': предпросмотр сохраняет цвет редактора');
   const shadow=await dialog.evaluate(el=>getComputedStyle(el).boxShadow);
@@ -118,7 +118,7 @@ module.exports=[{id:'retro-menu-palettes',name:'Borland и QuickBASIC: обща�
   ['dark','rgb(37, 46, 62)','rgb(53, 63, 80)','rgb(228, 235, 245)'],
   ['light','rgb(255, 255, 255)','rgb(220, 231, 245)','rgb(35, 50, 71)'],
   ['basic','rgb(192, 192, 192)','rgb(0, 0, 0)','rgb(255, 255, 255)'],
-  ['borland','rgb(0, 170, 170)','rgb(0, 170, 0)','rgb(255, 255, 255)']
+  ['borland','rgb(0, 170, 170)','rgb(0, 170, 0)','rgb(0, 0, 0)']
  ]) {
   await S.page.evaluate(theme=>window.__ide.setTheme(theme),theme);
   await S.clickMenuItem('tools','editor-settings');
@@ -150,8 +150,8 @@ module.exports=[{id:'retro-menu-palettes',name:'Borland и QuickBASIC: обща�
  C.eq(await about.evaluate(el=>getComputedStyle(el).color),'rgb(0, 0, 0)','Borland Pascal: текст окна «О программе» чёрный');
  C.eq(await about.locator('.about-row code').first().evaluate(el=>getComputedStyle(el).backgroundColor),'rgba(0, 0, 0, 0)','Borland Pascal: версии без цветных плашек');
  C.eq(await about.locator('#about-close').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(0, 170, 0)','Borland Pascal: кнопка окна «О программе» зелёная');
- C.eq(await about.locator('#about-close .about-button-default-text').evaluate(el=>getComputedStyle(el).color),'rgb(85, 255, 255)','Borland Pascal: первая буква ОК светло-бирюзовая');
- C.eq(await about.locator('#about-close .about-button-hotkey').evaluate(el=>getComputedStyle(el).color),'rgb(255, 255, 85)','Borland Pascal: клавиша К в ОК жёлтая');
+ C.eq(await about.locator('#about-close .about-button-default-text').evaluate(el=>getComputedStyle(el).color),'rgb(0, 0, 0)','Borland Pascal: первая буква ОК контрастна зелёному фону');
+ C.eq(await about.locator('#about-close .about-button-hotkey').evaluate(el=>getComputedStyle(el).color),'rgb(0, 0, 0)','Borland Pascal: клавиша К контрастна зелёному фону');
  await S.screenshot('borland-reference-about');
  C.eq(S.pageErrors.length,0,'Нет ошибок страницы');
 }}];

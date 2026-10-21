@@ -6,6 +6,7 @@ class AxiomIDE {
     this.langMeta = null; // language registry from `axiom metadata`; null until loaded
     this.editor = null;
     this._recoveryEnabled = false;
+    this._restoringSession = true;
     this.openFiles = new window.DocumentStore(() => {
       this.refreshDirtyIndicators(); this.persistRecovery();
       if(this.editor) this.scheduleLiveCheck();
@@ -101,6 +102,8 @@ class AxiomIDE {
       this.setupConsoleEvents();
       await this.restoreTabs();
       await this.restoreProject();
+      this._restoringSession = false;
+      this.scheduleLiveCheck();
       if (!this.openFiles.size) this.newFile();
       this._recoveryEnabled = true;
       this.persistRecovery();
@@ -732,7 +735,7 @@ class AxiomIDE {
       case 'toggle-toolbar': this.setToolbarVisible(this.settings.toolbarVisible === false); break;
       case 'toggle-sidebar': this.setSidebarVisible(this.settings.sidebarVisible === false); break;
       case 'run-current-file': return this.run('run',true,true);
-      case 'open-project-file': return API.openProjectFileDialog().then(file=>file&&this.openProject(file));
+      case 'open-project-file': return this.openProjectFileDialog();
       case 'create-project-descriptor': return window.ProjectView.create(this);
       case 'project-properties': return window.ProjectView.properties(this);
       case 'toggle-project-explorer': this.toggleProjectExplorer(); break;
@@ -779,8 +782,19 @@ class AxiomIDE {
   }
 
   async openProjectDialog() {
-    const dir = await API.openProjectDialog();
-    if (dir) await this.openProject(dir);
+    try {
+      const dir = await API.openProjectDialog(undefined, true);
+      if (dir) return await this.openProject(dir);
+    } catch(error) { this.showIdeProblem('project.failed',error.message||String(error)); }
+    return false;
+  }
+
+  async openProjectFileDialog() {
+    try {
+      const file = await API.openProjectFileDialog();
+      if (file) return await this.openProject(file);
+    } catch(error) { this.showIdeProblem('project.failed',error.message||String(error)); }
+    return false;
   }
 
   // Сеанс проекта открывает документы и хранит выбранную точку входа.
@@ -837,8 +851,19 @@ class AxiomIDE {
   async restoreProject() {
     const dir = this.settings.lastProjectFile || this.settings.lastProjectDir;
     if (typeof dir !== 'string' || !dir) return false;
-    try{return await this.projectSession.open(dir,{restore:true});}
-    catch(error){this.showIdeProblem('project.failed',error.message||String(error));return false;}
+    try {
+      // Старый сеанс папки не должен заново выбирать axproj из её содержимого.
+      const opened = await this.projectSession.open(dir,{restore:true,folder:!this.settings.lastProjectFile});
+      this.log('project.restore', {path:dir,opened,entry:this.projectSession.entry});
+      return opened;
+    }
+    catch(error){
+      const detail = error.message || String(error);
+      this.log('project.restore.failed',{path:dir,message:detail},'error');
+      this.showIdeProblem('project.failed',detail);
+      alert(I18N.t('project.failed')+' '+dir+'\n'+detail);
+      return false;
+    }
   }
 
   renderProjectFiles(files) {
@@ -906,7 +931,7 @@ class AxiomIDE {
       catch(error) { this.showIdeProblem('project.failed',error.message); this.projectSession.render(); }
     });
     document.getElementById('project-title').onclick = () => {
-      if (!this.projectDir) this.openProjectDialog();
+      if (!this.projectDir) this.openProjectFileDialog();
       else this.setProjectFilesExpanded(!!this.projectFilesCollapsed);
     };
     const close=document.getElementById('project-explorer-close');
@@ -1464,6 +1489,7 @@ class AxiomIDE {
   // active file's directory.
   scheduleLiveCheck() {
     this._liveCheckSeq++;
+    if (this._restoringSession) return;
     clearTimeout(this._liveCheckTimer);
     const seq = this._liveCheckSeq;
     this._liveCheckTimer = setTimeout(() => this.runLiveCheck(seq).catch((e) => this.log('check.live.exception', { message: e?.message || String(e) }, 'error')), 600);
@@ -1471,6 +1497,7 @@ class AxiomIDE {
   }
 
   async runLiveCheck(seq = this._liveCheckSeq) {
+    if (this._restoringSession || this.projectSession.loading) return;
     const model = this.editor.getModel();
     if (!model || model.getLanguageId() !== 'axiom' || seq !== this._liveCheckSeq) return;
     if (this._formatBusy) { this.log('check.live.skipped-format', { seq, busy: this._formatBusy }); return; }
@@ -2432,18 +2459,22 @@ class AxiomIDE {
   }
 
   saveOpenTabs(useSync = false) {
+    const active = this.openFiles.get(this.activeFile);
+    if (active && this.editor.getModel() === active.model) active.viewState = this.editor.saveViewState();
     this.persistRecovery();
     const tabs = [];
     for (const [p, f] of this.openFiles) {
       const discarded = this._discardedOnExit?.has(f);
       if (discarded && p.startsWith("untitled")) continue;
       const isDirty = !discarded && this.dirty.has(p);
-      tabs.push({ path: p, isActive: p === this.activeFile, content: isDirty ? f.model.getValue() : undefined });
+      tabs.push({ path: p, isActive: p === this.activeFile, content: isDirty ? f.model.getValue() : undefined, viewState: f.viewState });
     }
     // On window teardown the async invoke loses the race with the renderer being
     // destroyed; the synchronous send guarantees the final openTabs snapshot reaches
     // the main process.
-    const patch = { openTabs: tabs };
+    const patch = { openTabs: tabs,
+      lastProjectDir: this.projectDir || this.settings.lastProjectDir || null,
+      lastProjectFile: this.projectSession.descriptor?.projectFilePath || this.settings.lastProjectFile || null };
     if (useSync && API.saveSettingsSync) API.saveSettingsSync(patch);
     else this.saveSettings(patch);
   }
@@ -2451,6 +2482,7 @@ class AxiomIDE {
   async restoreTabs() {
     const recovery = await API.getRecovery();
     const tabs = recovery ?? this.settings.openTabs;
+    const views = new Map((this.settings.openTabs || []).map(tab => [tab.path, tab.viewState]));
     if (Array.isArray(tabs) && tabs.length) {
       for (const tab of tabs) {
         if (tab.path && !tab.path.startsWith('untitled')) {
@@ -2458,7 +2490,7 @@ class AxiomIDE {
             const disk = await API.readFileContent(tab.path);
             const restored = typeof tab.content === 'string' && (recovery ? tab.isDirty : tab.content !== disk);
             const model = this.monaco.editor.createModel(restored ? tab.content : disk.replace(/^\uFEFF/, ''), /\.axm$/i.test(tab.path) ? 'axiom' : 'plaintext', this.monaco.Uri.file(tab.path));
-            this.openFiles.set(tab.path, { model, viewState: null, readonly: !!tab.readonly });
+            this.openFiles.set(tab.path, { model, viewState: views.get(tab.path) || null, readonly: !!tab.readonly });
             this.openFiles.get(tab.path).savedText = restored ? (tab.savedText ?? disk.replace(/^\uFEFF/, '').replace(/\r\n?/g, model.getEOL())) : model.getValue();
             this.openFiles.get(tab.path).missing = !!(restored && tab.missing);
             this.createTab(tab.path);
@@ -2467,7 +2499,7 @@ class AxiomIDE {
           } catch {
             if (typeof tab.content !== 'string') continue;
             const model = this.monaco.editor.createModel(tab.content, /\.axm$/i.test(tab.path) ? 'axiom' : 'plaintext', this.monaco.Uri.file(tab.path));
-            this.openFiles.set(tab.path, { model, viewState: null, readonly: !!tab.readonly });
+            this.openFiles.set(tab.path, { model, viewState: views.get(tab.path) || null, readonly: !!tab.readonly });
             const entry = this.openFiles.get(tab.path); entry.savedText = tab.savedText ?? tab.content; entry.missing = true;
             this.createTab(tab.path); this.markDirty(tab.path, true);
             if (tab.isActive) this.switchToFile(tab.path);
@@ -2475,7 +2507,7 @@ class AxiomIDE {
           API.watchFile(tab.path).catch(() => {});
         } else if (tab.path && typeof tab.content === 'string') {
           const model = this.monaco.editor.createModel(tab.content, 'axiom');
-          this.openFiles.set(tab.path, { model, viewState: null });
+          this.openFiles.set(tab.path, { model, viewState: views.get(tab.path) || null });
           this.openFiles.get(tab.path).savedText = tab.savedText ?? '';
           this.createTab(tab.path);
           this.markDirty(tab.path, true);

@@ -38,9 +38,9 @@ body {
 
 /* Window icon + caption live in the native title bar (main.js). The About
    dialog keeps an in-page logo; both theme variants are always in the DOM,
-   CSS picks the one matching [data-theme]. */
-html[data-theme="dark"] .logo-light { display: none; }
-html[data-theme="light"] .logo-dark { display: none; }
+   CSS uses the shared palette display roles. */
+ .logo-light { display: var(--xs-logo-light-display); }
+.logo-dark { display: var(--xs-logo-dark-display); }
 
 .menu-item {
   position: relative;

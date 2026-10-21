@@ -475,3 +475,13 @@ BytecodeVm.Debug.TryCreateValueSnapshot включает четыре време
 ### Поколение проектного анализа IDE — 2026-10-21
 
 ProjectSession.analysisRevision увеличивается при invalidateAnalysis; старые советы активной модели снимаются через существующий clearUsageAdvice и назначается scheduleLiveCheck. Контекст analysisContext включает sequence, analysisRevision, projectDir, entry, contentHash описания и loading. DocumentServices получает поставщик контекста пятым аргументом конструктора и проверяет его после ожидания ответа для analyse/compile/hover/navigation вместе с прежними проверками документов и зависимостей. Протокол DesktopHost не расширялся, второй анализатор не вводился. Логика VariableUsageAnalysis осталась без изменения.
+
+## 21 октября 2026 года — контекст запуска восстановленного сеанса
+
+ProjectSession.open принимает признак folder для восстановления прежнего сеанса папки без обнаружения дескриптора. Поле lastProjectFile различает режим дескриптора и папки. AxiomIDE удерживает _restoringSession до окончания restoreTabs/restoreProject; фоновые запросы анализа блокируются при восстановлении и загрузке проекта. Окончательный синхронный снимок настроек включает вкладки и проектные пути, вкладки дополнены Monaco viewState. Журнал документов и его формат не менялись. Main добавляет выбор axproj при неоднозначной папке только для команды открытия, через необязательный chooseProject; выбор папки создания не меняется. Слои языка, DesktopHost и VM не затронуты.
+
+## 21 октября 2026 года - единый источник палитр оболочки
+
+design-system.css содержит четыре центральные палитры: корневую тёмную и переопределения light/basic/borland. Выбор темы удалён из CSS компонентов Studio, оболочки, настроек и базовых стилей. Общие роли xs-workbench, xs-chrome, xs-toolbar, xs-status, xs-menu, xs-dialog и xs-select задают поверхности и состояния; класс xs-menu-surface объединяет раскрываемые команды структуры и инструментов. Палитры содержат определения переменных, а общие селекторы компонентов находятся вне тематических блоков.
+
+themes.js сохраняет синтаксические и ANSI-палитры и читает общие CSS-роли для поверхностей Monaco. В surfaceColors передаются menu.background/foreground/border/separatorBackground/selectionBackground/selectionForeground и list.hoverBackground/hoverForeground. Установленный Monaco использует list.hover для выбранной строки штатного меню; API темы распространяет цвета в ShadowRoot, куда CSS оболочки не проникает. Внешние варианты меню Monaco также используют общие роли выбранного текста. Нативные диалоги выбора файлов принадлежат ОС. Слои языка, DesktopHost и VM не менялись.

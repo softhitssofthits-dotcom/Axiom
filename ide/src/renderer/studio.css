@@ -1,26 +1,15 @@
 /* Утверждённая компоновка Studio. Палитры Monaco остаются в themes.js. */
 #app.studio-shell {
-  --studio-chrome: var(--xs-surface);
-  --studio-raised: var(--xs-surface-raised);
-  --studio-border: var(--xs-border-subtle);
+  --studio-chrome: var(--xs-workbench-bg);
+  --studio-raised: var(--xs-workbench-raised);
+  --studio-border: var(--xs-workbench-border);
   --studio-ink: var(--xs-text);
   --studio-muted: var(--xs-text-muted);
-  --studio-toolbar-ink: var(--xs-text);
+  --studio-toolbar-ink: var(--xs-toolbar-label);
   font-family: 'Segoe UI', sans-serif;
   font-size: 12px;
   --tab-height: 33px;
 }
-html:not([data-theme]), html[data-theme='dark'] {
-  --studio-chrome-dark: #25262b;
-  --studio-raised-dark: #2e3036;
-  --studio-border-dark: #3c3e46;
-}
-html:not([data-theme]) #app.studio-shell, html[data-theme='dark'] #app.studio-shell {
-  --studio-chrome: var(--studio-chrome-dark);
-  --studio-raised: var(--studio-raised-dark);
-  --studio-border: var(--studio-border-dark);
-}
-html[data-theme='borland'] #app.studio-shell { --studio-toolbar-ink: var(--xs-chrome-text); }
 #app.studio-shell [hidden] { display: none !important; }
 #app.studio-shell #menubar {
   height: 32px;
@@ -77,10 +66,6 @@ html[data-theme='borland'] #app.studio-shell { --studio-toolbar-ink: var(--xs-ch
   z-index: 2000;
   min-width: 200px;
   padding: 5px;
-  background: var(--xs-menu-bg, var(--studio-raised));
-  color: var(--xs-menu-text, var(--studio-ink));
-  border: 1px solid var(--xs-menu-border, var(--studio-border));
-  box-shadow: var(--xs-shadow-menu);
 }
 #app.studio-shell #shell-sidebar { min-height: 0; overflow: hidden; background: var(--studio-chrome); border-color: var(--studio-border); container-type: inline-size; }
 #app.studio-shell .shell-section-title {
@@ -134,12 +119,13 @@ html[data-theme='borland'] #app.studio-shell { --studio-toolbar-ink: var(--xs-ch
 .studio-shell #outline-more { position: relative; margin-left: auto; }
 .studio-shell #outline-more summary { cursor: pointer; list-style: none; padding: 4px; }
 .studio-shell #outline-more summary .codicon { font-size: 18px; }
-.studio-shell .studio-outline-extra { position: absolute; top: 28px; right: 0; z-index: 10; box-sizing: border-box; width: min(240px, calc(100cqw - 24px)); padding: 8px; background: var(--xs-menu-bg, var(--studio-raised)); border: 1px solid var(--studio-border); box-shadow: var(--xs-shadow-menu); }
+.studio-shell .studio-outline-extra { position: absolute; top: 28px; right: 0; z-index: 10; box-sizing: border-box; width: min(240px, calc(100cqw - 24px)); padding: 8px; }
 .studio-shell .studio-outline-extra label { display: block; width: 100%; margin-bottom: 5px; }
 .studio-shell .studio-outline-extra select { display: flex; width: 100%; margin-bottom: 5px; }
 .studio-shell .studio-outline-extra > button { display: flex; width: 100%; height: auto; min-height: 30px; padding: 5px; gap: 6px; text-align: left; }
 .studio-shell .studio-outline-extra > button::after { content: attr(aria-label); font: 12px 'Segoe UI', sans-serif; }
-.studio-shell .project-file.active { background: var(--xs-accent-wash); box-shadow: inset 2px 0 var(--xs-accent); }
+.studio-shell .project-file.active { color:var(--xs-active-file-text); background: var(--xs-accent-wash); box-shadow: inset 2px 0 var(--xs-accent); }
+.studio-shell .project-file.active.project-entry-file::after { color:inherit; }
 .studio-shell #external-files { flex: 0 1 auto; overflow: auto; }
 .studio-shell #external-files-header { padding: 9px 10px 5px; font-size: 11px; letter-spacing: 0; text-transform: none; }
 .studio-shell #structure-document-name { flex: none; padding: 8px 11px 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--studio-muted); }
@@ -164,7 +150,7 @@ html[data-theme='borland'] #app.studio-shell { --studio-toolbar-ink: var(--xs-ch
   font: 12px 'Segoe UI', sans-serif;
   cursor: pointer;
 }
-.studio-shell #sidebar-tabs [aria-selected='true'] { background: var(--studio-raised); color: var(--studio-ink); border-bottom-color: var(--xs-tab-active-stripe); }
+.studio-shell #sidebar-tabs [aria-selected='true'] { background: var(--studio-raised); color: var(--xs-raised-text); border-bottom-color: var(--xs-tab-active-stripe); }
 .studio-shell #sidebar-tabs [role='tab']:hover { color: var(--xs-hover-text); background: var(--xs-surface-hover); }
 .studio-shell #sidebar-rail { display: flex; flex-direction: column; flex: 0 0 30px; width: 30px; padding: 5px 0; gap: 5px; border-right: 1px solid var(--studio-border); background: var(--studio-chrome); }
 .studio-shell .sidebar-return { writing-mode: vertical-rl; min-height: 75px; padding: 10px 6px; border: 0; border-left: 2px solid transparent; background: transparent; color: var(--studio-muted); font: 12px 'Segoe UI', sans-serif; cursor: pointer; }
@@ -212,7 +198,7 @@ html[data-theme='borland'] #app.studio-shell { --studio-toolbar-ink: var(--xs-ch
 .studio-shell .studio-unpinned #sidebar-pin { transform: rotate(-35deg); }
 
 .project-create-dialog { width: min(540px, calc(100vw - 32px)); padding: 24px; display: grid; gap: 12px; }
-.project-create-dialog input { min-width: 0; padding: 8px; color: var(--xs-text); background: var(--xs-bg); border: 1px solid var(--xs-border); }
+.project-create-dialog input { min-width: 0; padding: 8px; color: var(--xs-dialog-field-text); background: var(--xs-dialog-field-bg); border: 1px solid var(--xs-dialog-border); }
 .project-create-location { display: flex; gap: 8px; }
 .project-create-location input { flex: 1; }
-#project-create-error { color: var(--xs-text); white-space: pre-wrap; overflow-wrap: anywhere; }
+#project-create-error { color: var(--xs-dialog-error); white-space: pre-wrap; overflow-wrap: anywhere; }

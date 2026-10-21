@@ -43,63 +43,26 @@
 .settings-font-choice { display:flex; flex-direction:column; min-width:0; gap:4px; }
 .settings-font-choice select,.settings-font-choice input { width:100%; }
 
-/* QuickBASIC: серые поверхности диалога и чёрно-белое выделение списков. */
-html[data-theme="basic"] .editor-settings-dialog {
-  color:#000000; background:#c0c0c0; border:2px solid #ffffff; border-radius:0;
-  box-shadow:inset 0 0 0 1px #000000, inset 0 0 0 2px #ffffff, 7px 7px 0 #000000;
-  --bg-primary:#c0c0c0; --bg-secondary:#c0c0c0; --bg-tertiary:#c0c0c0; --bg-hover:#000000;
-  --text-primary:#000000; --text-secondary:#333333; --border-color:#000000;
-  --accent-color:#000000; --accent-hover:#555555; --warning-color:#800000; --error-color:#800000;
-}
-html[data-theme="basic"] .editor-settings-dialog :is(button,input,select,textarea) { border-radius:0; }
-html[data-theme="basic"] .editor-settings-dialog button { border-style:outset; }
-html[data-theme="basic"] .editor-settings-dialog button:active { border-style:inset; }
-html[data-theme="basic"] .editor-settings-dialog :is(input,select,textarea) { border-style:inset; }
-html[data-theme="basic"] .editor-settings-dialog :is(.settings-content,.settings-help,.settings-status) { color:#000000; }
-html[data-theme="basic"] .editor-settings-dialog .settings-content { border:1px solid #000000; }
-html[data-theme="basic"] .editor-settings-dialog .settings-tab[aria-selected="true"] { background:#808080; color:#ffffff; border-color:#000000; }
-html[data-theme="basic"] .editor-settings-dialog button:hover:not(:disabled) { background:#808080; color:#ffffff; }
-html[data-theme="basic"] .editor-settings-dialog input:focus,
-html[data-theme="basic"] .editor-settings-dialog select:focus,
-html[data-theme="basic"] .editor-settings-dialog textarea:focus { background:#c0c0c0; color:#000000; }
-html[data-theme="basic"] .editor-settings-dialog ::selection { background:#000000; color:#ffffff; }
-html[data-theme="basic"] .editor-settings-dialog .settings-subheading { color:#000000; border-bottom:1px solid #808080; }
-html[data-theme="basic"] .editor-settings-dialog .settings-primary { border-color:#000000!important; }
 
-/* Turbo Pascal: серый диалог, бирюзовые группы, зелёные кнопки. */
-html[data-theme="borland"] .editor-settings-dialog {
-  color:var(--xs-dialog-text); background:var(--xs-dialog-bg); border:3px solid #ffffff; border-radius:0;
-  box-shadow:inset 0 0 0 1px #000000, inset 0 0 0 3px #ffffff, 7px 7px 0 #000000;
-  --bg-primary:var(--xs-dialog-bg); --bg-secondary:var(--xs-dialog-bg); --bg-tertiary:var(--xs-dialog-bg); --bg-hover:var(--xs-dialog-group-bg);
-  --text-primary:var(--xs-dialog-text); --text-secondary:#555555; --border-color:#000000;
-  --accent-color:var(--xs-dialog-group-bg); --accent-hover:var(--xs-dialog-button-bg); --warning-color:#aa0000; --error-color:#aa0000;
+/* Общий диалог использует только роли центральной палитры. */
+.editor-settings-dialog {
+  --bg-primary:var(--xs-dialog-field-bg); --bg-secondary:var(--xs-dialog-bg); --bg-tertiary:var(--xs-dialog-content-bg); --bg-hover:var(--xs-dialog-group-bg);
+  --text-primary:var(--xs-dialog-text); --text-secondary:var(--xs-dialog-muted); --border-color:var(--xs-dialog-border);
+  --accent-color:var(--xs-dialog-label); --warning-color:var(--xs-dialog-warning); --error-color:var(--xs-dialog-error);
+  color:var(--xs-dialog-text); background:var(--xs-dialog-bg); border:var(--xs-dialog-border-width) solid var(--xs-dialog-frame); border-radius:var(--xs-dialog-radius); box-shadow:var(--xs-dialog-shadow);
 }
-html[data-theme="borland"] .editor-settings-dialog :is(button,input,select,textarea) { border-radius:0; }
-html[data-theme="borland"] .editor-settings-dialog button { border-style:outset; }
-html[data-theme="borland"] .editor-settings-dialog button:active { border-style:inset; }
-html[data-theme="borland"] .editor-settings-dialog .settings-content { background:var(--xs-dialog-bg); border:1px solid #000000; }
-html[data-theme="borland"] .editor-settings-dialog :is(.settings-search,.settings-row input:not([type="checkbox"]),.settings-row textarea) {
-  color:var(--xs-dialog-field-text); background:var(--xs-dialog-field-bg); border:1px solid #000000; border-style:inset; border-radius:0;
-}
-html[data-theme="borland"] .editor-settings-dialog .settings-row select {
-  color:var(--xs-select-field-text); background:var(--xs-select-field-bg); border:1px solid #000000; border-style:inset;
-}
-html[data-theme="borland"] .editor-settings-dialog .settings-tab { color:var(--xs-dialog-text); background:var(--xs-dialog-bg); border-color:#000000; border-radius:0!important; }
-html[data-theme="borland"] .editor-settings-dialog .settings-tab[aria-selected="true"] { color:#000000; background:var(--xs-dialog-button-bg); border-color:#000000; }
-html[data-theme="borland"] .editor-settings-dialog .settings-subheading { color:var(--xs-dialog-label); background:transparent; border:1px solid transparent; padding:4px 7px; }
-html[data-theme="borland"] .editor-settings-dialog h2 { color:var(--xs-dialog-label); }
-html[data-theme="borland"] .editor-settings-dialog .settings-search::placeholder { color:var(--text-secondary); opacity:1; }
-html[data-theme="borland"] .editor-settings-dialog :is(input:not([type="checkbox"]),textarea):focus { color:#ffffff; background:var(--xs-dialog-button-bg); }
-html[data-theme="borland"] .editor-settings-dialog .settings-row input[type="checkbox"] { accent-color:var(--xs-dialog-button-bg); }
-html[data-theme="borland"] .editor-settings-dialog .settings-footer button {
-  color:#000000; background:#00aa00; border:1px solid #000000; border-style:outset; border-radius:0;
-}
-html[data-theme="borland"] .editor-settings-dialog .settings-footer button:hover:not(:disabled) { color:#ffffff; background:#00aa00; }
-html[data-theme="borland"] .editor-settings-dialog .settings-footer .settings-primary { color:#55ffff; }
-html[data-theme="borland"] .editor-settings-dialog .settings-footer button:focus-visible { outline:2px solid #ffff55; outline-offset:1px; }
-html[data-theme="borland"] .editor-settings-dialog .settings-button-hotkey { color:#ffff55; }
-html[data-theme="borland"] .editor-settings-dialog .settings-button-default-text { color:#55ffff; }
-html[data-theme="borland"] .editor-settings-dialog .settings-footer .settings-primary { border-color:#000000!important; }
-html[data-theme="borland"] .editor-settings-dialog ::selection { background:#00aa00; color:#ffffff; }
-
+.editor-settings-dialog :is(button,input,select,textarea) { border-radius:var(--xs-dialog-control-radius); }
+.editor-settings-dialog button { color:var(--xs-dialog-button-text); background:var(--xs-dialog-button-bg); border-style:var(--xs-dialog-button-style); }
+.editor-settings-dialog button:hover:not(:disabled) { color:var(--xs-dialog-button-hover-text); background:var(--xs-dialog-button-hover-bg); }
+.editor-settings-dialog button:active { border-style:var(--xs-dialog-button-active-style); }
+.editor-settings-dialog :is(input,select,textarea) { border-style:var(--xs-dialog-field-style); }
+.editor-settings-dialog :is(input:not([type='checkbox']),textarea):focus { color:var(--xs-dialog-field-focus-text); background:var(--xs-dialog-field-focus-bg); }
+.editor-settings-dialog :focus-visible { outline-color:var(--xs-dialog-focus); }
+.editor-settings-dialog .settings-tab { color:var(--xs-dialog-text); background:var(--xs-dialog-bg); }
+.editor-settings-dialog .settings-tab[aria-selected='true'] { color:var(--xs-dialog-tab-text); background:var(--xs-dialog-tab-bg); border-color:var(--xs-dialog-border); }
+.editor-settings-dialog .settings-subheading,.editor-settings-dialog h2 { color:var(--xs-dialog-label); }
+.editor-settings-dialog .settings-search::placeholder { color:var(--xs-dialog-placeholder); opacity:1; }
+.editor-settings-dialog .settings-row input[type='checkbox'] { accent-color:var(--xs-dialog-group-bg); }
+.editor-settings-dialog .settings-primary { border-color:var(--xs-dialog-border)!important; }
+.editor-settings-dialog ::selection { background:var(--xs-dialog-selection-bg); color:var(--xs-dialog-selection-text); }
 .editor-settings-dialog select { color:var(--xs-select-field-text); background:var(--xs-select-field-bg); border-color:var(--xs-select-border); padding:var(--xs-select-padding); }
