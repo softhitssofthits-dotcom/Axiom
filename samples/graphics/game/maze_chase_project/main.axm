@@ -2,21 +2,21 @@
 ' Запускайте этот файл: он соединяет зависимости и владеет единственным игровым циклом.
 ' PUBLIC обозначает договор с соседними модулями; PRIVATE сохраняет внутреннее состояние.
 
-IMPORT maze_config
-IMPORT maze_world
-IMPORT maze_calibration
-IMPORT maze_player
-IMPORT maze_game
-IMPORT maze_render
+Import maze_config
+Import maze_world
+Import maze_calibration
+Import maze_player
+Import maze_game
+Import maze_render
 
 ' #region Состояние игрового цикла
 
-PRIVATE DIM exitRequested AS BOOLEAN = FALSE                                                            ' Флаг ручного выхода из программы по ESC.
-PRIVATE DIM paused AS BOOLEAN = FALSE                                                                   ' Флаг паузы: TRUE означает, что игра временно остановлена.
-PRIVATE DIM previousFrameTime AS DOUBLE = 0                                                             ' Предыдущее показание часов для ограниченного шага симуляции.
-PRIVATE DIM frameDeltaSeconds AS DOUBLE = 0                                                            ' Время между показами кадра после проверки скачков часов.
-PRIVATE DIM simulationAccumulator AS DOUBLE = 0                                                        ' Накопленное время для независимых от отрисовки шагов игры.
-PRIVATE DIM currentFrameTime AS DOUBLE = 0                                                             ' Текущее показание TIMER для расчёта прошедшего времени.
+Private Dim exitRequested As Boolean = False                                                            ' Флаг ручного выхода из программы по ESC.
+Private Dim paused As Boolean = False                                                                   ' Флаг паузы: TRUE означает, что игра временно остановлена.
+Private Dim previousFrameTime As Double = 0                                                             ' Предыдущее показание часов для ограниченного шага симуляции.
+Private Dim frameDeltaSeconds As Double = 0                                                            ' Время между показами кадра после проверки скачков часов.
+Private Dim simulationAccumulator As Double = 0                                                        ' Накопленное время для независимых от отрисовки шагов игры.
+Private Dim currentFrameTime As Double = 0                                                             ' Текущее показание TIMER для расчёта прошедшего времени.
 
 ' #endregion
 
@@ -27,81 +27,81 @@ InitPelletAlignment()                                                           
 InitCalibrationFile()                                                                           ' Готовим путь к файлу рядом с игрой, куда будем складывать ручные значения калибровки.
 LoadPelletAlignment()                                                                           ' При наличии полного снимка используем его вместо встроенных значений.
 InitMaze()                                                                                      ' Загружаем текстовую схему карты и считаем стартовые точки.
-IF MazeError() = "" THEN                                                                  ' Стартовые координаты безопасны только после проверки карты.
+If MazeError() = "" Then                                                                  ' Стартовые координаты безопасны только после проверки карты.
     InitGame()                                                                               ' Ставим героя и призрака в их начальные позиции.
-ELSE                                                                                            ' При неверной карте пропускаем игровой цикл.
-    exitRequested = TRUE                                                                        ' Не запускаем перемещение по некорректной схеме.
-END IF                                                                                          ' Завершаем обработку результата проверки карты.
+Else                                                                                            ' При неверной карте пропускаем игровой цикл.
+    exitRequested = True                                                                        ' Не запускаем перемещение по некорректной схеме.
+End If                                                                                          ' Завершаем обработку результата проверки карты.
 
-previousFrameTime = TIMER()                                                                     ' Запоминаем начало измерения игрового времени.
+previousFrameTime = Timer()                                                                     ' Запоминаем начало измерения игрового времени.
 simulationAccumulator = FIXED_STEP_SECONDS                                                     ' Первый шаг симуляции доступен сразу.
 
-SMOOTH ON
+Smooth On
 
-CANVAS VIEW_WIDTH, VIEW_HEIGHT                                                                  ' Открываем холст, в который теперь помещается весь лабиринт целиком.
+Canvas VIEW_WIDTH, VIEW_HEIGHT                                                                  ' Открываем холст, в который теперь помещается весь лабиринт целиком.
 
-DO WHILE NOT exitRequested                                                                      ' Главный игровой цикл продолжается, пока игрок не попросит выход.
-    BEGINFRAME                                                                                  ' Начинаем новый кадр современного графического холста.
+Do While Not exitRequested                                                                      ' Главный игровой цикл продолжается, пока игрок не попросит выход.
+    Beginframe                                                                                  ' Начинаем новый кадр современного графического холста.
     ClearGameFrame()                                                                        ' Очищаем фон кадра перед рисованием.
 
-    currentFrameTime = TIMER()                                                                  ' Берём показание часов один раз на кадр.
+    currentFrameTime = Timer()                                                                  ' Берём показание часов один раз на кадр.
     frameDeltaSeconds = currentFrameTime - previousFrameTime                                    ' Считаем время, прошедшее с предыдущего кадра.
     previousFrameTime = currentFrameTime                                                        ' Сохраняем показание для следующего кадра.
-    IF frameDeltaSeconds < 0 THEN
+    If frameDeltaSeconds < 0 Then
         frameDeltaSeconds = 0                                                                  ' TIMER сбрасывается в полночь, поэтому отрицательное время игнорируем.
-    END IF
-    IF frameDeltaSeconds > MAX_FRAME_DELTA_SECONDS THEN
+    End If
+    If frameDeltaSeconds > MAX_FRAME_DELTA_SECONDS Then
         frameDeltaSeconds = MAX_FRAME_DELTA_SECONDS                                             ' Ограничиваем скачки часов и возврат после блокировки окна.
-    END IF
+    End If
 
     ' Переключение калибровки не раскрывает её таблицы и внутренние сообщения.
-    IF CalibrationHotKeyPressed("K") THEN
+    If CalibrationHotKeyPressed("K") Then
         ToggleCalibration()
-        IF IsCalibrationActive() THEN paused = FALSE
-    END IF
+        If IsCalibrationActive() Then paused = False
+    End If
 
-    IF IsCalibrationActive() THEN                                                                     ' Если включена ручная калибровка...
+    If IsCalibrationActive() Then                                                                     ' Если включена ручная калибровка...
         HandleCalibrationInput()                                                                ' ...читаем клавиши калибровки и двигаем выбранные точки.
-    END IF                                                                                      ' Завершаем обработку режима калибровки.
+    End If                                                                                      ' Завершаем обработку режима калибровки.
 
-    IF KEYPRESS("SPACE") AND NOT GameFinished() AND NOT IsCalibrationActive() THEN                          ' Если нажали пробел и мы не в режиме калибровки...
-        paused = NOT paused                                                                     ' ...переключаем паузу туда или обратно.
-    END IF                                                                                      ' Завершаем обработку клавиши паузы.
+    If Keypress("SPACE") And Not GameFinished() And Not IsCalibrationActive() Then                          ' Если нажали пробел и мы не в режиме калибровки...
+        paused = Not paused                                                                     ' ...переключаем паузу туда или обратно.
+    End If                                                                                      ' Завершаем обработку клавиши паузы.
 
-    IF NOT GameFinished() AND NOT paused AND NOT IsCalibrationActive() THEN                                 ' Пока игра активна, накапливаем время независимой симуляции.
+    If Not GameFinished() And Not paused And Not IsCalibrationActive() Then                                 ' Пока игра активна, накапливаем время независимой симуляции.
         simulationAccumulator = simulationAccumulator + frameDeltaSeconds                      ' Время отрисовки не меняет скорость персонажей.
-        FOR catchUpSteps = 1 TO MAX_CATCH_UP_STEPS                                               ' Проверяем не больше шести возможных шагов.
-            IF simulationAccumulator >= FIXED_STEP_SECONDS THEN                                 ' Работаем только если накопилось полное время.
-                IF NOT GameFinished() THEN                                                            ' После победы или поражения мир замораживается.
+        For catchUpSteps = 1 To MAX_CATCH_UP_STEPS                                               ' Проверяем не больше шести возможных шагов.
+            If simulationAccumulator >= FIXED_STEP_SECONDS Then                                 ' Работаем только если накопилось полное время.
+                If Not GameFinished() Then                                                            ' После победы или поражения мир замораживается.
                     UpdateGameStep()                                                            ' Выполняем один полный шаг игровой логики.
                     simulationAccumulator = simulationAccumulator - FIXED_STEP_SECONDS          ' Списываем обработанный интервал.
-                END IF                                                                          ' Завершаем проверку состояния партии.
-            END IF                                                                              ' Завершаем проверку накопленного времени.
-        NEXT                                                                                    ' Переходим к следующей попытке догнать симуляцию.
-        IF simulationAccumulator >= FIXED_STEP_SECONDS THEN
+                End If                                                                          ' Завершаем проверку состояния партии.
+            End If                                                                              ' Завершаем проверку накопленного времени.
+        Next                                                                                    ' Переходим к следующей попытке догнать симуляцию.
+        If simulationAccumulator >= FIXED_STEP_SECONDS Then
             simulationAccumulator = 0                                                           ' Сбрасываем лишнее время после достижения лимита.
-        END IF
-    ELSE                                                                                        ' Если партия завершена или стоит на паузе...
+        End If
+    Else                                                                                        ' Если партия завершена или стоит на паузе...
         simulationAccumulator = 0                                                               ' После паузы не пытаемся ускоренно догонять игровое время.
         ResetPlayerAnimation()                                                                ' ...останавливаем анимацию героя, чтобы он не жевал в паузе.
-    END IF                                                                                      ' Завершаем обновление логики кадра.
+    End If                                                                                      ' Завершаем обновление логики кадра.
 
     DrawMazeWorld()                                                                             ' Рисуем лабиринт, точки и персонажей в мировых координатах.
-    IF IsCalibrationActive() THEN                                                                     ' Если сейчас идёт ручная калибровка...
+    If IsCalibrationActive() Then                                                                     ' Если сейчас идёт ручная калибровка...
         DrawCalibrationOverlay()                                                                ' ...рисуем направляющую линию поверх выбранной строки или столбца.
-    END IF                                                                                      ' Завершаем рисование калибровочного слоя.
+    End If                                                                                      ' Завершаем рисование калибровочного слоя.
     DrawHud(paused)                                                                                   ' Рисуем верхнюю информационную панель в экранных координатах.
-    PRESENT                                                                                     ' Показываем собранный кадр на экране.
-    SLEEP 1                                                                                     ' Отдаём процессор ОС; скорость игры задаёт фиксированный шаг выше.
+    Present                                                                                     ' Показываем собранный кадр на экране.
+    Sleep 1                                                                                     ' Отдаём процессор ОС; скорость игры задаёт фиксированный шаг выше.
 
-    IF KEYPRESS("ESC") THEN                                                                     ' Если в этом кадре нажали ESC...
-        exitRequested = TRUE                                                                    ' ...запрашиваем выход из главного цикла.
-    END IF                                                                                      ' Завершаем проверку клавиши ESC.
-LOOP                                                                                            ' Возвращаемся к следующему кадру.
+    If Keypress("ESC") Then                                                                     ' Если в этом кадре нажали ESC...
+        exitRequested = True                                                                    ' ...запрашиваем выход из главного цикла.
+    End If                                                                                      ' Завершаем проверку клавиши ESC.
+Loop                                                                                            ' Возвращаемся к следующему кадру.
 
-SCREEN 0                                                                                        ' Возвращаем обычный текстовый экран после выхода из игры.
-IF MazeError() <> "" THEN
-    PRINT "Ошибка карты Maze Chase: " + MazeError()                                         ' Показываем проверочную ошибку после закрытия графического режима.
-END IF
+Screen 0                                                                                        ' Возвращаем обычный текстовый экран после выхода из игры.
+If MazeError() <> "" Then
+    Print "Ошибка карты Maze Chase: " + MazeError()                                         ' Показываем проверочную ошибку после закрытия графического режима.
+End If
 
 ' #endregion

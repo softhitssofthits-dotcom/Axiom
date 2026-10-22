@@ -2,109 +2,109 @@
 ' Единую программу запускает main.axm; этот файл не запускает игровой цикл при импорте.
 ' PUBLIC обозначает договор с соседними модулями; PRIVATE сохраняет внутреннее состояние.
 
-IMPORT maze_config
-IMPORT maze_world
-IMPORT maze_calibration
-IMPORT maze_motion
-IMPORT maze_player
-IMPORT maze_ghost
+Import maze_config
+Import maze_world
+Import maze_calibration
+Import maze_motion
+Import maze_player
+Import maze_ghost
 
 ' #region Закрытое состояние партии
 
-PRIVATE DIM score AS INTEGER                                                                            ' Сколько очков уже набрал игрок.
-PRIVATE DIM lives AS INTEGER = 3                                                                        ' Сколько жизней осталось у игрока.
-PRIVATE DIM finished AS BOOLEAN = FALSE                                                                 ' Флаг завершения партии по победе или проигрышу.
-PRIVATE DIM statusText AS STRING = "Стрелки ведут героя. SPACE пауза. ESC выход."                      ' Текст подсказки и игровых сообщений в HUD.
+Private Dim score As Integer                                                                            ' Сколько очков уже набрал игрок.
+Private Dim lives As Integer = 3                                                                        ' Сколько жизней осталось у игрока.
+Private Dim finished As Boolean = False                                                                 ' Флаг завершения партии по победе или проигрышу.
+Private Dim statusText As String = "Стрелки ведут героя. SPACE пауза. ESC выход."                      ' Текст подсказки и игровых сообщений в HUD.
 
 ' #endregion
 
 ' #region Запуск и чтение состояния
 
 ' InitGame вызывается после проверки карты и калибровки, до первого шага симуляции.
-PUBLIC SUB InitGame()
+Public Sub InitGame()
     score = 0
     lives = 3
-    finished = FALSE
+    finished = False
     statusText = "Стрелки ведут героя. SPACE пауза. ESC выход."
-    IF CalibrationError() <> "" THEN statusText = "Калибровка не загружена: " + CalibrationError()
+    If CalibrationError() <> "" Then statusText = "Калибровка не загружена: " + CalibrationError()
     ResetActors()
-END SUB
+End Sub
 
 ' GameFinished возвращает снимок значения; менять правила партии может только этот модуль.
-PUBLIC FUNCTION GameFinished() AS BOOLEAN
-    RETURN finished
-END FUNCTION
+Public Function GameFinished() As Boolean
+    Return finished
+End Function
 
 ' GameScore возвращает снимок значения; менять правила партии может только этот модуль.
-PUBLIC FUNCTION GameScore() AS INTEGER
-    RETURN score
-END FUNCTION
+Public Function GameScore() As Integer
+    Return score
+End Function
 
 ' GameLives возвращает снимок значения; менять правила партии может только этот модуль.
-PUBLIC FUNCTION GameLives() AS INTEGER
-    RETURN lives
-END FUNCTION
+Public Function GameLives() As Integer
+    Return lives
+End Function
 
 ' GameStatus возвращает снимок значения; менять правила партии может только этот модуль.
-PUBLIC FUNCTION GameStatus() AS STRING
-    RETURN statusText
-END FUNCTION
+Public Function GameStatus() As String
+    Return statusText
+End Function
 
 ' #endregion
 
 ' #region Игровой шаг
 
 ' UpdateGameStep — Процедура выполняет один фиксированный шаг игровой логики.
-PUBLIC SUB UpdateGameStep()                                                                            ' Процедура выполняет один фиксированный шаг игровой логики.
+Public Sub UpdateGameStep()                                                                            ' Процедура выполняет один фиксированный шаг игровой логики.
     StepPlayer()
     EatPelletIfNeeded()                                                                         ' Проверяем, стоит ли герой на точке, и съедаем её.
     StepGhost(GetPlayer())                                                        ' Двигаем призрака и выбираем путь в каждом центре клетки.
 
-    IF EntitiesOverlap() THEN                                                                   ' Если герой и призрак подошли слишком близко...
+    If EntitiesOverlap() Then                                                                   ' Если герой и призрак подошли слишком близко...
         lives = lives - 1                                                                       ' ...уменьшаем число жизней.
-        IF lives <= 0 THEN                                                                      ' Если жизней больше не осталось...
-            finished = TRUE                                                                     ' ...завершаем партию поражением.
+        If lives <= 0 Then                                                                      ' Если жизней больше не осталось...
+            finished = True                                                                     ' ...завершаем партию поражением.
             statusText = "Жизни закончились. Нажмите ESC."                                     ' Показываем сообщение о проигрыше.
-        ELSE                                                                                    ' Иначе у игрока ещё есть шанс продолжить.
+        Else                                                                                    ' Иначе у игрока ещё есть шанс продолжить.
             statusText = "Призрак догнал героя. Позиции сброшены."                             ' Сообщаем о столкновении и новом старте.
             ResetActors()                                                                       ' Возвращаем обоих персонажей на стартовые позиции.
-        END IF                                                                                  ' Завершаем обработку потери жизни.
-    END IF                                                                                      ' Завершаем проверку столкновения.
+        End If                                                                                  ' Завершаем обработку потери жизни.
+    End If                                                                                      ' Завершаем проверку столкновения.
 
-    IF PelletsRemaining() = 0 THEN                                                                     ' Если на карте не осталось точек...
-        finished = TRUE                                                                         ' ...завершаем партию победой.
+    If PelletsRemaining() = 0 Then                                                                     ' Если на карте не осталось точек...
+        finished = True                                                                         ' ...завершаем партию победой.
         statusText = "Все точки собраны. Нажмите ESC."                                         ' Показываем сообщение о победе.
-    END IF                                                                                      ' Завершаем проверку победы.
-END SUB                                                                                         ' Завершаем один шаг симуляции.
+    End If                                                                                      ' Завершаем проверку победы.
+End Sub                                                                                         ' Завершаем один шаг симуляции.
 
 ' EatPelletIfNeeded изменяет очки только в центре клетки и только после успешного сбора.
-PRIVATE SUB EatPelletIfNeeded()
-    DIM actor AS Walker = GetPlayer()
-    IF actor.travel <> 0 THEN RETURN
-    DIM points AS INTEGER = TakePellet(actor.tileRow, actor.tileCol)
+Private Sub EatPelletIfNeeded()
+    Dim actor As Walker = GetPlayer()
+    If actor.travel <> 0 Then Return
+    Dim points As Integer = TakePellet(actor.tileRow, actor.tileCol)
     score = score + points
-    IF points = 50 THEN statusText = "Крупная точка принесла больше очков."
-END SUB
+    If points = 50 Then statusText = "Крупная точка принесла больше очков."
+End Sub
 
 ' ResetActors сбрасывает оба независимых владельца состояния после столкновения.
-PRIVATE SUB ResetActors()
+Private Sub ResetActors()
     ResetPlayer()
     ResetGhost()
-END SUB
+End Sub
 ' EntitiesOverlap — Функция проверяет близость героев с учётом перехода через туннель.
-PRIVATE FUNCTION EntitiesOverlap() AS BOOLEAN
-    DIM playerView AS Walker = GetPlayer()
-    DIM ghostView AS Walker = GetGhost()                                                           ' Функция проверяет близость героев с учётом перехода через туннель.
-    DIM horizontalDistance AS INTEGER = ABS(EntityPixelX(playerView.tileCol, playerView.tileRow, playerView.dir, playerView.travel) - EntityPixelX(ghostView.tileCol, ghostView.tileRow, ghostView.dir, ghostView.travel))                     ' Сначала сравниваем обычное расстояние центров.
-    DIM verticalDistance AS INTEGER = ABS(EntityPixelY(playerView.tileCol, playerView.tileRow, playerView.dir, playerView.travel) - EntityPixelY(ghostView.tileCol, ghostView.tileRow, ghostView.dir, ghostView.travel))                       ' Вертикальная координата не заворачивается.
+Private Function EntitiesOverlap() As Boolean
+    Dim playerView As Walker = GetPlayer()
+    Dim ghostView As Walker = GetGhost()                                                           ' Функция проверяет близость героев с учётом перехода через туннель.
+    Dim horizontalDistance As Integer = Abs(EntityPixelX(playerView.tileCol, playerView.tileRow, playerView.dir, playerView.travel) - EntityPixelX(ghostView.tileCol, ghostView.tileRow, ghostView.dir, ghostView.travel))                     ' Сначала сравниваем обычное расстояние центров.
+    Dim verticalDistance As Integer = Abs(EntityPixelY(playerView.tileCol, playerView.tileRow, playerView.dir, playerView.travel) - EntityPixelY(ghostView.tileCol, ghostView.tileRow, ghostView.dir, ghostView.travel))                       ' Вертикальная координата не заворачивается.
 
-    IF horizontalDistance >= WorldWidthPixels() THEN
+    If horizontalDistance >= WorldWidthPixels() Then
         horizontalDistance = horizontalDistance - WorldWidthPixels()                             ' Нормализуем координаты, вышедшие за боковой край.
-    END IF
-    IF horizontalDistance > WorldWidthPixels() \ 2 THEN
+    End If
+    If horizontalDistance > WorldWidthPixels() \ 2 Then
         horizontalDistance = WorldWidthPixels() - horizontalDistance                             ' Берём короткую дугу между сторонами туннеля.
-    END IF
-    RETURN horizontalDistance < 12 AND verticalDistance < 12                                    ' Столкновение определяется расстоянием по обеим осям.
-END FUNCTION                                                                                    ' Завершаем проверку столкновения.
+    End If
+    Return horizontalDistance < 12 And verticalDistance < 12                                    ' Столкновение определяется расстоянием по обеим осям.
+End Function                                                                                    ' Завершаем проверку столкновения.
 
 ' #endregion

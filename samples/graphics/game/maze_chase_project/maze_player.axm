@@ -2,20 +2,20 @@
 ' Единую программу запускает main.axm; этот файл не запускает игровой цикл при импорте.
 ' PUBLIC обозначает договор с соседними модулями; PRIVATE сохраняет внутреннее состояние.
 
-IMPORT maze_config
-IMPORT maze_world
-IMPORT maze_motion
+Import maze_config
+Import maze_world
+Import maze_motion
 
 ' #region Закрытое состояние героя
 
-PRIVATE DIM player AS Walker                                                                            ' Состояние героя меняется общей процедурой движения.
+Private Dim player As Walker                                                                            ' Состояние героя меняется общей процедурой движения.
 
 ' #endregion
 
 ' #region Открытые операции героя
 
 ' ResetPlayer возвращает героя в стартовую клетку после начала партии или потери жизни.
-PUBLIC SUB ResetPlayer()
+Public Sub ResetPlayer()
     player.tileCol = PlayerStartColumn()                                                                  ' Возвращаем героя в стартовый столбец.
     player.tileRow = PlayerStartRow()                                                                  ' Возвращаем героя в стартовую строку.
     player.dir = 0                                                                               ' Герой сразу после сброса ещё не движется.
@@ -23,66 +23,66 @@ PUBLIC SUB ResetPlayer()
     player.facing = DIR_RIGHT                                                                    ' По умолчанию герой смотрит вправо.
     player.travel = 0                                                                            ' Внутриклеточный пройденный путь обнуляем.
     player.animationStep = 0                                                                          ' Анимацию рта начинаем с закрытого состояния.
-END SUB
+End Sub
 
 ' StepPlayer сохраняет порядок: ввод, BYREF-движение, facing, анимация.
-PUBLIC SUB StepPlayer()
+Public Sub StepPlayer()
     UpdatePlayerInput()
-    StepWalker(player, PLAYER_SPEED, FALSE, NoPlayerRoute)
-    IF player.dir <> 0 THEN player.facing = player.dir
+    StepWalker(player, PLAYER_SPEED, False, NoPlayerRoute)
+    If player.dir <> 0 Then player.facing = player.dir
     UpdatePlayerAnimation()
-END SUB
+End Sub
 
 ' GetPlayer возвращает копию Walker; изменение копии не управляет героем.
-PUBLIC FUNCTION GetPlayer() AS Walker
-    RETURN player
-END FUNCTION
+Public Function GetPlayer() As Walker
+    Return player
+End Function
 
 ' ResetPlayerAnimation останавливает анимацию во время паузы или калибровки.
-PUBLIC SUB ResetPlayerAnimation()
+Public Sub ResetPlayerAnimation()
     player.animationStep = 0
-END SUB
+End Sub
 
 ' Для героя маршрут задаёт клавиатура; эта переданная функция не вызывается при chasePlayer=FALSE.
-PRIVATE FUNCTION NoPlayerRoute() AS INTEGER
-    RETURN 0
-END FUNCTION
+Private Function NoPlayerRoute() As Integer
+    Return 0
+End Function
 
 ' #endregion
 
 ' #region Ввод и анимация
 
 ' UpdatePlayerInput — Процедура читает клавиши и выбирает желаемое направление.
-PRIVATE SUB UpdatePlayerInput()                                                                         ' Процедура читает клавиши и выбирает желаемое направление.
-    IF KEYDOWN("LEFT") THEN                                                                     ' Если зажата стрелка влево...
+Private Sub UpdatePlayerInput()                                                                         ' Процедура читает клавиши и выбирает желаемое направление.
+    If Keydown("LEFT") Then                                                                     ' Если зажата стрелка влево...
         player.wantedDir = DIR_LEFT                                                                ' ...просим героя повернуть влево.
-    END IF                                                                                      ' Завершаем проверку удержания влево.
+    End If                                                                                      ' Завершаем проверку удержания влево.
 
-    IF KEYDOWN("RIGHT") THEN                                                                    ' Если зажата стрелка вправо...
+    If Keydown("RIGHT") Then                                                                    ' Если зажата стрелка вправо...
         player.wantedDir = DIR_RIGHT                                                               ' ...просим героя повернуть вправо.
-    END IF                                                                                      ' Завершаем проверку удержания вправо.
+    End If                                                                                      ' Завершаем проверку удержания вправо.
 
-    IF KEYDOWN("UP") THEN                                                                       ' Если зажата стрелка вверх...
+    If Keydown("UP") Then                                                                       ' Если зажата стрелка вверх...
         player.wantedDir = DIR_UP                                                                  ' ...просим героя повернуть вверх.
-    END IF                                                                                      ' Завершаем проверку удержания вверх.
+    End If                                                                                      ' Завершаем проверку удержания вверх.
 
-    IF KEYDOWN("DOWN") THEN                                                                     ' Если зажата стрелка вниз...
+    If Keydown("DOWN") Then                                                                     ' Если зажата стрелка вниз...
         player.wantedDir = DIR_DOWN                                                                ' ...просим героя повернуть вниз.
-    END IF                                                                                      ' Завершаем проверку удержания вниз.
+    End If                                                                                      ' Завершаем проверку удержания вниз.
     ' Для живого управления игрой намеренно не используем KEYPRESS для стрелок.                ' Иначе в очереди могут догонять старые повороты и герой будет слушаться с опозданием.
     ' Здесь важнее текущее удержание клавиши, поэтому обычная игра читает только KEYDOWN.      ' KEYPRESS оставляем для калибровки, где нужны одиночные щелчки по одному пикселю.
-END SUB                                                                                         ' Завершаем чтение управления игрока.
+End Sub                                                                                         ' Завершаем чтение управления игрока.
 ' UpdatePlayerAnimation — Процедура обновляет шаг анимации героя.
-PRIVATE SUB UpdatePlayerAnimation()                                                                     ' Процедура обновляет шаг анимации героя.
-    IF player.dir = 0 THEN                                                                       ' Если герой стоит на месте...
+Private Sub UpdatePlayerAnimation()                                                                     ' Процедура обновляет шаг анимации героя.
+    If player.dir = 0 Then                                                                       ' Если герой стоит на месте...
         player.animationStep = 0                                                                      ' ...держим рот в спокойном состоянии.
-        RETURN                                                                                  ' И выходим из процедуры сразу.
-    END IF                                                                                      ' Завершаем обработку неподвижного героя.
+        Return                                                                                  ' И выходим из процедуры сразу.
+    End If                                                                                      ' Завершаем обработку неподвижного героя.
 
     player.animationStep = player.animationStep + 1                                                         ' Переходим к следующему шагу анимации.
-    IF player.animationStep > 4 THEN                                                                  ' Если вышли за число шагов цикла...
+    If player.animationStep > 4 Then                                                                  ' Если вышли за число шагов цикла...
         player.animationStep = 1                                                                      ' ...возвращаемся в начало цикла.
-    END IF                                                                                      ' Завершаем циклическую анимацию.
-END SUB                                                                                         ' Завершаем обновление анимации героя.
+    End If                                                                                      ' Завершаем циклическую анимацию.
+End Sub                                                                                         ' Завершаем обновление анимации героя.
 
 ' #endregion

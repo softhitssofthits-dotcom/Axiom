@@ -4,84 +4,84 @@
 
 ' #region Константы и общий тип
 
-PUBLIC CONST TILE AS INTEGER = 16                                                                      ' Размер одной логической клетки лабиринта в пикселях.
-PUBLIC CONST VIEW_WIDTH AS INTEGER = 1024                                                              ' Широкий холст даёт нормальное окно без ощущения вытянутого поля.
-PUBLIC CONST VIEW_HEIGHT AS INTEGER = 660                                                              ' Высота холста вмещает весь лабиринт и HUD без ручного сдвига подложки.
-PUBLIC CONST HUD_HEIGHT AS INTEGER = 30                                                                ' Высота верхней панели со счётом и подсказкой.
-PUBLIC CONST PLAYER_SPEED AS INTEGER = 4                                                               ' Скорость героя в пикселях за фиксированный шаг симуляции.
-PUBLIC CONST GHOST_SPEED AS INTEGER = 3                                                                ' Скорость призрака в пикселях за фиксированный шаг симуляции.
-PUBLIC CONST FIXED_STEP_SECONDS AS DOUBLE = 0.0166666667                                               ' Частота симуляции близка к 60 шагам в секунду.
-PUBLIC CONST MAX_FRAME_DELTA_SECONDS AS DOUBLE = 0.1                                                   ' Ограничиваем догоняющие шаги после долгой паузы окна.
-PUBLIC CONST MAX_CATCH_UP_STEPS AS INTEGER = 6                                                         ' Не выполняем больше шести шагов за один показ кадра.
-PUBLIC CONST DIR_LEFT AS INTEGER = 1                                                                   ' Код направления влево.
-PUBLIC CONST DIR_RIGHT AS INTEGER = 2                                                                  ' Код направления вправо.
-PUBLIC CONST DIR_UP AS INTEGER = 3                                                                     ' Код направления вверх.
-PUBLIC CONST DIR_DOWN AS INTEGER = 4                                                                   ' Код направления вниз.
-PUBLIC CONST CALIBRATION_GRID_STEP AS INTEGER = 8                                                      ' Шаг мелкой сетки в пикселях, как в тетрадке по математике.
-PUBLIC CONST CALIBRATION_ROW_MODE AS INTEGER = 1                                                      ' Код режима, в котором двигаем вертикальное положение выбранной строки.
-PUBLIC CONST CALIBRATION_COL_MODE AS INTEGER = 2                                                      ' Код режима, в котором двигаем горизонтальное положение выбранного столбца.
-PUBLIC CONST MAZE_ROWS AS INTEGER = 36                                                                 ' Число строк логической карты.
-PUBLIC CONST MAZE_COLUMNS AS INTEGER = 28                                                              ' Число столбцов логической карты.
+Public Const TILE As Integer = 16                                                                      ' Размер одной логической клетки лабиринта в пикселях.
+Public Const VIEW_WIDTH As Integer = 1024                                                              ' Широкий холст даёт нормальное окно без ощущения вытянутого поля.
+Public Const VIEW_HEIGHT As Integer = 660                                                              ' Высота холста вмещает весь лабиринт и HUD без ручного сдвига подложки.
+Public Const HUD_HEIGHT As Integer = 30                                                                ' Высота верхней панели со счётом и подсказкой.
+Public Const PLAYER_SPEED As Integer = 4                                                               ' Скорость героя в пикселях за фиксированный шаг симуляции.
+Public Const GHOST_SPEED As Integer = 3                                                                ' Скорость призрака в пикселях за фиксированный шаг симуляции.
+Public Const FIXED_STEP_SECONDS As Double = 0.0166666667                                               ' Частота симуляции близка к 60 шагам в секунду.
+Public Const MAX_FRAME_DELTA_SECONDS As Double = 0.1                                                   ' Ограничиваем догоняющие шаги после долгой паузы окна.
+Public Const MAX_CATCH_UP_STEPS As Integer = 6                                                         ' Не выполняем больше шести шагов за один показ кадра.
+Public Const DIR_LEFT As Integer = 1                                                                   ' Код направления влево.
+Public Const DIR_RIGHT As Integer = 2                                                                  ' Код направления вправо.
+Public Const DIR_UP As Integer = 3                                                                     ' Код направления вверх.
+Public Const DIR_DOWN As Integer = 4                                                                   ' Код направления вниз.
+Public Const CALIBRATION_GRID_STEP As Integer = 8                                                      ' Шаг мелкой сетки в пикселях, как в тетрадке по математике.
+Public Const CALIBRATION_ROW_MODE As Integer = 1                                                      ' Код режима, в котором двигаем вертикальное положение выбранной строки.
+Public Const CALIBRATION_COL_MODE As Integer = 2                                                      ' Код режима, в котором двигаем горизонтальное положение выбранного столбца.
+Public Const MAZE_ROWS As Integer = 36                                                                 ' Число строк логической карты.
+Public Const MAZE_COLUMNS As Integer = 28                                                              ' Число столбцов логической карты.
 
-PUBLIC TYPE Walker                                                                                     ' Общие клеточные координаты и направление любого движущегося персонажа.
-    tileCol AS INTEGER
-    tileRow AS INTEGER
-    dir AS INTEGER
-    wantedDir AS INTEGER
-    facing AS INTEGER
-    travel AS INTEGER
-    animationStep AS INTEGER
-END TYPE
+Public Type Walker                                                                                     ' Общие клеточные координаты и направление любого движущегося персонажа.
+    tileCol As Integer
+    tileRow As Integer
+    dir As Integer
+    wantedDir As Integer
+    facing As Integer
+    travel As Integer
+    animationStep As Integer
+End Type
 
 ' #endregion
 
 ' #region Направления и числовые границы
 
 ' DirX — Функция возвращает горизонтальную составляющую направления.
-PUBLIC FUNCTION DirX(dir AS INTEGER) AS INTEGER                                                        ' Функция возвращает горизонтальную составляющую направления.
-    SELECT CASE dir                                                                             ' Выбираем код направления.
-        CASE DIR_LEFT                                                                           ' Для движения влево...
-            RETURN - 1                                                                           ' ...смещение по X равно минус один столбец.
-        CASE DIR_RIGHT                                                                          ' Для движения вправо...
-            RETURN 1                                                                            ' ...смещение по X равно плюс один столбец.
-        CASE ELSE                                                                               ' Для вертикального движения или нулевого направления...
-            RETURN 0                                                                            ' ...горизонтального смещения нет.
-    END SELECT                                                                                  ' Завершаем выбор горизонтальной компоненты.
-END FUNCTION                                                                                    ' Завершаем вычисление DirX.
+Public Function DirX(dir As Integer) As Integer                                                        ' Функция возвращает горизонтальную составляющую направления.
+    Select Case dir                                                                             ' Выбираем код направления.
+        Case DIR_LEFT                                                                           ' Для движения влево...
+            Return - 1                                                                           ' ...смещение по X равно минус один столбец.
+        Case DIR_RIGHT                                                                          ' Для движения вправо...
+            Return 1                                                                            ' ...смещение по X равно плюс один столбец.
+        Case Else                                                                               ' Для вертикального движения или нулевого направления...
+            Return 0                                                                            ' ...горизонтального смещения нет.
+    End Select                                                                                  ' Завершаем выбор горизонтальной компоненты.
+End Function                                                                                    ' Завершаем вычисление DirX.
 
 ' DirY — Функция возвращает вертикальную составляющую направления.
-PUBLIC FUNCTION DirY(dir AS INTEGER) AS INTEGER                                                        ' Функция возвращает вертикальную составляющую направления.
-    SELECT CASE dir                                                                             ' Выбираем код направления.
-        CASE DIR_UP                                                                             ' Для движения вверх...
-            RETURN - 1                                                                           ' ...смещение по Y равно минус одна строка.
-        CASE DIR_DOWN                                                                           ' Для движения вниз...
-            RETURN 1                                                                            ' ...смещение по Y равно плюс одна строка.
-        CASE ELSE                                                                               ' Для горизонтального движения или нулевого направления...
-            RETURN 0                                                                            ' ...вертикального смещения нет.
-    END SELECT                                                                                  ' Завершаем выбор вертикальной компоненты.
-END FUNCTION                                                                                    ' Завершаем вычисление DirY.
+Public Function DirY(dir As Integer) As Integer                                                        ' Функция возвращает вертикальную составляющую направления.
+    Select Case dir                                                                             ' Выбираем код направления.
+        Case DIR_UP                                                                             ' Для движения вверх...
+            Return - 1                                                                           ' ...смещение по Y равно минус одна строка.
+        Case DIR_DOWN                                                                           ' Для движения вниз...
+            Return 1                                                                            ' ...смещение по Y равно плюс одна строка.
+        Case Else                                                                               ' Для горизонтального движения или нулевого направления...
+            Return 0                                                                            ' ...вертикального смещения нет.
+    End Select                                                                                  ' Завершаем выбор вертикальной компоненты.
+End Function                                                                                    ' Завершаем вычисление DirY.
 
 ' MaxInt — Функция возвращает максимум из двух целых чисел.
-PUBLIC FUNCTION MaxInt(leftValue AS INTEGER, rightValue AS INTEGER) AS INTEGER                         ' Функция возвращает максимум из двух целых чисел.
-    IF leftValue > rightValue THEN                                                              ' Если левое значение больше...
-        RETURN leftValue                                                                        ' ...возвращаем его.
-    END IF                                                                                      ' Завершаем сравнение на максимум.
+Public Function MaxInt(leftValue As Integer, rightValue As Integer) As Integer                         ' Функция возвращает максимум из двух целых чисел.
+    If leftValue > rightValue Then                                                              ' Если левое значение больше...
+        Return leftValue                                                                        ' ...возвращаем его.
+    End If                                                                                      ' Завершаем сравнение на максимум.
 
-    RETURN rightValue                                                                           ' Иначе возвращаем правое значение.
-END FUNCTION                                                                                    ' Завершаем вычисление максимума.
+    Return rightValue                                                                           ' Иначе возвращаем правое значение.
+End Function                                                                                    ' Завершаем вычисление максимума.
 
 
 ' ClampInt — Функция ограничивает число диапазоном.
-PUBLIC FUNCTION ClampInt(value AS INTEGER, lowValue AS INTEGER, highValue AS INTEGER) AS INTEGER      ' Функция ограничивает число диапазоном.
-    IF value < lowValue THEN                                                                    ' Если число меньше нижней границы...
-        RETURN lowValue                                                                         ' ...возвращаем нижнюю границу.
-    END IF                                                                                      ' Завершаем проверку нижней границы.
+Public Function ClampInt(value As Integer, lowValue As Integer, highValue As Integer) As Integer      ' Функция ограничивает число диапазоном.
+    If value < lowValue Then                                                                    ' Если число меньше нижней границы...
+        Return lowValue                                                                         ' ...возвращаем нижнюю границу.
+    End If                                                                                      ' Завершаем проверку нижней границы.
 
-    IF value > highValue THEN                                                                   ' Если число больше верхней границы...
-        RETURN highValue                                                                        ' ...возвращаем верхнюю границу.
-    END IF                                                                                      ' Завершаем проверку верхней границы.
+    If value > highValue Then                                                                   ' Если число больше верхней границы...
+        Return highValue                                                                        ' ...возвращаем верхнюю границу.
+    End If                                                                                      ' Завершаем проверку верхней границы.
 
-    RETURN value                                                                                ' Если число внутри диапазона, возвращаем его без изменений.
-END FUNCTION                                                                                    ' Завершаем ограничение диапазоном.
+    Return value                                                                                ' Если число внутри диапазона, возвращаем его без изменений.
+End Function                                                                                    ' Завершаем ограничение диапазоном.
 
 ' #endregion
