@@ -1121,18 +1121,7 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
                 return;
             }
 
-            if (!_inputState.Snapshot.IsScreenActive || (_framebuffer is null && _gpuRenderer is null))
-            {
-                return;
-            }
-
-            if (!GraphicsCoordinateSpaceMath.TryTranslateLogicalToAbsoluteUnchecked(this, x, y, out var absoluteX, out var absoluteY))
-            {
-                return;
-            }
-
-            var viewport = GetEffectiveViewportCore();
-            if (viewport.IsEmpty)
+            if (!TryGetScreenImageDrawingContext(x, y, out var absoluteX, out var absoluteY, out var viewport))
             {
                 return;
             }
@@ -1154,18 +1143,7 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
                 return;
             }
 
-            if (!_inputState.Snapshot.IsScreenActive || (_framebuffer is null && _gpuRenderer is null))
-            {
-                return;
-            }
-
-            if (!GraphicsCoordinateSpaceMath.TryTranslateLogicalToAbsoluteUnchecked(this, x, y, out var absoluteX, out var absoluteY))
-            {
-                return;
-            }
-
-            var viewport = GetEffectiveViewportCore();
-            if (viewport.IsEmpty)
+            if (!TryGetScreenImageDrawingContext(x, y, out var absoluteX, out var absoluteY, out var viewport))
             {
                 return;
             }
@@ -1187,18 +1165,7 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
                 return;
             }
 
-            if (!_inputState.Snapshot.IsScreenActive || (_framebuffer is null && _gpuRenderer is null))
-            {
-                return;
-            }
-
-            if (!GraphicsCoordinateSpaceMath.TryTranslateLogicalToAbsoluteUnchecked(this, x, y, out var absoluteX, out var absoluteY))
-            {
-                return;
-            }
-
-            var viewport = GetEffectiveViewportCore();
-            if (viewport.IsEmpty)
+            if (!TryGetScreenImageDrawingContext(x, y, out var absoluteX, out var absoluteY, out var viewport))
             {
                 return;
             }
@@ -2186,6 +2153,25 @@ public sealed partial class GraphicsHostService : ViewModelBase, IGraphicsHost
     #endregion
 
     #region Private: Coordinate helpers
+
+    private bool TryGetScreenImageDrawingContext(long x, long y, out long absoluteX, out long absoluteY, out GraphicsViewport viewport)
+    {
+        absoluteX = 0;
+        absoluteY = 0;
+        viewport = default;
+        if (!_inputState.Snapshot.IsScreenActive || (_framebuffer is null && _gpuRenderer is null))
+        {
+            return false;
+        }
+
+        if (!GraphicsCoordinateSpaceMath.TryTranslateLogicalToAbsoluteUnchecked(this, x, y, out absoluteX, out absoluteY))
+        {
+            return false;
+        }
+
+        viewport = GetEffectiveViewportCore();
+        return !viewport.IsEmpty;
+    }
 
     private long TranslateCanvasX(long x, GraphicsViewport viewport) =>
         GraphicsLineMath.SaturatingAdd(viewport.Left, x - _canvasCameraX);

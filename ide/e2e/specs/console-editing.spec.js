@@ -122,4 +122,112 @@ module.exports = [{
       await S.close();
     }
   },
+}, {
+  id: 'console-paste-enter-order',
+  name: 'Ctrl+V и немедленный Enter сохраняют порядок после задержанного чтения буфера',
+  async fn({ S, C }) {
+    await launch(S, 'console-paste-enter-order');
+    await S.electronApp.evaluate(({ ipcMain }) => {
+      const state = globalThis.__consolePasteOrder = { reads: 0 };
+      ipcMain.removeHandler('read-clipboard-text');
+      ipcMain.handle('read-clipboard-text', () => {
+        state.reads++;
+        return new Promise(resolve => { state.release = resolve; });
+      });
+    });
+    await S.page.evaluate(() => {
+      const ide = window.__ide, execution = ide.execution;
+      const state = window.__consolePasteOrder = { calls: [], terminalData: [], request: execution.inputRequestId };
+      const original = execution.input.bind(execution);
+      execution.input = data => { state.calls.push(data); return original(data); };
+      ide.term.onData(data => state.terminalData.push(data));
+      ide.term.focus();
+    });
+    await S.page.keyboard.press('Control+V');
+    await S.electronApp.evaluate(async () => {
+      const deadline = Date.now() + 5000;
+      while (!globalThis.__consolePasteOrder.release && Date.now() < deadline) {
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+      if (!globalThis.__consolePasteOrder.release) throw new Error('Не получен запрос буфера обмена');
+    });
+    await S.page.keyboard.press('Enter');
+    await S.page.waitForFunction(() => window.__consolePasteOrder.terminalData.includes('\r'));
+    const pending = await S.page.evaluate(() => ({
+      calls: window.__consolePasteOrder.calls,
+      request: window.__ide.execution.inputRequestId,
+      expectedRequest: window.__consolePasteOrder.request,
+      text: window.__ide.execution.inputText,
+    }));
+    C.eq(pending.calls.length, 0, 'Enter ждёт завершения чтения буфера');
+    C.eq(pending.request, pending.expectedRequest, 'Запрос INPUT ещё не отправлен');
+    C.eq(pending.text, '', 'Ответ не изменился до завершения чтения');
+    await S.electronApp.evaluate(() => globalThis.__consolePasteOrder.release('Очередь\u001b\u0003'));
+    await S.waitIdle();
+    await S.waitConsole('Принято: Очередь');
+    const calls = await S.page.evaluate(() => window.__consolePasteOrder.calls);
+    C.eq(calls.length, 2, 'Ввод получил ровно текст вставки и Enter');
+    C.eq(calls[0], 'Очередь', 'Очищенный текст вставлен первым');
+    C.eq(calls[1], '\r', 'Enter передан после вставки');
+    C.eq(await S.electronApp.evaluate(() => globalThis.__consolePasteOrder.reads), 1, 'Одно сочетание прочитало буфер один раз');
+    C.contains(await visible(S), 'Принято: Очередь', 'Настоящая программа получила вставленную строку');
+  },
+}, {
+  id: 'console-ide-shortcuts-preserve-input',
+  name: 'Команды IDE из консоли не попадают в INPUT и сохраняют обычный ввод',
+  async fn({ S, C }) {
+    await launch(S, 'console-ide-shortcuts-preserve-input');
+    await S.page.evaluate(() => {
+      const ide = window.__ide, execution = ide.execution;
+      const state = window.__consoleShortcutInput = {
+        calls: [], actions: [], trace: [], session: execution.sessionId, request: execution.inputRequestId,
+      };
+      for (const name of ['save', 'check']) {
+        const original = ide[name].bind(ide);
+        ide[name] = (...args) => { state.pendingAction = original(...args); return state.pendingAction; };
+      }
+      const input = execution.input.bind(execution), action = ide.handleAction.bind(ide), trace = ide.trace.command.bind(ide.trace);
+      execution.input = data => { state.calls.push(data); return input(data); };
+      ide.handleAction = command => { state.actions.push(command); return action(command); };
+      ide.trace.command = command => { state.trace.push(command); return trace(command); };
+      ide.term.focus();
+    });
+    await S.page.keyboard.type('ab');
+    await S.page.waitForFunction(() => window.__ide.execution.inputText === 'ab');
+    const priorCount = await S.page.evaluate(() => window.__consoleShortcutInput.calls.length);
+    for (const key of ['Control+S', 'Control+Shift+C', 'F9']) {
+      await S.page.locator('.xterm-helper-textarea').focus();
+      await S.page.keyboard.press(key);
+      await S.page.evaluate(async () => {
+        await window.__consoleShortcutInput.pendingAction;
+        window.__ide.switchPanel('console');
+        window.__ide.term.focus();
+      });
+    }
+    await S.page.evaluate(async () => { await window.__ide._consoleWriteChain; });
+    const state = await S.page.evaluate(() => ({
+      calls: window.__consoleShortcutInput.calls,
+      actions: window.__consoleShortcutInput.actions,
+      trace: window.__consoleShortcutInput.trace,
+      session: window.__consoleShortcutInput.session,
+      request: window.__consoleShortcutInput.request,
+      currentSession: window.__ide.execution.sessionId,
+      currentRequest: window.__ide.execution.inputRequestId,
+      text: window.__ide.execution.inputText,
+    }));
+    C.eq(state.actions.join(','), 'save,check', 'Каждое сочетание вызвало одну команду оболочки');
+    C.eq(state.trace.join(','), 'breakpoint', 'F9 вызвал только команду точки остановки');
+    C.eq(state.calls.length, priorCount, 'Команды IDE не передали символов или escape-последовательностей в INPUT');
+    C.eq(state.text, 'ab', 'Набранный ответ сохранён');
+    C.eq(state.currentSession, state.session, 'Сессия программы сохранена');
+    C.eq(state.currentRequest, state.request, 'Запрос INPUT сохранён');
+    await S.page.locator('.xterm-helper-textarea').focus();
+    await S.page.keyboard.type('cd');
+    await S.page.waitForFunction(() => window.__ide.execution.inputText === 'abcd');
+    await S.page.keyboard.press('Enter');
+    await S.waitIdle();
+    await S.waitConsole('Принято: abcd');
+    C.eq(await S.page.evaluate(() => window.__consoleShortcutInput.calls.join('')), 'abcd\r', 'Обычные символы и Enter дошли без посторонних данных');
+    C.contains(await visible(S), 'Принято: abcd', 'Программа получила полный ответ после команд IDE');
+  },
 }];

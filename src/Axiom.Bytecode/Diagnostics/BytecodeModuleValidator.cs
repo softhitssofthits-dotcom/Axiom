@@ -3,7 +3,7 @@ using Axiom.Semantics;
 
 namespace Axiom.Bytecode;
 
-public sealed class BytecodeModuleValidator
+public sealed partial class BytecodeModuleValidator
 {
     private const string SupportedCompatibilityToken = "axiom-bytecode-v1";
     private const BytecodeModuleFlags KnownModuleFlags = BytecodeModuleFlags.HasDebugInfo | BytecodeModuleFlags.UsesBuiltinTable;
@@ -719,6 +719,10 @@ public sealed class BytecodeModuleValidator
 
                 case Opcode.ReseedRandom:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    if (instruction.OperandCount == 1 && instruction.GetOperand(0) is not 0 and not 1)
+                    {
+                        Report("BC4133", $"Инструкция ReseedRandom в процедуре '{routine.Name}' содержит неизвестный флаг наличия зерна {instruction.GetOperand(0)}.", module, routine.Id, instructionIndex);
+                    }
                     break;
 
                 case Opcode.Color:
@@ -1118,7 +1122,7 @@ public sealed class BytecodeModuleValidator
                 continue;
             }
 
-            if (!TryGetStackEffect(instruction, routinesById, builtinsById, out var popCount, out var pushCount))
+            if (!BytecodeStackEffect.TryGet(instruction, routinesById, builtinsById, out var popCount, out var pushCount))
             {
                 continue;
             }
@@ -1227,7 +1231,7 @@ public sealed class BytecodeModuleValidator
     {
         nextStack = stack;
 
-        if (!TryGetStackEffect(instruction, routinesById, builtinsById, out var popCount, out var pushCount)
+        if (!BytecodeStackEffect.TryGet(instruction, routinesById, builtinsById, out var popCount, out var pushCount)
             || stack.Length < popCount)
         {
             return false;
@@ -1237,9 +1241,7 @@ public sealed class BytecodeModuleValidator
 
         TypeSymbol? Pop()
         {
-            var value = workingStack[^1];
-            workingStack.RemoveAt(workingStack.Count - 1);
-            return value;
+            return PopStackType(workingStack);
         }
 
         void Push(TypeSymbol? type)
@@ -1373,51 +1375,16 @@ public sealed class BytecodeModuleValidator
             }
 
             case Opcode.Canvas:
-            {
-                var heightType = Pop();
-                var widthType = Pop();
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, widthType, "ширина CANVAS");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, heightType, "высота CANVAS");
+                ApplyCanvasStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.Camera:
-            {
-                var yType = Pop();
-                var xType = Pop();
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X CAMERA");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y CAMERA");
+                ApplyCameraStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.Viewport:
-            {
-                var valueCount = instruction.GetOperand(0);
-                if (valueCount != 0 && valueCount != 4)
-                {
-                    Report(
-                        "BC4124",
-                        $"Инструкция Viewport в процедуре '{routine.Name}' ожидает 0 или 4 значений, но содержит {valueCount}.",
-                        module,
-                        routine.Id,
-                        instructionIndex);
-                    break;
-                }
-
-                if (valueCount == 4)
-                {
-                    var bottomType = Pop();
-                    var rightType = Pop();
-                    var topType = Pop();
-                    var leftType = Pop();
-                    ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, leftType, "левая граница VIEWPORT");
-                    ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, topType, "верхняя граница VIEWPORT");
-                    ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, rightType, "правая граница VIEWPORT");
-                    ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, bottomType, "нижняя граница VIEWPORT");
-                }
-
+                ApplyViewportStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.ResetCamera:
                 break;
@@ -1848,159 +1815,45 @@ public sealed class BytecodeModuleValidator
 
             case Opcode.DrawRect:
             case Opcode.FillRect:
-            {
-                var colorType = Pop();
-                var heightType = Pop();
-                var widthType = Pop();
-                var yType = Pop();
-                var xType = Pop();
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, widthType, "ширина");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, heightType, "высота");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, colorType, TypeSymbol.Integer, "цвет");
+                ApplyDrawRectStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.DrawLine:
-            {
-                var colorType = Pop();
-                var y2Type = Pop();
-                var x2Type = Pop();
-                var y1Type = Pop();
-                var x1Type = Pop();
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, x1Type, "координата X1");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, y1Type, "координата Y1");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, x2Type, "координата X2");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, y2Type, "координата Y2");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, colorType, TypeSymbol.Integer, "цвет");
+                ApplyDrawLineStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.DrawCircle:
             case Opcode.FillCircle:
-            {
-                var colorType = Pop();
-                var radiusType = Pop();
-                var yType = Pop();
-                var xType = Pop();
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, radiusType, "радиус");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, colorType, TypeSymbol.Integer, "цвет");
+                ApplyDrawCircleStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.DrawText:
-            {
-                var colorType = Pop();
-                var yType = Pop();
-                var xType = Pop();
-                var textType = Pop();
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, textType, TypeSymbol.String, "текст");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y");
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, colorType, TypeSymbol.Integer, "цвет");
+                ApplyDrawTextStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.DrawImage:
-            {
-                var hasScale = instruction.GetOperand(0) != 0;
-                if (hasScale)
-                {
-                    var heightType = Pop();
-                    var widthType = Pop();
-                    ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, widthType, "ширина DRAWIMAGE");
-                    ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, heightType, "высота DRAWIMAGE");
-                }
-
-                var yType = Pop();
-                var xType = Pop();
-                var imageType = Pop();
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, imageType, TypeSymbol.Image, "изображение DRAWIMAGE");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X DRAWIMAGE");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y DRAWIMAGE");
+                ApplyDrawImageStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.DrawSprite:
-            {
-                var hasScale = instruction.GetOperand(0) != 0;
-                if (hasScale)
-                {
-                    var heightType = Pop();
-                    var widthType = Pop();
-                    ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, widthType, "ширина DRAWSPRITE");
-                    ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, heightType, "высота DRAWSPRITE");
-                }
-
-                var yType = Pop();
-                var xType = Pop();
-                var frameType = Pop();
-                var spriteType = Pop();
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, spriteType, TypeSymbol.Sprite, "спрайт DRAWSPRITE");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, frameType, "номер кадра DRAWSPRITE");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X DRAWSPRITE");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y DRAWSPRITE");
+                ApplyDrawSpriteStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.DrawTile:
-            {
-                var yType = Pop();
-                var xType = Pop();
-                var tileIndexType = Pop();
-                var tilesetType = Pop();
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, tilesetType, TypeSymbol.Tileset, "тайлсет DRAWTILE");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, tileIndexType, "номер тайла DRAWTILE");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X DRAWTILE");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y DRAWTILE");
+                ApplyDrawTileStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.DrawTilemap:
-            {
-                var yType = Pop();
-                var xType = Pop();
-                var tilemapType = Pop();
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, tilemapType, TypeSymbol.Tilemap, "тайловая карта DRAWTILEMAP");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X DRAWTILEMAP");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y DRAWTILEMAP");
+                ApplyDrawTilemapStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.DrawTileLayer:
-            {
-                var yType = Pop();
-                var xType = Pop();
-                var layerIndexType = Pop();
-                var tilemapType = Pop();
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, tilemapType, TypeSymbol.Tilemap, "тайловая карта DRAWTILELAYER");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, layerIndexType, "номер слоя DRAWTILELAYER");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, xType, "координата X DRAWTILELAYER");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, yType, "координата Y DRAWTILELAYER");
+                ApplyDrawTileLayerStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.SetMapTile:
-            {
-                var flagsType = Pop();
-                var tileIndexType = Pop();
-                var tilesetIndexType = Pop();
-                var rowType = Pop();
-                var columnType = Pop();
-                var layerIndexType = Pop();
-                var tilemapType = Pop();
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, tilemapType, TypeSymbol.Tilemap, "тайловая карта SETMAPTILE");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, layerIndexType, "номер слоя SETMAPTILE");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, columnType, "столбец SETMAPTILE");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, rowType, "строка SETMAPTILE");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, tilesetIndexType, "номер тайлсета SETMAPTILE");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, tileIndexType, "номер тайла SETMAPTILE");
-                ValidateExpectedIntegralStackType(module, routine, instructionIndex, instruction.Opcode, flagsType, "флаги SETMAPTILE");
+                ApplySetMapTileStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.Negate:
             case Opcode.Not:
@@ -2051,11 +1904,8 @@ public sealed class BytecodeModuleValidator
             }
 
             case Opcode.ValidateTypeInvariant:
-            {
-                var invariantType = Pop();
-                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, invariantType, TypeSymbol.Boolean, "TYPE invariant value");
+                ApplyValidateTypeInvariantStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.AdvanceForLoopLocal:
             {
@@ -2076,8 +1926,14 @@ public sealed class BytecodeModuleValidator
                 break;
             }
 
-            case Opcode.Add:
             case Opcode.Concat:
+                // Интерполяция использует Concat для любых отображаемых значений.
+                _ = Pop();
+                _ = Pop();
+                Push(TypeSymbol.String);
+                break;
+
+            case Opcode.Add:
             case Opcode.Subtract:
             case Opcode.Multiply:
             case Opcode.Power:
@@ -2113,12 +1969,20 @@ public sealed class BytecodeModuleValidator
                 break;
             }
 
-            case Opcode.EraseArray:
+            case Opcode.FormatInterpolatedPart:
             {
-                var arrayType = Pop();
-                ValidateArrayStackType(module, routine, instructionIndex, instruction.Opcode, arrayType, "массив");
+                var formatType = Pop();
+                var alignmentType = Pop();
+                _ = Pop();
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, formatType, TypeSymbol.String, "строку формата");
+                ValidateExpectedStackType(module, routine, instructionIndex, instruction.Opcode, alignmentType, TypeSymbol.Integer, "выравнивание");
+                Push(TypeSymbol.String);
                 break;
             }
+
+            case Opcode.EraseArray:
+                ApplyEraseArrayStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
+                break;
 
             case Opcode.OpenFile:
             {
@@ -2216,139 +2080,28 @@ public sealed class BytecodeModuleValidator
             }
 
             case Opcode.RedimArray:
-            {
-                var dimensionCount = instruction.GetOperand(2);
-                var upperBoundTypes = new TypeSymbol?[dimensionCount];
-                var lowerBoundTypes = new TypeSymbol?[dimensionCount];
-                for (var dimension = dimensionCount - 1; dimension >= 0; dimension--)
-                {
-                    upperBoundTypes[dimension] = Pop();
-                    lowerBoundTypes[dimension] = Pop();
-                }
-                var arrayType = Pop();
-                ValidateArrayStackType(module, routine, instructionIndex, instruction.Opcode, arrayType, "массив");
-                for (var dimension = 0; dimension < dimensionCount; dimension++)
-                {
-                    ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, lowerBoundTypes[dimension], $"нижнюю границу измерения {dimension + 1}");
-                    ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, upperBoundTypes[dimension], $"верхнюю границу измерения {dimension + 1}");
-                }
+                ApplyRedimArrayStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.LoadElement:
-            {
-                var dimensionCount = instruction.GetOperand(1);
-                var rangeMask = instruction.GetOperand(2);
-                var indexTypes = new TypeSymbol?[dimensionCount];
-                var upperBoundTypes = new TypeSymbol?[dimensionCount];
-                for (var dimension = dimensionCount - 1; dimension >= 0; dimension--)
-                {
-                    if (IsRangeDimension(rangeMask, dimension))
-                    {
-                        upperBoundTypes[dimension] = Pop();
-                        indexTypes[dimension] = Pop();
-                    }
-                    else
-                    {
-                        indexTypes[dimension] = Pop();
-                    }
-                }
-                var arrayType = Pop();
-                for (var dimension = 0; dimension < dimensionCount; dimension++)
-                {
-                    if (IsRangeDimension(rangeMask, dimension))
-                    {
-                        ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, indexTypes[dimension], $"нижнюю границу среза измерения {dimension + 1}");
-                        ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, upperBoundTypes[dimension], $"верхнюю границу среза измерения {dimension + 1}");
-                    }
-                    else
-                    {
-                        ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, indexTypes[dimension], $"индекс измерения {dimension + 1}");
-                    }
-                }
-                if (ValidateArrayStackType(module, routine, instructionIndex, instruction.Opcode, arrayType, "массив") is { } typedArray)
-                {
-                    if (dimensionCount > typedArray.Rank)
-                    {
-                        Report(
-                            "BC4111",
-                            $"Инструкция LoadElement в процедуре '{routine.Name}' запрашивает {dimensionCount} индексов у массива ранга {typedArray.Rank}.",
-                            module,
-                            routine.Id,
-                            instructionIndex);
-                        Push(null);
-                    }
-                    else
-                    {
-                        var fixedDimensionCount = dimensionCount - CountRangeBits(instruction);
-                        Push(fixedDimensionCount == typedArray.Rank
-                            ? typedArray.ElementType
-                            : ArrayTypeSymbol.Create(typedArray.ElementType, typedArray.Rank - fixedDimensionCount));
-                    }
-                }
-                else
-                {
-                    Push(null);
-                }
+                ApplyLoadElementStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.StoreElement:
-            {
-                var dimensionCount = instruction.GetOperand(1);
-                var indexTypes = new TypeSymbol?[dimensionCount];
-                for (var dimension = dimensionCount - 1; dimension >= 0; dimension--)
-                {
-                    indexTypes[dimension] = Pop();
-                }
-                var arrayType = Pop();
-                var valueType = Pop();
-                for (var dimension = 0; dimension < dimensionCount; dimension++)
-                {
-                    ValidateNumericStackType(module, routine, instructionIndex, instruction.Opcode, indexTypes[dimension], $"индекс измерения {dimension + 1}");
-                }
-                if (ValidateArrayStackType(module, routine, instructionIndex, instruction.Opcode, arrayType, "массив") is { } typedArray)
-                {
-                    if (dimensionCount != typedArray.Rank)
-                    {
-                        Report(
-                            "BC4112",
-                            $"Инструкция StoreElement в процедуре '{routine.Name}' запрашивает {dimensionCount} индексов у массива ранга {typedArray.Rank}; для записи элемента нужны все измерения.",
-                            module,
-                            routine.Id,
-                            instructionIndex);
-                    }
-
-                    ValidateAssignableStackType(module, routine, instructionIndex, instruction.Opcode, valueType, typedArray.ElementType, "значение элемента массива");
-                }
+                ApplyStoreElementStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.CreateRecord:
-            {
-                Push(ResolveCreatedRecordType(module, routine, instructionIndex, instruction));
+                ApplyCreateRecordStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.LoadField:
-            {
-                var recordType = Pop();
-                var fieldType = ValidateRecordFieldStackType(module, routine, instructionIndex, instruction, recordType);
-                Push(fieldType);
+                ApplyLoadFieldStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.StoreField:
-            {
-                var recordType = Pop();
-                var valueType = Pop();
-                var fieldType = ValidateRecordFieldStackType(module, routine, instructionIndex, instruction, recordType);
-                if (fieldType is not null)
-                {
-                    ValidateAssignableStackType(module, routine, instructionIndex, instruction.Opcode, valueType, fieldType, "значение поля записи");
-                }
+                ApplyStoreFieldStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
-            }
 
             case Opcode.PrintUsing:
             {
@@ -3282,7 +3035,6 @@ public sealed class BytecodeModuleValidator
     {
         return opcode switch
         {
-            Opcode.Concat => CanConcatenateAsString(leftType) && CanConcatenateAsString(rightType),
             Opcode.Add => (leftType == TypeSymbol.String && rightType == TypeSymbol.String)
                 || IsArithmeticOperationCompatible(leftType, rightType),
             Opcode.Subtract or Opcode.Multiply => IsArithmeticOperationCompatible(leftType, rightType),
@@ -3325,11 +3077,6 @@ public sealed class BytecodeModuleValidator
         if (opcode == Opcode.Power)
         {
             return TypeSymbol.Double;
-        }
-
-        if (opcode == Opcode.Concat)
-        {
-            return TypeSymbol.String;
         }
 
         return leftType;
@@ -3379,16 +3126,6 @@ public sealed class BytecodeModuleValidator
     private static bool IsIntegralOperationCompatible(TypeSymbol leftType, TypeSymbol rightType)
     {
         return leftType == rightType && (leftType == TypeSymbol.Integer || leftType == TypeSymbol.Long);
-    }
-
-    private static bool CanConcatenateAsString(TypeSymbol type)
-    {
-        return type == TypeSymbol.String
-            || type == TypeSymbol.Integer
-            || type == TypeSymbol.Long
-            || type == TypeSymbol.Double
-            || type == TypeSymbol.Decimal
-            || type == TypeSymbol.Boolean;
     }
 
     private static bool IsShiftOperationCompatible(TypeSymbol leftType, TypeSymbol rightType)
@@ -3626,347 +3363,6 @@ public sealed class BytecodeModuleValidator
     private static bool MatchesTypeIdentity(UserDefinedTypeSymbol type, string typeIdentity)
     {
         return TypeIdentityFormat.Equals(type.TypeIdentity, typeIdentity);
-    }
-
-    private static bool TryGetStackEffect(
-        BytecodeInstruction instruction,
-        IReadOnlyDictionary<int, BytecodeRoutine> routinesById,
-        IReadOnlyDictionary<int, BuiltinBinding> builtinsById,
-        out int popCount,
-        out int pushCount)
-    {
-        popCount = 0;
-        pushCount = 0;
-
-        switch (instruction.Opcode)
-        {
-            case Opcode.PushConst:
-            case Opcode.PushIntegerZero:
-            case Opcode.PushIntegerOne:
-            case Opcode.LoadFunction:
-            case Opcode.LoadBuiltinFunction:
-            case Opcode.LoadGlobal:
-            case Opcode.LoadLocal:
-            case Opcode.LoadArgument:
-            case Opcode.LoadCapture:
-            case Opcode.CreateRecord:
-                pushCount = 1;
-                return true;
-
-            case Opcode.JumpIfForDoneLocal:
-            case Opcode.AdvanceForLoopLocal:
-                return true;
-
-            case Opcode.StoreGlobal:
-            case Opcode.StoreLocal:
-            case Opcode.StoreArgument:
-            case Opcode.StoreCapture:
-            case Opcode.Pop:
-            case Opcode.UnregisterKeyHandler:
-            case Opcode.PauseKeyHandler:
-            case Opcode.ResumeKeyHandler:
-            case Opcode.UnregisterMouseHandler:
-            case Opcode.PauseMouseHandler:
-            case Opcode.ResumeMouseHandler:
-            case Opcode.Negate:
-            case Opcode.Not:
-            case Opcode.Convert:
-            case Opcode.ValidateTypeInvariant:
-            case Opcode.ValidateForStep:
-            case Opcode.PrintValue:
-            case Opcode.EraseArray:
-            case Opcode.AppendStringGlobal:
-            case Opcode.AppendStringLocal:
-            case Opcode.AppendStringArgument:
-            case Opcode.AppendStringCapture:
-                popCount = 1;
-                pushCount = instruction.Opcode is Opcode.Negate or Opcode.Not or Opcode.Convert ? 1 : 0;
-                return true;
-
-            case Opcode.SnapshotValue:
-                popCount = 1;
-                pushCount = 1;
-                return true;
-
-            case Opcode.OpenFile:
-                popCount = instruction.OperandCount == 3 ? 3 : 2;
-                pushCount = 1;
-                return true;
-
-            case Opcode.AddLongInteger:
-            case Opcode.Add:
-            case Opcode.Subtract:
-            case Opcode.Multiply:
-            case Opcode.Power:
-            case Opcode.Divide:
-            case Opcode.IntegralDivide:
-            case Opcode.Modulo:
-            case Opcode.And:
-            case Opcode.Or:
-            case Opcode.Xor:
-            case Opcode.Eqv:
-            case Opcode.Imp:
-            case Opcode.ShiftLeft:
-            case Opcode.ShiftRight:
-            case Opcode.CompareEqual:
-            case Opcode.CompareNotEqual:
-            case Opcode.CompareLess:
-            case Opcode.CompareLessOrEqual:
-            case Opcode.CompareGreater:
-            case Opcode.CompareGreaterOrEqual:
-            case Opcode.StoreField:
-                popCount = 2;
-                pushCount = instruction.Opcode is Opcode.StoreField ? 0 : 1;
-                return true;
-
-            case Opcode.RegisterKeyHandler:
-            case Opcode.RegisterMouseHandler:
-                popCount = 2;
-                return true;
-
-            case Opcode.LoadElement:
-                popCount = instruction.GetOperand(1) + CountRangeBits(instruction) + 1;
-                pushCount = 1;
-                return true;
-
-            case Opcode.RedimArray:
-                popCount = (instruction.GetOperand(2) * 2) + 1;
-                return true;
-
-            case Opcode.StoreElement:
-                popCount = instruction.GetOperand(1) + 2;
-                return true;
-
-            case Opcode.LoadField:
-                popCount = 1;
-                pushCount = 1;
-                return true;
-
-            case Opcode.Call:
-            case Opcode.CallByRef:
-                if (instruction.OperandCount < 2 || !routinesById.TryGetValue(instruction.GetOperand(0), out var targetRoutine))
-                {
-                    return false;
-                }
-
-                popCount = instruction.Opcode == Opcode.CallByRef ? instruction.GetOperand(2) : instruction.GetOperand(1);
-                pushCount = targetRoutine.ResultType == TypeSymbol.Void ? 0 : 1;
-                return true;
-
-            case Opcode.CallBuiltin:
-                if (instruction.OperandCount < 2 || !builtinsById.TryGetValue(instruction.GetOperand(0), out var builtin))
-                {
-                    return false;
-                }
-
-                popCount = instruction.GetOperand(1);
-                pushCount = builtin.ReturnsValue ? 1 : 0;
-                return true;
-
-            case Opcode.CallValue:
-                if (instruction.OperandCount < 2)
-                {
-                    return false;
-                }
-
-                popCount = instruction.GetOperand(0) == int.MaxValue
-                    ? int.MaxValue
-                    : instruction.GetOperand(0) + 1;
-                pushCount = instruction.GetOperand(1) == 0 ? 0 : 1;
-                return true;
-
-            case Opcode.PrintUsing:
-                if (instruction.OperandCount < 2)
-                {
-                    return false;
-                }
-
-                popCount = instruction.GetOperand(0) == int.MaxValue
-                    ? int.MaxValue
-                    : instruction.GetOperand(0) + 1;
-                return true;
-
-            case Opcode.ViewPrint:
-                popCount = instruction.GetOperand(0);
-                return true;
-
-            case Opcode.Cls:
-                popCount = instruction.GetOperand(0);
-                return true;
-
-            case Opcode.Canvas:
-                popCount = 2;
-                return true;
-
-            case Opcode.Camera:
-                popCount = 2;
-                return true;
-
-            case Opcode.Viewport:
-                popCount = instruction.GetOperand(0);
-                return true;
-
-            case Opcode.Line:
-            {
-                var flags = instruction.GetOperand(0);
-                var count = instruction.GetOperand(1);
-                var hasExplicitStartPoint = (flags & 4) != 0;
-                var hasColor = hasExplicitStartPoint ? count == 5 : count == 3;
-                popCount = 2 + (hasColor ? 1 : 0) + (hasExplicitStartPoint ? 2 : 0);
-                return true;
-            }
-
-            case Opcode.Screen:
-                popCount = 4;
-                return true;
-
-            case Opcode.PCopy:
-                popCount = 2;
-                return true;
-
-            case Opcode.Locate:
-                popCount = 2;
-                return true;
-
-            case Opcode.View:
-            {
-                var flags = instruction.GetOperand(0);
-                popCount = ((flags & 2) != 0 ? 4 : 0)
-                    + ((flags & 4) != 0 ? 1 : 0)
-                    + ((flags & 8) != 0 ? 1 : 0);
-                return true;
-            }
-
-            case Opcode.Window:
-                popCount = (instruction.GetOperand(0) & 2) != 0 ? 4 : 0;
-                return true;
-
-            case Opcode.Color:
-                popCount = instruction.GetOperand(1) == 2 ? 2 : 1;
-                return true;
-
-            case Opcode.Palette:
-                popCount = instruction.GetOperand(0);
-                return true;
-
-            case Opcode.PSet:
-                popCount = instruction.GetOperand(1) == 3 ? 3 : 2;
-                return true;
-
-            case Opcode.Get:
-                popCount = 5;
-                return true;
-
-            case Opcode.Put:
-                popCount = 3;
-                return true;
-
-            case Opcode.Circle:
-            {
-                var flags = instruction.GetOperand(0);
-                popCount = 3
-                    + ((flags & 16) != 0 ? 1 : 0)
-                    + ((flags & 2) != 0 ? 1 : 0)
-                    + ((flags & 4) != 0 ? 1 : 0)
-                    + ((flags & 8) != 0 ? 1 : 0);
-                return true;
-            }
-
-            case Opcode.Paint:
-            {
-                var flags = instruction.GetOperand(0);
-                popCount = 2
-                    + ((flags & 2) != 0 ? 1 : 0)
-                    + ((flags & 4) != 0 ? 1 : 0)
-                    + ((flags & 8) != 0 ? 1 : 0);
-                return true;
-            }
-
-            case Opcode.Draw:
-                popCount = instruction.GetOperand(0);
-                return true;
-
-            case Opcode.DrawCircle:
-            case Opcode.FillCircle:
-            case Opcode.DrawText:
-                popCount = 4;
-                return true;
-
-            case Opcode.DrawLine:
-            case Opcode.DrawRect:
-            case Opcode.FillRect:
-                popCount = 5;
-                return true;
-
-            case Opcode.DrawImage:
-                popCount = instruction.GetOperand(0) == 0 ? 3 : 5;
-                return true;
-
-            case Opcode.DrawSprite:
-                popCount = instruction.GetOperand(0) == 0 ? 4 : 6;
-                return true;
-
-            case Opcode.DrawTile:
-                popCount = 4;
-                return true;
-
-            case Opcode.DrawTilemap:
-                popCount = 3;
-                return true;
-
-            case Opcode.DrawTileLayer:
-                popCount = 4;
-                return true;
-
-            case Opcode.SetMapTile:
-                popCount = 7;
-                return true;
-
-            case Opcode.JumpIfTrue:
-            case Opcode.JumpIfFalse:
-                popCount = 1;
-                return true;
-
-            case Opcode.JumpIfEqual:
-            case Opcode.JumpIfNotEqual:
-            case Opcode.JumpIfLess:
-            case Opcode.JumpIfLessOrEqual:
-            case Opcode.JumpIfGreater:
-            case Opcode.JumpIfGreaterOrEqual:
-                popCount = 2;
-                return true;
-
-            case Opcode.Jump:
-            case Opcode.StatementBoundary:
-            case Opcode.PrintSeparator:
-            case Opcode.PrintLine:
-            case Opcode.Input:
-            case Opcode.BeginFrame:
-            case Opcode.Present:
-            case Opcode.ResetCamera:
-            case Opcode.ReseedRandom when instruction.GetOperand(0) == 0:
-            case Opcode.Sleep when instruction.GetOperand(0) == 0:
-            case Opcode.PushErrorHandler:
-            case Opcode.PopErrorHandler:
-            case Opcode.EndFinally:
-                return true;
-
-            case Opcode.Sleep:
-                popCount = instruction.GetOperand(0);
-                return true;
-
-            case Opcode.CloseFile:
-                popCount = 1;
-                pushCount = 1;
-                return true;
-
-            case Opcode.RaiseError:
-                popCount = instruction.GetOperand(0) == 1 ? 2 : 1;
-                return true;
-
-            default:
-                return false;
-        }
     }
 
     private static IEnumerable<int> GetSuccessorInstructionIndices(
@@ -4376,25 +3772,6 @@ public sealed class BytecodeModuleValidator
                     instructionIndex);
             }
         }
-    }
-
-    private static int CountRangeBits(BytecodeInstruction instruction)
-    {
-        if (instruction.Opcode != Opcode.LoadElement || instruction.OperandCount < 3)
-        {
-            return 0;
-        }
-
-        var mask = instruction.GetOperand(2);
-        var count = 0;
-
-        while (mask > 0)
-        {
-            count += mask & 1;
-            mask >>= 1;
-        }
-
-        return count;
     }
 
     private static bool IsRangeDimension(int rangeMask, int dimension)

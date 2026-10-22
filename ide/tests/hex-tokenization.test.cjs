@@ -43,3 +43,46 @@ test('Вложенная интерполяция открывает полны�
   assert.equal(rules[first][1][0], 'delimiter.interpolation');
   assert.equal(rules[first][1][1].next, '@interpolatedString');
 });
+
+for (const state of ['root', 'interpolation']) {
+  for (const [source, expected] of [
+    ['42', [['42', 'number']]],
+    ['2147483648', [['2147483648', 'number']]],
+    ['12.50', [['12.50', 'number']]],
+    ['42&value', [['42', 'number'], ['&', 'operator'], ['value', 'identifier']]],
+    ['42D', [['42', 'number'], ['D', 'identifier']]],
+    ['42F', [['42', 'number'], ['F', 'identifier']]],
+    ['42%D', [['42', 'number'], ['%', 'invalid'], ['D', 'identifier']]],
+    ['12.5#', [['12.5', 'number'], ['#', 'invalid']]],
+    ['1.', [['1', 'number'], ['.', 'delimiter']]],
+    ['.5', [['.', 'delimiter'], ['5', 'number']]],
+    ['1e3', [['1', 'number'], ['e3', 'identifier']]],
+    ['&hff&value', [['&hff', 'number.hex'], ['&', 'operator'], ['value', 'identifier']]],
+    ['&b1010', [['&b1010', 'number.binary']]],
+    ['&HFG', [['&HFG', 'invalid']]],
+    ['&B102', [['&B102', 'invalid']]],
+    ['&H', [['&H', 'invalid']]],
+    ['&B', [['&B', 'invalid']]],
+  ]) {
+    test('Границы чисел ' + source + ' соответствуют лексеру в ' + state, () => {
+      const definition = language();
+      const rules = definition.tokenizer[state];
+      const actual = [];
+      let rest = source;
+      while (rest) {
+        const matched = rules.map(rule => {
+          const match = new RegExp('^(?:' + rule[0].source + ')', 'i').exec(rest);
+          if (!match) return null;
+          const action = rule[1];
+          let token = typeof action === 'string' ? action : action.token;
+          if (action.cases) token = action.cases['@default'];
+          return [match[0], token];
+        }).find(Boolean);
+        assert.ok(matched, 'Нет правила для ' + rest);
+        actual.push(matched);
+        rest = rest.slice(matched[0].length);
+      }
+      assert.deepEqual(actual, expected);
+    });
+  }
+}

@@ -115,3 +115,53 @@ module.exports.push({ id: 'highlight-interpolation-text-escapes', name: 'Удв�
   C.ok(!tokens.some(t => t.offset >= 8 && t.offset < 18 && t.type === 'delimiter.interpolation.axiom'), 'Удвоенные пары не открывают вставку');
   await S.screenshot('interpolation-text-escapes');
 } });
+
+module.exports.push({ id: 'highlight-number-token-boundaries', name: 'Числа Monaco сохраняют границы лексера в коде и интерполяции', async fn({ S, C }) {
+  await S.launch();
+  const cases = [
+    ['42', [['42', 'number']]],
+    ['2147483648', [['2147483648', 'number']]],
+    ['12.50', [['12.50', 'number']]],
+    ['42&"x"', [['42', 'number'], ['&', 'operator'], ['"', 'string.quote'], ['x', 'string'], ['"', 'string.quote']]],
+    ['42D', [['42', 'number'], ['D', 'identifier']]],
+    ['42F', [['42', 'number'], ['F', 'identifier']]],
+    ['42%D', [['42', 'number'], ['%', 'invalid'], ['D', 'identifier']]],
+    ['12.5#', [['12.5', 'number'], ['#', 'invalid']]],
+    ['1.', [['1', 'number'], ['.', 'delimiter']]],
+    ['.5', [['.', 'delimiter'], ['5', 'number']]],
+    ['1e3', [['1', 'number'], ['e3', 'identifier']]],
+    ['&hff', [['&hff', 'number.hex']]],
+    ['&b1010', [['&b1010', 'number.binary']]],
+    ['&HFG', [['&HFG', 'invalid']]],
+    ['&B102', [['&B102', 'invalid']]],
+    ['&H', [['&H', 'invalid']]],
+    ['&B', [['&B', 'invalid']]],
+  ];
+  const results = await S.page.evaluate(inputs => {
+    const ide = window.__ide;
+    const forms = inputs.flatMap(([expression]) => [
+      { expression, prefix: 'PRINT ', suffix: '' },
+      { expression, prefix: 'PRINT $"[{', suffix: '}]"' },
+    ]);
+    ide.editor.getModel().setValue(forms.map(f => f.prefix + f.expression + f.suffix).join('\n'));
+    return ide.monaco.editor.tokenize(ide.editor.getValue(), 'axiom').map((tokens, line) => {
+      const form = forms[line], text = form.prefix + form.expression + form.suffix;
+      const start = form.prefix.length, end = start + form.expression.length;
+      return tokens.map((token, index) => ({ token, end: tokens[index + 1]?.offset ?? text.length }))
+        .filter(item => item.token.offset >= start && item.token.offset < end)
+        .map(item => [text.slice(item.token.offset, Math.min(item.end, end)), item.token.type.replace(/\.axiom$/, '')]);
+    });
+  }, cases);
+  for (let index = 0; index < cases.length; index++) {
+    const [expression, expected] = cases[index];
+    C.eq(JSON.stringify(results[index * 2]), JSON.stringify(expected), expression + ': обычный код');
+    C.eq(JSON.stringify(results[index * 2 + 1]), JSON.stringify(expected), expression + ': интерполяция');
+  }
+  const nested = await S.page.evaluate(() => {
+    const source = 'PRINT $"outer {$"inner {42D}"}"';
+    return window.__ide.monaco.editor.tokenize(source, 'axiom')[0].map((token, index, tokens) =>
+      [source.slice(token.offset, tokens[index + 1]?.offset ?? source.length), token.type]);
+  });
+  C.ok(nested.some(([text, type]) => text === '42' && type === 'number.axiom'), 'Вложенная интерполяция сохраняет число');
+  C.ok(nested.some(([text, type]) => text === 'D' && type === 'identifier.axiom'), 'Суффикс не поглощён и во вложенной интерполяции');
+} });

@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 558,
+  "count": 561,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -86,6 +86,16 @@
       "id": "console-leading-empty-lines",
       "spec": "console-editing.spec.js",
       "name": "Начальные пустые PRINT сохраняются перед INPUT и удаляются очисткой"
+    },
+    {
+      "id": "console-paste-enter-order",
+      "spec": "console-editing.spec.js",
+      "name": "Ctrl+V и немедленный Enter сохраняют порядок после задержанного чтения буфера"
+    },
+    {
+      "id": "console-ide-shortcuts-preserve-input",
+      "spec": "console-editing.spec.js",
+      "name": "Команды IDE из консоли не попадают в INPUT и сохраняют обычный ввод"
     },
     {
       "id": "console-key-inkey-poll-keys-axm",
@@ -2026,6 +2036,11 @@
       "id": "highlight-interpolation-text-escapes",
       "spec": "highlighting.spec.js",
       "name": "Удвоенные скобки и кавычки интерполяции относятся к тексту, а не к вставке"
+    },
+    {
+      "id": "highlight-number-token-boundaries",
+      "spec": "highlighting.spec.js",
+      "name": "Числа Monaco сохраняют границы лексера в коде и интерполяции"
     },
     {
       "id": "i18n-editor-context-menu",

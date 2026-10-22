@@ -231,6 +231,28 @@ class AxiomIDE {
       AxiomIDE.FALLBACK_DICTS.builtins
     );
 
+    const codeTokens = [
+      [/&H[0-9a-fA-F]+(?![a-zA-Z0-9_])/, 'number.hex'],
+      [/&B[01]+(?![a-zA-Z0-9_])/, 'number.binary'],
+      [/&[HB][a-zA-Z0-9_]*/, 'invalid'],
+      [/\d+\.\d+/, 'number'],
+      [/\d+/, 'number'],
+      [/<>|<=|>=|<<|>>|=|<|>/, 'operator'],
+      [/\+|-|\*|\/|\\|\^|&/, 'operator'],
+      [/[()]/, '@brackets'],
+      [/[,;:.]/, 'delimiter'],
+      [/[#%$]/, 'invalid'],
+      [/[^\x00-\x7F\s]+/, 'invalid'],
+      [/[a-zA-Z_][a-zA-Z0-9_]*/, {
+        cases: {
+          '@keywords': 'keyword',
+          '@typeKeywords': 'type',
+          '@builtins': 'support.function',
+          '@default': 'identifier',
+        },
+      }],
+    ];
+
     // BASIC: case-insensitive; ' and REM comments; "..." with "" escapes; $"..." with
     // {expression} holes; &H and &B integer literals; decimal numbers.
     monaco.languages.setMonarchTokensProvider('axiom', {
@@ -248,23 +270,7 @@ class AxiomIDE {
           // его на следующую строку, как и компилятор (MB0002).
           [/"(?:""|[^"])*$/, 'string'],
           [/"/, { token: 'string.quote', bracket: '@open', next: '@string' }],
-          [/&H[0-9a-fA-F]+/, 'number.hex'],
-          [/&B[01]+/, 'number.binary'],
-          [/\d+\.\d*(#[DRFdrf]?|\d*)/, 'number'],
-          [/\d+[%&#DRFSILdrfsil]?/, 'number'],
-          [/<>|<=|>=|=|<|>/, 'operator'],
-          [/\+|-|\*|\/|\\|\^|&/, 'operator'],
-          [/[()]/, '@brackets'],
-          [/[,;:]/, 'delimiter'],
-          [/[^\x00-\x7F\s]+/, 'invalid'],
-          [/[a-zA-Z_][a-zA-Z0-9_]*/, {
-            cases: {
-              '@keywords': 'keyword',
-              '@typeKeywords': 'type',
-              '@builtins': 'support.function',
-              '@default': 'identifier',
-            },
-          }],
+          ...codeTokens,
         ],
         string: [
           [/""/, 'string.escape'],
@@ -291,23 +297,7 @@ class AxiomIDE {
           [/"/, { token: 'string.quote', bracket: '@open', next: '@nestedString' }],
           [/\{/, { token: '@brackets', bracket: '@open', next: '@push' }],
           [/\}/, { token: 'delimiter.interpolation', bracket: '@close', next: '@pop' }],
-          [/&H[0-9a-fA-F]+/, 'number.hex'],
-          [/&B[01]+/, 'number.binary'],
-          [/\d+\.\d*(#[DRFdrf]?)?/, 'number'],
-          [/\d+%?[DL]?/, 'number'],
-          [/<>|<=|>=|=|<|>/, 'operator'],
-          [/\+|-|\*|\/|\\|\^|&/, 'operator'],
-          [/[()]/, '@brackets'],
-          [/[,;:]/, 'delimiter'],
-          [/[^\x00-\x7F\s]+/, 'invalid'],
-          [/[a-zA-Z_][a-zA-Z0-9_]*/, {
-            cases: {
-              '@keywords': 'keyword',
-              '@typeKeywords': 'type',
-              '@builtins': 'support.function',
-              '@default': 'identifier',
-            },
-          }],
+          ...codeTokens,
           [/\s+/, 'white'],
         ],
         nestedString: [
@@ -612,30 +602,63 @@ class AxiomIDE {
     requestAnimationFrame(() => { this.editor?.layout(); this.fitAddon?.fit(); });
   }
 
+  static shortcutKey(event) {
+    return /^Key[A-Z]$/.test(event.code) ? event.code.slice(3).toLowerCase() : event.key.toLowerCase();
+  }
+
+  static shellShortcut(event, key) {
+    if (!event.ctrlKey && !event.metaKey) return null;
+    if (event.code === 'Comma') return 'editor-settings';
+    if (event.shiftKey && event.altKey && key === 'f') return 'format';
+    if (event.shiftKey) {
+      switch (key) {
+        case 's': return 'save-as';
+        case 'c': return 'check';
+        case 'e': return 'toggle-project-explorer';
+        case 'o': return 'toggle-output';
+      }
+    }
+    if (!event.shiftKey && key === 'b') return 'toggle-sidebar';
+    switch (key) {
+      case 's': return 'save';
+      case 'n': return 'new';
+      case 'o': return 'open';
+      case 'w': return 'close-tab';
+      default: return null;
+    }
+  }
+
+  static traceShortcut(event) {
+    if (event.altKey) return null;
+    const mod = event.ctrlKey || event.metaKey;
+    switch (event.key) {
+      case 'F5':
+        if (mod && !event.shiftKey) return 'run';
+        return event.shiftKey ? (mod ? 'restart' : 'stop') : 'start';
+      case 'F9': return mod && event.shiftKey ? 'clear' : 'breakpoint';
+      case 'F10': return mod ? 'stepBack' : 'stepOver';
+      case 'F11': return event.shiftKey ? 'stepOut' : 'stepInto';
+      default: return null;
+    }
+  }
+
   setupKeyboardShortcuts() {
     // Capture phase: the integrated terminal's keydown handling stops the event before
     // bubble-phase listeners once xterm has focus, so F5 / Ctrl chords would never reach
     // the IDE while the console is focused.
     window.addEventListener('keydown', (e) => {
       if (document.querySelector('.editor-settings-overlay, #project-create-dialog')) return;
-      if ((e.ctrlKey || e.metaKey) && e.code === 'Comma') { e.preventDefault(); e.stopPropagation(); this.handleAction('editor-settings'); return; }
+      // `event.code` keeps physical shortcuts independent of the keyboard layout.
+      const shortcutKey = AxiomIDE.shortcutKey(e);
+      const action = AxiomIDE.shellShortcut(e, shortcutKey);
+      const consume = () => { e.preventDefault(); e.stopPropagation(); };
+      if (action === 'editor-settings') { consume(); this.handleAction(action); return; }
       const mod = e.ctrlKey || e.metaKey;
-      const k = e.key.toLowerCase();
-      // `event.key` follows the active keyboard layout, while `event.code` identifies the
-      // physical key. IDE shortcuts must work independently of the layout.
-      const shortcutKey = /^Key[A-Z]$/.test(e.code) ? e.code.slice(3).toLowerCase() : k;
       this.log('keyboard.down', { key: e.key, code: e.code, target: e.target?.id || e.target?.className || e.target?.tagName, mod, shift: e.shiftKey, alt: e.altKey, state: this.focusState() });
 
       // IDE shortcuts are consumed in the capture phase: preventDefault alone still lets
       // xterm see the key and echo its escape sequence into the running program's stdin.
-      const consume = () => { e.preventDefault(); e.stopPropagation(); };
-
-      if (mod && e.shiftKey && e.altKey && shortcutKey === 'f') { consume(); this.handleAction('format'); return; }
-      if (mod && e.shiftKey && shortcutKey === 's') { consume(); this.handleAction('save-as'); return; }
-      if (mod && e.shiftKey && shortcutKey === 'c') { consume(); this.handleAction('check'); return; }
-      if (mod && e.shiftKey && shortcutKey === 'e') { consume(); this.handleAction('toggle-project-explorer'); return; }
-      if (mod && !e.shiftKey && shortcutKey === 'b') { consume(); this.handleAction('toggle-sidebar'); return; }
-      if (mod && e.shiftKey && shortcutKey === 'o') { consume(); this.handleAction('toggle-output'); return; }
+      if (action) { consume(); this.handleAction(action); return; }
       // Terminal clipboard: Ctrl+C copies selected text only; without a selection it is
       // consumed as a no-op. Ctrl+V pastes sanitized text. Both act only while the
       // terminal has focus — the editor keeps its own Monaco copy/paste.
@@ -664,16 +687,11 @@ class AxiomIDE {
             .catch(() => {}));
         return;
       }
-      if (mod && shortcutKey === 's') { consume(); this.handleAction('save'); return; }
-      if (mod && shortcutKey === 'n') { consume(); this.handleAction('new'); return; }
-      if (mod && shortcutKey === 'o') { consume(); this.handleAction('open'); return; }
-      if (mod && shortcutKey === 'w') { consume(); this.handleAction('close-tab'); return; }
-      if (['F5','F9','F10','F11'].includes(e.key) && !e.altKey) {
+      const traceAction = AxiomIDE.traceShortcut(e);
+      if (traceAction) {
         consume();
-        if(e.key==='F5' && mod && !e.shiftKey) this.run('run');
-        else this.trace.command(e.key==='F5' ? (e.shiftKey ? (mod?'restart':'stop') : 'start') :
-          e.key==='F9' ? (mod&&e.shiftKey?'clear':'breakpoint') :
-          e.key==='F10' ? (mod?'stepBack':'stepOver') : (e.shiftKey?'stepOut':'stepInto'));
+        if (traceAction === 'run') this.run('run');
+        else this.trace.command(traceAction);
         return;
       }
     }, true);

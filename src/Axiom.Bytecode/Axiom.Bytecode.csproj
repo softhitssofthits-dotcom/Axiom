@@ -6,6 +6,10 @@
     <ProjectReference Include="..\Axiom.Semantics\Axiom.Semantics.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Axiom.Bytecode.Tests" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

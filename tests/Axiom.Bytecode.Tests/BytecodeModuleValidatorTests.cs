@@ -3,7 +3,7 @@ using Axiom.Semantics;
 
 namespace Axiom.Bytecode.Tests;
 
-public sealed class BytecodeModuleValidatorTests
+public sealed partial class BytecodeModuleValidatorTests
 {
     [Fact]
     public void Validate_WellFormedModule_Succeeds()
