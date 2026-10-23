@@ -3265,7 +3265,8 @@ public sealed class AcceptanceProgramTests
         lock (WorkingDirectoryLock)
         {
             var repositoryRoot = FindRepositoryRoot();
-            var directory = relativePath.Equals("samples/functions/readfile/single_byte_round_trip.axm", StringComparison.OrdinalIgnoreCase)
+            var directory = relativePath.Equals("samples/graphics/game/maze_chase_project/main.axm", StringComparison.OrdinalIgnoreCase)
+                || relativePath.Equals("samples/functions/readfile/single_byte_round_trip.axm", StringComparison.OrdinalIgnoreCase)
                 || relativePath.Equals("samples/functions/readfile/windows1251_fallback.axm", StringComparison.OrdinalIgnoreCase)
                 ? Path.GetDirectoryName(Path.Combine(repositoryRoot, relativePath))!
                 : repositoryRoot;
@@ -3333,6 +3334,11 @@ public sealed class AcceptanceProgramTests
         if (relativePath.StartsWith("samples/operators/drawtilemap/", StringComparison.OrdinalIgnoreCase))
         {
             return CreateGraphicsModernSampleInputProvider(relativePath, ["SPACE", "SPACE"]);
+        }
+
+        if (relativePath.StartsWith("samples/graphics/game/maze_chase_project/", StringComparison.OrdinalIgnoreCase))
+        {
+            return CreateGraphicsModernSampleInputProvider(relativePath, ["ESC"]);
         }
 
         if (relativePath.StartsWith("samples/graphics/", StringComparison.OrdinalIgnoreCase)
@@ -3459,6 +3465,11 @@ public sealed class AcceptanceProgramTests
         if (relativePath.Equals("samples/smoke/engine-compare/input_record_intake.axm", StringComparison.OrdinalIgnoreCase))
         {
             return new QueueInputProvider(CreateInputRecordIntakeLines());
+        }
+
+        if (relativePath.StartsWith("samples/smoke/input_sum_project/", StringComparison.OrdinalIgnoreCase))
+        {
+            return new QueueInputProvider("8", "13");
         }
 
         return new QueueInputProvider("Ника", "7", "TRUE");
