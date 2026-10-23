@@ -7,17 +7,15 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>RANDOMIZE</span></nav>
-<p class="eyebrow">Справочник языка</p><h1 class="page-title">RANDOMIZE</h1><p class="lead">RANDOMIZE — оператор языка Axiom, который повторно инициализирует генератор псевдослучайных чисел.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-<section class="article-section"><h2>Назначение</h2>
-<p>Оператор RANDOMIZE задаёт начальное состояние генератора, значения которого возвращает RND. Одинаковое зерно помогает воспроизводить вычисления.</p><h2>Где работает</h2>
-<p>Оператор работает в консольных и графических программах и влияет на генератор текущей среды исполнения.</p><h2>Синтаксис</h2><pre><code class="language-axiom">RANDOMIZE</code></pre><pre><code class="language-axiom">RANDOMIZE &lt;начальное значение&gt;</code></pre><h2>Параметр</h2>
-<p>Начальное значение должно быть INTEGER или LONG в диапазоне INTEGER: от −2147483648 до 2147483647. Передайте его для воспроизводимого начала последовательности. Форма без параметра сохраняет текущее состояние генератора.</p><h2>Действие</h2>
-<p>Оператор с параметром заменяет состояние генератора; следующие вызовы RND начинают новую последовательность. Форма без параметра не меняет состояние. Оператор не возвращает значение.</p><h2>Правила и ограничения</h2>
-<p>Повторный вызов с тем же зерном повторяет последовательность в текущей среде. Совпадение конкретных чисел между версиями .NET не является договором языка. Отрицательное зерно допустимо.</p><h2>Диагностика</h2>
-<p>Несовместимый тип параметра отклоняется при компиляции. LONG вне диапазона INTEGER вызывает MB3008.</p><h2>Пример</h2><pre><code class="language-axiom">RANDOMIZE 42
+<p class="eyebrow">Справочник языка</p><h1 class="page-title">RANDOMIZE</h1><p class="lead">Последовательность RND воспроизводима только тогда, когда генератор стартует из одного и того же состояния. Задать это состояние заново позволяет RANDOMIZE: с числовым аргументом он заменяет зерно генератора, без аргумента оставляет текущее состояние нетронутым.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Синтаксис</h2><pre><code class="language-axiom">RANDOMIZE</code></pre><pre><code class="language-axiom">RANDOMIZE &lt;начальное значение&gt;</code></pre>
+<p>Обе формы работают в консольных и графических программах и действуют на генератор текущей среды исполнения; собственного значения оператор не возвращает.</p><h2>Начальное значение</h2>
+<p>Зерно должно иметь тип INTEGER или LONG, но укладываться в диапазон INTEGER: от −2147483648 до 2147483647. Отрицательное зерно допустимо. Переданное число заменяет состояние генератора, поэтому следующие вызовы RND начинают новую последовательность; форма без параметра состояние не меняет.</p><h2>Воспроизводимость</h2>
+<p>Повторный вызов с тем же зерном повторяет последовательность в текущей среде. Совпадение конкретных чисел между версиями .NET договором языка не является.</p><h2>Диагностика</h2>
+<p>Несовместимый тип параметра отклоняется при компиляции, а LONG вне диапазона INTEGER вызывает MB3008.</p><h2>Пример</h2><p>Два запуска с одним зерном дают одно и то же первое число:</p><pre><code class="language-axiom">RANDOMIZE 42
 DIM first AS DOUBLE = RND()
 RANDOMIZE 42
 PRINT RND() = first</code></pre><p>Ожидаемый вывод:</p>
-<pre><code>TRUE</code></pre><h2>См. также</h2>
+<pre><code>TRUE</code></pre><p>Переменная <code>first</code> сохраняет первое значение до повторной инициализации, поэтому сравнение подтверждает, что после второго RANDOMIZE генератор начал ту же последовательность.</p><h2>См. также</h2>
 <p><a href="numeric-functions-core.html#rnd">RND</a></p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
 <script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

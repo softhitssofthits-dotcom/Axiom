@@ -7,9 +7,9 @@ public sealed class ModuleArtifactIdentityRegressionTests
     [Theory]
     [InlineData("FUNCTION(FUNCTION(Box, INTEGER) AS INTEGER) AS INTEGER")]
     [InlineData("FUNCTION() AS FUNCTION() AS Box")]
-    [InlineData("FUNCTION() AS Box(,)")]
-    [InlineData("FUNCTION(Box(,)) AS INTEGER")]
-    [InlineData("FUNCTION(BYREF Box(,), FUNCTION(INTEGER, Box) AS Box) AS Box")]
+    [InlineData("FUNCTION() AS Box[,]")]
+    [InlineData("FUNCTION(Box[,]) AS INTEGER")]
+    [InlineData("FUNCTION(BYREF Box[,], FUNCTION(INTEGER, Box) AS Box) AS Box")]
     public void NestedSignatureSurvivesJsonRoundTrip(string signature)
     {
         var module = CompilePair(signature);
@@ -57,7 +57,7 @@ public sealed class ModuleArtifactIdentityRegressionTests
     [Fact]
     public void ArrayOfFunctionsRetainsItsArrayBoundary()
     {
-        const string source = "TYPE Box\nItem AS INTEGER\nEND TYPE\nDIM factories(0 TO 1) AS FUNCTION() AS Box";
+        const string source = "TYPE Box\nItem AS INTEGER\nEND TYPE\nDIM factories[0 TO 1] AS FUNCTION() AS Box";
         var c = new AxiomExecutionPipeline().Compile(new CompilationRequest(source));
         Assert.True(c.Succeeded);
         var module = c.CompiledProgram!.BytecodeModule!;

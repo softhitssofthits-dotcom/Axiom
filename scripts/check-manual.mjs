@@ -106,7 +106,7 @@ if (fs.existsSync(path.join(manual, 'data/language-reference.json'))) {
     const forms=inventory.functions.flatMap(f=>f.forms.map(form=>f.name+'('+form.parameters.map(p=>p.name+':'+p.type).join(',')+'):'+form.returnType+':'+form.binding+':'+form.operandPolicy+':'+form.resultPolicy)).sort();
     const registered=actual.Rows.map(r=>r.Name+'('+r.Parameters.map(p=>p.Name+':'+p.Type).join(',')+'):'+r.ReturnType+':'+r.Binding+':'+r.OperandPolicy+':'+r.ResultPolicy).sort();
     if(JSON.stringify(forms)!==JSON.stringify(registered))errors.push('Формы вызова не совпадают с загруженным реестром компилятора.');
-    const covered=new Set(inventory.statements.map(s=>s.syntax+'StatementSyntax'));
+    const covered=new Set(inventory.statements.map(s=>s.syntax.endsWith('Statement') ? s.syntax+'Syntax' : s.syntax+'StatementSyntax'));
     for(const row of actual.Integrity.SyntaxStatements)if(!covered.has(row.Name)&&!inventory.internalSyntax[row.Name])errors.push(`Не описана инструкция ${row.Name}`);
     for(const type of ['Type','Sub','Function'])if(!inventory.statements.some(s=>s.syntax===type+'Declaration'))errors.push(`Не описано объявление ${type}`);
   }

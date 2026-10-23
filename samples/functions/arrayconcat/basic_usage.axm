@@ -1,23 +1,23 @@
 ' ARRAYCONCAT создаёт новый компактный массив 1 TO N
 ' и не делит хранилище элементов с исходными массивами.
 
-DIM left(5 TO 6) AS INTEGER
-DIM right(10 TO 11) AS INTEGER
-DIM merged() AS INTEGER
+DIM left[5 TO 6] AS INTEGER
+DIM right[10 TO 11] AS INTEGER
+DIM merged[] AS INTEGER
 
-left(5) = 10
-left(6) = 20
-right(10) = 30
-right(11) = 40
+left[5] = 10
+left[6] = 20
+right[10] = 30
+right[11] = 40
 
-merged = ARRAYCONCAT(left, right)
-merged(1) = 99
+merged[] = ARRAYCONCAT(left[], right[])
+merged[1] = 99
 
-PRINT LBOUND(merged)
-PRINT UBOUND(merged)
-PRINT ARRAYLENGTH(merged)
-PRINT left(5)
-PRINT merged(1)
-PRINT merged(2)
-PRINT merged(3)
-PRINT merged(4)
+PRINT LBOUND(merged[])
+PRINT UBOUND(merged[])
+PRINT ARRAYLENGTH(merged[])
+PRINT left[5]
+PRINT merged[1]
+PRINT merged[2]
+PRINT merged[3]
+PRINT merged[4]

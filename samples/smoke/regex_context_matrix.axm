@@ -9,10 +9,10 @@ value AS STRING
 END TYPE
 DIM rowValue AS Row
 rowValue.value = FindNumber("a12")
-DIM arrayValue(1 TO 2) AS STRING
-arrayValue(1) = REGEXEXTRACT("A34", "([A-Z])(\d+)", 2)
+DIM arrayValue[1 TO 2] AS STRING
+arrayValue[1] = REGEXEXTRACT("A34", "([A-Z])(\d+)", 2)
 PRINT rowValue.value
-PRINT arrayValue(1)
+PRINT arrayValue[1]
 DIM text AS STRING = "A12"
 ReplaceNumber(text)
 PRINT text

@@ -30,12 +30,13 @@
     }
     function code(hole) {
       let parentheses = 0;
+      let brackets = 0;
       let braces = 0;
       while (position < source.length) {
         const rest = source.slice(position);
         const char = source[position];
         if (hole && char === '}' && braces === 0) { emit(position + 1, 'delimiter.interpolation'); return; }
-        if (hole && char === ':' && source[position + 1] !== '=' && parentheses === 0 && braces === 0) {
+        if (hole && char === ':' && source[position + 1] !== '=' && parentheses === 0 && brackets === 0 && braces === 0) {
           emit(position + 1, 'delimiter');
           const close = source.indexOf('}', position);
           emit(close < 0 ? source.length : close, 'string');
@@ -67,8 +68,11 @@
         if (operator) { emit(position + operator[0].length, 'operator'); continue; }
         if (char === '(') parentheses++;
         if (char === ')') parentheses--;
+        if (char === '[') brackets++;
+        if (char === ']') brackets--;
         if (hole && char === '{') braces++;
         if (hole && char === '}') braces--;
+        if ('⟦⟧'.includes(char)) { emit(position + 1, 'placeholder'); continue; }
         if ('(),;:{}[]'.includes(char)) { emit(position + 1, 'delimiter'); continue; }
         const whitespace = rest.match(/^\s+/);
         if (whitespace) { emit(position + whitespace[0].length, 'white'); continue; }

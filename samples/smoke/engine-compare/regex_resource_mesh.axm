@@ -2,9 +2,9 @@
 DIM text AS STRING = STRING(100000, "a")
 PRINT REGEXCOUNT(text, "a")
 PRINT REGEXREPLACE(text + "b", "a|b", "a") = text + "a"
-DIM matches() AS STRING
-matches = REGEXMATCHES(text, "a{100}")
-PRINT ARRAYLENGTH(matches)
+DIM matches[] AS STRING
+matches[] = REGEXMATCHES(text, "a{100}")
+PRINT ARRAYLENGTH(matches[])
 DIM found AS BOOLEAN
 FOR i = 1 TO 512
     found = REGEXISMATCH("a", "(?#" & i & ")a", "Ii")

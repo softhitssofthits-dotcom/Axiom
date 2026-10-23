@@ -7,19 +7,19 @@
 ' 20
 ' 10
 ' 30
-DIM source(5 TO 7) AS INTEGER
-DIM reversed() AS INTEGER
+DIM source[5 TO 7] AS INTEGER
+DIM reversed[] AS INTEGER
 
-source(5) = 10
-source(6) = 20
-source(7) = 30
+source[5] = 10
+source[6] = 20
+source[7] = 30
 
-reversed = ARRAYTOREVERSED(source)
-reversed(1) = 99
+reversed[] = ARRAYTOREVERSED(source[])
+reversed[1] = 99
 
-PRINT LBOUND(reversed)
-PRINT UBOUND(reversed)
-PRINT reversed(1)
-PRINT reversed(2)
-PRINT reversed(3)
-PRINT source(7)
+PRINT LBOUND(reversed[])
+PRINT UBOUND(reversed[])
+PRINT reversed[1]
+PRINT reversed[2]
+PRINT reversed[3]
+PRINT source[7]

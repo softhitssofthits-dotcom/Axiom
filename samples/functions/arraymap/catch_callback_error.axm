@@ -1,13 +1,13 @@
 REM Второй элемент вызовет деление на ноль внутри пользовательской функции.
-DIM values(1 TO 3) AS INTEGER
-DIM result() AS INTEGER
+DIM values[1 TO 3] AS INTEGER
+DIM result[] AS INTEGER
 DIM calls AS INTEGER
-values(1) = 1
-values(2) = 2
-values(3) = 3
+values[1] = 1
+values[2] = 2
+values[3] = 3
 REM Перехватываем исходную ошибку вокруг всего преобразования.
 TRY
-    result = ARRAYMAP(values, Quotient)
+    result[] = ARRAYMAP(values[], Quotient)
 CATCH err
     PRINT "Ошибка преобразования:"
     PRINT err.Code
@@ -16,7 +16,7 @@ PRINT "Число вызовов, ожидается 2:"
 PRINT calls
 REM ARRAYMAP не изменяет исходные INTEGER-элементы.
 PRINT "Третий исходный элемент остался 3:"
-PRINT values(3)
+PRINT values[3]
 FUNCTION Quotient(value AS INTEGER) AS INTEGER
     calls = calls + 1
     RETURN CINT(10 / (value - 2))

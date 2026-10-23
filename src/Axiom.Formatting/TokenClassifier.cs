@@ -22,6 +22,8 @@ internal static class TokenClassifier
                 RawTokenKind.String => new FormattedToken(rawToken.Text, FormattedTokenKind.String),
                 RawTokenKind.OpenParen => new FormattedToken(rawToken.Text, FormattedTokenKind.OpenParen),
                 RawTokenKind.CloseParen => new FormattedToken(rawToken.Text, FormattedTokenKind.CloseParen),
+                RawTokenKind.OpenBracket => new FormattedToken(rawToken.Text, FormattedTokenKind.OpenBracket),
+                RawTokenKind.CloseBracket => new FormattedToken(rawToken.Text, FormattedTokenKind.CloseBracket),
                 RawTokenKind.Comma => new FormattedToken(rawToken.Text, FormattedTokenKind.Comma),
                 RawTokenKind.Semicolon => new FormattedToken(rawToken.Text, FormattedTokenKind.Semicolon),
                 RawTokenKind.Dot => new FormattedToken(rawToken.Text, FormattedTokenKind.Dot),
@@ -63,7 +65,9 @@ internal static class TokenClassifier
             return false;
         }
 
-        return previous is null || !EndsExpression(previous);
+        return previous is null || !EndsExpression(previous)
+            || previous.Kind == FormattedTokenKind.ReservedWord
+                && previous.Text.Equals("TO", StringComparison.OrdinalIgnoreCase);
     }
 
     public static bool EndsExpression(FormattedToken token) =>
@@ -72,7 +76,8 @@ internal static class TokenClassifier
             or FormattedTokenKind.ReservedWord
             or FormattedTokenKind.Number
             or FormattedTokenKind.String
-            or FormattedTokenKind.CloseParen;
+            or FormattedTokenKind.CloseParen
+            or FormattedTokenKind.CloseBracket;
 
     public static string ApplyStyle(string text, CodeFormattingStyle style)
     {

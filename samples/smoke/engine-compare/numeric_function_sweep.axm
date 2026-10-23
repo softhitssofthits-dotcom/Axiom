@@ -1,20 +1,20 @@
 ' Нагрузка на плотную последовательность встроенных числовых функций.
 ' Нагружает тригонометрию, логарифмы, корни, округление и базовые числовые функции.
 
-DIM values(1 TO 360) AS DOUBLE
+DIM values[1 TO 360] AS DOUBLE
 DIM mainSum AS DOUBLE = 0
 DIM growthSum AS DOUBLE = 0
 DIM shapeSum AS DOUBLE = 0
 DIM hyperSum AS DOUBLE = 0
 
-FOR itemIndex = 1 TO ARRAYLENGTH(values)
-    values(itemIndex) = itemIndex / 7.0
+FOR itemIndex = 1 TO ARRAYLENGTH(values[])
+    values[itemIndex] = itemIndex / 7.0
 NEXT
 
 FOR roundIndex = 1 TO 24
-    FOR itemIndex = 1 TO ARRAYLENGTH(values)
+    FOR itemIndex = 1 TO ARRAYLENGTH(values[])
         DIM angle AS DOUBLE = (itemIndex MOD 89) / 100.0
-        DIM baseValue AS DOUBLE = values(itemIndex) + roundIndex / 10.0
+        DIM baseValue AS DOUBLE = values[itemIndex] + roundIndex / 10.0
 
         mainSum = mainSum + ABS(SIN(angle))
         mainSum = mainSum + ABS(COS(angle))

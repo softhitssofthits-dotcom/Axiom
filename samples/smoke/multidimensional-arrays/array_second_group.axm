@@ -9,26 +9,26 @@
 ' N40
 ' [10][20][30][40]
 
-DIM values(2 TO 3, 4 TO 5) AS INTEGER
-DIM mapped(,) AS STRING
+DIM values[2 TO 3, 4 TO 5] AS INTEGER
+DIM mapped[,] AS STRING
 
-values(2, 4) = 10
-values(2, 5) = 20
-values(3, 4) = 30
-values(3, 5) = 40
+values[2, 4] = 10
+values[2, 5] = 20
+values[3, 4] = 30
+values[3, 5] = 40
 
-PRINT ARRAYEVERY(values, IsPositive)
-PRINT ARRAYSOME(values(2 TO 3, 5 TO 5), IsLarge)
+PRINT ARRAYEVERY(values[], IsPositive)
+PRINT ARRAYSOME(values[2 TO 3, 5 TO 5], IsLarge)
 
-mapped = ARRAYMAP(values(2 TO 3, 5 TO 5), FormatValue)
-PRINT LBOUND(mapped, 1)
-PRINT UBOUND(mapped, 1)
-PRINT LBOUND(mapped, 2)
-PRINT UBOUND(mapped, 2)
-PRINT mapped(2, 5)
-PRINT mapped(3, 5)
+mapped[] = ARRAYMAP(values[2 TO 3, 5 TO 5], FormatValue)
+PRINT LBOUND(mapped[], 1)
+PRINT UBOUND(mapped[], 1)
+PRINT LBOUND(mapped[], 2)
+PRINT UBOUND(mapped[], 2)
+PRINT mapped[2, 5]
+PRINT mapped[3, 5]
 
-PRINT ARRAYREDUCE(values(2 TO 3, 4 TO 5), "", AppendValue)
+PRINT ARRAYREDUCE(values[2 TO 3, 4 TO 5], "", AppendValue)
 
 FUNCTION IsPositive(value AS INTEGER) AS BOOLEAN
     RETURN value > 0

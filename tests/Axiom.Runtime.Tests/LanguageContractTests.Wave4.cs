@@ -86,17 +86,7 @@ PRINT a + b
     [Fact]
     public void Execute_ArrayAggregatesSummarizeMinMaxAverage()
     {
-        const string text = """
-DIM scores(1 TO 4) AS INTEGER
-scores(1) = 5
-scores(2) = 4
-scores(3) = 5
-scores(4) = 3
-PRINT ARRAYSUM(scores)
-PRINT ARRAYMIN(scores)
-PRINT ARRAYMAX(scores)
-PRINT ARRAYAVERAGE(scores)
-""";
+        const string text = "DIM scores[1 TO 4] AS INTEGER\r\nscores[1] = 5\r\nscores[2] = 4\r\nscores[3] = 5\r\nscores[4] = 3\r\nPRINT ARRAYSUM(scores[])\r\nPRINT ARRAYMIN(scores[])\r\nPRINT ARRAYMAX(scores[])\r\nPRINT ARRAYAVERAGE(scores[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -107,14 +97,7 @@ PRINT ARRAYAVERAGE(scores)
     [Fact]
     public void Execute_ArrayAggregatesWorkWithStringArrays()
     {
-        const string text = """
-DIM names(1 TO 3) AS STRING
-names(1) = "банан"
-names(2) = "apple"
-names(3) = "Яблоко"
-PRINT ARRAYMIN(names)
-PRINT ARRAYMAX(names)
-""";
+        const string text = "DIM names[1 TO 3] AS STRING\r\nnames[1] = \"банан\"\r\nnames[2] = \"apple\"\r\nnames[3] = \"Яблоко\"\r\nPRINT ARRAYMIN(names[])\r\nPRINT ARRAYMAX(names[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -125,10 +108,7 @@ PRINT ARRAYMAX(names)
     [Fact]
     public void Execute_ArrayAggregateRejectsEmptyAndStringSum()
     {
-        const string empty = """
-DIM none(1 TO 0) AS INTEGER
-PRINT ARRAYSUM(none)
-""";
+        const string empty = "DIM none[1 TO 0] AS INTEGER\r\nPRINT ARRAYSUM(none[])";
 
         var (_, _, emptyResult) = ExecuteProgram(empty);
 
@@ -136,9 +116,9 @@ PRINT ARRAYSUM(none)
         Assert.Single(emptyResult.Diagnostics, static d => d.Code == "MB3007");
 
         const string strings = """
-DIM names(1 TO 2) AS STRING
-names(1) = "a"
-PRINT ARRAYSUM(names)
+DIM names[1 TO 2] AS STRING
+names[1] = "a"
+PRINT ARRAYSUM(names[])
 """;
 
         var diagnostics = GetBindingDiagnostics(strings);
@@ -150,13 +130,7 @@ PRINT ARRAYSUM(names)
     [Fact]
     public void Execute_AndAlsoSkipsRightOperand()
     {
-        const string text = """
-DIM a(1 TO 3) AS INTEGER
-DIM i AS INTEGER
-i = 5
-PRINT i <= 3 ANDALSO a(i) = 0
-PRINT "reached"
-""";
+        const string text = "DIM a[1 TO 3] AS INTEGER\r\nDIM i AS INTEGER\r\ni = 5\r\nPRINT i <= 3 ANDALSO a[i] = 0\r\nPRINT \"reached\"";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -167,12 +141,7 @@ PRINT "reached"
     [Fact]
     public void Execute_OrElseEvaluatesRightOperandOnlyWhenNeeded()
     {
-        const string text = """
-DIM a(1 TO 3) AS INTEGER
-DIM i AS INTEGER
-i = 5
-PRINT i <= 3 ORELSE a(i) = 0
-""";
+        const string text = "DIM a[1 TO 3] AS INTEGER\r\nDIM i AS INTEGER\r\ni = 5\r\nPRINT i <= 3 ORELSE a[i] = 0";
 
         var (_, _, result) = ExecuteProgram(text);
 

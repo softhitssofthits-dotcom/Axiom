@@ -1,12 +1,12 @@
 ' Большие значения сокращаются, маленькое слагаемое сохраняется.
-DIM values(1 TO 3) AS DOUBLE
-values(1) = VAL("1e308")
-values(2) = -VAL("1e308")
-values(3) = VAL("1e-308")
+DIM values[1 TO 3] AS DOUBLE
+values[1] = VAL("1e308")
+values[2] = -VAL("1e308")
+values[3] = VAL("1e-308")
 ' Обе проверки должны вывести TRUE независимо от порядка элементов.
-PRINT "Малый остаток сохранён: "; ARRAYAVERAGE(values) = VAL("1e-308") / 3
-values(2) = VAL("1e-308")
-values(3) = -VAL("1e308")
-PRINT "Перестановка сохраняет результат: "; ARRAYAVERAGE(values) = VAL("1e-308") / 3
+PRINT "Малый остаток сохранён: "; ARRAYAVERAGE(values[]) = VAL("1e-308") / 3
+values[2] = VAL("1e-308")
+values[3] = -VAL("1e308")
+PRINT "Перестановка сохраняет результат: "; ARRAYAVERAGE(values[]) = VAL("1e-308") / 3
 ' Ожидаемое среднее около 3.33333333333333e-309.
-PRINT ARRAYAVERAGE(values)
+PRINT ARRAYAVERAGE(values[])

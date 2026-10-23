@@ -14,10 +14,10 @@ DIM writeResult AS BOOLEAN = FALSE                                              
 DIM backupResult AS BOOLEAN = FALSE                                                               ' Результат записи исходного текста в резервную копию.
 DIM parseErrorMessage AS STRING = ""                                                               ' Здесь храним причину ошибки разбора файла калибровки.
 DIM replaceErrorMessage AS STRING = ""                                                             ' Здесь храним причину ошибки замены процедуры в коде игры.
-DIM parsedRowValues(1 TO 36) AS INTEGER                                                            ' Здесь копим значения `pelletRowOffset(...)` из файла калибровки.
-DIM parsedColValues(1 TO 28) AS INTEGER                                                            ' Здесь копим значения `pelletColOffset(...)` из файла калибровки.
-DIM parsedRowSeen(1 TO 36) AS INTEGER                                                              ' Флаг 1 означает, что строка с таким индексом уже найдена в файле.
-DIM parsedColSeen(1 TO 28) AS INTEGER                                                              ' Флаг 1 означает, что столбец с таким индексом уже найден в файле.
+DIM parsedRowValues[1 TO 36] AS INTEGER                                                            ' Здесь копим значения `pelletRowOffset(...)` из файла калибровки.
+DIM parsedColValues[1 TO 28] AS INTEGER                                                            ' Здесь копим значения `pelletColOffset(...)` из файла калибровки.
+DIM parsedRowSeen[1 TO 36] AS INTEGER                                                              ' Флаг 1 означает, что строка с таким индексом уже найдена в файле.
+DIM parsedColSeen[1 TO 28] AS INTEGER                                                              ' Флаг 1 означает, что столбец с таким индексом уже найден в файле.
 
 IF NOT FILEEXISTS(gameFilePath) THEN                                                               ' Сначала убеждаемся, что игра лежит рядом со скриптом.
     PRINT "Не найден файл maze_chase.axm рядом со скриптом."                                      ' Если файла игры нет, дальше работать нельзя.
@@ -59,23 +59,23 @@ SUB ResetParsedCalibration()                                                    
     parseErrorMessage = ""                                                                         ' Старую ошибку разбора тоже обязательно сбрасываем.
 
     FOR rowIndex = 1 TO 36                                                                         ' Проходим по всем строкам калибровки по порядку.
-        parsedRowValues(rowIndex) = 0                                                              ' Сбрасываем старое значение строки.
-        parsedRowSeen(rowIndex) = 0                                                                ' Помечаем, что строка пока не встретилась в файле.
+        parsedRowValues[rowIndex] = 0                                                              ' Сбрасываем старое значение строки.
+        parsedRowSeen[rowIndex] = 0                                                                ' Помечаем, что строка пока не встретилась в файле.
     NEXT                                                                                           ' Переходим к следующему индексу строки.
 
     FOR colIndex = 1 TO 28                                                                         ' Проходим по всем столбцам калибровки по порядку.
-        parsedColValues(colIndex) = 0                                                              ' Сбрасываем старое значение столбца.
-        parsedColSeen(colIndex) = 0                                                                ' Помечаем, что столбец пока не встретился в файле.
+        parsedColValues[colIndex] = 0                                                              ' Сбрасываем старое значение столбца.
+        parsedColSeen[colIndex] = 0                                                                ' Помечаем, что столбец пока не встретился в файле.
     NEXT                                                                                           ' Переходим к следующему индексу столбца.
 END SUB                                                                                            ' Завершаем полную очистку служебных таблиц.
 
 SUB ParseCalibrationText(sourceText AS STRING)
-    DIM lines() AS STRING
+    DIM lines[] AS STRING
     DIM currentLine AS STRING = ""
 
-    lines = SPLIT(sourceText, CHR(10))
-    FOR lineIndex = 1 TO ARRAYLENGTH(lines)
-        currentLine = TRIM(TrimTrailingCr(lines(lineIndex)))
+    lines[] = SPLIT(sourceText, CHR(10))
+    FOR lineIndex = 1 TO ARRAYLENGTH(lines[])
+        currentLine = TRIM(TrimTrailingCr(lines[lineIndex]))
         IF currentLine <> "" AND LEFT(currentLine, 1) <> "'" THEN
             IF STARTSWITH(currentLine, "pelletRowOffset(") THEN
                 ApplyCalibrationLine(currentLine, 36, TRUE)
@@ -134,26 +134,26 @@ SUB ApplyCalibrationLine(lineText AS STRING, maxIndex AS INTEGER, isRowLine AS B
     parsedIndex = INT(indexNumber)
     parsedValue = INT(valueNumber)
     IF isRowLine THEN
-        IF parsedRowSeen(parsedIndex) <> 0 THEN
+        IF parsedRowSeen[parsedIndex] <> 0 THEN
             parseErrorMessage = "В файле калибровки повторён индекс: " + lineText
             RETURN
         END IF
-        parsedRowValues(parsedIndex) = parsedValue
-        parsedRowSeen(parsedIndex) = 1
+        parsedRowValues[parsedIndex] = parsedValue
+        parsedRowSeen[parsedIndex] = 1
     ELSE
-        IF parsedColSeen(parsedIndex) <> 0 THEN
+        IF parsedColSeen[parsedIndex] <> 0 THEN
             parseErrorMessage = "В файле калибровки повторён индекс: " + lineText
             RETURN
         END IF
-        parsedColValues(parsedIndex) = parsedValue
-        parsedColSeen(parsedIndex) = 1
+        parsedColValues[parsedIndex] = parsedValue
+        parsedColSeen[parsedIndex] = 1
     END IF
 END SUB                                                                                            ' Завершаем разбор одной строки калибровки.
 
 SUB EnsureAllCalibrationValuesExist()                                                              ' Эта процедура проверяет, что файл `t` действительно полный.
     IF parseErrorMessage = "" THEN                                                                 ' Проверяем строки только если более ранней ошибки нет.
         FOR rowIndex = 1 TO 36                                                                     ' Проверяем все строки таблицы по порядку.
-            IF parsedRowSeen(rowIndex) = 0 THEN                                                    ' Если хотя бы одна строка отсутствует, снимок неполный.
+            IF parsedRowSeen[rowIndex] = 0 THEN                                                    ' Если хотя бы одна строка отсутствует, снимок неполный.
                 parseErrorMessage = "В файле калибровки отсутствует pelletRowOffset(" + TRIM(STR(rowIndex)) + ")." ' Показываем точный пропущенный индекс.
             END IF                                                                                 ' Если строка найдена, идём к следующей.
         NEXT                                                                                       ' Переходим к следующей строке таблицы.
@@ -161,7 +161,7 @@ SUB EnsureAllCalibrationValuesExist()                                           
 
     IF parseErrorMessage = "" THEN                                                                 ' Проверяем столбцы только если таблица строк полная.
         FOR colIndex = 1 TO 28                                                                     ' Проверяем все столбцы таблицы по порядку.
-            IF parsedColSeen(colIndex) = 0 THEN                                                    ' Если хотя бы один столбец отсутствует, снимок неполный.
+            IF parsedColSeen[colIndex] = 0 THEN                                                    ' Если хотя бы один столбец отсутствует, снимок неполный.
                 parseErrorMessage = "В файле калибровки отсутствует pelletColOffset(" + TRIM(STR(colIndex)) + ")." ' Показываем точный пропущенный индекс.
             END IF                                                                                 ' Если столбец найден, идём к следующему.
         NEXT                                                                                       ' Переходим к следующему столбцу таблицы.
@@ -176,14 +176,14 @@ FUNCTION BuildPelletAlignmentProcedure() AS STRING                              
     AppendLine(resultText, "    ' Эти числа удобно крутить вручную и сразу смотреть результат в IDE.                        ' Так проще попасть в центр тоннеля по картинке.") ' Пишем вторую поясняющую строку.
 
     FOR rowIndex = 1 TO 36                                                                         ' Добавляем в код все строки `pelletRowOffset(...)`.
-        AppendLine(resultText, "    pelletRowOffset(" + TRIM(STR(rowIndex)) + ") = " + TRIM(STR(parsedRowValues(rowIndex))) + "                                                                   ' Значение строки " + TRIM(STR(rowIndex)) + " полностью перенесено из файла калибровки.") ' Формируем строку присваивания с русским комментарием.
+        AppendLine(resultText, "    pelletRowOffset[" + TRIM(STR(rowIndex)) + "] = " + TRIM(STR(parsedRowValues[rowIndex])) + "                                                                   ' Значение строки " + TRIM(STR(rowIndex)) + " полностью перенесено из файла калибровки.") ' Формируем строку присваивания с русским комментарием.
     NEXT                                                                                           ' Переходим к следующей строке таблицы.
 
     AppendLine(resultText, "")                                                                     ' Добавляем пустую строку между строками и столбцами.
     AppendLine(resultText, "    ' Здесь мы задаём положение точек по столбцам карты.                                        ' Больше число = точка правее. Меньше число = точка левее.") ' Пишем пояснение к таблице столбцов.
 
     FOR colIndex = 1 TO 28                                                                         ' Добавляем в код все строки `pelletColOffset(...)`.
-        AppendLine(resultText, "    pelletColOffset(" + TRIM(STR(colIndex)) + ") = " + TRIM(STR(parsedColValues(colIndex))) + "                                                                    ' Значение столбца " + TRIM(STR(colIndex)) + " полностью перенесено из файла калибровки.") ' Формируем строку присваивания с русским комментарием.
+        AppendLine(resultText, "    pelletColOffset[" + TRIM(STR(colIndex)) + "] = " + TRIM(STR(parsedColValues[colIndex])) + "                                                                    ' Значение столбца " + TRIM(STR(colIndex)) + " полностью перенесено из файла калибровки.") ' Формируем строку присваивания с русским комментарием.
     NEXT                                                                                           ' Переходим к следующему столбцу таблицы.
 
     AppendLine(resultText, "END SUB                                                                                         ' Завершаем настройку центров точек.") ' Закрываем процедуру тем же понятным комментарием.

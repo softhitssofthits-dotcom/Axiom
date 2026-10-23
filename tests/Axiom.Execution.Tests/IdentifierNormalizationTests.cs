@@ -6,7 +6,7 @@ public sealed class IdentifierNormalizationTests
     [InlineData("SUB Move(BYREF walker AS Walker)\nEND SUB\n")]
     [InlineData("DIM walker AS Walker\n")]
     [InlineData("DIM walker AS INTEGER\nFUNCTION Read() AS Walker\nEND FUNCTION\n")]
-    [InlineData("DIM walker AS INTEGER\nDIM values() AS Walker\n")]
+    [InlineData("DIM walker AS INTEGER\nDIM values[] AS Walker\n")]
     [InlineData("DIM walker AS INTEGER\nDIM choose AS FUNCTION(Walker) AS Walker\n")]
     [InlineData("DIM walker AS INTEGER\nTYPE Walker\n value AS INTEGER\nEND TYPE\n")]
     [InlineData("DIM walker AS INTEGER\nTYPE Holder\n value AS Walker\nEND TYPE\n")]

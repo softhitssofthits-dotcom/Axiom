@@ -8,21 +8,21 @@
 ' 20
 ' 30
 ' 10
-DIM source(5 TO 9) AS INTEGER
-DIM uniqueValues() AS INTEGER
+DIM source[5 TO 9] AS INTEGER
+DIM uniqueValues[] AS INTEGER
 
-source(5) = 10
-source(6) = 20
-source(7) = 10
-source(8) = 30
-source(9) = 20
+source[5] = 10
+source[6] = 20
+source[7] = 10
+source[8] = 30
+source[9] = 20
 
-uniqueValues = ARRAYDISTINCT(source)
-uniqueValues(1) = 99
+uniqueValues[] = ARRAYDISTINCT(source[])
+uniqueValues[1] = 99
 
-PRINT LBOUND(uniqueValues)
-PRINT UBOUND(uniqueValues)
-PRINT uniqueValues(1)
-PRINT uniqueValues(2)
-PRINT uniqueValues(3)
-PRINT source(5)
+PRINT LBOUND(uniqueValues[])
+PRINT UBOUND(uniqueValues[])
+PRINT uniqueValues[1]
+PRINT uniqueValues[2]
+PRINT uniqueValues[3]
+PRINT source[5]

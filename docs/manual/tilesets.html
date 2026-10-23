@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Тайлсеты TILESET — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
 <body data-page="tilesets"><a class="skip-link" href="#main-content">Перейти к статье</a>
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
@@ -7,24 +7,12 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Тайлсеты TILESET</span></nav>
-<p class="eyebrow">Тип, функции и операторы</p><h1 class="page-title">Тайлсеты TILESET</h1><p class="lead"><code>TILESET</code> — тип данных языка Axiom для атласа одинаковых тайлов. Раздел также описывает функции <code>LOADTILESET</code>, <code>TILECOUNT</code>, <code>TILEWIDTH</code>, <code>TILEHEIGHT</code> и оператор <code>DRAWTILE</code>, с помощью которых атлас загружают, измеряют и рисуют.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-
+<p class="eyebrow">Тип, функции и операторы</p><h1 class="page-title">Тайлсеты TILESET</h1><p class="lead">Повторяющиеся фрагменты карты, декорации, панели и небольшие игровые элементы удобно хранить одним атласом, нарезанным на одинаковые тайлы. Такой атлас описывает тип <code>TILESET</code>; его загружает <code>LOADTILESET</code>, размеры и число тайлов сообщают <code>TILECOUNT</code>, <code>TILEWIDTH</code> и <code>TILEHEIGHT</code>, а выводит выбранный тайл оператор <code>DRAWTILE</code>.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
             <section class="article-section" id="type">
-                <h2>Что такое TILESET</h2>
-                <p>Значение <code>TILESET</code> содержит загруженное изображение и сетку тайлов внутри него.</p>
-                <p>Все тайлы имеют одинаковые размеры. Нумерация начинается с <code>1</code> в левом верхнем углу и продолжается слева направо, затем сверху вниз.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Когда использовать TILESET</h2>
-                <p>Атлас удобен для повторяющихся фрагментов карты, декораций, панелей и небольших игровых элементов.</p>
-                <p>Загрузите атлас функцией <code>LOADTILESET</code>, проверьте его свойства функциями размеров и передайте нужный номер в <code>DRAWTILE</code>.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Где работает TILESET</h2>
-                <p>Загрузка и чтение свойств работают со значением тайлсета без открытия графического холста.</p>
+                <h2>Атлас и его сетка</h2>
+                <p>Значение <code>TILESET</code> содержит загруженное изображение и сетку тайлов внутри него. Все тайлы имеют одинаковые размеры; нумерация начинается с <code>1</code> в левом верхнем углу и продолжается слева направо, затем сверху вниз.</p>
+                <p>Загрузка выполняется функцией <code>LOADTILESET</code>, свойства проверяются функциями размеров, а нужный номер передаётся в <code>DRAWTILE</code>. Загрузка и чтение свойств работают со значением тайлсета без открытия графического холста.</p>
                 <p>Вывод <code>DRAWTILE</code> требует <code>CANVAS</code>. Координаты задаются в пикселях мира, преобразуются камерой и обрезаются областью <code>VIEWPORT</code>; при нулевой камере они совпадают с координатами холста в выбранной области.</p>
             </section>
 
@@ -38,13 +26,13 @@
 <pre><code class="language-axiom">TILEWIDTH(&lt;тайлсет&gt;)</code></pre>
 <pre><code class="language-axiom">TILEHEIGHT(&lt;тайлсет&gt;)</code></pre>
 <pre><code class="language-axiom">DRAWTILE &lt;тайлсет&gt;, &lt;номер тайла&gt;, &lt;координата X&gt;, &lt;координата Y&gt;</code></pre>
-                <p id="loadtileset"><code>LOADTILESET</code> — встроенная функция языка Axiom, которая загружает изображение с сеткой тайлов и возвращает <code>TILESET</code>. Функция имеет три формы. Пропущенные <code>&lt;отступ&gt;</code> и <code>&lt;промежуток&gt;</code> равны <code>0</code>.</p>
+                <p id="loadtileset"><code>LOADTILESET</code> загружает изображение с сеткой тайлов и возвращает <code>TILESET</code>. Функция имеет три формы. Пропущенные <code>&lt;отступ&gt;</code> и <code>&lt;промежуток&gt;</code> равны <code>0</code>.</p>
                 <p id="parts">Функции свойств принимают как загруженный, так и пустой тайлсет.</p>
                 <p id="drawtile">Оператор <code>DRAWTILE</code> выводит один тайл в натуральном размере. Формы масштабирования и поворота не поддерживаются.</p>
             </section>
 
             <section class="article-section">
-                <h2>Параметры</h2>
+                <h2>Аргументы</h2>
                 <table>
                     <thead>
                         <tr><th>Аргумент</th><th>Описание</th></tr>
@@ -64,13 +52,11 @@
 
             <section class="article-section">
                 <h2>Что делают оператор и функции</h2>
-                <p>При загрузке проверяется точное соответствие сетки размерам изображения. Результат успешного вызова имеет тип <code>TILESET</code>.</p>
-                <p>Функция <code>TILECOUNT</code> сообщает число тайлов, а <code>TILEWIDTH</code> и <code>TILEHEIGHT</code> — размеры одного тайла в пикселях.</p>
-                <p>Аргумент <code>tileIndex</code> выбирает прямоугольник атласа для вывода на холст.</p>
+                <p>При загрузке проверяется точное соответствие сетки размерам изображения, а результат успешного вызова имеет тип <code>TILESET</code>. Функция <code>TILECOUNT</code> сообщает число тайлов, а <code>TILEWIDTH</code> и <code>TILEHEIGHT</code> — размеры одного тайла в пикселях. Аргумент <code>tileIndex</code> выбирает прямоугольник атласа для вывода на холст.</p>
             </section>
 
             <section class="article-section">
-                <h2>Правила работы</h2>
+                <h2>Пустое значение и соответствие сетки</h2>
                 <ul>
                     <li>Тип <code>TILESET</code> допускает пустое значение переменной. Например, после <code>DIM tiles AS TILESET</code> переменная уже существует, но ещё не содержит загруженного атласа.</li>
                     <li>Для пустого значения <code>TILESET</code> функции <code>TILECOUNT</code>, <code>TILEWIDTH</code> и <code>TILEHEIGHT</code> возвращают <code>0</code>.</li>
@@ -81,8 +67,8 @@
                     <li>Оператор <code>DRAWTILE</code> рисует тайл в натуральном размере <code>tileWidth x tileHeight</code>. Если нужна произвольная масштабируемая графика, для этого подходят <code>DRAWIMAGE</code> и <code>DRAWSPRITE</code>.</li>
                 </ul>
             </section>
-<section class="article-section"><h2>Встроенная функция TILEWIDTH</h2><p><code>TILEWIDTH</code> — встроенная функция языка Axiom, которая возвращает ширину одного тайла в пикселях. Она читает свойства значения без графического окна; результат доступен сразу.</p><h3>Синтаксис</h3><pre><code class="language-axiom">TILEWIDTH(&lt;тайлсет&gt;)</code></pre><h3>Аргумент</h3><p>Передайте выражение типа <code>TILESET</code>, свойства которого нужно прочитать. Пустая переменная после объявления допустима.</p><h3>Результат, ограничения и диагностика</h3><p>Функция возвращает <code>INTEGER</code>. Для пустого значения результат равен 0. Чтение свойства не загружает файл и не вызывает ошибку из-за пустого ресурса. Несовместимый тип или неверное число аргументов отклоняется компилятором.</p><h3>Пример</h3><pre><code class="language-axiom">DIM atlas AS TILESET
-PRINT TILEWIDTH(atlas)</code></pre><p>Программа печатает 0, поскольку ресурс ещё не загружен. После успешной загрузки функция возвращает фактическое свойство.</p><h3>См. также</h3><p><a href="tilesets.html">Загрузка и рисование ресурса</a>.</p></section><section class="article-section"><h2>Встроенная функция TILEHEIGHT</h2><p><code>TILEHEIGHT</code> — встроенная функция языка Axiom, которая возвращает высоту одного тайла в пикселях. Она читает свойства значения без графического окна; результат доступен сразу.</p><h3>Синтаксис</h3><pre><code class="language-axiom">TILEHEIGHT(&lt;тайлсет&gt;)</code></pre><h3>Аргумент</h3><p>Передайте выражение типа <code>TILESET</code>, свойства которого нужно прочитать. Пустая переменная после объявления допустима.</p><h3>Результат, ограничения и диагностика</h3><p>Функция возвращает <code>INTEGER</code>. Для пустого значения результат равен 0. Чтение свойства не загружает файл и не вызывает ошибку из-за пустого ресурса. Несовместимый тип или неверное число аргументов отклоняется компилятором.</p><h3>Пример</h3><pre><code class="language-axiom">DIM atlas AS TILESET
-PRINT TILEHEIGHT(atlas)</code></pre><p>Программа печатает 0, поскольку ресурс ещё не загружен. После успешной загрузки функция возвращает фактическое свойство.</p><h3>См. также</h3><p><a href="tilesets.html">Загрузка и рисование ресурса</a>.</p></section><section class="article-section"><h2>Встроенная функция TILECOUNT</h2><p><code>TILECOUNT</code> — встроенная функция языка Axiom, которая возвращает количество тайлов в атласе. Она читает свойства значения без графического окна; результат доступен сразу.</p><h3>Синтаксис</h3><pre><code class="language-axiom">TILECOUNT(&lt;тайлсет&gt;)</code></pre><h3>Аргумент</h3><p>Передайте выражение типа <code>TILESET</code>, свойства которого нужно прочитать. Пустая переменная после объявления допустима.</p><h3>Результат, ограничения и диагностика</h3><p>Функция возвращает <code>INTEGER</code>. Для пустого значения результат равен 0. Чтение свойства не загружает файл и не вызывает ошибку из-за пустого ресурса. Несовместимый тип или неверное число аргументов отклоняется компилятором.</p><h3>Пример</h3><pre><code class="language-axiom">DIM atlas AS TILESET
+<section class="article-section"><h2>Встроенная функция TILEWIDTH</h2><p><code>TILEWIDTH</code> возвращает ширину одного тайла в пикселях. Она читает свойства значения без графического окна, поэтому результат доступен сразу.</p><h3>Синтаксис</h3><pre><code class="language-axiom">TILEWIDTH(&lt;тайлсет&gt;)</code></pre><h3>Аргумент</h3><p>Передайте выражение типа <code>TILESET</code>, свойства которого нужно прочитать. Пустая переменная после объявления допустима.</p><h3>Результат, ограничения и диагностика</h3><p>Функция возвращает <code>INTEGER</code>. Для пустого значения результат равен 0. Чтение свойства не загружает файл и не вызывает ошибку из-за пустого ресурса. Несовместимый тип или неверное число аргументов отклоняется компилятором.</p><h3>Пример</h3><pre><code class="language-axiom">DIM atlas AS TILESET
+PRINT TILEWIDTH(atlas)</code></pre><p>Программа печатает 0, поскольку ресурс ещё не загружен. После успешной загрузки функция возвращает фактическое свойство.</p><h3>См. также</h3><p><a href="tilesets.html">Загрузка и рисование ресурса</a>.</p></section><section class="article-section"><h2>Встроенная функция TILEHEIGHT</h2><p><code>TILEHEIGHT</code> возвращает высоту одного тайла в пикселях. Она читает свойства значения без графического окна, поэтому результат доступен сразу.</p><h3>Синтаксис</h3><pre><code class="language-axiom">TILEHEIGHT(&lt;тайлсет&gt;)</code></pre><h3>Аргумент</h3><p>Передайте выражение типа <code>TILESET</code>, свойства которого нужно прочитать. Пустая переменная после объявления допустима.</p><h3>Результат, ограничения и диагностика</h3><p>Функция возвращает <code>INTEGER</code>. Для пустого значения результат равен 0. Чтение свойства не загружает файл и не вызывает ошибку из-за пустого ресурса. Несовместимый тип или неверное число аргументов отклоняется компилятором.</p><h3>Пример</h3><pre><code class="language-axiom">DIM atlas AS TILESET
+PRINT TILEHEIGHT(atlas)</code></pre><p>Программа печатает 0, поскольку ресурс ещё не загружен. После успешной загрузки функция возвращает фактическое свойство.</p><h3>См. также</h3><p><a href="tilesets.html">Загрузка и рисование ресурса</a>.</p></section><section class="article-section"><h2>Встроенная функция TILECOUNT</h2><p><code>TILECOUNT</code> возвращает количество тайлов в атласе. Она читает свойства значения без графического окна, поэтому результат доступен сразу.</p><h3>Синтаксис</h3><pre><code class="language-axiom">TILECOUNT(&lt;тайлсет&gt;)</code></pre><h3>Аргумент</h3><p>Передайте выражение типа <code>TILESET</code>, свойства которого нужно прочитать. Пустая переменная после объявления допустима.</p><h3>Результат, ограничения и диагностика</h3><p>Функция возвращает <code>INTEGER</code>. Для пустого значения результат равен 0. Чтение свойства не загружает файл и не вызывает ошибку из-за пустого ресурса. Несовместимый тип или неверное число аргументов отклоняется компилятором.</p><h3>Пример</h3><pre><code class="language-axiom">DIM atlas AS TILESET
 PRINT TILECOUNT(atlas)</code></pre><p>Программа печатает 0, поскольку ресурс ещё не загружен. После успешной загрузки функция возвращает фактическое свойство.</p><h3>См. также</h3><p><a href="tilesets.html">Загрузка и рисование ресурса</a>.</p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
 <script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

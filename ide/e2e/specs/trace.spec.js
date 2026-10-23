@@ -5,7 +5,7 @@ async function paused(S,line){await S.page.waitForFunction(n=>!!window.__ide.exe
 async function menu(S,command){await S.page.locator('#menu-trace > .menu-label').click();await S.page.locator(`#menu-trace [data-action="trace-${command}"]`).click();}
 module.exports=[
 {id:'trace-type-self-stepback',name:'Шаг назад восстанавливает поле TYPE, изменённое методом через адресуемый SELF',async fn({S,C}){
-const source='TYPE Cell\n    Value AS INTEGER = 1\n\n    SUB Change()\n        SELF.Value = SELF.Value + 4\n        SELF.Value = SELF.Value * 2\n    END SUB\nEND TYPE\n\nDIM cells(1 TO 1) AS Cell\ncells(1).Change()\nPRINT cells(1).Value\n';
+const source='TYPE Cell\n    Value AS INTEGER = 1\n\n    SUB Change()\n        SELF.Value = SELF.Value + 4\n        SELF.Value = SELF.Value * 2\n    END SUB\nEND TYPE\n\nDIM cells[1 TO 1] AS Cell\ncells[1].Change()\nPRINT cells[1].Value\n';
 const file=writeAxm(testWorkspace('trace-type-self'),'тип-шаг-назад.axm',source);
 await S.launch();await S.page.evaluate(p=>window.__ide.openFile(p),file);
 await S.page.evaluate(()=>{const i=window.__ide;i.settings.formatOnBlur=false;i.settings.checkOnChange=false;});

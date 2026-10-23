@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Функция KEYDOWN — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
 <body data-page="keydown"><a class="skip-link" href="#main-content">Перейти к статье</a>
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
@@ -7,27 +7,17 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Функция KEYDOWN</span></nav>
-<p class="eyebrow">Встроенная функция</p><h1 class="page-title">Функция KEYDOWN</h1><p class="lead"><code>KEYDOWN</code> — встроенная функция языка Axiom, которая проверяет текущее удержание клавиши или сочетания клавиш. Повторные вызовы не изменяют очередь ввода.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-
+<p class="eyebrow">Встроенная функция</p><h1 class="page-title">Функция KEYDOWN</h1><p class="lead">Непрерывное управление, например движение при удержании стрелки, требует знать не о прошлом нажатии, а о том, нажата ли клавиша прямо сейчас. Функцию <code>KEYDOWN</code> вызывают повторно, чтобы проверить текущее удержание клавиши или сочетания клавиш; очередь ввода при этом не изменяется.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
         <section class="article-section">
-            <h2>Применение</h2>
-            <p>Функция подходит для непрерывного управления, например движения при удержании стрелки. Результат равен <code>TRUE</code>, пока нужная клавиша нажата, и <code>FALSE</code> в остальных случаях. Если среда не предоставляет состояние клавиатуры, возвращается <code>FALSE</code>.</p>
+            <h2>Где берётся состояние</h2>
+            <p>Состояние поступает от активной поверхности ввода: текстовой области IDE либо открытого окна <code>SCREEN 0</code> или <code>SCREEN 1..10</code>. Правила фокуса и очистки состояния описаны в <a href="keyboard-mouse-events.html">разделе ввода</a>.</p>
         </section>
 
         <section class="article-section">
-            <h2>Контекст выполнения</h2>
-            <p>Состояние поступает от активной поверхности ввода: текстовой области IDE либо открытого окна <code>SCREEN 0</code> или <code>SCREEN 1..10</code>.</p>
-            <p>Правила фокуса и очистки состояния описаны в <a href="keyboard-mouse-events.html">разделе ввода</a>.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Синтаксис</h2>
+            <h2>Синтаксис и аргумент</h2>
 <pre><code class="language-axiom">KEYDOWN(&lt;клавиша&gt;)</code></pre>
-        </section>
-
-        <section class="article-section">
-            <h2>Аргументы</h2>
+            <p>Передайте <code>STRING</code> с именем клавиши либо сочетанием, например <code>"CTRL+LEFT"</code>.</p>
             <table>
                 <thead><tr><th>Аргумент</th><th>Тип</th><th>Описание</th></tr></thead>
                 <tbody>
@@ -37,12 +27,13 @@
         </section>
 
         <section class="article-section">
-            <h2>Что возвращает функция KEYDOWN</h2>
-            <p>Функция возвращает значение типа <code>BOOLEAN</code>.</p>
+            <h2>Что возвращает функция</h2>
+            <p>Функция возвращает значение типа <code>BOOLEAN</code> и не извлекает события.</p>
             <ul>
                 <li><code>TRUE</code>, если указанная клавиша сейчас удерживается.</li>
                 <li><code>FALSE</code>, если клавиша не удерживается, имя пустое или среда выполнения не предоставляет состояние клавиатуры.</li>
             </ul>
+            <p>Для пустой строки или строки из пробелов возвращается <code>FALSE</code>; неподдержанное имя не обозначает физическую клавишу и не создаёт ошибку аргумента.</p>
         </section>
 
         <section class="article-section" id="key-names">
@@ -58,8 +49,6 @@
     PRINT "CTRL+LEFT"
 END IF</code></pre>
         </section>
-<section class="article-section"><h2>Аргумент функции</h2><p>Передайте <code>STRING</code> с именем клавиши либо сочетанием, например "CTRL+LEFT". <code>KEYDOWN</code> возвращает <code>BOOLEAN</code> и не извлекает события. Для пустой строки или строки из пробелов возвращается <code>FALSE</code>; неподдержанное имя не обозначает физическую клавишу и не создаёт ошибку аргумента.</p></section>
-
 
         <section class="article-section">
             <h2>Диагностика</h2>
@@ -77,6 +66,7 @@ END IF</code></pre>
         EXIT FOR
     END IF
 NEXT</code></pre>
+            <p>Цикл многократно проверяет удержание и завершается досрочно при первом совпадении. Повторные вызовы безопасны именно потому, что <code>KEYDOWN</code> не забирает события из очереди.</p>
         </section>
 
         <section class="article-section">

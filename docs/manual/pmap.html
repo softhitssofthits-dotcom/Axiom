@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Функция PMAP — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
 <body data-page="pmap"><a class="skip-link" href="#main-content">Перейти к статье</a>
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
@@ -7,17 +7,11 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Функция PMAP</span></nav>
-<p class="eyebrow">Встроенная функция</p><h1 class="page-title">Функция PMAP</h1><p class="lead"><code>PMAP</code> — встроенная функция языка Axiom, которая преобразует одну координату между логической шкалой <code>WINDOW</code> и физической системой текущей области <code>VIEW</code>.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-
+<p class="eyebrow">Встроенная функция</p><h1 class="page-title">Функция PMAP</h1><p class="lead">Когда рисунок задан логической шкалой <code>WINDOW</code>, а вычислению нужны физические пиксели области <code>VIEW</code>, одну координату переводит функция <code>PMAP</code>. Она работает в обе стороны: и из логической системы в физическую, и обратно.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
             <section class="article-section">
-                <h2>Применение</h2>
-                <p>Используйте функцию для вычислений, которым нужны обе системы координат: например, чтобы сопоставить точку графика с её положением в пикселях.</p>
-            </section>
-
-        <section class="article-section">
-                <h2>Контекст выполнения</h2>
-                <p>Для вызова требуется графический режим <code>SCREEN 1..10</code>.</p>
+                <h2>Когда нужны обе системы координат</h2>
+                <p>Функция нужна вычислениям, которым требуются обе системы: например, чтобы сопоставить точку графика с её положением в пикселях. Для вызова требуется графический режим <code>SCREEN 1..10</code>.</p>
             </section>
 
         <section class="article-section">
@@ -36,11 +30,7 @@
                         <tr><td><code>&lt;селектор&gt;</code></td><td>Передайте число, которое задаёт направление преобразования. Передаваемое значение имеет тип <code>INTEGER</code>.</td></tr>
                     </tbody>
                 </table>
-            </section>
-
-        <section class="article-section">
-                <h2>Что возвращает функция PMAP</h2>
-                <p>Результат содержит одну координату. Селектор определяет ось и направление преобразования; для точки из двух координат нужны два вызова.</p>
+                <p>Функция возвращает одну координату типа <code>DOUBLE</code> и сохраняет её дробную часть. Селектор определяет ось и направление преобразования; для точки из двух координат нужны два вызова.</p>
             </section>
 
         <section class="article-section">
@@ -59,13 +49,11 @@
             </section>
 
         <section class="article-section">
-                <h2>Правила работы</h2>
-                <p>Если логическая шкала <code>WINDOW</code> не настроена, функция возвращает исходную координату.</p>
-                <p>После изменения <code>VIEW</code> или <code>WINDOW</code> та же исходная координата может получить другой результат: функция всегда использует текущие настройки.</p>
+                <h2>Текущие настройки и отсутствие шкалы</h2>
+                <p>Если логическая шкала <code>WINDOW</code> не настроена, функция возвращает исходную координату. После изменения <code>VIEW</code> или <code>WINDOW</code> та же исходная координата может получить другой результат: функция всегда использует текущие настройки.</p>
+                <p>Селектор должен лежать в <code>0..3</code>, координата должна быть конечной; нарушение сообщает <code>MB3007</code>. При активном <code>WINDOW</code> слишком узкая область, не позволяющая выполнить преобразование, также сообщает <code>MB3007</code>.</p>
+                <p>Физическая координата результата относится к системе <code>VIEW</code>: при относительной области это координата внутри неё, при <code>VIEW SCREEN</code> — абсолютная координата экрана. Поэтому при относительной области начало области нужно прибавить отдельно, если требуется абсолютный пиксель.</p>
             </section>
-<section class="article-section"><h2>Типы аргументов и отсутствие шкалы</h2><p>Первый аргумент приводится к <code>DOUBLE</code>, второй — к <code>INTEGER</code>. Функция возвращает <code>DOUBLE</code> и сохраняет дробную часть преобразованной координаты. Селектор должен лежать в 0..3, координата должна быть конечной; нарушение сообщает <code>MB3007</code>. Без активного <code>WINDOW</code> функция возвращает переданную координату.</p>
-<p>Физическая координата результата относится к системе VIEW: при относительной области это координата внутри неё, при VIEW <code>SCREEN</code> — абсолютная координата экрана. Поэтому при относительной области начало области нужно прибавить отдельно, если требуется абсолютный пиксель. При активном <code>WINDOW</code> слишком узкая область, не позволяющая выполнить преобразование, сообщает <code>MB3007</code>.</p></section>
-
 
         <section class="article-section">
                 <h2>Диагностика</h2>
@@ -86,7 +74,7 @@ PRINT PMAP(200, 1)
 PRINT PMAP(10, 2)
 PRINT PMAP(10, 3)
 SLEEP</code></pre>
-                <p>Первые вызовы вычисляют физическое положение логической точки; последующие вызовы выполняют обратное преобразование.</p>
+                <p>Первые вызовы вычисляют физическое положение логической точки, последующие выполняют обратное преобразование. Результат зависит от текущих настроек области и шкалы, поэтому вызовы выполняются после <code>VIEW</code> и <code>WINDOW</code>.</p>
             </section>
 
         <section class="article-section">

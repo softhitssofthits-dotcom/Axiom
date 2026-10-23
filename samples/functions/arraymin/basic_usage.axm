@@ -2,11 +2,11 @@
 ' Для строковых массивов сравнение идёт по кодам символов.
 ' Ожидаемый вывод:
 ' 3
-DIM temps(1 TO 4) AS INTEGER
+DIM temps[1 TO 4] AS INTEGER
 
-temps(1) = 7
-temps(2) = 3
-temps(3) = 12
-temps(4) = 5
+temps[1] = 7
+temps[2] = 3
+temps[3] = 12
+temps[4] = 5
 
-PRINT ARRAYMIN(temps)
+PRINT ARRAYMIN(temps[])

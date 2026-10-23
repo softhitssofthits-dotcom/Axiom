@@ -6,23 +6,23 @@ DIM artifactsRoot AS STRING = COMBINEPATH(CURRENTDIR(), ".artifacts")
 DIM compareRoot AS STRING = COMBINEPATH(artifactsRoot, "manual-checks")
 DIM sourcePath AS STRING = COMBINEPATH(compareRoot, "document_batch_repair_source.txt")
 DIM workPath AS STRING = COMBINEPATH(compareRoot, "document_batch_repair_work.txt")
-DIM sourceLines() AS STRING
+DIM sourceLines[] AS STRING
 DIM sourceText AS STRING
 DIM repairedText AS STRING
-DIM repairedLines() AS STRING
+DIM repairedLines[] AS STRING
 DIM fixedCount AS INTEGER
 DIM remainingBrokenCount AS INTEGER
 
 PRINT MAKEDIR(artifactsRoot)
 PRINT MAKEDIR(compareRoot)
 
-REDIM sourceLines(1 TO 1200)
+REDIM sourceLines[1 TO 1200]
 
-FOR lineIndex = 1 TO ARRAYLENGTH(sourceLines)
-    sourceLines(lineIndex) = BuildSourceLine(lineIndex)
+FOR lineIndex = 1 TO ARRAYLENGTH(sourceLines[])
+    sourceLines[lineIndex] = BuildSourceLine(lineIndex)
 NEXT
 
-sourceText = JOIN(sourceLines, CHR(13) + CHR(10))
+sourceText = JOIN(sourceLines[], CHR(13) + CHR(10))
 
 PRINT WRITEFILE(sourcePath, sourceText)
 PRINT COPYFILE(sourcePath, workPath, TRUE)
@@ -36,8 +36,8 @@ PRINT fixedCount
 PRINT remainingBrokenCount
 PRINT WRITEFILE(workPath, repairedText)
 
-repairedLines = READALLLINES(workPath)
-PRINT ARRAYLENGTH(repairedLines)
+repairedLines[] = READALLLINES(workPath)
+PRINT ARRAYLENGTH(repairedLines[])
 PRINT LEFT(repairedText, 24)
 PRINT RIGHT(repairedText, 24)
 
@@ -60,15 +60,15 @@ FUNCTION BuildSourceLine(lineIndex AS INTEGER) AS STRING
 END FUNCTION
 
 FUNCTION RepairDocument(inputText AS STRING) AS STRING
-    DIM lines() AS STRING
+    DIM lines[] AS STRING
 
-    lines = SPLIT(inputText, CHR(10))
+    lines[] = SPLIT(inputText, CHR(10))
 
-    FOR lineIndex = 1 TO ARRAYLENGTH(lines)
-        lines(lineIndex) = RepairLine(RemoveTrailingCr(lines(lineIndex)))
+    FOR lineIndex = 1 TO ARRAYLENGTH(lines[])
+        lines[lineIndex] = RepairLine(RemoveTrailingCr(lines[lineIndex]))
     NEXT
 
-    RETURN JOIN(lines, CHR(13) + CHR(10))
+    RETURN JOIN(lines[], CHR(13) + CHR(10))
 END FUNCTION
 
 FUNCTION RepairLine(inputText AS STRING) AS STRING
@@ -98,15 +98,15 @@ FUNCTION RepairToken(inputText AS STRING, brokenText AS STRING, fixedText AS STR
 END FUNCTION
 
 FUNCTION CountFixedLines(originalDocumentText AS STRING, repairedDocumentText AS STRING) AS INTEGER
-    DIM beforeLines() AS STRING
-    DIM afterLines() AS STRING
+    DIM beforeLines[] AS STRING
+    DIM afterLines[] AS STRING
     DIM count AS INTEGER = 0
 
-    beforeLines = SPLIT(originalDocumentText, CHR(10))
-    afterLines = SPLIT(repairedDocumentText, CHR(10))
+    beforeLines[] = SPLIT(originalDocumentText, CHR(10))
+    afterLines[] = SPLIT(repairedDocumentText, CHR(10))
 
-    FOR lineIndex = 1 TO ARRAYLENGTH(beforeLines)
-        IF RepairLine(RemoveTrailingCr(beforeLines(lineIndex))) <> RemoveTrailingCr(beforeLines(lineIndex)) THEN
+    FOR lineIndex = 1 TO ARRAYLENGTH(beforeLines[])
+        IF RepairLine(RemoveTrailingCr(beforeLines[lineIndex])) <> RemoveTrailingCr(beforeLines[lineIndex]) THEN
             count = count + 1
         END IF
     NEXT
@@ -115,13 +115,13 @@ FUNCTION CountFixedLines(originalDocumentText AS STRING, repairedDocumentText AS
 END FUNCTION
 
 FUNCTION CountBrokenLines(inputText AS STRING) AS INTEGER
-    DIM lines() AS STRING
+    DIM lines[] AS STRING
     DIM count AS INTEGER = 0
 
-    lines = SPLIT(inputText, CHR(10))
+    lines[] = SPLIT(inputText, CHR(10))
 
-    FOR lineIndex = 1 TO ARRAYLENGTH(lines)
-        IF ContainsBrokenToken(RemoveTrailingCr(lines(lineIndex))) THEN
+    FOR lineIndex = 1 TO ARRAYLENGTH(lines[])
+        IF ContainsBrokenToken(RemoveTrailingCr(lines[lineIndex])) THEN
             count = count + 1
         END IF
     NEXT

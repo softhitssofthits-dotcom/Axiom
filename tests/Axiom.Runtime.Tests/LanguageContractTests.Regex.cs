@@ -88,22 +88,7 @@ PRINT REGEXCOUNT("text", "\d+")
     [Fact]
     public void Execute_BuiltinRegexMatchesReturnsAllMatches()
     {
-        const string text = """
-DIM values() AS STRING
-values = REGEXMATCHES("Order 42 and 100", "\d+")
-PRINT ARRAYLENGTH(values)
-PRINT values(1)
-PRINT values(2)
-
-values = REGEXMATCHES("A12 b34", "[a-z]\d+", "i")
-PRINT ARRAYLENGTH(values)
-PRINT values(1)
-PRINT values(2)
-
-values = REGEXMATCHES("Order", "\d+")
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-""";
+        const string text = "DIM values[] AS STRING\r\nvalues[] = REGEXMATCHES(\"Order 42 and 100\", \"\\d+\")\r\nPRINT ARRAYLENGTH(values[])\r\nPRINT values[1]\r\nPRINT values[2]\r\n\r\nvalues[] = REGEXMATCHES(\"A12 b34\", \"[a-z]\\d+\", \"i\")\r\nPRINT ARRAYLENGTH(values[])\r\nPRINT values[1]\r\nPRINT values[2]\r\n\r\nvalues[] = REGEXMATCHES(\"Order\", \"\\d+\")\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -114,22 +99,7 @@ PRINT UBOUND(values)
     [Fact]
     public void Execute_BuiltinRegexExtractAllReturnsRequestedGroupForEveryMatch()
     {
-        const string text = """
-DIM values() AS STRING
-values = REGEXEXTRACTALL("A12 B34", "([A-Z])(\d+)", 2)
-PRINT ARRAYLENGTH(values)
-PRINT values(1)
-PRINT values(2)
-
-values = REGEXEXTRACTALL("a12 b34", "([A-Z])(\d+)", 1, "i")
-PRINT ARRAYLENGTH(values)
-PRINT values(1)
-PRINT values(2)
-
-values = REGEXEXTRACTALL("A12 B34", "([A-Z])(\d+)", 3)
-PRINT "[" + values(1) + "]"
-PRINT "[" + values(2) + "]"
-""";
+        const string text = "DIM values[] AS STRING\r\nvalues[] = REGEXEXTRACTALL(\"A12 B34\", \"([A-Z])(\\d+)\", 2)\r\nPRINT ARRAYLENGTH(values[])\r\nPRINT values[1]\r\nPRINT values[2]\r\n\r\nvalues[] = REGEXEXTRACTALL(\"a12 b34\", \"([A-Z])(\\d+)\", 1, \"i\")\r\nPRINT ARRAYLENGTH(values[])\r\nPRINT values[1]\r\nPRINT values[2]\r\n\r\nvalues[] = REGEXEXTRACTALL(\"A12 B34\", \"([A-Z])(\\d+)\", 3)\r\nPRINT \"[\" + values[1] + \"]\"\r\nPRINT \"[\" + values[2] + \"]\"";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -140,20 +110,7 @@ PRINT "[" + values(2) + "]"
     [Fact]
     public void Execute_BuiltinRegexSplitReturnsStringArray()
     {
-        const string text = """
-DIM parts() AS STRING
-parts = REGEXSPLIT("one, two;three", "[,;]\s*")
-PRINT ARRAYLENGTH(parts)
-PRINT parts(1)
-PRINT parts(2)
-PRINT parts(3)
-
-parts = REGEXSPLIT("A12 b34", "[a-z]\d+", "i")
-PRINT ARRAYLENGTH(parts)
-PRINT "[" + parts(1) + "]"
-PRINT "[" + parts(2) + "]"
-PRINT "[" + parts(3) + "]"
-""";
+        const string text = "DIM parts[] AS STRING\r\nparts[] = REGEXSPLIT(\"one, two;three\", \"[,;]\\s*\")\r\nPRINT ARRAYLENGTH(parts[])\r\nPRINT parts[1]\r\nPRINT parts[2]\r\nPRINT parts[3]\r\n\r\nparts[] = REGEXSPLIT(\"A12 b34\", \"[a-z]\\d+\", \"i\")\r\nPRINT ARRAYLENGTH(parts[])\r\nPRINT \"[\" + parts[1] + \"]\"\r\nPRINT \"[\" + parts[2] + \"]\"\r\nPRINT \"[\" + parts[3] + \"]\"";
 
         var (_, host, result) = ExecuteProgram(text);
 

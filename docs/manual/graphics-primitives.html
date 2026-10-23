@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Операторы рисования — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
 <body data-page="graphics-primitives"><a class="skip-link" href="#main-content">Перейти к статье</a>
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
@@ -7,24 +7,19 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Операторы рисования</span></nav>
-<p class="eyebrow">Операторы и функция</p><h1 class="page-title">Операторы рисования</h1><p class="lead">Раздел примитивов описывает операторы <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code> и встроенную функцию <code>POINT</code>. Они рисуют точки и фигуры, заполняют области и читают состояние пикселей. Поддержка <code>SCREEN</code> и <code>CANVAS</code> указана для каждой сущности отдельно.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<p class="eyebrow">Операторы и функция</p><h1 class="page-title">Операторы рисования</h1><p class="lead">Точка, линия, окружность и залитая область — основа любого рисунка на графической поверхности. Их ставят операторы <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code> и <code>DRAW</code>, а состояние отдельного пикселя читает встроенная функция <code>POINT</code>. Ниже сначала объясняется, где эти средства работают, в каких единицах задаются координаты и что означает цвет, а затем каждая сущность описана отдельно вместе со своей формой вызова.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
 
             <section class="article-section">
                 <h2>Где работают эти операторы</h2>
-                <p>Для <code>LINE</code>, <code>CIRCLE</code>, <code>DRAW</code> и формы <code>POINT(selector)</code> требуется графический режим <code>SCREEN 1..10</code>.</p>
-                <p>Операторы <code>PSET</code>, <code>PRESET</code> и <code>PAINT</code> доступны и в графическом <code>SCREEN</code>, и на холсте <code>CANVAS</code>. В обоих случаях они используют индексные цвета.</p>
-                <p>Форма <code>POINT(x, y)</code> читает пиксель обеих поверхностей, но преобразование координат зависит от выбранной поверхности.</p>
-                <p>Обычная консоль и текстовый режим <code>SCREEN 0</code> не предоставляют поверхность для этих операций.</p>
-                <p>Если неподходящий режим известен при проверке программы, компилятор выдаёт <code>MB2046</code> и запрещает запуск. Например, после <code>SCREEN 0</code> нельзя выполнить <code>CIRCLE (10, 10), 5</code>. Когда режим определяется только при исполнении, его проверяет диагностика <code>MB3010</code>.</p>
+                <p>Набор доступных средств зависит от поверхности. Для <code>LINE</code>, <code>CIRCLE</code>, <code>DRAW</code> и формы <code>POINT(selector)</code> требуется графический режим <code>SCREEN 1..10</code>. Операторы <code>PSET</code>, <code>PRESET</code> и <code>PAINT</code> доступны и в графическом <code>SCREEN</code>, и на холсте <code>CANVAS</code>; в обоих случаях они используют индексные цвета. Форма <code>POINT(x, y)</code> читает пиксель обеих поверхностей, но преобразование координат зависит от выбранной поверхности.</p>
+                <p>Обычная консоль и текстовый режим <code>SCREEN 0</code> не предоставляют поверхность для этих операций. Если неподходящий режим известен при проверке программы, компилятор выдаёт <code>MB2046</code> и запрещает запуск: например, после <code>SCREEN 0</code> нельзя выполнить <code>CIRCLE (10, 10), 5</code>. Когда режим определяется только при исполнении, его проверяет диагностика <code>MB3010</code>.</p>
             </section>
 
             <section class="article-section">
                 <h2>Координаты и цвета</h2>
-                <p>Без дополнительного преобразования координаты измеряются в пикселях.</p>
-                <p>Ось <code>x</code> направлена вправо, а ось <code>y</code> — вниз от верхнего края.</p>
+                <p>Без дополнительного преобразования координаты измеряются в пикселях: ось <code>x</code> направлена вправо, а ось <code>y</code> — вниз от верхнего края. Операторы <code>VIEW</code> и <code>WINDOW</code> меняют систему координат экрана, а слово <code>STEP</code> задаёт относительное смещение от текущей графической позиции.</p>
                 <p>Цвет этих примитивов — индекс палитры. Полноцветное значение <code>RGB(...)</code> имеет другой договор и не заменяет индекс.</p>
-                <p>Операторы <code>VIEW</code> и <code>WINDOW</code> меняют систему координат экрана; слово <code>STEP</code> задаёт относительное смещение.</p>
             </section>
 
             <section class="article-section" id="pset">

@@ -44,22 +44,22 @@ static class AuditCases
         Expr("format-decimal-existing", "$\"{1.25:F2}\"", "1.25");
         foreach (var pair in new[] { ("positive", "1e308", "1e308"), ("cancel", "1e308", "-1e308") })
         {
-            c.Add(new("average-" + pair.Item1, $"DIM a(1 TO 2) AS DOUBLE\na(1) = VAL({Q(pair.Item2)})\na(2) = VAL({Q(pair.Item3)})\nPRINT ARRAYAVERAGE(a)", pair.Item1 == "cancel" ? "0" : "1E+308"));
+            c.Add(new("average-" + pair.Item1, $"DIM a[1 TO 2] AS DOUBLE\na[1] = VAL({Q(pair.Item2)})\na[2] = VAL({Q(pair.Item3)})\nPRINT ARRAYAVERAGE(a[])", pair.Item1 == "cancel" ? "0" : "1E+308"));
         }
-        c.Add(new("min-bool-single", "DIM a(1 TO 1) AS BOOLEAN\na(1) = TRUE\nPRINT ARRAYMIN(a)", ErrorCode: "MB2003"));
-        c.Add(new("min-bool-double", "DIM a(1 TO 2) AS BOOLEAN\na(1) = TRUE\nPRINT ARRAYMIN(a)", ErrorCode: "MB2003"));
-        c.Add(new("sum-long-overflow", "DIM a(1 TO 2) AS LONG\na(1)=9223372036854775807\na(2)=1\nPRINT ARRAYSUM(a)", ErrorCode: "MB3008"));
-        c.Add(new("sum-catch", "DIM a(1 TO 2) AS INTEGER\na(1)=2147483647\na(2)=1\nTRY\nPRINT ARRAYSUM(a)\nCATCH err\nPRINT err.Code\nFINALLY\nPRINT 7\nEND TRY", "MB3008\n7"));
-        c.Add(new("sum-overflow", "DIM a(1 TO 2) AS INTEGER\na(1)=2147483647\na(2)=1\nPRINT ARRAYSUM(a)", ErrorCode: "MB3008"));
-        c.Add(new("array-rank", "DIM a(-1 TO 0, 2 TO 3) AS INTEGER\na(-1,2)=1\na(-1,3)=2\na(0,2)=3\na(0,3)=4\nPRINT ARRAYSUM(a), ARRAYMIN(a), ARRAYMAX(a), ARRAYAVERAGE(a)", "10 1 4 2.5"));
+        c.Add(new("min-bool-single", "DIM a[1 TO 1] AS BOOLEAN\na[1] = TRUE\nPRINT ARRAYMIN(a[])", ErrorCode: "MB2003"));
+        c.Add(new("min-bool-double", "DIM a[1 TO 2] AS BOOLEAN\na[1] = TRUE\nPRINT ARRAYMIN(a[])", ErrorCode: "MB2003"));
+        c.Add(new("sum-long-overflow", "DIM a[1 TO 2] AS LONG\na[1]=9223372036854775807\na[2]=1\nPRINT ARRAYSUM(a[])", ErrorCode: "MB3008"));
+        c.Add(new("sum-catch", "DIM a[1 TO 2] AS INTEGER\na[1]=2147483647\na[2]=1\nTRY\nPRINT ARRAYSUM(a[])\nCATCH err\nPRINT err.Code\nFINALLY\nPRINT 7\nEND TRY", "MB3008\n7"));
+        c.Add(new("sum-overflow", "DIM a[1 TO 2] AS INTEGER\na[1]=2147483647\na[2]=1\nPRINT ARRAYSUM(a[])", ErrorCode: "MB3008"));
+        c.Add(new("array-rank", "DIM a[-1 TO 0, 2 TO 3] AS INTEGER\na[-1,2]=1\na[-1,3]=2\na[0,2]=3\na[0,3]=4\nPRINT ARRAYSUM(a[]), ARRAYMIN(a[]), ARRAYMAX(a[]), ARRAYAVERAGE(a[])", "10 1 4 2.5"));
         foreach (var name in new[] {"ARRAYSUM", "ARRAYMIN", "ARRAYMAX"})
         {
-            c.Add(new("aggregate-scalar-type-" + name, $"DIM a(1 TO 2) AS INTEGER\na(1)=2\na(2)=3\nDIM result AS INTEGER\nresult={name}(a)\nPRINT result", name == "ARRAYSUM" ? "5" : name == "ARRAYMIN" ? "2" : "3"));
-            c.Add(new("aggregate-inferred-type-" + name, $"DIM a(1 TO 2) AS INTEGER\na(1)=2\na(2)=3\nDIM result = {name}(a)\nPRINT result + 1", name == "ARRAYSUM" ? "6" : name == "ARRAYMIN" ? "3" : "4"));
+            c.Add(new("aggregate-scalar-type-" + name, $"DIM a[1 TO 2] AS INTEGER\na[1]=2\na[2]=3\nDIM result AS INTEGER\nresult={name}(a[])\nPRINT result", name == "ARRAYSUM" ? "5" : name == "ARRAYMIN" ? "2" : "3"));
+            c.Add(new("aggregate-inferred-type-" + name, $"DIM a[1 TO 2] AS INTEGER\na[1]=2\na[2]=3\nDIM result = {name}(a[])\nPRINT result + 1", name == "ARRAYSUM" ? "6" : name == "ARRAYMIN" ? "3" : "4"));
         }
-        c.Add(new("array-clone", "DIM a(1 TO 2) AS INTEGER\na(1)=9\nDIM b() AS INTEGER\nb=ARRAYCLONE(a)\nb(1)=4\nPRINT a(1), b(1)", "9 4"));
-        c.Add(new("array-unallocated", "DIM a() AS INTEGER\nPRINT ARRAYAVERAGE(a)", ErrorCode: "MB3005"));
-        c.Add(new("array-empty", "DIM a(1 TO 0) AS INTEGER\nPRINT ARRAYMIN(a)", ErrorCode: "MB3007"));
+        c.Add(new("array-clone", "DIM a[1 TO 2] AS INTEGER\na[1]=9\nDIM b[] AS INTEGER\nb[]=ARRAYCLONE(a[])\nb[1]=4\nPRINT a[1], b[1]", "9 4"));
+        c.Add(new("array-unallocated", "DIM a[] AS INTEGER\nPRINT ARRAYAVERAGE(a[])", ErrorCode: "MB3005"));
+        c.Add(new("array-empty", "DIM a[1 TO 0] AS INTEGER\nPRINT ARRAYMIN(a[])", ErrorCode: "MB3007"));
         Expr("unicode-len", "LEN(" + Q("a😀e\u0301") + ")", "5");
         Expr("unicode-reverse", "REVERSE(" + Q("a😀b") + ")", "b😀a");
         Expr("unicode-reverse-twice-cut", "REVERSE(REVERSE(LEFT(" + Q("😀") + ",1))) = LEFT(" + Q("😀") + ",1)", "TRUE");
@@ -79,7 +79,7 @@ static class AuditCases
         c.Add(new("short-circuit", "PRINT FALSE ANDALSO (1 / 0 > 0)\nPRINT TRUE ORELSE (1 / 0 > 0)", "False\nTrue"));
         c.Add(new("random-seed", "RANDOMIZE 42\nDIM a AS DOUBLE\na=RND()\nRANDOMIZE 42\nPRINT a=RND()", "True"));
         c.Add(new("finally-rethrow", "TRY\nTRY\nERROR \"APP005\"\nCATCH err\nERROR err\nFINALLY\nPRINT 7\nEND TRY\nCATCH outer\nPRINT 8\nEND TRY", "7\n8"));
-        c.Add(new("bound-dimension", "DIM a(-1 TO 0,2 TO 3) AS INTEGER\nPRINT LBOUND(a,2), UBOUND(a,2)", "2 3"));
+        c.Add(new("bound-dimension", "DIM a[-1 TO 0,2 TO 3] AS INTEGER\nPRINT LBOUND(a[],2), UBOUND(a[],2)", "2 3"));
         Expr("date-leap", "ISDATE(" + Q("2024-02-29") + ")", "True");
         Expr("date-nonleap", "ISDATE(" + Q("2023-02-29") + ")", "False");
         // Короткие и смешанные файлы: проверка байтов до и после границы заголовка.

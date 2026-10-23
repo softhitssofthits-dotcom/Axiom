@@ -31,21 +31,21 @@ public sealed class ReplaceMalformedUnicodeEvidenceTests
         Check($$"""
             DIM high AS STRING = LEFT("😀", 1)
             DIM low AS STRING = RIGHT("😀", 1)
-            DIM oldItems(-3 TO 1) AS STRING
-            DIM newItems(8 TO 12) AS STRING
-            oldItems(-3) = {{first}}
-            oldItems(-2) = {{second}}
-            oldItems(-1) = "😀"
-            oldItems(0) = low
-            oldItems(1) = CHRW(0)
-            newItems(8) = {{firstNew}}
-            newItems(9) = {{secondNew}}
-            newItems(10) = "Дубль"
-            newItems(11) = ""
-            newItems(12) = "Ноль"
-            PRINT REPLACEMANY("😀" + high + "А" + low + CHRW(0), oldItems, newItems) = "😀НАНоль"
-            PRINT oldItems(-3) = {{first}}
-            PRINT newItems(8) = {{firstNew}}
+            DIM oldItems[-3 TO 1] AS STRING
+            DIM newItems[8 TO 12] AS STRING
+            oldItems[-3] = {{first}}
+            oldItems[-2] = {{second}}
+            oldItems[-1] = "😀"
+            oldItems[0] = low
+            oldItems[1] = CHRW(0)
+            newItems[8] = {{firstNew}}
+            newItems[9] = {{secondNew}}
+            newItems[10] = "Дубль"
+            newItems[11] = ""
+            newItems[12] = "Ноль"
+            PRINT REPLACEMANY("😀" + high + "А" + low + CHRW(0), oldItems[], newItems[]) = "😀НАНоль"
+            PRINT oldItems[-3] = {{first}}
+            PRINT newItems[8] = {{firstNew}}
             """, ["TRUE", "TRUE", "TRUE"]);
     }
 

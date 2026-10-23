@@ -485,12 +485,7 @@ PrintBanner("debug sample")
         var consoleService = new ProgramConsoleService();
         var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
 
-        const string sourceText = """
-DIM values(1 TO 2) AS INTEGER
-values(1) = 10
-values(2) = 20
-PRINT values(1)
-""";
+        const string sourceText = "DIM values[1 TO 2] AS INTEGER\r\nvalues[1] = 10\r\nvalues[2] = 20\r\nPRINT values[1]";
 
         var stoppedResult = service.Run(sourceText, sourceBreakpointLines: [4]);
 
@@ -513,12 +508,7 @@ PRINT values(1)
         var consoleService = new ProgramConsoleService();
         var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
 
-        const string sourceText = """
-DIM values(1 TO 2) AS INTEGER
-values(1) = 10
-PRINT values(1)
-PRINT 99
-""";
+        const string sourceText = "DIM values[1 TO 2] AS INTEGER\r\nvalues[1] = 10\r\nPRINT values[1]\r\nPRINT 99";
 
         var stoppedResult = service.Run(sourceText, sourceBreakpointLines: [4]);
 
@@ -541,21 +531,7 @@ PRINT 99
         var consoleService = new ProgramConsoleService();
         var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
 
-        const string sourceText = """
-DIM board(1 TO 2, 1 TO 3) AS INTEGER
-
-board(1, 1) = 4
-board(1, 2) = 2
-board(1, 3) = 6
-board(2, 1) = 3
-board(2, 2) = 1
-board(2, 3) = 5
-
-ARRAYSORT(board, COLUMN)
-
-PRINT board(1, 1)
-PRINT board(1, 2)
-""";
+        const string sourceText = "DIM board[1 TO 2, 1 TO 3] AS INTEGER\r\n\r\nboard[1, 1] = 4\r\nboard[1, 2] = 2\r\nboard[1, 3] = 6\r\nboard[2, 1] = 3\r\nboard[2, 2] = 1\r\nboard[2, 3] = 5\r\n\r\nARRAYSORT(board[], COLUMN)\r\n\r\nPRINT board[1, 1]\r\nPRINT board[1, 2]";
 
         var stoppedResult = service.Run(sourceText, sourceBreakpointLines: [13]);
 
@@ -586,22 +562,7 @@ PRINT board(1, 2)
         var consoleService = new ProgramConsoleService();
         var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
 
-        const string sourceText = """
-DIM board(1 TO 2, 1 TO 3) AS INTEGER
-board(1, 1) = 4
-board(1, 2) = 2
-board(1, 3) = 6
-board(2, 1) = 3
-board(2, 2) = 1
-board(2, 3) = 5
-ARRAYSORT(board, COLUMN)
-PRINT board(1, 1)
-PRINT board(1, 2)
-PRINT board(1, 3)
-PRINT board(2, 1)
-PRINT board(2, 2)
-PRINT board(2, 3)
-""";
+        const string sourceText = "DIM board[1 TO 2, 1 TO 3] AS INTEGER\r\nboard[1, 1] = 4\r\nboard[1, 2] = 2\r\nboard[1, 3] = 6\r\nboard[2, 1] = 3\r\nboard[2, 2] = 1\r\nboard[2, 3] = 5\r\nARRAYSORT(board[], COLUMN)\r\nPRINT board[1, 1]\r\nPRINT board[1, 2]\r\nPRINT board[1, 3]\r\nPRINT board[2, 1]\r\nPRINT board[2, 2]\r\nPRINT board[2, 3]";
 
         var firstPrint = service.Run(sourceText, sourceBreakpointLines: [10]);
 
@@ -690,26 +651,7 @@ PRINT "done"
         var consoleService = new ProgramConsoleService(traceService);
         var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
 
-        const string sourceText = """
-SCREEN 1
-VIEW SCREEN (10, 10)-(30, 30)
-WINDOW SCREEN (100, 200)-(120, 220)
-
-DIM buffer(1 TO 2, 5 TO 6) AS INTEGER
-
-PSET (104, 205), 6
-PSET (105, 205), 9
-PSET (104, 206), 12
-PSET (105, 206), 15
-
-GET (104, 205)-(105, 206), buffer
-
-PRINT buffer(1, 5)
-PRINT buffer(2, 5)
-PRINT buffer(1, 6)
-PRINT buffer(2, 6)
-PRINT "GET sample finished"
-""";
+        const string sourceText = "SCREEN 1\r\nVIEW SCREEN (10, 10)-(30, 30)\r\nWINDOW SCREEN (100, 200)-(120, 220)\r\n\r\nDIM buffer[1 TO 2, 5 TO 6] AS INTEGER\r\n\r\nPSET (104, 205), 6\r\nPSET (105, 205), 9\r\nPSET (104, 206), 12\r\nPSET (105, 206), 15\r\n\r\nGET (104, 205)-(105, 206), buffer[]\r\n\r\nPRINT buffer[1, 5]\r\nPRINT buffer[2, 5]\r\nPRINT buffer[1, 6]\r\nPRINT buffer[2, 6]\r\nPRINT \"GET sample finished\"";
 
         var result = service.Run(sourceText);
         var graphicsOutput = traceService.Entries
@@ -729,28 +671,7 @@ PRINT "GET sample finished"
         var consoleService = new ProgramConsoleService(traceService);
         var service = new ProgramRunService(new AxiomExecutionPipeline(), consoleService);
 
-        const string sourceText = """
-SCREEN 1
-
-DIM buffer(1 TO 2, 1 TO 1) AS DOUBLE
-buffer(1, 1) = 1.9
-buffer(2, 1) = -2.2
-
-PUT (10, 10), buffer
-DIM xorLeft AS INTEGER = POINT(10, 10)
-DIM xorRight AS INTEGER = POINT(11, 10)
-
-LINE (10, 10)-(11, 10), 0, BF
-PUT (10, 10), buffer, PRESET
-DIM presetLeft AS INTEGER = POINT(10, 10)
-DIM presetRight AS INTEGER = POINT(11, 10)
-
-PRINT xorLeft
-PRINT xorRight
-PRINT presetLeft
-PRINT presetRight
-PRINT "PUT sample finished"
-""";
+        const string sourceText = "SCREEN 1\r\n\r\nDIM buffer[1 TO 2, 1 TO 1] AS DOUBLE\r\nbuffer[1, 1] = 1.9\r\nbuffer[2, 1] = -2.2\r\n\r\nPUT (10, 10), buffer[]\r\nDIM xorLeft AS INTEGER = POINT(10, 10)\r\nDIM xorRight AS INTEGER = POINT(11, 10)\r\n\r\nLINE (10, 10)-(11, 10), 0, BF\r\nPUT (10, 10), buffer[], PRESET\r\nDIM presetLeft AS INTEGER = POINT(10, 10)\r\nDIM presetRight AS INTEGER = POINT(11, 10)\r\n\r\nPRINT xorLeft\r\nPRINT xorRight\r\nPRINT presetLeft\r\nPRINT presetRight\r\nPRINT \"PUT sample finished\"";
 
         var result = service.Run(sourceText);
         var graphicsOutput = traceService.Entries

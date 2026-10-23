@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 561,
+  "count": 565,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -2133,6 +2133,16 @@
       "name": "Отмена и закрытие модели не показывают поздние hover и подпись"
     },
     {
+      "id": "language-array-colors-hover",
+      "spec": "language-format.spec.js",
+      "name": "Массивы отличаются от переменных и функций во всех темах и подсказках"
+    },
+    {
+      "id": "language-array-initializers",
+      "spec": "language-format.spec.js",
+      "name": "Массивные инициализаторы: явный и выведенный тип, форматирование, подсветка и запуск"
+    },
+    {
       "id": "format-smooth-two-styles",
       "spec": "language-format.spec.js",
       "name": "SMOOTH форматируется через меню и Enter в Classic и Modern"
@@ -2621,6 +2631,16 @@
       "id": "smart-identifier-legacy",
       "spec": "smart-identifier.spec.js",
       "name": "Умный идентификатор: меню, Enter, мышь, отмена и сохранение настройки"
+    },
+    {
+      "id": "editor-square-brackets-format-colors-signature",
+      "spec": "square-brackets.spec.js",
+      "name": "Квадратные массивы: набор, форматирование, четыре темы, подсказки и сохранение"
+    },
+    {
+      "id": "debug-square-array-view-stepback",
+      "spec": "square-brackets.spec.js",
+      "name": "Квадратный массив и представление сохраняются при обратном шаге"
     },
     {
       "id": "startup-ready",

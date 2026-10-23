@@ -85,8 +85,8 @@
       syntax: {
         comment: '#FFFF55', commentStyle: '', string: '#FFFF55', stringEscape: '#FFFFFF',
         interpolation: '#FFFFFF', number: '#FFFF55', keyword: '#FFFFFF', type: '#FFFF55',
-        builtin: '#FFFF55', identifier: '#FFFF55', variable: '#FFFF55', variableReadonly: '#FFFF55',
-        function: '#FFFF55', array: '#FFFF55', operator: '#FFFFFF', delimiter: '#FFFFFF', invalid: '#FF5555',
+        builtin: '#55FFFF', identifier: '#FFFF55', variable: '#FFFF55', variableReadonly: '#FFFF55',
+        function: '#55FFFF', array: '#AAFFAA', operator: '#FFFFFF', delimiter: '#FFFFFF', invalid: '#FF5555',
       },
       monacoColors: {
         'editor.foreground': '#FFFF55', 'editor.selectionForeground': '#0000AA',

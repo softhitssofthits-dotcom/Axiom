@@ -1263,25 +1263,7 @@ PRINT POINT(17, 10)
     [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForGetPutTransfers()
     {
-        const string text = """
-SCREEN 1
-DIM buffer(1 TO 2, 1 TO 2) AS INTEGER
-PSET (10, 10), 1
-PSET (11, 10), 2
-PSET (10, 11), 3
-PSET (11, 11), 4
-GET (11, 11)-(10, 10), buffer
-LINE (10, 10)-(11, 11), 0, BF
-PUT (10, 10), buffer
-PRINT buffer(1, 1)
-PRINT buffer(2, 1)
-PRINT buffer(1, 2)
-PRINT buffer(2, 2)
-PRINT POINT(10, 10)
-PRINT POINT(11, 10)
-PRINT POINT(10, 11)
-PRINT POINT(11, 11)
-""";
+        const string text = "SCREEN 1\r\nDIM buffer[1 TO 2, 1 TO 2] AS INTEGER\r\nPSET (10, 10), 1\r\nPSET (11, 10), 2\r\nPSET (10, 11), 3\r\nPSET (11, 11), 4\r\nGET (11, 11)-(10, 10), buffer[]\r\nLINE (10, 10)-(11, 11), 0, BF\r\nPUT (10, 10), buffer[]\r\nPRINT buffer[1, 1]\r\nPRINT buffer[2, 1]\r\nPRINT buffer[1, 2]\r\nPRINT buffer[2, 2]\r\nPRINT POINT(10, 10)\r\nPRINT POINT(11, 10)\r\nPRINT POINT(10, 11)\r\nPRINT POINT(11, 11)";
 
         var inputProvider = new MinimalGraphicsHostInputProvider();
         var result = Run(text, inputProvider: inputProvider);
@@ -1476,23 +1458,7 @@ PRINT REPLACE("abc", "", "x")
     [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForRegexArrayBuiltins()
     {
-        const string text = """
-DIM matches() AS STRING
-DIM extracted() AS STRING
-DIM parts() AS STRING
-
-matches = REGEXMATCHES("A12 b34 C56", "[a-z]\d+", "i")
-extracted = REGEXEXTRACTALL("A12 b34 C56", "([a-z])(\d+)", 2, "i")
-parts = REGEXSPLIT("A12,b34;C56", "[,;]")
-
-PRINT ARRAYLENGTH(matches)
-PRINT matches(1)
-PRINT matches(3)
-PRINT ARRAYLENGTH(extracted)
-PRINT extracted(2)
-PRINT ARRAYLENGTH(parts)
-PRINT parts(2)
-""";
+        const string text = "DIM matches[] AS STRING\r\nDIM extracted[] AS STRING\r\nDIM parts[] AS STRING\r\n\r\nmatches[] = REGEXMATCHES(\"A12 b34 C56\", \"[a-z]\\d+\", \"i\")\r\nextracted[] = REGEXEXTRACTALL(\"A12 b34 C56\", \"([a-z])(\\d+)\", 2, \"i\")\r\nparts[] = REGEXSPLIT(\"A12,b34;C56\", \"[,;]\")\r\n\r\nPRINT ARRAYLENGTH(matches[])\r\nPRINT matches[1]\r\nPRINT matches[3]\r\nPRINT ARRAYLENGTH(extracted[])\r\nPRINT extracted[2]\r\nPRINT ARRAYLENGTH(parts[])\r\nPRINT parts[2]";
 
         var result = Run(text);
 
@@ -1504,10 +1470,7 @@ PRINT parts(2)
     [Fact]
     public void Run_WithBytecodeMode_ReportsRegexArrayBuiltinArgumentError()
     {
-        const string text = """
-DIM matches() AS STRING
-matches = REGEXMATCHES("abc", "a", "q")
-""";
+        const string text = "DIM matches[] AS STRING\r\nmatches[] = REGEXMATCHES(\"abc\", \"a\", \"q\")";
 
         var pipeline = new AxiomExecutionPipeline();
         var result = pipeline.Run(new ExecutionRequest(text));
@@ -1559,13 +1522,7 @@ PRINT REGEXEXTRACT("abc", "(a)", -1)
     [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForStringArrayBuiltins()
     {
-        const string text = """
-DIM parts() AS STRING
-parts = SPLIT("red|green|blue", "|")
-PRINT ARRAYLENGTH(parts)
-PRINT parts(2)
-PRINT JOIN(parts, "/")
-""";
+        const string text = "DIM parts[] AS STRING\r\nparts[] = SPLIT(\"red|green|blue\", \"|\")\r\nPRINT ARRAYLENGTH(parts[])\r\nPRINT parts[2]\r\nPRINT JOIN(parts[], \"/\")";
 
         var result = Run(text);
 
@@ -1577,10 +1534,7 @@ PRINT JOIN(parts, "/")
     [Fact]
     public void Run_WithBytecodeMode_ReportsStringArrayBuiltinArgumentError()
     {
-        const string text = """
-DIM parts() AS STRING
-parts = SPLIT("abc", "")
-""";
+        const string text = "DIM parts[] AS STRING\r\nparts[] = SPLIT(\"abc\", \"\")";
 
         var pipeline = new AxiomExecutionPipeline();
         var result = pipeline.Run(new ExecutionRequest(text));
@@ -2269,27 +2223,7 @@ PRINT CLAMP(5, low, high)
     [InlineData(ExecutionEngineKind.BytecodeVm)]
     public void Run_Wave4FeaturesMatchInBytecodeVm(ExecutionEngineKind expectedEngine)
     {
-        const string text = """
-RANDOMIZE 42
-PRINT RND()
-PRINT CINT(-2.9)
-PRINT CLNG(7.9)
-PRINT CDBL(3)
-PRINT CDEC(0.5)
-
-DIM a(1 TO 3) AS INTEGER
-a(1) = 10
-a(2) = 20
-a(3) = 30
-PRINT ARRAYSUM(a)
-PRINT ARRAYMIN(a)
-PRINT ARRAYMAX(a)
-PRINT ARRAYAVERAGE(a)
-
-PRINT a(1) <= 3 ANDALSO a(2) = 0
-PRINT a(1) <= 3 ORELSE a(2) = 0
-PRINT a(1) >= 3 ANDALSO a(1) = 10
-""";
+        const string text = "RANDOMIZE 42\r\nPRINT RND()\r\nPRINT CINT(-2.9)\r\nPRINT CLNG(7.9)\r\nPRINT CDBL(3)\r\nPRINT CDEC(0.5)\r\n\r\nDIM a[1 TO 3] AS INTEGER\r\na[1] = 10\r\na[2] = 20\r\na[3] = 30\r\nPRINT ARRAYSUM(a[])\r\nPRINT ARRAYMIN(a[])\r\nPRINT ARRAYMAX(a[])\r\nPRINT ARRAYAVERAGE(a[])\r\n\r\nPRINT a[1] <= 3 ANDALSO a[2] = 0\r\nPRINT a[1] <= 3 ORELSE a[2] = 0\r\nPRINT a[1] >= 3 ANDALSO a[1] = 10";
 
         var pipeline = new AxiomExecutionPipeline();
         var result = pipeline.Run(new ExecutionRequest(text));
@@ -2494,15 +2428,7 @@ Outer()
     [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForArrayProgram()
     {
-        const string text = """
-DIM values() AS INTEGER
-REDIM values(1 TO 2)
-values(1) = 7
-values(2) = 8
-PRINT values(1)
-PRINT ARRAYLENGTH(values)
-PRINT UBOUND(values)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nREDIM values[1 TO 2]\r\nvalues[1] = 7\r\nvalues[2] = 8\r\nPRINT values[1]\r\nPRINT ARRAYLENGTH(values[])\r\nPRINT UBOUND(values[])";
 
         var pipeline = new AxiomExecutionPipeline();
         var result = pipeline.Run(new ExecutionRequest(text));
@@ -2515,19 +2441,7 @@ PRINT UBOUND(values)
     [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForMultidimensionalArrayProgram()
     {
-        const string text = """
-DIM grid(,) AS INTEGER
-REDIM grid(1 TO 2, 10 TO 11)
-grid(1, 10) = 7
-grid(2, 11) = 9
-PRINT LBOUND(grid, 1)
-PRINT UBOUND(grid, 1)
-PRINT LBOUND(grid, 2)
-PRINT UBOUND(grid, 2)
-REDIM PRESERVE grid(2 TO 3, 11 TO 12)
-PRINT grid(2, 11)
-PRINT grid(3, 12)
-""";
+        const string text = "DIM grid[,] AS INTEGER\r\nREDIM grid[1 TO 2, 10 TO 11]\r\ngrid[1, 10] = 7\r\ngrid[2, 11] = 9\r\nPRINT LBOUND(grid[], 1)\r\nPRINT UBOUND(grid[], 1)\r\nPRINT LBOUND(grid[], 2)\r\nPRINT UBOUND(grid[], 2)\r\nREDIM PRESERVE grid[2 TO 3, 11 TO 12]\r\nPRINT grid[2, 11]\r\nPRINT grid[3, 12]";
 
         var pipeline = new AxiomExecutionPipeline();
         var result = pipeline.Run(new ExecutionRequest(text));
@@ -2540,15 +2454,7 @@ PRINT grid(3, 12)
     [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForArrayMetadataBuiltins()
     {
-        const string text = """
-DIM cube(,,) AS INTEGER
-DIM bounds(,) AS INTEGER
-REDIM cube(2 TO 3, 10 TO 11, -1 TO 0)
-PRINT ARRAYRANK(cube)
-bounds = ARRAYBOUNDS(cube)
-PRINT bounds(1, 1)
-PRINT bounds(3, 2)
-""";
+        const string text = "DIM cube[,,] AS INTEGER\r\nDIM bounds[,] AS INTEGER\r\nREDIM cube[2 TO 3, 10 TO 11, -1 TO 0]\r\nPRINT ARRAYRANK(cube[])\r\nbounds[] = ARRAYBOUNDS(cube[])\r\nPRINT bounds[1, 1]\r\nPRINT bounds[3, 2]";
 
         var pipeline = new AxiomExecutionPipeline();
         var result = pipeline.Run(new ExecutionRequest(text));
@@ -2561,19 +2467,7 @@ PRINT bounds(3, 2)
     [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForPartialMultidimensionalIndexingProgram()
     {
-        const string text = """
-DIM grid(,) AS INTEGER
-DIM rowView() AS INTEGER
-REDIM grid(1 TO 2, 10 TO 11)
-grid(2, 10) = 7
-grid(2, 11) = 9
-rowView = grid(2)
-rowView(10) = 70
-PRINT grid(2, 10)
-PRINT rowView(11)
-PRINT LBOUND(rowView)
-PRINT UBOUND(rowView)
-""";
+        const string text = "DIM grid[,] AS INTEGER\r\nDIM rowView[] AS INTEGER\r\nREDIM grid[1 TO 2, 10 TO 11]\r\ngrid[2, 10] = 7\r\ngrid[2, 11] = 9\r\nrowView[] = grid[2]\r\nrowView[10] = 70\r\nPRINT grid[2, 10]\r\nPRINT rowView[11]\r\nPRINT LBOUND(rowView[])\r\nPRINT UBOUND(rowView[])";
 
         var pipeline = new AxiomExecutionPipeline();
         var result = pipeline.Run(new ExecutionRequest(text));
@@ -2586,29 +2480,7 @@ PRINT UBOUND(rowView)
     [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForPureArrayBuiltins()
     {
-        const string text = """
-DIM source(5 TO 7) AS INTEGER
-DIM clone() AS INTEGER
-DIM sortedValues() AS INTEGER
-DIM reversedValues() AS INTEGER
-DIM uniqueValues() AS INTEGER
-
-source(5) = 30
-source(6) = 10
-source(7) = 30
-
-clone = ARRAYCLONE(source)
-sortedValues = ARRAYTOSORTED(source)
-reversedValues = ARRAYTOREVERSED(source)
-uniqueValues = ARRAYDISTINCT(source)
-
-PRINT LBOUND(clone)
-PRINT UBOUND(clone)
-PRINT sortedValues(5)
-PRINT sortedValues(7)
-PRINT reversedValues(1)
-PRINT ARRAYLENGTH(uniqueValues)
-""";
+        const string text = "DIM source[5 TO 7] AS INTEGER\r\nDIM clone[] AS INTEGER\r\nDIM sortedValues[] AS INTEGER\r\nDIM reversedValues[] AS INTEGER\r\nDIM uniqueValues[] AS INTEGER\r\n\r\nsource[5] = 30\r\nsource[6] = 10\r\nsource[7] = 30\r\n\r\nclone[] = ARRAYCLONE(source[])\r\nsortedValues[] = ARRAYTOSORTED(source[])\r\nreversedValues[] = ARRAYTOREVERSED(source[])\r\nuniqueValues[] = ARRAYDISTINCT(source[])\r\n\r\nPRINT LBOUND(clone[])\r\nPRINT UBOUND(clone[])\r\nPRINT sortedValues[5]\r\nPRINT sortedValues[7]\r\nPRINT reversedValues[1]\r\nPRINT ARRAYLENGTH(uniqueValues[])";
 
         var pipeline = new AxiomExecutionPipeline();
         var result = pipeline.Run(new ExecutionRequest(text));
@@ -2621,10 +2493,7 @@ PRINT ARRAYLENGTH(uniqueValues)
     [Fact]
     public void Run_WithBytecodeMode_ReportsPureArrayBuiltinArgumentError()
     {
-        const string text = """
-DIM source(1 TO 1) AS INTEGER
-PRINT ARRAYSKIP(source, -1)
-""";
+        const string text = "DIM source[1 TO 1] AS INTEGER\r\nPRINT ARRAYSKIP(source[], -1)";
 
         var pipeline = new AxiomExecutionPipeline();
         var result = pipeline.Run(new ExecutionRequest(text));
@@ -2640,27 +2509,7 @@ PRINT ARRAYSKIP(source, -1)
     [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForMutatingArrayBuiltins()
     {
-        const string text = """
-DIM values(5 TO 6) AS INTEGER
-DIM removed AS INTEGER
-DIM popped AS INTEGER
-
-values(5) = 3
-values(6) = 1
-ARRAYPUSH(values, 2)
-ARRAYINSERT(values, 6, 4)
-removed = ARRAYREMOVE(values, 7)
-popped = ARRAYPOP(values)
-ARRAYREVERSE(values)
-ARRAYSORT(values)
-
-PRINT removed
-PRINT popped
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-PRINT values(5)
-PRINT values(6)
-""";
+        const string text = "DIM values[5 TO 6] AS INTEGER\r\nDIM removed AS INTEGER\r\nDIM popped AS INTEGER\r\n\r\nvalues[5] = 3\r\nvalues[6] = 1\r\nARRAYPUSH(values[], 2)\r\nARRAYINSERT(values[], 6, 4)\r\nremoved = ARRAYREMOVE(values[], 7)\r\npopped = ARRAYPOP(values[])\r\nARRAYREVERSE(values[])\r\nARRAYSORT(values[])\r\n\r\nPRINT removed\r\nPRINT popped\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])\r\nPRINT values[5]\r\nPRINT values[6]";
 
         var pipeline = new AxiomExecutionPipeline();
         var result = pipeline.Run(new ExecutionRequest(text));
@@ -2673,30 +2522,7 @@ PRINT values(6)
     [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForMultidimensionalDynamicArrayBuiltins()
     {
-        const string text = """
-DIM board(1 TO 2, 10 TO 11) AS INTEGER
-DIM newColumn(1 TO 2) AS INTEGER
-DIM removedColumn() AS INTEGER
-
-board(1, 10) = 110
-board(1, 11) = 111
-board(2, 10) = 210
-board(2, 11) = 211
-newColumn(1) = 112
-newColumn(2) = 212
-
-ARRAYPUSH(board, newColumn, COLUMN)
-removedColumn = ARRAYPOP(board, COLUMN)
-ARRAYINSERT(board, 11, newColumn, COLUMN)
-removedColumn = ARRAYREMOVE(board, 10, COLUMN)
-
-PRINT removedColumn(1)
-PRINT removedColumn(2)
-PRINT board(1, 10)
-PRINT board(1, 11)
-PRINT board(2, 10)
-PRINT board(2, 11)
-""";
+        const string text = "DIM board[1 TO 2, 10 TO 11] AS INTEGER\r\nDIM newColumn[1 TO 2] AS INTEGER\r\nDIM removedColumn[] AS INTEGER\r\n\r\nboard[1, 10] = 110\r\nboard[1, 11] = 111\r\nboard[2, 10] = 210\r\nboard[2, 11] = 211\r\nnewColumn[1] = 112\r\nnewColumn[2] = 212\r\n\r\nARRAYPUSH(board[], newColumn[], COLUMN)\r\nremovedColumn[] = ARRAYPOP(board[], COLUMN)\r\nARRAYINSERT(board[], 11, newColumn[], COLUMN)\r\nremovedColumn[] = ARRAYREMOVE(board[], 10, COLUMN)\r\n\r\nPRINT removedColumn[1]\r\nPRINT removedColumn[2]\r\nPRINT board[1, 10]\r\nPRINT board[1, 11]\r\nPRINT board[2, 10]\r\nPRINT board[2, 11]";
 
         var pipeline = new AxiomExecutionPipeline();
         var result = pipeline.Run(new ExecutionRequest(text));
@@ -2709,10 +2535,7 @@ PRINT board(2, 11)
     [Fact]
     public void Run_WithBytecodeMode_ReportsMutatingArrayBuiltinArgumentError()
     {
-        const string text = """
-DIM values(1 TO 0) AS INTEGER
-PRINT ARRAYPOP(values)
-""";
+        const string text = "DIM values[1 TO 0] AS INTEGER\r\nPRINT ARRAYPOP(values[])";
 
         var pipeline = new AxiomExecutionPipeline();
         var result = pipeline.Run(new ExecutionRequest(text));
@@ -2728,35 +2551,7 @@ PRINT ARRAYPOP(values)
     [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForArraySearchBuiltins()
     {
-        const string text = """
-DIM values(5 TO 9) AS INTEGER
-DIM matches() AS INTEGER
-DIM sorted(5 TO 9) AS INTEGER
-
-values(5) = 10
-values(6) = 20
-values(7) = 10
-values(8) = 30
-values(9) = 20
-
-sorted(5) = 10
-sorted(6) = 20
-sorted(7) = 20
-sorted(8) = 30
-sorted(9) = 40
-
-matches = ARRAYFINDALL(values, 20)
-
-PRINT ARRAYCONTAINS(values, 20)
-PRINT ARRAYINDEXOF(values, 10)
-PRINT ARRAYLASTINDEXOF(values, 20)
-PRINT ARRAYCOUNT(values, 20)
-PRINT ARRAYINDEXOF(values, 99)
-PRINT matches(1)
-PRINT matches(2)
-PRINT ARRAYBINARYSEARCH(sorted, 20)
-PRINT ARRAYBINARYSEARCH(sorted, 25)
-""";
+        const string text = "DIM values[5 TO 9] AS INTEGER\r\nDIM matches[] AS INTEGER\r\nDIM sorted[5 TO 9] AS INTEGER\r\n\r\nvalues[5] = 10\r\nvalues[6] = 20\r\nvalues[7] = 10\r\nvalues[8] = 30\r\nvalues[9] = 20\r\n\r\nsorted[5] = 10\r\nsorted[6] = 20\r\nsorted[7] = 20\r\nsorted[8] = 30\r\nsorted[9] = 40\r\n\r\nmatches[] = ARRAYFINDALL(values[], 20)\r\n\r\nPRINT ARRAYCONTAINS(values[], 20)\r\nPRINT ARRAYINDEXOF(values[], 10)\r\nPRINT ARRAYLASTINDEXOF(values[], 20)\r\nPRINT ARRAYCOUNT(values[], 20)\r\nPRINT ARRAYINDEXOF(values[], 99)\r\nPRINT matches[1]\r\nPRINT matches[2]\r\nPRINT ARRAYBINARYSEARCH(sorted[], 20)\r\nPRINT ARRAYBINARYSEARCH(sorted[], 25)";
 
         var pipeline = new AxiomExecutionPipeline();
         var result = pipeline.Run(new ExecutionRequest(text));
@@ -2769,32 +2564,7 @@ PRINT ARRAYBINARYSEARCH(sorted, 25)
     [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForMultidimensionalSortingGroup()
     {
-        const string text = """
-DIM board(1 TO 2, 1 TO 4) AS INTEGER
-DIM sortedByColumn(1 TO 2, 1 TO 4) AS INTEGER
-DIM hit() AS INTEGER
-
-board(1, 1) = 4
-board(1, 2) = 2
-board(1, 3) = 2
-board(1, 4) = 7
-board(2, 1) = 3
-board(2, 2) = 1
-board(2, 3) = 5
-board(2, 4) = 8
-
-sortedByColumn = ARRAYTOSORTED(board, COLUMN)
-ARRAYSORT(board, ROW)
-hit = ARRAYBINARYSEARCH(board, 5, ROW)
-
-PRINT sortedByColumn(1, 1)
-PRINT sortedByColumn(1, 2)
-PRINT sortedByColumn(2, 2)
-PRINT board(1, 1)
-PRINT board(2, 3)
-PRINT hit(1)
-PRINT hit(2)
-""";
+        const string text = "DIM board[1 TO 2, 1 TO 4] AS INTEGER\r\nDIM sortedByColumn[1 TO 2, 1 TO 4] AS INTEGER\r\nDIM hit[] AS INTEGER\r\n\r\nboard[1, 1] = 4\r\nboard[1, 2] = 2\r\nboard[1, 3] = 2\r\nboard[1, 4] = 7\r\nboard[2, 1] = 3\r\nboard[2, 2] = 1\r\nboard[2, 3] = 5\r\nboard[2, 4] = 8\r\n\r\nsortedByColumn[] = ARRAYTOSORTED(board[], COLUMN)\r\nARRAYSORT(board[], ROW)\r\nhit[] = ARRAYBINARYSEARCH(board[], 5, ROW)\r\n\r\nPRINT sortedByColumn[1, 1]\r\nPRINT sortedByColumn[1, 2]\r\nPRINT sortedByColumn[2, 2]\r\nPRINT board[1, 1]\r\nPRINT board[2, 3]\r\nPRINT hit[1]\r\nPRINT hit[2]";
 
         var pipeline = new AxiomExecutionPipeline();
         var result = pipeline.Run(new ExecutionRequest(text));
@@ -2807,26 +2577,7 @@ PRINT hit(2)
     [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForArrayFlattenAndReshape()
     {
-        const string text = """
-DIM board(1 TO 2, 10 TO 12) AS INTEGER
-DIM flat() AS INTEGER
-DIM reshaped(,) AS INTEGER
-
-board(1, 10) = 3
-board(1, 11) = 1
-board(1, 12) = 2
-board(2, 10) = 6
-board(2, 11) = 4
-board(2, 12) = 5
-
-flat = ARRAYFLATTEN(board)
-reshaped = ARRAYRESHAPE(flat, board)
-
-PRINT flat(1)
-PRINT flat(6)
-PRINT reshaped(1, 10)
-PRINT reshaped(2, 12)
-""";
+        const string text = "DIM board[1 TO 2, 10 TO 12] AS INTEGER\r\nDIM flat[] AS INTEGER\r\nDIM reshaped[,] AS INTEGER\r\n\r\nboard[1, 10] = 3\r\nboard[1, 11] = 1\r\nboard[1, 12] = 2\r\nboard[2, 10] = 6\r\nboard[2, 11] = 4\r\nboard[2, 12] = 5\r\n\r\nflat[] = ARRAYFLATTEN(board[])\r\nreshaped[] = ARRAYRESHAPE(flat[], board[])\r\n\r\nPRINT flat[1]\r\nPRINT flat[6]\r\nPRINT reshaped[1, 10]\r\nPRINT reshaped[2, 12]";
 
         var pipeline = new AxiomExecutionPipeline();
         var result = pipeline.Run(new ExecutionRequest(text));
@@ -2839,10 +2590,7 @@ PRINT reshaped(2, 12)
     [Fact]
     public void Run_WithBytecodeMode_ReportsArraySearchBuiltinRuntimeError()
     {
-        const string text = """
-DIM values() AS INTEGER
-PRINT ARRAYBINARYSEARCH(values, 1)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nPRINT ARRAYBINARYSEARCH(values[], 1)";
 
         var pipeline = new AxiomExecutionPipeline();
         var result = pipeline.Run(new ExecutionRequest(text));
@@ -2856,50 +2604,7 @@ PRINT ARRAYBINARYSEARCH(values, 1)
     [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForArrayCallbackBuiltins()
     {
-        const string text = """
-SUB RunCallbacks()
-DIM values(1 TO 4) AS INTEGER
-DIM filtered() AS INTEGER
-DIM mapped() AS STRING
-DIM threshold AS INTEGER = 2
-DIM prefix AS STRING = "N"
-DIM bonus AS INTEGER = 1
-
-values(1) = 1
-values(2) = 2
-values(3) = 3
-values(4) = 4
-
-PRINT ARRAYEVERY(values, IsPositive)
-PRINT ARRAYSOME(values, IsLarge)
-
-filtered = ARRAYFILTER(values, IsLarge)
-mapped = ARRAYMAP(filtered, FormatValue)
-
-PRINT ARRAYLENGTH(filtered)
-PRINT mapped(1)
-PRINT mapped(2)
-PRINT ARRAYREDUCE(values, 10, AddWithBonus)
-
-FUNCTION IsPositive(value AS INTEGER) AS BOOLEAN
-    RETURN value > 0
-END FUNCTION
-
-FUNCTION IsLarge(value AS INTEGER) AS BOOLEAN
-    RETURN value > threshold
-END FUNCTION
-
-FUNCTION FormatValue(value AS INTEGER) AS STRING
-    RETURN prefix + STR(value)
-END FUNCTION
-
-FUNCTION AddWithBonus(accumulator AS INTEGER, value AS INTEGER) AS INTEGER
-    RETURN accumulator + value + bonus
-END FUNCTION
-END SUB
-
-RunCallbacks()
-""";
+        const string text = "SUB RunCallbacks()\r\nDIM values[1 TO 4] AS INTEGER\r\nDIM filtered[] AS INTEGER\r\nDIM mapped[] AS STRING\r\nDIM threshold AS INTEGER = 2\r\nDIM prefix AS STRING = \"N\"\r\nDIM bonus AS INTEGER = 1\r\n\r\nvalues[1] = 1\r\nvalues[2] = 2\r\nvalues[3] = 3\r\nvalues[4] = 4\r\n\r\nPRINT ARRAYEVERY(values[], IsPositive)\r\nPRINT ARRAYSOME(values[], IsLarge)\r\n\r\nfiltered[] = ARRAYFILTER(values[], IsLarge)\r\nmapped[] = ARRAYMAP(filtered[], FormatValue)\r\n\r\nPRINT ARRAYLENGTH(filtered[])\r\nPRINT mapped[1]\r\nPRINT mapped[2]\r\nPRINT ARRAYREDUCE(values[], 10, AddWithBonus)\r\n\r\nFUNCTION IsPositive(value AS INTEGER) AS BOOLEAN\r\n    RETURN value > 0\r\nEND FUNCTION\r\n\r\nFUNCTION IsLarge(value AS INTEGER) AS BOOLEAN\r\n    RETURN value > threshold\r\nEND FUNCTION\r\n\r\nFUNCTION FormatValue(value AS INTEGER) AS STRING\r\n    RETURN prefix + STR(value)\r\nEND FUNCTION\r\n\r\nFUNCTION AddWithBonus(accumulator AS INTEGER, value AS INTEGER) AS INTEGER\r\n    RETURN accumulator + value + bonus\r\nEND FUNCTION\r\nEND SUB\r\n\r\nRunCallbacks()";
 
         var pipeline = new AxiomExecutionPipeline();
         var result = pipeline.Run(new ExecutionRequest(text));
@@ -2912,31 +2617,7 @@ RunCallbacks()
     [Fact]
     public void Run_WithBytecodeMode_UsesBytecodeVmForBuiltinFunctionCallbacks()
     {
-        const string text = """
-DIM names(1 TO 3) AS STRING
-DIM upper() AS STRING
-DIM lengths() AS INTEGER
-DIM dateTexts(1 TO 3) AS STRING
-DIM validDates() AS STRING
-
-names(1) = "ada"
-names(2) = "Grace"
-names(3) = "linus"
-
-dateTexts(1) = "2026-04-24"
-dateTexts(2) = "not-a-date"
-dateTexts(3) = "2026-05-01"
-
-upper = ARRAYMAP(names, UCASE)
-lengths = ARRAYMAP(names, LEN)
-validDates = ARRAYFILTER(dateTexts, ISDATE)
-
-PRINT upper(1)
-PRINT upper(3)
-PRINT lengths(2)
-PRINT ARRAYLENGTH(validDates)
-PRINT validDates(2)
-""";
+        const string text = "DIM names[1 TO 3] AS STRING\r\nDIM upper[] AS STRING\r\nDIM lengths[] AS INTEGER\r\nDIM dateTexts[1 TO 3] AS STRING\r\nDIM validDates[] AS STRING\r\n\r\nnames[1] = \"ada\"\r\nnames[2] = \"Grace\"\r\nnames[3] = \"linus\"\r\n\r\ndateTexts[1] = \"2026-04-24\"\r\ndateTexts[2] = \"not-a-date\"\r\ndateTexts[3] = \"2026-05-01\"\r\n\r\nupper[] = ARRAYMAP(names[], UCASE)\r\nlengths[] = ARRAYMAP(names[], LEN)\r\nvalidDates[] = ARRAYFILTER(dateTexts[], ISDATE)\r\n\r\nPRINT upper[1]\r\nPRINT upper[3]\r\nPRINT lengths[2]\r\nPRINT ARRAYLENGTH(validDates[])\r\nPRINT validDates[2]";
 
         var pipeline = new AxiomExecutionPipeline();
         var result = pipeline.Run(new ExecutionRequest(text));
@@ -3002,9 +2683,9 @@ PRINT READFILE(filePath)
 PRINT FILEEXISTS(filePath)
 PRINT MAKEDIR(nestedDirectory)
 PRINT DIREXISTS(nestedDirectory)
-DIM files() AS STRING
-files = GETFILES("{{EscapePath(workspace)}}", "*.txt")
-PRINT ARRAYLENGTH(files)
+DIM files[] AS STRING
+files[] = GETFILES("{{EscapePath(workspace)}}", "*.txt")
+PRINT ARRAYLENGTH(files[])
 PRINT DELETEFILE(filePath)
 PRINT DELETEDIR(nestedDirectory)
 """;

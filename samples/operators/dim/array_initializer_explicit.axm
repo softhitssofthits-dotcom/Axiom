@@ -1,0 +1,9 @@
+' Явный тип массива находится после AS; скобки стоят после типа элемента.
+' Ожидаемый вывод:
+' банан
+' апельсин
+DIM fruits[] AS STRING = SPLIT("яблоко,банан,апельсин", ",")
+PRINT fruits[2]
+DIM basket[] AS STRING = fruits[]
+basket[2] = "апельсин"
+PRINT fruits[2]

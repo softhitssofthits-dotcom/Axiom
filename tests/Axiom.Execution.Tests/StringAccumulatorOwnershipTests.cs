@@ -44,19 +44,7 @@ Run()
     [Fact]
     public void ComparisonAndStoredCopiesKeepValuesBeforeMutation()
     {
-        Check("""
-DIM text AS STRING = "A"
-text = text + "B"
-DIM saved(1 TO 1) AS STRING
-saved(1) = text
-PRINT text = Change()
-PRINT saved(1)
-PRINT text
-FUNCTION Change() AS STRING
-    text = text + "C"
-    RETURN "AB"
-END FUNCTION
-""", "TRUE", "AB", "ABC");
+        Check("DIM text AS STRING = \"A\"\r\ntext = text + \"B\"\r\nDIM saved[1 TO 1] AS STRING\r\nsaved[1] = text\r\nPRINT text = Change()\r\nPRINT saved[1]\r\nPRINT text\r\nFUNCTION Change() AS STRING\r\n    text = text + \"C\"\r\n    RETURN \"AB\"\r\nEND FUNCTION", "TRUE", "AB", "ABC");
     }
 
     private static void Check(string source, params string[] expected)

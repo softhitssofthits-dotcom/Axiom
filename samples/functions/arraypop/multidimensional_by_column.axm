@@ -1,19 +1,19 @@
 ' ARRAYPOP по COLUMN возвращает снятый столбец как отдельный массив.
-DIM board(1 TO 2, 10 TO 12) AS INTEGER
-DIM removedColumn() AS INTEGER
+DIM board[1 TO 2, 10 TO 12] AS INTEGER
+DIM removedColumn[] AS INTEGER
 
-board(1, 10) = 110
-board(1, 11) = 111
-board(1, 12) = 112
-board(2, 10) = 210
-board(2, 11) = 211
-board(2, 12) = 212
+board[1, 10] = 110
+board[1, 11] = 111
+board[1, 12] = 112
+board[2, 10] = 210
+board[2, 11] = 211
+board[2, 12] = 212
 
-removedColumn = ARRAYPOP(board, COLUMN)
+removedColumn[] = ARRAYPOP(board[], COLUMN)
 
-PRINT LBOUND(removedColumn)
-PRINT UBOUND(removedColumn)
-PRINT removedColumn(1)
-PRINT removedColumn(2)
-PRINT LBOUND(board, COLUMN)
-PRINT UBOUND(board, COLUMN)
+PRINT LBOUND(removedColumn[])
+PRINT UBOUND(removedColumn[])
+PRINT removedColumn[1]
+PRINT removedColumn[2]
+PRINT LBOUND(board[], COLUMN)
+PRINT UBOUND(board[], COLUMN)

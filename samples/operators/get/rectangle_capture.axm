@@ -10,17 +10,17 @@ SCREEN 1
 VIEW SCREEN (10, 10)-(30, 30)
 WINDOW SCREEN (100, 200)-(120, 220)
 
-DIM buffer(1 TO 2, 5 TO 6) AS INTEGER
+DIM buffer[1 TO 2, 5 TO 6] AS INTEGER
 
 PSET (104, 205), 6
 PSET (105, 205), 9
 PSET (104, 206), 12
 PSET (105, 206), 15
 
-GET (104, 205)-(105, 206), buffer
+GET (104, 205)-(105, 206), buffer[]
 
-PRINT buffer(1, 5)
-PRINT buffer(2, 5)
-PRINT buffer(1, 6)
-PRINT buffer(2, 6)
+PRINT buffer[1, 5]
+PRINT buffer[2, 5]
+PRINT buffer[1, 6]
+PRINT buffer[2, 6]
 PRINT "Проверка GET завершена"

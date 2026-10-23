@@ -2,24 +2,24 @@
 DIM path AS STRING = MAKETEMPFILE("readlines_empty_")
 DIM ok AS BOOLEAN
 DIM reader AS FILE
-DIM lines() AS STRING
+DIM lines[] AS STRING
 
 ok = WRITEFILE(path, "alpha")
 
 OPEN path FOR INPUT AS reader
-lines = READLINES(reader, 0)
-PRINT ARRAYISALLOCATED(lines)
-PRINT ARRAYLENGTH(lines)
-PRINT LBOUND(lines)
-PRINT UBOUND(lines)
+lines[] = READLINES(reader, 0)
+PRINT ARRAYISALLOCATED(lines[])
+PRINT ARRAYLENGTH(lines[])
+PRINT LBOUND(lines[])
+PRINT UBOUND(lines[])
 PRINT LINENUMBER(reader)
 
-lines = READLINES(reader, 1)
-lines = READLINES(reader, 1)
-PRINT ARRAYISALLOCATED(lines)
-PRINT ARRAYLENGTH(lines)
-PRINT LBOUND(lines)
-PRINT UBOUND(lines)
+lines[] = READLINES(reader, 1)
+lines[] = READLINES(reader, 1)
+PRINT ARRAYISALLOCATED(lines[])
+PRINT ARRAYLENGTH(lines[])
+PRINT LBOUND(lines[])
+PRINT UBOUND(lines[])
 CLOSE reader
 
 ok = DELETEFILE(path)

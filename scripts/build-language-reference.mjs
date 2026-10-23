@@ -83,11 +83,11 @@ const expressionOperators=[
 ].map(([name,token,description])=>({name,token,description,href:'arithmetic-and-logic.html'}));
 const sourceFiles=[...fs.readdirSync(path.join(root,'src/Axiom.Semantics/Symbols/Builtins')).filter(f=>f.endsWith('.cs')).map(f=>'src/Axiom.Semantics/Symbols/Builtins/'+f),
  'src/Axiom.Semantics/Symbols/BuiltinFunctionDescriptor.cs','src/Axiom.Core/AxiomLanguageKeywords.cs','src/Axiom.Lexing/Lexer.cs','src/Axiom.Lexing/TokenKind.cs','src/Axiom.Syntax/SyntaxKind.cs',
- 'src/Axiom.Parsing/Parser.Statements.cs','src/Axiom.Parsing/Parser.Declarations.cs','src/Axiom.Parsing/Parser.Expressions.cs'].sort();
+ 'src/Axiom.Parsing/Parser.Statements.cs','src/Axiom.Parsing/Parser.Declarations.cs','src/Axiom.Parsing/Parser.Expressions.cs','src/Axiom.Parsing/Parser.Arrays.cs'].sort();
 const sourceFingerprint=crypto.createHash('sha256').update(sourceFiles.map(f=>f+'\n'+fs.readFileSync(path.join(root,f),'utf8').replaceAll('\r\n','\n')).join('\n')).digest('hex');
 if(!actual && previous.sourceFingerprint!==sourceFingerprint)throw new Error('Реестр или синтаксис изменились: сначала обновите --inventory.');
 const snapshot={sourceFiles,sourceFingerprint,functions,statements,expressionOperators,keywords:actual?.Integrity.Keywords??previous.keywords,types:actual?.Integrity.TypeNames??previous.types,
- internalSyntax:{GlobalStatementSyntax:'Обёртка инструкции верхнего уровня; отдельного оператора GLOBAL нет.',LocalSubDeclarationStatementSyntax:'Локальное объявление SUB; описано вместе с SUB.',LocalFunctionDeclarationStatementSyntax:'Локальное объявление FUNCTION; описано вместе с FUNCTION.'}};
+ internalSyntax:{ModuleStatementSyntax:'Обёртка инструкции с PUBLIC или PRIVATE; модификаторы описаны в разделе видимости.',GlobalStatementSyntax:'Обёртка инструкции верхнего уровня; отдельного оператора GLOBAL нет.',LocalSubDeclarationStatementSyntax:'Локальное объявление SUB; описано вместе с SUB.',LocalFunctionDeclarationStatementSyntax:'Локальное объявление FUNCTION; описано вместе с FUNCTION.'}};
 fs.mkdirSync(path.dirname(dataPath),{recursive:true});
 fs.writeFileSync(dataPath,JSON.stringify(snapshot,null,2)+'\n');
 
@@ -104,21 +104,25 @@ function parameterType(form,param) {
    if(param.name==='selector')return 'FUNCTION(T) AS U';
    if(param.name==='reducer')return 'FUNCTION(A, T) AS A';
  }
- return param.type;
+ return arrayTypeNotation(param.type);
+}
+function arrayTypeNotation(type){
+ return String(type||'').replace(/\b((?!FUNCTION\b)[A-Za-z_]\w*)\s*\((,*)\)/gi,(_,element,commas)=>`${element}[${commas}]`);
 }
 function returnType(form){return ({
  SameAsFirstArgument:form.binding==='Array'?'Массив того же типа и формы, если правила функции не изменяют его границы.':'Тип первого аргумента.',
- SameAsSecondArgument:'Массив с типом элементов исходного массива и формой массива-шаблона.',
+ SameAsSecondArgument:'Массив с типом элементов исходного массива и формой массива-образца.',
  ElementTypeOfFirstArrayArgument:'T — тип элемента исходного массива.',
  ArrayOfFirstArrayElementType:'Одномерный массив элементов типа T.',
  ArrayDynamicSliceResult:'Для ранга 1 — элемент T; для ранга 2 и выше — массив T ранга на единицу меньше.',
- ArrayIndexCoordinateResult:'Для ранга 1 — INTEGER; для многомерного массива — INTEGER() с координатами.',
- ArrayFindAllCoordinateResult:'Для ранга 1 — INTEGER(); для многомерного массива — INTEGER(,) с координатами.',
+ ArrayIndexCoordinateResult:'Для ранга 1 — INTEGER; для многомерного массива — INTEGER[] с координатами.',
+ ArrayFindAllCoordinateResult:'Для ранга 1 — INTEGER[]; для многомерного массива — INTEGER[,] с координатами.',
  ArrayMapSelectorReturnArray:'Массив результатов типа U с рангом исходного массива.',
  ArrayReduceAccumulator:'A — тип начального значения аккумулятора.',
  PromotedNumeric:'Общий числовой тип аргументов.',
  Integer:'INTEGER',String:'STRING',Double:'DOUBLE'
-})[form.resultPolicy]??(form.returnType==='VOID'?'Значение не возвращается; вызов используется как инструкция.':form.returnType);}
+})[form.resultPolicy]??(form.returnType==='VOID'?'Значение не возвращается; вызов используется как инструкция.':arrayTypeNotation(form.returnType));}
+
 
 function argumentContract(form,param){
  const type=parameterType(form,param);
@@ -132,9 +136,9 @@ function argumentContract(form,param){
  return 'Допустимый тип значения: '+type+'.';
 }
 function resultContract(form){
- const named={INTEGER:'целое число типа INTEGER',LONG:'целое число типа LONG',DOUBLE:'число типа DOUBLE',DECIMAL:'десятичное число типа DECIMAL',STRING:'строку типа STRING',BOOLEAN:'логическое значение типа BOOLEAN',DATE:'дату типа DATE',TIME:'время суток типа TIME',DATETIME:'дату и время типа DATETIME',UTCDATETIME:'момент времени типа UTCDATETIME',IMAGE:'изображение типа IMAGE',SPRITE:'спрайт типа SPRITE',TILESET:'набор тайлов типа TILESET',TILEMAP:'тайловую карту типа TILEMAP','STRING()':'одномерный массив строк типа STRING()','INTEGER()':'одномерный массив целых чисел типа INTEGER()','INTEGER(,)':'двумерный массив целых чисел типа INTEGER(,)'};
+ const named={INTEGER:'целое число типа INTEGER',LONG:'целое число типа LONG',DOUBLE:'число типа DOUBLE',DECIMAL:'десятичное число типа DECIMAL',STRING:'строку типа STRING',BOOLEAN:'логическое значение типа BOOLEAN',DATE:'дату типа DATE',TIME:'время суток типа TIME',DATETIME:'дату и время типа DATETIME',UTCDATETIME:'момент времени типа UTCDATETIME',IMAGE:'изображение типа IMAGE',SPRITE:'спрайт типа SPRITE',TILESET:'набор тайлов типа TILESET',TILEMAP:'тайловую карту типа TILEMAP','STRING[]':'одномерный массив строк типа STRING[]','INTEGER[]':'одномерный массив целых чисел типа INTEGER[]','INTEGER[,]':'двумерный массив целых чисел типа INTEGER[,]'};
  if(form.returnType==='VOID')return 'Функция выполняет действие и не возвращает значение. Используйте вызов как отдельную инструкцию.';
- if(form.resultPolicy==='Default'&&named[form.returnType])return 'Функция возвращает '+named[form.returnType]+'.';
+ if(form.resultPolicy==='Default'&&named[arrayTypeNotation(form.returnType)])return 'Функция возвращает '+named[arrayTypeNotation(form.returnType)]+'.';
  const result=returnType(form);
  if(named[result])return 'Функция возвращает '+named[result]+'.';
  const policies={
@@ -143,8 +147,8 @@ function resultContract(form){
    ElementTypeOfFirstArrayArgument:'Функция возвращает значение того же типа, что и элементы исходного массива.',
    ArrayOfFirstArrayElementType:'Функция возвращает одномерный массив с типом элементов исходного массива.',
    ArrayDynamicSliceResult:'Для одномерного массива функция возвращает элемент его типа. Для массива ранга 2 или выше функция возвращает массив с тем же типом элементов и рангом на единицу меньше.',
-   ArrayIndexCoordinateResult:'Для одномерного массива функция возвращает индекс типа INTEGER. Для многомерного массива функция возвращает одномерный массив INTEGER() с координатами найденного элемента.',
-   ArrayFindAllCoordinateResult:'Для одномерного массива функция возвращает массив индексов INTEGER(). Для многомерного массива функция возвращает двумерный массив INTEGER(,) с координатами найденных элементов.',
+   ArrayIndexCoordinateResult:'Для одномерного массива функция возвращает индекс типа INTEGER. Для многомерного массива функция возвращает одномерный массив INTEGER[] с координатами найденного элемента.',
+   ArrayFindAllCoordinateResult:'Для одномерного массива функция возвращает массив индексов INTEGER[]. Для многомерного массива функция возвращает двумерный массив INTEGER[,] с координатами найденных элементов.',
    ArrayMapSelectorReturnArray:'Функция возвращает массив с типом элементов U, который задаётся результатом переданной функции преобразования. Ранг и границы совпадают с исходным массивом.',
    ArrayReduceAccumulator:'Функция возвращает значение типа A, заданного начальным значением аккумулятора.',
    PromotedNumeric:'Функция возвращает значение общего числового типа своих аргументов.'
@@ -157,7 +161,7 @@ let body=`<section class="article-section"><h2>Содержание</h2><p>В у
 for(const fn of functions) {
  const samples=path.join(root,'samples/functions',fn.name.toLowerCase());
  const files=fs.existsSync(samples)?fs.readdirSync(samples).filter(f=>f.endsWith('.axm')):[];
- body+=`\n<section class="article-section" id="fn-${fn.name.toLowerCase()}"><h2>${fn.name}</h2><p><code>${fn.name}</code> — встроенная функция языка Axiom, которая ${escape(fn.description[0].toLowerCase()+fn.description.slice(1))}</p><h3>Синтаксис, аргументы и результат</h3>`;
+ body+=`\n<section class="article-section" id="fn-${fn.name.toLowerCase()}"><h2>${fn.name}</h2><p><code>${fn.name}</code> ${escape(fn.description[0].toLowerCase()+fn.description.slice(1))}</p><h3>Синтаксис, аргументы и результат</h3>`;
  for(const form of fn.forms) {
    body+=`<div class="reference-form" data-form="${form.key}"><pre><code class="language-axiom">${fn.name}(${form.parameters.map(p=>'&lt;'+formalParameterName(p.name)+'&gt;').join(', ')})</code></pre>`;
    body+=form.parameters.length?`<table><thead><tr><th>Аргумент</th><th>Что передать</th></tr></thead><tbody>${form.parameters.map(p=>`<tr><td><code>&lt;${escape(formalParameterName(p.name))}&gt;</code></td><td><p>${escape(argumentContract(form,p))}</p><p>${escape(explanations[fn.name].arguments[p.name])}</p></td></tr>`).join('')}</tbody></table>`:'<p>Функция вызывается без аргументов.</p>';
@@ -167,7 +171,7 @@ for(const fn of functions) {
  if(files.length)body+=`<h3>Запускаемые примеры</h3><ul>${files.map(f=>`<li><a href="../../samples/functions/${fn.name.toLowerCase()}/${escape(f)}">${escape(f)}</a></li>`).join('')}</ul>`;
  body+='</section>';
 }
-fs.writeFileSync(path.join(manual,'function-reference.html'),shell('function-reference','Встроенные функции','Раздел перечисляет встроенные функции и точные зарегистрированные формы вызова. Полное объяснение поведения каждой функции находится в её тематической статье.',body));
+fs.writeFileSync(path.join(manual,'function-reference.html'),shell('function-reference','Встроенные функции','Здесь собраны встроенные функции Axiom и точные зарегистрированные формы их вызова: имя, аргументы, результат и ссылка на тематическую статью, где описаны поведение, ограничения и примеры.',body));
 
 body='<section class="article-section"><h2>Содержание</h2><p>Операторы сгруппированы по роли в программе. В перечень включены объявления, управляющие конструкции, ввод и вывод, графика, события, присваивание и вызов как инструкция. Слова завершения блоков и режимы описываются вместе с соответствующим оператором.</p><div class="link-list">'+statements.map(s=>`<a href="#op-${s.id}">${escape(s.name)}</a>`).join(' ')+'</div></section>';
 for(const op of statements){
@@ -176,7 +180,7 @@ for(const op of statements){
  body+=`<section class="article-section" id="op-${op.id}"><h2>${escape(op.name)}</h2><p>${lead}</p><p><a href="${op.href}">Описание ${escape(op.name)}: синтаксис, параметры и примеры</a></p>`;
  body+='</section>';
 }
-fs.writeFileSync(path.join(manual,'operator-reference.html'),shell('operator-reference','Операторы и инструкции','Раздел перечисляет объявления, инструкции и управляющие конструкции Axiom. Каждая запись ведёт к основному описанию соответствующей формы.',body));
+fs.writeFileSync(path.join(manual,'operator-reference.html'),shell('operator-reference','Операторы и инструкции','Здесь собраны объявления, инструкции и управляющие конструкции Axiom с точной формой записи; каждая запись ведёт к основному описанию соответствующей формы.',body));
 const definitions={
  IMPORT:['Подключает открытые объявления другого исходного модуля.','import.html'],
  PUBLIC:['Открывает объявление для импортирующих модулей.','visibility.html'],
@@ -210,5 +214,5 @@ for(const name of snapshot.types){if(!typeDescriptions[name])throw new Error('Н
 body+='</tbody></table></section><section class="article-section"><h2>Операции в выражениях</h2><p>Унарное отрицание числа и операция NOT принимают один операнд. Остальные перечисленные формы принимают два операнда. Приоритет, допустимые типы и ограничения определены в разделе выражений.</p><table><thead><tr><th>Знак</th><th>Назначение</th></tr></thead><tbody>';
 for(const op of expressionOperators)body+=`<tr id="expr-${op.token.toLowerCase()}"><td><a href="${op.href}"><code>${escape(op.name)}</code></a></td><td>${escape(op.description)}</td></tr>`;
 body+='</tbody></table></section>';
-fs.writeFileSync(path.join(manual,'keyword-reference.html'),shell('keyword-reference','Ключевые слова, типы и операции','Раздел перечисляет все ключевые слова и имена встроенных типов Axiom, а также операции в выражениях. Каждый элемент связан с подробным описанием соответствующей конструкции.',body));
+fs.writeFileSync(path.join(manual,'keyword-reference.html'),shell('keyword-reference','Ключевые слова, типы и операции','Здесь собраны ключевые слова и имена встроенных типов Axiom, а также операции, допустимые в выражениях; каждый элемент связан с подробным описанием соответствующей конструкции.',body));
 console.log(`Сформированы карточки ${functions.length} функций, ${functions.reduce((n,f)=>n+f.forms.length,0)} форм вызова и ${statements.length} операторов и форм инструкций.`);

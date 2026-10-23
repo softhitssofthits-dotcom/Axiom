@@ -2,20 +2,20 @@
 DIM path AS STRING = MAKETEMPFILE("readlines_")
 DIM ok AS BOOLEAN
 DIM reader AS FILE
-DIM first() AS STRING
-DIM rest() AS STRING
+DIM first[] AS STRING
+DIM rest[] AS STRING
 
 ok = WRITEFILE(path, "alpha" + CHR(13) + CHR(10) + "beta" + CHR(13) + CHR(10) + "gamma")
 
 OPEN path FOR INPUT AS reader
-first = READLINES(reader, 2)
-rest = READLINES(reader, 2)
+first[] = READLINES(reader, 2)
+rest[] = READLINES(reader, 2)
 CLOSE reader
 
-PRINT ARRAYLENGTH(first)
-PRINT first(1)
-PRINT first(2)
-PRINT ARRAYLENGTH(rest)
-PRINT rest(1)
+PRINT ARRAYLENGTH(first[])
+PRINT first[1]
+PRINT first[2]
+PRINT ARRAYLENGTH(rest[])
+PRINT rest[1]
 
 ok = DELETEFILE(path)

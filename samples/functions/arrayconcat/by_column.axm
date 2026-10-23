@@ -1,27 +1,27 @@
 ' ARRAYCONCAT по COLUMN склеивает две части таблицы
 ' и создаёт новый независимый массив.
 
-DIM leftPart(1 TO 2, 10 TO 11) AS INTEGER
-DIM rightPart(1 TO 2, 20 TO 21) AS INTEGER
-DIM merged(,) AS INTEGER
+DIM leftPart[1 TO 2, 10 TO 11] AS INTEGER
+DIM rightPart[1 TO 2, 20 TO 21] AS INTEGER
+DIM merged[,] AS INTEGER
 
-leftPart(1, 10) = 110
-leftPart(1, 11) = 111
-leftPart(2, 10) = 210
-leftPart(2, 11) = 211
+leftPart[1, 10] = 110
+leftPart[1, 11] = 111
+leftPart[2, 10] = 210
+leftPart[2, 11] = 211
 
-rightPart(1, 20) = 120
-rightPart(1, 21) = 121
-rightPart(2, 20) = 220
-rightPart(2, 21) = 221
+rightPart[1, 20] = 120
+rightPart[1, 21] = 121
+rightPart[2, 20] = 220
+rightPart[2, 21] = 221
 
-merged = ARRAYCONCAT(leftPart, rightPart, COLUMN)
-merged(1, 10) = 999
+merged[] = ARRAYCONCAT(leftPart[], rightPart[], COLUMN)
+merged[1, 10] = 999
 
-PRINT LBOUND(merged, ROW)
-PRINT UBOUND(merged, ROW)
-PRINT LBOUND(merged, COLUMN)
-PRINT UBOUND(merged, COLUMN)
-PRINT merged(1, 12)
-PRINT merged(2, 13)
-PRINT leftPart(1, 10)
+PRINT LBOUND(merged[], ROW)
+PRINT UBOUND(merged[], ROW)
+PRINT LBOUND(merged[], COLUMN)
+PRINT UBOUND(merged[], COLUMN)
+PRINT merged[1, 12]
+PRINT merged[2, 13]
+PRINT leftPart[1, 10]

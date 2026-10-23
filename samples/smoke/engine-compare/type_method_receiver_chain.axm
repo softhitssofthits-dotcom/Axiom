@@ -14,7 +14,7 @@ END TYPE
 
 TYPE Board
     Origin AS Cell
-    Cells(1 TO 16) AS Cell
+    Cells[1 TO 16] AS Cell
 END TYPE
 
 DIM board AS Board
@@ -24,7 +24,7 @@ FOR pass = 1 TO 400
     board.Origin.Accumulate(pass)
 
     FOR i = 1 TO 16
-        board.Cells(i).Accumulate(i + (pass MOD 5))
+        board.Cells[i].Accumulate(i + (pass MOD 5))
     NEXT
 
     IF pass MOD 8 = 0 THEN
@@ -33,6 +33,6 @@ FOR pass = 1 TO 400
 NEXT
 
 PRINT board.Origin.Value
-PRINT board.Cells(16).Value
-PRINT board.Cells(16).Weight
+PRINT board.Cells[16].Value
+PRINT board.Cells[16].Weight
 PRINT total

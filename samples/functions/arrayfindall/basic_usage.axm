@@ -1,23 +1,23 @@
 ' ARRAYFINDALL: все логические индексы совпадений в компактном INTEGER()-результате.
-DIM values(-3 TO 1) AS INTEGER
-DIM matches() AS INTEGER
-DIM missing() AS INTEGER
+DIM values[-3 TO 1] AS INTEGER
+DIM matches[] AS INTEGER
+DIM missing[] AS INTEGER
 
-values(-3) = 20
-values(-2) = 10
-values(-1) = 20
-values(0) = 30
-values(1) = 20
+values[-3] = 20
+values[-2] = 10
+values[-1] = 20
+values[0] = 30
+values[1] = 20
 
-matches = ARRAYFINDALL(values, 20)
-missing = ARRAYFINDALL(values, 99)
+matches[] = ARRAYFINDALL(values[], 20)
+missing[] = ARRAYFINDALL(values[], 99)
 
-PRINT ARRAYISALLOCATED(matches)
-PRINT LBOUND(matches)
-PRINT UBOUND(matches)
-PRINT matches(1)
-PRINT matches(2)
-PRINT matches(3)
-PRINT ARRAYISALLOCATED(missing)
-PRINT LBOUND(missing)
-PRINT UBOUND(missing)
+PRINT ARRAYISALLOCATED(matches[])
+PRINT LBOUND(matches[])
+PRINT UBOUND(matches[])
+PRINT matches[1]
+PRINT matches[2]
+PRINT matches[3]
+PRINT ARRAYISALLOCATED(missing[])
+PRINT LBOUND(missing[])
+PRINT UBOUND(missing[])

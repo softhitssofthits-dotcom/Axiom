@@ -87,7 +87,7 @@ public static class AxiomLanguageMetadata
     {
         var type = descriptor.Parameters[index].Type;
         if (index == 0 && descriptor.BindingKind == BuiltinBindingKind.Array && type is ArrayTypeSymbol)
-            return "T()";
+            return "T[]";
         if (descriptor.BindingKind == BuiltinBindingKind.Numeric
             && descriptor.OperandBindingPolicy is BuiltinOperandBindingPolicy.PreserveNumericArguments or BuiltinOperandBindingPolicy.PromoteNumericArguments)
             return "T";
@@ -99,10 +99,10 @@ public static class AxiomLanguageMetadata
         BuiltinResultTypePolicy.SameAsFirstArgument => ParameterDisplayType(descriptor, 0),
         BuiltinResultTypePolicy.SameAsSecondArgument => ParameterDisplayType(descriptor, 1),
         BuiltinResultTypePolicy.ElementTypeOfFirstArrayArgument => "T",
-        BuiltinResultTypePolicy.ArrayOfFirstArrayElementType => "T()",
+        BuiltinResultTypePolicy.ArrayOfFirstArrayElementType => "T[]",
         BuiltinResultTypePolicy.ArrayDynamicSliceResult => "элемент или массив T",
-        BuiltinResultTypePolicy.ArrayIndexCoordinateResult => "INTEGER или INTEGER()",
-        BuiltinResultTypePolicy.ArrayFindAllCoordinateResult => "INTEGER() или INTEGER(,)",
+        BuiltinResultTypePolicy.ArrayIndexCoordinateResult => "INTEGER или INTEGER[]",
+        BuiltinResultTypePolicy.ArrayFindAllCoordinateResult => "INTEGER[] или INTEGER[,]",
         BuiltinResultTypePolicy.ArrayMapSelectorReturnArray => "массив результатов selector",
         BuiltinResultTypePolicy.ArrayReduceAccumulator => "тип начального значения",
         BuiltinResultTypePolicy.PromotedNumeric => "общий числовой тип",

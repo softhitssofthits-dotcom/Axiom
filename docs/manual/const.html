@@ -7,35 +7,45 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор CONST</span></nav>
-<p class="eyebrow">Глава 2 · Переменные и значения</p><h1 class="page-title">Оператор CONST</h1><p class="lead">CONST объявляет константу, сохраняя результат выражения под именем, защищённым от присваивания. Константой можно обозначить предельное количество, коэффициент расчёта или строковый заголовок и обращаться к ней по имени в выражениях.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-<section class="article-section" id="syntax"><h2>Объявление константы</h2>
+<p class="eyebrow">Глава 2 · Переменные и значения</p><h1 class="page-title">Оператор CONST</h1><p class="lead">Предельное количество, коэффициент расчёта или неизменный заголовок удобно назвать один раз и дальше ссылаться на это имя в выражениях. CONST сохраняет результат выражения под таким именем и запрещает его переписывать.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="syntax"><h2>Форма объявления</h2>
 <pre><code class="language-axiom">CONST &lt;имя&gt; AS &lt;тип&gt; = &lt;выражение&gt;</code></pre>
-<p>После CONST указываются <code>&lt;имя&gt;</code> константы, её тип после AS и начальное выражение после знака равенства. Тип и выражение обязательны, а результат выражения должен быть совместим с указанным типом. Каждая инструкция объявляет одну константу; для нескольких констант объявления записываются отдельными строками.</p>
-<p>CONST допустим на верхнем уровне файла, в подпрограмме и внутри блока. Имя доступно в соответствующей <a href="variables-scope.html">области видимости</a> и может участвовать в выражениях наравне с именами переменных.</p>
+<p>После <code>CONST</code> указываются имя константы, её тип после <code>AS</code> и начальное выражение после знака равенства. Тип и выражение обязательны, а результат выражения должен быть совместим с указанным типом. Одна инструкция объявляет одну константу, поэтому несколько констант записываются отдельными строками.</p>
+<p>CONST допустим на верхнем уровне файла, в подпрограмме и внутри блока. Имя действует в соответствующей <a href="variables-scope.html">области видимости</a> и участвует в выражениях наравне с именами переменных.</p>
 <pre><code class="language-axiom">CONST LIMIT AS INTEGER = 10
 DIM count AS INTEGER = 7
 PRINT count &lt;= LIMIT</code></pre>
 <p>Результат:</p><pre><code>TRUE</code></pre></section>
 <section class="article-section" id="evaluation"><h2>Вычисление начального значения</h2>
-<p>Когда выполнение достигает CONST, программа вычисляет начальное выражение, в котором допустимы обращения к переменным и вызовы функций. Константа сохраняет полученное значение, даже если затем изменятся данные, использованные при вычислении:</p>
+<p>Когда выполнение достигает CONST, вычисляется начальное выражение, в котором допустимы обращения к переменным и вызовы функций. Полученное значение сохраняется за константой, даже если использованные при вычислении данные затем изменятся:</p>
 <pre><code class="language-axiom">DIM source AS INTEGER = 5
 CONST SNAPSHOT AS INTEGER = source + 1
 source = 99
 PRINT SNAPSHOT</code></pre>
 <p>Результат:</p><pre><code>6</code></pre>
-<p>Повторное выполнение CONST заново вычисляет начальное выражение. Поэтому в теле цикла константа получает значение при каждом выполнении её объявления.</p>
-<p>В некоторых объявлениях значение требуется ещё при компиляции, например для границ фиксированного массивного поля <a href="type.html">TYPE</a>. В таких местах допустимы целочисленные константные выражения, которые компилятор может вычислить заранее. Пригодность константы для такого объявления определяется её начальным выражением.</p></section>
+<p>Повторное выполнение CONST заново вычисляет начальное выражение, поэтому в теле цикла константа получает значение при каждом проходе.</p>
+<p>Некоторым объявлениям значение нужно ещё при компиляции — так обстоит дело с границами фиксированного массивного поля <a href="type.html">TYPE</a>. В этих местах допустимы целочисленные константные выражения, которые компилятор вычисляет заранее; пригодность константы для такого объявления определяется её начальным выражением.</p></section>
 <section class="article-section" id="readonly"><h2>Защита от изменения</h2>
-<p>Компилятор запрещает прямое присваивание константе и передачу константы параметру BYREF, поскольку такой параметр допускает изменение переданного значения. В обоих случаях выдаётся MB2010. Эти ограничения действуют и для предопределённых констант.</p>
-<p>Для данных, которые должна изменять подпрограмма, объявляется обычная переменная через <a href="dim.html">DIM</a>. Правила передачи аргументов приведены в статье <a href="calls.html">«Вызовы и аргументы»</a>. Форма <code>STRING * N</code> в CONST не поддерживается.</p></section>
-<section class="article-section" id="predefined"><h2>Предопределённые константы</h2>
-<p>Следующие имена доступны без объявления:</p>
+<p>Прямое присваивание константе запрещено, как и передача её параметру BYREF, который допускает изменение переданного значения; в обоих случаях выдаётся MB2010. Ограничения распространяются и на предопределённые константы.</p>
+<p>Данные, которые должна изменять подпрограмма, объявляются обычной переменной через <a href="dim.html">DIM</a>. Правила передачи аргументов приведены в статье <a href="calls.html">«Вызовы и аргументы»</a>. Форма <code>STRING * N</code> в CONST не поддерживается.</p></section>
+<section class="article-section" id="array-constant"><h2>Массивное значение константы</h2>
+<pre><code class="language-axiom">CONST &lt;имя&gt;[] AS &lt;тип элемента&gt; = &lt;массивное выражение&gt;</code></pre>
+<pre><code class="language-axiom">CONST &lt;имя&gt;[,] AS &lt;тип элемента&gt; = &lt;двумерное массивное выражение&gt;</code></pre>
+<p>Для массива квадратные скобки находятся после имени: пустая пара задаёт ранг 1, запятые — большее число измерений. Тип элемента и начальное выражение обязательны, ранг и тип элементов должны совпадать. Границы в таком объявлении не задаются: они приходят из начального массива. Обращение к константе целиком также требует <code>[]</code>; индекс выбирает элемент. Суффикс массива после типа в именованном объявлении CONST запрещён с MB2003.</p>
+<pre><code class="language-axiom">CONST fruits[] AS STRING = SPLIT("яблоко,банан", ",")
+PRINT fruits[2]
+PRINT ARRAYLENGTH(fruits[])</code></pre>
+<p>Результат:</p><pre><code>банан
+2</code></pre>
+<p>CONST не создаёт независимую копию и не вводит особый неизменяемый контейнер. Передача и присваивание сохраняют обычные правила общей памяти массивов. Защита константного имени от записи и передачи BYREF остаётся прежней; независимый массив создаёт <a href="arrays-and-builtins.html#arrayclone">ARRAYCLONE</a>.</p></section>
+<section class="article-section" id="predefined"><h2>Предопределённые имена</h2>
+<p>Три имени уже доступны без объявления:</p>
 <table><thead><tr><th>Имя</th><th>Значение и назначение</th><th>Тип</th></tr></thead><tbody>
 <tr><td>PI</td><td>Число π</td><td>DOUBLE</td></tr>
 <tr><td>ROW</td><td>1, первое измерение массива</td><td>INTEGER</td></tr>
 <tr><td>COLUMN</td><td>2, второе измерение массива</td><td>INTEGER</td></tr>
 </tbody></table>
-<p>ROW и COLUMN можно указывать в аргументах, которые задают номер измерения массива, вместо чисел 1 и 2 соответственно. Имена PI, ROW и COLUMN нельзя переобъявлять через DIM или CONST или давать процедурам SUB и функциям FUNCTION верхнего уровня.</p></section>
+<p>В аргументах, задающих номер измерения массива, вместо чисел 1 и 2 можно указывать ROW и COLUMN. Переобъявить PI, ROW или COLUMN через DIM либо CONST, а также дать эти имена процедурам SUB и функциям FUNCTION верхнего уровня нельзя.</p></section>
 <section class="article-section" id="module-visibility"><h2>Константа модуля</h2>
 <pre><code class="language-axiom">PUBLIC CONST &lt;имя&gt; AS &lt;тип&gt; = &lt;выражение&gt;</code></pre>
 <pre><code class="language-axiom">PRIVATE CONST &lt;имя&gt; AS &lt;тип&gt; = &lt;выражение&gt;</code></pre>
@@ -50,7 +60,8 @@ PRINT SNAPSHOT</code></pre>
 <section class="article-section" id="samples"><h2>Запускаемые примеры</h2>
 <ul class="resource-list"><li><a href="../../samples/operators/const/basic_constant.axm">Объявление и использование константы</a></li>
 <li><a href="../../samples/operators/const/predefined_constants.axm">PI, ROW и COLUMN</a></li>
+<li><a href="../../samples/operators/const/array_value.axm">Массивная константа и независимая копия</a></li>
 <li><a href="../../samples/operators/const/fixed_string_error.axm">Отказ CONST со строкой фиксированной длины</a></li></ul></section>
 <section class="article-section" id="related"><h2>См. также</h2>
-<p><a href="variables-and-constants.html">Переменные и значения</a> объясняют различие объявления и присваивания. <a href="dim.html">DIM</a> создаёт изменяемую переменную; <a href="assignment.html">присваивание</a> записывает новое значение. Применение ROW и COLUMN описано в <a href="arrays-functions.html">функциях массивов</a>, константные границы полей описаны в <a href="type.html">TYPE</a>.</p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<p>Различие объявления и присваивания объясняют <a href="variables-and-constants.html">Переменные и значения</a>. Изменяемую переменную создаёт <a href="dim.html">DIM</a>, а новое значение в неё записывает <a href="assignment.html">присваивание</a>. Применение ROW и COLUMN описано в <a href="arrays-functions.html">функциях массивов</a>, константные границы полей — в <a href="type.html">TYPE</a>.</p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
 <script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

@@ -13,7 +13,7 @@ Import maze_game
 ' #region Закрытые ресурсы и палитра
 
 Private Dim mazeBackground As Image                                                                     ' Фоновая картинка лабиринта, которую мы рисуем как эталонный контур.
-Private Dim playerFrames(1 To 12) As Sprite                                                            ' Набор кадров героя: 4 направления по 3 кадра.
+Private Dim playerFrames[1 To 12] As Sprite                                                            ' Набор кадров героя: 4 направления по 3 кадра.
 Private Dim ghostSprite As Sprite                                                                       ' Спрайт призрака, который гонится за героем.
 Private Dim WALL_LIGHT_COLOR As Integer = Rgb(90, 214, 255)                                            ' Светлая голубая линия для HUD и декоративных контуров.
 Private Dim BACKGROUND_COLOR As Integer = Rgb(1, 4, 14)                                                ' Почти чёрный фон за пределами картинки лабиринта.
@@ -30,21 +30,21 @@ Private Dim HUD_STATUS_COLOR As Integer = Rgb(210, 228, 255)                    
 Public Sub LoadResources()                                                                             ' Процедура загружает все графические ресурсы игры.
     mazeBackground = Loadimage("art/Background.gif")                                            ' Загружаем эталонный фон лабиринта из GIF-файла.
 
-    playerFrames(SpriteSlot(DIR_RIGHT, 1)) = Loadsprite("art/pacman-right/1.png", 16, 16)     ' Загружаем первый кадр героя, смотрящего вправо.
-    playerFrames(SpriteSlot(DIR_RIGHT, 2)) = Loadsprite("art/pacman-right/2.png", 16, 16)     ' Загружаем второй кадр героя, смотрящего вправо.
-    playerFrames(SpriteSlot(DIR_RIGHT, 3)) = Loadsprite("art/pacman-right/3.png", 16, 16)     ' Загружаем третий кадр героя, смотрящего вправо.
+    playerFrames[SpriteSlot(DIR_RIGHT, 1)] = Loadsprite("art/pacman-right/1.png", 16, 16)     ' Загружаем первый кадр героя, смотрящего вправо.
+    playerFrames[SpriteSlot(DIR_RIGHT, 2)] = Loadsprite("art/pacman-right/2.png", 16, 16)     ' Загружаем второй кадр героя, смотрящего вправо.
+    playerFrames[SpriteSlot(DIR_RIGHT, 3)] = Loadsprite("art/pacman-right/3.png", 16, 16)     ' Загружаем третий кадр героя, смотрящего вправо.
 
-    playerFrames(SpriteSlot(DIR_LEFT, 1)) = Loadsprite("art/pacman-left/1.png", 16, 16)       ' Загружаем первый кадр героя, смотрящего влево.
-    playerFrames(SpriteSlot(DIR_LEFT, 2)) = Loadsprite("art/pacman-left/2.png", 16, 16)       ' Загружаем второй кадр героя, смотрящего влево.
-    playerFrames(SpriteSlot(DIR_LEFT, 3)) = Loadsprite("art/pacman-left/3.png", 16, 16)       ' Загружаем третий кадр героя, смотрящего влево.
+    playerFrames[SpriteSlot(DIR_LEFT, 1)] = Loadsprite("art/pacman-left/1.png", 16, 16)       ' Загружаем первый кадр героя, смотрящего влево.
+    playerFrames[SpriteSlot(DIR_LEFT, 2)] = Loadsprite("art/pacman-left/2.png", 16, 16)       ' Загружаем второй кадр героя, смотрящего влево.
+    playerFrames[SpriteSlot(DIR_LEFT, 3)] = Loadsprite("art/pacman-left/3.png", 16, 16)       ' Загружаем третий кадр героя, смотрящего влево.
 
-    playerFrames(SpriteSlot(DIR_UP, 1)) = Loadsprite("art/pacman-up/1.png", 16, 16)           ' Загружаем первый кадр героя, смотрящего вверх.
-    playerFrames(SpriteSlot(DIR_UP, 2)) = Loadsprite("art/pacman-up/2.png", 16, 16)           ' Загружаем второй кадр героя, смотрящего вверх.
-    playerFrames(SpriteSlot(DIR_UP, 3)) = Loadsprite("art/pacman-up/3.png", 16, 16)           ' Загружаем третий кадр героя, смотрящего вверх.
+    playerFrames[SpriteSlot(DIR_UP, 1)] = Loadsprite("art/pacman-up/1.png", 16, 16)           ' Загружаем первый кадр героя, смотрящего вверх.
+    playerFrames[SpriteSlot(DIR_UP, 2)] = Loadsprite("art/pacman-up/2.png", 16, 16)           ' Загружаем второй кадр героя, смотрящего вверх.
+    playerFrames[SpriteSlot(DIR_UP, 3)] = Loadsprite("art/pacman-up/3.png", 16, 16)           ' Загружаем третий кадр героя, смотрящего вверх.
 
-    playerFrames(SpriteSlot(DIR_DOWN, 1)) = Loadsprite("art/pacman-down/1.png", 16, 16)       ' Загружаем первый кадр героя, смотрящего вниз.
-    playerFrames(SpriteSlot(DIR_DOWN, 2)) = Loadsprite("art/pacman-down/2.png", 16, 16)       ' Загружаем второй кадр героя, смотрящего вниз.
-    playerFrames(SpriteSlot(DIR_DOWN, 3)) = Loadsprite("art/pacman-down/3.png", 16, 16)       ' Загружаем третий кадр героя, смотрящего вниз.
+    playerFrames[SpriteSlot(DIR_DOWN, 1)] = Loadsprite("art/pacman-down/1.png", 16, 16)       ' Загружаем первый кадр героя, смотрящего вниз.
+    playerFrames[SpriteSlot(DIR_DOWN, 2)] = Loadsprite("art/pacman-down/2.png", 16, 16)       ' Загружаем второй кадр героя, смотрящего вниз.
+    playerFrames[SpriteSlot(DIR_DOWN, 3)] = Loadsprite("art/pacman-down/3.png", 16, 16)       ' Загружаем третий кадр героя, смотрящего вниз.
 
     ghostSprite = Loadsprite("art/ghosts/blinky.png", 16, 16)                                  ' Загружаем спрайт красного призрака.
 End Sub                                                                                         ' Завершаем загрузку ресурсов.
@@ -59,7 +59,7 @@ Public Sub DrawMazeWorld()
     DrawMazeBackground()                                                                         ' Рисуем фон лабиринта.
     DrawVisiblePellets()                                                                         ' Рисуем оставшиеся точки на полной карте.
 
-    Drawsprite playerFrames(CurrentPlayerSpriteSlot()), 0, EntityPixelX(playerView.tileCol, playerView.tileRow, playerView.dir, playerView.travel) - (TILE \ 2), EntityPixelY(playerView.tileCol, playerView.tileRow, playerView.dir, playerView.travel) - (TILE \ 2) ' Рисуем героя по его пиксельным координатам.
+    Drawsprite playerFrames[CurrentPlayerSpriteSlot()], 0, EntityPixelX(playerView.tileCol, playerView.tileRow, playerView.dir, playerView.travel) - (TILE \ 2), EntityPixelY(playerView.tileCol, playerView.tileRow, playerView.dir, playerView.travel) - (TILE \ 2) ' Рисуем героя по его пиксельным координатам.
     Drawsprite ghostSprite, 0, EntityPixelX(ghostView.tileCol, ghostView.tileRow, ghostView.dir, ghostView.travel) - (TILE \ 2), EntityPixelY(ghostView.tileCol, ghostView.tileRow, ghostView.dir, ghostView.travel) - (TILE \ 2)          ' Рисуем призрака по его пиксельным координатам.
 End Sub                                                                                         ' Завершаем рисование мира.
 

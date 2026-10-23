@@ -5,19 +5,19 @@
 ' 1
 ' 0
 
-DIM board(1 TO 2, 5 TO 7) AS INTEGER
-DIM hit() AS INTEGER
-DIM missing() AS INTEGER
+DIM board[1 TO 2, 5 TO 7] AS INTEGER
+DIM hit[] AS INTEGER
+DIM missing[] AS INTEGER
 
-board(1, 5) = 10
-board(1, 6) = 20
-board(2, 6) = 20
-board(2, 7) = 20
+board[1, 5] = 10
+board[1, 6] = 20
+board[2, 6] = 20
+board[2, 7] = 20
 
-hit = ARRAYINDEXOF(board, 20)
-missing = ARRAYINDEXOF(board, 99)
+hit[] = ARRAYINDEXOF(board[], 20)
+missing[] = ARRAYINDEXOF(board[], 99)
 
-PRINT hit(1)
-PRINT hit(2)
-PRINT LBOUND(missing)
-PRINT UBOUND(missing)
+PRINT hit[1]
+PRINT hit[2]
+PRINT LBOUND(missing[])
+PRINT UBOUND(missing[])

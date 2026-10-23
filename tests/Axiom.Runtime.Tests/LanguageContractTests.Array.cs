@@ -9,10 +9,7 @@ public sealed partial class LanguageContractTests
     [Fact]
     public void Execute_UnallocatedDynamicArrayAccessReportsRuntimeState()
     {
-        const string text = """
-DIM items() AS STRING
-PRINT items(1)
-""";
+        const string text = "DIM items[] AS STRING\r\nPRINT items[1]";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -26,15 +23,7 @@ PRINT items(1)
     [Fact]
     public void Execute_WholeArrayAssignmentSharesAllocatedArray()
     {
-        const string text = """
-DIM source(1 TO 2) AS INTEGER
-DIM target() AS INTEGER
-source(1) = 10
-source(2) = 20
-target = source
-PRINT target(1)
-PRINT target(2)
-""";
+        const string text = "DIM source[1 TO 2] AS INTEGER\r\nDIM target[] AS INTEGER\r\nsource[1] = 10\r\nsource[2] = 20\r\ntarget[] = source[]\r\nPRINT target[1]\r\nPRINT target[2]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -45,27 +34,7 @@ PRINT target(2)
     [Fact]
     public void Execute_ArrayCanBePassedToSubAndReturnedFromFunction()
     {
-        const string text = """
-DIM values(1 TO 2) AS INTEGER
-values(1) = 10
-values(2) = 20
-
-Bump(values)
-
-DIM copy() AS INTEGER
-copy = Echo(values)
-
-PRINT values(1)
-PRINT copy(2)
-
-SUB Bump(items AS INTEGER())
-    items(1) = items(1) + 1
-END SUB
-
-FUNCTION Echo(items AS INTEGER()) AS INTEGER()
-    RETURN items
-END FUNCTION
-""";
+        const string text = "DIM values[1 TO 2] AS INTEGER\r\nvalues[1] = 10\r\nvalues[2] = 20\r\n\r\nBump(values[])\r\n\r\nDIM copy[] AS INTEGER\r\ncopy[] = Echo(values[])\r\n\r\nPRINT values[1]\r\nPRINT copy[2]\r\n\r\nSUB Bump(items[] AS INTEGER)\r\n    items[1] = items[1] + 1\r\nEND SUB\r\n\r\nFUNCTION Echo(items[] AS INTEGER) AS INTEGER[]\r\n    RETURN items[]\r\nEND FUNCTION";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -76,15 +45,7 @@ END FUNCTION
     [Fact]
     public void Execute_RedimAllocatesDynamicArray()
     {
-        const string text = """
-DIM values() AS INTEGER
-REDIM values(1 TO 3)
-values(1) = 10
-values(2) = 20
-values(3) = 30
-PRINT values(1)
-PRINT values(3)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nREDIM values[1 TO 3]\r\nvalues[1] = 10\r\nvalues[2] = 20\r\nvalues[3] = 30\r\nPRINT values[1]\r\nPRINT values[3]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -95,15 +56,7 @@ PRINT values(3)
     [Fact]
     public void Execute_RedimResetsSharedArrayStorage()
     {
-        const string text = """
-DIM source(1 TO 2) AS INTEGER
-DIM alias() AS INTEGER
-source(1) = 10
-alias = source
-REDIM alias(5 TO 6)
-PRINT source(5)
-PRINT source(6)
-""";
+        const string text = "DIM source[1 TO 2] AS INTEGER\r\nDIM alias[] AS INTEGER\r\nsource[1] = 10\r\nalias[] = source[]\r\nREDIM alias[5 TO 6]\r\nPRINT source[5]\r\nPRINT source[6]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -114,16 +67,7 @@ PRINT source(6)
     [Fact]
     public void Execute_RedimPreserveKeepsOverlappingValues()
     {
-        const string text = """
-DIM values(1 TO 3) AS INTEGER
-values(1) = 10
-values(2) = 20
-values(3) = 30
-REDIM PRESERVE values(2 TO 4)
-PRINT values(2)
-PRINT values(3)
-PRINT values(4)
-""";
+        const string text = "DIM values[1 TO 3] AS INTEGER\r\nvalues[1] = 10\r\nvalues[2] = 20\r\nvalues[3] = 30\r\nREDIM PRESERVE values[2 TO 4]\r\nPRINT values[2]\r\nPRINT values[3]\r\nPRINT values[4]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -134,16 +78,7 @@ PRINT values(4)
     [Fact]
     public void Execute_RedimPreserveMutatesSharedArrayStorage()
     {
-        const string text = """
-DIM source(1 TO 2) AS INTEGER
-DIM alias() AS INTEGER
-source(1) = 10
-source(2) = 20
-alias = source
-REDIM PRESERVE alias(2 TO 3)
-PRINT source(2)
-PRINT source(3)
-""";
+        const string text = "DIM source[1 TO 2] AS INTEGER\r\nDIM alias[] AS INTEGER\r\nsource[1] = 10\r\nsource[2] = 20\r\nalias[] = source[]\r\nREDIM PRESERVE alias[2 TO 3]\r\nPRINT source[2]\r\nPRINT source[3]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -154,22 +89,7 @@ PRINT source(3)
     [Fact]
     public void Execute_MultidimensionalArrayProgram()
     {
-        const string text = """
-DIM grid(,) AS INTEGER
-REDIM grid(1 TO 2, 10 TO 11)
-grid(1, 10) = 7
-grid(2, 11) = 9
-PRINT ARRAYISALLOCATED(grid)
-PRINT LBOUND(grid, 1)
-PRINT UBOUND(grid, 1)
-PRINT LBOUND(grid, 2)
-PRINT UBOUND(grid, 2)
-PRINT grid(1, 10)
-PRINT grid(2, 11)
-REDIM PRESERVE grid(2 TO 3, 11 TO 12)
-PRINT grid(2, 11)
-PRINT grid(3, 12)
-""";
+        const string text = "DIM grid[,] AS INTEGER\r\nREDIM grid[1 TO 2, 10 TO 11]\r\ngrid[1, 10] = 7\r\ngrid[2, 11] = 9\r\nPRINT ARRAYISALLOCATED(grid[])\r\nPRINT LBOUND(grid[], 1)\r\nPRINT UBOUND(grid[], 1)\r\nPRINT LBOUND(grid[], 2)\r\nPRINT UBOUND(grid[], 2)\r\nPRINT grid[1, 10]\r\nPRINT grid[2, 11]\r\nREDIM PRESERVE grid[2 TO 3, 11 TO 12]\r\nPRINT grid[2, 11]\r\nPRINT grid[3, 12]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -180,24 +100,7 @@ PRINT grid(3, 12)
     [Fact]
     public void Execute_ArrayMetadataBuiltinsReportRankAndVisibleBounds()
     {
-        const string text = """
-DIM cube(,,) AS INTEGER
-DIM bounds(,) AS INTEGER
-REDIM cube(2 TO 3, 10 TO 11, -1 TO 0)
-PRINT ARRAYRANK(cube)
-PRINT ARRAYRANK(bounds)
-bounds = ARRAYBOUNDS(cube)
-PRINT LBOUND(bounds, ROW)
-PRINT UBOUND(bounds, ROW)
-PRINT LBOUND(bounds, COLUMN)
-PRINT UBOUND(bounds, COLUMN)
-PRINT bounds(1, 1)
-PRINT bounds(1, 2)
-PRINT bounds(2, 1)
-PRINT bounds(2, 2)
-PRINT bounds(3, 1)
-PRINT bounds(3, 2)
-""";
+        const string text = "DIM cube[,,] AS INTEGER\r\nDIM bounds[,] AS INTEGER\r\nREDIM cube[2 TO 3, 10 TO 11, -1 TO 0]\r\nPRINT ARRAYRANK(cube[])\r\nPRINT ARRAYRANK(bounds[])\r\nbounds[] = ARRAYBOUNDS(cube[])\r\nPRINT LBOUND(bounds[], ROW)\r\nPRINT UBOUND(bounds[], ROW)\r\nPRINT LBOUND(bounds[], COLUMN)\r\nPRINT UBOUND(bounds[], COLUMN)\r\nPRINT bounds[1, 1]\r\nPRINT bounds[1, 2]\r\nPRINT bounds[2, 1]\r\nPRINT bounds[2, 2]\r\nPRINT bounds[3, 1]\r\nPRINT bounds[3, 2]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -208,10 +111,7 @@ PRINT bounds(3, 2)
     [Fact]
     public void Execute_ArrayBoundsReportsUnallocatedArrayState()
     {
-        const string text = """
-DIM grid(,) AS INTEGER
-PRINT ARRAYBOUNDS(grid)
-""";
+        const string text = "DIM grid[,] AS INTEGER\r\nPRINT ARRAYBOUNDS(grid[])";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -222,23 +122,7 @@ PRINT ARRAYBOUNDS(grid)
     [Fact]
     public void Execute_PartialMultidimensionalIndexingReturnsSharedRowView()
     {
-        const string text = """
-DIM grid(,) AS INTEGER
-DIM rowView() AS INTEGER
-DIM firstOnly() AS INTEGER
-REDIM grid(1 TO 2, 10 TO 11)
-grid(2, 10) = 7
-grid(2, 11) = 9
-rowView = grid(2)
-rowView(10) = 70
-firstOnly = ARRAYTAKE(rowView, 1)
-PRINT grid(2, 10)
-PRINT rowView(11)
-PRINT LBOUND(rowView)
-PRINT UBOUND(rowView)
-PRINT ARRAYLENGTH(rowView)
-PRINT firstOnly(1)
-""";
+        const string text = "DIM grid[,] AS INTEGER\r\nDIM rowView[] AS INTEGER\r\nDIM firstOnly[] AS INTEGER\r\nREDIM grid[1 TO 2, 10 TO 11]\r\ngrid[2, 10] = 7\r\ngrid[2, 11] = 9\r\nrowView[] = grid[2]\r\nrowView[10] = 70\r\nfirstOnly[] = ARRAYTAKE(rowView[], 1)\r\nPRINT grid[2, 10]\r\nPRINT rowView[11]\r\nPRINT LBOUND(rowView[])\r\nPRINT UBOUND(rowView[])\r\nPRINT ARRAYLENGTH(rowView[])\r\nPRINT firstOnly[1]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -249,29 +133,7 @@ PRINT firstOnly(1)
     [Fact]
     public void Execute_RangeMultidimensionalIndexingReturnsSharedViews()
     {
-        const string text = """
-DIM grid(,) AS INTEGER
-DIM rowView() AS INTEGER
-DIM block(,) AS INTEGER
-REDIM grid(1 TO 3, 10 TO 14)
-grid(2, 11) = 21
-grid(2, 12) = 22
-grid(3, 12) = 32
-rowView = grid(2, 11 TO 12)
-block = grid(2 TO 3, 11 TO 12)
-rowView(11) = 210
-block(3, 12) = 320
-PRINT grid(2, 11)
-PRINT rowView(12)
-PRINT grid(3, 12)
-PRINT LBOUND(rowView)
-PRINT UBOUND(rowView)
-PRINT LBOUND(block, 1)
-PRINT UBOUND(block, 1)
-PRINT LBOUND(block, 2)
-PRINT UBOUND(block, 2)
-PRINT ARRAYLENGTH(block)
-""";
+        const string text = "DIM grid[,] AS INTEGER\r\nDIM rowView[] AS INTEGER\r\nDIM block[,] AS INTEGER\r\nREDIM grid[1 TO 3, 10 TO 14]\r\ngrid[2, 11] = 21\r\ngrid[2, 12] = 22\r\ngrid[3, 12] = 32\r\nrowView[] = grid[2, 11 TO 12]\r\nblock[] = grid[2 TO 3, 11 TO 12]\r\nrowView[11] = 210\r\nblock[3, 12] = 320\r\nPRINT grid[2, 11]\r\nPRINT rowView[12]\r\nPRINT grid[3, 12]\r\nPRINT LBOUND(rowView[])\r\nPRINT UBOUND(rowView[])\r\nPRINT LBOUND(block[], 1)\r\nPRINT UBOUND(block[], 1)\r\nPRINT LBOUND(block[], 2)\r\nPRINT UBOUND(block[], 2)\r\nPRINT ARRAYLENGTH(block[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -282,13 +144,7 @@ PRINT ARRAYLENGTH(block)
     [Fact]
     public void Execute_RedimOnArrayViewReportsBuiltinArgumentDiagnostic()
     {
-        const string text = """
-DIM grid(,) AS INTEGER
-DIM rowView() AS INTEGER
-REDIM grid(1 TO 2, 10 TO 11)
-rowView = grid(2)
-REDIM rowView(1 TO 2)
-""";
+        const string text = "DIM grid[,] AS INTEGER\r\nDIM rowView[] AS INTEGER\r\nREDIM grid[1 TO 2, 10 TO 11]\r\nrowView[] = grid[2]\r\nREDIM rowView[1 TO 2]";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -300,13 +156,7 @@ REDIM rowView(1 TO 2)
     [Fact]
     public void Execute_EraseOnArrayViewReportsBuiltinArgumentDiagnostic()
     {
-        const string text = """
-DIM grid(,) AS INTEGER
-DIM rowView() AS INTEGER
-REDIM grid(1 TO 2, 10 TO 11)
-rowView = grid(2)
-ERASE rowView
-""";
+        const string text = "DIM grid[,] AS INTEGER\r\nDIM rowView[] AS INTEGER\r\nREDIM grid[1 TO 2, 10 TO 11]\r\nrowView[] = grid[2]\r\nERASE rowView[]";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -318,14 +168,7 @@ ERASE rowView
     [Fact]
     public void Execute_RedimAllowsCanonicalEmptyAllocatedArray()
     {
-        const string text = """
-DIM values() AS INTEGER
-REDIM values(1 TO 0)
-PRINT ARRAYISALLOCATED(values)
-PRINT ARRAYLENGTH(values)
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nREDIM values[1 TO 0]\r\nPRINT ARRAYISALLOCATED(values[])\r\nPRINT ARRAYLENGTH(values[])\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -336,13 +179,7 @@ PRINT UBOUND(values)
     [Fact]
     public void Execute_DimAllowsCanonicalEmptyAllocatedArray()
     {
-        const string text = """
-DIM values(1 TO 0) AS INTEGER
-PRINT ARRAYISALLOCATED(values)
-PRINT ARRAYLENGTH(values)
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-""";
+        const string text = "DIM values[1 TO 0] AS INTEGER\r\nPRINT ARRAYISALLOCATED(values[])\r\nPRINT ARRAYLENGTH(values[])\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -353,10 +190,7 @@ PRINT UBOUND(values)
     [Fact]
     public void Execute_RedimRejectsNonCanonicalEmptyRange()
     {
-        const string text = """
-DIM values() AS INTEGER
-REDIM values(5 TO 3)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nREDIM values[5 TO 3]";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -368,9 +202,7 @@ REDIM values(5 TO 3)
     [Fact]
     public void Execute_DimRejectsMinimumIntegerLowerBound()
     {
-        const string text = """
-DIM values(-2147483648 TO -2147483648) AS INTEGER
-""";
+        const string text = "DIM values[-2147483648 TO -2147483648] AS INTEGER";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -382,10 +214,7 @@ DIM values(-2147483648 TO -2147483648) AS INTEGER
     [Fact]
     public void Execute_RedimRejectsMinimumIntegerLowerBound()
     {
-        const string text = """
-DIM values() AS INTEGER
-REDIM values(-2147483648 TO -2147483648)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nREDIM values[-2147483648 TO -2147483648]";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -397,16 +226,7 @@ REDIM values(-2147483648 TO -2147483648)
     [Fact]
     public void Execute_RedimPreserveCanShrinkToCanonicalEmptyArray()
     {
-        const string text = """
-DIM values(1 TO 2) AS INTEGER
-values(1) = 10
-values(2) = 20
-REDIM PRESERVE values(1 TO 0)
-PRINT ARRAYISALLOCATED(values)
-PRINT ARRAYLENGTH(values)
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-""";
+        const string text = "DIM values[1 TO 2] AS INTEGER\r\nvalues[1] = 10\r\nvalues[2] = 20\r\nREDIM PRESERVE values[1 TO 0]\r\nPRINT ARRAYISALLOCATED(values[])\r\nPRINT ARRAYLENGTH(values[])\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -417,13 +237,7 @@ PRINT UBOUND(values)
     [Fact]
     public void Execute_EraseMakesArrayUnallocatedAgain()
     {
-        const string text = """
-DIM values() AS INTEGER
-REDIM values(1 TO 2)
-values(1) = 10
-ERASE values
-PRINT values(1)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nREDIM values[1 TO 2]\r\nvalues[1] = 10\r\nERASE values[]\r\nPRINT values[1]";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -435,21 +249,7 @@ PRINT values(1)
     [Fact]
     public void Execute_ArrayCloneCopiesBoundsAndElementsIntoIndependentArray()
     {
-        const string text = """
-DIM source(5 TO 6) AS INTEGER
-DIM copy() AS INTEGER
-source(5) = 10
-source(6) = 20
-copy = ARRAYCLONE(source)
-copy(5) = 99
-PRINT LBOUND(copy)
-PRINT UBOUND(copy)
-PRINT ARRAYLENGTH(copy)
-PRINT source(5)
-PRINT copy(5)
-PRINT source(6)
-PRINT copy(6)
-""";
+        const string text = "DIM source[5 TO 6] AS INTEGER\r\nDIM copy[] AS INTEGER\r\nsource[5] = 10\r\nsource[6] = 20\r\ncopy[] = ARRAYCLONE(source[])\r\ncopy[5] = 99\r\nPRINT LBOUND(copy[])\r\nPRINT UBOUND(copy[])\r\nPRINT ARRAYLENGTH(copy[])\r\nPRINT source[5]\r\nPRINT copy[5]\r\nPRINT source[6]\r\nPRINT copy[6]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -460,18 +260,7 @@ PRINT copy(6)
     [Fact]
     public void Execute_ArrayClonePreservesUnallocatedAndCanonicalEmptyStates()
     {
-        const string text = """
-DIM pending() AS STRING
-DIM pendingCopy() AS STRING
-pendingCopy = ARRAYCLONE(pending)
-PRINT ARRAYISALLOCATED(pendingCopy)
-REDIM pending(1 TO 0)
-pendingCopy = ARRAYCLONE(pending)
-PRINT ARRAYISALLOCATED(pendingCopy)
-PRINT ARRAYLENGTH(pendingCopy)
-PRINT LBOUND(pendingCopy)
-PRINT UBOUND(pendingCopy)
-""";
+        const string text = "DIM pending[] AS STRING\r\nDIM pendingCopy[] AS STRING\r\npendingCopy[] = ARRAYCLONE(pending[])\r\nPRINT ARRAYISALLOCATED(pendingCopy[])\r\nREDIM pending[1 TO 0]\r\npendingCopy[] = ARRAYCLONE(pending[])\r\nPRINT ARRAYISALLOCATED(pendingCopy[])\r\nPRINT ARRAYLENGTH(pendingCopy[])\r\nPRINT LBOUND(pendingCopy[])\r\nPRINT UBOUND(pendingCopy[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -482,22 +271,7 @@ PRINT UBOUND(pendingCopy)
     [Fact]
     public void Execute_ArrayCloneCopiesMultidimensionalVisibleShapeIntoIndependentArray()
     {
-        const string text = """
-DIM source(1 TO 3, 10 TO 12) AS INTEGER
-DIM copy(,) AS INTEGER
-source(1, 10) = 10
-source(2, 11) = 20
-source(3, 12) = 30
-copy = ARRAYCLONE(source(2 TO 3, 11 TO 12))
-copy(2, 11) = 99
-PRINT LBOUND(copy, 1)
-PRINT UBOUND(copy, 1)
-PRINT LBOUND(copy, 2)
-PRINT UBOUND(copy, 2)
-PRINT source(2, 11)
-PRINT copy(2, 11)
-PRINT copy(3, 12)
-""";
+        const string text = "DIM source[1 TO 3, 10 TO 12] AS INTEGER\r\nDIM copy[,] AS INTEGER\r\nsource[1, 10] = 10\r\nsource[2, 11] = 20\r\nsource[3, 12] = 30\r\ncopy[] = ARRAYCLONE(source[2 TO 3, 11 TO 12])\r\ncopy[2, 11] = 99\r\nPRINT LBOUND(copy[], 1)\r\nPRINT UBOUND(copy[], 1)\r\nPRINT LBOUND(copy[], 2)\r\nPRINT UBOUND(copy[], 2)\r\nPRINT source[2, 11]\r\nPRINT copy[2, 11]\r\nPRINT copy[3, 12]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -508,22 +282,7 @@ PRINT copy(3, 12)
     [Fact]
     public void Execute_ArraySliceReturnsCompactIndependentSlice()
     {
-        const string text = """
-DIM source(5 TO 7) AS INTEGER
-DIM part() AS INTEGER
-source(5) = 10
-source(6) = 20
-source(7) = 30
-part = ARRAYSLICE(source, 6, 2)
-part(1) = 99
-PRINT LBOUND(part)
-PRINT UBOUND(part)
-PRINT ARRAYLENGTH(part)
-PRINT source(6)
-PRINT part(1)
-PRINT source(7)
-PRINT part(2)
-""";
+        const string text = "DIM source[5 TO 7] AS INTEGER\r\nDIM part[] AS INTEGER\r\nsource[5] = 10\r\nsource[6] = 20\r\nsource[7] = 30\r\npart[] = ARRAYSLICE(source[], 6, 2)\r\npart[1] = 99\r\nPRINT LBOUND(part[])\r\nPRINT UBOUND(part[])\r\nPRINT ARRAYLENGTH(part[])\r\nPRINT source[6]\r\nPRINT part[1]\r\nPRINT source[7]\r\nPRINT part[2]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -534,15 +293,7 @@ PRINT part(2)
     [Fact]
     public void Execute_ArraySliceAllowsZeroCountAsCanonicalEmptyArray()
     {
-        const string text = """
-DIM source(5 TO 7) AS INTEGER
-DIM part() AS INTEGER
-part = ARRAYSLICE(source, 999, 0)
-PRINT ARRAYISALLOCATED(part)
-PRINT ARRAYLENGTH(part)
-PRINT LBOUND(part)
-PRINT UBOUND(part)
-""";
+        const string text = "DIM source[5 TO 7] AS INTEGER\r\nDIM part[] AS INTEGER\r\npart[] = ARRAYSLICE(source[], 999, 0)\r\nPRINT ARRAYISALLOCATED(part[])\r\nPRINT ARRAYLENGTH(part[])\r\nPRINT LBOUND(part[])\r\nPRINT UBOUND(part[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -553,11 +304,7 @@ PRINT UBOUND(part)
     [Fact]
     public void Execute_ArraySliceReportsUnallocatedSource()
     {
-        const string text = """
-DIM source() AS INTEGER
-DIM part() AS INTEGER
-part = ARRAYSLICE(source, 1, 1)
-""";
+        const string text = "DIM source[] AS INTEGER\r\nDIM part[] AS INTEGER\r\npart[] = ARRAYSLICE(source[], 1, 1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -569,11 +316,7 @@ part = ARRAYSLICE(source, 1, 1)
     [Fact]
     public void Execute_ArraySliceReportsOutOfRangeSlice()
     {
-        const string text = """
-DIM source(5 TO 7) AS INTEGER
-DIM part() AS INTEGER
-part = ARRAYSLICE(source, 7, 2)
-""";
+        const string text = "DIM source[5 TO 7] AS INTEGER\r\nDIM part[] AS INTEGER\r\npart[] = ARRAYSLICE(source[], 7, 2)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -585,25 +328,7 @@ part = ARRAYSLICE(source, 7, 2)
     [Fact]
     public void Execute_ArrayConcatReturnsCompactIndependentArray()
     {
-        const string text = """
-DIM left(5 TO 6) AS INTEGER
-DIM right(10 TO 11) AS INTEGER
-DIM merged() AS INTEGER
-left(5) = 10
-left(6) = 20
-right(10) = 30
-right(11) = 40
-merged = ARRAYCONCAT(left, right)
-merged(1) = 99
-PRINT LBOUND(merged)
-PRINT UBOUND(merged)
-PRINT ARRAYLENGTH(merged)
-PRINT left(5)
-PRINT merged(1)
-PRINT merged(2)
-PRINT merged(3)
-PRINT merged(4)
-""";
+        const string text = "DIM left[5 TO 6] AS INTEGER\r\nDIM right[10 TO 11] AS INTEGER\r\nDIM merged[] AS INTEGER\r\nleft[5] = 10\r\nleft[6] = 20\r\nright[10] = 30\r\nright[11] = 40\r\nmerged[] = ARRAYCONCAT(left[], right[])\r\nmerged[1] = 99\r\nPRINT LBOUND(merged[])\r\nPRINT UBOUND(merged[])\r\nPRINT ARRAYLENGTH(merged[])\r\nPRINT left[5]\r\nPRINT merged[1]\r\nPRINT merged[2]\r\nPRINT merged[3]\r\nPRINT merged[4]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -614,20 +339,7 @@ PRINT merged(4)
     [Fact]
     public void Execute_ArrayConcatAllowsCanonicalEmptyOperands()
     {
-        const string text = """
-DIM left(1 TO 0) AS INTEGER
-DIM right(10 TO 11) AS INTEGER
-DIM merged() AS INTEGER
-right(10) = 30
-right(11) = 40
-merged = ARRAYCONCAT(left, right)
-PRINT ARRAYISALLOCATED(merged)
-PRINT LBOUND(merged)
-PRINT UBOUND(merged)
-PRINT ARRAYLENGTH(merged)
-PRINT merged(10)
-PRINT merged(11)
-""";
+        const string text = "DIM left[1 TO 0] AS INTEGER\r\nDIM right[10 TO 11] AS INTEGER\r\nDIM merged[] AS INTEGER\r\nright[10] = 30\r\nright[11] = 40\r\nmerged[] = ARRAYCONCAT(left[], right[])\r\nPRINT ARRAYISALLOCATED(merged[])\r\nPRINT LBOUND(merged[])\r\nPRINT UBOUND(merged[])\r\nPRINT ARRAYLENGTH(merged[])\r\nPRINT merged[10]\r\nPRINT merged[11]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -638,12 +350,7 @@ PRINT merged(11)
     [Fact]
     public void Execute_ArrayConcatReportsUnallocatedOperand()
     {
-        const string text = """
-DIM left() AS INTEGER
-DIM right(1 TO 1) AS INTEGER
-DIM merged() AS INTEGER
-merged = ARRAYCONCAT(left, right)
-""";
+        const string text = "DIM left[] AS INTEGER\r\nDIM right[1 TO 1] AS INTEGER\r\nDIM merged[] AS INTEGER\r\nmerged[] = ARRAYCONCAT(left[], right[])";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -654,22 +361,7 @@ merged = ARRAYCONCAT(left, right)
     [Fact]
     public void Execute_ArrayToReversedReturnsCompactIndependentArray()
     {
-        const string text = """
-DIM source(5 TO 7) AS INTEGER
-DIM reversed() AS INTEGER
-source(5) = 10
-source(6) = 20
-source(7) = 30
-reversed = ARRAYTOREVERSED(source)
-reversed(1) = 99
-PRINT LBOUND(reversed)
-PRINT UBOUND(reversed)
-PRINT ARRAYLENGTH(reversed)
-PRINT source(7)
-PRINT reversed(1)
-PRINT reversed(2)
-PRINT reversed(3)
-""";
+        const string text = "DIM source[5 TO 7] AS INTEGER\r\nDIM reversed[] AS INTEGER\r\nsource[5] = 10\r\nsource[6] = 20\r\nsource[7] = 30\r\nreversed[] = ARRAYTOREVERSED(source[])\r\nreversed[1] = 99\r\nPRINT LBOUND(reversed[])\r\nPRINT UBOUND(reversed[])\r\nPRINT ARRAYLENGTH(reversed[])\r\nPRINT source[7]\r\nPRINT reversed[1]\r\nPRINT reversed[2]\r\nPRINT reversed[3]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -680,15 +372,7 @@ PRINT reversed(3)
     [Fact]
     public void Execute_ArrayToReversedAllowsCanonicalEmptyResult()
     {
-        const string text = """
-DIM source(1 TO 0) AS INTEGER
-DIM reversed() AS INTEGER
-reversed = ARRAYTOREVERSED(source)
-PRINT ARRAYISALLOCATED(reversed)
-PRINT ARRAYLENGTH(reversed)
-PRINT LBOUND(reversed)
-PRINT UBOUND(reversed)
-""";
+        const string text = "DIM source[1 TO 0] AS INTEGER\r\nDIM reversed[] AS INTEGER\r\nreversed[] = ARRAYTOREVERSED(source[])\r\nPRINT ARRAYISALLOCATED(reversed[])\r\nPRINT ARRAYLENGTH(reversed[])\r\nPRINT LBOUND(reversed[])\r\nPRINT UBOUND(reversed[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -699,11 +383,7 @@ PRINT UBOUND(reversed)
     [Fact]
     public void Execute_ArrayToReversedReportsUnallocatedSource()
     {
-        const string text = """
-DIM source() AS INTEGER
-DIM reversed() AS INTEGER
-reversed = ARRAYTOREVERSED(source)
-""";
+        const string text = "DIM source[] AS INTEGER\r\nDIM reversed[] AS INTEGER\r\nreversed[] = ARRAYTOREVERSED(source[])";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -714,30 +394,7 @@ reversed = ARRAYTOREVERSED(source)
     [Fact]
     public void Execute_ArrayToReversedSupportsMultidimensionalDimension()
     {
-        const string text = """
-DIM board(1 TO 2, 10 TO 12) AS INTEGER
-DIM byColumn(,) AS INTEGER
-DIM byRow(,) AS INTEGER
-board(1, 10) = 110
-board(1, 11) = 111
-board(1, 12) = 112
-board(2, 10) = 210
-board(2, 11) = 211
-board(2, 12) = 212
-byColumn = ARRAYTOREVERSED(board, COLUMN)
-byRow = ARRAYTOREVERSED(board, ROW)
-byColumn(1, 10) = 999
-PRINT LBOUND(byColumn, ROW)
-PRINT UBOUND(byColumn, ROW)
-PRINT LBOUND(byColumn, COLUMN)
-PRINT UBOUND(byColumn, COLUMN)
-PRINT byColumn(1, 10)
-PRINT byColumn(2, 12)
-PRINT byRow(1, 10)
-PRINT byRow(2, 12)
-PRINT board(1, 12)
-PRINT board(2, 10)
-""";
+        const string text = "DIM board[1 TO 2, 10 TO 12] AS INTEGER\r\nDIM byColumn[,] AS INTEGER\r\nDIM byRow[,] AS INTEGER\r\nboard[1, 10] = 110\r\nboard[1, 11] = 111\r\nboard[1, 12] = 112\r\nboard[2, 10] = 210\r\nboard[2, 11] = 211\r\nboard[2, 12] = 212\r\nbyColumn[] = ARRAYTOREVERSED(board[], COLUMN)\r\nbyRow[] = ARRAYTOREVERSED(board[], ROW)\r\nbyColumn[1, 10] = 999\r\nPRINT LBOUND(byColumn[], ROW)\r\nPRINT UBOUND(byColumn[], ROW)\r\nPRINT LBOUND(byColumn[], COLUMN)\r\nPRINT UBOUND(byColumn[], COLUMN)\r\nPRINT byColumn[1, 10]\r\nPRINT byColumn[2, 12]\r\nPRINT byRow[1, 10]\r\nPRINT byRow[2, 12]\r\nPRINT board[1, 12]\r\nPRINT board[2, 10]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -748,21 +405,7 @@ PRINT board(2, 10)
     [Fact]
     public void Execute_ArrayTakeReturnsCompactIndependentPrefix()
     {
-        const string text = """
-DIM source(5 TO 7) AS INTEGER
-DIM part() AS INTEGER
-source(5) = 10
-source(6) = 20
-source(7) = 30
-part = ARRAYTAKE(source, 2)
-part(1) = 99
-PRINT LBOUND(part)
-PRINT UBOUND(part)
-PRINT ARRAYLENGTH(part)
-PRINT source(5)
-PRINT part(1)
-PRINT part(2)
-""";
+        const string text = "DIM source[5 TO 7] AS INTEGER\r\nDIM part[] AS INTEGER\r\nsource[5] = 10\r\nsource[6] = 20\r\nsource[7] = 30\r\npart[] = ARRAYTAKE(source[], 2)\r\npart[1] = 99\r\nPRINT LBOUND(part[])\r\nPRINT UBOUND(part[])\r\nPRINT ARRAYLENGTH(part[])\r\nPRINT source[5]\r\nPRINT part[1]\r\nPRINT part[2]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -773,24 +416,7 @@ PRINT part(2)
     [Fact]
     public void Execute_ArrayTakeAllowsZeroAndExcessiveCount()
     {
-        const string text = """
-DIM source(5 TO 7) AS INTEGER
-DIM emptyPart() AS INTEGER
-DIM wholePart() AS INTEGER
-source(5) = 10
-source(6) = 20
-source(7) = 30
-emptyPart = ARRAYTAKE(source, 0)
-wholePart = ARRAYTAKE(source, 99)
-PRINT ARRAYISALLOCATED(emptyPart)
-PRINT ARRAYLENGTH(emptyPart)
-PRINT LBOUND(emptyPart)
-PRINT UBOUND(emptyPart)
-PRINT LBOUND(wholePart)
-PRINT UBOUND(wholePart)
-PRINT wholePart(1)
-PRINT wholePart(3)
-""";
+        const string text = "DIM source[5 TO 7] AS INTEGER\r\nDIM emptyPart[] AS INTEGER\r\nDIM wholePart[] AS INTEGER\r\nsource[5] = 10\r\nsource[6] = 20\r\nsource[7] = 30\r\nemptyPart[] = ARRAYTAKE(source[], 0)\r\nwholePart[] = ARRAYTAKE(source[], 99)\r\nPRINT ARRAYISALLOCATED(emptyPart[])\r\nPRINT ARRAYLENGTH(emptyPart[])\r\nPRINT LBOUND(emptyPart[])\r\nPRINT UBOUND(emptyPart[])\r\nPRINT LBOUND(wholePart[])\r\nPRINT UBOUND(wholePart[])\r\nPRINT wholePart[1]\r\nPRINT wholePart[3]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -801,11 +427,7 @@ PRINT wholePart(3)
     [Fact]
     public void Execute_ArrayTakeReportsUnallocatedSource()
     {
-        const string text = """
-DIM source() AS INTEGER
-DIM part() AS INTEGER
-part = ARRAYTAKE(source, 1)
-""";
+        const string text = "DIM source[] AS INTEGER\r\nDIM part[] AS INTEGER\r\npart[] = ARRAYTAKE(source[], 1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -816,10 +438,7 @@ part = ARRAYTAKE(source, 1)
     [Fact]
     public void Execute_ArrayTakeReportsNegativeCount()
     {
-        const string text = """
-DIM source(1 TO 1) AS INTEGER
-PRINT ARRAYTAKE(source, -1)
-""";
+        const string text = "DIM source[1 TO 1] AS INTEGER\r\nPRINT ARRAYTAKE(source[], -1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -831,21 +450,7 @@ PRINT ARRAYTAKE(source, -1)
     [Fact]
     public void Execute_ArraySkipReturnsCompactIndependentSuffix()
     {
-        const string text = """
-DIM source(5 TO 7) AS INTEGER
-DIM part() AS INTEGER
-source(5) = 10
-source(6) = 20
-source(7) = 30
-part = ARRAYSKIP(source, 1)
-part(1) = 99
-PRINT LBOUND(part)
-PRINT UBOUND(part)
-PRINT ARRAYLENGTH(part)
-PRINT source(6)
-PRINT part(1)
-PRINT part(2)
-""";
+        const string text = "DIM source[5 TO 7] AS INTEGER\r\nDIM part[] AS INTEGER\r\nsource[5] = 10\r\nsource[6] = 20\r\nsource[7] = 30\r\npart[] = ARRAYSKIP(source[], 1)\r\npart[1] = 99\r\nPRINT LBOUND(part[])\r\nPRINT UBOUND(part[])\r\nPRINT ARRAYLENGTH(part[])\r\nPRINT source[6]\r\nPRINT part[1]\r\nPRINT part[2]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -856,24 +461,7 @@ PRINT part(2)
     [Fact]
     public void Execute_ArraySkipAllowsZeroAndExcessiveCount()
     {
-        const string text = """
-DIM source(5 TO 7) AS INTEGER
-DIM samePart() AS INTEGER
-DIM emptyPart() AS INTEGER
-source(5) = 10
-source(6) = 20
-source(7) = 30
-samePart = ARRAYSKIP(source, 0)
-emptyPart = ARRAYSKIP(source, 99)
-PRINT LBOUND(samePart)
-PRINT UBOUND(samePart)
-PRINT samePart(1)
-PRINT samePart(3)
-PRINT ARRAYISALLOCATED(emptyPart)
-PRINT ARRAYLENGTH(emptyPart)
-PRINT LBOUND(emptyPart)
-PRINT UBOUND(emptyPart)
-""";
+        const string text = "DIM source[5 TO 7] AS INTEGER\r\nDIM samePart[] AS INTEGER\r\nDIM emptyPart[] AS INTEGER\r\nsource[5] = 10\r\nsource[6] = 20\r\nsource[7] = 30\r\nsamePart[] = ARRAYSKIP(source[], 0)\r\nemptyPart[] = ARRAYSKIP(source[], 99)\r\nPRINT LBOUND(samePart[])\r\nPRINT UBOUND(samePart[])\r\nPRINT samePart[1]\r\nPRINT samePart[3]\r\nPRINT ARRAYISALLOCATED(emptyPart[])\r\nPRINT ARRAYLENGTH(emptyPart[])\r\nPRINT LBOUND(emptyPart[])\r\nPRINT UBOUND(emptyPart[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -884,11 +472,7 @@ PRINT UBOUND(emptyPart)
     [Fact]
     public void Execute_ArraySkipReportsUnallocatedSource()
     {
-        const string text = """
-DIM source() AS INTEGER
-DIM part() AS INTEGER
-part = ARRAYSKIP(source, 1)
-""";
+        const string text = "DIM source[] AS INTEGER\r\nDIM part[] AS INTEGER\r\npart[] = ARRAYSKIP(source[], 1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -899,10 +483,7 @@ part = ARRAYSKIP(source, 1)
     [Fact]
     public void Execute_ArraySkipReportsNegativeCount()
     {
-        const string text = """
-DIM source(1 TO 1) AS INTEGER
-PRINT ARRAYSKIP(source, -1)
-""";
+        const string text = "DIM source[1 TO 1] AS INTEGER\r\nPRINT ARRAYSKIP(source[], -1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -914,51 +495,7 @@ PRINT ARRAYSKIP(source, -1)
     [Fact]
     public void Execute_ArrayShapeBuiltinsSupportExplicitDimensionForMultidimensionalArrays()
     {
-        const string text = """
-DIM board(1 TO 3, 10 TO 13) AS INTEGER
-DIM slice(,) AS INTEGER
-DIM taken(,) AS INTEGER
-DIM skipped(,) AS INTEGER
-DIM leftPart(,) AS INTEGER
-DIM rightPart(,) AS INTEGER
-DIM merged(,) AS INTEGER
-
-board(1, 10) = 110
-board(1, 11) = 111
-board(1, 12) = 112
-board(1, 13) = 113
-board(2, 10) = 210
-board(2, 11) = 211
-board(2, 12) = 212
-board(2, 13) = 213
-board(3, 10) = 310
-board(3, 11) = 311
-board(3, 12) = 312
-board(3, 13) = 313
-
-slice = ARRAYSLICE(board, 11, 2, COLUMN)
-taken = ARRAYTAKE(board, 2, ROW)
-skipped = ARRAYSKIP(board, 1, ROW)
-leftPart = ARRAYTAKE(board, 2, COLUMN)
-rightPart = ARRAYSKIP(board, 2, COLUMN)
-merged = ARRAYCONCAT(leftPart, rightPart, COLUMN)
-
-PRINT LBOUND(slice, ROW)
-PRINT UBOUND(slice, ROW)
-PRINT LBOUND(slice, COLUMN)
-PRINT UBOUND(slice, COLUMN)
-PRINT slice(2, 11)
-PRINT slice(3, 12)
-PRINT LBOUND(taken, ROW)
-PRINT UBOUND(taken, ROW)
-PRINT taken(2, 13)
-PRINT LBOUND(skipped, ROW)
-PRINT UBOUND(skipped, ROW)
-PRINT skipped(2, 10)
-PRINT LBOUND(merged, COLUMN)
-PRINT UBOUND(merged, COLUMN)
-PRINT merged(3, 13)
-""";
+        const string text = "DIM board[1 TO 3, 10 TO 13] AS INTEGER\r\nDIM slice[,] AS INTEGER\r\nDIM taken[,] AS INTEGER\r\nDIM skipped[,] AS INTEGER\r\nDIM leftPart[,] AS INTEGER\r\nDIM rightPart[,] AS INTEGER\r\nDIM merged[,] AS INTEGER\r\n\r\nboard[1, 10] = 110\r\nboard[1, 11] = 111\r\nboard[1, 12] = 112\r\nboard[1, 13] = 113\r\nboard[2, 10] = 210\r\nboard[2, 11] = 211\r\nboard[2, 12] = 212\r\nboard[2, 13] = 213\r\nboard[3, 10] = 310\r\nboard[3, 11] = 311\r\nboard[3, 12] = 312\r\nboard[3, 13] = 313\r\n\r\nslice[] = ARRAYSLICE(board[], 11, 2, COLUMN)\r\ntaken[] = ARRAYTAKE(board[], 2, ROW)\r\nskipped[] = ARRAYSKIP(board[], 1, ROW)\r\nleftPart[] = ARRAYTAKE(board[], 2, COLUMN)\r\nrightPart[] = ARRAYSKIP(board[], 2, COLUMN)\r\nmerged[] = ARRAYCONCAT(leftPart[], rightPart[], COLUMN)\r\n\r\nPRINT LBOUND(slice[], ROW)\r\nPRINT UBOUND(slice[], ROW)\r\nPRINT LBOUND(slice[], COLUMN)\r\nPRINT UBOUND(slice[], COLUMN)\r\nPRINT slice[2, 11]\r\nPRINT slice[3, 12]\r\nPRINT LBOUND(taken[], ROW)\r\nPRINT UBOUND(taken[], ROW)\r\nPRINT taken[2, 13]\r\nPRINT LBOUND(skipped[], ROW)\r\nPRINT UBOUND(skipped[], ROW)\r\nPRINT skipped[2, 10]\r\nPRINT LBOUND(merged[], COLUMN)\r\nPRINT UBOUND(merged[], COLUMN)\r\nPRINT merged[3, 13]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -970,9 +507,9 @@ PRINT merged(3, 13)
     public void Execute_ArrayShapeBuiltinsRequireExplicitDimensionForMultidimensionalArrays()
     {
         const string text = """
-DIM board(1 TO 2, 1 TO 2) AS INTEGER
-DIM part(,) AS INTEGER
-part = ARRAYTAKE(board, 1)
+DIM board[1 TO 2, 1 TO 2] AS INTEGER
+DIM part[,] AS INTEGER
+part[] = ARRAYTAKE(board[], 1)
 """;
 
         var syntax = Parser.Parse(text, out var parserDiagnostics);
@@ -986,12 +523,7 @@ part = ARRAYTAKE(board, 1)
     [Fact]
     public void Execute_ArrayConcatReportsIncompatibleMultidimensionalShapes()
     {
-        const string text = """
-DIM leftPart(1 TO 2, 10 TO 11) AS INTEGER
-DIM rightPart(2 TO 3, 12 TO 13) AS INTEGER
-DIM merged(,) AS INTEGER
-merged = ARRAYCONCAT(leftPart, rightPart, COLUMN)
-""";
+        const string text = "DIM leftPart[1 TO 2, 10 TO 11] AS INTEGER\r\nDIM rightPart[2 TO 3, 12 TO 13] AS INTEGER\r\nDIM merged[,] AS INTEGER\r\nmerged[] = ARRAYCONCAT(leftPart[], rightPart[], COLUMN)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -1003,23 +535,7 @@ merged = ARRAYCONCAT(leftPart, rightPart, COLUMN)
     [Fact]
     public void Execute_ArrayTakeAndSkipCanProduceAllocatedEmptyMultidimensionalResult()
     {
-        const string text = """
-DIM board(1 TO 2, 10 TO 12) AS INTEGER
-DIM emptyTake(,) AS INTEGER
-DIM emptySkip(,) AS INTEGER
-emptyTake = ARRAYTAKE(board, 0, COLUMN)
-emptySkip = ARRAYSKIP(board, 99, COLUMN)
-PRINT ARRAYISALLOCATED(emptyTake)
-PRINT ARRAYLENGTH(emptyTake)
-PRINT LBOUND(emptyTake, ROW)
-PRINT UBOUND(emptyTake, ROW)
-PRINT LBOUND(emptyTake, COLUMN)
-PRINT UBOUND(emptyTake, COLUMN)
-PRINT ARRAYISALLOCATED(emptySkip)
-PRINT ARRAYLENGTH(emptySkip)
-PRINT LBOUND(emptySkip, COLUMN)
-PRINT UBOUND(emptySkip, COLUMN)
-""";
+        const string text = "DIM board[1 TO 2, 10 TO 12] AS INTEGER\r\nDIM emptyTake[,] AS INTEGER\r\nDIM emptySkip[,] AS INTEGER\r\nemptyTake[] = ARRAYTAKE(board[], 0, COLUMN)\r\nemptySkip[] = ARRAYSKIP(board[], 99, COLUMN)\r\nPRINT ARRAYISALLOCATED(emptyTake[])\r\nPRINT ARRAYLENGTH(emptyTake[])\r\nPRINT LBOUND(emptyTake[], ROW)\r\nPRINT UBOUND(emptyTake[], ROW)\r\nPRINT LBOUND(emptyTake[], COLUMN)\r\nPRINT UBOUND(emptyTake[], COLUMN)\r\nPRINT ARRAYISALLOCATED(emptySkip[])\r\nPRINT ARRAYLENGTH(emptySkip[])\r\nPRINT LBOUND(emptySkip[], COLUMN)\r\nPRINT UBOUND(emptySkip[], COLUMN)";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1030,24 +546,7 @@ PRINT UBOUND(emptySkip, COLUMN)
     [Fact]
     public void Execute_ArrayDistinctReturnsCompactUniqueArray()
     {
-        const string text = """
-DIM source(5 TO 9) AS INTEGER
-DIM uniqueValues() AS INTEGER
-source(5) = 10
-source(6) = 20
-source(7) = 10
-source(8) = 30
-source(9) = 20
-uniqueValues = ARRAYDISTINCT(source)
-uniqueValues(1) = 99
-PRINT LBOUND(uniqueValues)
-PRINT UBOUND(uniqueValues)
-PRINT ARRAYLENGTH(uniqueValues)
-PRINT source(5)
-PRINT uniqueValues(1)
-PRINT uniqueValues(2)
-PRINT uniqueValues(3)
-""";
+        const string text = "DIM source[5 TO 9] AS INTEGER\r\nDIM uniqueValues[] AS INTEGER\r\nsource[5] = 10\r\nsource[6] = 20\r\nsource[7] = 10\r\nsource[8] = 30\r\nsource[9] = 20\r\nuniqueValues[] = ARRAYDISTINCT(source[])\r\nuniqueValues[1] = 99\r\nPRINT LBOUND(uniqueValues[])\r\nPRINT UBOUND(uniqueValues[])\r\nPRINT ARRAYLENGTH(uniqueValues[])\r\nPRINT source[5]\r\nPRINT uniqueValues[1]\r\nPRINT uniqueValues[2]\r\nPRINT uniqueValues[3]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1058,15 +557,7 @@ PRINT uniqueValues(3)
     [Fact]
     public void Execute_ArrayDistinctAllowsCanonicalEmptyResult()
     {
-        const string text = """
-DIM source(1 TO 0) AS INTEGER
-DIM uniqueValues() AS INTEGER
-uniqueValues = ARRAYDISTINCT(source)
-PRINT ARRAYISALLOCATED(uniqueValues)
-PRINT ARRAYLENGTH(uniqueValues)
-PRINT LBOUND(uniqueValues)
-PRINT UBOUND(uniqueValues)
-""";
+        const string text = "DIM source[1 TO 0] AS INTEGER\r\nDIM uniqueValues[] AS INTEGER\r\nuniqueValues[] = ARRAYDISTINCT(source[])\r\nPRINT ARRAYISALLOCATED(uniqueValues[])\r\nPRINT ARRAYLENGTH(uniqueValues[])\r\nPRINT LBOUND(uniqueValues[])\r\nPRINT UBOUND(uniqueValues[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1077,11 +568,7 @@ PRINT UBOUND(uniqueValues)
     [Fact]
     public void Execute_ArrayDistinctReportsUnallocatedSource()
     {
-        const string text = """
-DIM source() AS INTEGER
-DIM uniqueValues() AS INTEGER
-uniqueValues = ARRAYDISTINCT(source)
-""";
+        const string text = "DIM source[] AS INTEGER\r\nDIM uniqueValues[] AS INTEGER\r\nuniqueValues[] = ARRAYDISTINCT(source[])";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -1092,25 +579,7 @@ uniqueValues = ARRAYDISTINCT(source)
     [Fact]
     public void Execute_ArrayDistinctOnMultidimensionalArrayReturnsCompactVisibleOrderResult()
     {
-        const string text = """
-DIM source(1 TO 2, 10 TO 12) AS INTEGER
-DIM uniqueValues() AS INTEGER
-source(1, 10) = 5
-source(1, 11) = 7
-source(1, 12) = 5
-source(2, 10) = 9
-source(2, 11) = 7
-source(2, 12) = 11
-uniqueValues = ARRAYDISTINCT(source)
-PRINT LBOUND(uniqueValues)
-PRINT UBOUND(uniqueValues)
-PRINT ARRAYLENGTH(uniqueValues)
-PRINT uniqueValues(1)
-PRINT uniqueValues(2)
-PRINT uniqueValues(3)
-PRINT uniqueValues(4)
-PRINT ARRAYISALLOCATED(uniqueValues)
-""";
+        const string text = "DIM source[1 TO 2, 10 TO 12] AS INTEGER\r\nDIM uniqueValues[] AS INTEGER\r\nsource[1, 10] = 5\r\nsource[1, 11] = 7\r\nsource[1, 12] = 5\r\nsource[2, 10] = 9\r\nsource[2, 11] = 7\r\nsource[2, 12] = 11\r\nuniqueValues[] = ARRAYDISTINCT(source[])\r\nPRINT LBOUND(uniqueValues[])\r\nPRINT UBOUND(uniqueValues[])\r\nPRINT ARRAYLENGTH(uniqueValues[])\r\nPRINT uniqueValues[1]\r\nPRINT uniqueValues[2]\r\nPRINT uniqueValues[3]\r\nPRINT uniqueValues[4]\r\nPRINT ARRAYISALLOCATED(uniqueValues[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1121,26 +590,7 @@ PRINT ARRAYISALLOCATED(uniqueValues)
     [Fact]
     public void Execute_ArrayFlattenOnMultidimensionalArrayReturnsCompactVisibleOrderResult()
     {
-        const string text = """
-DIM board(1 TO 2, 10 TO 12) AS INTEGER
-DIM flat() AS INTEGER
-board(1, 10) = 3
-board(1, 11) = 1
-board(1, 12) = 2
-board(2, 10) = 6
-board(2, 11) = 4
-board(2, 12) = 5
-flat = ARRAYFLATTEN(board)
-PRINT ARRAYISALLOCATED(flat)
-PRINT LBOUND(flat)
-PRINT UBOUND(flat)
-PRINT flat(1)
-PRINT flat(2)
-PRINT flat(3)
-PRINT flat(4)
-PRINT flat(5)
-PRINT flat(6)
-""";
+        const string text = "DIM board[1 TO 2, 10 TO 12] AS INTEGER\r\nDIM flat[] AS INTEGER\r\nboard[1, 10] = 3\r\nboard[1, 11] = 1\r\nboard[1, 12] = 2\r\nboard[2, 10] = 6\r\nboard[2, 11] = 4\r\nboard[2, 12] = 5\r\nflat[] = ARRAYFLATTEN(board[])\r\nPRINT ARRAYISALLOCATED(flat[])\r\nPRINT LBOUND(flat[])\r\nPRINT UBOUND(flat[])\r\nPRINT flat[1]\r\nPRINT flat[2]\r\nPRINT flat[3]\r\nPRINT flat[4]\r\nPRINT flat[5]\r\nPRINT flat[6]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1151,33 +601,7 @@ PRINT flat(6)
     [Fact]
     public void Execute_ArrayReshapeRebuildsTemplateShapeFromSortedFlat()
     {
-        const string text = """
-DIM board(1 TO 2, 10 TO 12) AS INTEGER
-DIM flat() AS INTEGER
-DIM sorted() AS INTEGER
-DIM reshaped(,) AS INTEGER
-board(1, 10) = 3
-board(1, 11) = 1
-board(1, 12) = 2
-board(2, 10) = 6
-board(2, 11) = 4
-board(2, 12) = 5
-flat = ARRAYFLATTEN(board)
-sorted = ARRAYTOSORTED(flat)
-reshaped = ARRAYRESHAPE(sorted, board)
-PRINT LBOUND(reshaped, ROW)
-PRINT UBOUND(reshaped, ROW)
-PRINT LBOUND(reshaped, COLUMN)
-PRINT UBOUND(reshaped, COLUMN)
-PRINT reshaped(1, 10)
-PRINT reshaped(1, 11)
-PRINT reshaped(1, 12)
-PRINT reshaped(2, 10)
-PRINT reshaped(2, 11)
-PRINT reshaped(2, 12)
-PRINT board(1, 10)
-PRINT board(2, 12)
-""";
+        const string text = "DIM board[1 TO 2, 10 TO 12] AS INTEGER\r\nDIM flat[] AS INTEGER\r\nDIM sorted[] AS INTEGER\r\nDIM reshaped[,] AS INTEGER\r\nboard[1, 10] = 3\r\nboard[1, 11] = 1\r\nboard[1, 12] = 2\r\nboard[2, 10] = 6\r\nboard[2, 11] = 4\r\nboard[2, 12] = 5\r\nflat[] = ARRAYFLATTEN(board[])\r\nsorted[] = ARRAYTOSORTED(flat[])\r\nreshaped[] = ARRAYRESHAPE(sorted[], board[])\r\nPRINT LBOUND(reshaped[], ROW)\r\nPRINT UBOUND(reshaped[], ROW)\r\nPRINT LBOUND(reshaped[], COLUMN)\r\nPRINT UBOUND(reshaped[], COLUMN)\r\nPRINT reshaped[1, 10]\r\nPRINT reshaped[1, 11]\r\nPRINT reshaped[1, 12]\r\nPRINT reshaped[2, 10]\r\nPRINT reshaped[2, 11]\r\nPRINT reshaped[2, 12]\r\nPRINT board[1, 10]\r\nPRINT board[2, 12]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1188,12 +612,7 @@ PRINT board(2, 12)
     [Fact]
     public void Execute_ArrayReshapeReportsMismatchedVisibleElementCount()
     {
-        const string text = """
-DIM source(1 TO 3) AS INTEGER
-DIM template(1 TO 2, 1 TO 2) AS INTEGER
-DIM reshaped(,) AS INTEGER
-reshaped = ARRAYRESHAPE(source, template)
-""";
+        const string text = "DIM source[1 TO 3] AS INTEGER\r\nDIM template[1 TO 2, 1 TO 2] AS INTEGER\r\nDIM reshaped[,] AS INTEGER\r\nreshaped[] = ARRAYRESHAPE(source[], template[])";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -1206,29 +625,7 @@ reshaped = ARRAYRESHAPE(source, template)
     [Fact]
     public void Execute_ArrayToSortedPreservesBoundsAndDoesNotMutateSource()
     {
-        const string text = """
-DIM source(5 TO 9) AS INTEGER
-DIM sortedValues() AS INTEGER
-source(5) = 30
-source(6) = 10
-source(7) = 20
-source(8) = 20
-source(9) = 10
-sortedValues = ARRAYTOSORTED(source)
-sortedValues(5) = 99
-PRINT LBOUND(sortedValues)
-PRINT UBOUND(sortedValues)
-PRINT source(5)
-PRINT source(6)
-PRINT source(7)
-PRINT source(8)
-PRINT source(9)
-PRINT sortedValues(5)
-PRINT sortedValues(6)
-PRINT sortedValues(7)
-PRINT sortedValues(8)
-PRINT sortedValues(9)
-""";
+        const string text = "DIM source[5 TO 9] AS INTEGER\r\nDIM sortedValues[] AS INTEGER\r\nsource[5] = 30\r\nsource[6] = 10\r\nsource[7] = 20\r\nsource[8] = 20\r\nsource[9] = 10\r\nsortedValues[] = ARRAYTOSORTED(source[])\r\nsortedValues[5] = 99\r\nPRINT LBOUND(sortedValues[])\r\nPRINT UBOUND(sortedValues[])\r\nPRINT source[5]\r\nPRINT source[6]\r\nPRINT source[7]\r\nPRINT source[8]\r\nPRINT source[9]\r\nPRINT sortedValues[5]\r\nPRINT sortedValues[6]\r\nPRINT sortedValues[7]\r\nPRINT sortedValues[8]\r\nPRINT sortedValues[9]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1239,27 +636,7 @@ PRINT sortedValues(9)
     [Fact]
     public void Execute_ArrayToSortedSupportsStringsAndCanonicalEmptyArray()
     {
-        const string text = """
-DIM names(2 TO 5) AS STRING
-DIM sortedNames() AS STRING
-DIM emptyNames(1 TO 0) AS STRING
-DIM emptySorted() AS STRING
-names(2) = "Cara"
-names(3) = "Ann"
-names(4) = "Bob"
-names(5) = "Bob"
-sortedNames = ARRAYTOSORTED(names)
-emptySorted = ARRAYTOSORTED(emptyNames)
-PRINT LBOUND(sortedNames)
-PRINT UBOUND(sortedNames)
-PRINT sortedNames(2)
-PRINT sortedNames(3)
-PRINT sortedNames(4)
-PRINT sortedNames(5)
-PRINT ARRAYISALLOCATED(emptySorted)
-PRINT LBOUND(emptySorted)
-PRINT UBOUND(emptySorted)
-""";
+        const string text = "DIM names[2 TO 5] AS STRING\r\nDIM sortedNames[] AS STRING\r\nDIM emptyNames[1 TO 0] AS STRING\r\nDIM emptySorted[] AS STRING\r\nnames[2] = \"Cara\"\r\nnames[3] = \"Ann\"\r\nnames[4] = \"Bob\"\r\nnames[5] = \"Bob\"\r\nsortedNames[] = ARRAYTOSORTED(names[])\r\nemptySorted[] = ARRAYTOSORTED(emptyNames[])\r\nPRINT LBOUND(sortedNames[])\r\nPRINT UBOUND(sortedNames[])\r\nPRINT sortedNames[2]\r\nPRINT sortedNames[3]\r\nPRINT sortedNames[4]\r\nPRINT sortedNames[5]\r\nPRINT ARRAYISALLOCATED(emptySorted[])\r\nPRINT LBOUND(emptySorted[])\r\nPRINT UBOUND(emptySorted[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1270,11 +647,7 @@ PRINT UBOUND(emptySorted)
     [Fact]
     public void Execute_ArrayToSortedReportsUnallocatedSource()
     {
-        const string text = """
-DIM values() AS INTEGER
-DIM sortedValues() AS INTEGER
-sortedValues = ARRAYTOSORTED(values)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nDIM sortedValues[] AS INTEGER\r\nsortedValues[] = ARRAYTOSORTED(values[])";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -1285,18 +658,7 @@ sortedValues = ARRAYTOSORTED(values)
     [Fact]
     public void Execute_ArrayFillMutatesArrayInPlace()
     {
-        const string text = """
-DIM values(5 TO 7) AS INTEGER
-values(5) = 1
-values(6) = 2
-values(7) = 3
-ARRAYFILL(values, 42)
-PRINT values(5)
-PRINT values(6)
-PRINT values(7)
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-""";
+        const string text = "DIM values[5 TO 7] AS INTEGER\r\nvalues[5] = 1\r\nvalues[6] = 2\r\nvalues[7] = 3\r\nARRAYFILL(values[], 42)\r\nPRINT values[5]\r\nPRINT values[6]\r\nPRINT values[7]\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1307,18 +669,7 @@ PRINT UBOUND(values)
     [Fact]
     public void Execute_ArrayFillMutatesMultidimensionalVisibleElements()
     {
-        const string text = """
-DIM values(1 TO 3, 1 TO 3) AS INTEGER
-values(1, 1) = 1
-values(2, 2) = 2
-values(3, 3) = 3
-ARRAYFILL(values(2 TO 3, 2 TO 3), 8)
-PRINT values(1, 1)
-PRINT values(2, 2)
-PRINT values(2, 3)
-PRINT values(3, 2)
-PRINT values(3, 3)
-""";
+        const string text = "DIM values[1 TO 3, 1 TO 3] AS INTEGER\r\nvalues[1, 1] = 1\r\nvalues[2, 2] = 2\r\nvalues[3, 3] = 3\r\nARRAYFILL(values[2 TO 3, 2 TO 3], 8)\r\nPRINT values[1, 1]\r\nPRINT values[2, 2]\r\nPRINT values[2, 3]\r\nPRINT values[3, 2]\r\nPRINT values[3, 3]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1329,20 +680,7 @@ PRINT values(3, 3)
     [Fact]
     public void Execute_ArrayReverseMutatesArrayInPlace()
     {
-        const string text = """
-DIM values(5 TO 8) AS INTEGER
-values(5) = 10
-values(6) = 20
-values(7) = 30
-values(8) = 40
-ARRAYREVERSE(values)
-PRINT values(5)
-PRINT values(6)
-PRINT values(7)
-PRINT values(8)
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-""";
+        const string text = "DIM values[5 TO 8] AS INTEGER\r\nvalues[5] = 10\r\nvalues[6] = 20\r\nvalues[7] = 30\r\nvalues[8] = 40\r\nARRAYREVERSE(values[])\r\nPRINT values[5]\r\nPRINT values[6]\r\nPRINT values[7]\r\nPRINT values[8]\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1353,33 +691,7 @@ PRINT UBOUND(values)
     [Fact]
     public void Execute_ArrayReverseSupportsMultidimensionalDimension()
     {
-        const string text = """
-DIM board(1 TO 2, 10 TO 12) AS INTEGER
-board(1, 10) = 110
-board(1, 11) = 111
-board(1, 12) = 112
-board(2, 10) = 210
-board(2, 11) = 211
-board(2, 12) = 212
-ARRAYREVERSE(board, COLUMN)
-PRINT board(1, 10)
-PRINT board(1, 11)
-PRINT board(1, 12)
-PRINT board(2, 10)
-PRINT board(2, 11)
-PRINT board(2, 12)
-ARRAYREVERSE(board, ROW)
-PRINT board(1, 10)
-PRINT board(1, 11)
-PRINT board(1, 12)
-PRINT board(2, 10)
-PRINT board(2, 11)
-PRINT board(2, 12)
-PRINT LBOUND(board, ROW)
-PRINT UBOUND(board, ROW)
-PRINT LBOUND(board, COLUMN)
-PRINT UBOUND(board, COLUMN)
-""";
+        const string text = "DIM board[1 TO 2, 10 TO 12] AS INTEGER\r\nboard[1, 10] = 110\r\nboard[1, 11] = 111\r\nboard[1, 12] = 112\r\nboard[2, 10] = 210\r\nboard[2, 11] = 211\r\nboard[2, 12] = 212\r\nARRAYREVERSE(board[], COLUMN)\r\nPRINT board[1, 10]\r\nPRINT board[1, 11]\r\nPRINT board[1, 12]\r\nPRINT board[2, 10]\r\nPRINT board[2, 11]\r\nPRINT board[2, 12]\r\nARRAYREVERSE(board[], ROW)\r\nPRINT board[1, 10]\r\nPRINT board[1, 11]\r\nPRINT board[1, 12]\r\nPRINT board[2, 10]\r\nPRINT board[2, 11]\r\nPRINT board[2, 12]\r\nPRINT LBOUND(board[], ROW)\r\nPRINT UBOUND(board[], ROW)\r\nPRINT LBOUND(board[], COLUMN)\r\nPRINT UBOUND(board[], COLUMN)";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1390,34 +702,7 @@ PRINT UBOUND(board, COLUMN)
     [Fact]
     public void Execute_ArraySortMutatesArrayInPlaceAcrossTypes()
     {
-        const string text = """
-DIM numbers(5 TO 9) AS INTEGER
-DIM names(2 TO 5) AS STRING
-numbers(5) = 30
-numbers(6) = 10
-numbers(7) = 20
-numbers(8) = 20
-numbers(9) = 10
-names(2) = "Cara"
-names(3) = "Ann"
-names(4) = "Bob"
-names(5) = "Bob"
-ARRAYSORT(numbers)
-ARRAYSORT(names)
-PRINT numbers(5)
-PRINT numbers(6)
-PRINT numbers(7)
-PRINT numbers(8)
-PRINT numbers(9)
-PRINT LBOUND(numbers)
-PRINT UBOUND(numbers)
-PRINT names(2)
-PRINT names(3)
-PRINT names(4)
-PRINT names(5)
-PRINT LBOUND(names)
-PRINT UBOUND(names)
-""";
+        const string text = "DIM numbers[5 TO 9] AS INTEGER\r\nDIM names[2 TO 5] AS STRING\r\nnumbers[5] = 30\r\nnumbers[6] = 10\r\nnumbers[7] = 20\r\nnumbers[8] = 20\r\nnumbers[9] = 10\r\nnames[2] = \"Cara\"\r\nnames[3] = \"Ann\"\r\nnames[4] = \"Bob\"\r\nnames[5] = \"Bob\"\r\nARRAYSORT(numbers[])\r\nARRAYSORT(names[])\r\nPRINT numbers[5]\r\nPRINT numbers[6]\r\nPRINT numbers[7]\r\nPRINT numbers[8]\r\nPRINT numbers[9]\r\nPRINT LBOUND(numbers[])\r\nPRINT UBOUND(numbers[])\r\nPRINT names[2]\r\nPRINT names[3]\r\nPRINT names[4]\r\nPRINT names[5]\r\nPRINT LBOUND(names[])\r\nPRINT UBOUND(names[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1428,16 +713,7 @@ PRINT UBOUND(names)
     [Fact]
     public void Execute_ArrayMutatingProceduresAllowCanonicalEmptyArray()
     {
-        const string text = """
-DIM values(1 TO 0) AS INTEGER
-ARRAYFILL(values, 1)
-ARRAYREVERSE(values)
-ARRAYSORT(values)
-PRINT ARRAYISALLOCATED(values)
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-PRINT ARRAYLENGTH(values)
-""";
+        const string text = "DIM values[1 TO 0] AS INTEGER\r\nARRAYFILL(values[], 1)\r\nARRAYREVERSE(values[])\r\nARRAYSORT(values[])\r\nPRINT ARRAYISALLOCATED(values[])\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])\r\nPRINT ARRAYLENGTH(values[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1448,10 +724,7 @@ PRINT ARRAYLENGTH(values)
     [Fact]
     public void Execute_ArrayFillReportsUnallocatedSource()
     {
-        const string text = """
-DIM values() AS INTEGER
-ARRAYFILL(values, 1)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nARRAYFILL(values[], 1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -1462,10 +735,7 @@ ARRAYFILL(values, 1)
     [Fact]
     public void Execute_ArrayReverseReportsUnallocatedSource()
     {
-        const string text = """
-DIM values() AS INTEGER
-ARRAYREVERSE(values)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nARRAYREVERSE(values[])";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -1476,10 +746,7 @@ ARRAYREVERSE(values)
     [Fact]
     public void Execute_ArraySortReportsUnallocatedSource()
     {
-        const string text = """
-DIM values() AS INTEGER
-ARRAYSORT(values)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nARRAYSORT(values[])";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -1490,18 +757,7 @@ ARRAYSORT(values)
     [Fact]
     public void Execute_ArrayPushAppendsValueAndPreservesLowerBound()
     {
-        const string text = """
-DIM values(5 TO 6) AS INTEGER
-values(5) = 10
-values(6) = 20
-ARRAYPUSH(values, 30)
-PRINT values(5)
-PRINT values(6)
-PRINT values(7)
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-PRINT ARRAYLENGTH(values)
-""";
+        const string text = "DIM values[5 TO 6] AS INTEGER\r\nvalues[5] = 10\r\nvalues[6] = 20\r\nARRAYPUSH(values[], 30)\r\nPRINT values[5]\r\nPRINT values[6]\r\nPRINT values[7]\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])\r\nPRINT ARRAYLENGTH(values[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1512,15 +768,7 @@ PRINT ARRAYLENGTH(values)
     [Fact]
     public void Execute_ArrayPushAllowsCanonicalEmptyArray()
     {
-        const string text = """
-DIM values(1 TO 0) AS INTEGER
-ARRAYPUSH(values, 42)
-PRINT ARRAYISALLOCATED(values)
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-PRINT ARRAYLENGTH(values)
-PRINT values(1)
-""";
+        const string text = "DIM values[1 TO 0] AS INTEGER\r\nARRAYPUSH(values[], 42)\r\nPRINT ARRAYISALLOCATED(values[])\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])\r\nPRINT ARRAYLENGTH(values[])\r\nPRINT values[1]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1531,18 +779,7 @@ PRINT values(1)
     [Fact]
     public void Execute_ArrayPopReturnsLastElementAndShrinksArray()
     {
-        const string text = """
-DIM values(5 TO 7) AS INTEGER
-values(5) = 10
-values(6) = 20
-values(7) = 30
-PRINT ARRAYPOP(values)
-PRINT values(5)
-PRINT values(6)
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-PRINT ARRAYLENGTH(values)
-""";
+        const string text = "DIM values[5 TO 7] AS INTEGER\r\nvalues[5] = 10\r\nvalues[6] = 20\r\nvalues[7] = 30\r\nPRINT ARRAYPOP(values[])\r\nPRINT values[5]\r\nPRINT values[6]\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])\r\nPRINT ARRAYLENGTH(values[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1553,19 +790,7 @@ PRINT ARRAYLENGTH(values)
     [Fact]
     public void Execute_ArrayPopNormalizesSingleElementArrayToCanonicalEmpty()
     {
-        const string text = """
-DIM values(5 TO 5) AS INTEGER
-values(5) = 99
-PRINT ARRAYPOP(values)
-PRINT ARRAYISALLOCATED(values)
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-PRINT ARRAYLENGTH(values)
-ARRAYPUSH(values, 77)
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-PRINT values(1)
-""";
+        const string text = "DIM values[5 TO 5] AS INTEGER\r\nvalues[5] = 99\r\nPRINT ARRAYPOP(values[])\r\nPRINT ARRAYISALLOCATED(values[])\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])\r\nPRINT ARRAYLENGTH(values[])\r\nARRAYPUSH(values[], 77)\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])\r\nPRINT values[1]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1576,10 +801,7 @@ PRINT values(1)
     [Fact]
     public void Execute_ArrayPushReportsUnallocatedSource()
     {
-        const string text = """
-DIM values() AS INTEGER
-ARRAYPUSH(values, 1)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nARRAYPUSH(values[], 1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -1590,10 +812,7 @@ ARRAYPUSH(values, 1)
     [Fact]
     public void Execute_ArrayPopReportsUnallocatedSource()
     {
-        const string text = """
-DIM values() AS INTEGER
-PRINT ARRAYPOP(values)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nPRINT ARRAYPOP(values[])";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -1604,10 +823,7 @@ PRINT ARRAYPOP(values)
     [Fact]
     public void Execute_ArrayPopReportsCanonicalEmptyArray()
     {
-        const string text = """
-DIM values(1 TO 0) AS INTEGER
-PRINT ARRAYPOP(values)
-""";
+        const string text = "DIM values[1 TO 0] AS INTEGER\r\nPRINT ARRAYPOP(values[])";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -1618,10 +834,7 @@ PRINT ARRAYPOP(values)
     [Fact]
     public void Execute_ArrayPushReportsUpperBoundOverflow()
     {
-        const string text = """
-DIM values(2147483647 TO 2147483647) AS INTEGER
-ARRAYPUSH(values, 1)
-""";
+        const string text = "DIM values[2147483647 TO 2147483647] AS INTEGER\r\nARRAYPUSH(values[], 1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -1632,20 +845,7 @@ ARRAYPUSH(values, 1)
     [Fact]
     public void Execute_ArrayInsertShiftsTailAndPreservesLowerBound()
     {
-        const string text = """
-DIM values(5 TO 7) AS INTEGER
-values(5) = 10
-values(6) = 30
-values(7) = 40
-ARRAYINSERT(values, 6, 20)
-PRINT values(5)
-PRINT values(6)
-PRINT values(7)
-PRINT values(8)
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-PRINT ARRAYLENGTH(values)
-""";
+        const string text = "DIM values[5 TO 7] AS INTEGER\r\nvalues[5] = 10\r\nvalues[6] = 30\r\nvalues[7] = 40\r\nARRAYINSERT(values[], 6, 20)\r\nPRINT values[5]\r\nPRINT values[6]\r\nPRINT values[7]\r\nPRINT values[8]\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])\r\nPRINT ARRAYLENGTH(values[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1656,15 +856,7 @@ PRINT ARRAYLENGTH(values)
     [Fact]
     public void Execute_ArrayInsertAllowsCanonicalEmptyArray()
     {
-        const string text = """
-DIM values(1 TO 0) AS INTEGER
-ARRAYINSERT(values, 1, 42)
-PRINT ARRAYISALLOCATED(values)
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-PRINT ARRAYLENGTH(values)
-PRINT values(1)
-""";
+        const string text = "DIM values[1 TO 0] AS INTEGER\r\nARRAYINSERT(values[], 1, 42)\r\nPRINT ARRAYISALLOCATED(values[])\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])\r\nPRINT ARRAYLENGTH(values[])\r\nPRINT values[1]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1675,20 +867,7 @@ PRINT values(1)
     [Fact]
     public void Execute_ArrayRemoveReturnsRemovedElementAndShiftsTail()
     {
-        const string text = """
-DIM values(5 TO 8) AS INTEGER
-values(5) = 10
-values(6) = 20
-values(7) = 30
-values(8) = 40
-PRINT ARRAYREMOVE(values, 6)
-PRINT values(5)
-PRINT values(6)
-PRINT values(7)
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-PRINT ARRAYLENGTH(values)
-""";
+        const string text = "DIM values[5 TO 8] AS INTEGER\r\nvalues[5] = 10\r\nvalues[6] = 20\r\nvalues[7] = 30\r\nvalues[8] = 40\r\nPRINT ARRAYREMOVE(values[], 6)\r\nPRINT values[5]\r\nPRINT values[6]\r\nPRINT values[7]\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])\r\nPRINT ARRAYLENGTH(values[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1699,19 +878,7 @@ PRINT ARRAYLENGTH(values)
     [Fact]
     public void Execute_ArrayRemoveNormalizesSingleElementArrayToCanonicalEmpty()
     {
-        const string text = """
-DIM values(5 TO 5) AS INTEGER
-values(5) = 99
-PRINT ARRAYREMOVE(values, 5)
-PRINT ARRAYISALLOCATED(values)
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-PRINT ARRAYLENGTH(values)
-ARRAYINSERT(values, 1, 77)
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-PRINT values(1)
-""";
+        const string text = "DIM values[5 TO 5] AS INTEGER\r\nvalues[5] = 99\r\nPRINT ARRAYREMOVE(values[], 5)\r\nPRINT ARRAYISALLOCATED(values[])\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])\r\nPRINT ARRAYLENGTH(values[])\r\nARRAYINSERT(values[], 1, 77)\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])\r\nPRINT values[1]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1722,35 +889,7 @@ PRINT values(1)
     [Fact]
     public void Execute_MultidimensionalDynamicArrayBuiltinsWorkAlongExplicitDimension()
     {
-        const string text = """
-DIM board(1 TO 2, 10 TO 11) AS INTEGER
-DIM newColumn(1 TO 2) AS INTEGER
-DIM removedColumn() AS INTEGER
-board(1, 10) = 110
-board(1, 11) = 111
-board(2, 10) = 210
-board(2, 11) = 211
-newColumn(1) = 112
-newColumn(2) = 212
-ARRAYPUSH(board, newColumn, COLUMN)
-PRINT board(1, 12)
-PRINT board(2, 12)
-removedColumn = ARRAYPOP(board, COLUMN)
-PRINT LBOUND(removedColumn)
-PRINT UBOUND(removedColumn)
-PRINT removedColumn(1)
-PRINT removedColumn(2)
-ARRAYINSERT(board, 11, newColumn, COLUMN)
-removedColumn = ARRAYREMOVE(board, 10, COLUMN)
-PRINT removedColumn(1)
-PRINT removedColumn(2)
-PRINT LBOUND(board, COLUMN)
-PRINT UBOUND(board, COLUMN)
-PRINT board(1, 10)
-PRINT board(1, 11)
-PRINT board(2, 10)
-PRINT board(2, 11)
-""";
+        const string text = "DIM board[1 TO 2, 10 TO 11] AS INTEGER\r\nDIM newColumn[1 TO 2] AS INTEGER\r\nDIM removedColumn[] AS INTEGER\r\nboard[1, 10] = 110\r\nboard[1, 11] = 111\r\nboard[2, 10] = 210\r\nboard[2, 11] = 211\r\nnewColumn[1] = 112\r\nnewColumn[2] = 212\r\nARRAYPUSH(board[], newColumn[], COLUMN)\r\nPRINT board[1, 12]\r\nPRINT board[2, 12]\r\nremovedColumn[] = ARRAYPOP(board[], COLUMN)\r\nPRINT LBOUND(removedColumn[])\r\nPRINT UBOUND(removedColumn[])\r\nPRINT removedColumn[1]\r\nPRINT removedColumn[2]\r\nARRAYINSERT(board[], 11, newColumn[], COLUMN)\r\nremovedColumn[] = ARRAYREMOVE(board[], 10, COLUMN)\r\nPRINT removedColumn[1]\r\nPRINT removedColumn[2]\r\nPRINT LBOUND(board[], COLUMN)\r\nPRINT UBOUND(board[], COLUMN)\r\nPRINT board[1, 10]\r\nPRINT board[1, 11]\r\nPRINT board[2, 10]\r\nPRINT board[2, 11]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1761,11 +900,7 @@ PRINT board(2, 11)
     [Fact]
     public void Execute_MultidimensionalArrayInsertReportsIncompatibleValueShape()
     {
-        const string text = """
-DIM board(1 TO 2, 10 TO 11) AS INTEGER
-DIM wrongRow(10 TO 11) AS INTEGER
-ARRAYINSERT(board, 10, wrongRow, COLUMN)
-""";
+        const string text = "DIM board[1 TO 2, 10 TO 11] AS INTEGER\r\nDIM wrongRow[10 TO 11] AS INTEGER\r\nARRAYINSERT(board[], 10, wrongRow[], COLUMN)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -1777,25 +912,7 @@ ARRAYINSERT(board, 10, wrongRow, COLUMN)
     [Fact]
     public void Execute_ArrayEveryAndSomeUseFunctionValuesAndClosures()
     {
-        const string text = """
-DIM values(5 TO 8) AS INTEGER
-DIM threshold AS INTEGER = 25
-values(5) = 10
-values(6) = 20
-values(7) = 30
-values(8) = 40
-
-PRINT ARRAYEVERY(values, IsPositive)
-PRINT ARRAYSOME(values, GreaterThanThreshold)
-
-FUNCTION IsPositive(value AS INTEGER) AS BOOLEAN
-    RETURN value > 0
-END FUNCTION
-
-FUNCTION GreaterThanThreshold(value AS INTEGER) AS BOOLEAN
-    RETURN value > threshold
-END FUNCTION
-""";
+        const string text = "DIM values[5 TO 8] AS INTEGER\r\nDIM threshold AS INTEGER = 25\r\nvalues[5] = 10\r\nvalues[6] = 20\r\nvalues[7] = 30\r\nvalues[8] = 40\r\n\r\nPRINT ARRAYEVERY(values[], IsPositive)\r\nPRINT ARRAYSOME(values[], GreaterThanThreshold)\r\n\r\nFUNCTION IsPositive(value AS INTEGER) AS BOOLEAN\r\n    RETURN value > 0\r\nEND FUNCTION\r\n\r\nFUNCTION GreaterThanThreshold(value AS INTEGER) AS BOOLEAN\r\n    RETURN value > threshold\r\nEND FUNCTION";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1806,41 +923,7 @@ END FUNCTION
     [Fact]
     public void Execute_ArrayCallbackBuiltinsTraverseMultidimensionalVisibleElementsAndPreserveMappedShape()
     {
-        const string text = """
-DIM values(2 TO 3, 4 TO 5) AS INTEGER
-DIM mapped(,) AS STRING
-values(2, 4) = 10
-values(2, 5) = 20
-values(3, 4) = 30
-values(3, 5) = 40
-
-PRINT ARRAYEVERY(values, IsPositive)
-PRINT ARRAYSOME(values(2 TO 3, 5 TO 5), IsLarge)
-mapped = ARRAYMAP(values(2 TO 3, 5 TO 5), FormatValue)
-PRINT LBOUND(mapped, 1)
-PRINT UBOUND(mapped, 1)
-PRINT LBOUND(mapped, 2)
-PRINT UBOUND(mapped, 2)
-PRINT mapped(2, 5)
-PRINT mapped(3, 5)
-PRINT ARRAYREDUCE(values(2 TO 3, 4 TO 5), "", AppendValue)
-
-FUNCTION IsPositive(value AS INTEGER) AS BOOLEAN
-    RETURN value > 0
-END FUNCTION
-
-FUNCTION IsLarge(value AS INTEGER) AS BOOLEAN
-    RETURN value >= 40
-END FUNCTION
-
-FUNCTION FormatValue(value AS INTEGER) AS STRING
-    RETURN "N" + STR(value)
-END FUNCTION
-
-FUNCTION AppendValue(accumulator AS STRING, value AS INTEGER) AS STRING
-    RETURN accumulator + "[" + STR(value) + "]"
-END FUNCTION
-""";
+        const string text = "DIM values[2 TO 3, 4 TO 5] AS INTEGER\r\nDIM mapped[,] AS STRING\r\nvalues[2, 4] = 10\r\nvalues[2, 5] = 20\r\nvalues[3, 4] = 30\r\nvalues[3, 5] = 40\r\n\r\nPRINT ARRAYEVERY(values[], IsPositive)\r\nPRINT ARRAYSOME(values[2 TO 3, 5 TO 5], IsLarge)\r\nmapped[] = ARRAYMAP(values[2 TO 3, 5 TO 5], FormatValue)\r\nPRINT LBOUND(mapped[], 1)\r\nPRINT UBOUND(mapped[], 1)\r\nPRINT LBOUND(mapped[], 2)\r\nPRINT UBOUND(mapped[], 2)\r\nPRINT mapped[2, 5]\r\nPRINT mapped[3, 5]\r\nPRINT ARRAYREDUCE(values[2 TO 3, 4 TO 5], \"\", AppendValue)\r\n\r\nFUNCTION IsPositive(value AS INTEGER) AS BOOLEAN\r\n    RETURN value > 0\r\nEND FUNCTION\r\n\r\nFUNCTION IsLarge(value AS INTEGER) AS BOOLEAN\r\n    RETURN value >= 40\r\nEND FUNCTION\r\n\r\nFUNCTION FormatValue(value AS INTEGER) AS STRING\r\n    RETURN \"N\" + STR(value)\r\nEND FUNCTION\r\n\r\nFUNCTION AppendValue(accumulator AS STRING, value AS INTEGER) AS STRING\r\n    RETURN accumulator + \"[\" + STR(value) + \"]\"\r\nEND FUNCTION";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1851,15 +934,7 @@ END FUNCTION
     [Fact]
     public void Execute_ArrayEveryTreatsCanonicalEmptyArrayAsTrueAndArraySomeAsFalse()
     {
-        const string text = """
-DIM values(1 TO 0) AS INTEGER
-PRINT ARRAYEVERY(values, IsPositive)
-PRINT ARRAYSOME(values, IsPositive)
-
-FUNCTION IsPositive(value AS INTEGER) AS BOOLEAN
-    RETURN value > 0
-END FUNCTION
-""";
+        const string text = "DIM values[1 TO 0] AS INTEGER\r\nPRINT ARRAYEVERY(values[], IsPositive)\r\nPRINT ARRAYSOME(values[], IsPositive)\r\n\r\nFUNCTION IsPositive(value AS INTEGER) AS BOOLEAN\r\n    RETURN value > 0\r\nEND FUNCTION";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1870,27 +945,7 @@ END FUNCTION
     [Fact]
     public void Execute_ArrayFilterReturnsCompactArrayAndPreservesSource()
     {
-        const string text = """
-DIM values(5 TO 8) AS INTEGER
-DIM threshold AS INTEGER = 25
-DIM filtered() AS INTEGER
-values(5) = 10
-values(6) = 20
-values(7) = 30
-values(8) = 40
-filtered = ARRAYFILTER(values, GreaterThanThreshold)
-filtered(1) = 99
-PRINT LBOUND(filtered)
-PRINT UBOUND(filtered)
-PRINT ARRAYLENGTH(filtered)
-PRINT values(7)
-PRINT filtered(1)
-PRINT filtered(2)
-
-FUNCTION GreaterThanThreshold(value AS INTEGER) AS BOOLEAN
-    RETURN value > threshold
-END FUNCTION
-""";
+        const string text = "DIM values[5 TO 8] AS INTEGER\r\nDIM threshold AS INTEGER = 25\r\nDIM filtered[] AS INTEGER\r\nvalues[5] = 10\r\nvalues[6] = 20\r\nvalues[7] = 30\r\nvalues[8] = 40\r\nfiltered[] = ARRAYFILTER(values[], GreaterThanThreshold)\r\nfiltered[1] = 99\r\nPRINT LBOUND(filtered[])\r\nPRINT UBOUND(filtered[])\r\nPRINT ARRAYLENGTH(filtered[])\r\nPRINT values[7]\r\nPRINT filtered[1]\r\nPRINT filtered[2]\r\n\r\nFUNCTION GreaterThanThreshold(value AS INTEGER) AS BOOLEAN\r\n    RETURN value > threshold\r\nEND FUNCTION";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1901,32 +956,7 @@ END FUNCTION
     [Fact]
     public void Execute_ArrayFilterAllowsCanonicalEmptyInputAndResult()
     {
-        const string text = """
-DIM values(1 TO 0) AS INTEGER
-DIM filtered() AS INTEGER
-filtered = ARRAYFILTER(values, IsPositive)
-PRINT ARRAYISALLOCATED(filtered)
-PRINT LBOUND(filtered)
-PRINT UBOUND(filtered)
-PRINT ARRAYLENGTH(filtered)
-
-REDIM values(5 TO 6)
-values(5) = 1
-values(6) = 2
-filtered = ARRAYFILTER(values, IsLarge)
-PRINT ARRAYISALLOCATED(filtered)
-PRINT LBOUND(filtered)
-PRINT UBOUND(filtered)
-PRINT ARRAYLENGTH(filtered)
-
-FUNCTION IsPositive(value AS INTEGER) AS BOOLEAN
-    RETURN value > 0
-END FUNCTION
-
-FUNCTION IsLarge(value AS INTEGER) AS BOOLEAN
-    RETURN value > 100
-END FUNCTION
-""";
+        const string text = "DIM values[1 TO 0] AS INTEGER\r\nDIM filtered[] AS INTEGER\r\nfiltered[] = ARRAYFILTER(values[], IsPositive)\r\nPRINT ARRAYISALLOCATED(filtered[])\r\nPRINT LBOUND(filtered[])\r\nPRINT UBOUND(filtered[])\r\nPRINT ARRAYLENGTH(filtered[])\r\n\r\nREDIM values[5 TO 6]\r\nvalues[5] = 1\r\nvalues[6] = 2\r\nfiltered[] = ARRAYFILTER(values[], IsLarge)\r\nPRINT ARRAYISALLOCATED(filtered[])\r\nPRINT LBOUND(filtered[])\r\nPRINT UBOUND(filtered[])\r\nPRINT ARRAYLENGTH(filtered[])\r\n\r\nFUNCTION IsPositive(value AS INTEGER) AS BOOLEAN\r\n    RETURN value > 0\r\nEND FUNCTION\r\n\r\nFUNCTION IsLarge(value AS INTEGER) AS BOOLEAN\r\n    RETURN value > 100\r\nEND FUNCTION";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1937,27 +967,7 @@ END FUNCTION
     [Fact]
     public void Execute_ArrayFilterTraversesMultidimensionalVisibleElementsIntoCompactResult()
     {
-        const string text = """
-DIM values(2 TO 3, 4 TO 6) AS INTEGER
-DIM filtered() AS INTEGER
-values(2, 4) = 10
-values(2, 5) = 21
-values(2, 6) = 30
-values(3, 4) = 41
-values(3, 5) = 50
-values(3, 6) = 61
-filtered = ARRAYFILTER(values(2 TO 3, 4 TO 6), IsOdd)
-PRINT LBOUND(filtered)
-PRINT UBOUND(filtered)
-PRINT ARRAYLENGTH(filtered)
-PRINT filtered(1)
-PRINT filtered(2)
-PRINT filtered(3)
-
-FUNCTION IsOdd(value AS INTEGER) AS BOOLEAN
-    RETURN value MOD 2 = 1
-END FUNCTION
-""";
+        const string text = "DIM values[2 TO 3, 4 TO 6] AS INTEGER\r\nDIM filtered[] AS INTEGER\r\nvalues[2, 4] = 10\r\nvalues[2, 5] = 21\r\nvalues[2, 6] = 30\r\nvalues[3, 4] = 41\r\nvalues[3, 5] = 50\r\nvalues[3, 6] = 61\r\nfiltered[] = ARRAYFILTER(values[2 TO 3, 4 TO 6], IsOdd)\r\nPRINT LBOUND(filtered[])\r\nPRINT UBOUND(filtered[])\r\nPRINT ARRAYLENGTH(filtered[])\r\nPRINT filtered[1]\r\nPRINT filtered[2]\r\nPRINT filtered[3]\r\n\r\nFUNCTION IsOdd(value AS INTEGER) AS BOOLEAN\r\n    RETURN value MOD 2 = 1\r\nEND FUNCTION";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1970,15 +980,7 @@ END FUNCTION
     [Fact]
     public void Execute_ArrayFilterReportsUnallocatedSource()
     {
-        const string text = """
-DIM values() AS INTEGER
-DIM filtered() AS INTEGER
-filtered = ARRAYFILTER(values, IsPositive)
-
-FUNCTION IsPositive(value AS INTEGER) AS BOOLEAN
-    RETURN value > 0
-END FUNCTION
-""";
+        const string text = "DIM values[] AS INTEGER\r\nDIM filtered[] AS INTEGER\r\nfiltered[] = ARRAYFILTER(values[], IsPositive)\r\n\r\nFUNCTION IsPositive(value AS INTEGER) AS BOOLEAN\r\n    RETURN value > 0\r\nEND FUNCTION";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -1989,14 +991,7 @@ END FUNCTION
     [Fact]
     public void Execute_ArrayFilterReportsEmptyFunctionValue()
     {
-        const string text = """
-DIM values(1 TO 2) AS INTEGER
-DIM predicate AS FUNCTION(INTEGER) AS BOOLEAN
-DIM filtered() AS INTEGER
-values(1) = 10
-values(2) = 20
-filtered = ARRAYFILTER(values, predicate)
-""";
+        const string text = "DIM values[1 TO 2] AS INTEGER\r\nDIM predicate AS FUNCTION(INTEGER) AS BOOLEAN\r\nDIM filtered[] AS INTEGER\r\nvalues[1] = 10\r\nvalues[2] = 20\r\nfiltered[] = ARRAYFILTER(values[], predicate)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2007,29 +1002,7 @@ filtered = ARRAYFILTER(values, predicate)
     [Fact]
     public void Execute_ArrayMapPreservesTransformedArrayShapeAndPreservesSource()
     {
-        const string text = """
-DIM values(5 TO 8) AS INTEGER
-DIM factor AS INTEGER = 3
-DIM mapped() AS INTEGER
-values(5) = 10
-values(6) = 20
-values(7) = 30
-values(8) = 40
-mapped = ARRAYMAP(values, Multiply)
-mapped(5) = 99
-PRINT LBOUND(mapped)
-PRINT UBOUND(mapped)
-PRINT ARRAYLENGTH(mapped)
-PRINT values(5)
-PRINT mapped(5)
-PRINT mapped(6)
-PRINT mapped(7)
-PRINT mapped(8)
-
-FUNCTION Multiply(value AS INTEGER) AS INTEGER
-    RETURN value * factor
-END FUNCTION
-""";
+        const string text = "DIM values[5 TO 8] AS INTEGER\r\nDIM factor AS INTEGER = 3\r\nDIM mapped[] AS INTEGER\r\nvalues[5] = 10\r\nvalues[6] = 20\r\nvalues[7] = 30\r\nvalues[8] = 40\r\nmapped[] = ARRAYMAP(values[], Multiply)\r\nmapped[5] = 99\r\nPRINT LBOUND(mapped[])\r\nPRINT UBOUND(mapped[])\r\nPRINT ARRAYLENGTH(mapped[])\r\nPRINT values[5]\r\nPRINT mapped[5]\r\nPRINT mapped[6]\r\nPRINT mapped[7]\r\nPRINT mapped[8]\r\n\r\nFUNCTION Multiply(value AS INTEGER) AS INTEGER\r\n    RETURN value * factor\r\nEND FUNCTION";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -2040,24 +1013,7 @@ END FUNCTION
     [Fact]
     public void Execute_ArrayMapSupportsPolymorphicResultType()
     {
-        const string text = """
-DIM values(5 TO 7) AS INTEGER
-DIM prefix AS STRING = "item:"
-DIM mapped() AS STRING
-values(5) = 10
-values(6) = 20
-values(7) = 30
-mapped = ARRAYMAP(values, FormatValue)
-PRINT LBOUND(mapped)
-PRINT UBOUND(mapped)
-PRINT mapped(5)
-PRINT mapped(6)
-PRINT mapped(7)
-
-FUNCTION FormatValue(value AS INTEGER) AS STRING
-    RETURN prefix + STR(value)
-END FUNCTION
-""";
+        const string text = "DIM values[5 TO 7] AS INTEGER\r\nDIM prefix AS STRING = \"item:\"\r\nDIM mapped[] AS STRING\r\nvalues[5] = 10\r\nvalues[6] = 20\r\nvalues[7] = 30\r\nmapped[] = ARRAYMAP(values[], FormatValue)\r\nPRINT LBOUND(mapped[])\r\nPRINT UBOUND(mapped[])\r\nPRINT mapped[5]\r\nPRINT mapped[6]\r\nPRINT mapped[7]\r\n\r\nFUNCTION FormatValue(value AS INTEGER) AS STRING\r\n    RETURN prefix + STR(value)\r\nEND FUNCTION";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -2068,19 +1024,7 @@ END FUNCTION
     [Fact]
     public void Execute_ArrayMapAllowsCanonicalEmptyInput()
     {
-        const string text = """
-DIM values(1 TO 0) AS INTEGER
-DIM mapped() AS INTEGER
-mapped = ARRAYMAP(values, DoubleIt)
-PRINT ARRAYISALLOCATED(mapped)
-PRINT LBOUND(mapped)
-PRINT UBOUND(mapped)
-PRINT ARRAYLENGTH(mapped)
-
-FUNCTION DoubleIt(value AS INTEGER) AS INTEGER
-    RETURN value * 2
-END FUNCTION
-""";
+        const string text = "DIM values[1 TO 0] AS INTEGER\r\nDIM mapped[] AS INTEGER\r\nmapped[] = ARRAYMAP(values[], DoubleIt)\r\nPRINT ARRAYISALLOCATED(mapped[])\r\nPRINT LBOUND(mapped[])\r\nPRINT UBOUND(mapped[])\r\nPRINT ARRAYLENGTH(mapped[])\r\n\r\nFUNCTION DoubleIt(value AS INTEGER) AS INTEGER\r\n    RETURN value * 2\r\nEND FUNCTION";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -2091,23 +1035,7 @@ END FUNCTION
     [Fact]
     public void Execute_ArrayMapPreservesMultidimensionalEmptyVisibleShape()
     {
-        const string text = """
-DIM values(1 TO 2, 1 TO 2) AS INTEGER
-DIM empty(,) AS INTEGER
-empty = ARRAYTAKE(values, 0, 1)
-DIM mapped(,) AS INTEGER
-mapped = ARRAYMAP(empty, DoubleIt)
-PRINT ARRAYISALLOCATED(mapped)
-PRINT LBOUND(mapped, 1)
-PRINT UBOUND(mapped, 1)
-PRINT LBOUND(mapped, 2)
-PRINT UBOUND(mapped, 2)
-PRINT ARRAYLENGTH(mapped)
-
-FUNCTION DoubleIt(value AS INTEGER) AS INTEGER
-    RETURN value * 2
-END FUNCTION
-""";
+        const string text = "DIM values[1 TO 2, 1 TO 2] AS INTEGER\r\nDIM empty[,] AS INTEGER\r\nempty[] = ARRAYTAKE(values[], 0, 1)\r\nDIM mapped[,] AS INTEGER\r\nmapped[] = ARRAYMAP(empty[], DoubleIt)\r\nPRINT ARRAYISALLOCATED(mapped[])\r\nPRINT LBOUND(mapped[], 1)\r\nPRINT UBOUND(mapped[], 1)\r\nPRINT LBOUND(mapped[], 2)\r\nPRINT UBOUND(mapped[], 2)\r\nPRINT ARRAYLENGTH(mapped[])\r\n\r\nFUNCTION DoubleIt(value AS INTEGER) AS INTEGER\r\n    RETURN value * 2\r\nEND FUNCTION";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -2118,15 +1046,7 @@ END FUNCTION
     [Fact]
     public void Execute_ArrayMapReportsUnallocatedSource()
     {
-        const string text = """
-DIM values() AS INTEGER
-DIM mapped() AS INTEGER
-mapped = ARRAYMAP(values, DoubleIt)
-
-FUNCTION DoubleIt(value AS INTEGER) AS INTEGER
-    RETURN value * 2
-END FUNCTION
-""";
+        const string text = "DIM values[] AS INTEGER\r\nDIM mapped[] AS INTEGER\r\nmapped[] = ARRAYMAP(values[], DoubleIt)\r\n\r\nFUNCTION DoubleIt(value AS INTEGER) AS INTEGER\r\n    RETURN value * 2\r\nEND FUNCTION";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2137,14 +1057,7 @@ END FUNCTION
     [Fact]
     public void Execute_ArrayMapReportsEmptyFunctionValue()
     {
-        const string text = """
-DIM values(1 TO 2) AS INTEGER
-DIM selector AS FUNCTION(INTEGER) AS STRING
-DIM mapped() AS STRING
-values(1) = 10
-values(2) = 20
-mapped = ARRAYMAP(values, selector)
-""";
+        const string text = "DIM values[1 TO 2] AS INTEGER\r\nDIM selector AS FUNCTION(INTEGER) AS STRING\r\nDIM mapped[] AS STRING\r\nvalues[1] = 10\r\nvalues[2] = 20\r\nmapped[] = ARRAYMAP(values[], selector)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2155,19 +1068,7 @@ mapped = ARRAYMAP(values, selector)
     [Fact]
     public void Execute_ArrayReduceUsesSeedAndClosure()
     {
-        const string text = """
-DIM values(5 TO 7) AS INTEGER
-DIM bonus AS INTEGER = 1
-values(5) = 10
-values(6) = 20
-values(7) = 30
-PRINT ARRAYREDUCE(values, 5, AddWithBonus)
-PRINT values(5)
-
-FUNCTION AddWithBonus(acc AS INTEGER, value AS INTEGER) AS INTEGER
-    RETURN acc + value + bonus
-END FUNCTION
-""";
+        const string text = "DIM values[5 TO 7] AS INTEGER\r\nDIM bonus AS INTEGER = 1\r\nvalues[5] = 10\r\nvalues[6] = 20\r\nvalues[7] = 30\r\nPRINT ARRAYREDUCE(values[], 5, AddWithBonus)\r\nPRINT values[5]\r\n\r\nFUNCTION AddWithBonus(acc AS INTEGER, value AS INTEGER) AS INTEGER\r\n    RETURN acc + value + bonus\r\nEND FUNCTION";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -2178,17 +1079,7 @@ END FUNCTION
     [Fact]
     public void Execute_ArrayReduceSupportsPolymorphicAccumulatorType()
     {
-        const string text = """
-DIM words(3 TO 5) AS STRING
-words(3) = "alpha"
-words(4) = "bb"
-words(5) = "ccc"
-PRINT ARRAYREDUCE(words, 0, AddLength)
-
-FUNCTION AddLength(acc AS INTEGER, value AS STRING) AS INTEGER
-    RETURN acc + LEN(value)
-END FUNCTION
-""";
+        const string text = "DIM words[3 TO 5] AS STRING\r\nwords[3] = \"alpha\"\r\nwords[4] = \"bb\"\r\nwords[5] = \"ccc\"\r\nPRINT ARRAYREDUCE(words[], 0, AddLength)\r\n\r\nFUNCTION AddLength(acc AS INTEGER, value AS STRING) AS INTEGER\r\n    RETURN acc + LEN(value)\r\nEND FUNCTION";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -2199,14 +1090,7 @@ END FUNCTION
     [Fact]
     public void Execute_ArrayReduceReturnsSeedForCanonicalEmptyArray()
     {
-        const string text = """
-DIM values(1 TO 0) AS INTEGER
-PRINT ARRAYREDUCE(values, 7, Add)
-
-FUNCTION Add(acc AS INTEGER, value AS INTEGER) AS INTEGER
-    RETURN acc + value
-END FUNCTION
-""";
+        const string text = "DIM values[1 TO 0] AS INTEGER\r\nPRINT ARRAYREDUCE(values[], 7, Add)\r\n\r\nFUNCTION Add(acc AS INTEGER, value AS INTEGER) AS INTEGER\r\n    RETURN acc + value\r\nEND FUNCTION";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -2217,14 +1101,7 @@ END FUNCTION
     [Fact]
     public void Execute_ArrayReduceReportsUnallocatedSource()
     {
-        const string text = """
-DIM values() AS INTEGER
-PRINT ARRAYREDUCE(values, 0, Add)
-
-FUNCTION Add(acc AS INTEGER, value AS INTEGER) AS INTEGER
-    RETURN acc + value
-END FUNCTION
-""";
+        const string text = "DIM values[] AS INTEGER\r\nPRINT ARRAYREDUCE(values[], 0, Add)\r\n\r\nFUNCTION Add(acc AS INTEGER, value AS INTEGER) AS INTEGER\r\n    RETURN acc + value\r\nEND FUNCTION";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2235,13 +1112,7 @@ END FUNCTION
     [Fact]
     public void Execute_ArrayReduceReportsEmptyFunctionValue()
     {
-        const string text = """
-DIM values(1 TO 2) AS STRING
-DIM reducer AS FUNCTION(INTEGER, STRING) AS INTEGER
-values(1) = "aa"
-values(2) = "bbb"
-PRINT ARRAYREDUCE(values, 0, reducer)
-""";
+        const string text = "DIM values[1 TO 2] AS STRING\r\nDIM reducer AS FUNCTION(INTEGER, STRING) AS INTEGER\r\nvalues[1] = \"aa\"\r\nvalues[2] = \"bbb\"\r\nPRINT ARRAYREDUCE(values[], 0, reducer)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2252,14 +1123,7 @@ PRINT ARRAYREDUCE(values, 0, reducer)
     [Fact]
     public void Execute_ArrayPredicateFunctionsReportUnallocatedSource()
     {
-        const string text = """
-DIM values() AS INTEGER
-PRINT ARRAYSOME(values, IsPositive)
-
-FUNCTION IsPositive(value AS INTEGER) AS BOOLEAN
-    RETURN value > 0
-END FUNCTION
-""";
+        const string text = "DIM values[] AS INTEGER\r\nPRINT ARRAYSOME(values[], IsPositive)\r\n\r\nFUNCTION IsPositive(value AS INTEGER) AS BOOLEAN\r\n    RETURN value > 0\r\nEND FUNCTION";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2270,13 +1134,7 @@ END FUNCTION
     [Fact]
     public void Execute_ArrayPredicateFunctionsReportEmptyFunctionValue()
     {
-        const string text = """
-DIM values(1 TO 2) AS INTEGER
-DIM predicate AS FUNCTION(INTEGER) AS BOOLEAN
-values(1) = 10
-values(2) = 20
-PRINT ARRAYEVERY(values, predicate)
-""";
+        const string text = "DIM values[1 TO 2] AS INTEGER\r\nDIM predicate AS FUNCTION(INTEGER) AS BOOLEAN\r\nvalues[1] = 10\r\nvalues[2] = 20\r\nPRINT ARRAYEVERY(values[], predicate)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2287,10 +1145,7 @@ PRINT ARRAYEVERY(values, predicate)
     [Fact]
     public void Execute_ArrayInsertReportsUnallocatedSource()
     {
-        const string text = """
-DIM values() AS INTEGER
-ARRAYINSERT(values, 1, 1)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nARRAYINSERT(values[], 1, 1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2301,10 +1156,7 @@ ARRAYINSERT(values, 1, 1)
     [Fact]
     public void Execute_ArrayRemoveReportsUnallocatedSource()
     {
-        const string text = """
-DIM values() AS INTEGER
-PRINT ARRAYREMOVE(values, 1)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nPRINT ARRAYREMOVE(values[], 1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2315,10 +1167,7 @@ PRINT ARRAYREMOVE(values, 1)
     [Fact]
     public void Execute_ArrayInsertReportsInvalidIndex()
     {
-        const string text = """
-DIM values(5 TO 6) AS INTEGER
-ARRAYINSERT(values, 4, 1)
-""";
+        const string text = "DIM values[5 TO 6] AS INTEGER\r\nARRAYINSERT(values[], 4, 1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2331,10 +1180,7 @@ ARRAYINSERT(values, 4, 1)
     [Fact]
     public void Execute_ArrayRemoveReportsInvalidIndex()
     {
-        const string text = """
-DIM values(5 TO 6) AS INTEGER
-PRINT ARRAYREMOVE(values, 7)
-""";
+        const string text = "DIM values[5 TO 6] AS INTEGER\r\nPRINT ARRAYREMOVE(values[], 7)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2347,10 +1193,7 @@ PRINT ARRAYREMOVE(values, 7)
     [Fact]
     public void Execute_ArrayRemoveReportsCanonicalEmptyArray()
     {
-        const string text = """
-DIM values(1 TO 0) AS INTEGER
-PRINT ARRAYREMOVE(values, 1)
-""";
+        const string text = "DIM values[1 TO 0] AS INTEGER\r\nPRINT ARRAYREMOVE(values[], 1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2362,10 +1205,7 @@ PRINT ARRAYREMOVE(values, 1)
     [Fact]
     public void Execute_ArrayInsertReportsInvalidIndexForCanonicalEmptyArray()
     {
-        const string text = """
-DIM values(1 TO 0) AS INTEGER
-ARRAYINSERT(values, 2, 1)
-""";
+        const string text = "DIM values[1 TO 0] AS INTEGER\r\nARRAYINSERT(values[], 2, 1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2378,10 +1218,7 @@ ARRAYINSERT(values, 2, 1)
     [Fact]
     public void Execute_ArrayInsertReportsUpperBoundOverflow()
     {
-        const string text = """
-DIM values(2147483647 TO 2147483647) AS INTEGER
-ARRAYINSERT(values, 2147483647, 1)
-""";
+        const string text = "DIM values[2147483647 TO 2147483647] AS INTEGER\r\nARRAYINSERT(values[], 2147483647, 1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2392,35 +1229,7 @@ ARRAYINSERT(values, 2147483647, 1)
     [Fact]
     public void Execute_ArraySearchFunctionsUseLogicalIndexesAcrossLowerBounds()
     {
-        const string text = """
-DIM oneBased(1 TO 3) AS INTEGER
-DIM zeroBased(0 TO 2) AS INTEGER
-DIM shifted(5 TO 7) AS INTEGER
-DIM negative(-3 TO -1) AS INTEGER
-oneBased(1) = 10
-oneBased(2) = 20
-oneBased(3) = 20
-zeroBased(0) = 10
-zeroBased(1) = 20
-zeroBased(2) = 30
-shifted(5) = 10
-shifted(6) = 20
-shifted(7) = 30
-negative(-3) = 10
-negative(-2) = 20
-negative(-1) = 20
-PRINT ARRAYCONTAINS(oneBased, 20)
-PRINT ARRAYCOUNT(oneBased, 20)
-PRINT ARRAYINDEXOF(oneBased, 20)
-PRINT ARRAYLASTINDEXOF(oneBased, 20)
-PRINT ARRAYINDEXOF(oneBased, 99)
-PRINT ARRAYINDEXOF(zeroBased, 20)
-PRINT ARRAYINDEXOF(zeroBased, 99)
-PRINT ARRAYINDEXOF(shifted, 20)
-PRINT ARRAYINDEXOF(shifted, 99)
-PRINT ARRAYLASTINDEXOF(negative, 20)
-PRINT ARRAYINDEXOF(negative, 99)
-""";
+        const string text = "DIM oneBased[1 TO 3] AS INTEGER\r\nDIM zeroBased[0 TO 2] AS INTEGER\r\nDIM shifted[5 TO 7] AS INTEGER\r\nDIM negative[-3 TO -1] AS INTEGER\r\noneBased[1] = 10\r\noneBased[2] = 20\r\noneBased[3] = 20\r\nzeroBased[0] = 10\r\nzeroBased[1] = 20\r\nzeroBased[2] = 30\r\nshifted[5] = 10\r\nshifted[6] = 20\r\nshifted[7] = 30\r\nnegative[-3] = 10\r\nnegative[-2] = 20\r\nnegative[-1] = 20\r\nPRINT ARRAYCONTAINS(oneBased[], 20)\r\nPRINT ARRAYCOUNT(oneBased[], 20)\r\nPRINT ARRAYINDEXOF(oneBased[], 20)\r\nPRINT ARRAYLASTINDEXOF(oneBased[], 20)\r\nPRINT ARRAYINDEXOF(oneBased[], 99)\r\nPRINT ARRAYINDEXOF(zeroBased[], 20)\r\nPRINT ARRAYINDEXOF(zeroBased[], 99)\r\nPRINT ARRAYINDEXOF(shifted[], 20)\r\nPRINT ARRAYINDEXOF(shifted[], 99)\r\nPRINT ARRAYLASTINDEXOF(negative[], 20)\r\nPRINT ARRAYINDEXOF(negative[], 99)";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -2431,13 +1240,7 @@ PRINT ARRAYINDEXOF(negative, 99)
     [Fact]
     public void Execute_ArraySearchFunctionsTreatCanonicalEmptyArrayAsNotFound()
     {
-        const string text = """
-DIM values(1 TO 0) AS INTEGER
-PRINT ARRAYCONTAINS(values, 1)
-PRINT ARRAYCOUNT(values, 1)
-PRINT ARRAYINDEXOF(values, 1)
-PRINT ARRAYLASTINDEXOF(values, 1)
-""";
+        const string text = "DIM values[1 TO 0] AS INTEGER\r\nPRINT ARRAYCONTAINS(values[], 1)\r\nPRINT ARRAYCOUNT(values[], 1)\r\nPRINT ARRAYINDEXOF(values[], 1)\r\nPRINT ARRAYLASTINDEXOF(values[], 1)";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -2448,17 +1251,7 @@ PRINT ARRAYLASTINDEXOF(values, 1)
     [Fact]
     public void Execute_ArrayContainsAndCountScanMultidimensionalVisibleElements()
     {
-        const string text = """
-DIM values(1 TO 3, 1 TO 3) AS INTEGER
-values(1, 1) = 5
-values(1, 2) = 7
-values(2, 2) = 7
-values(3, 3) = 7
-PRINT ARRAYCONTAINS(values, 7)
-PRINT ARRAYCOUNT(values, 7)
-PRINT ARRAYCONTAINS(values(2 TO 3, 2 TO 3), 5)
-PRINT ARRAYCOUNT(values(2 TO 3, 2 TO 3), 7)
-""";
+        const string text = "DIM values[1 TO 3, 1 TO 3] AS INTEGER\r\nvalues[1, 1] = 5\r\nvalues[1, 2] = 7\r\nvalues[2, 2] = 7\r\nvalues[3, 3] = 7\r\nPRINT ARRAYCONTAINS(values[], 7)\r\nPRINT ARRAYCOUNT(values[], 7)\r\nPRINT ARRAYCONTAINS(values[2 TO 3, 2 TO 3], 5)\r\nPRINT ARRAYCOUNT(values[2 TO 3, 2 TO 3], 7)";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -2469,38 +1262,7 @@ PRINT ARRAYCOUNT(values(2 TO 3, 2 TO 3), 7)
     [Fact]
     public void Execute_ArrayFindAllReturnsCompactArrayOfLogicalIndexes()
     {
-        const string text = """
-DIM shifted(5 TO 8) AS INTEGER
-DIM negative(-3 TO 0) AS INTEGER
-DIM found() AS INTEGER
-DIM negativeHits() AS INTEGER
-DIM missing() AS INTEGER
-shifted(5) = 10
-shifted(6) = 20
-shifted(7) = 10
-shifted(8) = 30
-negative(-3) = 20
-negative(-2) = 10
-negative(-1) = 20
-negative(0) = 20
-found = ARRAYFINDALL(shifted, 10)
-negativeHits = ARRAYFINDALL(negative, 20)
-missing = ARRAYFINDALL(shifted, 99)
-PRINT ARRAYISALLOCATED(found)
-PRINT LBOUND(found)
-PRINT UBOUND(found)
-PRINT found(1)
-PRINT found(2)
-PRINT ARRAYISALLOCATED(negativeHits)
-PRINT LBOUND(negativeHits)
-PRINT UBOUND(negativeHits)
-PRINT negativeHits(1)
-PRINT negativeHits(2)
-PRINT negativeHits(3)
-PRINT ARRAYISALLOCATED(missing)
-PRINT LBOUND(missing)
-PRINT UBOUND(missing)
-""";
+        const string text = "DIM shifted[5 TO 8] AS INTEGER\r\nDIM negative[-3 TO 0] AS INTEGER\r\nDIM found[] AS INTEGER\r\nDIM negativeHits[] AS INTEGER\r\nDIM missing[] AS INTEGER\r\nshifted[5] = 10\r\nshifted[6] = 20\r\nshifted[7] = 10\r\nshifted[8] = 30\r\nnegative[-3] = 20\r\nnegative[-2] = 10\r\nnegative[-1] = 20\r\nnegative[0] = 20\r\nfound[] = ARRAYFINDALL(shifted[], 10)\r\nnegativeHits[] = ARRAYFINDALL(negative[], 20)\r\nmissing[] = ARRAYFINDALL(shifted[], 99)\r\nPRINT ARRAYISALLOCATED(found[])\r\nPRINT LBOUND(found[])\r\nPRINT UBOUND(found[])\r\nPRINT found[1]\r\nPRINT found[2]\r\nPRINT ARRAYISALLOCATED(negativeHits[])\r\nPRINT LBOUND(negativeHits[])\r\nPRINT UBOUND(negativeHits[])\r\nPRINT negativeHits[1]\r\nPRINT negativeHits[2]\r\nPRINT negativeHits[3]\r\nPRINT ARRAYISALLOCATED(missing[])\r\nPRINT LBOUND(missing[])\r\nPRINT UBOUND(missing[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -2511,55 +1273,7 @@ PRINT UBOUND(missing)
     [Fact]
     public void Execute_ArrayCoordinateSearchFunctionsReturnCoordinateVectorsAndTables()
     {
-        const string text = """
-DIM grid(1 TO 2, 5 TO 7) AS INTEGER
-DIM cube(0 TO 1, 10 TO 11, -1 TO 0) AS INTEGER
-DIM firstHit() AS INTEGER
-DIM lastHit() AS INTEGER
-DIM allHits(,) AS INTEGER
-DIM cubeHit() AS INTEGER
-DIM missing() AS INTEGER
-DIM noHits(,) AS INTEGER
-grid(1, 5) = 10
-grid(1, 6) = 20
-grid(2, 6) = 20
-grid(2, 7) = 20
-cube(1, 11, 0) = 7
-firstHit = ARRAYINDEXOF(grid, 20)
-lastHit = ARRAYLASTINDEXOF(grid, 20)
-allHits = ARRAYFINDALL(grid, 20)
-cubeHit = ARRAYINDEXOF(cube, 7)
-missing = ARRAYINDEXOF(grid, 99)
-noHits = ARRAYFINDALL(grid, 99)
-PRINT ARRAYISALLOCATED(firstHit)
-PRINT LBOUND(firstHit)
-PRINT UBOUND(firstHit)
-PRINT firstHit(1)
-PRINT firstHit(2)
-PRINT lastHit(1)
-PRINT lastHit(2)
-PRINT LBOUND(allHits, 1)
-PRINT UBOUND(allHits, 1)
-PRINT LBOUND(allHits, 2)
-PRINT UBOUND(allHits, 2)
-PRINT allHits(1, 1)
-PRINT allHits(1, 2)
-PRINT allHits(2, 1)
-PRINT allHits(2, 2)
-PRINT allHits(3, 1)
-PRINT allHits(3, 2)
-PRINT cubeHit(1)
-PRINT cubeHit(2)
-PRINT cubeHit(3)
-PRINT ARRAYISALLOCATED(missing)
-PRINT LBOUND(missing)
-PRINT UBOUND(missing)
-PRINT ARRAYISALLOCATED(noHits)
-PRINT LBOUND(noHits, 1)
-PRINT UBOUND(noHits, 1)
-PRINT LBOUND(noHits, 2)
-PRINT UBOUND(noHits, 2)
-""";
+        const string text = "DIM grid[1 TO 2, 5 TO 7] AS INTEGER\r\nDIM cube[0 TO 1, 10 TO 11, -1 TO 0] AS INTEGER\r\nDIM firstHit[] AS INTEGER\r\nDIM lastHit[] AS INTEGER\r\nDIM allHits[,] AS INTEGER\r\nDIM cubeHit[] AS INTEGER\r\nDIM missing[] AS INTEGER\r\nDIM noHits[,] AS INTEGER\r\ngrid[1, 5] = 10\r\ngrid[1, 6] = 20\r\ngrid[2, 6] = 20\r\ngrid[2, 7] = 20\r\ncube[1, 11, 0] = 7\r\nfirstHit[] = ARRAYINDEXOF(grid[], 20)\r\nlastHit[] = ARRAYLASTINDEXOF(grid[], 20)\r\nallHits[] = ARRAYFINDALL(grid[], 20)\r\ncubeHit[] = ARRAYINDEXOF(cube[], 7)\r\nmissing[] = ARRAYINDEXOF(grid[], 99)\r\nnoHits[] = ARRAYFINDALL(grid[], 99)\r\nPRINT ARRAYISALLOCATED(firstHit[])\r\nPRINT LBOUND(firstHit[])\r\nPRINT UBOUND(firstHit[])\r\nPRINT firstHit[1]\r\nPRINT firstHit[2]\r\nPRINT lastHit[1]\r\nPRINT lastHit[2]\r\nPRINT LBOUND(allHits[], 1)\r\nPRINT UBOUND(allHits[], 1)\r\nPRINT LBOUND(allHits[], 2)\r\nPRINT UBOUND(allHits[], 2)\r\nPRINT allHits[1, 1]\r\nPRINT allHits[1, 2]\r\nPRINT allHits[2, 1]\r\nPRINT allHits[2, 2]\r\nPRINT allHits[3, 1]\r\nPRINT allHits[3, 2]\r\nPRINT cubeHit[1]\r\nPRINT cubeHit[2]\r\nPRINT cubeHit[3]\r\nPRINT ARRAYISALLOCATED(missing[])\r\nPRINT LBOUND(missing[])\r\nPRINT UBOUND(missing[])\r\nPRINT ARRAYISALLOCATED(noHits[])\r\nPRINT LBOUND(noHits[], 1)\r\nPRINT UBOUND(noHits[], 1)\r\nPRINT LBOUND(noHits[], 2)\r\nPRINT UBOUND(noHits[], 2)";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -2570,30 +1284,7 @@ PRINT UBOUND(noHits, 2)
     [Fact]
     public void Execute_ArrayBinarySearchReturnsFirstLogicalIndexAcrossLowerBounds()
     {
-        const string text = """
-DIM numbers(5 TO 9) AS INTEGER
-DIM zeroBased(0 TO 3) AS INTEGER
-DIM names(2 TO 5) AS STRING
-numbers(5) = 10
-numbers(6) = 20
-numbers(7) = 20
-numbers(8) = 20
-numbers(9) = 30
-zeroBased(0) = 10
-zeroBased(1) = 20
-zeroBased(2) = 30
-zeroBased(3) = 40
-names(2) = "Ann"
-names(3) = "Bob"
-names(4) = "Bob"
-names(5) = "Cara"
-PRINT ARRAYBINARYSEARCH(numbers, 20)
-PRINT ARRAYBINARYSEARCH(numbers, 15)
-PRINT ARRAYBINARYSEARCH(zeroBased, 10)
-PRINT ARRAYBINARYSEARCH(zeroBased, 35)
-PRINT ARRAYBINARYSEARCH(names, "Bob")
-PRINT ARRAYBINARYSEARCH(names, "Aaron")
-""";
+        const string text = "DIM numbers[5 TO 9] AS INTEGER\r\nDIM zeroBased[0 TO 3] AS INTEGER\r\nDIM names[2 TO 5] AS STRING\r\nnumbers[5] = 10\r\nnumbers[6] = 20\r\nnumbers[7] = 20\r\nnumbers[8] = 20\r\nnumbers[9] = 30\r\nzeroBased[0] = 10\r\nzeroBased[1] = 20\r\nzeroBased[2] = 30\r\nzeroBased[3] = 40\r\nnames[2] = \"Ann\"\r\nnames[3] = \"Bob\"\r\nnames[4] = \"Bob\"\r\nnames[5] = \"Cara\"\r\nPRINT ARRAYBINARYSEARCH(numbers[], 20)\r\nPRINT ARRAYBINARYSEARCH(numbers[], 15)\r\nPRINT ARRAYBINARYSEARCH(zeroBased[], 10)\r\nPRINT ARRAYBINARYSEARCH(zeroBased[], 35)\r\nPRINT ARRAYBINARYSEARCH(names[], \"Bob\")\r\nPRINT ARRAYBINARYSEARCH(names[], \"Aaron\")";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -2604,10 +1295,7 @@ PRINT ARRAYBINARYSEARCH(names, "Aaron")
     [Fact]
     public void Execute_ArrayBinarySearchTreatsCanonicalEmptyArrayAsNotFound()
     {
-        const string text = """
-DIM values(1 TO 0) AS INTEGER
-PRINT ARRAYBINARYSEARCH(values, 1)
-""";
+        const string text = "DIM values[1 TO 0] AS INTEGER\r\nPRINT ARRAYBINARYSEARCH(values[], 1)";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -2618,31 +1306,7 @@ PRINT ARRAYBINARYSEARCH(values, 1)
     [Fact]
     public void Execute_MultidimensionalSortingGroupSortsAlongExplicitDimension()
     {
-        const string text = """
-DIM board(1 TO 2, 1 TO 3) AS INTEGER
-DIM sortedByColumn(1 TO 2, 1 TO 3) AS INTEGER
-board(1, 1) = 4
-board(1, 2) = 2
-board(1, 3) = 6
-board(2, 1) = 3
-board(2, 2) = 1
-board(2, 3) = 5
-sortedByColumn = ARRAYTOSORTED(board, COLUMN)
-PRINT board(1, 1)
-PRINT sortedByColumn(1, 1)
-PRINT sortedByColumn(1, 2)
-PRINT sortedByColumn(1, 3)
-PRINT sortedByColumn(2, 1)
-PRINT sortedByColumn(2, 2)
-PRINT sortedByColumn(2, 3)
-ARRAYSORT(board, ROW)
-PRINT board(1, 1)
-PRINT board(1, 2)
-PRINT board(1, 3)
-PRINT board(2, 1)
-PRINT board(2, 2)
-PRINT board(2, 3)
-""";
+        const string text = "DIM board[1 TO 2, 1 TO 3] AS INTEGER\r\nDIM sortedByColumn[1 TO 2, 1 TO 3] AS INTEGER\r\nboard[1, 1] = 4\r\nboard[1, 2] = 2\r\nboard[1, 3] = 6\r\nboard[2, 1] = 3\r\nboard[2, 2] = 1\r\nboard[2, 3] = 5\r\nsortedByColumn[] = ARRAYTOSORTED(board[], COLUMN)\r\nPRINT board[1, 1]\r\nPRINT sortedByColumn[1, 1]\r\nPRINT sortedByColumn[1, 2]\r\nPRINT sortedByColumn[1, 3]\r\nPRINT sortedByColumn[2, 1]\r\nPRINT sortedByColumn[2, 2]\r\nPRINT sortedByColumn[2, 3]\r\nARRAYSORT(board[], ROW)\r\nPRINT board[1, 1]\r\nPRINT board[1, 2]\r\nPRINT board[1, 3]\r\nPRINT board[2, 1]\r\nPRINT board[2, 2]\r\nPRINT board[2, 3]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -2653,29 +1317,7 @@ PRINT board(2, 3)
     [Fact]
     public void Execute_MultidimensionalArrayBinarySearchReturnsCoordinateVectorOrEmptyArray()
     {
-        const string text = """
-DIM board(1 TO 2, 1 TO 4) AS INTEGER
-DIM firstHit() AS INTEGER
-DIM missing() AS INTEGER
-board(1, 1) = 1
-board(1, 2) = 4
-board(1, 3) = 4
-board(1, 4) = 7
-board(2, 1) = 2
-board(2, 2) = 4
-board(2, 3) = 5
-board(2, 4) = 8
-firstHit = ARRAYBINARYSEARCH(board, 4, ROW)
-missing = ARRAYBINARYSEARCH(board, 6, ROW)
-PRINT ARRAYISALLOCATED(firstHit)
-PRINT LBOUND(firstHit)
-PRINT UBOUND(firstHit)
-PRINT firstHit(1)
-PRINT firstHit(2)
-PRINT ARRAYISALLOCATED(missing)
-PRINT LBOUND(missing)
-PRINT UBOUND(missing)
-""";
+        const string text = "DIM board[1 TO 2, 1 TO 4] AS INTEGER\r\nDIM firstHit[] AS INTEGER\r\nDIM missing[] AS INTEGER\r\nboard[1, 1] = 1\r\nboard[1, 2] = 4\r\nboard[1, 3] = 4\r\nboard[1, 4] = 7\r\nboard[2, 1] = 2\r\nboard[2, 2] = 4\r\nboard[2, 3] = 5\r\nboard[2, 4] = 8\r\nfirstHit[] = ARRAYBINARYSEARCH(board[], 4, ROW)\r\nmissing[] = ARRAYBINARYSEARCH(board[], 6, ROW)\r\nPRINT ARRAYISALLOCATED(firstHit[])\r\nPRINT LBOUND(firstHit[])\r\nPRINT UBOUND(firstHit[])\r\nPRINT firstHit[1]\r\nPRINT firstHit[2]\r\nPRINT ARRAYISALLOCATED(missing[])\r\nPRINT LBOUND(missing[])\r\nPRINT UBOUND(missing[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -2686,10 +1328,7 @@ PRINT UBOUND(missing)
     [Fact]
     public void Execute_ArrayContainsReportsUnallocatedSource()
     {
-        const string text = """
-DIM values() AS INTEGER
-PRINT ARRAYCONTAINS(values, 1)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nPRINT ARRAYCONTAINS(values[], 1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2700,10 +1339,7 @@ PRINT ARRAYCONTAINS(values, 1)
     [Fact]
     public void Execute_ArrayIndexOfReportsUnallocatedSource()
     {
-        const string text = """
-DIM values() AS INTEGER
-PRINT ARRAYINDEXOF(values, 1)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nPRINT ARRAYINDEXOF(values[], 1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2714,10 +1350,7 @@ PRINT ARRAYINDEXOF(values, 1)
     [Fact]
     public void Execute_ArrayLastIndexOfReportsUnallocatedSource()
     {
-        const string text = """
-DIM values() AS INTEGER
-PRINT ARRAYLASTINDEXOF(values, 1)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nPRINT ARRAYLASTINDEXOF(values[], 1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2728,10 +1361,7 @@ PRINT ARRAYLASTINDEXOF(values, 1)
     [Fact]
     public void Execute_ArrayCountReportsUnallocatedSource()
     {
-        const string text = """
-DIM values() AS INTEGER
-PRINT ARRAYCOUNT(values, 1)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nPRINT ARRAYCOUNT(values[], 1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2742,11 +1372,7 @@ PRINT ARRAYCOUNT(values, 1)
     [Fact]
     public void Execute_ArrayFindAllReportsUnallocatedSource()
     {
-        const string text = """
-DIM values() AS INTEGER
-DIM matches() AS INTEGER
-matches = ARRAYFINDALL(values, 1)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nDIM matches[] AS INTEGER\r\nmatches[] = ARRAYFINDALL(values[], 1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2757,10 +1383,7 @@ matches = ARRAYFINDALL(values, 1)
     [Fact]
     public void Execute_ArrayBinarySearchReportsUnallocatedSource()
     {
-        const string text = """
-DIM values() AS INTEGER
-PRINT ARRAYBINARYSEARCH(values, 1)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nPRINT ARRAYBINARYSEARCH(values[], 1)";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2771,13 +1394,7 @@ PRINT ARRAYBINARYSEARCH(values, 1)
     [Fact]
     public void Execute_EraseMutatesSharedArrayStorage()
     {
-        const string text = """
-DIM source(1 TO 2) AS INTEGER
-DIM alias() AS INTEGER
-alias = source
-ERASE alias
-PRINT source(1)
-""";
+        const string text = "DIM source[1 TO 2] AS INTEGER\r\nDIM alias[] AS INTEGER\r\nalias[] = source[]\r\nERASE alias[]\r\nPRINT source[1]";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -2789,19 +1406,7 @@ PRINT source(1)
     [Fact]
     public void Execute_BuiltinArrayInformationFunctionsReportCurrentState()
     {
-        const string text = """
-DIM values() AS INTEGER
-PRINT ARRAYISALLOCATED(values)
-PRINT ARRAYLENGTH(values)
-REDIM values(3 TO 5)
-PRINT ARRAYISALLOCATED(values)
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-PRINT ARRAYLENGTH(values)
-ERASE values
-PRINT ARRAYISALLOCATED(values)
-PRINT ARRAYLENGTH(values)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nPRINT ARRAYISALLOCATED(values[])\r\nPRINT ARRAYLENGTH(values[])\r\nREDIM values[3 TO 5]\r\nPRINT ARRAYISALLOCATED(values[])\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])\r\nPRINT ARRAYLENGTH(values[])\r\nERASE values[]\r\nPRINT ARRAYISALLOCATED(values[])\r\nPRINT ARRAYLENGTH(values[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -2812,10 +1417,7 @@ PRINT ARRAYLENGTH(values)
     [Fact]
     public void Execute_LBoundReportsUnallocatedArrayState()
     {
-        const string text = """
-DIM values() AS INTEGER
-PRINT LBOUND(values)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nPRINT LBOUND(values[])";
 
         var (_, _, result) = ExecuteProgram(text);
 

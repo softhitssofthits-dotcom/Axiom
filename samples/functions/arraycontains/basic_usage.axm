@@ -1,10 +1,10 @@
 ' ARRAYCONTAINS: поиск наличия значения в уже выделенном массиве.
 
-Dim values(0 To 2) As Integer
+Dim values[0 To 2] As Integer
 
-values(0) = 10
-values(1) = 20
-values(2) = 30
+values[0] = 10
+values[1] = 20
+values[2] = 30
 
-Print ARRAYCONTAINS(values, 20)
-Print ARRAYCONTAINS(values, 99)
+Print ARRAYCONTAINS(values[], 20)
+Print ARRAYCONTAINS(values[], 99)

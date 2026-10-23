@@ -1,22 +1,22 @@
 REM Меняем форму таблицы без предварительного ARRAYFLATTEN.
-DIM source(-2 TO -1, 4 TO 6) AS INTEGER
-DIM template(9 TO 11, -4 TO -3) AS INTEGER
-DIM result(,) AS INTEGER
-source(-2, 4) = 11
-source(-2, 5) = 12
-source(-2, 6) = 13
-source(-1, 4) = 21
-source(-1, 5) = 22
-source(-1, 6) = 23
+DIM source[-2 TO -1, 4 TO 6] AS INTEGER
+DIM template[9 TO 11, -4 TO -3] AS INTEGER
+DIM result[,] AS INTEGER
+source[-2, 4] = 11
+source[-2, 5] = 12
+source[-2, 6] = 13
+source[-1, 4] = 21
+source[-1, 5] = 22
+source[-1, 6] = 23
 REM Образец задаёт границы новой таблицы, а не её значения.
-result = ARRAYRESHAPE(source, template)
+result[] = ARRAYRESHAPE(source[], template[])
 PRINT "Значения новой таблицы:"
 FOR i = 9 TO 11
     FOR j = -4 TO -3
-        PRINT result(i, j)
+        PRINT result[i, j]
     NEXT j
 NEXT i
 REM Изменение результата сохраняет исходный INTEGER-элемент.
-result(9, -4) = 99
+result[9, -4] = 99
 PRINT "Исходное значение осталось 11:"
-PRINT source(-2, 4)
+PRINT source[-2, 4]

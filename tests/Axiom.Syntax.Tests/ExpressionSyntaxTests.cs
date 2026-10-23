@@ -79,6 +79,39 @@ public sealed class ExpressionSyntaxTests
     }
 
     [Fact]
+    public void ArrayAccessExpression_HasCorrectKindAndTracksWholeArray()
+    {
+        var target = new NameExpressionSyntax(Token(SyntaxKind.IdentifierToken, "fruits"));
+        var open = Token(SyntaxKind.OpenBracketToken, "[");
+        var close = Token(SyntaxKind.CloseBracketToken, "]");
+        var expr = new ArrayAccessExpressionSyntax(target, open, [], [], close);
+
+        Assert.Equal(SyntaxKind.ArrayAccessExpression, expr.Kind);
+        Assert.Same(target, expr.Target);
+        Assert.Same(open, expr.OpenBracketToken);
+        Assert.Empty(expr.Indices);
+        Assert.Empty(expr.CommaTokens);
+        Assert.Same(close, expr.CloseBracketToken);
+        Assert.True(expr.IsWholeArray);
+    }
+
+    [Fact]
+    public void ArrayAccessExpression_WithIndicesIsNotWholeArray()
+    {
+        var target = new NameExpressionSyntax(Token(SyntaxKind.IdentifierToken, "grid"));
+        var open = Token(SyntaxKind.OpenBracketToken, "[");
+        var first = new LiteralExpressionSyntax(Token(SyntaxKind.IntegerLiteralToken, "2"));
+        var comma = Token(SyntaxKind.CommaToken, ",");
+        var second = new LiteralExpressionSyntax(Token(SyntaxKind.IntegerLiteralToken, "3"));
+        var close = Token(SyntaxKind.CloseBracketToken, "]");
+        var expr = new ArrayAccessExpressionSyntax(target, open, [first, second], [comma], close);
+
+        Assert.Equal(2, expr.Indices.Count);
+        Assert.Single(expr.CommaTokens);
+        Assert.False(expr.IsWholeArray);
+    }
+
+    [Fact]
     public void FieldAccessExpression_HasCorrectKind()
     {
         var target = new NameExpressionSyntax(Token(SyntaxKind.IdentifierToken, "obj"));

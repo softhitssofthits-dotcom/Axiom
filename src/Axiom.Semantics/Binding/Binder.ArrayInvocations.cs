@@ -5,6 +5,93 @@ namespace Axiom.Semantics;
 
 public sealed partial class Binder
 {
+    // Разрешение цели не отключает строгую проверку вложенных выражений:
+    // только непосредственные имя/поле получают массивный контекст.
+    private BoundExpression BindArrayTarget(ExpressionSyntax target)
+    {
+        return target switch
+        {
+            NameExpressionSyntax name => BindNameExpression(name, allowArrayTarget: true),
+            FieldAccessExpressionSyntax field => BindFieldAccessExpression(field, allowArrayTarget: true),
+            ParenthesizedExpressionSyntax parenthesized => BindArrayTarget(parenthesized.Expression),
+            _ => BindExpression(target)
+        };
+    }
+
+    private BoundExpression BindSquareArrayAccessExpression(ArrayAccessExpressionSyntax expression, bool forAssignment = false)
+    {
+        var target = BindArrayTarget(expression.Target);
+        var location = GetLocation(expression.Target);
+        var displayName = GetArrayTargetDisplayName(target);
+
+        if (target.Type is not ArrayTypeSymbol arrayType)
+        {
+            if (target.Type != TypeSymbol.Error)
+            {
+                ReportInvalidArrayAccess(displayName, location);
+            }
+
+            foreach (var index in expression.Indices)
+            {
+                BindArrayIndexExpression(index);
+            }
+
+            return new BoundErrorExpression(location);
+        }
+
+        // Никакой обёртки или копии: BYREF должен видеть исходную переменную,
+        // а поле — сохранять свой прежний адресуемый bound-узел.
+        if (expression.IsWholeArray)
+        {
+            if (forAssignment && target is not (BoundVariableExpression or BoundFieldAccessExpression))
+            {
+                ReportArrayAssignmentRequiresFullIndices(location);
+                return new BoundErrorExpression(location);
+            }
+
+            return target;
+        }
+
+        if (!IsValidReadableArrayIndexCount(arrayType, expression.Indices.Count))
+        {
+            ReportReadableArrayIndexCount(displayName, arrayType.Rank, expression.Indices.Count, location);
+            foreach (var index in expression.Indices)
+            {
+                BindArrayIndexExpression(index);
+            }
+
+            return new BoundErrorExpression(location);
+        }
+
+        if (forAssignment && (expression.Indices.Count != arrayType.Rank
+            || expression.Indices.Any(static index => index is RangeExpressionSyntax)))
+        {
+            ReportArrayAssignmentRequiresFullIndices(location);
+            foreach (var index in expression.Indices)
+            {
+                BindArrayIndexExpression(index);
+            }
+
+            return new BoundErrorExpression(location);
+        }
+
+        return BindArrayAccess(target, expression.Indices, location, displayName);
+    }
+
+    private BoundExpression RejectParenthesizedArrayAccess(
+        BoundExpression target,
+        CallExpressionSyntax expression)
+    {
+        var location = GetLocation(expression.Target);
+        ReportArrayParenthesesForbidden(GetArrayTargetDisplayName(target), location);
+        foreach (var argument in expression.Arguments)
+        {
+            BindArrayIndexExpression(argument);
+        }
+
+        return new BoundErrorExpression(location);
+    }
+
     private BoundExpression BindArrayAccess(
         BoundExpression target,
         IReadOnlyList<ExpressionSyntax> indexExpressions,
@@ -64,7 +151,17 @@ public sealed partial class Binder
             && variable is not null
             && variable.IsArray)
         {
+            _editorReferences?.Add(new(variable, nameExpression.IdentifierToken.Location, false));
+            if (_usesSquareArraySyntax)
+            {
+                return RejectParenthesizedArrayAccess(
+                    new BoundVariableExpression(nameExpression.IdentifierToken.Location, variable), expression);
+            }
+
             var arrayType = (ArrayTypeSymbol)variable.Type;
+
+            if (expression.Arguments.Count == 0)
+                return new BoundVariableExpression(nameExpression.IdentifierToken.Location, variable);
 
             if (expression.Arguments.Count != arrayType.Rank)
             {
@@ -95,10 +192,16 @@ public sealed partial class Binder
                 variable.Name);
         }
 
-        var target = BindExpression(expression.Target);
+        var target = BindArrayTarget(expression.Target);
 
         if (target.Type is ArrayTypeSymbol)
         {
+            if (_usesSquareArraySyntax)
+            {
+                return RejectParenthesizedArrayAccess(target, expression);
+            }
+
+            if (expression.Arguments.Count == 0) return target;
             var displayName = GetArrayTargetDisplayName(target);
             var arrayType = (ArrayTypeSymbol)target.Type;
 

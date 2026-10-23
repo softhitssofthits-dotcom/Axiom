@@ -3,14 +3,14 @@
 ' 42
 ' 42
 ' 42
-DIM values(5 TO 7) AS INTEGER
+DIM values[5 TO 7] AS INTEGER
 
-values(5) = 1
-values(6) = 2
-values(7) = 3
+values[5] = 1
+values[6] = 2
+values[7] = 3
 
-ARRAYFILL(values, 42)
+ARRAYFILL(values[], 42)
 
-PRINT values(5)
-PRINT values(6)
-PRINT values(7)
+PRINT values[5]
+PRINT values[6]
+PRINT values[7]

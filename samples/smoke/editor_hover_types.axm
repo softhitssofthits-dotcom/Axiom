@@ -13,7 +13,7 @@ DIM item AS Product
 item.Price = price
 
 ' Массив имеет ранг два; limit является константой.
-DIM grid(1 TO 2, 1 TO 3) AS INTEGER
+DIM grid[1 TO 2, 1 TO 3] AS INTEGER
 CONST limit AS INTEGER = 2
 
 ' В карточке функции видны BYREF и возвращаемый тип.
@@ -24,7 +24,7 @@ END FUNCTION
 PRINT title; ": "; price
 PRINT "Поле записи: "; item.Price
 PRINT "Вычисленная сумма: "; amount
-PRINT "Элемент массива: "; grid(1, 1); ", предел: "; limit
+PRINT "Элемент массива: "; grid[1, 1]; ", предел: "; limit
 PRINT "Удвоенная цена: "; Twice(price)
 ' price внутри интерполяции тоже получает подсказку; текст строки — нет.
 PRINT $"Цена в интерполяции: {price}"

@@ -92,43 +92,47 @@ public sealed class ArrayTypeSyntax : TypeSyntax
 {
     public ArrayTypeSyntax(
         TypeSyntax elementType,
-        SyntaxToken openParenToken,
+        SyntaxToken openDelimiterToken,
         IReadOnlyList<SyntaxToken> commaTokens,
-        SyntaxToken closeParenToken)
+        SyntaxToken closeDelimiterToken)
     {
         ArgumentNullException.ThrowIfNull(elementType);
-        ArgumentNullException.ThrowIfNull(openParenToken);
+        ArgumentNullException.ThrowIfNull(openDelimiterToken);
         ArgumentNullException.ThrowIfNull(commaTokens);
-        ArgumentNullException.ThrowIfNull(closeParenToken);
+        ArgumentNullException.ThrowIfNull(closeDelimiterToken);
 
         ElementType = elementType;
-        OpenParenToken = openParenToken;
+        OpenDelimiterToken = openDelimiterToken;
         CommaTokens = commaTokens;
-        CloseParenToken = closeParenToken;
+        CloseDelimiterToken = closeDelimiterToken;
     }
 
     public override SyntaxKind Kind => SyntaxKind.ArrayType;
 
     public TypeSyntax ElementType { get; }
 
-    public SyntaxToken OpenParenToken { get; }
+    public SyntaxToken OpenDelimiterToken { get; }
 
     public IReadOnlyList<SyntaxToken> CommaTokens { get; }
 
-    public SyntaxToken CloseParenToken { get; }
+    public SyntaxToken CloseDelimiterToken { get; }
 
     public int Rank => CommaTokens.Count + 1;
 }
 
 public sealed class ProgramSyntax : SyntaxNode
 {
-    public ProgramSyntax(IReadOnlyList<MemberSyntax> members, SyntaxToken endOfFileToken)
+    public ProgramSyntax(
+        IReadOnlyList<MemberSyntax> members,
+        SyntaxToken endOfFileToken,
+        bool usesSquareArraySyntax = false)
     {
         ArgumentNullException.ThrowIfNull(members);
         ArgumentNullException.ThrowIfNull(endOfFileToken);
 
         Members = members;
         EndOfFileToken = endOfFileToken;
+        UsesSquareArraySyntax = usesSquareArraySyntax;
     }
 
     public override SyntaxKind Kind => SyntaxKind.Program;
@@ -136,6 +140,8 @@ public sealed class ProgramSyntax : SyntaxNode
     public IReadOnlyList<MemberSyntax> Members { get; }
 
     public SyntaxToken EndOfFileToken { get; }
+
+    public bool UsesSquareArraySyntax { get; }
 }
 
 public sealed class ImportStatementSyntax : MemberSyntax
@@ -215,7 +221,11 @@ public sealed class TypeClauseSyntax : SyntaxNode
 
 public sealed class ParameterSyntax : SyntaxNode
 {
-    public ParameterSyntax(SyntaxToken? passingKeyword, SyntaxToken identifier, TypeClauseSyntax typeClause)
+    public ParameterSyntax(
+        SyntaxToken? passingKeyword,
+        SyntaxToken identifier,
+        TypeClauseSyntax typeClause,
+        ArrayBoundsSyntax? arrayBounds = null)
     {
         ArgumentNullException.ThrowIfNull(identifier);
         ArgumentNullException.ThrowIfNull(typeClause);
@@ -223,6 +233,7 @@ public sealed class ParameterSyntax : SyntaxNode
         PassingKeyword = passingKeyword;
         Identifier = identifier;
         TypeClause = typeClause;
+        ArrayBounds = arrayBounds;
     }
 
     public override SyntaxKind Kind => SyntaxKind.Parameter;
@@ -232,6 +243,8 @@ public sealed class ParameterSyntax : SyntaxNode
     public SyntaxToken Identifier { get; }
 
     public TypeClauseSyntax TypeClause { get; }
+
+    public ArrayBoundsSyntax? ArrayBounds { get; }
 }
 
 public sealed class TypeFieldSyntax : SyntaxNode

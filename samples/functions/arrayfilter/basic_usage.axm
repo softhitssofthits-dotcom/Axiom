@@ -10,27 +10,27 @@
 ' 1
 ' 0
 ' 0
-DIM values(5 TO 8) AS INTEGER
-DIM filtered() AS INTEGER
+DIM values[5 TO 8] AS INTEGER
+DIM filtered[] AS INTEGER
 DIM threshold AS INTEGER = 25
 
-values(5) = 10
-values(6) = 20
-values(7) = 30
-values(8) = 40
+values[5] = 10
+values[6] = 20
+values[7] = 30
+values[8] = 40
 
-filtered = ARRAYFILTER(values, GreaterThanThreshold)
-PRINT LBOUND(filtered)
-PRINT UBOUND(filtered)
-PRINT ARRAYLENGTH(filtered)
-PRINT filtered(1)
-PRINT filtered(2)
+filtered[] = ARRAYFILTER(values[], GreaterThanThreshold)
+PRINT LBOUND(filtered[])
+PRINT UBOUND(filtered[])
+PRINT ARRAYLENGTH(filtered[])
+PRINT filtered[1]
+PRINT filtered[2]
 
 threshold = 100
-filtered = ARRAYFILTER(values, GreaterThanThreshold)
-PRINT LBOUND(filtered)
-PRINT UBOUND(filtered)
-PRINT ARRAYLENGTH(filtered)
+filtered[] = ARRAYFILTER(values[], GreaterThanThreshold)
+PRINT LBOUND(filtered[])
+PRINT UBOUND(filtered[])
+PRINT ARRAYLENGTH(filtered[])
 
 FUNCTION GreaterThanThreshold(value AS INTEGER) AS BOOLEAN
     RETURN value > threshold

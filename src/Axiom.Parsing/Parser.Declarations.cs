@@ -174,6 +174,21 @@ public sealed partial class Parser
         return new TypeClauseSyntax(asKeyword, type);
     }
 
+    private int _fixedStringLengthDepth;
+
+    private ExpressionSyntax ParseFixedStringLength()
+    {
+        _fixedStringLengthDepth++;
+        try
+        {
+            return ParseExpression(GetBinaryOperatorPrecedence(SyntaxKind.EqualsToken));
+        }
+        finally
+        {
+            _fixedStringLengthDepth--;
+        }
+    }
+
     private TypeSyntax ParseTypeSyntax()
     {
         TypeSyntax typeSyntax;
@@ -186,7 +201,7 @@ public sealed partial class Parser
         {
             var stringKeyword = Match(SyntaxKind.StringKeyword, "STRING");
             var starToken = Match(SyntaxKind.StarToken, "*");
-            var lengthExpression = ParseExpression(GetBinaryOperatorPrecedence(SyntaxKind.EqualsToken));
+            var lengthExpression = ParseFixedStringLength();
             typeSyntax = new FixedLengthStringTypeSyntax(stringKeyword, starToken, lengthExpression);
         }
         else
@@ -196,7 +211,8 @@ public sealed partial class Parser
 
         if (IsArrayTypeSuffix())
         {
-            var openParenToken = Match(SyntaxKind.OpenParenToken, "(");
+            var openDelimiterToken = NextToken();
+            var square = openDelimiterToken.Kind == SyntaxKind.OpenBracketToken;
             var commaTokens = new List<SyntaxToken>();
 
             while (Current.Kind == SyntaxKind.CommaToken)
@@ -204,8 +220,8 @@ public sealed partial class Parser
                 commaTokens.Add(NextToken());
             }
 
-            var closeParenToken = Match(SyntaxKind.CloseParenToken, ")");
-            typeSyntax = new ArrayTypeSyntax(typeSyntax, openParenToken, commaTokens, closeParenToken);
+            var closeDelimiterToken = Match(square ? SyntaxKind.CloseBracketToken : SyntaxKind.CloseParenToken, square ? "]" : ")");
+            typeSyntax = new ArrayTypeSyntax(typeSyntax, openDelimiterToken, commaTokens, closeDelimiterToken);
         }
 
         return typeSyntax;
@@ -264,16 +280,17 @@ public sealed partial class Parser
 
     private bool IsArrayTypeSuffix()
     {
-        if (Current.Kind != SyntaxKind.OpenParenToken)
+        if (Current.Kind is not (SyntaxKind.OpenParenToken or SyntaxKind.OpenBracketToken))
         {
             return false;
         }
 
+        var closingKind = Current.Kind == SyntaxKind.OpenBracketToken ? SyntaxKind.CloseBracketToken : SyntaxKind.CloseParenToken;
         for (var offset = 1; ; offset++)
         {
             var token = Peek(offset);
 
-            if (token.Kind == SyntaxKind.CloseParenToken)
+            if (token.Kind == closingKind)
             {
                 return true;
             }
@@ -349,8 +366,9 @@ public sealed partial class Parser
     {
         var passingKeyword = ParseOptionalPassingKeyword();
         var identifier = MatchIdentifier();
+        var arrayBounds = Current.Kind == SyntaxKind.OpenBracketToken ? ParseParameterArrayBounds() : null;
         var typeClause = ParseTypeClause();
-        return new ParameterSyntax(passingKeyword, identifier, typeClause);
+        return new ParameterSyntax(passingKeyword, identifier, typeClause, arrayBounds);
     }
 
     private SyntaxToken? ParseOptionalPassingKeyword()

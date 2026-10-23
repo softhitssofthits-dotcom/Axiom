@@ -21,14 +21,14 @@ public sealed class ReadAllLinesEncodingFormEvidenceTests
         try
         {
             var source = $$"""
-                DIM lines() AS STRING
-                lines = READALLLINES("{{path}}", "{{(bigEndian ? "UTF-16BE" : "UTF-16LE")}}")
-                PRINT ARRAYLENGTH(lines)
-                PRINT lines(1) = CHRW(3393)
-                PRINT lines(2) = ""
-                PRINT lines(3) = "😀"
-                PRINT LBOUND(lines)
-                PRINT UBOUND(lines)
+                DIM lines[] AS STRING
+                lines[] = READALLLINES("{{path}}", "{{(bigEndian ? "UTF-16BE" : "UTF-16LE")}}")
+                PRINT ARRAYLENGTH(lines[])
+                PRINT lines[1] = CHRW(3393)
+                PRINT lines[2] = ""
+                PRINT lines[3] = "😀"
+                PRINT LBOUND(lines[])
+                PRINT UBOUND(lines[])
                 """;
             var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
             Assert.Equal(ExecutionStatus.Success, result.Status);

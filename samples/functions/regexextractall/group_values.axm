@@ -1,12 +1,12 @@
 ' Пример показывает извлечение одной и той же группы из всех совпадений.
 ' Ожидается вывод: 2, затем 12, затем 34, затем a, затем b.
-DIM values() AS STRING
+DIM values[] AS STRING
 
-values = REGEXEXTRACTALL("A12 B34", "([A-Z])(\d+)", 2)
-PRINT ARRAYLENGTH(values)
-PRINT values(1)
-PRINT values(2)
+values[] = REGEXEXTRACTALL("A12 B34", "([A-Z])(\d+)", 2)
+PRINT ARRAYLENGTH(values[])
+PRINT values[1]
+PRINT values[2]
 
-values = REGEXEXTRACTALL("a12 b34", "([A-Z])(\d+)", 1, "i")
-PRINT values(1)
-PRINT values(2)
+values[] = REGEXEXTRACTALL("a12 b34", "([A-Z])(\d+)", 1, "i")
+PRINT values[1]
+PRINT values[2]

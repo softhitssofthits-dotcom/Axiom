@@ -223,7 +223,7 @@ public sealed class ArrayTypeSymbol : TypeSymbol
 
     private static string CreateName(TypeSymbol elementType, int rank)
     {
-        return $"{elementType.Name}({new string(',', rank - 1)})";
+        return $"{elementType.Name}[{new string(',', rank - 1)}]";
     }
 }
 

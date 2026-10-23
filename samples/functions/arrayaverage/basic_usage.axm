@@ -1,11 +1,11 @@
 ' ARRAYAVERAGE возвращает среднее арифметическое как DOUBLE.
 ' Ожидаемый вывод:
 ' 4.25
-DIM scores(1 TO 4) AS INTEGER
+DIM scores[1 TO 4] AS INTEGER
 
-scores(1) = 5
-scores(2) = 4
-scores(3) = 5
-scores(4) = 3
+scores[1] = 5
+scores[2] = 4
+scores[3] = 5
+scores[4] = 3
 
-PRINT ARRAYAVERAGE(scores)
+PRINT ARRAYAVERAGE(scores[])

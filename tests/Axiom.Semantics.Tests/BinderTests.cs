@@ -703,12 +703,7 @@ DRAWSPRITE text, "frame", "x", 20, 32, FALSE
     [Fact]
     public void Bind_GetAndPutStatementsBindNumericTwoDimensionalBuffer()
     {
-        const string text = """
-DIM buffer(1 TO 2, 5 TO 6) AS DOUBLE
-GET STEP (1, 2)-STEP (3, 4), buffer
-PUT (5, 6), buffer
-PUT STEP (7, 8), buffer, OR
-""";
+        const string text = "DIM buffer[1 TO 2, 5 TO 6] AS DOUBLE\r\nGET STEP (1, 2)-STEP (3, 4), buffer[]\r\nPUT (5, 6), buffer[]\r\nPUT STEP (7, 8), buffer[], OR";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -734,8 +729,8 @@ PUT STEP (7, 8), buffer, OR
     public void Bind_GetRejectsNonNumericTwoDimensionalBuffer()
     {
         _ = BindProgram("""
-DIM textBuffer(1 TO 2, 1 TO 2) AS STRING
-GET (0, 0)-(1, 1), textBuffer
+DIM textBuffer[1 TO 2, 1 TO 2] AS STRING
+GET (0, 0)-(1, 1), textBuffer[]
 """, out var diagnostics);
 
         Assert.Contains(diagnostics, static d => d.Code == "MB2003");
@@ -828,10 +823,7 @@ GET (0, 0)-(1, 1), textBuffer
     [Fact]
     public void Bind_PaletteUsingRequiresOneDimensionalNumericArray()
     {
-        const string text = """
-DIM colors(0 TO 2) AS INTEGER
-PALETTE USING colors
-""";
+        const string text = "DIM colors[0 TO 2] AS INTEGER\r\nPALETTE USING colors[]";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -847,8 +839,8 @@ PALETTE USING colors
     public void Bind_PaletteUsingRejectsStringArray()
     {
         const string text = """
-DIM colors(0 TO 2) AS STRING
-PALETTE USING colors
+DIM colors[0 TO 2] AS STRING
+PALETTE USING colors[]
 """;
 
         BindProgram(text, out var diagnostics);
@@ -1098,7 +1090,7 @@ ON MOUSE(1), HandleMouse
     [Fact]
     public void Bind_DynamicArrayDeclarationLeavesBoundsUnbound()
     {
-        var program = BindProgram("DIM items() AS STRING", out var diagnostics);
+        var program = BindProgram("DIM items[] AS STRING", out var diagnostics);
 
         Assert.Empty(diagnostics);
         var declaration = Assert.IsType<BoundVariableDeclarationStatement>(Assert.Single(program.GlobalStatements));
@@ -1113,11 +1105,7 @@ ON MOUSE(1), HandleMouse
     [Fact]
     public void Bind_WholeArrayAssignmentUsesArrayType()
     {
-        const string text = """
-DIM source() AS INTEGER
-DIM target() AS INTEGER
-target = source
-""";
+        const string text = "DIM source[] AS INTEGER\r\nDIM target[] AS INTEGER\r\ntarget[] = source[]";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1133,11 +1121,7 @@ target = source
     [Fact]
     public void Bind_FunctionDeclarationWithArrayTypedParameterAndReturnType()
     {
-        const string text = """
-FUNCTION Echo(values AS INTEGER()) AS INTEGER()
-    RETURN values
-END FUNCTION
-""";
+        const string text = "FUNCTION Echo(values[] AS INTEGER) AS INTEGER[]\r\n    RETURN values[]\r\nEND FUNCTION";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1156,10 +1140,7 @@ END FUNCTION
     [Fact]
     public void Bind_RedimStatement()
     {
-        const string text = """
-DIM items() AS STRING
-REDIM items(1 TO 3)
-""";
+        const string text = "DIM items[] AS STRING\r\nREDIM items[1 TO 3]";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1177,10 +1158,7 @@ REDIM items(1 TO 3)
     [Fact]
     public void Bind_RedimPreserveStatement()
     {
-        const string text = """
-DIM items() AS STRING
-REDIM PRESERVE items(2 TO 4)
-""";
+        const string text = "DIM items[] AS STRING\r\nREDIM PRESERVE items[2 TO 4]";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1198,10 +1176,7 @@ REDIM PRESERVE items(2 TO 4)
     [Fact]
     public void Bind_EraseStatement()
     {
-        const string text = """
-DIM items() AS STRING
-ERASE items
-""";
+        const string text = "DIM items[] AS STRING\r\nERASE items[]";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1218,7 +1193,7 @@ ERASE items
     {
         const string text = """
 DIM value AS INTEGER
-ERASE value
+ERASE value[]
 """;
 
         BindProgram(text, out var diagnostics);
@@ -1232,7 +1207,7 @@ ERASE value
     {
         const string text = """
 DIM value AS INTEGER
-REDIM value(1 TO 3)
+REDIM value[1 TO 3]
 """;
 
         BindProgram(text, out var diagnostics);
@@ -1244,13 +1219,7 @@ REDIM value(1 TO 3)
     [Fact]
     public void Bind_BuiltinArrayInformationFunctions()
     {
-        const string text = """
-DIM values() AS INTEGER
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-PRINT ARRAYLENGTH(values)
-PRINT ARRAYISALLOCATED(values)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])\r\nPRINT ARRAYLENGTH(values[])\r\nPRINT ARRAYISALLOCATED(values[])";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1264,11 +1233,7 @@ PRINT ARRAYISALLOCATED(values)
     [Fact]
     public void Bind_BuiltinArrayMetadataFunctions()
     {
-        const string text = """
-DIM grid(,) AS INTEGER
-PRINT ARRAYRANK(grid)
-PRINT ARRAYBOUNDS(grid)
-""";
+        const string text = "DIM grid[,] AS INTEGER\r\nPRINT ARRAYRANK(grid[])\r\nPRINT ARRAYBOUNDS(grid[])";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1298,11 +1263,7 @@ PRINT ARRAYBOUNDS(grid)
     [Fact]
     public void Bind_BuiltinArrayCloneReturnsSameArrayType()
     {
-        const string text = """
-DIM values() AS INTEGER
-DIM copy() AS INTEGER
-copy = ARRAYCLONE(values)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nDIM copy[] AS INTEGER\r\ncopy[] = ARRAYCLONE(values[])";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1326,14 +1287,7 @@ copy = ARRAYCLONE(values)
     [Fact]
     public void Bind_BuiltinArrayFirstMultidimensionalGroupAcceptsMultidimensionalArray()
     {
-        const string text = """
-DIM values(1 TO 2, 1 TO 2) AS INTEGER
-DIM copy(,) AS INTEGER
-copy = ARRAYCLONE(values)
-ARRAYFILL(values, 7)
-PRINT ARRAYCONTAINS(values, 7)
-PRINT ARRAYCOUNT(values, 7)
-""";
+        const string text = "DIM values[1 TO 2, 1 TO 2] AS INTEGER\r\nDIM copy[,] AS INTEGER\r\ncopy[] = ARRAYCLONE(values[])\r\nARRAYFILL(values[], 7)\r\nPRINT ARRAYCONTAINS(values[], 7)\r\nPRINT ARRAYCOUNT(values[], 7)";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1351,11 +1305,7 @@ PRINT ARRAYCOUNT(values, 7)
     [Fact]
     public void Bind_BuiltinArraySliceReturnsSameArrayType()
     {
-        const string text = """
-DIM values() AS STRING
-DIM part() AS STRING
-part = ARRAYSLICE(values, 1, 2)
-""";
+        const string text = "DIM values[] AS STRING\r\nDIM part[] AS STRING\r\npart[] = ARRAYSLICE(values[], 1, 2)";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1379,11 +1329,7 @@ part = ARRAYSLICE(values, 1, 2)
     [Fact]
     public void Bind_BuiltinArraySliceAcceptsExplicitDimensionForMultidimensionalArray()
     {
-        const string text = """
-DIM values(,) AS INTEGER
-DIM part(,) AS INTEGER
-part = ARRAYSLICE(values, 2, 3, COLUMN)
-""";
+        const string text = "DIM values[,] AS INTEGER\r\nDIM part[,] AS INTEGER\r\npart[] = ARRAYSLICE(values[], 2, 3, COLUMN)";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1399,9 +1345,9 @@ part = ARRAYSLICE(values, 2, 3, COLUMN)
     public void Bind_BuiltinArraySliceRequiresDimensionForMultidimensionalArray()
     {
         const string text = """
-DIM values(,) AS INTEGER
-DIM part(,) AS INTEGER
-part = ARRAYSLICE(values, 2, 3)
+DIM values[,] AS INTEGER
+DIM part[,] AS INTEGER
+part[] = ARRAYSLICE(values[], 2, 3)
 """;
 
         BindProgram(text, out var diagnostics);
@@ -1413,12 +1359,7 @@ part = ARRAYSLICE(values, 2, 3)
     [Fact]
     public void Bind_BuiltinArrayConcatReturnsSameArrayType()
     {
-        const string text = """
-DIM left() AS INTEGER
-DIM right() AS INTEGER
-DIM merged() AS INTEGER
-merged = ARRAYCONCAT(left, right)
-""";
+        const string text = "DIM left[] AS INTEGER\r\nDIM right[] AS INTEGER\r\nDIM merged[] AS INTEGER\r\nmerged[] = ARRAYCONCAT(left[], right[])";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1434,27 +1375,22 @@ merged = ARRAYCONCAT(left, right)
     public void Bind_BuiltinArrayConcatReportsMismatchedArrayTypes()
     {
         const string text = """
-DIM left() AS INTEGER
-DIM right() AS STRING
-PRINT ARRAYCONCAT(left, right)
+DIM left[] AS INTEGER
+DIM right[] AS STRING
+PRINT ARRAYCONCAT(left[], right[])
 """;
 
         BindProgram(text, out var diagnostics);
 
         var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
-        Assert.Contains("STRING()", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("INTEGER()", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("STRING[]", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("INTEGER[]", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
     public void Bind_BuiltinArrayConcatAcceptsExplicitDimensionForMultidimensionalArray()
     {
-        const string text = """
-DIM left(,) AS INTEGER
-DIM right(,) AS INTEGER
-DIM merged(,) AS INTEGER
-merged = ARRAYCONCAT(left, right, ROW)
-""";
+        const string text = "DIM left[,] AS INTEGER\r\nDIM right[,] AS INTEGER\r\nDIM merged[,] AS INTEGER\r\nmerged[] = ARRAYCONCAT(left[], right[], ROW)";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1470,9 +1406,9 @@ merged = ARRAYCONCAT(left, right, ROW)
     public void Bind_BuiltinArrayConcatRequiresDimensionForMultidimensionalArray()
     {
         const string text = """
-DIM left(,) AS INTEGER
-DIM right(,) AS INTEGER
-PRINT ARRAYCONCAT(left, right)
+DIM left[,] AS INTEGER
+DIM right[,] AS INTEGER
+PRINT ARRAYCONCAT(left[], right[])
 """;
 
         BindProgram(text, out var diagnostics);
@@ -1484,11 +1420,7 @@ PRINT ARRAYCONCAT(left, right)
     [Fact]
     public void Bind_BuiltinArrayToReversedReturnsSameArrayType()
     {
-        const string text = """
-DIM values() AS STRING
-DIM reversed() AS STRING
-reversed = ARRAYTOREVERSED(values)
-""";
+        const string text = "DIM values[] AS STRING\r\nDIM reversed[] AS STRING\r\nreversed[] = ARRAYTOREVERSED(values[])";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1512,11 +1444,7 @@ reversed = ARRAYTOREVERSED(values)
     [Fact]
     public void Bind_BuiltinArrayToReversedAcceptsExplicitDimensionForMultidimensionalArray()
     {
-        const string text = """
-DIM values(,) AS INTEGER
-DIM reversed(,) AS INTEGER
-reversed = ARRAYTOREVERSED(values, COLUMN)
-""";
+        const string text = "DIM values[,] AS INTEGER\r\nDIM reversed[,] AS INTEGER\r\nreversed[] = ARRAYTOREVERSED(values[], COLUMN)";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1532,9 +1460,9 @@ reversed = ARRAYTOREVERSED(values, COLUMN)
     public void Bind_BuiltinArrayToReversedRequiresDimensionForMultidimensionalArray()
     {
         const string text = """
-DIM values(,) AS INTEGER
-DIM reversed(,) AS INTEGER
-reversed = ARRAYTOREVERSED(values)
+DIM values[,] AS INTEGER
+DIM reversed[,] AS INTEGER
+reversed[] = ARRAYTOREVERSED(values[])
 """;
 
         BindProgram(text, out var diagnostics);
@@ -1546,10 +1474,7 @@ reversed = ARRAYTOREVERSED(values)
     [Fact]
     public void Bind_BuiltinArrayReverseAcceptsExplicitDimensionForMultidimensionalArray()
     {
-        const string text = """
-DIM values(,) AS INTEGER
-ARRAYREVERSE(values, COLUMN)
-""";
+        const string text = "DIM values[,] AS INTEGER\r\nARRAYREVERSE(values[], COLUMN)";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1561,8 +1486,8 @@ ARRAYREVERSE(values, COLUMN)
     public void Bind_BuiltinArrayReverseRequiresDimensionForMultidimensionalArray()
     {
         const string text = """
-DIM values(,) AS INTEGER
-ARRAYREVERSE(values)
+DIM values[,] AS INTEGER
+ARRAYREVERSE(values[])
 """;
 
         BindProgram(text, out var diagnostics);
@@ -1574,11 +1499,7 @@ ARRAYREVERSE(values)
     [Fact]
     public void Bind_BuiltinArrayTakeReturnsSameArrayType()
     {
-        const string text = """
-DIM values() AS INTEGER
-DIM part() AS INTEGER
-part = ARRAYTAKE(values, 2)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nDIM part[] AS INTEGER\r\npart[] = ARRAYTAKE(values[], 2)";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1602,11 +1523,7 @@ part = ARRAYTAKE(values, 2)
     [Fact]
     public void Bind_BuiltinArrayTakeAcceptsExplicitDimensionForMultidimensionalArray()
     {
-        const string text = """
-DIM values(,) AS INTEGER
-DIM part(,) AS INTEGER
-part = ARRAYTAKE(values, 2, ROW)
-""";
+        const string text = "DIM values[,] AS INTEGER\r\nDIM part[,] AS INTEGER\r\npart[] = ARRAYTAKE(values[], 2, ROW)";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1622,9 +1539,9 @@ part = ARRAYTAKE(values, 2, ROW)
     public void Bind_BuiltinArrayTakeRequiresDimensionForMultidimensionalArray()
     {
         const string text = """
-DIM values(,) AS INTEGER
-DIM part(,) AS INTEGER
-part = ARRAYTAKE(values, 2)
+DIM values[,] AS INTEGER
+DIM part[,] AS INTEGER
+part[] = ARRAYTAKE(values[], 2)
 """;
 
         BindProgram(text, out var diagnostics);
@@ -1636,11 +1553,7 @@ part = ARRAYTAKE(values, 2)
     [Fact]
     public void Bind_BuiltinArraySkipReturnsSameArrayType()
     {
-        const string text = """
-DIM values() AS STRING
-DIM part() AS STRING
-part = ARRAYSKIP(values, 2)
-""";
+        const string text = "DIM values[] AS STRING\r\nDIM part[] AS STRING\r\npart[] = ARRAYSKIP(values[], 2)";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1664,11 +1577,7 @@ part = ARRAYSKIP(values, 2)
     [Fact]
     public void Bind_BuiltinArraySkipAcceptsExplicitDimensionForMultidimensionalArray()
     {
-        const string text = """
-DIM values(,) AS STRING
-DIM part(,) AS STRING
-part = ARRAYSKIP(values, 2, COLUMN)
-""";
+        const string text = "DIM values[,] AS STRING\r\nDIM part[,] AS STRING\r\npart[] = ARRAYSKIP(values[], 2, COLUMN)";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1684,9 +1593,9 @@ part = ARRAYSKIP(values, 2, COLUMN)
     public void Bind_BuiltinArraySkipRequiresDimensionForMultidimensionalArray()
     {
         const string text = """
-DIM values(,) AS STRING
-DIM part(,) AS STRING
-part = ARRAYSKIP(values, 2)
+DIM values[,] AS STRING
+DIM part[,] AS STRING
+part[] = ARRAYSKIP(values[], 2)
 """;
 
         BindProgram(text, out var diagnostics);
@@ -1698,11 +1607,7 @@ part = ARRAYSKIP(values, 2)
     [Fact]
     public void Bind_BuiltinArrayDistinctReturnsSameArrayType()
     {
-        const string text = """
-DIM values() AS INTEGER
-DIM uniqueValues() AS INTEGER
-uniqueValues = ARRAYDISTINCT(values)
-""";
+        const string text = "DIM values[] AS INTEGER\r\nDIM uniqueValues[] AS INTEGER\r\nuniqueValues[] = ARRAYDISTINCT(values[])";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1718,11 +1623,7 @@ uniqueValues = ARRAYDISTINCT(values)
     [Fact]
     public void Bind_BuiltinArrayDistinctOnMultidimensionalArrayReturnsCompactOneDimensionalArray()
     {
-        const string text = """
-DIM values(,) AS INTEGER
-DIM uniqueValues() AS INTEGER
-uniqueValues = ARRAYDISTINCT(values)
-""";
+        const string text = "DIM values[,] AS INTEGER\r\nDIM uniqueValues[] AS INTEGER\r\nuniqueValues[] = ARRAYDISTINCT(values[])";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1737,11 +1638,7 @@ uniqueValues = ARRAYDISTINCT(values)
     [Fact]
     public void Bind_BuiltinArrayFlattenOnMultidimensionalArrayReturnsCompactOneDimensionalArray()
     {
-        const string text = """
-DIM values(,) AS INTEGER
-DIM flat() AS INTEGER
-flat = ARRAYFLATTEN(values)
-""";
+        const string text = "DIM values[,] AS INTEGER\r\nDIM flat[] AS INTEGER\r\nflat[] = ARRAYFLATTEN(values[])";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1757,12 +1654,7 @@ flat = ARRAYFLATTEN(values)
     [Fact]
     public void Bind_BuiltinArrayReshapeReturnsTemplateArrayType()
     {
-        const string text = """
-DIM source() AS INTEGER
-DIM template(,) AS INTEGER
-DIM reshaped(,) AS INTEGER
-reshaped = ARRAYRESHAPE(source, template)
-""";
+        const string text = "DIM source[] AS INTEGER\r\nDIM template[,] AS INTEGER\r\nDIM reshaped[,] AS INTEGER\r\nreshaped[] = ARRAYRESHAPE(source[], template[])";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1778,11 +1670,7 @@ reshaped = ARRAYRESHAPE(source, template)
     [Fact]
     public void Bind_BuiltinArrayToSortedReturnsSameArrayType()
     {
-        const string text = """
-DIM values() AS STRING
-DIM sortedValues() AS STRING
-sortedValues = ARRAYTOSORTED(values)
-""";
+        const string text = "DIM values[] AS STRING\r\nDIM sortedValues[] AS STRING\r\nsortedValues[] = ARRAYTOSORTED(values[])";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1797,14 +1685,7 @@ sortedValues = ARRAYTOSORTED(values)
     [Fact]
     public void Bind_BuiltinSortingGroupAcceptsMultidimensionalArrayWithExplicitDimension()
     {
-        const string text = """
-DIM values(,) AS INTEGER
-DIM sortedValues(,) AS INTEGER
-DIM hit() AS INTEGER
-sortedValues = ARRAYTOSORTED(values, COLUMN)
-ARRAYSORT(values, ROW)
-hit = ARRAYBINARYSEARCH(values, 10, ROW)
-""";
+        const string text = "DIM values[,] AS INTEGER\r\nDIM sortedValues[,] AS INTEGER\r\nDIM hit[] AS INTEGER\r\nsortedValues[] = ARRAYTOSORTED(values[], COLUMN)\r\nARRAYSORT(values[], ROW)\r\nhit[] = ARRAYBINARYSEARCH(values[], 10, ROW)";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1850,10 +1731,10 @@ hit = ARRAYBINARYSEARCH(values, 10, ROW)
     {
         BindProgram(
             """
-DIM source() AS INTEGER
-DIM template(,) AS STRING
-DIM reshaped(,) AS STRING
-reshaped = ARRAYRESHAPE(source, template)
+DIM source[] AS INTEGER
+DIM template[,] AS STRING
+DIM reshaped[,] AS STRING
+reshaped[] = ARRAYRESHAPE(source[], template[])
 """,
             out var diagnostics);
 
@@ -1876,8 +1757,8 @@ reshaped = ARRAYRESHAPE(source, template)
     {
         BindProgram(
             """
-DIM flags() AS BOOLEAN
-flags = ARRAYTOSORTED(flags)
+DIM flags[] AS BOOLEAN
+flags[] = ARRAYTOSORTED(flags[])
 """,
             out var diagnostics);
 
@@ -1891,12 +1772,12 @@ flags = ARRAYTOSORTED(flags)
     {
         BindProgram(
             """
-DIM values(,) AS INTEGER
-DIM sortedValues(,) AS INTEGER
-DIM hit() AS INTEGER
-sortedValues = ARRAYTOSORTED(values)
-ARRAYSORT(values)
-hit = ARRAYBINARYSEARCH(values, 10)
+DIM values[,] AS INTEGER
+DIM sortedValues[,] AS INTEGER
+DIM hit[] AS INTEGER
+sortedValues[] = ARRAYTOSORTED(values[])
+ARRAYSORT(values[])
+hit[] = ARRAYBINARYSEARCH(values[], 10)
 """,
             out var diagnostics);
 
@@ -1911,14 +1792,7 @@ hit = ARRAYBINARYSEARCH(values, 10)
     [Fact]
     public void Bind_BuiltinArrayMutatingProcedures()
     {
-        const string text = """
-DIM numbers() AS INTEGER
-DIM names() AS STRING
-ARRAYFILL(numbers, 1)
-ARRAYREVERSE(numbers)
-ARRAYSORT(numbers)
-ARRAYSORT(names)
-""";
+        const string text = "DIM numbers[] AS INTEGER\r\nDIM names[] AS STRING\r\nARRAYFILL(numbers[], 1)\r\nARRAYREVERSE(numbers[])\r\nARRAYSORT(numbers[])\r\nARRAYSORT(names[])";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1932,12 +1806,7 @@ ARRAYSORT(names)
     [Fact]
     public void Bind_BuiltinArrayPushAndPop()
     {
-        const string text = """
-DIM numbers() AS INTEGER
-DIM lastValue AS INTEGER
-ARRAYPUSH(numbers, 1)
-lastValue = ARRAYPOP(numbers)
-""";
+        const string text = "DIM numbers[] AS INTEGER\r\nDIM lastValue AS INTEGER\r\nARRAYPUSH(numbers[], 1)\r\nlastValue = ARRAYPOP(numbers[])";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1953,12 +1822,7 @@ lastValue = ARRAYPOP(numbers)
     [Fact]
     public void Bind_BuiltinArrayInsertAndRemove()
     {
-        const string text = """
-DIM numbers() AS INTEGER
-DIM removedValue AS INTEGER
-ARRAYINSERT(numbers, 1, 10)
-removedValue = ARRAYREMOVE(numbers, 1)
-""";
+        const string text = "DIM numbers[] AS INTEGER\r\nDIM removedValue AS INTEGER\r\nARRAYINSERT(numbers[], 1, 10)\r\nremovedValue = ARRAYREMOVE(numbers[], 1)";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -1974,15 +1838,7 @@ removedValue = ARRAYREMOVE(numbers, 1)
     [Fact]
     public void Bind_MultidimensionalDynamicArrayBuiltinsUseSliceContract()
     {
-        const string text = """
-DIM board(1 TO 2, 10 TO 12) AS INTEGER
-DIM newColumn(1 TO 2) AS INTEGER
-DIM removedColumn() AS INTEGER
-ARRAYPUSH(board, newColumn, COLUMN)
-removedColumn = ARRAYPOP(board, COLUMN)
-ARRAYINSERT(board, 11, newColumn, COLUMN)
-removedColumn = ARRAYREMOVE(board, 10, COLUMN)
-""";
+        const string text = "DIM board[1 TO 2, 10 TO 12] AS INTEGER\r\nDIM newColumn[1 TO 2] AS INTEGER\r\nDIM removedColumn[] AS INTEGER\r\nARRAYPUSH(board[], newColumn[], COLUMN)\r\nremovedColumn[] = ARRAYPOP(board[], COLUMN)\r\nARRAYINSERT(board[], 11, newColumn[], COLUMN)\r\nremovedColumn[] = ARRAYREMOVE(board[], 10, COLUMN)";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -2011,23 +1867,7 @@ removedColumn = ARRAYREMOVE(board, 10, COLUMN)
     [Fact]
     public void Bind_BuiltinArrayEverySomeAndFilter()
     {
-        const string text = """
-DIM numbers() AS INTEGER
-DIM allPositive AS BOOLEAN
-DIM anyLarge AS BOOLEAN
-DIM filtered() AS INTEGER
-allPositive = ARRAYEVERY(numbers, IsPositive)
-anyLarge = ARRAYSOME(numbers, IsLarge)
-filtered = ARRAYFILTER(numbers, IsLarge)
-
-FUNCTION IsPositive(value AS INTEGER) AS BOOLEAN
-    RETURN value > 0
-END FUNCTION
-
-FUNCTION IsLarge(value AS INTEGER) AS BOOLEAN
-    RETURN value > 100
-END FUNCTION
-""";
+        const string text = "DIM numbers[] AS INTEGER\r\nDIM allPositive AS BOOLEAN\r\nDIM anyLarge AS BOOLEAN\r\nDIM filtered[] AS INTEGER\r\nallPositive = ARRAYEVERY(numbers[], IsPositive)\r\nanyLarge = ARRAYSOME(numbers[], IsLarge)\r\nfiltered[] = ARRAYFILTER(numbers[], IsLarge)\r\n\r\nFUNCTION IsPositive(value AS INTEGER) AS BOOLEAN\r\n    RETURN value > 0\r\nEND FUNCTION\r\n\r\nFUNCTION IsLarge(value AS INTEGER) AS BOOLEAN\r\n    RETURN value > 100\r\nEND FUNCTION";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -2052,15 +1892,7 @@ END FUNCTION
     [Fact]
     public void Bind_BuiltinArrayFilterCompactsMultidimensionalArrayToOneDimensionalResult()
     {
-        const string text = """
-DIM values(2 TO 3, 4 TO 6) AS INTEGER
-DIM filtered() AS INTEGER
-filtered = ARRAYFILTER(values(2 TO 3, 4 TO 6), IsOdd)
-
-FUNCTION IsOdd(value AS INTEGER) AS BOOLEAN
-    RETURN value MOD 2 = 1
-END FUNCTION
-""";
+        const string text = "DIM values[2 TO 3, 4 TO 6] AS INTEGER\r\nDIM filtered[] AS INTEGER\r\nfiltered[] = ARRAYFILTER(values[2 TO 3, 4 TO 6], IsOdd)\r\n\r\nFUNCTION IsOdd(value AS INTEGER) AS BOOLEAN\r\n    RETURN value MOD 2 = 1\r\nEND FUNCTION";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -2078,15 +1910,7 @@ END FUNCTION
     [Fact]
     public void Bind_BuiltinArrayMap()
     {
-        const string text = """
-DIM numbers() AS INTEGER
-DIM mapped() AS INTEGER
-mapped = ARRAYMAP(numbers, DoubleIt)
-
-FUNCTION DoubleIt(value AS INTEGER) AS INTEGER
-    RETURN value * 2
-END FUNCTION
-""";
+        const string text = "DIM numbers[] AS INTEGER\r\nDIM mapped[] AS INTEGER\r\nmapped[] = ARRAYMAP(numbers[], DoubleIt)\r\n\r\nFUNCTION DoubleIt(value AS INTEGER) AS INTEGER\r\n    RETURN value * 2\r\nEND FUNCTION";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -2101,15 +1925,7 @@ END FUNCTION
     [Fact]
     public void Bind_BuiltinArrayMapSupportsPolymorphicResultType()
     {
-        const string text = """
-DIM numbers() AS INTEGER
-DIM mapped() AS STRING
-mapped = ARRAYMAP(numbers, FormatValue)
-
-FUNCTION FormatValue(value AS INTEGER) AS STRING
-    RETURN "item:" + STR(value)
-END FUNCTION
-""";
+        const string text = "DIM numbers[] AS INTEGER\r\nDIM mapped[] AS STRING\r\nmapped[] = ARRAYMAP(numbers[], FormatValue)\r\n\r\nFUNCTION FormatValue(value AS INTEGER) AS STRING\r\n    RETURN \"item:\" + STR(value)\r\nEND FUNCTION";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -2124,15 +1940,7 @@ END FUNCTION
     [Fact]
     public void Bind_BuiltinArrayReduce()
     {
-        const string text = """
-DIM numbers() AS INTEGER
-DIM total AS INTEGER
-total = ARRAYREDUCE(numbers, 0, Add)
-
-FUNCTION Add(acc AS INTEGER, value AS INTEGER) AS INTEGER
-    RETURN acc + value
-END FUNCTION
-""";
+        const string text = "DIM numbers[] AS INTEGER\r\nDIM total AS INTEGER\r\ntotal = ARRAYREDUCE(numbers[], 0, Add)\r\n\r\nFUNCTION Add(acc AS INTEGER, value AS INTEGER) AS INTEGER\r\n    RETURN acc + value\r\nEND FUNCTION";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -2147,15 +1955,7 @@ END FUNCTION
     [Fact]
     public void Bind_BuiltinArrayReduceSupportsPolymorphicAccumulatorType()
     {
-        const string text = """
-DIM words() AS STRING
-DIM total AS INTEGER
-total = ARRAYREDUCE(words, 0, AddLength)
-
-FUNCTION AddLength(acc AS INTEGER, value AS STRING) AS INTEGER
-    RETURN acc + LEN(value)
-END FUNCTION
-""";
+        const string text = "DIM words[] AS STRING\r\nDIM total AS INTEGER\r\ntotal = ARRAYREDUCE(words[], 0, AddLength)\r\n\r\nFUNCTION AddLength(acc AS INTEGER, value AS STRING) AS INTEGER\r\n    RETURN acc + LEN(value)\r\nEND FUNCTION";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -2170,15 +1970,7 @@ END FUNCTION
     [Fact]
     public void Bind_BuiltinArrayReduceInfersAccumulatorTypeFromReducer()
     {
-        const string text = """
-DIM numbers() AS INTEGER
-DIM total AS LONG
-total = ARRAYREDUCE(numbers, 0, AddLong)
-
-FUNCTION AddLong(acc AS LONG, value AS INTEGER) AS LONG
-    RETURN acc + value
-END FUNCTION
-""";
+        const string text = "DIM numbers[] AS INTEGER\r\nDIM total AS LONG\r\ntotal = ARRAYREDUCE(numbers[], 0, AddLong)\r\n\r\nFUNCTION AddLong(acc AS LONG, value AS INTEGER) AS LONG\r\n    RETURN acc + value\r\nEND FUNCTION";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -2195,8 +1987,8 @@ END FUNCTION
     {
         BindProgram(
             """
-DIM names() AS STRING
-PRINT ARRAYFILTER(names, IsLongEnough)
+DIM names[] AS STRING
+PRINT ARRAYFILTER(names[], IsLongEnough)
 
 FUNCTION IsLongEnough(value AS INTEGER) AS BOOLEAN
     RETURN value > 3
@@ -2213,8 +2005,8 @@ END FUNCTION
     {
         BindProgram(
             """
-DIM values() AS INTEGER
-PRINT ARRAYFILTER(values, ToNumber)
+DIM values[] AS INTEGER
+PRINT ARRAYFILTER(values[], ToNumber)
 
 FUNCTION ToNumber(value AS INTEGER) AS INTEGER
     RETURN value
@@ -2231,9 +2023,9 @@ END FUNCTION
     {
         BindProgram(
             """
-DIM names() AS STRING
-DIM mapped() AS STRING
-mapped = ARRAYMAP(names, AsNumber)
+DIM names[] AS STRING
+DIM mapped[] AS STRING
+mapped[] = ARRAYMAP(names[], AsNumber)
 
 FUNCTION AsNumber(value AS INTEGER) AS INTEGER
     RETURN value
@@ -2250,8 +2042,8 @@ END FUNCTION
     {
         BindProgram(
             """
-DIM names() AS STRING
-PRINT ARRAYREDUCE(names, 1, KeepLeft)
+DIM names[] AS STRING
+PRINT ARRAYREDUCE(names[], 1, KeepLeft)
 
 FUNCTION KeepLeft(acc AS STRING, value AS STRING) AS STRING
     RETURN acc
@@ -2268,8 +2060,8 @@ END FUNCTION
     {
         BindProgram(
             """
-DIM names() AS STRING
-PRINT ARRAYREDUCE(names, "", AppendLength)
+DIM names[] AS STRING
+PRINT ARRAYREDUCE(names[], "", AppendLength)
 
 FUNCTION AppendLength(acc AS STRING, value AS INTEGER) AS STRING
     RETURN acc
@@ -2286,8 +2078,8 @@ END FUNCTION
     {
         BindProgram(
             """
-DIM names() AS STRING
-ARRAYFILL(names, 1)
+DIM names[] AS STRING
+ARRAYFILL(names[], 1)
 """,
             out var diagnostics);
 
@@ -2300,8 +2092,8 @@ ARRAYFILL(names, 1)
     {
         BindProgram(
             """
-DIM names() AS STRING
-ARRAYPUSH(names, 1)
+DIM names[] AS STRING
+ARRAYPUSH(names[], 1)
 """,
             out var diagnostics);
 
@@ -2314,8 +2106,8 @@ ARRAYPUSH(names, 1)
     {
         BindProgram(
             """
-DIM names() AS STRING
-ARRAYINSERT(names, 1, 1)
+DIM names[] AS STRING
+ARRAYINSERT(names[], 1, 1)
 """,
             out var diagnostics);
 
@@ -2328,13 +2120,13 @@ ARRAYINSERT(names, 1, 1)
     {
         BindProgram(
             """
-DIM board(1 TO 2, 10 TO 12) AS INTEGER
-ARRAYPUSH(board, 1, COLUMN)
+DIM board[1 TO 2, 10 TO 12] AS INTEGER
+ARRAYPUSH(board[], 1, COLUMN)
 """,
             out var diagnostics);
 
         var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
-        Assert.Contains("INTEGER()", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("INTEGER[]", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -2445,26 +2237,7 @@ END FUNCTION
     [Fact]
     public void Bind_BuiltinArraySecondMultidimensionalGroupAcceptsMultidimensionalArray()
     {
-        const string text = """
-DIM values(,) AS INTEGER
-DIM mapped(,) AS STRING
-PRINT ARRAYEVERY(values, IsPositive)
-PRINT ARRAYSOME(values, IsPositive)
-mapped = ARRAYMAP(values, FormatValue)
-PRINT ARRAYREDUCE(values, "", AppendValue)
-
-FUNCTION IsPositive(value AS INTEGER) AS BOOLEAN
-    RETURN value > 0
-END FUNCTION
-
-FUNCTION FormatValue(value AS INTEGER) AS STRING
-    RETURN STR(value)
-END FUNCTION
-
-FUNCTION AppendValue(accumulator AS STRING, value AS INTEGER) AS STRING
-    RETURN accumulator + STR(value)
-END FUNCTION
-""";
+        const string text = "DIM values[,] AS INTEGER\r\nDIM mapped[,] AS STRING\r\nPRINT ARRAYEVERY(values[], IsPositive)\r\nPRINT ARRAYSOME(values[], IsPositive)\r\nmapped[] = ARRAYMAP(values[], FormatValue)\r\nPRINT ARRAYREDUCE(values[], \"\", AppendValue)\r\n\r\nFUNCTION IsPositive(value AS INTEGER) AS BOOLEAN\r\n    RETURN value > 0\r\nEND FUNCTION\r\n\r\nFUNCTION FormatValue(value AS INTEGER) AS STRING\r\n    RETURN STR(value)\r\nEND FUNCTION\r\n\r\nFUNCTION AppendValue(accumulator AS STRING, value AS INTEGER) AS STRING\r\n    RETURN accumulator + STR(value)\r\nEND FUNCTION";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -2497,8 +2270,8 @@ END FUNCTION
     {
         BindProgram(
             """
-DIM flags() AS BOOLEAN
-ARRAYSORT(flags)
+DIM flags[] AS BOOLEAN
+ARRAYSORT(flags[])
 """,
             out var diagnostics);
 
@@ -2510,17 +2283,7 @@ ARRAYSORT(flags)
     [Fact]
     public void Bind_BuiltinArraySearchFunctions()
     {
-        const string text = """
-DIM numbers() AS INTEGER
-DIM names() AS STRING
-PRINT ARRAYCONTAINS(numbers, 1)
-PRINT ARRAYINDEXOF(numbers, 1)
-PRINT ARRAYLASTINDEXOF(numbers, 1)
-PRINT ARRAYCOUNT(numbers, 1)
-PRINT ARRAYBINARYSEARCH(numbers, 1)
-PRINT ARRAYCONTAINS(names, "Ann")
-PRINT ARRAYBINARYSEARCH(names, "Ann")
-""";
+        const string text = "DIM numbers[] AS INTEGER\r\nDIM names[] AS STRING\r\nPRINT ARRAYCONTAINS(numbers[], 1)\r\nPRINT ARRAYINDEXOF(numbers[], 1)\r\nPRINT ARRAYLASTINDEXOF(numbers[], 1)\r\nPRINT ARRAYCOUNT(numbers[], 1)\r\nPRINT ARRAYBINARYSEARCH(numbers[], 1)\r\nPRINT ARRAYCONTAINS(names[], \"Ann\")\r\nPRINT ARRAYBINARYSEARCH(names[], \"Ann\")";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -2539,8 +2302,8 @@ PRINT ARRAYBINARYSEARCH(names, "Ann")
     {
         BindProgram(
             """
-DIM names() AS STRING
-PRINT ARRAYCONTAINS(names, 1)
+DIM names[] AS STRING
+PRINT ARRAYCONTAINS(names[], 1)
 """,
             out var diagnostics);
 
@@ -2551,14 +2314,7 @@ PRINT ARRAYCONTAINS(names, 1)
     [Fact]
     public void Bind_BuiltinArrayFindAllReturnsIntegerArray()
     {
-        const string text = """
-DIM numbers() AS INTEGER
-DIM names() AS STRING
-DIM numberMatches() AS INTEGER
-DIM nameMatches() AS INTEGER
-numberMatches = ARRAYFINDALL(numbers, 1)
-nameMatches = ARRAYFINDALL(names, "Ann")
-""";
+        const string text = "DIM numbers[] AS INTEGER\r\nDIM names[] AS STRING\r\nDIM numberMatches[] AS INTEGER\r\nDIM nameMatches[] AS INTEGER\r\nnumberMatches[] = ARRAYFINDALL(numbers[], 1)\r\nnameMatches[] = ARRAYFINDALL(names[], \"Ann\")";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -2580,18 +2336,7 @@ nameMatches = ARRAYFINDALL(names, "Ann")
     [Fact]
     public void Bind_BuiltinArrayCoordinateSearchFunctionsReturnCoordinateShapesForMultidimensionalArrays()
     {
-        const string text = """
-DIM grid(,) AS INTEGER
-DIM cube(,,) AS INTEGER
-DIM firstHit() AS INTEGER
-DIM lastHit() AS INTEGER
-DIM allHits(,) AS INTEGER
-DIM cubeHit() AS INTEGER
-firstHit = ARRAYINDEXOF(grid, 1)
-lastHit = ARRAYLASTINDEXOF(grid, 1)
-allHits = ARRAYFINDALL(grid, 1)
-cubeHit = ARRAYINDEXOF(cube, 1)
-""";
+        const string text = "DIM grid[,] AS INTEGER\r\nDIM cube[,,] AS INTEGER\r\nDIM firstHit[] AS INTEGER\r\nDIM lastHit[] AS INTEGER\r\nDIM allHits[,] AS INTEGER\r\nDIM cubeHit[] AS INTEGER\r\nfirstHit[] = ARRAYINDEXOF(grid[], 1)\r\nlastHit[] = ARRAYLASTINDEXOF(grid[], 1)\r\nallHits[] = ARRAYFINDALL(grid[], 1)\r\ncubeHit[] = ARRAYINDEXOF(cube[], 1)";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -2627,9 +2372,9 @@ cubeHit = ARRAYINDEXOF(cube, 1)
     {
         BindProgram(
             """
-DIM names() AS STRING
-DIM matches() AS INTEGER
-matches = ARRAYFINDALL(names, 1)
+DIM names[] AS STRING
+DIM matches[] AS INTEGER
+matches[] = ARRAYFINDALL(names[], 1)
 """,
             out var diagnostics);
 
@@ -2642,8 +2387,8 @@ matches = ARRAYFINDALL(names, 1)
     {
         BindProgram(
             """
-DIM names() AS STRING
-PRINT ARRAYBINARYSEARCH(names, 1)
+DIM names[] AS STRING
+PRINT ARRAYBINARYSEARCH(names[], 1)
 """,
             out var diagnostics);
 
@@ -2663,7 +2408,7 @@ PRINT ARRAYBINARYSEARCH(names, 1)
     [Fact]
     public void Bind_BuiltinArrayFindAllReportsScalarArgument()
     {
-        BindProgram("DIM matches() AS INTEGER\nmatches = ARRAYFINDALL(1, 1)", out var diagnostics);
+        BindProgram("DIM matches[] AS INTEGER\nmatches[] = ARRAYFINDALL(1, 1)", out var diagnostics);
 
         var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
         Assert.Contains("INTEGER", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
@@ -2683,8 +2428,8 @@ PRINT ARRAYBINARYSEARCH(names, 1)
     {
         BindProgram(
             """
-DIM flags() AS BOOLEAN
-PRINT ARRAYBINARYSEARCH(flags, TRUE)
+DIM flags[] AS BOOLEAN
+PRINT ARRAYBINARYSEARCH(flags[], TRUE)
 """,
             out var diagnostics);
 
@@ -2696,11 +2441,7 @@ PRINT ARRAYBINARYSEARCH(flags, TRUE)
     [Fact]
     public void Bind_BuiltinSplitReturnsStringArray()
     {
-        const string text = """
-DIM parts() AS STRING
-parts = SPLIT("A,B", ",")
-PRINT JOIN(parts)
-""";
+        const string text = "DIM parts[] AS STRING\r\nparts[] = SPLIT(\"A,B\", \",\")\r\nPRINT JOIN(parts[])";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -2718,15 +2459,15 @@ PRINT JOIN(parts)
     public void Bind_BuiltinJoinReportsNonStringArray()
     {
         const string text = """
-DIM values() AS INTEGER
-PRINT JOIN(values)
+DIM values[] AS INTEGER
+PRINT JOIN(values[])
 """;
 
         BindProgram(text, out var diagnostics);
 
         var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB2003");
-        Assert.Contains("INTEGER()", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("STRING()", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("INTEGER[]", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("STRING[]", diagnostic.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -2749,8 +2490,8 @@ value = 10
     public void Bind_AssignmentReportsScalarAssignedToArray()
     {
         const string text = """
-DIM values() AS INTEGER
-values = 5
+DIM values[] AS INTEGER
+values[] = 5
 """;
 
         BindProgram(text, out var diagnostics);
@@ -2765,9 +2506,9 @@ values = 5
     public void Bind_AssignmentReportsArrayAssignedToScalar()
     {
         const string text = """
-DIM values(1 TO 1) AS INTEGER
+DIM values[1 TO 1] AS INTEGER
 DIM value AS INTEGER
-value = values
+value = values[]
 """;
 
         BindProgram(text, out var diagnostics);
@@ -3408,12 +3149,7 @@ PRINT ENDSWITH("Hello", "lo")
     [Fact]
     public void Bind_BuiltinReplaceReturnsString()
     {
-        const string text = """
-DIM oldItems(1 TO 1) AS STRING
-DIM newItems(1 TO 1) AS STRING
-PRINT REPLACE("one two", "two", "three")
-PRINT REPLACEMANY("one two", oldItems, newItems)
-""";
+        const string text = "DIM oldItems[1 TO 1] AS STRING\r\nDIM newItems[1 TO 1] AS STRING\r\nPRINT REPLACE(\"one two\", \"two\", \"three\")\r\nPRINT REPLACEMANY(\"one two\", oldItems[], newItems[])";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -5249,16 +4985,7 @@ x
     [Fact]
     public void Bind_AllowsProcedureAndBuiltinCallsAsStatements()
     {
-        const string text = """
-DIM a(1 TO 2) AS INTEGER
-ARRAYFILL(a, 9)
-Run()
-PRINT a(1)
-
-SUB Run()
-PRINT "ran"
-END SUB
-""";
+        const string text = "DIM a[1 TO 2] AS INTEGER\r\nARRAYFILL(a[], 9)\r\nRun()\r\nPRINT a[1]\r\n\r\nSUB Run()\r\nPRINT \"ran\"\r\nEND SUB";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -5355,16 +5082,7 @@ PRINT circumference
     [Fact]
     public void Bind_PredefinedIntegralConstantsWorkInConstantOnlyBounds()
     {
-        const string text = """
-TYPE Pair
-    Values(1 TO ROW + COLUMN) AS INTEGER
-END TYPE
-
-DIM code AS STRING * (ROW + COLUMN + 2)
-DIM pair AS Pair
-PRINT pair.Values(3)
-PRINT code
-""";
+        const string text = "TYPE Pair\r\n    Values[1 TO ROW + COLUMN] AS INTEGER\r\nEND TYPE\r\n\r\nDIM code AS STRING * (ROW + COLUMN + 2)\r\nDIM pair AS Pair\r\nPRINT pair.Values[3]\r\nPRINT code";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -5583,15 +5301,7 @@ PRINT user.Home.City
     [Fact]
     public void Bind_TypeArrayElementFieldAccess()
     {
-        const string text = """
-TYPE Person
-    Name AS STRING
-END TYPE
-
-DIM people(1 TO 2) AS Person
-people(1).Name = "Ada"
-PRINT people(2).Name
-""";
+        const string text = "TYPE Person\r\n    Name AS STRING\r\nEND TYPE\r\n\r\nDIM people[1 TO 2] AS Person\r\npeople[1].Name = \"Ada\"\r\nPRINT people[2].Name";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -5618,17 +5328,7 @@ PRINT people(2).Name
     [Fact]
     public void Bind_TypeDynamicArrayField()
     {
-        const string text = """
-TYPE Person
-    Scores() AS INTEGER
-END TYPE
-
-DIM user AS Person
-REDIM user.Scores(1 TO 2)
-user.Scores(1) = 10
-PRINT user.Scores(2)
-ERASE user.Scores
-""";
+        const string text = "TYPE Person\r\n    Scores[] AS INTEGER\r\nEND TYPE\r\n\r\nDIM user AS Person\r\nREDIM user.Scores[1 TO 2]\r\nuser.Scores[1] = 10\r\nPRINT user.Scores[2]\r\nERASE user.Scores[]";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -5664,16 +5364,7 @@ ERASE user.Scores
     [Fact]
     public void Bind_TypeDynamicArrayFieldOnArrayElement()
     {
-        const string text = """
-TYPE Person
-    Scores() AS INTEGER
-END TYPE
-
-DIM people(1 TO 1) AS Person
-REDIM people(1).Scores(1 TO 2)
-people(1).Scores(2) = 20
-PRINT people(1).Scores(2)
-""";
+        const string text = "TYPE Person\r\n    Scores[] AS INTEGER\r\nEND TYPE\r\n\r\nDIM people[1 TO 1] AS Person\r\nREDIM people[1].Scores[1 TO 2]\r\npeople[1].Scores[2] = 20\r\nPRINT people[1].Scores[2]";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -5698,17 +5389,7 @@ PRINT people(1).Scores(2)
     [Fact]
     public void Bind_TypeDynamicMultidimensionalArrayField()
     {
-        const string text = """
-TYPE Person
-    Scores(,) AS INTEGER
-END TYPE
-
-DIM user AS Person
-REDIM user.Scores(1 TO 2, 3 TO 4)
-user.Scores(1, 3) = 10
-PRINT user.Scores(2, 4)
-ERASE user.Scores
-""";
+        const string text = "TYPE Person\r\n    Scores[,] AS INTEGER\r\nEND TYPE\r\n\r\nDIM user AS Person\r\nREDIM user.Scores[1 TO 2, 3 TO 4]\r\nuser.Scores[1, 3] = 10\r\nPRINT user.Scores[2, 4]\r\nERASE user.Scores[]";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -5743,15 +5424,7 @@ ERASE user.Scores
     [Fact]
     public void Bind_TypeFixedArrayField()
     {
-        const string text = """
-TYPE Person
-    Scores(-1 TO 3) AS INTEGER
-END TYPE
-
-DIM user AS Person
-user.Scores(0) = 10
-PRINT user.Scores(3)
-""";
+        const string text = "TYPE Person\r\n    Scores[-1 TO 3] AS INTEGER\r\nEND TYPE\r\n\r\nDIM user AS Person\r\nuser.Scores[0] = 10\r\nPRINT user.Scores[3]";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -5782,15 +5455,7 @@ PRINT user.Scores(3)
     [Fact]
     public void Bind_TypeFixedMultidimensionalArrayField()
     {
-        const string text = """
-TYPE Person
-    Scores(1 TO 2, 4 TO 5) AS INTEGER
-END TYPE
-
-DIM user AS Person
-user.Scores(1, 4) = 10
-PRINT user.Scores(2, 5)
-""";
+        const string text = "TYPE Person\r\n    Scores[1 TO 2, 4 TO 5] AS INTEGER\r\nEND TYPE\r\n\r\nDIM user AS Person\r\nuser.Scores[1, 4] = 10\r\nPRINT user.Scores[2, 5]";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -5819,17 +5484,7 @@ PRINT user.Scores(2, 5)
     [Fact]
     public void Bind_TypeFixedArrayFieldWithConstBounds()
     {
-        const string text = """
-CONST MinScore AS INTEGER = 1
-CONST MaxScore AS LONG = MinScore + 2
-
-TYPE Person
-    Scores(MinScore TO MaxScore) AS INTEGER
-END TYPE
-
-DIM user AS Person
-PRINT user.Scores(3)
-""";
+        const string text = "CONST MinScore AS INTEGER = 1\r\nCONST MaxScore AS LONG = MinScore + 2\r\n\r\nTYPE Person\r\n    Scores[MinScore TO MaxScore] AS INTEGER\r\nEND TYPE\r\n\r\nDIM user AS Person\r\nPRINT user.Scores[3]";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -6044,17 +5699,7 @@ PRINT user.Scores(3)
     [Fact]
     public void Bind_TypeFixedArrayFieldWithConstBoundsDeclaredLater()
     {
-        const string text = """
-TYPE Person
-    Scores(MinScore TO MaxScore) AS INTEGER
-END TYPE
-
-CONST MinScore AS INTEGER = 1
-CONST MaxScore AS LONG = MinScore + 2
-
-DIM user AS Person
-PRINT user.Scores(3)
-""";
+        const string text = "TYPE Person\r\n    Scores[MinScore TO MaxScore] AS INTEGER\r\nEND TYPE\r\n\r\nCONST MinScore AS INTEGER = 1\r\nCONST MaxScore AS LONG = MinScore + 2\r\n\r\nDIM user AS Person\r\nPRINT user.Scores[3]";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -6071,19 +5716,7 @@ PRINT user.Scores(3)
     [Fact]
     public void Bind_TypeFixedMultidimensionalArrayFieldWithConstBounds()
     {
-        const string text = """
-CONST MinRow AS INTEGER = 1
-CONST MaxRow AS INTEGER = 2
-CONST MinColumn AS INTEGER = 4
-CONST MaxColumn AS INTEGER = MinColumn + 1
-
-TYPE Person
-    Scores(MinRow TO MaxRow, MinColumn TO MaxColumn) AS INTEGER
-END TYPE
-
-DIM user AS Person
-PRINT user.Scores(2, 5)
-""";
+        const string text = "CONST MinRow AS INTEGER = 1\r\nCONST MaxRow AS INTEGER = 2\r\nCONST MinColumn AS INTEGER = 4\r\nCONST MaxColumn AS INTEGER = MinColumn + 1\r\n\r\nTYPE Person\r\n    Scores[MinRow TO MaxRow, MinColumn TO MaxColumn] AS INTEGER\r\nEND TYPE\r\n\r\nDIM user AS Person\r\nPRINT user.Scores[2, 5]";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -6121,15 +5754,7 @@ PRINT code
     [Fact]
     public void Bind_TypeFixedLengthStringField()
     {
-        const string text = """
-TYPE Person
-    Name AS STRING * 20
-    Aliases() AS STRING * 5
-END TYPE
-
-DIM user AS Person
-PRINT user.Name
-""";
+        const string text = "TYPE Person\r\n    Name AS STRING * 20\r\n    Aliases[] AS STRING * 5\r\nEND TYPE\r\n\r\nDIM user AS Person\r\nPRINT user.Name";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -6203,19 +5828,7 @@ END FUNCTION
     [Fact]
     public void Bind_TypeGroupedFields()
     {
-        const string text = """
-TYPE Person
-    Name, Alias AS STRING
-    Scores(), Flags(1 TO 2) AS INTEGER
-END TYPE
-
-DIM user AS Person
-REDIM user.Scores(1 TO 3)
-user.Alias = "Ada"
-user.Flags(2) = 7
-PRINT user.Name
-PRINT user.Flags(2)
-""";
+        const string text = "TYPE Person\r\n    Name, Alias AS STRING\r\n    Scores[], Flags[1 TO 2] AS INTEGER\r\nEND TYPE\r\n\r\nDIM user AS Person\r\nREDIM user.Scores[1 TO 3]\r\nuser.Alias = \"Ada\"\r\nuser.Flags[2] = 7\r\nPRINT user.Name\r\nPRINT user.Flags[2]";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -6262,17 +5875,7 @@ PRINT user.Flags(2)
     [Fact]
     public void Bind_TypeArrayFieldViewAccess()
     {
-        const string text = """
-TYPE Board
-    Cells(,) AS INTEGER
-END TYPE
-
-DIM board AS Board
-DIM lineView() AS INTEGER
-DIM region(,) AS INTEGER
-lineView = board.Cells(2)
-region = board.Cells(2 TO 3, 3 TO 4)
-""";
+        const string text = "TYPE Board\r\n    Cells[,] AS INTEGER\r\nEND TYPE\r\n\r\nDIM board AS Board\r\nDIM lineView[] AS INTEGER\r\nDIM region[,] AS INTEGER\r\nlineView[] = board.Cells[2]\r\nregion[] = board.Cells[2 TO 3, 3 TO 4]";
 
         var program = BindProgram(text, out var diagnostics);
 
@@ -6385,7 +5988,7 @@ END TYPE
     {
         const string text = """
 TYPE Person
-    Scores() AS INTEGER = 1
+    Scores[] AS INTEGER = 1
 END TYPE
 """;
 
@@ -6430,7 +6033,7 @@ PRINT left <> right
     {
         const string text = """
 TYPE Person
-    Scores() AS INTEGER
+    Scores[] AS INTEGER
 END TYPE
 
 DIM left AS Person
@@ -6539,12 +6142,12 @@ user = Person("Ada")
     {
         const string text = """
 TYPE Person
-    Scores(1 TO 3) AS INTEGER
+    Scores[1 TO 3] AS INTEGER
 END TYPE
 
 DIM user AS Person
-REDIM user.Scores(1 TO 4)
-ERASE user.Scores
+REDIM user.Scores[1 TO 4]
+ERASE user.Scores[]
 """;
 
         BindProgram(text, out var diagnostics);
@@ -6562,7 +6165,7 @@ ERASE user.Scores
     {
         const string text = """
 TYPE Node
-    Children(1 TO 1) AS Node
+    Children[1 TO 1] AS Node
 END TYPE
 """;
 
@@ -6664,24 +6267,7 @@ PRINT counter.Current()
     [Fact]
     public void Bind_TypeMethodCallsAcceptFieldAndArrayElementReceivers()
     {
-        const string text = """
-TYPE Counter
-    Value AS INTEGER
-
-    SUB Increment(stepValue AS INTEGER)
-        SELF.Value = SELF.Value + stepValue
-    END SUB
-END TYPE
-
-TYPE Holder
-    Item AS Counter
-END TYPE
-
-DIM holder AS Holder
-DIM counters(1 TO 2) AS Counter
-holder.Item.Increment(2)
-counters(1).Increment(3)
-""";
+        const string text = "TYPE Counter\r\n    Value AS INTEGER\r\n\r\n    SUB Increment(stepValue AS INTEGER)\r\n        SELF.Value = SELF.Value + stepValue\r\n    END SUB\r\nEND TYPE\r\n\r\nTYPE Holder\r\n    Item AS Counter\r\nEND TYPE\r\n\r\nDIM holder AS Holder\r\nDIM counters[1 TO 2] AS Counter\r\nholder.Item.Increment(2)\r\ncounters[1].Increment(3)";
 
         var program = BindProgram(text, out var diagnostics);
 

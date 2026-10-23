@@ -7,33 +7,24 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор DO … LOOP</span></nav>
-<p class="eyebrow">Справочная статья</p><h1 class="page-title">Оператор DO … LOOP</h1><p class="lead">DO … LOOP — оператор языка Axiom, который повторяет блок с условием в начале, условием в конце или без условия. Формы WHILE продолжают повторение при истинном условии, а UNTIL завершают его при истинном условии.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-<section class="article-section"><h2>Назначение и контекст</h2><p>Оператор DO позволяет повторять действия до изменения состояния данных. Цикл работает в консольной и графической программе, на верхнем уровне и внутри подпрограммы; специальный графический режим ему не нужен.</p><h3>Выбор места проверки</h3><p>Если записано только одно условие, условие в заголовке проверяется до первого прохода. Условие после <code>LOOP</code> проверяется после тела, поэтому тело выполняется минимум один раз. Форма без условия повторяется до явного выхода или остановки программы.</p></section>
+<p class="eyebrow">Справочная статья</p><h1 class="page-title">Оператор DO … LOOP</h1><p class="lead">Место проверки условия иногда важнее самого условия: блок может требовать хотя бы одного выполнения или, наоборот, не выполняться при ложном условии вовсе. DO … LOOP позволяет выбрать, где стоит проверка — в начале, в конце или нигде, — и как она читается: WHILE продолжает повторение при истинном условии, UNTIL завершает его при истинном.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Когда нужен DO … LOOP</h2><p>Оператор DO позволяет повторять действия до изменения состояния данных. Цикл работает в консольной и графической программе, на верхнем уровне и внутри подпрограммы; специальный графический режим ему не нужен.</p><p>Если записано только одно условие, условие в заголовке проверяется до первого прохода. Условие после <code>LOOP</code> проверяется после тела, поэтому тело выполняется минимум один раз. Форма без условия повторяется до явного выхода или остановки программы. Выбор между этими вариантами и определяет, где именно окажется проверка.</p></section>
 <section class="article-section" id="syntax"><h2>Синтаксис</h2><pre><code class="language-axiom">DO WHILE &lt;условие&gt;
-    [&lt;инструкции&gt;]
+    ⟦&lt;инструкции&gt;⟧
 LOOP</code></pre>
 <pre><code class="language-axiom">DO UNTIL &lt;условие&gt;
-    [&lt;инструкции&gt;]
+    ⟦&lt;инструкции&gt;⟧
 LOOP</code></pre>
 <pre><code class="language-axiom">DO
-    [&lt;инструкции&gt;]
+    ⟦&lt;инструкции&gt;⟧
 LOOP WHILE &lt;условие&gt;</code></pre>
 <pre><code class="language-axiom">DO
-    [&lt;инструкции&gt;]
+    ⟦&lt;инструкции&gt;⟧
 LOOP UNTIL &lt;условие&gt;</code></pre>
 <pre><code class="language-axiom">DO
-    [&lt;инструкции&gt;]
+    ⟦&lt;инструкции&gt;⟧
 LOOP</code></pre></section>
-<section class="article-section"><h2>Части конструкции</h2><p>Условие — выражение типа <code>BOOLEAN</code>, определяющее продолжение или завершение повторений. Инструкции обозначают ноль или несколько операторов тела. Между <code>DO</code> и <code>LOOP</code> находится тело. <code>EXIT DO</code> немедленно завершает ближайший цикл этого вида.</p><p><code>CONTINUE DO</code> пропускает остаток текущего тела. При единственном условии после <code>LOOP</code> проверяется это условие; при единственном условии после <code>DO</code> проверяется заголовок следующего прохода. Без условия начинается следующий проход.</p></section>
-<section class="article-section">
-                <h2>Диагностика</h2><p><code>MB2008</code> возникает, если любое указанное условие не имеет тип BOOLEAN. <code>MB1001</code> возникает при отсутствии требуемого окончания блока.</p>
-                <p>Ошибка возникает, если условие цикла не имеет тип <code>BOOLEAN</code>, если <code>DO</code> не закрыт соответствующим <code>LOOP</code> или если <code>EXIT DO</code> записан вне цикла <code>DO ... LOOP</code>.</p>
-                <ul>
-                    <li><code>MB2014</code> — <code>EXIT DO</code> используется вне цикла <code>DO ... LOOP</code>.</li>
-                    <li><code>MB2039</code> — <code>CONTINUE DO</code> используется вне цикла <code>DO ... LOOP</code>.</li>
-                </ul>
-            </section>
-<section class="article-section"><h2>Пример</h2><p>Цикл с проверкой после тела выполняется хотя бы один раз:</p>
+<section class="article-section"><h2>Тело, продолжение и выход</h2><p>Условие — выражение типа <code>BOOLEAN</code>, определяющее продолжение или завершение повторений. Инструкции обозначают ноль или несколько операторов тела. Между <code>DO</code> и <code>LOOP</code> находится тело. <code>EXIT DO</code> немедленно завершает ближайший цикл этого вида.</p><p><code>CONTINUE DO</code> пропускает остаток текущего тела. При единственном условии после <code>LOOP</code> проверяется это условие; при единственном условии после <code>DO</code> проверяется заголовок следующего прохода. Без условия начинается следующий проход.</p><p>Проверка в конце гарантирует хотя бы один проход даже при ложном условии. В следующем примере счётчик увеличивается в теле, а цикл заканчивается, когда он достиг трёх:</p>
 <pre><code class="language-axiom">DIM count AS INTEGER = 0
 DO
     PRINT count
@@ -41,7 +32,31 @@ DO
 LOOP UNTIL count = 3</code></pre><p>Результат:</p>
 <pre><code>0
 1
+2</code></pre><p>Ноль попал в вывод до первой проверки: условие после <code>LOOP</code> оценивается только после тела. Когда счётчик стал равен трём, условие <code>UNTIL</code> выполнилось и повторение прекратилось.</p></section>
+<section class="article-section"><h2>Условия в заголовке и после LOOP</h2><p>Разбор допускает условие после DO и условие после LOOP одновременно. В этом сочетании выполняется проверка выражения и вида WHILE или UNTIL из заголовка DO, но проверка происходит после тела из-за наличия условия после LOOP. Выражение после LOOP при исполнении не вычисляется; его тип всё равно проверяется компилятором. Оба условия не объединяются. Чтобы место проверки было однозначно видно из программы, используйте одну из пяти форм с единственным условием или без условия, показанных выше. Допустимые сочетания записываются так:</p>
+<pre><code class="language-axiom">DO WHILE &lt;условие заголовка&gt;
+    ⟦&lt;инструкции&gt;⟧
+LOOP WHILE &lt;условие окончания&gt;</code></pre><pre><code class="language-axiom">DO WHILE &lt;условие заголовка&gt;
+    ⟦&lt;инструкции&gt;⟧
+LOOP UNTIL &lt;условие окончания&gt;</code></pre><pre><code class="language-axiom">DO UNTIL &lt;условие заголовка&gt;
+    ⟦&lt;инструкции&gt;⟧
+LOOP WHILE &lt;условие окончания&gt;</code></pre><pre><code class="language-axiom">DO UNTIL &lt;условие заголовка&gt;
+    ⟦&lt;инструкции&gt;⟧
+LOOP UNTIL &lt;условие окончания&gt;</code></pre><p>В следующем примере заголовок задаёт <code>DO WHILE count &lt; 2</code>, но проверка выполняется после тела, а выражение <code>TRUE</code> после <code>LOOP</code> при исполнении не вычисляется:</p>
+<pre><code class="language-axiom">DIM count AS INTEGER = 0
+DO WHILE count &lt; 2
+    count = count + 1
+    PRINT count
+LOOP UNTIL TRUE</code></pre><p>Ожидаемый вывод:</p>
+<pre><code>1
 2</code></pre></section>
+<section class="article-section">
+                <h2>Диагностика</h2><p>Условие не типа <code>BOOLEAN</code> даёт <code>MB2008</code>, отсутствие требуемого окончания блока — <code>MB1001</code>. Ошибкой является и <code>EXIT DO</code>, записанный вне цикла <code>DO ... LOOP</code>.</p>
+                <ul>
+                    <li><code>MB2014</code> — <code>EXIT DO</code> используется вне цикла <code>DO ... LOOP</code>.</li>
+                    <li><code>MB2039</code> — <code>CONTINUE DO</code> используется вне цикла <code>DO ... LOOP</code>.</li>
+                </ul>
+            </section>
 <section class="article-section"><h2>Запускаемые примеры</h2><p>Откройте нужный файл в IDE и запустите его. Примеры с ошибкой предназначены для проверки сообщения компилятора или выполнения.</p><ul class="resource-list">
                     <li><a href="../../samples/control-flow/do/do_while_loop.axm">DO WHILE: условие в начале</a></li>
                     <li><a href="../../samples/control-flow/do/do_until_loop.axm">DO UNTIL: повторение до условия</a></li>
@@ -51,22 +66,5 @@ LOOP UNTIL count = 3</code></pre><p>Результат:</p>
                     <li><a href="../../samples/control-flow/do/continue_do.axm">CONTINUE DO: пропуск итерации</a></li>
                     <li><a href="../../samples/control-flow/do/do_loop_exit.axm">DO ... LOOP: выход из безусловной формы</a></li>
                 </ul></section>
-<section class="article-section"><h2>Сочетание условий в текущей реализации</h2><p>Разбор допускает условие после DO и условие после LOOP одновременно. В этом сочетании выполняется проверка выражения и вида WHILE или UNTIL из заголовка DO, но проверка происходит после тела из-за наличия условия после LOOP. Выражение после LOOP при исполнении не вычисляется; его тип всё равно проверяется компилятором. Оба условия не объединяются. Чтобы место проверки было однозначно видно из программы, используйте одну из пяти форм с единственным условием или без условия, показанных выше.</p>
-<pre><code class="language-axiom">DO WHILE &lt;условие заголовка&gt;
-    [&lt;инструкции&gt;]
-LOOP WHILE &lt;условие окончания&gt;</code></pre><pre><code class="language-axiom">DO WHILE &lt;условие заголовка&gt;
-    [&lt;инструкции&gt;]
-LOOP UNTIL &lt;условие окончания&gt;</code></pre><pre><code class="language-axiom">DO UNTIL &lt;условие заголовка&gt;
-    [&lt;инструкции&gt;]
-LOOP WHILE &lt;условие окончания&gt;</code></pre><pre><code class="language-axiom">DO UNTIL &lt;условие заголовка&gt;
-    [&lt;инструкции&gt;]
-LOOP UNTIL &lt;условие окончания&gt;</code></pre></section>
-<section class="article-section"><h2>Пример сочетания условий</h2><pre><code class="language-axiom">DIM count AS INTEGER = 0
-DO WHILE count &lt; 2
-    count = count + 1
-    PRINT count
-LOOP UNTIL TRUE</code></pre><p>Ожидаемый вывод:</p>
-<pre><code>1
-2</code></pre></section>
 <section class="article-section"><h2>См. также</h2><div class="link-list"><a href="loops.html">Циклы</a><a href="exit.html">EXIT DO</a><a href="continue.html">CONTINUE DO</a><a href="while.html">WHILE</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
 <script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

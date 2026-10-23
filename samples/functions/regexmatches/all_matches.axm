@@ -1,11 +1,11 @@
 ' Пример показывает сбор всех совпадений в массив и пустой результат без совпадений.
 ' Ожидается вывод: 2, затем 42, затем 100, затем 0.
-DIM values() AS STRING
+DIM values[] AS STRING
 
-values = REGEXMATCHES("Order 42 and 100", "\d+")
-PRINT ARRAYLENGTH(values)
-PRINT values(1)
-PRINT values(2)
+values[] = REGEXMATCHES("Order 42 and 100", "\d+")
+PRINT ARRAYLENGTH(values[])
+PRINT values[1]
+PRINT values[2]
 
-values = REGEXMATCHES("Order", "\d+")
-PRINT ARRAYLENGTH(values)
+values[] = REGEXMATCHES("Order", "\d+")
+PRINT ARRAYLENGTH(values[])

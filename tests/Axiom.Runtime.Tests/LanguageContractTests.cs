@@ -136,16 +136,7 @@ PRINT &H80000000
     [Fact]
     public void Execute_PredefinedConstantsCanBeReadInExpressionsAndArrayDimensions()
     {
-        const string text = """
-DIM board(10 TO 12, 20 TO 21) AS INTEGER
-PRINT ROW
-PRINT COLUMN
-PRINT LBOUND(board, ROW)
-PRINT UBOUND(board, COLUMN)
-PRINT PI > 3
-PRINT PI < 4
-PRINT ROW + COLUMN
-""";
+        const string text = "DIM board[10 TO 12, 20 TO 21] AS INTEGER\r\nPRINT ROW\r\nPRINT COLUMN\r\nPRINT LBOUND(board[], ROW)\r\nPRINT UBOUND(board[], COLUMN)\r\nPRINT PI > 3\r\nPRINT PI < 4\r\nPRINT ROW + COLUMN";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -540,10 +531,7 @@ PRINT value + value
     [Fact]
     public void Execute_DynamicArrayDeclarationDoesNotFail()
     {
-        const string text = """
-DIM items() AS STRING
-PRINT "ok"
-""";
+        const string text = "DIM items[] AS STRING\r\nPRINT \"ok\"";
 
         var (_, host, result) = ExecuteProgram(text);
 

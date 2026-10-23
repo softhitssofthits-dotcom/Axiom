@@ -5,15 +5,15 @@
 ' снято 50
 ' осталось 4
 
-DIM values() AS INTEGER
-REDIM values(1 TO 0)        ' Пустой выделенный массив перед добавлением.
+DIM values[] AS INTEGER
+REDIM values[1 TO 0]        ' Пустой выделенный массив перед добавлением.
 
 FOR index = 1 TO 5
-    ARRAYPUSH(values, index * 10)   ' Добавляем 10, 20, 30, 40, 50.
+    ARRAYPUSH(values[], index * 10)   ' Добавляем 10, 20, 30, 40, 50.
 NEXT
 
-PRINT "элементов "; ARRAYLENGTH(values)
-PRINT "границы "; LBOUND(values); ".."; UBOUND(values)
+PRINT "элементов "; ARRAYLENGTH(values[])
+PRINT "границы "; LBOUND(values[]); ".."; UBOUND(values[])
 
-PRINT "снято "; ARRAYPOP(values)
-PRINT "осталось "; ARRAYLENGTH(values)
+PRINT "снято "; ARRAYPOP(values[])
+PRINT "осталось "; ARRAYLENGTH(values[])

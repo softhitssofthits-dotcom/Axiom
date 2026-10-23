@@ -30,10 +30,10 @@ public sealed class RegexIndependentContractTests
             _ => ["2", "А12", "б34"]
         };
         var source = name is "REGEXMATCHES" or "REGEXEXTRACTALL" or "REGEXSPLIT"
-            ? $"DIM v() AS STRING\nv = {call}\nPRINT ARRAYLENGTH(v)\nPRINT v(1)\nPRINT v(3)"
+            ? $"DIM v[] AS STRING\nv[] = {call}\nPRINT ARRAYLENGTH(v[])\nPRINT v[1]\nPRINT v[3]"
             : $"DIM v AS {(name == "REGEXISMATCH" ? "BOOLEAN" : name == "REGEXCOUNT" ? "INTEGER" : "STRING")} = {call}\nPRINT v";
-        if (name == "REGEXMATCHES") source = $"DIM v() AS STRING\nv = {call}\nPRINT ARRAYLENGTH(v)\nPRINT v(1)\nPRINT v(2)";
-        if (name == "REGEXEXTRACTALL") source = $"DIM v() AS STRING\nv = {call}\nPRINT ARRAYLENGTH(v)\nPRINT v(1)\nPRINT v(2)";
+        if (name == "REGEXMATCHES") source = $"DIM v[] AS STRING\nv[] = {call}\nPRINT ARRAYLENGTH(v[])\nPRINT v[1]\nPRINT v[2]";
+        if (name == "REGEXEXTRACTALL") source = $"DIM v[] AS STRING\nv[] = {call}\nPRINT ARRAYLENGTH(v[])\nPRINT v[1]\nPRINT v[2]";
         AssertRun(source, expected);
     }
 
@@ -60,7 +60,7 @@ public sealed class RegexIndependentContractTests
             if (name is "REGEXMATCHES" or "REGEXEXTRACTALL" or "REGEXSPLIT")
             {
                 var expectedCount = name == "REGEXSPLIT" && text.Length > 0 ? "1" : "0";
-                AssertRun($"DIM v() AS STRING\nv = {call}\nPRINT ARRAYLENGTH(v)", [expectedCount]);
+                AssertRun($"DIM v[] AS STRING\nv[] = {call}\nPRINT ARRAYLENGTH(v[])", [expectedCount]);
             }
             else
             {
@@ -73,65 +73,19 @@ public sealed class RegexIndependentContractTests
     [Fact]
     public void ModesZeroWidthSplitAndMissingCapturesAreExplicit()
     {
-        AssertRun("""
-PRINT REGEXMATCH("А", "а", "i")
-PRINT REGEXMATCH("a" + CHR(10) + "b", "^b", "m")
-PRINT REGEXISMATCH("a" + CHR(10) + "b", "a.b", "s")
-PRINT REGEXISMATCH("ab", "a b # пояснение", "x")
-DIM v() AS STRING
-v = REGEXMATCHES("😀", ".")
-PRINT v(1) = LEFT("😀", 1)
-PRINT v(2) = RIGHT("😀", 1)
-v = REGEXSPLIT("ab", "")
-PRINT ARRAYLENGTH(v)
-PRINT v(1) = ""
-PRINT v(2)
-PRINT v(3)
-PRINT v(4) = ""
-v = REGEXEXTRACTALL("aba", "(a)?b|(a)", 1)
-PRINT ARRAYLENGTH(v)
-PRINT v(1)
-PRINT v(2) = ""
-PRINT REGEXEXTRACT("a", "(?<10>a)", 1) = ""
-""", ["А", "b", "TRUE", "TRUE", "TRUE", "TRUE", "4", "TRUE", "a", "b", "TRUE", "2", "a", "TRUE", "TRUE"]);
+        AssertRun("PRINT REGEXMATCH(\"А\", \"а\", \"i\")\r\nPRINT REGEXMATCH(\"a\" + CHR(10) + \"b\", \"^b\", \"m\")\r\nPRINT REGEXISMATCH(\"a\" + CHR(10) + \"b\", \"a.b\", \"s\")\r\nPRINT REGEXISMATCH(\"ab\", \"a b # пояснение\", \"x\")\r\nDIM v[] AS STRING\r\nv[] = REGEXMATCHES(\"😀\", \".\")\r\nPRINT v[1] = LEFT(\"😀\", 1)\r\nPRINT v[2] = RIGHT(\"😀\", 1)\r\nv[] = REGEXSPLIT(\"ab\", \"\")\r\nPRINT ARRAYLENGTH(v[])\r\nPRINT v[1] = \"\"\r\nPRINT v[2]\r\nPRINT v[3]\r\nPRINT v[4] = \"\"\r\nv[] = REGEXEXTRACTALL(\"aba\", \"(a)?b|(a)\", 1)\r\nPRINT ARRAYLENGTH(v[])\r\nPRINT v[1]\r\nPRINT v[2] = \"\"\r\nPRINT REGEXEXTRACT(\"a\", \"(?<10>a)\", 1) = \"\"", ["А", "b", "TRUE", "TRUE", "TRUE", "TRUE", "4", "TRUE", "a", "b", "TRUE", "2", "a", "TRUE", "TRUE"]);
     }
 
     [Fact]
     public void EmptyMatchesUnicodeAndReplacementTokensFollowExplicitContracts()
     {
-        AssertRun("""
-PRINT REGEXCOUNT("😀", ".")
-PRINT REGEXCOUNT("😀", "")
-PRINT REGEXISMATCH("", "")
-DIM matches() AS STRING
-matches = REGEXMATCHES("", "")
-PRINT ARRAYLENGTH(matches)
-PRINT matches(1) = ""
-DIM parts() AS STRING
-parts = REGEXSPLIT("", ",")
-PRINT ARRAYLENGTH(parts)
-PRINT REGEXREPLACE("ab", "", "!", 2)
-PRINT REGEXREPLACE("ab", "(?<letter>[a-z])", "${letter}$$$&", 1)
-PRINT REGEXEXTRACT("bbb", "(a)?b", 1) = ""
-PRINT REGEXEXTRACT("a", "(a)", 99) = ""
-PRINT REGEXREPLACE("a", "[", "x", "q", 0)
-""", ["2", "3", "TRUE", "1", "TRUE", "0", "!a!b", "a$ab", "TRUE", "TRUE", "a"]);
+        AssertRun("PRINT REGEXCOUNT(\"😀\", \".\")\r\nPRINT REGEXCOUNT(\"😀\", \"\")\r\nPRINT REGEXISMATCH(\"\", \"\")\r\nDIM matches[] AS STRING\r\nmatches[] = REGEXMATCHES(\"\", \"\")\r\nPRINT ARRAYLENGTH(matches[])\r\nPRINT matches[1] = \"\"\r\nDIM parts[] AS STRING\r\nparts[] = REGEXSPLIT(\"\", \",\")\r\nPRINT ARRAYLENGTH(parts[])\r\nPRINT REGEXREPLACE(\"ab\", \"\", \"!\", 2)\r\nPRINT REGEXREPLACE(\"ab\", \"(?<letter>[a-z])\", \"${letter}$$$&\", 1)\r\nPRINT REGEXEXTRACT(\"bbb\", \"(a)?b\", 1) = \"\"\r\nPRINT REGEXEXTRACT(\"a\", \"(a)\", 99) = \"\"\r\nPRINT REGEXREPLACE(\"a\", \"[\", \"x\", \"q\", 0)", ["2", "3", "TRUE", "1", "TRUE", "0", "!a!b", "a$ab", "TRUE", "TRUE", "a"]);
     }
 
     [Fact]
     public void ExplicitNumericGroupNumbersAreNotArrayOrdinals()
     {
-        AssertRun("""
-PRINT REGEXEXTRACT("a", "(?<10>a)", 10)
-PRINT REGEXEXTRACT("A", "(?<10>a)", 10, "i")
-DIM v() AS STRING
-v = REGEXEXTRACTALL("aa", "(?<10>a)", 10)
-PRINT v(1)
-PRINT v(2)
-v = REGEXEXTRACTALL("AA", "(?<10>a)", 10, "i")
-PRINT v(1)
-PRINT v(2)
-""", ["a", "A", "a", "a", "A", "A"]);
+        AssertRun("PRINT REGEXEXTRACT(\"a\", \"(?<10>a)\", 10)\r\nPRINT REGEXEXTRACT(\"A\", \"(?<10>a)\", 10, \"i\")\r\nDIM v[] AS STRING\r\nv[] = REGEXEXTRACTALL(\"aa\", \"(?<10>a)\", 10)\r\nPRINT v[1]\r\nPRINT v[2]\r\nv[] = REGEXEXTRACTALL(\"AA\", \"(?<10>a)\", 10, \"i\")\r\nPRINT v[1]\r\nPRINT v[2]", ["a", "A", "a", "a", "A", "A"]);
     }
 
     [Theory]
@@ -198,13 +152,7 @@ PRINT REGEXREPLACE("A12 B34", "([A-Z])(\d+)", "$1-$2")
     [Fact]
     public void GroupZeroWholeMatchAndWrongArgumentTypesAreExplicit()
     {
-        AssertRun("""
-PRINT REGEXEXTRACT("код12", "код([0-9]+)", 0)
-DIM v() AS STRING
-v = REGEXEXTRACTALL("код12 код34", "код([0-9]+)", 0, "i")
-PRINT v(1)
-PRINT v(2)
-""", ["код12", "код12", "код34"]);
+        AssertRun("PRINT REGEXEXTRACT(\"код12\", \"код([0-9]+)\", 0)\r\nDIM v[] AS STRING\r\nv[] = REGEXEXTRACTALL(\"код12 код34\", \"код([0-9]+)\", 0, \"i\")\r\nPRINT v[1]\r\nPRINT v[2]", ["код12", "код12", "код34"]);
         foreach (var call in new[]
         {
             "REGEXISMATCH(\"a\", TRUE)",
@@ -228,7 +176,7 @@ PRINT v(2)
         var call = Call(name, "\"ab\"", "\"\"", modes ? "i" : null, count);
         if (name == "REGEXREPLACE") call = call.Replace("\"$2:$1\"", "\"!\"", StringComparison.Ordinal);
         if (name is "REGEXMATCHES" or "REGEXEXTRACTALL" or "REGEXSPLIT")
-            AssertRun($"DIM v() AS STRING\nv = {call}\nPRINT ARRAYLENGTH(v)\nPRINT v(1) = \"\"", [name == "REGEXSPLIT" ? "4" : "3", "TRUE"]);
+            AssertRun($"DIM v[] AS STRING\nv[] = {call}\nPRINT ARRAYLENGTH(v[])\nPRINT v[1] = \"\"", [name == "REGEXSPLIT" ? "4" : "3", "TRUE"]);
         else
         {
             var expected = name switch { "REGEXISMATCH" => "TRUE", "REGEXCOUNT" => "3", "REGEXREPLACE" => count ? "!ab" : "!a!b!", _ => "" };

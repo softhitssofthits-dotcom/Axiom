@@ -1,6 +1,6 @@
 ' Пример показывает чтение значения по индексу массива.
-DIM numbers(1 TO 3) AS INTEGER
-numbers(1) = 10
-numbers(2) = 20
-numbers(3) = 30
-PRINT numbers(3)
+DIM numbers[1 TO 3] AS INTEGER
+numbers[1] = 10
+numbers[2] = 20
+numbers[3] = 30
+PRINT numbers[3]

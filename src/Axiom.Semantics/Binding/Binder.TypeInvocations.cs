@@ -5,7 +5,7 @@ namespace Axiom.Semantics;
 
 public sealed partial class Binder
 {
-    private BoundExpression BindFieldAccessExpression(FieldAccessExpressionSyntax expression)
+    private BoundExpression BindFieldAccessExpression(FieldAccessExpressionSyntax expression, bool allowArrayTarget = false)
     {
         var target = BindExpression(expression.Target);
 
@@ -34,6 +34,13 @@ public sealed partial class Binder
         if (!userType.TryGetField(expression.Identifier.Text, out var field) || field is null)
         {
             ReportUnknownField(userType, expression.Identifier.Text, expression.Identifier.Location);
+            return new BoundErrorExpression(expression.Identifier.Location);
+        }
+
+        _editorReferences?.Add(new(field, expression.Identifier.Location, false));
+        if (_usesSquareArraySyntax && field.IsArray && !allowArrayTarget)
+        {
+            ReportArrayNameRequiresBrackets(field.Name, expression.Identifier.Location);
             return new BoundErrorExpression(expression.Identifier.Location);
         }
 

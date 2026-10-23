@@ -12,8 +12,8 @@ DIM boardHeight AS INTEGER = rows * cellSize
 DIM leftMargin AS INTEGER = (SCREENWIDTH() - boardWidth) \ 2
 DIM topMargin AS INTEGER = 44
 
-DIM snakeCol(1 TO 468) AS INTEGER
-DIM snakeRow(1 TO 468) AS INTEGER
+DIM snakeCol[1 TO 468] AS INTEGER
+DIM snakeRow[1 TO 468] AS INTEGER
 
 DIM snakeLength AS INTEGER
 DIM dirX AS INTEGER
@@ -64,14 +64,14 @@ SUB InitGame()
     DIM initStartRow AS INTEGER = rows \ 2
 
     snakeLength = 4
-    snakeCol(1) = initStartCol
-    snakeRow(1) = initStartRow
-    snakeCol(2) = initStartCol - 1
-    snakeRow(2) = initStartRow
-    snakeCol(3) = initStartCol - 2
-    snakeRow(3) = initStartRow
-    snakeCol(4) = initStartCol - 3
-    snakeRow(4) = initStartRow
+    snakeCol[1] = initStartCol
+    snakeRow[1] = initStartRow
+    snakeCol[2] = initStartCol - 1
+    snakeRow[2] = initStartRow
+    snakeCol[3] = initStartCol - 2
+    snakeRow[3] = initStartRow
+    snakeCol[4] = initStartCol - 3
+    snakeRow[4] = initStartRow
 
     dirX = 1
     dirY = 0
@@ -122,8 +122,8 @@ SUB StepSnake()
     dirX = nextDirX
     dirY = nextDirY
 
-    stepNewCol = snakeCol(1) + dirX
-    stepNewRow = snakeRow(1) + dirY
+    stepNewCol = snakeCol[1] + dirX
+    stepNewRow = snakeRow[1] + dirY
 
     IF stepNewCol < 1 OR stepNewCol > cols OR stepNewRow < 1 OR stepNewRow > rows THEN
         gameOver = TRUE
@@ -147,12 +147,12 @@ SUB StepSnake()
     END IF
 
     FOR stepShiftIndex = snakeLength TO 2 STEP -1
-        snakeCol(stepShiftIndex) = snakeCol(stepShiftIndex - 1)
-        snakeRow(stepShiftIndex) = snakeRow(stepShiftIndex - 1)
+        snakeCol[stepShiftIndex] = snakeCol[stepShiftIndex - 1]
+        snakeRow[stepShiftIndex] = snakeRow[stepShiftIndex - 1]
     NEXT
 
-    snakeCol(1) = stepNewCol
-    snakeRow(1) = stepNewRow
+    snakeCol[1] = stepNewCol
+    snakeRow[1] = stepNewRow
 
     IF stepWillGrow THEN
         score = score + 1
@@ -189,7 +189,7 @@ END SUB
 
 FUNCTION HitsSnake(hitCheckCol AS INTEGER, hitCheckRow AS INTEGER, hitSegmentCount AS INTEGER) AS BOOLEAN
     FOR hitSegmentIndex = 1 TO hitSegmentCount
-        IF snakeCol(hitSegmentIndex) = hitCheckCol AND snakeRow(hitSegmentIndex) = hitCheckRow THEN
+        IF snakeCol[hitSegmentIndex] = hitCheckCol AND snakeRow[hitSegmentIndex] = hitCheckRow THEN
             RETURN TRUE
         END IF
     NEXT
@@ -207,10 +207,10 @@ SUB DrawFrame()
     DrawBlock(foodCol, foodRow, 12)
 
     FOR drawSegmentIndex = snakeLength TO 2 STEP -1
-        DrawBlock(snakeCol(drawSegmentIndex), snakeRow(drawSegmentIndex), 2)
+        DrawBlock(snakeCol[drawSegmentIndex], snakeRow[drawSegmentIndex], 2)
     NEXT
 
-    DrawBlock(snakeCol(1), snakeRow(1), 10)
+    DrawBlock(snakeCol[1], snakeRow[1], 10)
 
     PCOPY 1, 0
 END SUB

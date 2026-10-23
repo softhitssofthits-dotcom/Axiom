@@ -1,22 +1,22 @@
 ' ARRAYBINARYSEARCH для ранга 2+ возвращает координаты первого совпадения как INTEGER().
 
-DIM board(1 TO 2, 1 TO 4) AS INTEGER
-DIM hit() AS INTEGER
-DIM missing() AS INTEGER
+DIM board[1 TO 2, 1 TO 4] AS INTEGER
+DIM hit[] AS INTEGER
+DIM missing[] AS INTEGER
 
-board(1, 1) = 1
-board(1, 2) = 4
-board(1, 3) = 4
-board(1, 4) = 7
-board(2, 1) = 2
-board(2, 2) = 4
-board(2, 3) = 5
-board(2, 4) = 8
+board[1, 1] = 1
+board[1, 2] = 4
+board[1, 3] = 4
+board[1, 4] = 7
+board[2, 1] = 2
+board[2, 2] = 4
+board[2, 3] = 5
+board[2, 4] = 8
 
-hit = ARRAYBINARYSEARCH(board, 4, ROW)
-missing = ARRAYBINARYSEARCH(board, 6, ROW)
+hit[] = ARRAYBINARYSEARCH(board[], 4, ROW)
+missing[] = ARRAYBINARYSEARCH(board[], 6, ROW)
 
-PRINT hit(1)
-PRINT hit(2)
-PRINT LBOUND(missing)
-PRINT UBOUND(missing)
+PRINT hit[1]
+PRINT hit[2]
+PRINT LBOUND(missing[])
+PRINT UBOUND(missing[])

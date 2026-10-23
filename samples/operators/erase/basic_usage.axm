@@ -1,10 +1,10 @@
 ' ERASE освобождает массив: после этого для работы с ним снова нужно выполнить REDIM.
 
-DIM values() AS INTEGER
-REDIM values(1 TO 2)
-values(1) = 10
+DIM values[] AS INTEGER
+REDIM values[1 TO 2]
+values[1] = 10
 
-ERASE values
-REDIM values(5 TO 5)
+ERASE values[]
+REDIM values[5 TO 5]
 
-PRINT values(5)
+PRINT values[5]

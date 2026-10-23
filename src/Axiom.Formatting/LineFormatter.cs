@@ -108,7 +108,11 @@ internal static class LineFormatter
 
     private static bool NeedsSpace(FormattedToken previous, FormattedToken current)
     {
-        if (current.Kind is FormattedTokenKind.CloseParen or FormattedTokenKind.Comma or FormattedTokenKind.Semicolon or FormattedTokenKind.PlainText)
+        if (current.Kind is FormattedTokenKind.CloseParen
+            or FormattedTokenKind.CloseBracket
+            or FormattedTokenKind.Comma
+            or FormattedTokenKind.Semicolon
+            or FormattedTokenKind.PlainText)
         {
             return false;
         }
@@ -123,7 +127,7 @@ internal static class LineFormatter
             return false;
         }
 
-        if (previous.Kind == FormattedTokenKind.OpenParen)
+        if (previous.Kind is FormattedTokenKind.OpenParen or FormattedTokenKind.OpenBracket)
         {
             return false;
         }
@@ -138,11 +142,18 @@ internal static class LineFormatter
             return true;
         }
 
+        // Суффикс массива примыкает и к имени/типу, и к результату вызова.
+        if (current.Kind == FormattedTokenKind.OpenBracket)
+        {
+            return false;
+        }
+
         if (current.Kind == FormattedTokenKind.OpenParen)
         {
             return previous.Kind is not FormattedTokenKind.PlainWord
                 and not FormattedTokenKind.BuiltInWord
-                and not FormattedTokenKind.CloseParen;
+                and not FormattedTokenKind.CloseParen
+                and not FormattedTokenKind.CloseBracket;
         }
 
         if (current.Kind == FormattedTokenKind.BinaryOperator || previous.Kind == FormattedTokenKind.BinaryOperator)
@@ -150,8 +161,8 @@ internal static class LineFormatter
             return true;
         }
 
-        return IsWordLike(previous.Kind) && IsWordLike(current.Kind)
-            || previous.Kind == FormattedTokenKind.CloseParen
+        return IsWordLike(previous.Kind) && (IsWordLike(current.Kind) || current.Kind == FormattedTokenKind.PrefixOperator)
+            || previous.Kind is FormattedTokenKind.CloseParen or FormattedTokenKind.CloseBracket
             || current.Kind == FormattedTokenKind.ReservedWord;
     }
 
@@ -320,9 +331,26 @@ internal static class LineFormatter
         var lastTextOffset = -1;
         var interpolationFrames = new Stack<(bool InsideExpression, int LastTextOffset,
             List<RawToken> ExpressionTokens, StringBuilder Text)>();
+        var delimiters = new Stack<TokenKind>();
+        var validateDelimiters = lexerTokens.Any(static token => token.Kind is TokenKind.OpenBracketToken or TokenKind.CloseBracketToken);
 
         foreach (var token in lexerTokens)
         {
+            if (validateDelimiters && token.Kind is (TokenKind.OpenParenToken or TokenKind.OpenBracketToken))
+            {
+                delimiters.Push(token.Kind);
+            }
+            else if (validateDelimiters && token.Kind is (TokenKind.CloseParenToken or TokenKind.CloseBracketToken))
+            {
+                var expectedOpen = token.Kind == TokenKind.CloseParenToken
+                    ? TokenKind.OpenParenToken
+                    : TokenKind.OpenBracketToken;
+                if (delimiters.Count == 0 || delimiters.Pop() != expectedOpen)
+                {
+                    return false;
+                }
+            }
+
             if (token.Kind is TokenKind.EndOfFileToken or TokenKind.NewLineToken or TokenKind.CommentToken)
             {
                 continue;
@@ -417,7 +445,7 @@ internal static class LineFormatter
             }
         }
 
-        return true;
+        return delimiters.Count == 0 && !insideInterpolation && !insideExpression;
     }
 
     private static string FormatExpressionTokens(List<RawToken> expressionTokens, CodeFormattingStyle style)
@@ -469,6 +497,16 @@ internal static class LineFormatter
             return RawTokenKind.CloseParen;
         }
 
+        if (kind is TokenKind.OpenBracketToken)
+        {
+            return RawTokenKind.OpenBracket;
+        }
+
+        if (kind is TokenKind.CloseBracketToken)
+        {
+            return RawTokenKind.CloseBracket;
+        }
+
         if (kind is TokenKind.CommaToken)
         {
             return RawTokenKind.Comma;
@@ -486,7 +524,7 @@ internal static class LineFormatter
 
         if (kind is TokenKind.PlusToken or TokenKind.MinusToken or TokenKind.StarToken or
             TokenKind.SlashToken or TokenKind.BackslashToken or TokenKind.CaretToken or
-            TokenKind.EqualsToken or TokenKind.LessToken or TokenKind.GreaterToken or
+            TokenKind.EqualsToken or TokenKind.ColonEqualsToken or TokenKind.LessToken or TokenKind.GreaterToken or
             TokenKind.LessOrEqualsToken or TokenKind.GreaterOrEqualsToken or TokenKind.NotEqualsToken or
             TokenKind.AmpersandToken)
         {

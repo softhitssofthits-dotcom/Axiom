@@ -109,30 +109,30 @@ PRINT LEN(DIRNAME(filePath)) > 0
 
             var text = $"""
 DIM root AS STRING = "{ToBasicString(root)}"
-DIM files() AS STRING
-DIM textFiles() AS STRING
-DIM dirs() AS STRING
-DIM matchingDirs() AS STRING
-DIM emptyFiles() AS STRING
+DIM files[] AS STRING
+DIM textFiles[] AS STRING
+DIM dirs[] AS STRING
+DIM matchingDirs[] AS STRING
+DIM emptyFiles[] AS STRING
 
-files = GETFILES(root)
-textFiles = GETFILES(root, "*.txt")
-dirs = GETDIRS(root)
-matchingDirs = GETDIRS(root, "b*")
-emptyFiles = GETFILES(root, "*.none")
+files[] = GETFILES(root)
+textFiles[] = GETFILES(root, "*.txt")
+dirs[] = GETDIRS(root)
+matchingDirs[] = GETDIRS(root, "b*")
+emptyFiles[] = GETFILES(root, "*.none")
 
-PRINT ARRAYLENGTH(files)
-PRINT FILENAME(files(1))
-PRINT FILENAME(files(2))
-PRINT ARRAYLENGTH(textFiles)
-PRINT FILENAME(textFiles(1))
-PRINT ARRAYLENGTH(dirs)
-PRINT FILENAME(dirs(1))
-PRINT FILENAME(dirs(2))
-PRINT ARRAYLENGTH(matchingDirs)
-PRINT FILENAME(matchingDirs(1))
-PRINT ARRAYISALLOCATED(emptyFiles)
-PRINT ARRAYLENGTH(emptyFiles)
+PRINT ARRAYLENGTH(files[])
+PRINT FILENAME(files[1])
+PRINT FILENAME(files[2])
+PRINT ARRAYLENGTH(textFiles[])
+PRINT FILENAME(textFiles[1])
+PRINT ARRAYLENGTH(dirs[])
+PRINT FILENAME(dirs[1])
+PRINT FILENAME(dirs[2])
+PRINT ARRAYLENGTH(matchingDirs[])
+PRINT FILENAME(matchingDirs[1])
+PRINT ARRAYISALLOCATED(emptyFiles[])
+PRINT ARRAYLENGTH(emptyFiles[])
 """;
 
             var (_, host, result) = ExecuteProgram(text);
@@ -159,16 +159,16 @@ PRINT ARRAYLENGTH(emptyFiles)
 
             var text = $"""
 DIM filePath AS STRING = "{ToBasicString(filePath)}"
-DIM lines() AS STRING
+DIM lines[] AS STRING
 
-lines = READALLLINES(filePath)
+lines[] = READALLLINES(filePath)
 
-PRINT ARRAYISALLOCATED(lines)
-PRINT ARRAYLENGTH(lines)
-PRINT LBOUND(lines)
-PRINT UBOUND(lines)
-PRINT lines(1)
-PRINT lines(2)
+PRINT ARRAYISALLOCATED(lines[])
+PRINT ARRAYLENGTH(lines[])
+PRINT LBOUND(lines[])
+PRINT UBOUND(lines[])
+PRINT lines[1]
+PRINT lines[2]
 """;
 
             var (_, host, result) = ExecuteProgram(text);
@@ -195,14 +195,14 @@ PRINT lines(2)
 
             var text = $"""
 DIM filePath AS STRING = "{ToBasicString(filePath)}"
-DIM lines() AS STRING
+DIM lines[] AS STRING
 
-lines = READALLLINES(filePath)
+lines[] = READALLLINES(filePath)
 
-PRINT ARRAYISALLOCATED(lines)
-PRINT ARRAYLENGTH(lines)
-PRINT LBOUND(lines)
-PRINT UBOUND(lines)
+PRINT ARRAYISALLOCATED(lines[])
+PRINT ARRAYLENGTH(lines[])
+PRINT LBOUND(lines[])
+PRINT UBOUND(lines[])
 """;
 
             var (_, host, result) = ExecuteProgram(text);
@@ -222,8 +222,8 @@ PRINT UBOUND(lines)
         var filePath = Path.Combine(Path.GetTempPath(), "axiom-fs-tests", Guid.NewGuid().ToString("N"), "missing.txt");
 
         var text = $"""
-DIM lines() AS STRING
-lines = READALLLINES("{ToBasicString(filePath)}")
+DIM lines[] AS STRING
+lines[] = READALLLINES("{ToBasicString(filePath)}")
 """;
 
         var (_, _, result) = ExecuteProgram(text);
@@ -243,8 +243,8 @@ lines = READALLLINES("{ToBasicString(filePath)}")
         {
             var text = $"""
 DIM root AS STRING = "{ToBasicString(root)}"
-DIM files() AS STRING
-files = GETFILES(root, "")
+DIM files[] AS STRING
+files[] = GETFILES(root, "")
 """;
 
             var (_, _, result) = ExecuteProgram(text);

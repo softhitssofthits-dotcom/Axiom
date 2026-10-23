@@ -7,29 +7,7 @@ public sealed class StringValueContextMatrixTests
     [Fact]
     public void ArraysRecordsArgumentsReturnsAndInterpolationPreserveStringValues()
     {
-        const string source = """
-TYPE Box
-    value AS STRING
-END TYPE
-DIM text AS STRING = "А😀"
-text = text + "Б"
-DIM saved AS Box
-saved.value = text
-DIM items(-1 TO 0) AS STRING
-items(-1) = text
-items(0) = text
-PRINT Combine(text, Change())
-PRINT saved.value = items(-1)
-PRINT JOIN(items, "|")
-PRINT $"{saved.value}|{text}"
-FUNCTION Change() AS STRING
-    text = text + "В"
-    RETURN "!"
-END FUNCTION
-FUNCTION Combine(first AS STRING, second AS STRING) AS STRING
-    RETURN first + second
-END FUNCTION
-""";
+        const string source = "TYPE Box\r\n    value AS STRING\r\nEND TYPE\r\nDIM text AS STRING = \"А😀\"\r\ntext = text + \"Б\"\r\nDIM saved AS Box\r\nsaved.value = text\r\nDIM items[-1 TO 0] AS STRING\r\nitems[-1] = text\r\nitems[0] = text\r\nPRINT Combine(text, Change())\r\nPRINT saved.value = items[-1]\r\nPRINT JOIN(items[], \"|\")\r\nPRINT $\"{saved.value}|{text}\"\r\nFUNCTION Change() AS STRING\r\n    text = text + \"В\"\r\n    RETURN \"!\"\r\nEND FUNCTION\r\nFUNCTION Combine(first AS STRING, second AS STRING) AS STRING\r\n    RETURN first + second\r\nEND FUNCTION";
         var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Equal(new[] { "А😀Б!", "TRUE", "А😀Б|А😀Б", "А😀Б|А😀БВ" }, run.Output);

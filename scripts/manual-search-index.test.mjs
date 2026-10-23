@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
 import {mergeSearchDestinations} from './manual-search-index.mjs';
 
 test('Одна статья находится по всем именам без повторения результата', () => {
@@ -19,4 +21,15 @@ test('Одна статья находится по всем именам без
   assert.ok(entries[1].keywords.includes('PUT'));
   assert.equal(entries[2].href,'view.html#view-print');
   assert.equal(entries[3].href,'view.html');
+});
+
+
+test('Руководство перехода массивов доступно в общем оглавлении и поиске',()=>{
+ const context={window:{}};
+ for(const file of ['chapters.js','search-index.js'])vm.runInNewContext(fs.readFileSync(new URL('../docs/manual/scripts/'+file,import.meta.url),'utf8'),context);
+ const chapter=context.window.AxiomManualChapters.find(c=>c.number===10);
+ assert.equal(chapter.items.filter(item=>item.href==='arrays-migration.html').length,1);
+ const entries=context.window.AxiomSearchIndex.filter(item=>item.href==='arrays-migration.html');
+ assert.equal(entries.length,1);
+ assert.ok(entries[0].keywords.includes('квадратные скобки'));
 });

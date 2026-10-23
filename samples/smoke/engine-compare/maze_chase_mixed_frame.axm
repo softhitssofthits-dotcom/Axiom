@@ -25,12 +25,12 @@ DIM HUD_TEXT_COLOR AS INTEGER = RGB(255, 244, 180)
 DIM HUD_STATUS_COLOR AS INTEGER = RGB(210, 228, 255)
 DIM HUD_LINE_COLOR AS INTEGER = RGB(90, 214, 255)
 
-DIM maze(1 TO 36) AS STRING
+DIM maze[1 TO 36] AS STRING
 DIM mazeRows AS INTEGER = 36
 DIM mazeCols AS INTEGER = 0
 
 DIM mazeBackground AS IMAGE
-DIM playerFrames(1 TO 4) AS SPRITE
+DIM playerFrames[1 TO 4] AS SPRITE
 DIM ghostSprite AS SPRITE
 
 DIM playerStartCol AS INTEGER
@@ -89,57 +89,57 @@ PRINT lives
 
 SUB LoadResources()
     mazeBackground = LOADIMAGE("../../graphics/game/art/Background.gif")
-    playerFrames(DIR_RIGHT) = LOADSPRITE("../../graphics/game/art/pacman-right/1.png", 16, 16)
-    playerFrames(DIR_LEFT) = LOADSPRITE("../../graphics/game/art/pacman-left/1.png", 16, 16)
-    playerFrames(DIR_UP) = LOADSPRITE("../../graphics/game/art/pacman-up/1.png", 16, 16)
-    playerFrames(DIR_DOWN) = LOADSPRITE("../../graphics/game/art/pacman-down/1.png", 16, 16)
+    playerFrames[DIR_RIGHT] = LOADSPRITE("../../graphics/game/art/pacman-right/1.png", 16, 16)
+    playerFrames[DIR_LEFT] = LOADSPRITE("../../graphics/game/art/pacman-left/1.png", 16, 16)
+    playerFrames[DIR_UP] = LOADSPRITE("../../graphics/game/art/pacman-up/1.png", 16, 16)
+    playerFrames[DIR_DOWN] = LOADSPRITE("../../graphics/game/art/pacman-down/1.png", 16, 16)
     ghostSprite = LOADSPRITE("../../graphics/game/art/ghosts/blinky.png", 16, 16)
 END SUB
 
 SUB InitMaze()
-    maze(1) = "############################"
-    maze(2) = "############################"
-    maze(3) = "############################"
-    maze(4) = "############################"
-    maze(5) = "#o...........##...........o#"
-    maze(6) = "#.####.#####.##.#####.####.#"
-    maze(7) = "#.####.#####.##.#####.####.#"
-    maze(8) = "#.####.#####.##.#####.####.#"
-    maze(9) = "#..........................#"
-    maze(10) = "#.####.##.########.##.####.#"
-    maze(11) = "#.####.##.########.##.####.#"
-    maze(12) = "#......##....##....##......#"
-    maze(13) = "######.#####.##.#####.######"
-    maze(14) = "######.#####.##.#####.######"
-    maze(15) = "######.##..........##.######"
-    maze(16) = "######.##.########.##.######"
-    maze(17) = "######.##.########.##.######"
-    maze(18) = "..........########.........."
-    maze(19) = "######.##.########.##.######"
-    maze(20) = "######.##.########.##.######"
-    maze(21) = "######.##.....G....##.######"
-    maze(22) = "######.##.########.##.######"
-    maze(23) = "######.##.########.##.######"
-    maze(24) = "#............##............#"
-    maze(25) = "#.####.#####.##.#####.####.#"
-    maze(26) = "#.####.#####.##.#####.####.#"
-    maze(27) = "#o..##.......P........##..o#"
-    maze(28) = "###.##.##.########.##.##.###"
-    maze(29) = "###.##.##.########.##.##.###"
-    maze(30) = "#......##....##....##......#"
-    maze(31) = "#.##########.##.##########.#"
-    maze(32) = "#.##########.##.##########.#"
-    maze(33) = "#..........................#"
-    maze(34) = "############################"
-    maze(35) = "############################"
-    maze(36) = "############################"
+    maze[1] = "############################"
+    maze[2] = "############################"
+    maze[3] = "############################"
+    maze[4] = "############################"
+    maze[5] = "#o...........##...........o#"
+    maze[6] = "#.####.#####.##.#####.####.#"
+    maze[7] = "#.####.#####.##.#####.####.#"
+    maze[8] = "#.####.#####.##.#####.####.#"
+    maze[9] = "#..........................#"
+    maze[10] = "#.####.##.########.##.####.#"
+    maze[11] = "#.####.##.########.##.####.#"
+    maze[12] = "#......##....##....##......#"
+    maze[13] = "######.#####.##.#####.######"
+    maze[14] = "######.#####.##.#####.######"
+    maze[15] = "######.##..........##.######"
+    maze[16] = "######.##.########.##.######"
+    maze[17] = "######.##.########.##.######"
+    maze[18] = "..........########.........."
+    maze[19] = "######.##.########.##.######"
+    maze[20] = "######.##.########.##.######"
+    maze[21] = "######.##.....G....##.######"
+    maze[22] = "######.##.########.##.######"
+    maze[23] = "######.##.########.##.######"
+    maze[24] = "#............##............#"
+    maze[25] = "#.####.#####.##.#####.####.#"
+    maze[26] = "#.####.#####.##.#####.####.#"
+    maze[27] = "#o..##.......P........##..o#"
+    maze[28] = "###.##.##.########.##.##.###"
+    maze[29] = "###.##.##.########.##.##.###"
+    maze[30] = "#......##....##....##......#"
+    maze[31] = "#.##########.##.##########.#"
+    maze[32] = "#.##########.##.##########.#"
+    maze[33] = "#..........................#"
+    maze[34] = "############################"
+    maze[35] = "############################"
+    maze[36] = "############################"
 
-    mazeCols = LEN(maze(1))
+    mazeCols = LEN(maze[1])
     pelletsLeft = 0
 
     FOR rowIndex = 1 TO mazeRows
         FOR columnIndex = 1 TO mazeCols
-            DIM tileText AS STRING = MID(maze(rowIndex), columnIndex, 1)
+            DIM tileText AS STRING = MID(maze[rowIndex], columnIndex, 1)
 
             IF tileText = "." OR tileText = "o" THEN
                 pelletsLeft = pelletsLeft + 1
@@ -148,13 +148,13 @@ SUB InitMaze()
             IF tileText = "P" THEN
                 playerStartCol = columnIndex
                 playerStartRow = rowIndex
-                maze(rowIndex) = ReplaceCell(maze(rowIndex), columnIndex, " ")
+                maze[rowIndex] = ReplaceCell(maze[rowIndex], columnIndex, " ")
             END IF
 
             IF tileText = "G" THEN
                 ghostStartCol = columnIndex
                 ghostStartRow = rowIndex
-                maze(rowIndex) = ReplaceCell(maze(rowIndex), columnIndex, " ")
+                maze[rowIndex] = ReplaceCell(maze[rowIndex], columnIndex, " ")
             END IF
         NEXT
     NEXT
@@ -212,7 +212,7 @@ SUB DrawMazeWorld()
     CAMERA 0, 0
     DRAWIMAGE mazeBackground, WorldOffsetX(), WorldOffsetY(), worldWidthPixels, worldHeightPixels
     DrawVisiblePellets()
-    DRAWSPRITE playerFrames(playerFacing), 0, PlayerPixelX() - (TILE \ 2), PlayerPixelY() - (TILE \ 2)
+    DRAWSPRITE playerFrames[playerFacing], 0, PlayerPixelX() - (TILE \ 2), PlayerPixelY() - (TILE \ 2)
     DRAWSPRITE ghostSprite, 0, GhostPixelX() - (TILE \ 2), GhostPixelY() - (TILE \ 2)
 END SUB
 
@@ -250,13 +250,13 @@ SUB EatPelletIfNeeded()
     IF tileText = "." THEN
         score = score + 10
         pelletsLeft = pelletsLeft - 1
-        maze(playerRow) = ReplaceCell(maze(playerRow), playerCol, " ")
+        maze[playerRow] = ReplaceCell(maze[playerRow], playerCol, " ")
     END IF
 
     IF tileText = "o" THEN
         score = score + 50
         pelletsLeft = pelletsLeft - 1
-        maze(playerRow) = ReplaceCell(maze(playerRow), playerCol, " ")
+        maze[playerRow] = ReplaceCell(maze[playerRow], playerCol, " ")
     END IF
 END SUB
 
@@ -461,7 +461,7 @@ FUNCTION CellAt(rowIndex AS INTEGER, columnIndex AS INTEGER) AS STRING
         RETURN "#"
     END IF
 
-    RETURN MID(maze(rowIndex), columnIndex, 1)
+    RETURN MID(maze[rowIndex], columnIndex, 1)
 END FUNCTION
 
 FUNCTION ReplaceCell(lineText AS STRING, position AS INTEGER, replacement AS STRING) AS STRING

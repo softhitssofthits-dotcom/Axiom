@@ -1,14 +1,14 @@
 ' У одномерного массива есть только измерение 1.
-DIM values(5 TO 7) AS INTEGER
-DIM part() AS INTEGER
-values(5) = 10
+DIM values[5 TO 7] AS INTEGER
+DIM part[] AS INTEGER
+values[5] = 10
 ' Результат выборки компактен: первый элемент имеет индекс 1.
-part = ARRAYTAKE(values, 1, 1)
-PRINT "Первое значение: "; part(1)
+part[] = ARRAYTAKE(values[], 1, 1)
+PRINT "Первое значение: "; part[1]
 ' Ошибка измерения перехватывается, программа продолжает работу.
 TRY
-    part = ARRAYTAKE(values, 1, 2)
+    part[] = ARRAYTAKE(values[], 1, 2)
 CATCH err
     PRINT "Неверное измерение: "; err.Code
 END TRY
-PRINT "Исходное значение сохранено: "; values(5)
+PRINT "Исходное значение сохранено: "; values[5]

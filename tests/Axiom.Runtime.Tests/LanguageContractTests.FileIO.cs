@@ -189,17 +189,17 @@ CLOSE f
 
         var text = $"""
 DIM f AS FILE
-DIM first() AS STRING
-DIM rest() AS STRING
+DIM first[] AS STRING
+DIM rest[] AS STRING
 OPEN "{ToBasicString(filePath)}" FOR INPUT AS f
-first = READLINES(f, 2)
-rest = READLINES(f, 2)
-PRINT ARRAYLENGTH(first)
-PRINT first(1)
-PRINT first(2)
+first[] = READLINES(f, 2)
+rest[] = READLINES(f, 2)
+PRINT ARRAYLENGTH(first[])
+PRINT first[1]
+PRINT first[2]
 PRINT LINENUMBER(f)
-PRINT ARRAYLENGTH(rest)
-PRINT rest(1)
+PRINT ARRAYLENGTH(rest[])
+PRINT rest[1]
 PRINT EOF(f)
 CLOSE f
 """;
@@ -220,20 +220,20 @@ CLOSE f
 
         var text = $"""
 DIM f AS FILE
-DIM lines() AS STRING
+DIM lines[] AS STRING
 OPEN "{ToBasicString(filePath)}" FOR INPUT AS f
-lines = READLINES(f, 0)
-PRINT ARRAYISALLOCATED(lines)
-PRINT ARRAYLENGTH(lines)
-PRINT LBOUND(lines)
-PRINT UBOUND(lines)
+lines[] = READLINES(f, 0)
+PRINT ARRAYISALLOCATED(lines[])
+PRINT ARRAYLENGTH(lines[])
+PRINT LBOUND(lines[])
+PRINT UBOUND(lines[])
 PRINT LINENUMBER(f)
-lines = READLINES(f, 1)
-lines = READLINES(f, 1)
-PRINT ARRAYISALLOCATED(lines)
-PRINT ARRAYLENGTH(lines)
-PRINT LBOUND(lines)
-PRINT UBOUND(lines)
+lines[] = READLINES(f, 1)
+lines[] = READLINES(f, 1)
+PRINT ARRAYISALLOCATED(lines[])
+PRINT ARRAYLENGTH(lines[])
+PRINT LBOUND(lines[])
+PRINT UBOUND(lines[])
 CLOSE f
 """;
 
@@ -522,9 +522,9 @@ PRINT READTOEND(f)
 
         var text = $"""
 DIM f AS FILE
-DIM lines() AS STRING
+DIM lines[] AS STRING
 OPEN "{ToBasicString(filePath)}" FOR OUTPUT AS f
-lines = READLINES(f, 1)
+lines[] = READLINES(f, 1)
 """;
 
         var (_, _, result) = ExecuteProgram(text);
@@ -544,9 +544,9 @@ lines = READLINES(f, 1)
 
         var text = $"""
 DIM f AS FILE
-DIM lines() AS STRING
+DIM lines[] AS STRING
 OPEN "{ToBasicString(filePath)}" FOR INPUT AS f
-lines = READLINES(f, -1)
+lines[] = READLINES(f, -1)
 """;
 
         var (_, _, result) = ExecuteProgram(text);

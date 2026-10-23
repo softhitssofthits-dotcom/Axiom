@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Оператор WINDOW — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
 <body data-page="window"><a class="skip-link" href="#main-content">Перейти к статье</a>
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
@@ -7,18 +7,12 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор WINDOW</span></nav>
-<p class="eyebrow">Оператор</p><h1 class="page-title">Оператор WINDOW</h1><p class="lead"><code>WINDOW</code> — оператор языка Axiom, который связывает текущую область рисования с логической системой координат. Программа может задать собственную шкалу вместо прямого обращения к пикселям.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-
+<p class="eyebrow">Оператор</p><h1 class="page-title">Оператор WINDOW</h1><p class="lead">График функции, оси или схему удобнее описывать в собственных числах, а не в пикселях. Оператор <code>WINDOW</code> связывает текущую область рисования с логической системой координат, и программа задаёт свою шкалу, которую среда переводит в экранную область.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
             <section class="article-section">
-                <h2>Когда использовать WINDOW</h2>
-                <p>Логические координаты удобны для графика функции, осей или схемы: размеры изображения задаются предметной шкалой, а оператор <code>WINDOW</code> переводит их в экранную область.</p>
-            </section>
-
-        <section class="article-section">
-                <h2>Контекст выполнения</h2>
-                <p>Оператор требует графического режима <code>SCREEN 1..10</code>.</p>
-                <p>Перед настройкой логической шкалы откройте экран оператором <a href="screen.html">SCREEN</a>. Сам оператор <code>WINDOW</code> окно не создаёт.</p>
+                <h2>Логическая шкала и экран</h2>
+                <p>Логические координаты удобны там, где размеры изображения задаются предметной шкалой, а не пикселями: оператор <code>WINDOW</code> переводит их в экранную область.</p>
+                <p>Оператор требует графического режима <code>SCREEN 1..10</code>. Перед настройкой логической шкалы откройте экран оператором <a href="screen.html">SCREEN</a>: сам оператор <code>WINDOW</code> окно не создаёт.</p>
             </section>
 
         <section class="article-section">
@@ -29,7 +23,7 @@
             </section>
 
         <section class="article-section">
-                <h2>Параметры</h2>
+                <h2>Аргументы</h2>
                 <table>
                     <thead>
                         <tr><th>Часть</th><th>Описание</th></tr>
@@ -43,19 +37,16 @@
 
         <section class="article-section">
                 <h2>Что делает оператор WINDOW</h2>
-                <p>Вызов без аргументов отменяет логическую шкалу и возвращает координаты текущей области <code>VIEW</code>.</p>
-                <p>Форма со словом <code>SCREEN</code> сохраняет экранное направление оси <code>Y</code>.</p>
-                <p>В форме без слова <code>SCREEN</code> увеличение <code>Y</code> направлено вверх, как в математической системе координат.</p>
+                <p>Вызов без аргументов отменяет логическую шкалу и возвращает координаты текущей области <code>VIEW</code>. Форма со словом <code>SCREEN</code> сохраняет экранное направление оси <code>Y</code>, а в форме без этого слова увеличение <code>Y</code> направлено вверх, как в математической системе координат.</p>
+                <p>Все четыре координаты приводятся к <code>DOUBLE</code>. Они должны быть конечными и задавать ненулевые диапазоны обеих осей; нулевая ширина или высота логической шкалы сообщает <code>MB3007</code>. Единицу логической шкалы выбирает программа, и она не обязана совпадать с пикселем. <code>WINDOW</code> изменяет преобразование последующего рисования, сохраняя уже нарисованные пиксели.</p>
             </section>
 
         <section class="article-section">
-                <h2>Правила работы</h2>
+                <h2>Порядок с VIEW и PMAP</h2>
                 <p>Сначала оператором <a href="view.html">VIEW</a> выбирают физическую область экрана. Затем оператором <code>WINDOW</code> задают шкалу, которая отображается в эту область.</p>
-                <p>Настроенную шкалу используют <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code> и форма <code>POINT(x, y)</code>.</p>
-                <p>Чтобы получить отдельную физическую или логическую координату явно, вызовите <a href="pmap.html">PMAP</a> с нужным селектором.</p>
+                <p>Настроенную шкалу используют <code>PSET</code>, <code>PRESET</code>, <code>LINE</code>, <code>CIRCLE</code>, <code>PAINT</code>, <code>DRAW</code> и форма <code>POINT(x, y)</code>. Чтобы получить отдельную физическую или логическую координату явно, вызовите <a href="pmap.html">PMAP</a> с нужным селектором.</p>
+                <p>Без активного <code>SCREEN 1..10</code> оператор завершается диагностикой <code>MB3010</code>.</p>
             </section>
-<section class="article-section"><h2>Типы аргументов и вырожденная шкала</h2><p>Все четыре координаты <code>WINDOW</code> приводятся к <code>DOUBLE</code>. Они должны быть конечными и задавать ненулевые диапазоны обеих осей. Нулевая ширина или высота логической шкалы сообщает <code>MB3007</code>. Единицу логической шкалы выбирает программа; она не обязана совпадать с пикселем. <code>WINDOW</code> изменяет преобразование последующего рисования, сохраняя уже нарисованные пиксели.</p></section>
-
 
         <section class="article-section">
                 <h2>Диагностика</h2>
@@ -74,7 +65,7 @@ WINDOW SCREEN (100, 200)-(110, 210)
 PSET (100, 200), 12
 PRINT PMAP(100, 0); ","; PMAP(200, 1)
 SLEEP</code></pre>
-                <p>Диапазоны <code>100..110</code> и <code>200..210</code> отображаются в выбранную физическую область. Поэтому аргументы оператора <code>PSET</code> обозначают точку логической шкалы.</p>
+                <p>Диапазоны <code>100..110</code> и <code>200..210</code> отображаются в выбранную физическую область, поэтому аргументы оператора <code>PSET</code> обозначают точку логической шкалы. Вызовы <code>PMAP</code> показывают, как эта же точка выражается в физических координатах области.</p>
             </section>
 
         <section class="article-section">

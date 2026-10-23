@@ -2,17 +2,17 @@
 ' TRUE
 ' FALSE
 
-DIM values(2 TO 3, 4 TO 6) AS INTEGER
+DIM values[2 TO 3, 4 TO 6] AS INTEGER
 
-values(2, 4) = 10
-values(2, 5) = 20
-values(2, 6) = 30
-values(3, 4) = 40
-values(3, 5) = -5
-values(3, 6) = 60
+values[2, 4] = 10
+values[2, 5] = 20
+values[2, 6] = 30
+values[3, 4] = 40
+values[3, 5] = -5
+values[3, 6] = 60
 
-PRINT ARRAYEVERY(values(2 TO 2, 4 TO 6), IsPositive)
-PRINT ARRAYEVERY(values(2 TO 3, 4 TO 6), IsPositive)
+PRINT ARRAYEVERY(values[2 TO 2, 4 TO 6], IsPositive)
+PRINT ARRAYEVERY(values[2 TO 3, 4 TO 6], IsPositive)
 
 FUNCTION IsPositive(value AS INTEGER) AS BOOLEAN
     RETURN value > 0

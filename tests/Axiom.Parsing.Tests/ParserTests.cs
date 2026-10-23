@@ -636,14 +636,16 @@ public sealed class ParserTests
     [Fact]
     public void Parse_PaletteUsingStatement()
     {
-        var program = ParseProgram("PALETTE USING colors", out var diagnostics);
+        var program = ParseProgram("PALETTE USING colors[]", out var diagnostics);
 
         Assert.Empty(diagnostics);
         var palette = AssertGlobalStatement<PaletteStatementSyntax>(program);
         Assert.False(palette.IsReset);
         Assert.True(palette.IsUsing);
         Assert.Equal(SyntaxKind.UsingKeyword, palette.UsingKeyword?.Kind);
-        Assert.Equal("colors", Assert.IsType<NameExpressionSyntax>(palette.ValuesExpression).IdentifierToken.Text);
+        var values = Assert.IsType<ArrayAccessExpressionSyntax>(palette.ValuesExpression);
+        Assert.True(values.IsWholeArray);
+        Assert.Equal("colors", Assert.IsType<NameExpressionSyntax>(values.Target).IdentifierToken.Text);
     }
 
     [Fact]
@@ -680,9 +682,9 @@ public sealed class ParserTests
     public void Parse_GetAndPutStatements()
     {
         var program = ParseProgram("""
-            GET STEP (1, 2)-STEP (3, 4), buffer
-            PUT STEP (5, 6), buffer, PRESET
-            PUT (7, 8), buffer
+            GET STEP (1, 2)-STEP (3, 4), buffer[]
+            PUT STEP (5, 6), buffer[], PRESET
+            PUT (7, 8), buffer[]
             """, out var diagnostics);
 
         Assert.Empty(diagnostics);
@@ -692,7 +694,9 @@ public sealed class ParserTests
 
         Assert.True(get.IsStartRelative);
         Assert.True(get.IsEndRelative);
-        Assert.IsType<NameExpressionSyntax>(get.BufferExpression);
+        Assert.True(Assert.IsType<ArrayAccessExpressionSyntax>(get.BufferExpression).IsWholeArray);
+        Assert.True(Assert.IsType<ArrayAccessExpressionSyntax>(putPreset.BufferExpression).IsWholeArray);
+        Assert.True(Assert.IsType<ArrayAccessExpressionSyntax>(putDefault.BufferExpression).IsWholeArray);
         Assert.True(putPreset.IsRelative);
         Assert.NotNull(putPreset.ActionToken);
         Assert.Equal(SyntaxKind.PresetKeyword, putPreset.ActionToken!.Kind);
@@ -983,18 +987,14 @@ END SUB
     [Fact]
     public void Parse_FunctionDeclarationWithArrayTypedParameterAndReturnType()
     {
-        const string text = """
-FUNCTION Clone(values AS INTEGER()) AS INTEGER()
-    RETURN values
-END FUNCTION
-""";
+        const string text = "FUNCTION Clone(values[] AS INTEGER) AS INTEGER[]\r\n    RETURN values[]\r\nEND FUNCTION";
 
         var program = ParseProgram(text, out var diagnostics);
 
         Assert.Empty(diagnostics);
         var function = Assert.IsType<FunctionDeclarationSyntax>(Assert.Single(program.Members));
-        var parameterType = AssertArrayType(function.Parameters[0].TypeClause.Type);
-        AssertNamedType(parameterType.ElementType, SyntaxKind.IntegerKeyword);
+        Assert.Equal(1, function.Parameters[0].ArrayBounds!.Rank);
+        AssertNamedType(function.Parameters[0].TypeClause.Type, SyntaxKind.IntegerKeyword);
 
         var returnType = AssertArrayType(function.ReturnType.Type);
         AssertNamedType(returnType.ElementType, SyntaxKind.IntegerKeyword);
@@ -1016,19 +1016,19 @@ END FUNCTION
     }
 
     [Fact]
-    public void Parse_CallArgumentRangeExpression()
+    public void Parse_ArrayIndexRangeExpression()
     {
-        var program = ParseProgram("PRINT grid(2, 3 TO 4)", out var diagnostics);
+        var program = ParseProgram("PRINT grid[2, 3 TO 4]", out var diagnostics);
 
         Assert.Empty(diagnostics);
         var print = AssertPrintStatement(program);
-        var call = Assert.IsType<CallExpressionSyntax>(AssertSinglePrintExpression(print));
+        var call = Assert.IsType<ArrayAccessExpressionSyntax>(AssertSinglePrintExpression(print));
 
         Assert.Equal("grid", Assert.IsType<NameExpressionSyntax>(call.Target).IdentifierToken.Text);
-        Assert.Equal(2, call.Arguments.Count);
-        Assert.IsType<LiteralExpressionSyntax>(call.Arguments[0]);
+        Assert.Equal(2, call.Indices.Count);
+        Assert.IsType<LiteralExpressionSyntax>(call.Indices[0]);
 
-        var range = Assert.IsType<RangeExpressionSyntax>(call.Arguments[1]);
+        var range = Assert.IsType<RangeExpressionSyntax>(call.Indices[1]);
         Assert.Equal(SyntaxKind.ToKeyword, range.ToKeyword.Kind);
         Assert.Equal(3, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(range.LowerBound).LiteralToken.Value));
         Assert.Equal(4, Assert.IsType<int>(Assert.IsType<LiteralExpressionSyntax>(range.UpperBound).LiteralToken.Value));
@@ -1050,7 +1050,7 @@ END FUNCTION
     [Fact]
     public void Parse_DimStatementWithDynamicArrayDeclarator()
     {
-        var program = ParseProgram("DIM items() AS STRING", out var diagnostics);
+        var program = ParseProgram("DIM items[] AS STRING", out var diagnostics);
 
         Assert.Empty(diagnostics);
         var dim = AssertGlobalStatement<DimStatementSyntax>(program);
@@ -1069,7 +1069,7 @@ END FUNCTION
     [Fact]
     public void Parse_DimStatementWithMultidimensionalArrayDeclarator()
     {
-        var program = ParseProgram("DIM grid(1 TO 2, 10 TO 11) AS INTEGER", out var diagnostics);
+        var program = ParseProgram("DIM grid[1 TO 2, 10 TO 11] AS INTEGER", out var diagnostics);
 
         Assert.Empty(diagnostics);
         var dim = AssertGlobalStatement<DimStatementSyntax>(program);
@@ -1143,7 +1143,7 @@ END FUNCTION
     [Fact]
     public void Parse_RedimStatement()
     {
-        var program = ParseProgram("REDIM items(1 TO 3)", out var diagnostics);
+        var program = ParseProgram("REDIM items[1 TO 3]", out var diagnostics);
 
         Assert.Empty(diagnostics);
         var redim = AssertGlobalStatement<RedimStatementSyntax>(program);
@@ -1158,7 +1158,7 @@ END FUNCTION
     [Fact]
     public void Parse_RedimStatementWithMultipleDimensions()
     {
-        var program = ParseProgram("REDIM grid(1 TO 2, 10 TO 11)", out var diagnostics);
+        var program = ParseProgram("REDIM grid[1 TO 2, 10 TO 11]", out var diagnostics);
 
         Assert.Empty(diagnostics);
         var redim = AssertGlobalStatement<RedimStatementSyntax>(program);
@@ -1178,7 +1178,7 @@ END FUNCTION
     [Fact]
     public void Parse_ArrayBoundsAndDimensionHaveDistinctSyntaxKinds()
     {
-        var program = ParseProgram("DIM grid(1 TO 2, 3 TO 4)", out var diagnostics);
+        var program = ParseProgram("DIM grid[1 TO 2, 3 TO 4]", out var diagnostics);
 
         Assert.Empty(diagnostics);
         var dim = AssertGlobalStatement<DimStatementSyntax>(program);
@@ -1191,7 +1191,7 @@ END FUNCTION
     [Fact]
     public void Parse_RedimPreserveStatement()
     {
-        var program = ParseProgram("REDIM PRESERVE items(2 TO 4)", out var diagnostics);
+        var program = ParseProgram("REDIM PRESERVE items[2 TO 4]", out var diagnostics);
 
         Assert.Empty(diagnostics);
         var redim = AssertGlobalStatement<RedimStatementSyntax>(program);
@@ -1207,18 +1207,19 @@ END FUNCTION
     [Fact]
     public void Parse_EraseStatement()
     {
-        var program = ParseProgram("ERASE items", out var diagnostics);
+        var program = ParseProgram("ERASE items[]", out var diagnostics);
 
         Assert.Empty(diagnostics);
         var erase = AssertGlobalStatement<EraseStatementSyntax>(program);
-        Assert.NotNull(erase.Identifier);
-        Assert.Equal("items", erase.Identifier!.Text);
+        var target = Assert.IsType<ArrayAccessExpressionSyntax>(erase.Target);
+        Assert.True(target.IsWholeArray);
+        Assert.Equal("items", Assert.IsType<NameExpressionSyntax>(target.Target).IdentifierToken.Text);
     }
 
     [Fact]
     public void Parse_RedimStatementWithTypeFieldTarget()
     {
-        var program = ParseProgram("REDIM user.Scores(1 TO 3)", out var diagnostics);
+        var program = ParseProgram("REDIM user.Scores[1 TO 3]", out var diagnostics);
 
         Assert.Empty(diagnostics);
         var redim = AssertGlobalStatement<RedimStatementSyntax>(program);
@@ -1230,31 +1231,33 @@ END FUNCTION
     [Fact]
     public void Parse_RedimStatementWithIndexedTypeFieldTarget()
     {
-        var program = ParseProgram("REDIM people(1).Scores(1 TO 3)", out var diagnostics);
+        var program = ParseProgram("REDIM people[1].Scores[1 TO 3]", out var diagnostics);
 
         Assert.Empty(diagnostics);
         var redim = AssertGlobalStatement<RedimStatementSyntax>(program);
         var target = Assert.IsType<FieldAccessExpressionSyntax>(redim.Target);
         Assert.Equal("Scores", target.Identifier.Text);
 
-        var recordTarget = Assert.IsType<CallExpressionSyntax>(target.Target);
+        var recordTarget = Assert.IsType<ArrayAccessExpressionSyntax>(target.Target);
         Assert.Equal("people", Assert.IsType<NameExpressionSyntax>(recordTarget.Target).IdentifierToken.Text);
-        Assert.Single(recordTarget.Arguments);
+        Assert.Single(recordTarget.Indices);
     }
 
     [Fact]
     public void Parse_EraseStatementWithIndexedTypeFieldTarget()
     {
-        var program = ParseProgram("ERASE people(1).Scores", out var diagnostics);
+        var program = ParseProgram("ERASE people[1].Scores[]", out var diagnostics);
 
         Assert.Empty(diagnostics);
         var erase = AssertGlobalStatement<EraseStatementSyntax>(program);
-        var target = Assert.IsType<FieldAccessExpressionSyntax>(erase.Target);
+        var wholeArray = Assert.IsType<ArrayAccessExpressionSyntax>(erase.Target);
+        Assert.True(wholeArray.IsWholeArray);
+        var target = Assert.IsType<FieldAccessExpressionSyntax>(wholeArray.Target);
         Assert.Equal("Scores", target.Identifier.Text);
 
-        var recordTarget = Assert.IsType<CallExpressionSyntax>(target.Target);
+        var recordTarget = Assert.IsType<ArrayAccessExpressionSyntax>(target.Target);
         Assert.Equal("people", Assert.IsType<NameExpressionSyntax>(recordTarget.Target).IdentifierToken.Text);
-        Assert.Single(recordTarget.Arguments);
+        Assert.Single(recordTarget.Indices);
     }
 
     [Fact]
@@ -1978,15 +1981,7 @@ PRINT user.Age
     [Fact]
     public void Parse_TypeArrayElementFieldAccess()
     {
-        const string text = """
-TYPE Person
-    Name AS STRING
-END TYPE
-
-DIM people(1 TO 2) AS Person
-people(1).Name = "Ada"
-PRINT people(2).Name
-""";
+        const string text = "TYPE Person\r\n    Name AS STRING\r\nEND TYPE\r\n\r\nDIM people[1 TO 2] AS Person\r\npeople[1].Name = \"Ada\"\r\nPRINT people[2].Name";
 
         var program = ParseProgram(text, out var diagnostics);
 
@@ -1994,60 +1989,47 @@ PRINT people(2).Name
 
         var assignment = Assert.IsType<AssignmentStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[2]).Statement);
         var assignmentTarget = Assert.IsType<FieldAccessExpressionSyntax>(assignment.Target);
-        var assignmentArrayAccess = Assert.IsType<CallExpressionSyntax>(assignmentTarget.Target);
+        var assignmentArrayAccess = Assert.IsType<ArrayAccessExpressionSyntax>(assignmentTarget.Target);
         Assert.Equal("Name", assignmentTarget.Identifier.Text);
         Assert.Equal("people", Assert.IsType<NameExpressionSyntax>(assignmentArrayAccess.Target).IdentifierToken.Text);
-        Assert.Single(assignmentArrayAccess.Arguments);
+        Assert.Single(assignmentArrayAccess.Indices);
 
         var print = Assert.IsType<PrintStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[3]).Statement);
         var printTarget = Assert.IsType<FieldAccessExpressionSyntax>(AssertSinglePrintExpression(print));
-        var printArrayAccess = Assert.IsType<CallExpressionSyntax>(printTarget.Target);
+        var printArrayAccess = Assert.IsType<ArrayAccessExpressionSyntax>(printTarget.Target);
         Assert.Equal("Name", printTarget.Identifier.Text);
         Assert.Equal("people", Assert.IsType<NameExpressionSyntax>(printArrayAccess.Target).IdentifierToken.Text);
-        Assert.Single(printArrayAccess.Arguments);
+        Assert.Single(printArrayAccess.Indices);
     }
 
     [Fact]
     public void Parse_TypeArrayFieldViewAccess()
     {
-        const string text = """
-TYPE Board
-    Cells(,) AS INTEGER
-END TYPE
-
-DIM board AS Board
-DIM lineView() AS INTEGER
-lineView = board.Cells(2)
-PRINT board.Cells(2 TO 3, 3 TO 4)
-""";
+        const string text = "TYPE Board\r\n    Cells[,] AS INTEGER\r\nEND TYPE\r\n\r\nDIM board AS Board\r\nDIM lineView[] AS INTEGER\r\nlineView[] = board.Cells[2]\r\nPRINT board.Cells[2 TO 3, 3 TO 4]";
 
         var program = ParseProgram(text, out var diagnostics);
 
         Assert.Empty(diagnostics);
 
         var assignment = Assert.IsType<AssignmentStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[3]).Statement);
-        var assignmentValue = Assert.IsType<CallExpressionSyntax>(assignment.Expression);
+        var assignmentValue = Assert.IsType<ArrayAccessExpressionSyntax>(assignment.Expression);
         var assignmentFieldTarget = Assert.IsType<FieldAccessExpressionSyntax>(assignmentValue.Target);
         Assert.Equal("Cells", assignmentFieldTarget.Identifier.Text);
         Assert.Equal("board", Assert.IsType<NameExpressionSyntax>(assignmentFieldTarget.Target).IdentifierToken.Text);
-        Assert.Single(assignmentValue.Arguments);
+        Assert.Single(assignmentValue.Indices);
 
         var print = Assert.IsType<PrintStatementSyntax>(Assert.IsType<GlobalStatementSyntax>(program.Members[4]).Statement);
-        var printValue = Assert.IsType<CallExpressionSyntax>(AssertSinglePrintExpression(print));
+        var printValue = Assert.IsType<ArrayAccessExpressionSyntax>(AssertSinglePrintExpression(print));
         var printFieldTarget = Assert.IsType<FieldAccessExpressionSyntax>(printValue.Target);
         Assert.Equal("Cells", printFieldTarget.Identifier.Text);
-        Assert.Equal(2, printValue.Arguments.Count);
-        Assert.All(printValue.Arguments, static argument => Assert.IsType<RangeExpressionSyntax>(argument));
+        Assert.Equal(2, printValue.Indices.Count);
+        Assert.All(printValue.Indices, static argument => Assert.IsType<RangeExpressionSyntax>(argument));
     }
 
     [Fact]
     public void Parse_TypeDeclarationWithDynamicArrayField()
     {
-        const string text = """
-TYPE Person
-    Scores() AS INTEGER
-END TYPE
-""";
+        const string text = "TYPE Person\r\n    Scores[] AS INTEGER\r\nEND TYPE";
 
         var program = ParseProgram(text, out var diagnostics);
 
@@ -2064,11 +2046,7 @@ END TYPE
     [Fact]
     public void Parse_TypeDeclarationWithFixedArrayField()
     {
-        const string text = """
-TYPE Person
-    Scores(-1 TO 3) AS INTEGER
-END TYPE
-""";
+        const string text = "TYPE Person\r\n    Scores[-1 TO 3] AS INTEGER\r\nEND TYPE";
 
         var program = ParseProgram(text, out var diagnostics);
 
@@ -2139,12 +2117,7 @@ END TYPE
     [Fact]
     public void Parse_TypeDeclarationWithGroupedFields()
     {
-        const string text = """
-TYPE Person
-    Name, Alias AS STRING
-    Scores(), Flags(1 TO 2) AS INTEGER
-END TYPE
-""";
+        const string text = "TYPE Person\r\n    Name, Alias AS STRING\r\n    Scores[], Flags[1 TO 2] AS INTEGER\r\nEND TYPE";
 
         var program = ParseProgram(text, out var diagnostics);
 

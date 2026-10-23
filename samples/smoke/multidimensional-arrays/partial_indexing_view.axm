@@ -1,19 +1,19 @@
 ' Подмассив-представление через частичное индексирование многомерного массива.
-DIM grid(,) AS INTEGER
-DIM rowView() AS INTEGER
-DIM firstOnly() AS INTEGER
+DIM grid[,] AS INTEGER
+DIM rowView[] AS INTEGER
+DIM firstOnly[] AS INTEGER
 
-REDIM grid(1 TO 2, 10 TO 11)
-grid(2, 10) = 7
-grid(2, 11) = 9
+REDIM grid[1 TO 2, 10 TO 11]
+grid[2, 10] = 7
+grid[2, 11] = 9
 
-rowView = grid(2)
-rowView(10) = 70
-firstOnly = ARRAYTAKE(rowView, 1)
+rowView[] = grid[2]
+rowView[10] = 70
+firstOnly[] = ARRAYTAKE(rowView[], 1)
 
-PRINT grid(2, 10)
-PRINT rowView(11)
-PRINT LBOUND(rowView)
-PRINT UBOUND(rowView)
-PRINT ARRAYLENGTH(rowView)
-PRINT firstOnly(1)
+PRINT grid[2, 10]
+PRINT rowView[11]
+PRINT LBOUND(rowView[])
+PRINT UBOUND(rowView[])
+PRINT ARRAYLENGTH(rowView[])
+PRINT firstOnly[1]

@@ -9,20 +9,20 @@ REM 9
 REM 9
 REM 0
 
-DIM grid(,) AS INTEGER
-REDIM grid(1 TO 2, 10 TO 11)
+DIM grid[,] AS INTEGER
+REDIM grid[1 TO 2, 10 TO 11]
 
-grid(1, 10) = 7
-grid(2, 11) = 9
+grid[1, 10] = 7
+grid[2, 11] = 9
 
-PRINT ARRAYISALLOCATED(grid)
-PRINT LBOUND(grid, 1)
-PRINT UBOUND(grid, 1)
-PRINT LBOUND(grid, 2)
-PRINT UBOUND(grid, 2)
-PRINT grid(1, 10)
-PRINT grid(2, 11)
+PRINT ARRAYISALLOCATED(grid[])
+PRINT LBOUND(grid[], 1)
+PRINT UBOUND(grid[], 1)
+PRINT LBOUND(grid[], 2)
+PRINT UBOUND(grid[], 2)
+PRINT grid[1, 10]
+PRINT grid[2, 11]
 
-REDIM PRESERVE grid(2 TO 3, 11 TO 12)
-PRINT grid(2, 11)
-PRINT grid(3, 12)
+REDIM PRESERVE grid[2 TO 3, 11 TO 12]
+PRINT grid[2, 11]
+PRINT grid[3, 12]

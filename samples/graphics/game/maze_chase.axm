@@ -40,15 +40,15 @@ CONST CALIBRATION_COL_MODE AS INTEGER = 2                                       
 
 CONST MAZE_ROWS AS INTEGER = 36                                                                 ' Число строк логической карты.
 CONST MAZE_COLUMNS AS INTEGER = 28                                                              ' Число столбцов логической карты.
-DIM maze(1 TO MAZE_ROWS) AS STRING                                                              ' Массив строк, в котором хранится логическая карта лабиринта.
+DIM maze[1 TO MAZE_ROWS] AS STRING                                                              ' Массив строк, в котором хранится логическая карта лабиринта.
 DIM mazeCols AS INTEGER = 0                                                                     ' Количество столбцов логической карты, вычисляется после загрузки.
 
 DIM mazeBackground AS IMAGE                                                                     ' Фоновая картинка лабиринта, которую мы рисуем как эталонный контур.
-DIM playerFrames(1 TO 12) AS SPRITE                                                            ' Набор кадров героя: 4 направления по 3 кадра.
+DIM playerFrames[1 TO 12] AS SPRITE                                                            ' Набор кадров героя: 4 направления по 3 кадра.
 DIM ghostSprite AS SPRITE                                                                       ' Спрайт призрака, который гонится за героем.
 
-DIM pelletRowOffset(1 TO MAZE_ROWS) AS INTEGER                                                  ' Вертикальная поправка к началу клетки для выравнивания с картинкой.
-DIM pelletColOffset(1 TO MAZE_COLUMNS) AS INTEGER                                               ' Горизонтальная поправка к началу клетки для выравнивания с картинкой.
+DIM pelletRowOffset[1 TO MAZE_ROWS] AS INTEGER                                                  ' Вертикальная поправка к началу клетки для выравнивания с картинкой.
+DIM pelletColOffset[1 TO MAZE_COLUMNS] AS INTEGER                                               ' Горизонтальная поправка к началу клетки для выравнивания с картинкой.
 
 DIM playerStartCol AS INTEGER                                                                   ' Стартовый столбец героя на логической сетке.
 DIM playerStartRow AS INTEGER                                                                   ' Стартовая строка героя на логической сетке.
@@ -81,12 +81,12 @@ DIM previousFrameTime AS DOUBLE = 0                                             
 DIM frameDeltaSeconds AS DOUBLE = 0                                                            ' Время между показами кадра после проверки скачков часов.
 DIM simulationAccumulator AS DOUBLE = 0                                                        ' Накопленное время для независимых от отрисовки шагов игры.
 DIM currentFrameTime AS DOUBLE = 0                                                             ' Текущее показание TIMER для расчёта прошедшего времени.
-DIM parsedRowValues(1 TO MAZE_ROWS) AS INTEGER                                                 ' Проверенные значения смещения строк из внешнего файла.
-DIM parsedColValues(1 TO MAZE_COLUMNS) AS INTEGER                                              ' Проверенные значения смещения столбцов из внешнего файла.
-DIM parsedRowSeen(1 TO MAZE_ROWS) AS INTEGER                                                   ' Флаги найденных строк таблицы калибровки.
-DIM parsedColSeen(1 TO MAZE_COLUMNS) AS INTEGER                                                ' Флаги найденных столбцов таблицы калибровки.
+DIM parsedRowValues[1 TO MAZE_ROWS] AS INTEGER                                                 ' Проверенные значения смещения строк из внешнего файла.
+DIM parsedColValues[1 TO MAZE_COLUMNS] AS INTEGER                                              ' Проверенные значения смещения столбцов из внешнего файла.
+DIM parsedRowSeen[1 TO MAZE_ROWS] AS INTEGER                                                   ' Флаги найденных строк таблицы калибровки.
+DIM parsedColSeen[1 TO MAZE_COLUMNS] AS INTEGER                                                ' Флаги найденных столбцов таблицы калибровки.
 DIM calibrationText AS STRING = ""                                                            ' Текст внешнего снимка калибровки.
-DIM calibrationLines() AS STRING                                                               ' Строки внешнего снимка калибровки.
+DIM calibrationLines[] AS STRING                                                               ' Строки внешнего снимка калибровки.
 DIM calibrationParseError AS STRING = ""                                                      ' Ошибка разбора внешней таблицы калибровки.
 DIM statusText AS STRING = "Стрелки ведут героя. SPACE пауза. ESC выход."                      ' Текст подсказки и игровых сообщений в HUD.
 DIM calibrationMode AS BOOLEAN = FALSE                                                         ' Флаг ручной калибровки: TRUE означает, что стрелки двигают точки, а не героя.
@@ -226,21 +226,21 @@ END SUB                                                                         
 SUB LoadResources()                                                                             ' Процедура загружает все графические ресурсы игры.
     mazeBackground = LOADIMAGE("art/Background.gif")                                            ' Загружаем эталонный фон лабиринта из GIF-файла.
 
-    playerFrames(SpriteSlot(DIR_RIGHT, 1)) = LOADSPRITE("art/pacman-right/1.png", 16, 16)     ' Загружаем первый кадр героя, смотрящего вправо.
-    playerFrames(SpriteSlot(DIR_RIGHT, 2)) = LOADSPRITE("art/pacman-right/2.png", 16, 16)     ' Загружаем второй кадр героя, смотрящего вправо.
-    playerFrames(SpriteSlot(DIR_RIGHT, 3)) = LOADSPRITE("art/pacman-right/3.png", 16, 16)     ' Загружаем третий кадр героя, смотрящего вправо.
+    playerFrames[SpriteSlot(DIR_RIGHT, 1)] = LOADSPRITE("art/pacman-right/1.png", 16, 16)     ' Загружаем первый кадр героя, смотрящего вправо.
+    playerFrames[SpriteSlot(DIR_RIGHT, 2)] = LOADSPRITE("art/pacman-right/2.png", 16, 16)     ' Загружаем второй кадр героя, смотрящего вправо.
+    playerFrames[SpriteSlot(DIR_RIGHT, 3)] = LOADSPRITE("art/pacman-right/3.png", 16, 16)     ' Загружаем третий кадр героя, смотрящего вправо.
 
-    playerFrames(SpriteSlot(DIR_LEFT, 1)) = LOADSPRITE("art/pacman-left/1.png", 16, 16)       ' Загружаем первый кадр героя, смотрящего влево.
-    playerFrames(SpriteSlot(DIR_LEFT, 2)) = LOADSPRITE("art/pacman-left/2.png", 16, 16)       ' Загружаем второй кадр героя, смотрящего влево.
-    playerFrames(SpriteSlot(DIR_LEFT, 3)) = LOADSPRITE("art/pacman-left/3.png", 16, 16)       ' Загружаем третий кадр героя, смотрящего влево.
+    playerFrames[SpriteSlot(DIR_LEFT, 1)] = LOADSPRITE("art/pacman-left/1.png", 16, 16)       ' Загружаем первый кадр героя, смотрящего влево.
+    playerFrames[SpriteSlot(DIR_LEFT, 2)] = LOADSPRITE("art/pacman-left/2.png", 16, 16)       ' Загружаем второй кадр героя, смотрящего влево.
+    playerFrames[SpriteSlot(DIR_LEFT, 3)] = LOADSPRITE("art/pacman-left/3.png", 16, 16)       ' Загружаем третий кадр героя, смотрящего влево.
 
-    playerFrames(SpriteSlot(DIR_UP, 1)) = LOADSPRITE("art/pacman-up/1.png", 16, 16)           ' Загружаем первый кадр героя, смотрящего вверх.
-    playerFrames(SpriteSlot(DIR_UP, 2)) = LOADSPRITE("art/pacman-up/2.png", 16, 16)           ' Загружаем второй кадр героя, смотрящего вверх.
-    playerFrames(SpriteSlot(DIR_UP, 3)) = LOADSPRITE("art/pacman-up/3.png", 16, 16)           ' Загружаем третий кадр героя, смотрящего вверх.
+    playerFrames[SpriteSlot(DIR_UP, 1)] = LOADSPRITE("art/pacman-up/1.png", 16, 16)           ' Загружаем первый кадр героя, смотрящего вверх.
+    playerFrames[SpriteSlot(DIR_UP, 2)] = LOADSPRITE("art/pacman-up/2.png", 16, 16)           ' Загружаем второй кадр героя, смотрящего вверх.
+    playerFrames[SpriteSlot(DIR_UP, 3)] = LOADSPRITE("art/pacman-up/3.png", 16, 16)           ' Загружаем третий кадр героя, смотрящего вверх.
 
-    playerFrames(SpriteSlot(DIR_DOWN, 1)) = LOADSPRITE("art/pacman-down/1.png", 16, 16)       ' Загружаем первый кадр героя, смотрящего вниз.
-    playerFrames(SpriteSlot(DIR_DOWN, 2)) = LOADSPRITE("art/pacman-down/2.png", 16, 16)       ' Загружаем второй кадр героя, смотрящего вниз.
-    playerFrames(SpriteSlot(DIR_DOWN, 3)) = LOADSPRITE("art/pacman-down/3.png", 16, 16)       ' Загружаем третий кадр героя, смотрящего вниз.
+    playerFrames[SpriteSlot(DIR_DOWN, 1)] = LOADSPRITE("art/pacman-down/1.png", 16, 16)       ' Загружаем первый кадр героя, смотрящего вниз.
+    playerFrames[SpriteSlot(DIR_DOWN, 2)] = LOADSPRITE("art/pacman-down/2.png", 16, 16)       ' Загружаем второй кадр героя, смотрящего вниз.
+    playerFrames[SpriteSlot(DIR_DOWN, 3)] = LOADSPRITE("art/pacman-down/3.png", 16, 16)       ' Загружаем третий кадр героя, смотрящего вниз.
 
     ghostSprite = LOADSPRITE("art/ghosts/blinky.png", 16, 16)                                  ' Загружаем спрайт красного призрака.
 END SUB                                                                                         ' Завершаем загрузку ресурсов.
@@ -265,32 +265,32 @@ SUB LoadPelletAlignment()                                                       
     END IF
 
     FOR rowIndex = 1 TO MAZE_ROWS                                                               ' Применяем только прошедшие полную проверку смещения.
-        pelletRowOffset(rowIndex) = parsedRowValues(rowIndex)
+        pelletRowOffset[rowIndex] = parsedRowValues[rowIndex]
     NEXT
     FOR colIndex = 1 TO MAZE_COLUMNS
-        pelletColOffset(colIndex) = parsedColValues(colIndex)
+        pelletColOffset[colIndex] = parsedColValues[colIndex]
     NEXT
 END SUB                                                                                         ' Завершаем чтение внешней калибровки.
 
 SUB ResetParsedCalibration()                                                                    ' Процедура очищает таблицы перед новым разбором файла.
     calibrationParseError = ""                                                                  ' Сбрасываем прежнюю ошибку.
     FOR rowIndex = 1 TO MAZE_ROWS                                                               ' Очищаем значения и признаки строк.
-        parsedRowValues(rowIndex) = 0
-        parsedRowSeen(rowIndex) = 0
+        parsedRowValues[rowIndex] = 0
+        parsedRowSeen[rowIndex] = 0
     NEXT
     FOR colIndex = 1 TO MAZE_COLUMNS                                                            ' Очищаем значения и признаки столбцов.
-        parsedColValues(colIndex) = 0
-        parsedColSeen(colIndex) = 0
+        parsedColValues[colIndex] = 0
+        parsedColSeen[colIndex] = 0
     NEXT
 END SUB                                                                                         ' Завершаем очистку служебных таблиц.
 
 SUB ParseCalibrationText(sourceText AS STRING)                                                  ' Процедура разбирает снимок построчно и отвергает неизвестные записи.
     DIM currentCalibrationLine AS STRING = ""
-    calibrationLines = SPLIT(sourceText, CHR(10))                                               ' Поддерживаем обычные файлы с переводом строк LF или CRLF.
+    calibrationLines[] = SPLIT(sourceText, CHR(10))                                               ' Поддерживаем обычные файлы с переводом строк LF или CRLF.
     ResetParsedCalibration()                                                                    ' Каждое чтение начинает проверку с чистого состояния.
 
-    FOR lineIndex = 1 TO ARRAYLENGTH(calibrationLines)                                          ' Идём по всем строкам файла.
-        currentCalibrationLine = TRIM(TrimTrailingCr(calibrationLines(lineIndex)))             ' Убираем пробелы и CR в конце CRLF.
+    FOR lineIndex = 1 TO ARRAYLENGTH(calibrationLines[])                                          ' Идём по всем строкам файла.
+        currentCalibrationLine = TRIM(TrimTrailingCr(calibrationLines[lineIndex]))             ' Убираем пробелы и CR в конце CRLF.
         IF currentCalibrationLine <> "" AND LEFT(currentCalibrationLine, 1) <> "'" THEN       ' Пропускаем пустые строки и комментарии.
             IF STARTSWITH(currentCalibrationLine, "pelletRowOffset(") THEN                    ' Разбираем смещение каждой строки карты.
                 ApplyCalibrationLine(currentCalibrationLine, MAZE_ROWS, TRUE)
@@ -306,13 +306,13 @@ SUB ParseCalibrationText(sourceText AS STRING)                                  
     NEXT
 
     FOR rowIndex = 1 TO MAZE_ROWS                                                               ' Полный файл обязан содержать каждую строку ровно один раз.
-        IF parsedRowSeen(rowIndex) = 0 THEN
+        IF parsedRowSeen[rowIndex] = 0 THEN
             calibrationParseError = "нет pelletRowOffset(" + TRIM(STR(rowIndex)) + ")."
             RETURN
         END IF
     NEXT
     FOR colIndex = 1 TO MAZE_COLUMNS                                                            ' Полный файл обязан содержать каждый столбец ровно один раз.
-        IF parsedColSeen(colIndex) = 0 THEN
+        IF parsedColSeen[colIndex] = 0 THEN
             calibrationParseError = "нет pelletColOffset(" + TRIM(STR(colIndex)) + ")."
             RETURN
         END IF
@@ -357,19 +357,19 @@ SUB ApplyCalibrationLine(lineText AS STRING, maxIndex AS INTEGER, isRowLine AS B
 
     parsedIndex = INT(indexNumber)
     IF isRowLine THEN
-        IF parsedRowSeen(parsedIndex) <> 0 THEN
+        IF parsedRowSeen[parsedIndex] <> 0 THEN
             calibrationParseError = "повтор pelletRowOffset(" + TRIM(STR(parsedIndex)) + ")."
             RETURN
         END IF
-        parsedRowSeen(parsedIndex) = 1
-        parsedRowValues(parsedIndex) = INT(valueNumber)
+        parsedRowSeen[parsedIndex] = 1
+        parsedRowValues[parsedIndex] = INT(valueNumber)
     ELSE
-        IF parsedColSeen(parsedIndex) <> 0 THEN
+        IF parsedColSeen[parsedIndex] <> 0 THEN
             calibrationParseError = "повтор pelletColOffset(" + TRIM(STR(parsedIndex)) + ")."
             RETURN
         END IF
-        parsedColSeen(parsedIndex) = 1
-        parsedColValues(parsedIndex) = INT(valueNumber)
+        parsedColSeen[parsedIndex] = 1
+        parsedColValues[parsedIndex] = INT(valueNumber)
     END IF
 END SUB                                                                                         ' Завершаем проверку одной строки.
 
@@ -389,72 +389,72 @@ END FUNCTION                                                                    
 SUB InitPelletAlignment()                                                                       ' Процедура задаёт реальные центры тоннелей на фоне лабиринта.
     ' Здесь мы задаём высоту точек по строкам карты.                                            ' Больше число = точка ниже. Меньше число = точка выше.
     ' Эти числа удобно крутить вручную и сразу смотреть результат в IDE.                        ' Так проще попасть в центр тоннеля по картинке.
-    pelletRowOffset(1) = -37                                                                   ' Значение строки 1 полностью перенесено из файла калибровки.
-    pelletRowOffset(2) = -37                                                                   ' Значение строки 2 полностью перенесено из файла калибровки.
-    pelletRowOffset(3) = -37                                                                   ' Значение строки 3 полностью перенесено из файла калибровки.
-    pelletRowOffset(4) = -34                                                                   ' Значение строки 4 полностью перенесено из файла калибровки.
-    pelletRowOffset(5) = -33                                                                   ' Значение строки 5 полностью перенесено из файла калибровки.
-    pelletRowOffset(6) = -23                                                                   ' Значение строки 6 полностью перенесено из файла калибровки.
-    pelletRowOffset(7) = -19                                                                   ' Значение строки 7 полностью перенесено из файла калибровки.
-    pelletRowOffset(8) = -16                                                                   ' Значение строки 8 полностью перенесено из файла калибровки.
-    pelletRowOffset(9) = -15                                                                   ' Значение строки 9 полностью перенесено из файла калибровки.
-    pelletRowOffset(10) = -8                                                                   ' Значение строки 10 полностью перенесено из файла калибровки.
-    pelletRowOffset(11) = -3                                                                   ' Значение строки 11 полностью перенесено из файла калибровки.
-    pelletRowOffset(12) = 1                                                                   ' Значение строки 12 полностью перенесено из файла калибровки.
-    pelletRowOffset(13) = 2                                                                   ' Значение строки 13 полностью перенесено из файла калибровки.
-    pelletRowOffset(14) = 1                                                                   ' Значение строки 14 полностью перенесено из файла калибровки.
-    pelletRowOffset(15) = 2                                                                   ' Значение строки 15 полностью перенесено из файла калибровки.
-    pelletRowOffset(16) = 7                                                                   ' Значение строки 16 полностью перенесено из файла калибровки.
-    pelletRowOffset(17) = 10                                                                   ' Значение строки 17 полностью перенесено из файла калибровки.
-    pelletRowOffset(18) = 15                                                                   ' Значение строки 18 полностью перенесено из файла калибровки.
-    pelletRowOffset(19) = 14                                                                   ' Значение строки 19 полностью перенесено из файла калибровки.
-    pelletRowOffset(20) = 14                                                                   ' Значение строки 20 полностью перенесено из файла калибровки.
-    pelletRowOffset(21) = 13                                                                   ' Значение строки 21 полностью перенесено из файла калибровки.
-    pelletRowOffset(22) = 20                                                                   ' Значение строки 22 полностью перенесено из файла калибровки.
-    pelletRowOffset(23) = 21                                                                   ' Значение строки 23 полностью перенесено из файла калибровки.
-    pelletRowOffset(24) = 26                                                                   ' Значение строки 24 полностью перенесено из файла калибровки.
-    pelletRowOffset(25) = 26                                                                   ' Значение строки 25 полностью перенесено из файла калибровки.
-    pelletRowOffset(26) = 24                                                                   ' Значение строки 26 полностью перенесено из файла калибровки.
-    pelletRowOffset(27) = 27                                                                   ' Значение строки 27 полностью перенесено из файла калибровки.
-    pelletRowOffset(28) = 33                                                                   ' Значение строки 28 полностью перенесено из файла калибровки.
-    pelletRowOffset(29) = 40                                                                   ' Значение строки 29 полностью перенесено из файла калибровки.
-    pelletRowOffset(30) = 42                                                                   ' Значение строки 30 полностью перенесено из файла калибровки.
-    pelletRowOffset(31) = 42                                                                   ' Значение строки 31 полностью перенесено из файла калибровки.
-    pelletRowOffset(32) = 40                                                                   ' Значение строки 32 полностью перенесено из файла калибровки.
-    pelletRowOffset(33) = 38                                                                   ' Значение строки 33 полностью перенесено из файла калибровки.
-    pelletRowOffset(34) = -37                                                                   ' Значение строки 34 полностью перенесено из файла калибровки.
-    pelletRowOffset(35) = -37                                                                   ' Значение строки 35 полностью перенесено из файла калибровки.
-    pelletRowOffset(36) = -37                                                                   ' Значение строки 36 полностью перенесено из файла калибровки.
+    pelletRowOffset[1] = -37                                                                   ' Значение строки 1 полностью перенесено из файла калибровки.
+    pelletRowOffset[2] = -37                                                                   ' Значение строки 2 полностью перенесено из файла калибровки.
+    pelletRowOffset[3] = -37                                                                   ' Значение строки 3 полностью перенесено из файла калибровки.
+    pelletRowOffset[4] = -34                                                                   ' Значение строки 4 полностью перенесено из файла калибровки.
+    pelletRowOffset[5] = -33                                                                   ' Значение строки 5 полностью перенесено из файла калибровки.
+    pelletRowOffset[6] = -23                                                                   ' Значение строки 6 полностью перенесено из файла калибровки.
+    pelletRowOffset[7] = -19                                                                   ' Значение строки 7 полностью перенесено из файла калибровки.
+    pelletRowOffset[8] = -16                                                                   ' Значение строки 8 полностью перенесено из файла калибровки.
+    pelletRowOffset[9] = -15                                                                   ' Значение строки 9 полностью перенесено из файла калибровки.
+    pelletRowOffset[10] = -8                                                                   ' Значение строки 10 полностью перенесено из файла калибровки.
+    pelletRowOffset[11] = -3                                                                   ' Значение строки 11 полностью перенесено из файла калибровки.
+    pelletRowOffset[12] = 1                                                                   ' Значение строки 12 полностью перенесено из файла калибровки.
+    pelletRowOffset[13] = 2                                                                   ' Значение строки 13 полностью перенесено из файла калибровки.
+    pelletRowOffset[14] = 1                                                                   ' Значение строки 14 полностью перенесено из файла калибровки.
+    pelletRowOffset[15] = 2                                                                   ' Значение строки 15 полностью перенесено из файла калибровки.
+    pelletRowOffset[16] = 7                                                                   ' Значение строки 16 полностью перенесено из файла калибровки.
+    pelletRowOffset[17] = 10                                                                   ' Значение строки 17 полностью перенесено из файла калибровки.
+    pelletRowOffset[18] = 15                                                                   ' Значение строки 18 полностью перенесено из файла калибровки.
+    pelletRowOffset[19] = 14                                                                   ' Значение строки 19 полностью перенесено из файла калибровки.
+    pelletRowOffset[20] = 14                                                                   ' Значение строки 20 полностью перенесено из файла калибровки.
+    pelletRowOffset[21] = 13                                                                   ' Значение строки 21 полностью перенесено из файла калибровки.
+    pelletRowOffset[22] = 20                                                                   ' Значение строки 22 полностью перенесено из файла калибровки.
+    pelletRowOffset[23] = 21                                                                   ' Значение строки 23 полностью перенесено из файла калибровки.
+    pelletRowOffset[24] = 26                                                                   ' Значение строки 24 полностью перенесено из файла калибровки.
+    pelletRowOffset[25] = 26                                                                   ' Значение строки 25 полностью перенесено из файла калибровки.
+    pelletRowOffset[26] = 24                                                                   ' Значение строки 26 полностью перенесено из файла калибровки.
+    pelletRowOffset[27] = 27                                                                   ' Значение строки 27 полностью перенесено из файла калибровки.
+    pelletRowOffset[28] = 33                                                                   ' Значение строки 28 полностью перенесено из файла калибровки.
+    pelletRowOffset[29] = 40                                                                   ' Значение строки 29 полностью перенесено из файла калибровки.
+    pelletRowOffset[30] = 42                                                                   ' Значение строки 30 полностью перенесено из файла калибровки.
+    pelletRowOffset[31] = 42                                                                   ' Значение строки 31 полностью перенесено из файла калибровки.
+    pelletRowOffset[32] = 40                                                                   ' Значение строки 32 полностью перенесено из файла калибровки.
+    pelletRowOffset[33] = 38                                                                   ' Значение строки 33 полностью перенесено из файла калибровки.
+    pelletRowOffset[34] = -37                                                                   ' Значение строки 34 полностью перенесено из файла калибровки.
+    pelletRowOffset[35] = -37                                                                   ' Значение строки 35 полностью перенесено из файла калибровки.
+    pelletRowOffset[36] = -37                                                                   ' Значение строки 36 полностью перенесено из файла калибровки.
 
     ' Здесь мы задаём положение точек по столбцам карты.                                        ' Больше число = точка правее. Меньше число = точка левее.
-    pelletColOffset(1) = 11                                                                    ' Значение столбца 1 полностью перенесено из файла калибровки.
-    pelletColOffset(2) = 11                                                                    ' Значение столбца 2 полностью перенесено из файла калибровки.
-    pelletColOffset(3) = 13                                                                    ' Значение столбца 3 полностью перенесено из файла калибровки.
-    pelletColOffset(4) = 18                                                                    ' Значение столбца 4 полностью перенесено из файла калибровки.
-    pelletColOffset(5) = 15                                                                    ' Значение столбца 5 полностью перенесено из файла калибровки.
-    pelletColOffset(6) = 14                                                                    ' Значение столбца 6 полностью перенесено из файла калибровки.
-    pelletColOffset(7) = 16                                                                    ' Значение столбца 7 полностью перенесено из файла калибровки.
-    pelletColOffset(8) = 14                                                                    ' Значение столбца 8 полностью перенесено из файла калибровки.
-    pelletColOffset(9) = 11                                                                    ' Значение столбца 9 полностью перенесено из файла калибровки.
-    pelletColOffset(10) = 12                                                                    ' Значение столбца 10 полностью перенесено из файла калибровки.
-    pelletColOffset(11) = 11                                                                    ' Значение столбца 11 полностью перенесено из файла калибровки.
-    pelletColOffset(12) = 12                                                                    ' Значение столбца 12 полностью перенесено из файла калибровки.
-    pelletColOffset(13) = 11                                                                    ' Значение столбца 13 полностью перенесено из файла калибровки.
-    pelletColOffset(14) = 11                                                                    ' Значение столбца 14 полностью перенесено из файла калибровки.
-    pelletColOffset(15) = 7                                                                    ' Значение столбца 15 полностью перенесено из файла калибровки.
-    pelletColOffset(16) = 6                                                                    ' Значение столбца 16 полностью перенесено из файла калибровки.
-    pelletColOffset(17) = 6                                                                    ' Значение столбца 17 полностью перенесено из файла калибровки.
-    pelletColOffset(18) = 3                                                                    ' Значение столбца 18 полностью перенесено из файла калибровки.
-    pelletColOffset(19) = 4                                                                    ' Значение столбца 19 полностью перенесено из файла калибровки.
-    pelletColOffset(20) = 3                                                                    ' Значение столбца 20 полностью перенесено из файла калибровки.
-    pelletColOffset(21) = 2                                                                    ' Значение столбца 21 полностью перенесено из файла калибровки.
-    pelletColOffset(22) = -1                                                                    ' Значение столбца 22 полностью перенесено из файла калибровки.
-    pelletColOffset(23) = 0                                                                    ' Значение столбца 23 полностью перенесено из файла калибровки.
-    pelletColOffset(24) = -2                                                                    ' Значение столбца 24 полностью перенесено из файла калибровки.
-    pelletColOffset(25) = -3                                                                    ' Значение столбца 25 полностью перенесено из файла калибровки.
-    pelletColOffset(26) = 0                                                                    ' Значение столбца 26 полностью перенесено из файла калибровки.
-    pelletColOffset(27) = 5                                                                    ' Значение столбца 27 полностью перенесено из файла калибровки.
-    pelletColOffset(28) = 6                                                                    ' Значение столбца 28 полностью перенесено из файла калибровки.
+    pelletColOffset[1] = 11                                                                    ' Значение столбца 1 полностью перенесено из файла калибровки.
+    pelletColOffset[2] = 11                                                                    ' Значение столбца 2 полностью перенесено из файла калибровки.
+    pelletColOffset[3] = 13                                                                    ' Значение столбца 3 полностью перенесено из файла калибровки.
+    pelletColOffset[4] = 18                                                                    ' Значение столбца 4 полностью перенесено из файла калибровки.
+    pelletColOffset[5] = 15                                                                    ' Значение столбца 5 полностью перенесено из файла калибровки.
+    pelletColOffset[6] = 14                                                                    ' Значение столбца 6 полностью перенесено из файла калибровки.
+    pelletColOffset[7] = 16                                                                    ' Значение столбца 7 полностью перенесено из файла калибровки.
+    pelletColOffset[8] = 14                                                                    ' Значение столбца 8 полностью перенесено из файла калибровки.
+    pelletColOffset[9] = 11                                                                    ' Значение столбца 9 полностью перенесено из файла калибровки.
+    pelletColOffset[10] = 12                                                                    ' Значение столбца 10 полностью перенесено из файла калибровки.
+    pelletColOffset[11] = 11                                                                    ' Значение столбца 11 полностью перенесено из файла калибровки.
+    pelletColOffset[12] = 12                                                                    ' Значение столбца 12 полностью перенесено из файла калибровки.
+    pelletColOffset[13] = 11                                                                    ' Значение столбца 13 полностью перенесено из файла калибровки.
+    pelletColOffset[14] = 11                                                                    ' Значение столбца 14 полностью перенесено из файла калибровки.
+    pelletColOffset[15] = 7                                                                    ' Значение столбца 15 полностью перенесено из файла калибровки.
+    pelletColOffset[16] = 6                                                                    ' Значение столбца 16 полностью перенесено из файла калибровки.
+    pelletColOffset[17] = 6                                                                    ' Значение столбца 17 полностью перенесено из файла калибровки.
+    pelletColOffset[18] = 3                                                                    ' Значение столбца 18 полностью перенесено из файла калибровки.
+    pelletColOffset[19] = 4                                                                    ' Значение столбца 19 полностью перенесено из файла калибровки.
+    pelletColOffset[20] = 3                                                                    ' Значение столбца 20 полностью перенесено из файла калибровки.
+    pelletColOffset[21] = 2                                                                    ' Значение столбца 21 полностью перенесено из файла калибровки.
+    pelletColOffset[22] = -1                                                                    ' Значение столбца 22 полностью перенесено из файла калибровки.
+    pelletColOffset[23] = 0                                                                    ' Значение столбца 23 полностью перенесено из файла калибровки.
+    pelletColOffset[24] = -2                                                                    ' Значение столбца 24 полностью перенесено из файла калибровки.
+    pelletColOffset[25] = -3                                                                    ' Значение столбца 25 полностью перенесено из файла калибровки.
+    pelletColOffset[26] = 0                                                                    ' Значение столбца 26 полностью перенесено из файла калибровки.
+    pelletColOffset[27] = 5                                                                    ' Значение столбца 27 полностью перенесено из файла калибровки.
+    pelletColOffset[28] = 6                                                                    ' Значение столбца 28 полностью перенесено из файла калибровки.
 END SUB                                                                                         ' Завершаем настройку центров точек.
 
 ' #endregion
@@ -468,21 +468,21 @@ FUNCTION ValidateMaze() AS BOOLEAN                                              
     DIM tileText AS STRING                                                                      ' Символ текущей клетки.
 
     mazeErrorMessage = ""                                                                      ' Перед проверкой убираем возможную старую ошибку.
-    mazeCols = LEN(maze(1))                                                                     ' Фиксируем ширину первой строки.
+    mazeCols = LEN(maze[1])                                                                     ' Фиксируем ширину первой строки.
     IF mazeCols <> MAZE_COLUMNS THEN                                                            ' Константа размеров должна совпадать с картой.
         mazeErrorMessage = "ожидалось " + STR(MAZE_COLUMNS) + " столбцов, найдено " + STR(mazeCols) + "."
         RETURN FALSE                                                                            ' Не запускаем логику на карте неверной ширины.
     END IF                                                                                      ' Завершаем проверку ширины первой строки.
 
     FOR rowIndex = 1 TO MAZE_ROWS                                                               ' Проверяем все строки до обхода клеток.
-        rowLength = LEN(maze(rowIndex))                                                         ' Получаем фактическую длину строки.
+        rowLength = LEN(maze[rowIndex])                                                         ' Получаем фактическую длину строки.
         IF rowLength <> MAZE_COLUMNS THEN                                                       ' Все строки должны иметь одну ширину.
             mazeErrorMessage = "строка " + STR(rowIndex) + " имеет ширину " + STR(rowLength) + "."
             RETURN FALSE                                                                        ' Возвращаем ошибку до индексирования клетки.
         END IF                                                                                  ' Завершаем проверку длины строки.
 
         FOR columnIndex = 1 TO MAZE_COLUMNS                                                     ' Проверяем каждый символ строки.
-            tileText = MID(maze(rowIndex), columnIndex, 1)                                      ' Читаем одну клетку карты.
+            tileText = MID(maze[rowIndex], columnIndex, 1)                                      ' Читаем одну клетку карты.
             IF tileText = "P" THEN
                 playerCount = playerCount + 1                                                   ' Считаем старт героя.
             END IF
@@ -509,42 +509,42 @@ FUNCTION ValidateMaze() AS BOOLEAN                                              
 END FUNCTION                                                                                    ' Завершаем проверку карты.
 
 SUB InitMaze()                                                                                  ' Процедура загружает текстовую карту и стартовые метки.
-    maze(1) = "############################"                                                    ' Верхняя рамка лабиринта.
-    maze(2) = "############################"                                                    ' Вторая верхняя строка рамки.
-    maze(3) = "############################"                                                    ' Третья верхняя строка рамки.
-    maze(4) = "############################"                                                    ' Четвёртая верхняя строка рамки.
-    maze(5) = "#o...........##...........o#"                                                    ' Верхний длинный коридор с крупными точками по краям.
-    maze(6) = "#.####.#####.##.#####.####.#"                                                    ' Верхний блок коридоров и стен.
-    maze(7) = "#.####.#####.##.#####.####.#"                                                    ' Следующая строка той же геометрии.
-    maze(8) = "#.####.#####.##.#####.####.#"                                                    ' Ещё одна строка верхней геометрии.
-    maze(9) = "#..........................#"                                                    ' Длинный свободный верхний горизонтальный проход.
-    maze(10) = "#.####.##.########.##.####.#"                                                   ' Коридоры вокруг верхнего центрального блока.
-    maze(11) = "#.####.##.########.##.####.#"                                                   ' Повтор геометрии предыдущей строки.
-    maze(12) = "#......##....##....##......#"                                                   ' Несколько разветвлений перед домиком.
-    maze(13) = "######.#####.##.#####.######"                                                   ' Верхняя рамка вокруг центральной зоны.
-    maze(14) = "######.#####.##.#####.######"                                                   ' Ещё одна строка рамки центральной зоны.
-    maze(15) = "######.##..........##.######"                                                   ' Коридор над центральным домиком.
-    maze(16) = "######.##.########.##.######"                                                   ' Верхняя стенка домика призраков.
-    maze(17) = "######.##.########.##.######"                                                   ' Нижняя стенка домика призраков.
-    maze(18) = "..........########.........."                                                   ' Горизонтальный туннель сквозь середину карты.
-    maze(19) = "######.##.########.##.######"                                                   ' Симметричная нижняя часть после туннеля.
-    maze(20) = "######.##.########.##.######"                                                   ' Повтор геометрии над стартовой зоной призрака.
-    maze(21) = "######.##.....G....##.######"                                                   ' Строка со стартом призрака.
-    maze(22) = "######.##.########.##.######"                                                   ' Нижняя часть центральной зоны.
-    maze(23) = "######.##.########.##.######"                                                   ' Повтор этой геометрии.
-    maze(24) = "#............##............#"                                                   ' Длинный средний горизонтальный коридор.
-    maze(25) = "#.####.#####.##.#####.####.#"                                                   ' Нижний блок развилок.
-    maze(26) = "#.####.#####.##.#####.####.#"                                                   ' Повтор нижнего блока развилок.
-    maze(27) = "#o..##.......P........##..o#"                                                   ' Строка старта героя и крупных нижних точек.
-    maze(28) = "###.##.##.########.##.##.###"                                                   ' Нижние узкие коридоры и центральный блок.
-    maze(29) = "###.##.##.########.##.##.###"                                                   ' Повтор предыдущей строки.
-    maze(30) = "#......##....##....##......#"                                                   ' Нижние разветвления перед последним коридором.
-    maze(31) = "#.##########.##.##########.#"                                                   ' Предпоследняя рамка нижней части.
-    maze(32) = "#.##########.##.##########.#"                                                   ' Повтор предпоследней рамки.
-    maze(33) = "#..........................#"                                                   ' Нижний длинный коридор с точками.
-    maze(34) = "############################"                                                   ' Нижняя рамка лабиринта.
-    maze(35) = "############################"                                                   ' Предпоследняя строка нижней рамки.
-    maze(36) = "############################"                                                   ' Последняя строка нижней рамки.
+    maze[1] = "############################"                                                    ' Верхняя рамка лабиринта.
+    maze[2] = "############################"                                                    ' Вторая верхняя строка рамки.
+    maze[3] = "############################"                                                    ' Третья верхняя строка рамки.
+    maze[4] = "############################"                                                    ' Четвёртая верхняя строка рамки.
+    maze[5] = "#o...........##...........o#"                                                    ' Верхний длинный коридор с крупными точками по краям.
+    maze[6] = "#.####.#####.##.#####.####.#"                                                    ' Верхний блок коридоров и стен.
+    maze[7] = "#.####.#####.##.#####.####.#"                                                    ' Следующая строка той же геометрии.
+    maze[8] = "#.####.#####.##.#####.####.#"                                                    ' Ещё одна строка верхней геометрии.
+    maze[9] = "#..........................#"                                                    ' Длинный свободный верхний горизонтальный проход.
+    maze[10] = "#.####.##.########.##.####.#"                                                   ' Коридоры вокруг верхнего центрального блока.
+    maze[11] = "#.####.##.########.##.####.#"                                                   ' Повтор геометрии предыдущей строки.
+    maze[12] = "#......##....##....##......#"                                                   ' Несколько разветвлений перед домиком.
+    maze[13] = "######.#####.##.#####.######"                                                   ' Верхняя рамка вокруг центральной зоны.
+    maze[14] = "######.#####.##.#####.######"                                                   ' Ещё одна строка рамки центральной зоны.
+    maze[15] = "######.##..........##.######"                                                   ' Коридор над центральным домиком.
+    maze[16] = "######.##.########.##.######"                                                   ' Верхняя стенка домика призраков.
+    maze[17] = "######.##.########.##.######"                                                   ' Нижняя стенка домика призраков.
+    maze[18] = "..........########.........."                                                   ' Горизонтальный туннель сквозь середину карты.
+    maze[19] = "######.##.########.##.######"                                                   ' Симметричная нижняя часть после туннеля.
+    maze[20] = "######.##.########.##.######"                                                   ' Повтор геометрии над стартовой зоной призрака.
+    maze[21] = "######.##.....G....##.######"                                                   ' Строка со стартом призрака.
+    maze[22] = "######.##.########.##.######"                                                   ' Нижняя часть центральной зоны.
+    maze[23] = "######.##.########.##.######"                                                   ' Повтор этой геометрии.
+    maze[24] = "#............##............#"                                                   ' Длинный средний горизонтальный коридор.
+    maze[25] = "#.####.#####.##.#####.####.#"                                                   ' Нижний блок развилок.
+    maze[26] = "#.####.#####.##.#####.####.#"                                                   ' Повтор нижнего блока развилок.
+    maze[27] = "#o..##.......P........##..o#"                                                   ' Строка старта героя и крупных нижних точек.
+    maze[28] = "###.##.##.########.##.##.###"                                                   ' Нижние узкие коридоры и центральный блок.
+    maze[29] = "###.##.##.########.##.##.###"                                                   ' Повтор предыдущей строки.
+    maze[30] = "#......##....##....##......#"                                                   ' Нижние разветвления перед последним коридором.
+    maze[31] = "#.##########.##.##########.#"                                                   ' Предпоследняя рамка нижней части.
+    maze[32] = "#.##########.##.##########.#"                                                   ' Повтор предпоследней рамки.
+    maze[33] = "#..........................#"                                                   ' Нижний длинный коридор с точками.
+    maze[34] = "############################"                                                   ' Нижняя рамка лабиринта.
+    maze[35] = "############################"                                                   ' Предпоследняя строка нижней рамки.
+    maze[36] = "############################"                                                   ' Последняя строка нижней рамки.
 
     IF NOT ValidateMaze() THEN                                                                  ' Проверяем строки до подсчёта точек и чтения маркеров.
         RETURN                                                                                  ' Не индексируем карту, если проверка завершилась ошибкой.
@@ -555,7 +555,7 @@ SUB InitMaze()                                                                  
 
     FOR rowIndex = 1 TO MAZE_ROWS                                                               ' Проходим все строки карты.
         FOR columnIndex = 1 TO MAZE_COLUMNS                                                     ' Проходим все столбцы в текущей строке.
-            tileText = MID(maze(rowIndex), columnIndex, 1)                                      ' Берём один символ из текущей клетки карты.
+            tileText = MID(maze[rowIndex], columnIndex, 1)                                      ' Берём один символ из текущей клетки карты.
 
             IF tileText = "." OR tileText = "o" THEN                                            ' Если клетка содержит обычную или крупную точку...
                 pelletsLeft = pelletsLeft + 1                                                   ' ...увеличиваем общий счётчик точек.
@@ -564,13 +564,13 @@ SUB InitMaze()                                                                  
             IF tileText = "P" THEN                                                              ' Если нашли старт героя...
                 playerStartCol = columnIndex                                                    ' ...запоминаем его столбец.
                 playerStartRow = rowIndex                                                       ' ...запоминаем его строку.
-                maze(rowIndex) = ReplaceCell(maze(rowIndex), columnIndex, " ")                  ' ...и очищаем клетку, чтобы герой не считался стеной или точкой.
+                maze[rowIndex] = ReplaceCell(maze[rowIndex], columnIndex, " ")                  ' ...и очищаем клетку, чтобы герой не считался стеной или точкой.
             END IF                                                                              ' Завершаем обработку старта героя.
 
             IF tileText = "G" THEN                                                              ' Если нашли старт призрака...
                 ghostStartCol = columnIndex                                                     ' ...запоминаем его столбец.
                 ghostStartRow = rowIndex                                                        ' ...запоминаем его строку.
-                maze(rowIndex) = ReplaceCell(maze(rowIndex), columnIndex, " ")                  ' ...и очищаем логическую клетку карты.
+                maze[rowIndex] = ReplaceCell(maze[rowIndex], columnIndex, " ")                  ' ...и очищаем логическую клетку карты.
             END IF                                                                              ' Завершаем обработку старта призрака.
         NEXT                                                                                    ' Переходим к следующему столбцу.
     NEXT                                                                                        ' Переходим к следующей строке.
@@ -686,13 +686,13 @@ SUB EatPelletIfNeeded()                                                         
     IF tileText = "." THEN                                                                      ' Если это обычная маленькая точка...
         score = score + 10                                                                      ' ...добавляем десять очков.
         pelletsLeft = pelletsLeft - 1                                                           ' ...уменьшаем число оставшихся точек.
-        maze(player.tileRow) = ReplaceCell(maze(player.tileRow), player.tileCol, " ")                          ' ...и очищаем клетку карты от точки.
+        maze[player.tileRow] = ReplaceCell(maze[player.tileRow], player.tileCol, " ")                          ' ...и очищаем клетку карты от точки.
     END IF                                                                                      ' Завершаем съедание обычной точки.
 
     IF tileText = "o" THEN                                                                      ' Если это крупная точка...
         score = score + 50                                                                      ' ...даём больше очков.
         pelletsLeft = pelletsLeft - 1                                                           ' ...уменьшаем число оставшихся точек.
-        maze(player.tileRow) = ReplaceCell(maze(player.tileRow), player.tileCol, " ")                          ' ...очищаем клетку карты.
+        maze[player.tileRow] = ReplaceCell(maze[player.tileRow], player.tileCol, " ")                          ' ...очищаем клетку карты.
         statusText = "Крупная точка принесла больше очков."                                    ' ...и выводим поясняющее сообщение в HUD.
     END IF                                                                                      ' Завершаем съедание крупной точки.
 END SUB                                                                                         ' Завершаем проверку съедания точки.
@@ -708,7 +708,7 @@ SUB DrawMazeWorld()                                                             
     DrawMazeBackground()                                                                         ' Рисуем фон лабиринта.
     DrawVisiblePellets()                                                                         ' Рисуем оставшиеся точки на полной карте.
 
-    DRAWSPRITE playerFrames(CurrentPlayerSpriteSlot()), 0, PlayerPixelX() - (TILE \ 2), PlayerPixelY() - (TILE \ 2) ' Рисуем героя по его пиксельным координатам.
+    DRAWSPRITE playerFrames[CurrentPlayerSpriteSlot()], 0, PlayerPixelX() - (TILE \ 2), PlayerPixelY() - (TILE \ 2) ' Рисуем героя по его пиксельным координатам.
     DRAWSPRITE ghostSprite, 0, GhostPixelX() - (TILE \ 2), GhostPixelY() - (TILE \ 2)          ' Рисуем призрака по его пиксельным координатам.
 END SUB                                                                                         ' Завершаем рисование мира.
 
@@ -783,22 +783,22 @@ SUB HandleCalibrationInput()                                                    
 
     IF calibrationTarget = CALIBRATION_ROW_MODE THEN                                            ' Если сейчас двигаем строку точек...
         IF KEYPRESS("UP") THEN                                                                  ' Если нажали стрелку вверх...
-            pelletRowOffset(calibrationRow) = pelletRowOffset(calibrationRow) - 1              ' ...поднимаем выбранную строку на один пиксель.
+            pelletRowOffset[calibrationRow] = pelletRowOffset[calibrationRow] - 1              ' ...поднимаем выбранную строку на один пиксель.
             SetCalibrationStatusText("Строка поднята.", CalibrationAssignmentText())            ' Показываем новое значение в две строки.
         END IF                                                                                  ' Завершаем обработку стрелки вверх.
 
         IF KEYPRESS("DOWN") THEN                                                                ' Если нажали стрелку вниз...
-            pelletRowOffset(calibrationRow) = pelletRowOffset(calibrationRow) + 1              ' ...опускаем выбранную строку на один пиксель.
+            pelletRowOffset[calibrationRow] = pelletRowOffset[calibrationRow] + 1              ' ...опускаем выбранную строку на один пиксель.
             SetCalibrationStatusText("Строка опущена.", CalibrationAssignmentText())            ' Показываем новое значение в две строки.
         END IF                                                                                  ' Завершаем обработку стрелки вниз.
     ELSE                                                                                        ' Иначе сейчас двигаем столбец точек.
         IF KEYPRESS("LEFT") THEN                                                                ' Если нажали стрелку влево...
-            pelletColOffset(calibrationCol) = pelletColOffset(calibrationCol) - 1              ' ...сдвигаем выбранный столбец на один пиксель влево.
+            pelletColOffset[calibrationCol] = pelletColOffset[calibrationCol] - 1              ' ...сдвигаем выбранный столбец на один пиксель влево.
             SetCalibrationStatusText("Столбец влево.", CalibrationAssignmentText())             ' Показываем новое значение и сохраняем короткий статус.
         END IF                                                                                  ' Завершаем обработку стрелки влево.
 
         IF KEYPRESS("RIGHT") THEN                                                               ' Если нажали стрелку вправо...
-            pelletColOffset(calibrationCol) = pelletColOffset(calibrationCol) + 1              ' ...сдвигаем выбранный столбец на один пиксель вправо.
+            pelletColOffset[calibrationCol] = pelletColOffset[calibrationCol] + 1              ' ...сдвигаем выбранный столбец на один пиксель вправо.
             SetCalibrationStatusText("Столбец вправо.", CalibrationAssignmentText())            ' Показываем новое значение и сохраняем короткий статус.
         END IF                                                                                  ' Завершаем обработку стрелки вправо.
     END IF                                                                                      ' Завершаем обработку сдвига выбранной линии.
@@ -896,10 +896,10 @@ END SUB                                                                         
 
 FUNCTION CalibrationSelectionText() AS STRING                                                   ' Функция возвращает человекочитаемое описание текущего выбора.
     IF calibrationTarget = CALIBRATION_ROW_MODE THEN                                            ' Если выбрана строка...
-        RETURN "строка " + TRIM(STR(calibrationRow)) + ", значение " + TRIM(STR(pelletRowOffset(calibrationRow))) ' Возвращаем номер строки и её Y-сдвиг.
+        RETURN "строка " + TRIM(STR(calibrationRow)) + ", значение " + TRIM(STR(pelletRowOffset[calibrationRow])) ' Возвращаем номер строки и её Y-сдвиг.
     END IF                                                                                      ' Завершаем строковый режим.
 
-    RETURN "столбец " + TRIM(STR(calibrationCol)) + ", значение " + TRIM(STR(pelletColOffset(calibrationCol))) ' Возвращаем номер столбца и его X-сдвиг.
+    RETURN "столбец " + TRIM(STR(calibrationCol)) + ", значение " + TRIM(STR(pelletColOffset[calibrationCol])) ' Возвращаем номер столбца и его X-сдвиг.
 END FUNCTION                                                                                    ' Завершаем описание текущего выбора.
 
 FUNCTION CalibrationAssignmentText() AS STRING                                                  ' Функция собирает точную строку присваивания для файла калибровки.
@@ -911,11 +911,11 @@ FUNCTION CalibrationAssignmentText() AS STRING                                  
 END FUNCTION                                                                                    ' Завершаем сборку строки присваивания.
 
 FUNCTION CalibrationRowAssignmentText(rowIndex AS INTEGER) AS STRING                            ' Функция собирает строку присваивания для одной строки точек.
-    RETURN "pelletRowOffset(" + TRIM(STR(rowIndex)) + ") = " + TRIM(STR(pelletRowOffset(rowIndex))) ' Возвращаем готовую строку `pelletRowOffset`.
+    RETURN "pelletRowOffset(" + TRIM(STR(rowIndex)) + ") = " + TRIM(STR(pelletRowOffset[rowIndex])) ' Возвращаем готовую строку `pelletRowOffset`.
 END FUNCTION                                                                                    ' Завершаем сборку строки для вертикального центра.
 
 FUNCTION CalibrationColAssignmentText(colIndex AS INTEGER) AS STRING                            ' Функция собирает строку присваивания для одного столбца точек.
-    RETURN "pelletColOffset(" + TRIM(STR(colIndex)) + ") = " + TRIM(STR(pelletColOffset(colIndex))) ' Возвращаем готовую строку `pelletColOffset`.
+    RETURN "pelletColOffset(" + TRIM(STR(colIndex)) + ") = " + TRIM(STR(pelletColOffset[colIndex])) ' Возвращаем готовую строку `pelletColOffset`.
 END FUNCTION                                                                                    ' Завершаем сборку строки для горизонтального центра.
 
 FUNCTION CalibrationHotKeyPressed(keyName AS STRING) AS BOOLEAN                                 ' Функция проверяет буквенную клавишу калибровки в обоих регистрах.
@@ -1043,10 +1043,10 @@ END FUNCTION                                                                    
 ' #region Поиск пути и столкновения
 
 FUNCTION ChooseGhostDirection() AS INTEGER                                                     ' Функция ищет кратчайший проходимый путь к клетке героя.
-    DIM visited(1 TO MAZE_ROWS, 1 TO MAZE_COLUMNS) AS BOOLEAN                                  ' Отмечает клетки, уже добавленные в очередь поиска.
-    DIM firstDirection(1 TO MAZE_ROWS, 1 TO MAZE_COLUMNS) AS INTEGER                            ' Хранит первый ход кратчайшего пути до каждой клетки.
-    DIM queueRows(1 TO MAZE_ROWS * MAZE_COLUMNS) AS INTEGER                                    ' Очередь строк для обхода карты в ширину.
-    DIM queueCols(1 TO MAZE_ROWS * MAZE_COLUMNS) AS INTEGER                                    ' Очередь столбцов для обхода карты в ширину.
+    DIM visited[1 TO MAZE_ROWS, 1 TO MAZE_COLUMNS] AS BOOLEAN                                  ' Отмечает клетки, уже добавленные в очередь поиска.
+    DIM firstDirection[1 TO MAZE_ROWS, 1 TO MAZE_COLUMNS] AS INTEGER                            ' Хранит первый ход кратчайшего пути до каждой клетки.
+    DIM queueRows[1 TO MAZE_ROWS * MAZE_COLUMNS] AS INTEGER                                    ' Очередь строк для обхода карты в ширину.
+    DIM queueCols[1 TO MAZE_ROWS * MAZE_COLUMNS] AS INTEGER                                    ' Очередь столбцов для обхода карты в ширину.
     DIM head AS INTEGER = 1                                                                     ' Индекс следующей клетки для обработки.
     DIM tail AS INTEGER = 1                                                                     ' Индекс последней добавленной клетки.
     DIM currentRow AS INTEGER                                                                   ' Строка клетки, которую сейчас обрабатываем.
@@ -1054,31 +1054,31 @@ FUNCTION ChooseGhostDirection() AS INTEGER                                      
     DIM nextRow AS INTEGER                                                                      ' Строка проверяемого соседнего узла.
     DIM nextCol AS INTEGER                                                                      ' Столбец проверяемого соседнего узла с учётом туннеля.
 
-    queueRows(1) = ghost.tileRow                                                                ' Поиск начинается с текущей клетки призрака.
-    queueCols(1) = ghost.tileCol
-    visited(ghost.tileRow, ghost.tileCol) = TRUE
+    queueRows[1] = ghost.tileRow                                                                ' Поиск начинается с текущей клетки призрака.
+    queueCols[1] = ghost.tileCol
+    visited[ghost.tileRow, ghost.tileCol] = TRUE
 
     DO WHILE head <= tail                                                                       ' Очередь обходит клетки по возрастанию расстояния.
-        currentRow = queueRows(head)                                                            ' Берём следующую клетку из очереди.
-        currentCol = queueCols(head)
+        currentRow = queueRows[head]                                                            ' Берём следующую клетку из очереди.
+        currentCol = queueCols[head]
         IF currentRow = player.tileRow AND currentCol = player.tileCol THEN                    ' Цель найдена кратчайшим обходом.
-            RETURN firstDirection(currentRow, currentCol)                                      ' Возвращаем направление первого шага из старта.
+            RETURN firstDirection[currentRow, currentCol]                                      ' Возвращаем направление первого шага из старта.
         END IF
 
         FOR candidate = DIR_LEFT TO DIR_DOWN                                                    ' Проверяем соседей в стабильном порядке.
             IF CanMove(currentCol, currentRow, candidate) THEN                                 ' В очередь попадают только проходимые клетки.
                 nextRow = currentRow + DirY(candidate)                                         ' Считаем соседнюю строку.
                 nextCol = WrapTunnelColumn(currentCol + DirX(candidate), nextRow)              ' Переход через тоннель считается обычным ребром графа.
-                IF NOT visited(nextRow, nextCol) THEN                                          ' Повторно клетки не посещаем.
-                    visited(nextRow, nextCol) = TRUE                                           ' Отмечаем клетку до добавления в очередь.
+                IF NOT visited[nextRow, nextCol] THEN                                          ' Повторно клетки не посещаем.
+                    visited[nextRow, nextCol] = TRUE                                           ' Отмечаем клетку до добавления в очередь.
                     IF currentRow = ghost.tileRow AND currentCol = ghost.tileCol THEN          ' Для соседей старта первым ходом будет текущий кандидат.
-                        firstDirection(nextRow, nextCol) = candidate
+                        firstDirection[nextRow, nextCol] = candidate
                     ELSE                                                                        ' Остальные клетки наследуют первый ход пути.
-                        firstDirection(nextRow, nextCol) = firstDirection(currentRow, currentCol)
+                        firstDirection[nextRow, nextCol] = firstDirection[currentRow, currentCol]
                     END IF
                     tail = tail + 1                                                            ' Добавляем соседа в конец очереди.
-                    queueRows(tail) = nextRow
-                    queueCols(tail) = nextCol
+                    queueRows[tail] = nextRow
+                    queueCols[tail] = nextCol
                 END IF
             END IF
         NEXT
@@ -1154,11 +1154,11 @@ FUNCTION EntityPixelY(tileCol AS INTEGER, tileRow AS INTEGER, dir AS INTEGER, tr
 END FUNCTION                                                                                    ' Завершаем вычисление мировой Y-координаты.
 
 FUNCTION PelletPixelX(tileCol AS INTEGER) AS INTEGER                                            ' Функция возвращает реальную X-координату точки внутри клетки.
-    RETURN (tileCol - 1) * TILE + pelletColOffset(tileCol)                                    ' Добавляем к клетке не математический центр, а измеренный центр тоннеля.
+    RETURN (tileCol - 1) * TILE + pelletColOffset[tileCol]                                    ' Добавляем к клетке не математический центр, а измеренный центр тоннеля.
 END FUNCTION                                                                                    ' Завершаем вычисление X точки.
 
 FUNCTION PelletPixelY(tileRow AS INTEGER) AS INTEGER                                            ' Функция возвращает реальную Y-координату точки внутри клетки.
-    RETURN (tileRow - 1) * TILE + pelletRowOffset(tileRow)                                    ' Берём верх мира и добавляем к строке измеренный центр прохода.
+    RETURN (tileRow - 1) * TILE + pelletRowOffset[tileRow]                                    ' Берём верх мира и добавляем к строке измеренный центр прохода.
 END FUNCTION                                                                                    ' Завершаем вычисление Y точки.
 
 ' #endregion
@@ -1189,7 +1189,7 @@ FUNCTION CellAt(rowIndex AS INTEGER, columnIndex AS INTEGER) AS STRING          
         RETURN "#"                                                                              ' ...тоже возвращаем стену.
     END IF                                                                                      ' Завершаем проверку столбца.
 
-    RETURN MID(maze(rowIndex), columnIndex, 1)                                                  ' Возвращаем один символ из нужной клетки карты.
+    RETURN MID(maze[rowIndex], columnIndex, 1)                                                  ' Возвращаем один символ из нужной клетки карты.
 END FUNCTION                                                                                    ' Завершаем чтение клетки.
 
 FUNCTION ReplaceCell(lineText AS STRING, position AS INTEGER, replacement AS STRING) AS STRING  ' Функция заменяет один символ в строке карты.

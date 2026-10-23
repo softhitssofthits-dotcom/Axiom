@@ -5,17 +5,17 @@ namespace Axiom.Execution.Tests;
 public sealed class StringCancellationContractTests
 {
     [Theory]
-    [InlineData("REPLACEMANY(text, oldItems, newItems)")]
+    [InlineData("REPLACEMANY(text, oldItems[], newItems[])")]
     [InlineData("STR(SUBSTRCOUNT(text, \"a\"))")]
     [InlineData("STR(LEN(text, \"CODEPOINT\"))")]
     public void LongInternalScanObservesCancellation(string expression)
     {
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($$"""
 DIM text AS STRING = REPEAT("a", 200000)
-DIM oldItems(1 TO 1) AS STRING
-DIM newItems(1 TO 1) AS STRING
-oldItems(1) = "z"
-newItems(1) = "x"
+DIM oldItems[1 TO 1] AS STRING
+DIM newItems[1 TO 1] AS STRING
+oldItems[1] = "z"
+newItems[1] = "x"
 PRINT {{expression}}
 """, cancellationProvider: new CancelAfterChecks(64)));
         Assert.Equal(ExecutionStatus.Cancelled, result.Status);
@@ -34,11 +34,7 @@ PRINT REPLACE(text, "a", "xx")
     [Fact]
     public void JoinObservesCancellationDuringElementScan()
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("""
-DIM items() AS STRING
-items = SPLIT(REPEAT("a,", 200000), ",")
-PRINT LEN(JOIN(items, ","))
-""", cancellationProvider: new CancelAfterChecks(64)));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("DIM items[] AS STRING\r\nitems[] = SPLIT(REPEAT(\"a,\", 200000), \",\")\r\nPRINT LEN(JOIN(items[], \",\"))", cancellationProvider: new CancelAfterChecks(64)));
         Assert.Equal(ExecutionStatus.Cancelled, result.Status);
     }
 

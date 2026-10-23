@@ -96,19 +96,7 @@ PRINT action(shared, Touch())
     [Fact]
     public void ArrayCallbackStillReceivesRecordCopy()
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("""
-TYPE Box
-    item AS INTEGER
-END TYPE
-DIM items(1 TO 1) AS Box
-items(1).item = 5
-FUNCTION Peek(copy AS Box) AS BOOLEAN
-    copy.item = 99
-    RETURN copy.item = 99
-END FUNCTION
-PRINT ARRAYEVERY(items, Peek)
-PRINT items(1).item
-"""));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("TYPE Box\r\n    item AS INTEGER\r\nEND TYPE\r\nDIM items[1 TO 1] AS Box\r\nitems[1].item = 5\r\nFUNCTION Peek(copy AS Box) AS BOOLEAN\r\n    copy.item = 99\r\n    RETURN copy.item = 99\r\nEND FUNCTION\r\nPRINT ARRAYEVERY(items[], Peek)\r\nPRINT items[1].item"));
 
         Assert.True(result.Succeeded, string.Join("\n", result.Diagnostics.Select(d => d.Message)));
         Assert.Equal(["TRUE", "5"], result.Output);

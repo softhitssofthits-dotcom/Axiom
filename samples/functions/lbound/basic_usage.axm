@@ -1,6 +1,6 @@
 ' Ожидается: 5.
 
-DIM values() AS INTEGER
-REDIM values(5 TO 7)
+DIM values[] AS INTEGER
+REDIM values[5 TO 7]
 
-PRINT LBOUND(values)
+PRINT LBOUND(values[])

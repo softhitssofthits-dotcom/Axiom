@@ -70,19 +70,7 @@ PRINT root.Child.Other
     [Fact]
     public void Execute_TypeMethodOnArrayElementObservesOwnChangeImmediately()
     {
-        const string text = """
-TYPE Leaf
-    Value AS INTEGER
-    SUB Change()
-        SELF.Value = 10
-        PRINT items(0).Value
-    END SUB
-END TYPE
-
-DIM items(0 TO 0) AS Leaf
-items(0).Change()
-PRINT items(0).Value
-""";
+        const string text = "TYPE Leaf\r\n    Value AS INTEGER\r\n    SUB Change()\r\n        SELF.Value = 10\r\n        PRINT items[0].Value\r\n    END SUB\r\nEND TYPE\r\n\r\nDIM items[0 TO 0] AS Leaf\r\nitems[0].Change()\r\nPRINT items[0].Value";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -93,20 +81,7 @@ PRINT items(0).Value
     [Fact]
     public void Execute_TypeMethodOnArrayElementKeepsSiblingAssignment()
     {
-        const string text = """
-TYPE Leaf
-    Value AS INTEGER
-    SUB Change()
-        SELF.Value = 10
-        items(1).Value = 99
-    END SUB
-END TYPE
-
-DIM items(0 TO 1) AS Leaf
-items(0).Change()
-PRINT items(0).Value
-PRINT items(1).Value
-""";
+        const string text = "TYPE Leaf\r\n    Value AS INTEGER\r\n    SUB Change()\r\n        SELF.Value = 10\r\n        items[1].Value = 99\r\n    END SUB\r\nEND TYPE\r\n\r\nDIM items[0 TO 1] AS Leaf\r\nitems[0].Change()\r\nPRINT items[0].Value\r\nPRINT items[1].Value";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -150,26 +125,7 @@ PRINT x.Child.Value
     [Fact]
     public void Execute_TypeMethodEvaluatesArrayReceiverIndexOnce()
     {
-        const string text = """
-TYPE Leaf
-    V AS INTEGER
-    SUB Change()
-        SELF.V = SELF.V + 1
-    END SUB
-END TYPE
-
-DIM items(0 TO 0) AS Leaf
-DIM calls AS INTEGER
-
-items(Pick()).Change()
-PRINT calls
-PRINT items(0).V
-
-FUNCTION Pick() AS INTEGER
-    calls = calls + 1
-    RETURN 0
-END FUNCTION
-""";
+        const string text = "TYPE Leaf\r\n    V AS INTEGER\r\n    SUB Change()\r\n        SELF.V = SELF.V + 1\r\n    END SUB\r\nEND TYPE\r\n\r\nDIM items[0 TO 0] AS Leaf\r\nDIM calls AS INTEGER\r\n\r\nitems[Pick()].Change()\r\nPRINT calls\r\nPRINT items[0].V\r\n\r\nFUNCTION Pick() AS INTEGER\r\n    calls = calls + 1\r\n    RETURN 0\r\nEND FUNCTION";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -204,18 +160,7 @@ Show()
     [Fact]
     public void Execute_UncalledRoutineWithOversizedFixedFieldAllocatesNothing()
     {
-        const string text = """
-TYPE Big
-    Data(0 TO 67108864) AS INTEGER
-END TYPE
-
-PRINT 42
-
-SUB NeverCalled()
-    DIM local AS Big
-    PRINT UBOUND(local.Data)
-END SUB
-""";
+        const string text = "TYPE Big\r\n    Data[0 TO 67108864] AS INTEGER\r\nEND TYPE\r\n\r\nPRINT 42\r\n\r\nSUB NeverCalled()\r\n    DIM local AS Big\r\n    PRINT UBOUND(local.Data[])\r\nEND SUB";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -226,20 +171,7 @@ END SUB
     [Fact]
     public void Execute_OversizedFixedFieldReportsDiagnosticInsideTry()
     {
-        const string text = """
-TYPE Big
-    Data(0 TO 67108864) AS INTEGER
-END TYPE
-
-TRY
-    DIM local AS Big
-    PRINT UBOUND(local.Data)
-CATCH problem
-    PRINT problem.Code
-END TRY
-
-PRINT 42
-""";
+        const string text = "TYPE Big\r\n    Data[0 TO 67108864] AS INTEGER\r\nEND TYPE\r\n\r\nTRY\r\n    DIM local AS Big\r\n    PRINT UBOUND(local.Data[])\r\nCATCH problem\r\n    PRINT problem.Code\r\nEND TRY\r\n\r\nPRINT 42";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -280,16 +212,7 @@ PRINT item.Value
     [Fact]
     public void Execute_StepBackIsAvailableWhenStateContainsRecordArray()
     {
-        const string text = """
-TYPE Item
-    Value AS INTEGER
-END TYPE
-
-DIM items(0 TO 0) AS Item
-items(0).Value = 1
-items(0).Value = 2
-PRINT items(0).Value
-""";
+        const string text = "TYPE Item\r\n    Value AS INTEGER\r\nEND TYPE\r\n\r\nDIM items[0 TO 0] AS Item\r\nitems[0].Value = 1\r\nitems[0].Value = 2\r\nPRINT items[0].Value";
 
         var (_, host, result) = ExecuteProgram(text, breakpoints: BytecodeBreakpointSet.FromLines(8));
 

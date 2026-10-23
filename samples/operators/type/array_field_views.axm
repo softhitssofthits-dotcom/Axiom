@@ -9,24 +9,24 @@
 ' 99
 
 TYPE Board
-    Cells(,) AS INTEGER
+    Cells[,] AS INTEGER
 END TYPE
 
 DIM board AS Board
-DIM lineView() AS INTEGER
-DIM region(,) AS INTEGER
+DIM lineView[] AS INTEGER
+DIM region[,] AS INTEGER
 
-REDIM board.Cells(1 TO 3, 1 TO 4)
-board.Cells(2, 3) = 23
+REDIM board.Cells[1 TO 3, 1 TO 4]
+board.Cells[2, 3] = 23
 
-lineView = board.Cells(2)
-PRINT lineView(3)
-lineView(4) = 24
-PRINT board.Cells(2, 4)
+lineView[] = board.Cells[2]
+PRINT lineView[3]
+lineView[4] = 24
+PRINT board.Cells[2, 4]
 
-region = board.Cells(2 TO 3, 3 TO 4)
-PRINT LBOUND(region, 1)
-PRINT UBOUND(region, 2)
-PRINT ARRAYLENGTH(region)
-region(3, 3) = 99
-PRINT board.Cells(3, 3)
+region[] = board.Cells[2 TO 3, 3 TO 4]
+PRINT LBOUND(region[], 1)
+PRINT UBOUND(region[], 2)
+PRINT ARRAYLENGTH(region[])
+region[3, 3] = 99
+PRINT board.Cells[3, 3]

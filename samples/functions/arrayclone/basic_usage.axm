@@ -1,17 +1,17 @@
 ' ARRAYCLONE создаёт независимую копию с теми же границами.
-DIM source(5 TO 6) AS INTEGER
-DIM copy() AS INTEGER
+DIM source[5 TO 6] AS INTEGER
+DIM copy[] AS INTEGER
 
-source(5) = 10
-source(6) = 20
+source[5] = 10
+source[6] = 20
 
-copy = ARRAYCLONE(source)
-copy(5) = 99
+copy[] = ARRAYCLONE(source[])
+copy[5] = 99
 
-PRINT LBOUND(copy)
-PRINT UBOUND(copy)
-PRINT ARRAYLENGTH(copy)
-PRINT source(5)
-PRINT copy(5)
-PRINT source(6)
-PRINT copy(6)
+PRINT LBOUND(copy[])
+PRINT UBOUND(copy[])
+PRINT ARRAYLENGTH(copy[])
+PRINT source[5]
+PRINT copy[5]
+PRINT source[6]
+PRINT copy[6]

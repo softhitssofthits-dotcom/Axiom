@@ -42,10 +42,10 @@ End Function
 
 ' ChooseGhostDirection — Функция ищет кратчайший проходимый путь к клетке героя.
 Private Function ChooseGhostDirection() As Integer                                                     ' Функция ищет кратчайший проходимый путь к клетке героя.
-    Dim visited(1 To MAZE_ROWS, 1 To MAZE_COLUMNS) As Boolean                                  ' Отмечает клетки, уже добавленные в очередь поиска.
-    Dim firstDirection(1 To MAZE_ROWS, 1 To MAZE_COLUMNS) As Integer                            ' Хранит первый ход кратчайшего пути до каждой клетки.
-    Dim queueRows(1 To MAZE_ROWS * MAZE_COLUMNS) As Integer                                    ' Очередь строк для обхода карты в ширину.
-    Dim queueCols(1 To MAZE_ROWS * MAZE_COLUMNS) As Integer                                    ' Очередь столбцов для обхода карты в ширину.
+    Dim visited[1 To MAZE_ROWS, 1 To MAZE_COLUMNS] As Boolean                                  ' Отмечает клетки, уже добавленные в очередь поиска.
+    Dim firstDirection[1 To MAZE_ROWS, 1 To MAZE_COLUMNS] As Integer                            ' Хранит первый ход кратчайшего пути до каждой клетки.
+    Dim queueRows[1 To MAZE_ROWS * MAZE_COLUMNS] As Integer                                    ' Очередь строк для обхода карты в ширину.
+    Dim queueCols[1 To MAZE_ROWS * MAZE_COLUMNS] As Integer                                    ' Очередь столбцов для обхода карты в ширину.
     Dim head As Integer = 1                                                                     ' Индекс следующей клетки для обработки.
     Dim tail As Integer = 1                                                                     ' Индекс последней добавленной клетки.
     Dim currentRow As Integer                                                                   ' Строка клетки, которую сейчас обрабатываем.
@@ -53,31 +53,31 @@ Private Function ChooseGhostDirection() As Integer                              
     Dim nextRow As Integer                                                                      ' Строка проверяемого соседнего узла.
     Dim nextCol As Integer                                                                      ' Столбец проверяемого соседнего узла с учётом туннеля.
 
-    queueRows(1) = ghost.tileRow                                                                ' Поиск начинается с текущей клетки призрака.
-    queueCols(1) = ghost.tileCol
-    visited(ghost.tileRow, ghost.tileCol) = True
+    queueRows[1] = ghost.tileRow                                                                ' Поиск начинается с текущей клетки призрака.
+    queueCols[1] = ghost.tileCol
+    visited[ghost.tileRow, ghost.tileCol] = True
 
     Do While head <= tail                                                                       ' Очередь обходит клетки по возрастанию расстояния.
-        currentRow = queueRows(head)                                                            ' Берём следующую клетку из очереди.
-        currentCol = queueCols(head)
+        currentRow = queueRows[head]                                                            ' Берём следующую клетку из очереди.
+        currentCol = queueCols[head]
         If currentRow = ghostTarget.tileRow And currentCol = ghostTarget.tileCol Then                    ' Цель найдена кратчайшим обходом.
-            Return firstDirection(currentRow, currentCol)                                      ' Возвращаем направление первого шага из старта.
+            Return firstDirection[currentRow, currentCol]                                      ' Возвращаем направление первого шага из старта.
         End If
 
         For candidate = DIR_LEFT To DIR_DOWN                                                    ' Проверяем соседей в стабильном порядке.
             If CanMove(currentCol, currentRow, candidate) Then                                 ' В очередь попадают только проходимые клетки.
                 nextRow = currentRow + DirY(candidate)                                         ' Считаем соседнюю строку.
                 nextCol = WrapTunnelColumn(currentCol + DirX(candidate), nextRow)              ' Переход через тоннель считается обычным ребром графа.
-                If Not visited(nextRow, nextCol) Then                                          ' Повторно клетки не посещаем.
-                    visited(nextRow, nextCol) = True                                           ' Отмечаем клетку до добавления в очередь.
+                If Not visited[nextRow, nextCol] Then                                          ' Повторно клетки не посещаем.
+                    visited[nextRow, nextCol] = True                                           ' Отмечаем клетку до добавления в очередь.
                     If currentRow = ghost.tileRow And currentCol = ghost.tileCol Then          ' Для соседей старта первым ходом будет текущий кандидат.
-                        firstDirection(nextRow, nextCol) = candidate
+                        firstDirection[nextRow, nextCol] = candidate
                     Else                                                                        ' Остальные клетки наследуют первый ход пути.
-                        firstDirection(nextRow, nextCol) = firstDirection(currentRow, currentCol)
+                        firstDirection[nextRow, nextCol] = firstDirection[currentRow, currentCol]
                     End If
                     tail = tail + 1                                                            ' Добавляем соседа в конец очереди.
-                    queueRows(tail) = nextRow
-                    queueCols(tail) = nextCol
+                    queueRows[tail] = nextRow
+                    queueCols[tail] = nextCol
                 End If
             End If
         Next

@@ -22,16 +22,16 @@ public sealed partial class BytecodeModuleValidatorTests
     }
 
     [Theory]
-    [InlineData("DIM value AS FILE")]
-    [InlineData("DIM value AS IMAGE")]
-    [InlineData("DIM value AS SPRITE")]
-    [InlineData("DIM value AS TILEMAP")]
-    [InlineData("DIM value AS TILESET")]
-    [InlineData("DIM value(1 TO 2) AS INTEGER")]
-    [InlineData("TYPE Item\n    Number AS INTEGER\nEND TYPE\nDIM value AS Item")]
-    public void Compile_InterpolationAcceptsDisplayableValues(string declaration)
+    [InlineData("DIM value AS FILE", "value")]
+    [InlineData("DIM value AS IMAGE", "value")]
+    [InlineData("DIM value AS SPRITE", "value")]
+    [InlineData("DIM value AS TILEMAP", "value")]
+    [InlineData("DIM value AS TILESET", "value")]
+    [InlineData("DIM value[1 TO 2] AS INTEGER", "value[]")]
+    [InlineData("TYPE Item\n    Number AS INTEGER\nEND TYPE\nDIM value AS Item", "value")]
+    public void Compile_InterpolationAcceptsDisplayableValues(string declaration, string expression)
     {
-        var source = declaration + "\nPRINT $\"value={value}!\"";
+        var source = declaration + "\nPRINT $\"value={" + expression + "}!\"";
 
         var compilation = new AxiomExecutionPipeline().Compile(new CompilationRequest(source));
 

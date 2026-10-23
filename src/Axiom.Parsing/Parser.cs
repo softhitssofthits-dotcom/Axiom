@@ -8,16 +8,32 @@ public sealed partial class Parser
 {
     private readonly IReadOnlyList<SyntaxToken> _tokens;
     private int _position;
+    private readonly bool _allowSquareBracketSyntax;
 
     public Parser(string text, string? document = null)
+        : this(text, document, allowSquareBracketSyntax: true)
     {
+    }
+
+    private Parser(string text, string? document, bool allowSquareBracketSyntax)
+    {
+        _allowSquareBracketSyntax = allowSquareBracketSyntax;
         var lexedTokens = Lexer.Lex(text, out var lexerDiagnostics, document);
 
         Diagnostics = new DiagnosticBag();
         Diagnostics.AddRange(lexerDiagnostics);
 
+        if (!allowSquareBracketSyntax)
+        {
+            foreach (var token in lexedTokens.Where(static token => token.Kind is TokenKind.OpenBracketToken or TokenKind.CloseBracketToken))
+            {
+                Diagnostics.Report(DiagnosticCodes.InvalidCharacter, $"Недопустимый символ: '{token.Text}'.", token.Location);
+            }
+        }
+
         _tokens = lexedTokens
-            .Where(static token => token.Kind is not TokenKind.CommentToken and not TokenKind.BadToken)
+            .Where(token => token.Kind is not TokenKind.CommentToken and not TokenKind.BadToken
+                && (allowSquareBracketSyntax || token.Kind is not (TokenKind.OpenBracketToken or TokenKind.CloseBracketToken)))
             .Select(static token => new SyntaxToken(
                 MapTokenKind(token.Kind),
                 token.Text,
@@ -36,6 +52,22 @@ public sealed partial class Parser
     public static ProgramSyntax Parse(string text, out DiagnosticBag diagnostics, string? document)
     {
         var parser = new Parser(text, document);
+        var program = parser.ParseProgram();
+        diagnostics = parser.Diagnostics;
+        return program;
+    }
+
+    internal static ProgramSyntax ParseSquareBracketSyntax(string text, out DiagnosticBag diagnostics, string? document = null)
+    {
+        var parser = new Parser(text, document, allowSquareBracketSyntax: true);
+        var program = parser.ParseProgram();
+        diagnostics = parser.Diagnostics;
+        return program;
+    }
+
+    internal static ProgramSyntax ParseLegacySyntax(string text, out DiagnosticBag diagnostics, string? document = null)
+    {
+        var parser = new Parser(text, document, allowSquareBracketSyntax: false);
         var program = parser.ParseProgram();
         diagnostics = parser.Diagnostics;
         return program;
@@ -83,6 +115,6 @@ public sealed partial class Parser
             SkipNewLines();
         }
 
-        return new ProgramSyntax(members, Match(SyntaxKind.EndOfFileToken, "конец файла"));
+        return new ProgramSyntax(members, Match(SyntaxKind.EndOfFileToken, "конец файла"), usesSquareArraySyntax: _allowSquareBracketSyntax);
     }
 }

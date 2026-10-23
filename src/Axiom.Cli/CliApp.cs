@@ -12,7 +12,7 @@ namespace Axiom.Cli;
 /// или рантайма, 2 — неверный usage или файл не найден.
 /// Команда `check` выполняет полную компиляционную проверку (frontend и backend), не исполняет программу и не создаёт файлы.
 /// </summary>
-internal static class CliApp
+internal static partial class CliApp
 {
     public const string Version = AxiomVersionInfo.CompilerVersion;
 
@@ -24,13 +24,14 @@ internal static class CliApp
     private static readonly string UsageText =
         $"""
         usage: axiom <command> [options] <file>
-          commands: run | check | fmt | metadata
+          commands: run | check | fmt | metadata | migrate-arrays
           projects: run/check принимают .axproj; fmt работает с исходниками .axm
-          options:  --json    машинно-читаемые диагностки (check)
-                    --stdin   читать источник из stdin (check, fmt)
+          options:  --json    машинно-читаемые диагностики (check) или результат миграции (migrate-arrays)
+                    --stdin   читать источник из stdin (check, fmt, migrate-arrays)
                     --help    показать эту справку
                     --version показать версию и git-ревизию
           notes:    check — полная компиляционная проверка (frontend и backend), без запуска программы и без файлов
+                    migrate-arrays [--json] [--stdin | <file>] — только предварительный просмотр; запись не поддерживается
         axiom {Version}
         """;
 
@@ -65,6 +66,8 @@ internal static class CliApp
                 return RunFormat(args, stdout, stderr, stdin);
             case "metadata":
                 return args.Length == 1 ? RunMetadata(stdout) : Usage(stderr);
+            case "migrate-arrays":
+                return RunArrayMigration(args, stdout, stderr, stdin);
             default:
                 return Usage(stderr);
         }

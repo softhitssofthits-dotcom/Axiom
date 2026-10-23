@@ -1,9 +1,9 @@
 ' Пример показывает разбиение строки по регулярному выражению.
 ' Ожидается вывод: 3, затем one, затем two, затем three.
-DIM parts() AS STRING
+DIM parts[] AS STRING
 
-parts = REGEXSPLIT("one, two;three", "[,;]\s*")
-PRINT ARRAYLENGTH(parts)
-PRINT parts(1)
-PRINT parts(2)
-PRINT parts(3)
+parts[] = REGEXSPLIT("one, two;three", "[,;]\s*")
+PRINT ARRAYLENGTH(parts[])
+PRINT parts[1]
+PRINT parts[2]
+PRINT parts[3]

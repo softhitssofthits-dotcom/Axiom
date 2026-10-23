@@ -28,7 +28,7 @@ module.exports = [{ id: 'highlight-punctuation-and-maze', name: 'Пунктуа�
     ['dark', 'rgb(78, 201, 176)', 'rgb(197, 134, 192)', 'rgb(220, 220, 170)', 'rgb(206, 145, 120)', 'rgb(106, 153, 85)', 'rgb(230, 155, 200)'],
     ['light', 'rgb(38, 127, 153)', 'rgb(0, 0, 255)', 'rgb(121, 94, 38)', 'rgb(163, 21, 21)', 'rgb(106, 153, 85)', 'rgb(175, 25, 112)'],
     ['basic', 'rgb(255, 255, 255)', 'rgb(255, 255, 85)', 'rgb(85, 255, 255)', 'rgb(170, 255, 170)', 'rgb(184, 199, 232)', 'rgb(255, 255, 85)'],
-    ['borland', 'rgb(255, 255, 85)', 'rgb(255, 255, 255)', 'rgb(255, 255, 85)', 'rgb(255, 255, 85)', 'rgb(255, 255, 85)', 'rgb(255, 255, 255)'],
+    ['borland', 'rgb(255, 255, 85)', 'rgb(255, 255, 255)', 'rgb(85, 255, 255)', 'rgb(255, 255, 85)', 'rgb(255, 255, 85)', 'rgb(255, 255, 255)'],
   ]) {
     await S.page.evaluate(t => window.__ide.setTheme(t), theme);
     await S.page.waitForFunction(({typeColor,keywordColor}) => {
@@ -46,12 +46,12 @@ module.exports = [{ id: 'highlight-punctuation-and-maze', name: 'Пунктуа�
   await S.screenshot('highlighting-fixed');
 } }, { id: 'highlight-user-symbols', name: 'Пользовательские имена и операции получают цвета выбранной темы', async fn({S,C}) {
   await S.launch();
-  await S.page.evaluate(() => { const i=window.__ide; i.settings.formatOnBlur=false; i.settings.checkOnChange=false; i.editor.getModel().setValue('CONST limit = 2\nDIM items(3) AS INTEGER\nSUB PaintWorld(value AS INTEGER)\nvalue = items(0) + limit\nEND SUB\nPaintWorld(1)'); });
+  await S.page.evaluate(() => { const i=window.__ide; i.settings.formatOnBlur=false; i.settings.checkOnChange=false; i.editor.getModel().setValue('CONST limit = 2\nDIM items[1 TO 3] AS INTEGER\nSUB PaintWorld(value AS INTEGER)\nvalue = items[1] + limit\nEND SUB\nPaintWorld(1)'); });
   for (const [theme, variable, constant, array, procedure, operator] of [
     ['dark','rgb(156, 220, 254)','rgb(240, 185, 117)','rgb(185, 163, 227)','rgb(220, 220, 170)','rgb(230, 155, 200)'],
     ['light','rgb(33, 94, 156)','rgb(143, 68, 0)','rgb(117, 82, 165)','rgb(121, 94, 38)','rgb(175, 25, 112)'],
     ['basic','rgb(255, 255, 255)','rgb(255, 255, 170)','rgb(170, 255, 170)','rgb(85, 255, 255)','rgb(255, 255, 85)'],
-    ['borland','rgb(255, 255, 85)','rgb(255, 255, 85)','rgb(255, 255, 85)','rgb(255, 255, 85)','rgb(255, 255, 255)']]) {
+    ['borland','rgb(255, 255, 85)','rgb(255, 255, 85)','rgb(170, 255, 170)','rgb(85, 255, 255)','rgb(255, 255, 255)']]) {
     await S.page.evaluate(t=>window.__ide.setTheme(t),theme);
     for(const [word,color] of [['value',variable],['limit',constant],['items',array],['PaintWorld',procedure],['=',operator]]) {
       await S.page.waitForFunction(({word,color})=>[...document.querySelectorAll('.view-lines span')].some(s=>s.textContent.trim()===word&&getComputedStyle(s).color===color),{word,color}, {timeout:7000});

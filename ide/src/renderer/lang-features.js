@@ -24,16 +24,17 @@ const LangFeatures = (() => {
         mask[i] = ' ';
         if (ch === '"' && next === '"') { mask[++i] = ' '; continue; }
         if (ch === '"') stack.pop();
-        else if (ch === '{' && state.interpolated) stack.push({kind: 'expression', depth: 0});
+        else if (state.interpolated && (ch === '{' || ch === '}') && next === ch) { mask[++i] = ' '; }
+        else if (ch === '{' && state.interpolated) { mask[i] = '{'; stack.push({kind: 'expression', depth: 0, bracketDepth: 0}); }
         continue;
       }
       if (state.kind === 'format') {
         mask[i] = ' ';
-        if (ch === '}') stack.pop();
+        if (ch === '}') { mask[i] = '}'; stack.pop(); }
         continue;
       }
-      if (state.kind === 'expression' && ch === '}' && state.depth === 0) {
-        mask[i] = ' '; stack.pop(); continue;
+      if (state.kind === 'expression' && ch === '}' && state.depth === 0 && state.bracketDepth === 0) {
+        mask[i] = '}'; stack.pop(); continue;
       }
       if (ch === '"') { mask[i] = ' '; stack.push({kind: 'string', interpolated: line[i - 1] === '$'}); continue; }
       if (ch === "'" || (/^REM\b/i.test(line.slice(i)) && (i === 0 || !/[A-Za-z0-9_]/.test(line[i - 1])))) {
@@ -41,29 +42,80 @@ const LangFeatures = (() => {
       }
       if (state.kind === 'expression') {
         if (ch === '(') state.depth++;
-        if (ch === ')') state.depth--;
-        if (ch === ':' && state.depth === 0) { mask[i] = ' '; state.kind = 'format'; }
+        if (ch === ')') state.depth = Math.max(0, state.depth - 1);
+        if (ch === '[') state.bracketDepth++;
+        if (ch === ']') state.bracketDepth = Math.max(0, state.bracketDepth - 1);
+        if (ch === ':' && next !== '=' && state.depth === 0 && state.bracketDepth === 0) { mask[i] = ' '; state.kind = 'format'; }
       }
     }
     return { mask: mask.join(''), commentStart };
   }
 
+  // Эти средства читают только форму объявления, не выводят тип начального выражения.
+  function closingDelimiter(text, start) {
+    const stack = [], pairs = {')': '(', ']': '['};
+    const code = lexicalCode(text).mask;
+    for (let i = start; i < code.length; i++) {
+      const ch = code[i];
+      if (ch === '(' || ch === '[') stack.push(ch);
+      else if (ch === ')' || ch === ']') {
+        if (stack.pop() !== pairs[ch]) return -1;
+        if (!stack.length) return i;
+      }
+    }
+    return -1;
+  }
+
+  function splitTopLevel(text, separator = ',') {
+    const parts = [], code = lexicalCode(text).mask;
+    let depth = 0, start = 0;
+    for (let i = 0; i < code.length; i++) {
+      if ('([{'.includes(code[i])) depth++;
+      else if (')]}'.includes(code[i])) depth--;
+      else if (code[i] === separator && depth === 0) { parts.push(text.slice(start, i)); start = i + 1; }
+    }
+    parts.push(text.slice(start));
+    return parts;
+  }
+
+  function declaration(text) {
+    const match = text.trim().match(/^(?:(BYREF|BYVAL)\s+)?([A-Za-z_]\w*)\b/i);
+    if (!match) return null;
+    let rest = text.trim().slice(match[0].length).trim(), arrayRank = 0, suffix = '';
+    if (rest[0] === '[' || rest[0] === '(') {
+      const end = closingDelimiter(rest, 0);
+      if (end < 0) return {name: match[2], type: null, arrayRank: 0, label: text.trim()};
+      arrayRank = splitTopLevel(rest.slice(1, end)).length;
+      suffix = rest[0] + ','.repeat(arrayRank - 1) + rest[end];
+      rest = rest.slice(end + 1).trim();
+    }
+    const typeText = /^AS\s+/i.test(rest) ? splitTopLevel(rest.replace(/^AS\s+/i, ''), '=')[0].trim() : null;
+    const type = typeText ? typeText.replace(/\s*\[([\s,]*)\]\s*$/, (_, rank) => '[' + rank.replace(/\s/g, '') + ']')
+      .replace(/\s*\(([\s,]*)\)\s*$/, (_, rank) => '(' + rank.replace(/\s/g, '') + ')') + suffix : null;
+    const typeSuffix = type && !/^FUNCTION\b/i.test(type) ? type.match(/(?:\[([\s,]*)\]|\(([\s,]*)\))$/) : null;
+    const typeRank = typeSuffix ? ((typeSuffix[1] ?? typeSuffix[2]).match(/,/g) || []).length + 1 : 0;
+    return {name: match[2], type, arrayRank: arrayRank || typeRank,
+      squareArray: suffix.startsWith('[') || (!suffix && typeSuffix?.[1] !== undefined),
+      label: text.trim()};
+  }
+
   function scanDoc(model) {
     const res = { subs: [], functions: [], types: [], vars: [] };
-    const lines = model.getValue().replace(/\r\n/g, '\n').split('\n');
+    const lines = model.getValue().split(/\r\n|\r|\n/);
     for (const [lineIndex, raw] of lines.entries()) {
       const line = codeOf(raw).trim().replace(/^(?:PUBLIC|PRIVATE)\s+/i, '');
       if (!line) continue;
       let m;
-      if ((m = line.match(/^SUB\s+([A-Za-z_]\w*)\s*\(([^)]*)\)/i))) {
-        res.subs.push({ name: m[1], params: parseParams(m[2]), lineNo: lineIndex + 1, signature: 'SUB ' + m[1] + '(' + m[2].trim() + ')' });
-        continue;
-      }
-      if ((m = line.match(/^FUNCTION\s+([A-Za-z_]\w*)\s*\(([^)]*)\)\s*(?:AS\s+(\w+))?/i))) {
-        res.functions.push({
-          name: m[1], params: parseParams(m[2]), returnType: m[3] || null, lineNo: lineIndex + 1,
-          signature: 'FUNCTION ' + m[1] + '(' + m[2].trim() + ')' + (m[3] ? ' AS ' + m[3] : ''),
-        });
+      if ((m = line.match(/^(SUB|FUNCTION)\s+([A-Za-z_]\w*)\s*\(/i))) {
+        const open = m[0].length - 1, close = closingDelimiter(line, open);
+        if (close < 0) continue;
+        const paramText = line.slice(open + 1, close).trim();
+        const result = line.slice(close + 1).trim().match(/^AS\s+(.+)$/i)?.[1] || null;
+        const kind = m[1].toUpperCase();
+        const routine = {name: m[2], params: parseParams(paramText), lineNo: lineIndex + 1,
+          signature: kind + ' ' + m[2] + '(' + paramText + ')' + (kind === 'FUNCTION' && result ? ' AS ' + result : '')};
+        if (kind === 'FUNCTION') res.functions.push({...routine, returnType: result});
+        else res.subs.push(routine);
         continue;
       }
       if ((m = line.match(/^TYPE\s+([A-Za-z_]\w*)/i))) {
@@ -72,14 +124,17 @@ const LangFeatures = (() => {
         for (let j = lineIndex + 1; j < lines.length; j++) {
           const inner = codeOf(lines[j]).trim();
           if (/^END\s+TYPE/i.test(inner)) break;
-          const f = inner.match(/^([A-Za-z_]\w*)\s+AS\s+([A-Za-z_]\w*)/i);
-          if (f) type.fields.push({ name: f[1], type: f[2] });
+          const field = declaration(inner);
+          if (field?.type) type.fields.push({name: field.name, type: field.type});
         }
         res.types.push(type);
         continue;
       }
-      if ((m = line.match(/^(?:DIM|CONST)\s+([A-Za-z_]\w*)(?:\s*\([^)]*\))?(?:\s+AS\s+([A-Za-z_]\w*))?/i))) {
-        res.vars.push({ name: m[1], type: m[2] || null, lineNo: lineIndex + 1 });
+      if ((m = line.match(/^(?:DIM|CONST)\s+(.+)$/i))) {
+        for (const segment of splitTopLevel(m[1])) {
+          const item = declaration(segment);
+          if (item) res.vars.push({...item, type: item.type || null, lineNo: lineIndex + 1});
+        }
       }
     }
     const declarations = [...res.subs.map(item => ({item, kind:'SUB'})), ...res.functions.map(item => ({item, kind:'FUNCTION'})), ...res.types.map(item => ({item, kind:'TYPE'}))].sort((a,b) => a.item.lineNo-b.item.lineNo);
@@ -140,12 +195,10 @@ const LangFeatures = (() => {
   // 'a AS INTEGER, b AS STRING' -> [{name, type}]
   function parseParams(paramText) {
     const params = [];
-    for (const seg of String(paramText || '').split(',')) {
+    for (const seg of splitTopLevel(String(paramText || ''))) {
       const t = seg.trim();
       if (!t) continue;
-      const m = t.match(/^([A-Za-z_]\w*)\s*(?:AS\s+([A-Za-z_]\w*))?$/i);
-      if (m) params.push({ name: m[1], type: m[2] || '' });
-      else params.push({ name: t, type: '' });
+      params.push(declaration(t) || { name: t, type: '', label: t });
     }
     return params;
   }
@@ -252,7 +305,8 @@ const LangFeatures = (() => {
           if (!b || typeof b.name !== 'string') continue;
           add(b.name, 'Function', b.name + '($0)', true, families.size ? builtinSignature(b) : '', '0');
         }
-        for (const v of doc.vars) add(v.name, 'Variable', v.name, false, v.type ? v.type : '', '1');
+        const suffixAtCursor = model.getLineContent(line).slice(range.replace.endColumn - 1);
+        for (const v of doc.vars) add(v.name, 'Variable', v.name + (v.squareArray && !/^\s*[[(]/.test(suffixAtCursor) ? '[]' : ''), false, v.type || '', '1');
         for (const f of doc.functions) add(f.name, 'Function', f.name + '($0)', true, f.signature, '1');
         for (const s of doc.subs) add(s.name, 'Function', s.name + ' $0', false, s.signature, '1');
         for (const t of doc.types) add(t.name, 'Struct', t.name, false, I18N.t('hover.userType'), '2');
@@ -278,26 +332,22 @@ const LangFeatures = (() => {
         const code = lexical.mask.slice(0, line.length);
         const empty = { signatures: [], activeSignature: 0, activeParameter: 0 };
         if (line.length > lexical.commentStart) return { value: empty, dispose() {} };
-        let depth = 0;
-        let callStart = -1;
-        for (let i = code.length - 1; i >= 0; i--) {
+        // Квадратные скобки и вставки интерполяции ограждают запятые,
+        // но не становятся вызовами. Вызов внутри индекса остаётся доступен.
+        const stack = [], pairs = {')': '(', ']': '[', '}': '{'};
+        for (let i = 0; i < code.length; i++) {
           const ch = code[i];
-          if (ch === ')') depth += 1;
-          else if (ch === '(') {
-            if (depth === 0) { callStart = i; break; }
-            depth -= 1;
-          }
+          if ('([{'.includes(ch)) stack.push({kind: ch, start: i, active: 0});
+          else if (')]}'.includes(ch)) {
+            if (stack.at(-1)?.kind !== pairs[ch]) return {value: empty, dispose() {}};
+            stack.pop();
+          } else if (ch === ',' && stack.at(-1)?.kind === '(') stack.at(-1).active++;
         }
-        const nm = callStart >= 0 ? code.slice(0, callStart).match(/([A-Za-z_]\w*)\s*$/) : null;
-        if (!nm) return { value: empty, dispose() {} };
-        const fnName = nm[1];
+        const call = [...stack].reverse().find(frame => frame.kind === '(' && /[A-Za-z_]\w*\s*$/.test(code.slice(0, frame.start)));
+        const nm = call ? code.slice(0, call.start).match(/([A-Za-z_]\w*)\s*$/) : null;
+        if (!nm || cancellation?.isCancellationRequested || model.isDisposed?.()) return { value: empty, dispose() {} };
+        const fnName = nm[1], active = call.active;
         const meta = getMeta();
-        let active = 0, argumentDepth = 0;
-        for (const ch of code.slice(callStart + 1)) {
-          if (ch === '(') argumentDepth++;
-          else if (ch === ')') argumentDepth--;
-          else if (ch === ',' && argumentDepth === 0) active++;
-        }
 
         // 1. Builtin overload family from the registry — every overload becomes a signature.
         const family = meta && Array.isArray(meta.builtins)
@@ -337,7 +387,7 @@ const LangFeatures = (() => {
         const user = doc.functions.find((f) => f.name.toUpperCase() === fnName.toUpperCase())
           || doc.subs.find((s) => s.name.toUpperCase() === fnName.toUpperCase());
         if (user) {
-          const paramLabels = user.params.map((p) => (p.type ? p.name + ' AS ' + p.type : p.name));
+          const paramLabels = user.params.map((p) => p.label || (p.type ? p.name + ' AS ' + p.type : p.name));
           return {
             value: {
               signatures: [{ label: user.signature, parameters: paramLabels.map((p) => ({ label: p })) }],
@@ -377,6 +427,7 @@ const LangFeatures = (() => {
         return null;
       }
     }
+    LangFeatures.getSemanticHovers = semanticHovers;
     const hoverProvider = {
       async provideHover(model, position, cancellation) {
         if (!isCodePosition(model, position)) return null;
@@ -404,10 +455,14 @@ const LangFeatures = (() => {
         const symbol = symbols?.find(item => item.start === offset && item.length === name.length);
         if (symbol) {
           let details = '';
+          const callable = ['function', 'sub'].includes(symbol.kind);
+          const array = callable ? null : symbol.arrayRank ? {elementType: symbol.elementType, rank: symbol.arrayRank}
+            : window.AxiomSemanticColors?.arrayType(symbol.type);
           if (symbol.type) details = I18N.t('hover.typeLabel') + ': `' + symbol.type + '`';
+          if (array) details += '\n\n' + I18N.t('hover.elementType') + ': `' + array.elementType + '`\n\n' + I18N.t('hover.dimensions') + ': ' + array.rank;
           if (symbol.signature) details = '`' + symbol.signature + '`';
           if (symbol.fields) details = I18N.t('hover.fields') + ': ' + (symbol.fields.join(', ') || I18N.t('hover.noFields'));
-          return { range, contents: [{ value: '**' + name + '** — ' + I18N.t('hover.' + symbol.kind) + '\n\n' + details }] };
+          return { range, contents: [{ value: '**' + name + '** — ' + I18N.t('hover.' + (array ? 'array' : symbol.kind)) + '\n\n' + details }] };
         }
 
         // 1. Builtin family: all overloads, one signature per line.

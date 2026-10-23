@@ -44,20 +44,7 @@ PRINT $"|{moment}|"
     [Fact]
     public void RecordFieldAndArrayKeepPrecision()
     {
-        const string source = """
-TYPE Entry
-    Moment AS DATETIME
-END TYPE
-
-DIM item AS Entry
-item.Moment = "2024-02-29 12:34:56.125"
-PRINT item.Moment
-
-DIM list(1 TO 2) AS DATETIME
-list(1) = item.Moment
-PRINT list(1)
-PRINT list(1) = item.Moment
-""";
+        const string source = "TYPE Entry\n    Moment AS DATETIME\nEND TYPE\n\nDIM item AS Entry\nitem.Moment = \"2024-02-29 12:34:56.125\"\nPRINT item.Moment\n\nDIM list[1 TO 2] AS DATETIME\nlist[1] = item.Moment\nPRINT list[1]\nPRINT list[1] = item.Moment";
 
         var result = Run(source);
 
@@ -138,22 +125,7 @@ PRINT moment
     [Fact]
     public void SelectCaseWorksInsideLoopWithTemporalSelector()
     {
-        const string source = """
-DIM days(1 TO 3) AS DATE
-days(1) = "2024-01-15"
-days(2) = "2024-02-29"
-days(3) = "2024-03-01"
-FOR i = 1 TO 3
-    SELECT CASE days(i)
-        CASE "2024-02-01" TO "2024-02-29"
-            PRINT "февраль"
-        CASE IS >= "2024-03-01"
-            PRINT "позже"
-        CASE ELSE
-            PRINT "раньше"
-    END SELECT
-NEXT i
-""";
+        const string source = "DIM days[1 TO 3] AS DATE\ndays[1] = \"2024-01-15\"\ndays[2] = \"2024-02-29\"\ndays[3] = \"2024-03-01\"\nFOR i = 1 TO 3\n    SELECT CASE days[i]\n        CASE \"2024-02-01\" TO \"2024-02-29\"\n            PRINT \"февраль\"\n        CASE IS >= \"2024-03-01\"\n            PRINT \"позже\"\n        CASE ELSE\n            PRINT \"раньше\"\n    END SELECT\nNEXT i";
 
         var result = Run(source);
 
@@ -188,17 +160,7 @@ PRINT restoredDate = dayValue
     [Fact]
     public void ValuesWithSameVisiblePartRemainDistinct()
     {
-        const string source = """
-DIM first AS DATETIME = "2024-02-29 12:34:56.100"
-DIM second AS DATETIME = "2024-02-29 12:34:56.200"
-PRINT first = second
-PRINT first < second
-DIM list(1 TO 2) AS DATETIME
-list(1) = first
-list(2) = second
-PRINT ARRAYMIN(list)
-PRINT ARRAYMAX(list)
-""";
+        const string source = "DIM first AS DATETIME = \"2024-02-29 12:34:56.100\"\nDIM second AS DATETIME = \"2024-02-29 12:34:56.200\"\nPRINT first = second\nPRINT first < second\nDIM list[1 TO 2] AS DATETIME\nlist[1] = first\nlist[2] = second\nPRINT ARRAYMIN(list[])\nPRINT ARRAYMAX(list[])";
 
         var result = Run(source);
 

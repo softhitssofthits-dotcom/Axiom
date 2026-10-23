@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Операторы GET и PUT — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
 <body data-page="get-put"><a class="skip-link" href="#main-content">Перейти к статье</a>
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
@@ -7,26 +7,17 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Операторы GET и PUT</span></nav>
-<p class="eyebrow">Операторы</p><h1 class="page-title">Операторы GET и PUT</h1><p class="lead"><code>GET</code> и <code>PUT</code> — операторы языка Axiom для обмена прямоугольными блоками пикселей с двумерным числовым массивом. Оператор <code>GET</code> сохраняет блок в массив, а оператор <code>PUT</code> рисует сохранённый блок.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-
+<p class="eyebrow">Операторы</p><h1 class="page-title">Операторы GET и PUT</h1><p class="lead">Участок изображения иногда нужно сохранить, чтобы восстановить его позже, перенести в другую точку или наложить на уже нарисованное. Для этого служит пара операторов: <code>GET</code> считывает прямоугольный блок пикселей в двумерный числовой массив, а <code>PUT</code> рисует сохранённый блок на поверхности.</p><nav class="article-toc" aria-label="В этой статье"></nav><p>Массивный аргумент-имя записывается с обязательными квадратными скобками [], например <code>GET (5, 5)-(5, 5), pixel[]</code>. Круглые скобки координат не меняются.</p>
 
             <section class="article-section" id="get">
-                <h2>Что такое GET и PUT</h2>
-                <p>Оператор <code>GET</code> считывает прямоугольник активной графической поверхности в подготовленный массив.</p>
-                <p>Оператор <code>PUT</code> выводит массив на активную поверхность с выбранным действием наложения.</p>
+                <h2>Что даёт буфер пикселей</h2>
+                <p>Оператор <code>GET</code> считывает прямоугольник активной графической поверхности в подготовленный массив. Оператор <code>PUT</code> выводит массив на активную поверхность с выбранным действием наложения. Буфер позволяет сохранить участок изображения, восстановить его позже, перенести в другую точку или выполнить побитовое наложение.</p>
+                <p>Массивы <code>GET</code> и <code>PUT</code> хранят индексные цвета в обоих графических режимах. Для полноцветных ресурсов предназначены <a href="images.html">IMAGE</a> и <a href="sprites.html">SPRITE</a>.</p>
             </section>
 
             <section class="article-section">
-                <h2>Когда использовать GET и PUT</h2>
-                <p>Буфер позволяет сохранить участок изображения, восстановить его позже, перенести в другую точку или выполнить побитовое наложение.</p>
-                <p>Для полноцветных ресурсов предназначены <a href="images.html">IMAGE</a> и <a href="sprites.html">SPRITE</a>. Массивы <code>GET</code> и <code>PUT</code> хранят индексные цвета в обоих графических режимах.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Где работают операторы GET и PUT</h2>
-                <p>Перед обменом откройте графический <code>SCREEN 1..10</code> или холст <code>CANVAS</code>.</p>
-                <p>В режиме <code>SCREEN</code> координаты преобразуются текущими операторами <code>VIEW</code> и <code>WINDOW</code>.</p>
-                <p>На холсте <code>CANVAS</code> передаются мировые координаты. Камера преобразует их, а область <code>VIEWPORT</code> ограничивает доступные пиксели.</p>
+                <h2>Где работают операторы</h2>
+                <p>Перед обменом откройте графический <code>SCREEN 1..10</code> или холст <code>CANVAS</code>. В режиме <code>SCREEN</code> координаты преобразуются текущими операторами <code>VIEW</code> и <code>WINDOW</code>. На холсте <code>CANVAS</code> передаются мировые координаты: камера преобразует их, а область <code>VIEWPORT</code> ограничивает доступные пиксели.</p>
             </section>
 
             <section class="article-section">
@@ -43,7 +34,7 @@
             </section>
 
             <section class="article-section" id="put">
-                <h2>Параметры</h2>
+                <h2>Аргументы</h2>
                 <table>
                     <thead>
                         <tr><th>Часть</th><th>Описание</th></tr>
@@ -59,14 +50,14 @@
             </section>
 
             <section class="article-section">
-                <h2>Что именно делает оператор</h2>
-                <p>Оператор <code>GET</code> вычисляет прямоугольник и заполняет видимую форму массива <code>buffer</code> считанными пикселями.</p>
-                <p>Оператор <code>PUT</code> читает всю видимую форму массива и располагает её начиная с указанной точки.</p>
-                <p>В каждом элементе буфера хранится индекс <code>0..255</code>. Полноцветные значения не сохраняются в этом формате даже при обмене с <code>CANVAS</code>.</p>
+                <h2>Как устроен буфер</h2>
+                <p>Оператор <code>GET</code> вычисляет прямоугольник и заполняет видимую форму массива <code>buffer[]</code> считанными пикселями. Оператор <code>PUT</code> читает всю видимую форму массива и располагает её начиная с указанной точки. В каждом элементе буфера хранится индекс <code>0..255</code>; полноцветные значения не сохраняются в этом формате даже при обмене с <code>CANVAS</code>.</p>
+                <p>Массив должен быть выделен заранее и иметь два измерения. Поддерживаются элементы <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code> и <code>DECIMAL</code>. Видимые ширина и высота массива должны точно соответствовать прямоугольнику <code>GET</code>; несовпадение размеров вызывает ошибку выполнения. При выводе каждый элемент нормализуется по формуле <code>ABS(TRUNC(value)) MOD 256</code>.</p>
             </section>
 
             <section class="article-section">
                 <h2>Действия PUT</h2>
+                <p>Действие определяет, как цвет буфера сочетается с уже нарисованным пикселем. Если действие не указано, применяется <code>XOR</code>.</p>
                 <table>
                     <thead>
                         <tr><th>Действие</th><th>Результат</th></tr>
@@ -82,16 +73,26 @@
             </section>
 
             <section class="article-section">
-                <h2>Правила работы и ограничения</h2>
-                <p>Массив должен быть выделен заранее и иметь два измерения. Поддерживаются элементы <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code> и <code>DECIMAL</code>.</p>
-                <p>Видимые ширина и высота массива должны точно соответствовать прямоугольнику <code>GET</code>. Несовпадение размеров вызывает ошибку выполнения.</p>
-                <p>При выводе каждый элемент нормализуется по формуле <code>ABS(TRUNC(value)) MOD 256</code>.</p>
-                <p>За пределами поверхности или области вывода <code>GET</code> записывает в буфер <code>0</code>, а <code>PUT</code> пропускает рисование. Доступная часть прямоугольника обрабатывается.</p>
-                <p>На холсте действуют камера и <code>VIEWPORT</code>; настройки <code>VIEW</code> и <code>WINDOW</code> относятся к экрану <code>SCREEN</code>.</p>
-                <p>Для проверки результата на холсте укажите физическую точку в <code>POINT(x, y)</code>. При <code>VIEWPORT (10, 6)-(15, 11)</code> и <code>CAMERA 100, 50</code> вызов <code>PUT (100, 50), buffer, PSET</code> записывает первый элемент в <code>(10, 6)</code>. Вызов <code>POINT(10, 6)</code> читает этот пиксель без повторного смещения камеры.</p>
+                <h2>Координаты, обрезка и момент показа</h2>
+                <p>Все координаты <code>GET</code> и <code>PUT</code> приводятся к <code>LONG</code>, и обе границы захватываемого прямоугольника включаются. <code>GET</code> не выделяет память под массив и не меняет его размеры. За пределами поверхности или области вывода <code>GET</code> записывает в буфер <code>0</code>, а <code>PUT</code> пропускает рисование; доступная часть прямоугольника при этом обрабатывается.</p>
+                <p>На холсте действуют камера и <code>VIEWPORT</code>; настройки <code>VIEW</code> и <code>WINDOW</code> относятся к экрану <code>SCREEN</code>. Проверка результата на холсте идёт по физической точке в <code>POINT(x, y)</code>: при <code>VIEWPORT (10, 6)-(15, 11)</code> и <code>CAMERA 100, 50</code> вызов <code>PUT (100, 50), buffer[], PSET</code> записывает первый элемент в <code>(10, 6)</code>, и <code>POINT(10, 6)</code> читает этот пиксель без повторного смещения камеры.</p>
+                <p>Момент показа различается у операторов: <code>GET</code> только читает поверхность и не показывает новый кадр, а <code>PUT</code> изменяет активную страницу <code>SCREEN</code> или рабочий кадр <code>CANVAS</code>. В открытом кадре холста для показа результата требуется <code>PRESENT</code>; вне открытого кадра действует автоматическое обновление.</p>
             </section>
-<section class="article-section"><h2>Типы координат и момент показа</h2><p>Все координаты GET и PUT приводятся к <code>LONG</code>. Массив должен быть выделенным двумерным числовым массивом; оператор GET не выделяет память и не меняет его размеры. Обе границы захватываемого прямоугольника включаются. GET только читает поверхность и не показывает новый кадр. PUT изменяет активную страницу <code>SCREEN</code> или рабочий кадр <code>CANVAS</code>; в открытом кадре для показа холста требуется <code>PRESENT</code>; вне открытого кадра действует автоматическое обновление.</p></section>
 
+            <section class="article-section"><h2>Предельные индексы и целостность записи</h2><p>Операторы <code>GET</code> и <code>PUT</code> поддерживают произвольные допустимые нижние границы массива, в том числе одноэлементное измерение <code>2147483647 TO 2147483647</code>. Недостаток памяти для временного графического буфера вызывает <code>MB3005</code>, которую можно перехватить через <code>TRY...CATCH</code>. Графический буфер может содержать не более 16 777 216 элементов; превышение вызывает <code>MB3007</code>.</p><p>Оператор <code>PUT</code> проверяет все исходные элементы до первой записи. Если числовое значение нельзя использовать как цвет, возникает <code>MB3007</code>, а изображение остаётся прежним. На DirectX готовый прямоугольник передаётся пакетно; действия <code>PSET</code> и <code>PRESET</code> не требуют чтения прежних пикселей. Область отсечения и начало массива не изменяют смысл действий <code>AND</code>, <code>OR</code> и <code>XOR</code>.</p><pre><code class="language-axiom">SCREEN 1
+DIM pixel[2147483647 TO 2147483647, 0 TO 0] AS INTEGER
+PSET (5, 5), 12
+GET (5, 5)-(5, 5), pixel[]
+PUT (10, 10), pixel[], PSET
+PRINT pixel[2147483647, 0]</code></pre><p>Программа печатает 12 и копирует красный пиксель. Другие исправленные границы показывает <a href="../../samples/graphics/regressions/audit_boundaries.axm">запускаемый пример графического аудита</a>. В открытом кадре <code>CANVAS</code> результат становится виден после <code>PRESENT</code>; вне открытого кадра действует автоматическое обновление.</p></section>
+
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3010</code>: оператор <code>GET</code> или оператор <code>PUT</code> вызван без активного <code>SCREEN</code> и без активного <code>CANVAS</code>.</li>
+                    <li><code>MB3007</code>: массив <code>buffer[]</code> не является выделенным двумерным числовым массивом, размеры буфера не совпали с прямоугольником <code>GET</code>, координаты недопустимы или значение буфера у <code>PUT</code> не приводится к корректному числу.</li>
+                </ul>
+            </section>
 
             <section class="article-section">
                 <h2>Пример</h2>
@@ -100,18 +101,19 @@ CLS RGB(0, 0, 0)
 VIEWPORT (10, 6)-(15, 11)
 CAMERA 100, 50
 
-DIM buffer(1 TO 2, 5 TO 6) AS INTEGER
+DIM buffer[1 TO 2, 5 TO 6] AS INTEGER
 
 PSET (100, 50), 6
 PSET (101, 50), 9
 PSET (100, 51), 12
 PSET (101, 51), 15
 
-GET (100, 50)-(101, 51), buffer
-PUT (102, 50), buffer, PSET
+GET (100, 50)-(101, 51), buffer[]
+PUT (102, 50), buffer[], PSET
 
 PRESENT
 SLEEP</code></pre>
+                <p>Четыре вызова <code>PSET</code> заполняют блок два на два мировыми координатами, затем <code>GET</code> считывает его в массив, размеры которого совпадают с прямоугольником. Вызов <code>PUT</code> со словом <code>PSET</code> копирует блок правее без наложения на прежние пиксели, а <code>PRESENT</code> показывает рабочий кадр холста.</p>
             </section>
 
             <section class="article-section">
@@ -126,20 +128,6 @@ SLEEP</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li><code>MB3010</code>: оператор <code>GET</code> или оператор <code>PUT</code> вызван без активного <code>SCREEN</code> и без активного <code>CANVAS</code>.</li>
-                    <li><code>MB3007</code>: массив <code>buffer</code> не является выделенным двумерным числовым массивом, размеры буфера не совпали с прямоугольником <code>GET</code>, координаты недопустимы или значение буфера у <code>PUT</code> не приводится к корректному числу.</li>
-                </ul>
-            </section>
-
-            <section class="article-section"><h2>Предельные индексы и целостность записи</h2><p>Операторы <code>GET</code> и <code>PUT</code> поддерживают произвольные допустимые нижние границы массива, в том числе одноэлементное измерение <code>2147483647 TO 2147483647</code>. Недостаток памяти для временного графического буфера вызывает <code>MB3005</code>, которую можно перехватить через <code>TRY...CATCH</code>. Графический буфер может содержать не более 16 777 216 элементов; превышение вызывает <code>MB3007</code>.</p><p>Оператор <code>PUT</code> проверяет все исходные элементы до первой записи. Если числовое значение нельзя использовать как цвет, возникает <code>MB3007</code>, а изображение остаётся прежним. На DirectX готовый прямоугольник передаётся пакетно; действия <code>PSET</code> и <code>PRESET</code> не требуют чтения прежних пикселей. Область отсечения и начало массива не изменяют смысл действий <code>AND</code>, <code>OR</code> и <code>XOR</code>.</p><pre><code class="language-axiom">SCREEN 1
-DIM pixel(2147483647 TO 2147483647, 0 TO 0) AS INTEGER
-PSET (5, 5), 12
-GET (5, 5)-(5, 5), pixel
-PUT (10, 10), pixel, PSET
-PRINT pixel(2147483647, 0)</code></pre><p>Программа печатает 12 и копирует красный пиксель. Другие исправленные границы показывает <a href="../../samples/graphics/regressions/audit_boundaries.axm">запускаемый пример графического аудита</a>. В открытом кадре <code>CANVAS</code> результат становится виден после <code>PRESENT</code>; вне открытого кадра действует автоматическое обновление.</p></section>
-<section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="screen.html">Оператор SCREEN</a>

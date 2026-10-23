@@ -12,12 +12,7 @@ public sealed class BytecodeVmArrayFailurePathTests
     [InlineData(true)]
     public void UnhandledAllocationLimitHasExactLocation(bool observed)
     {
-        const string source = """
-DIM values(1 TO 1) AS INTEGER
-PRINT "before"
-REDIM values(1 TO 100000000)
-PRINT "unreachable"
-""";
+        const string source = "DIM values[1 TO 1] AS INTEGER\r\nPRINT \"before\"\r\nREDIM values[1 TO 100000000]\r\nPRINT \"unreachable\"";
 
         var (host, result, snapshots) = Execute(source, observed);
 
@@ -35,24 +30,7 @@ PRINT "unreachable"
     [InlineData(true)]
     public void AllocationFailureRunsCatchAndFinallyAndKeepsArray(bool observed)
     {
-        const string source = """
-DIM values(1 TO 1) AS INTEGER
-values(1) = 7
-TRY
-    REDIM values(1 TO 100000000)
-    PRINT "unreachable"
-CATCH failure
-    PRINT failure.Code
-    PRINT failure.Line
-    PRINT failure.Column
-FINALLY
-    PRINT "finally"
-END TRY
-PRINT values(1)
-values(1) = 9
-PRINT values(1)
-PRINT "after"
-""";
+        const string source = "DIM values[1 TO 1] AS INTEGER\r\nvalues[1] = 7\r\nTRY\r\n    REDIM values[1 TO 100000000]\r\n    PRINT \"unreachable\"\r\nCATCH failure\r\n    PRINT failure.Code\r\n    PRINT failure.Line\r\n    PRINT failure.Column\r\nFINALLY\r\n    PRINT \"finally\"\r\nEND TRY\r\nPRINT values[1]\r\nvalues[1] = 9\r\nPRINT values[1]\r\nPRINT \"after\"";
 
         var (host, result, snapshots) = Execute(source, observed);
 
@@ -63,22 +41,22 @@ PRINT "after"
     }
 
     [Theory]
-    [InlineData(false, "REDIM grid(1 TO 3, 1 TO 3)")]
-    [InlineData(true, "REDIM grid(1 TO 3, 1 TO 3)")]
-    [InlineData(false, "REDIM PRESERVE grid(1 TO 2, 1 TO 3)")]
-    [InlineData(true, "REDIM PRESERVE grid(1 TO 2, 1 TO 3)")]
-    [InlineData(false, "ERASE grid")]
-    [InlineData(true, "ERASE grid")]
+    [InlineData(false, "REDIM grid[1 TO 3, 1 TO 3]")]
+    [InlineData(true, "REDIM grid[1 TO 3, 1 TO 3]")]
+    [InlineData(false, "REDIM PRESERVE grid[1 TO 2, 1 TO 3]")]
+    [InlineData(true, "REDIM PRESERVE grid[1 TO 2, 1 TO 3]")]
+    [InlineData(false, "ERASE grid[]")]
+    [InlineData(true, "ERASE grid[]")]
     public void UnhandledExpiredViewHasExactLocation(bool observed, string invalidate)
     {
         var source = $$"""
-DIM grid(1 TO 2, 1 TO 2) AS INTEGER
-DIM rowView() AS INTEGER
-grid(1, 1) = 7
-rowView = grid(1)
+DIM grid[1 TO 2, 1 TO 2] AS INTEGER
+DIM rowView[] AS INTEGER
+grid[1, 1] = 7
+rowView[] = grid[1]
 {{invalidate}}
 PRINT "before"
-PRINT rowView(1)
+PRINT rowView[1]
 PRINT "unreachable"
 """;
 
@@ -94,22 +72,22 @@ PRINT "unreachable"
     }
 
     [Theory]
-    [InlineData(false, "REDIM grid(1 TO 3, 1 TO 3)")]
-    [InlineData(true, "REDIM grid(1 TO 3, 1 TO 3)")]
-    [InlineData(false, "REDIM PRESERVE grid(1 TO 2, 1 TO 3)")]
-    [InlineData(true, "REDIM PRESERVE grid(1 TO 2, 1 TO 3)")]
-    [InlineData(false, "ERASE grid")]
-    [InlineData(true, "ERASE grid")]
+    [InlineData(false, "REDIM grid[1 TO 3, 1 TO 3]")]
+    [InlineData(true, "REDIM grid[1 TO 3, 1 TO 3]")]
+    [InlineData(false, "REDIM PRESERVE grid[1 TO 2, 1 TO 3]")]
+    [InlineData(true, "REDIM PRESERVE grid[1 TO 2, 1 TO 3]")]
+    [InlineData(false, "ERASE grid[]")]
+    [InlineData(true, "ERASE grid[]")]
     public void ExpiredViewRunsCatchAndFinallyAndRootRemainsUsable(bool observed, string invalidate)
     {
         var source = $$"""
-DIM grid(1 TO 2, 1 TO 2) AS INTEGER
-DIM rowView() AS INTEGER
-grid(1, 1) = 7
-rowView = grid(1)
+DIM grid[1 TO 2, 1 TO 2] AS INTEGER
+DIM rowView[] AS INTEGER
+grid[1, 1] = 7
+rowView[] = grid[1]
 {{invalidate}}
 TRY
-    PRINT rowView(1)
+    PRINT rowView[1]
     PRINT "unreachable"
 CATCH failure
     PRINT failure.Code
@@ -118,9 +96,9 @@ CATCH failure
 FINALLY
     PRINT "finally"
 END TRY
-REDIM grid(1 TO 2, 1 TO 2)
-grid(1, 1) = 9
-PRINT grid(1, 1)
+REDIM grid[1 TO 2, 1 TO 2]
+grid[1, 1] = 9
+PRINT grid[1, 1]
 PRINT "after"
 """;
 
@@ -140,27 +118,7 @@ PRINT "after"
     [Fact]
     public void ObservedAllocationFailureKeepsIndependentStateSnapshotAndResumes()
     {
-        const string source = """
-DIM values(1 TO 1) AS INTEGER
-values(1) = 7
-TryResize()
-values(1) = 9
-PRINT values(1)
-values(1) = 10
-PRINT values(1)
-
-SUB TryResize()
-    TRY
-        REDIM values(1 TO 100000000)
-    CATCH failure
-        PRINT failure.Code
-        PRINT failure.Line
-        PRINT failure.Column
-    FINALLY
-        PRINT "finally"
-    END TRY
-END SUB
-""";
+        const string source = "DIM values[1 TO 1] AS INTEGER\r\nvalues[1] = 7\r\nTryResize()\r\nvalues[1] = 9\r\nPRINT values[1]\r\nvalues[1] = 10\r\nPRINT values[1]\r\n\r\nSUB TryResize()\r\n    TRY\r\n        REDIM values[1 TO 100000000]\r\n    CATCH failure\r\n        PRINT failure.Code\r\n        PRINT failure.Line\r\n        PRINT failure.Column\r\n    FINALLY\r\n        PRINT \"finally\"\r\n    END TRY\r\nEND SUB";
         var stoppedOnce = false;
         var (host, stopped, snapshots) = Execute(source, observed: true, snapshot =>
         {

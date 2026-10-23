@@ -12,21 +12,21 @@ TYPE Person
 END TYPE
 
 DIM first AS Person
-DIM people(1 TO 2) AS Person
+DIM people[1 TO 2] AS Person
 
 first.Name = "Ada"
 first.Age = 36
 first.Home.City = "London"
 
-people(1) = first
+people[1] = first
 first.Name = "Grace"
 
-people(2).Name = "Alan"
+people[2].Name = "Alan"
 
-PRINT people(1).Name
-PRINT people(1).Age
-PRINT people(1).Home.City
-PRINT people(2).Name
+PRINT people[1].Name
+PRINT people[1].Age
+PRINT people[1].Home.City
+PRINT people[2].Name
 PRINT first.Name
-PRINT LBOUND(people)
-PRINT UBOUND(people)
+PRINT LBOUND(people[])
+PRINT UBOUND(people[])

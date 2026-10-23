@@ -167,6 +167,43 @@ public sealed class CallExpressionSyntax : ExpressionSyntax
     public SyntaxToken CloseParenToken { get; }
 }
 
+public sealed class ArrayAccessExpressionSyntax : ExpressionSyntax
+{
+    public ArrayAccessExpressionSyntax(
+        ExpressionSyntax target,
+        SyntaxToken openBracketToken,
+        IReadOnlyList<ExpressionSyntax> indices,
+        IReadOnlyList<SyntaxToken> commaTokens,
+        SyntaxToken closeBracketToken)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        ArgumentNullException.ThrowIfNull(openBracketToken);
+        ArgumentNullException.ThrowIfNull(indices);
+        ArgumentNullException.ThrowIfNull(commaTokens);
+        ArgumentNullException.ThrowIfNull(closeBracketToken);
+
+        Target = target;
+        OpenBracketToken = openBracketToken;
+        Indices = indices;
+        CommaTokens = commaTokens;
+        CloseBracketToken = closeBracketToken;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.ArrayAccessExpression;
+
+    public ExpressionSyntax Target { get; }
+
+    public SyntaxToken OpenBracketToken { get; }
+
+    public IReadOnlyList<ExpressionSyntax> Indices { get; }
+
+    public IReadOnlyList<SyntaxToken> CommaTokens { get; }
+
+    public SyntaxToken CloseBracketToken { get; }
+
+    public bool IsWholeArray => Indices.Count == 0;
+}
+
 public sealed class FieldAccessExpressionSyntax : ExpressionSyntax
 {
     public FieldAccessExpressionSyntax(ExpressionSyntax target, SyntaxToken dotToken, SyntaxToken identifier)

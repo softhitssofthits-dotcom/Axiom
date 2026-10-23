@@ -29,7 +29,7 @@ public sealed class MazeChaseModuleTests
     [Fact]
     public void PrivateWorldDataIsNotExported()
     {
-        var result = Compile("IMPORT maze_world\nPRINT maze(1)");
+        var result = Compile("IMPORT maze_world\nPRINT maze[1]");
         Assert.Contains(result.Diagnostics, d => d.Code == "MB2053");
     }
 
@@ -132,7 +132,7 @@ public sealed class MazeChaseModuleTests
     public void InvalidMazeIsRejectedBeforeActorInitialization()
     {
         var documents = Documents().Select(d => d.ModuleName == "maze_world" ? new SourceDocument(d.Name,
-            d.Text.Replace("maze(1) = \"############################\"", "maze(1) = \"#\"", StringComparison.Ordinal)) : d).ToArray();
+            d.Text.Replace("maze[1] = \"############################\"", "maze[1] = \"#\"", StringComparison.Ordinal)) : d).ToArray();
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("IMPORT maze_world\nInitMaze()\nPRINT MazeError()<>\"\"\nPRINT PelletsRemaining()",
             sourceName: "probe.axm", additionalDocuments: documents));
         Assert.Equal(ExecutionStatus.Success, result.Status);

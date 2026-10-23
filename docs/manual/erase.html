@@ -7,17 +7,14 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор ERASE</span></nav>
-<p class="eyebrow">10 · Массивы</p><h1 class="page-title">Оператор ERASE</h1><p class="lead">ERASE — оператор Axiom, который освобождает элементы массива. После выполнения массив сохраняет объявленный тип и ранг, но становится невыделенным.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-<section class="article-section"><h2>Контекст</h2><p>Цель должна быть изменяемой переменной массива или доступным массивным полем. Операция не требует дополнительных режимов выполнения.</p></section>
-<section class="article-section"><h2>Синтаксис</h2><pre><code class="language-axiom">ERASE &lt;массив&gt;</code></pre></section>
-<section class="article-section"><h2>Параметр</h2><p>Массивный аргумент указывает хранилище, которое нужно освободить.</p></section>
-<section class="article-section"><h2>Правила работы</h2><p>Объявление массива продолжает действовать, а доступных элементов больше нет. До нового <code>REDIM</code> обращение к ним вызывает ошибку. Проверка <code>ARRAYISALLOCATED</code> возвращает <code>FALSE</code>. Фиксированное массивное поле <code>TYPE</code> освобождать нельзя.</p></section>
+<p class="eyebrow">10 · Массивы</p><h1 class="page-title">Оператор ERASE</h1><p class="lead">Когда элементы массива больше не нужны, занимаемое ими хранилище освобождают оператором ERASE. Имя и объявленный тип при этом сохраняются, поэтому массив остаётся в программе, но переходит в невыделенное состояние.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Синтаксис</h2><p>Оператор имеет единственную форму с одним массивным аргументом.</p><pre><code class="language-axiom">ERASE &lt;массив&gt;[]</code></pre><p>Массивный аргумент указывает хранилище, которое нужно освободить. Цель должна быть изменяемой переменной массива или доступным массивным полем, записанным с обязательным суффиксом [], например <code>ERASE values[]</code> или <code>ERASE bag.values[]</code>; дополнительных режимов выполнения операция не требует.</p></section>
+<section class="article-section"><h2>Состояние после освобождения</h2><p>Объявление массива продолжает действовать, а доступных элементов больше нет. До нового <code>REDIM</code> обращение к ним вызывает ошибку. Проверка <code>ARRAYISALLOCATED</code> возвращает <code>FALSE</code>. Фиксированное массивное поле <code>TYPE</code> освобождать нельзя.</p><p>Переход между состояниями виден на одном массиве:</p><pre><code class="language-axiom">DIM values[] AS INTEGER
+REDIM values[1 TO 2]
+PRINT ARRAYISALLOCATED(values[])
+ERASE values[]
+PRINT ARRAYISALLOCATED(values[])</code></pre><p>Программа выводит:</p><pre><code>TRUE
+FALSE</code></pre><p>После <code>REDIM</code> массив выделен, хотя ни одному элементу значение ещё не присвоено, поэтому первая проверка даёт TRUE. <code>ERASE</code> возвращает массив в состояние объявления без элементов, и вторая проверка даёт FALSE.</p><p>Связанный файл проверяет состояние до и после освобождения. Связанные материалы: <a href="../../samples/operators/erase/basic_usage.axm">освобождение массива</a>.</p></section>
 <section class="article-section"><h2>Диагностика</h2><ul><li><code>MB2011</code> — цель не является массивом.</li><li><code>MB2010</code> — цель объявлена неизменяемой.</li><li><code>MB2025</code> — цель является фиксированным полем массива в записи <code>TYPE</code>.</li><li><code>MB3005</code> — программа обращается к элементам после освобождения хранилища.</li></ul></section>
-<section class="article-section"><h2>Пример</h2><pre><code class="language-axiom">DIM values() AS INTEGER
-REDIM values(1 TO 2)
-PRINT ARRAYISALLOCATED(values)
-ERASE values
-PRINT ARRAYISALLOCATED(values)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE
-FALSE</code></pre><p>Связанный файл проверяет состояние до и после освобождения. Связанные материалы: <a href="../../samples/operators/erase/basic_usage.axm">освобождение массива</a>.</p></section>
 <section class="article-section"><h2>См. также</h2><div class="link-list"><a href="redim.html">REDIM</a><a href="arrays-dynamic.html">Динамические массивы</a><a href="arrays-functions.html#arrayisallocated">ARRAYISALLOCATED</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
 <script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

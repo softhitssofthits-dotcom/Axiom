@@ -173,10 +173,7 @@ PRINT value * 10
     [Fact]
     public void Execute_ReportsArrayBoundsViolation()
     {
-        const string text = """
-DIM arr(1 TO 2) AS INTEGER
-PRINT arr(3)
-""";
+        const string text = "DIM arr[1 TO 2] AS INTEGER\r\nPRINT arr[3]";
 
         var (_, _, result) = ExecuteProgram(text);
 

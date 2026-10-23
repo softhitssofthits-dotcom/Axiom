@@ -27,26 +27,26 @@ public sealed class FileLineBatchEvidenceTests
             File.WriteAllBytes(path, bytes);
             var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($$"""
                 DIM f AS FILE
-                DIM lines() AS STRING
+                DIM lines[] AS STRING
                 OPEN "{{path}}" FOR INPUT AS f USING "{{encodingName}}"
                 PRINT FILEPATH(f) = "{{path}}"
                 PRINT FILEMODE(f)
-                lines = READLINES(f, 0)
-                PRINT ARRAYLENGTH(lines)
+                lines[] = READLINES(f, 0)
+                PRINT ARRAYLENGTH(lines[])
                 PRINT FILEPOS(f)
-                lines = READLINES(f, 2)
-                PRINT ARRAYLENGTH(lines)
-                PRINT lines(1) = "😀"
-                PRINT lines(2) = ""
+                lines[] = READLINES(f, 2)
+                PRINT ARRAYLENGTH(lines[])
+                PRINT lines[1] = "😀"
+                PRINT lines[2] = ""
                 PRINT LINENUMBER(f)
                 PRINT SKIPLINE(f)
                 PRINT LINENUMBER(f)
-                lines = READLINES(f, 99)
-                PRINT ARRAYLENGTH(lines)
-                PRINT lines(1) = "Б"
+                lines[] = READLINES(f, 99)
+                PRINT ARRAYLENGTH(lines[])
+                PRINT lines[1] = "Б"
                 PRINT EOF(f)
-                lines = READLINES(f, 1)
-                PRINT ARRAYLENGTH(lines)
+                lines[] = READLINES(f, 1)
+                PRINT ARRAYLENGTH(lines[])
                 TRY
                     PRINT SKIPLINE(f)
                 CATCH err

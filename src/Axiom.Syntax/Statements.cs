@@ -26,25 +26,25 @@ public sealed class ArrayDimensionSyntax : SyntaxNode
 public sealed class ArrayBoundsSyntax : SyntaxNode
 {
     public ArrayBoundsSyntax(
-        SyntaxToken openParenToken,
+        SyntaxToken openDelimiterToken,
         IReadOnlyList<ArrayDimensionSyntax> dimensions,
         IReadOnlyList<SyntaxToken> commaTokens,
-        SyntaxToken closeParenToken)
+        SyntaxToken closeDelimiterToken)
     {
-        ArgumentNullException.ThrowIfNull(openParenToken);
+        ArgumentNullException.ThrowIfNull(openDelimiterToken);
         ArgumentNullException.ThrowIfNull(dimensions);
         ArgumentNullException.ThrowIfNull(commaTokens);
-        ArgumentNullException.ThrowIfNull(closeParenToken);
+        ArgumentNullException.ThrowIfNull(closeDelimiterToken);
 
-        OpenParenToken = openParenToken;
+        OpenDelimiterToken = openDelimiterToken;
         Dimensions = dimensions;
         CommaTokens = commaTokens;
-        CloseParenToken = closeParenToken;
+        CloseDelimiterToken = closeDelimiterToken;
     }
 
     public override SyntaxKind Kind => SyntaxKind.ArrayBounds;
 
-    public SyntaxToken OpenParenToken { get; }
+    public SyntaxToken OpenDelimiterToken { get; }
 
     public IReadOnlyList<ArrayDimensionSyntax> Dimensions { get; }
 
@@ -56,7 +56,7 @@ public sealed class ArrayBoundsSyntax : SyntaxNode
 
     public ExpressionSyntax? EndExpression => Dimensions.Count == 0 ? null : Dimensions[0].EndExpression;
 
-    public SyntaxToken CloseParenToken { get; }
+    public SyntaxToken CloseDelimiterToken { get; }
 
     public int Rank => Dimensions.Count;
 
@@ -121,7 +121,8 @@ public sealed class ConstantDeclarationSyntax : SyntaxNode
         SyntaxToken identifier,
         TypeClauseSyntax typeClause,
         SyntaxToken equalsToken,
-        ExpressionSyntax initializer)
+        ExpressionSyntax initializer,
+        ArrayBoundsSyntax? arrayBounds = null)
     {
         ArgumentNullException.ThrowIfNull(identifier);
         ArgumentNullException.ThrowIfNull(typeClause);
@@ -132,6 +133,7 @@ public sealed class ConstantDeclarationSyntax : SyntaxNode
         TypeClause = typeClause;
         EqualsToken = equalsToken;
         Initializer = initializer;
+        ArrayBounds = arrayBounds;
     }
 
     public override SyntaxKind Kind => SyntaxKind.ConstantDeclaration;
@@ -143,6 +145,8 @@ public sealed class ConstantDeclarationSyntax : SyntaxNode
     public SyntaxToken EqualsToken { get; }
 
     public ExpressionSyntax Initializer { get; }
+
+    public ArrayBoundsSyntax? ArrayBounds { get; }
 }
 
 public sealed class ElseClauseSyntax : SyntaxNode

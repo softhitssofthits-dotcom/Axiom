@@ -7,20 +7,10 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор CONTINUE</span></nav>
-<p class="eyebrow">Справочная статья</p><h1 class="page-title">Оператор CONTINUE</h1><p class="lead">CONTINUE — оператор языка Axiom, который пропускает остаток текущего прохода цикла. На странице описаны отдельные формы для FOR, WHILE и DO.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-<section class="article-section"><h2>Назначение и контекст</h2><p>Оператор нужен, чтобы пропустить оставшиеся действия текущего прохода и перейти к проверке или изменению счётчика. Каждая форма требует охватывающего цикла названного вида; сама форма не имеет аргументов. Оператор может находиться внутри условия или обработки ошибок, вложенных в цикл.</p></section>
+<p class="eyebrow">Справочная статья</p><h1 class="page-title">Оператор CONTINUE</h1><p class="lead">Часть прохода иногда не имеет смысла: данные не подходят под условие обработки, и остаток тела нужно пропустить, не прекращая цикл. CONTINUE передаёт управление к концу текущего прохода, после чего цикл обычным образом переходит к следующему. Форма выбирается по виду цикла — CONTINUE FOR, CONTINUE WHILE или CONTINUE DO.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Когда оператор применим</h2><p>Оператор нужен, чтобы пропустить оставшиеся действия текущего прохода и перейти к проверке или изменению счётчика. Каждая форма требует охватывающего цикла названного вида; сама форма не имеет аргументов. Оператор может находиться внутри условия или обработки ошибок, вложенных в цикл.</p></section>
 <section class="article-section"><h2>Синтаксис</h2><pre><code class="language-axiom">CONTINUE FOR</code></pre><pre><code class="language-axiom">CONTINUE WHILE</code></pre><pre><code class="language-axiom">CONTINUE DO</code></pre></section>
-<section class="article-section"><h2>Переход каждой формы</h2><table><thead><tr><th>Форма</th><th>Действие</th></tr></thead><tbody><tr><td><code>CONTINUE FOR</code></td><td>Переходит к NEXT, изменяет счётчик и проверяет границу следующего прохода.</td></tr><tr><td><code>CONTINUE WHILE</code></td><td>Переходит к условию в заголовке WHILE.</td></tr><tr><td><code>CONTINUE DO</code></td><td>Переходит к предусмотренной формой DO проверке условия или к следующему проходу безусловного цикла.</td></tr></tbody></table><p>Форма должна находиться внутри охватывающего цикла соответствующего вида. Для вложения циклов одного вида действие относится к ближайшему циклу. В текущей реализации во вложении разных видов переход определяется самым внутренним циклом независимо от слова после CONTINUE. Компилятор при этом требует наличия охватывающего цикла названного вида. Например, CONTINUE FOR внутри WHILE, вложенного в FOR, проходит проверку, но переходит к условию внутреннего WHILE. Для предсказуемого выбора перехода указывайте вид непосредственного охватывающего цикла. Аргументов у оператора нет.</p></section>
-<section class="article-section"><h2>Изменение состояния</h2><p>Продолжение не отменяет уже выполненные инструкции. Следите, чтобы нужное изменение состояния не оказалось после <code>CONTINUE</code>: для цикла с условием это может помешать завершению. В <code>FOR</code> изменение счётчика выполняется автоматически.</p></section>
-<section class="article-section">
-            <h2>Диагностика</h2>
-            <ul>
-                <li><code>MB2037</code> — <code>CONTINUE FOR</code> используется вне цикла <code>FOR ... NEXT</code>.</li>
-                <li><code>MB2038</code> — <code>CONTINUE WHILE</code> используется вне цикла <code>WHILE ... END WHILE</code>.</li>
-                <li><code>MB2039</code> — <code>CONTINUE DO</code> используется вне цикла <code>DO ... LOOP</code>.</li>
-            </ul>
-        </section>
-<section class="article-section"><h2>Пример</h2><p>Чётные значения пропускаются, а счётчик продолжает изменяться:</p>
+<section class="article-section"><h2>Куда переходит каждая форма</h2><table><thead><tr><th>Форма</th><th>Действие</th></tr></thead><tbody><tr><td><code>CONTINUE FOR</code></td><td>Переходит к NEXT, изменяет счётчик и проверяет границу следующего прохода.</td></tr><tr><td><code>CONTINUE WHILE</code></td><td>Переходит к условию в заголовке WHILE.</td></tr><tr><td><code>CONTINUE DO</code></td><td>Переходит к предусмотренной формой DO проверке условия или к следующему проходу безусловного цикла.</td></tr></tbody></table><p>Форма должна находиться внутри охватывающего цикла соответствующего вида. Для вложения циклов одного вида действие относится к ближайшему циклу. В текущей реализации во вложении разных видов переход определяется самым внутренним циклом независимо от слова после CONTINUE. Компилятор при этом требует наличия охватывающего цикла названного вида. Например, CONTINUE FOR внутри WHILE, вложенного в FOR, проходит проверку, но переходит к условию внутреннего WHILE. Для предсказуемого выбора перехода указывайте вид непосредственного охватывающего цикла. Аргументов у оператора нет.</p><p>Пропуск не мешает обычному ходу счётного цикла. В следующей программе чётные значения не доходят до PRINT, но счётчик всё равно изменяется на NEXT:</p>
 <pre><code class="language-axiom">FOR index = 1 TO 5
     IF index MOD 2 = 0 THEN
         CONTINUE FOR
@@ -29,13 +19,9 @@
 NEXT</code></pre><p>Результат:</p>
 <pre><code>1
 3
-5</code></pre></section>
-<section class="article-section"><h2>Запускаемые примеры</h2><p>Откройте нужный файл в IDE и запустите его. Примеры с ошибкой предназначены для проверки сообщения компилятора или выполнения.</p><ul class="resource-list">
-                <li><a href="../../samples/control-flow/for/continue_for.axm">CONTINUE FOR: пропуск итерации счётного цикла</a></li>
-                <li><a href="../../samples/control-flow/while/continue_while.axm">CONTINUE WHILE: пропуск итерации предусловного цикла</a></li>
-                <li><a href="../../samples/control-flow/do/continue_do.axm">CONTINUE DO: пропуск итерации цикла DO ... LOOP</a></li>
-            </ul></section>
-<section class="article-section"><h2>Пример разных вложенных циклов</h2><pre><code class="language-axiom">FOR counter = 1 TO 2
+5</code></pre><p>Для значений 2 и 4 управление ушло к NEXT до вывода, поэтому напечатаны только нечётные числа, а цикл прошёл все пять значений.</p></section>
+<section class="article-section"><h2>Изменение состояния</h2><p>Продолжение не отменяет уже выполненные инструкции. Следите, чтобы нужное изменение состояния не оказалось после <code>CONTINUE</code>: для цикла с условием это может помешать завершению. В <code>FOR</code> изменение счётчика выполняется автоматически. Если CONTINUE FOR стоит внутри вложенного WHILE, переход уходит к условию внутреннего цикла, а не к счётчику внешнего:</p>
+<pre><code class="language-axiom">FOR counter = 1 TO 2
     DIM count AS INTEGER = 0
     WHILE count &lt; 2
         count = count + 1
@@ -45,6 +31,19 @@ NEXT</code></pre><p>Результат:</p>
     PRINT counter
 NEXT</code></pre><p>Ожидаемый вывод:</p>
 <pre><code>1
-2</code></pre></section>
+2</code></pre><p>Строка после CONTINUE FOR не выполняется ни разу, потому что переход каждый раз возвращает к проверке условия WHILE; счётчик внешнего цикла меняется только на NEXT, и внешний цикл проходит оба своих значения.</p></section>
+<section class="article-section">
+            <h2>Диагностика</h2>
+            <ul>
+                <li><code>MB2037</code> — <code>CONTINUE FOR</code> используется вне цикла <code>FOR ... NEXT</code>.</li>
+                <li><code>MB2038</code> — <code>CONTINUE WHILE</code> используется вне цикла <code>WHILE ... END WHILE</code>.</li>
+                <li><code>MB2039</code> — <code>CONTINUE DO</code> используется вне цикла <code>DO ... LOOP</code>.</li>
+            </ul>
+        </section>
+<section class="article-section"><h2>Запускаемые примеры</h2><p>Откройте нужный файл в IDE и запустите его. Примеры с ошибкой предназначены для проверки сообщения компилятора или выполнения.</p><ul class="resource-list">
+                <li><a href="../../samples/control-flow/for/continue_for.axm">CONTINUE FOR: пропуск итерации счётного цикла</a></li>
+                <li><a href="../../samples/control-flow/while/continue_while.axm">CONTINUE WHILE: пропуск итерации предусловного цикла</a></li>
+                <li><a href="../../samples/control-flow/do/continue_do.axm">CONTINUE DO: пропуск итерации цикла DO ... LOOP</a></li>
+            </ul></section>
 <section class="article-section"><h2>См. также</h2><div class="link-list"><a href="loops.html">Циклы</a><a href="for.html">FOR</a><a href="while.html">WHILE</a><a href="do-loop.html">DO … LOOP</a><a href="exit.html">EXIT</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
 <script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

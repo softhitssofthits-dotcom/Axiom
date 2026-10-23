@@ -52,19 +52,19 @@ public sealed class ReadAllLinesBoundaryEvidenceTests
         try
         {
             var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($$"""
-                DIM lines() AS STRING
-                lines = READALLLINES("{{path}}")
-                PRINT ARRAYLENGTH(lines)
-                PRINT ARRAYISALLOCATED(lines)
-                PRINT LBOUND(lines)
-                PRINT UBOUND(lines)
-                PRINT JOIN(lines, "/")
+                DIM lines[] AS STRING
+                lines[] = READALLLINES("{{path}}")
+                PRINT ARRAYLENGTH(lines[])
+                PRINT ARRAYISALLOCATED(lines[])
+                PRINT LBOUND(lines[])
+                PRINT UBOUND(lines[])
+                PRINT JOIN(lines[], "/")
                 TRY
-                    lines = READALLLINES("{{path}}.missing")
+                    lines[] = READALLLINES("{{path}}.missing")
                 CATCH err
                     PRINT err.Code
                 END TRY
-                PRINT JOIN(lines, "/")
+                PRINT JOIN(lines[], "/")
                 """));
             Assert.Equal(ExecutionStatus.Success, result.Status);
             Assert.Empty(result.Diagnostics);

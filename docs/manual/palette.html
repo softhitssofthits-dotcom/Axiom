@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Оператор PALETTE — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
 <body data-page="palette"><a class="skip-link" href="#main-content">Перейти к статье</a>
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
@@ -7,19 +7,12 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор PALETTE</span></nav>
-<p class="eyebrow">Оператор</p><h1 class="page-title">Оператор PALETTE</h1><p class="lead"><code>PALETTE</code> — оператор языка Axiom, который задаёт видимый цвет для индекса палитры графического экрана <code>SCREEN</code>. Пиксели сохраняют индексы, а палитра определяет их отображение.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-
+<p class="eyebrow">Оператор</p><h1 class="page-title">Оператор PALETTE</h1><p class="lead">Пиксели графического экрана хранят не готовый цвет, а номер в палитре, и видимый оттенок определяет сама палитра. Оператор <code>PALETTE</code> задаёт этот видимый цвет для выбранного индекса, поэтому цветовую схему можно сменить, не перерисовывая изображение.</p><nav class="article-toc" aria-label="В этой статье"></nav><p>Массивный аргумент-имя записывается с обязательными квадратными скобками [], например <code>PALETTE USING colors[]</code>.</p>
 
             <section class="article-section">
-                <h2>Когда использовать PALETTE</h2>
-                <p>Переназначение палитры меняет вид уже нарисованного изображения без повторного рисования его пикселей.</p>
-                <p>Так можно переключить цветовую схему, выделить объект или временно изменить цвета, а затем восстановить стандартную палитру.</p>
-            </section>
-
-        <section class="article-section">
-                <h2>Контекст выполнения</h2>
-                <p>Оператор требует графического режима <code>SCREEN 1..10</code>.</p>
-                <p>Для полноцветного холста <code>CANVAS</code> используется <a href="modern-graphics.html">RGB</a>. Его цвета задаются непосредственно и не переназначаются оператором <code>PALETTE</code>.</p>
+                <h2>Зачем переназначать палитру</h2>
+                <p>Переназначение меняет вид уже нарисованного изображения без повторного рисования его пикселей. Так можно переключить цветовую схему, выделить объект или временно изменить цвета, а затем восстановить стандартную палитру.</p>
+                <p>Оператор требует графического режима <code>SCREEN 1..10</code>. Для полноцветного холста <code>CANVAS</code> используется <a href="modern-graphics.html">RGB</a>: его цвета задаются непосредственно и не переназначаются оператором <code>PALETTE</code>.</p>
             </section>
 
         <section class="article-section">
@@ -27,11 +20,11 @@
 <pre><code class="language-axiom">PALETTE</code></pre>
 <pre><code class="language-axiom">PALETTE &lt;индекс&gt;, &lt;цвет&gt;</code></pre>
 <pre><code class="language-axiom">PALETTE USING &lt;массив&gt;</code></pre>
-                <p>Формы ниже отдельно сбрасывают палитру, меняют один индекс или читают набор цветов из массива.</p>
+                <p>Три формы решают разные задачи: первая сбрасывает палитру, вторая меняет один индекс, третья читает набор цветов из массива.</p>
             </section>
 
         <section class="article-section">
-                <h2>Параметры</h2>
+                <h2>Аргументы</h2>
                 <table>
                     <thead>
                         <tr><th>Часть</th><th>Описание</th></tr>
@@ -45,31 +38,17 @@
             </section>
 
         <section class="article-section">
-                <h2>Что делает оператор PALETTE</h2>
-                <p>Вызов без аргументов восстанавливает стандартную палитру Axiom для текущего экрана.</p>
-                <p>Форма с двумя аргументами задаёт новый видимый цвет для одного индекса.</p>
-                <p>Форма <code>USING</code> последовательно задаёт цвета из одномерного числового массива.</p>
+                <h2>Что делает каждая форма</h2>
+                <p>Вызов без аргументов восстанавливает стандартную палитру Axiom для текущего экрана. Форма с двумя аргументами задаёт новый видимый цвет для одного индекса. Форма <code>USING</code> последовательно задаёт цвета из одномерного числового массива.</p>
+                <p>Индекс и цвет отдельного переназначения приводятся к <code>INTEGER</code>. <code>PALETTE USING</code> принимает выделенный одномерный массив с элементами <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code> или <code>DECIMAL</code>. Вещественные элементы сначала усекаются к целому; результат должен помещаться в <code>INTEGER</code>. Не выделенный массив сообщает <code>MB3005</code>, переполнение при приведении сообщает <code>MB3008</code>.</p>
             </section>
 
         <section class="article-section">
-                <h2>Правила работы</h2>
-                <p>Если графический экран не открыт, выполнение завершается диагностикой <code>MB3010</code>.</p>
-                <p>Сохранённые индексы не изменяются. Например, после рисования цветом <code>1</code> и вызова <code>PALETTE 1, 196</code> изображение имеет вид цвета <code>196</code>, но <code>POINT(x, y)</code> возвращает <code>1</code>.</p>
-                <p>Первый видимый элемент массива задаёт индекс <code>0</code>, второй — индекс <code>1</code>. Нижняя граница массива не влияет на нумерацию индексов палитры.</p>
+                <h2>Индексы, массив и сохранение состояния</h2>
+                <p>Первый видимый элемент массива задаёт индекс <code>0</code>, второй — индекс <code>1</code>. Нижняя граница массива не влияет на нумерацию индексов палитры. Из массива читаются не более <code>256</code> видимых элементов; если элементов меньше, цвета остальных индексов сохраняются, а элементы сверх первых 256 не используются.</p>
                 <p>После приведения к целому цвета и индексы нормализуются по правилу <code>ABS(value) MOD 256</code>; это же правило применяется к элементам массива.</p>
-                <p>Из массива читаются не более <code>256</code> видимых элементов. Если элементов меньше, цвета остальных индексов сохраняются.</p>
-                <p>Смена палитры сохраняет графическую позицию, настройки <code>VIEW</code>, <code>WINDOW</code> и <code>VIEW PRINT</code>, текстовый курсор и состояние мыши.</p>
-            </section>
-<section class="article-section"><h2>Типы значений массива</h2><p>Индекс и цвет отдельного переназначения приводятся к <code>INTEGER</code>. PALETTE USING принимает выделенный одномерный массив с элементами <code>INTEGER</code>, <code>LONG</code>, <code>DOUBLE</code> или <code>DECIMAL</code>. Вещественные элементы сначала усекаются к целому; результат должен помещаться в <code>INTEGER</code>. Не выделенный массив сообщает <code>MB3005</code>, переполнение при приведении сообщает <code>MB3008</code>. Элементы сверх первых 256 не используются.</p></section>
-
-
-        <section class="article-section">
-                <h2>Диагностика</h2>
-                <ul>
-                    <li><code>MB3010</code>: графический режим <code>SCREEN</code> не активен.</li>
-                    <li><code>MB3005</code>: массив для <code>PALETTE USING</code> объявлен, но ещё не выделен.</li>
-                    <li><code>MB2003</code>: форма <code>PALETTE USING</code> получила не одномерный числовой массив.</li>
-                </ul>
+                <p>Смена палитры сохраняет графическую позицию, настройки <code>VIEW</code>, <code>WINDOW</code> и <code>VIEW PRINT</code>, текстовый курсор и состояние мыши. Сохранённые в пикселях индексы при этом не изменяются: после рисования цветом <code>1</code> и вызова <code>PALETTE 1, 196</code> изображение имеет вид цвета <code>196</code>, но <code>POINT(x, y)</code> возвращает <code>1</code>.</p>
+                <p>Если графический экран не открыт, выполнение завершается диагностикой <code>MB3010</code>.</p>
             </section>
 
         <section class="article-section">
@@ -83,23 +62,32 @@ PRINT POINT(20, 40)
 
 PALETTE
 PRINT POINT(20, 40)</code></pre>
-                <p>Каждый вызов функции <code>POINT</code> печатает <code>1</code>: меняется только отображение пикселя.</p>
+                <p>Каждый вызов функции <code>POINT</code> печатает <code>1</code>: меняется только отображение пикселя. Переназначение и последующий сброс палитры не затрагивают сохранённый индекс.</p>
             </section>
 
         <section class="article-section">
                 <h2>Пример PALETTE USING</h2>
 <pre><code class="language-axiom">SCREEN 1
-DIM colors(0 TO 2) AS INTEGER
-colors(0) = 16
-colors(1) = 196
-colors(2) = 46
+DIM colors[0 TO 2] AS INTEGER
+colors[0] = 16
+colors[1] = 196
+colors[2] = 46
 
 LINE (20, 40)-(180, 40), 1
 PRINT POINT(20, 40)
 
-PALETTE USING colors
+PALETTE USING colors[]
 PRINT POINT(20, 40)</code></pre>
                 <p>Массив задаёт цвета индексов <code>0</code>, <code>1</code> и <code>2</code>. Нарисованная линия продолжает хранить индекс <code>1</code>.</p>
+            </section>
+
+        <section class="article-section">
+                <h2>Диагностика</h2>
+                <ul>
+                    <li><code>MB3010</code>: графический режим <code>SCREEN</code> не активен.</li>
+                    <li><code>MB3005</code>: массив для <code>PALETTE USING</code> объявлен, но ещё не выделен.</li>
+                    <li><code>MB2003</code>: форма <code>PALETTE USING</code> получила не одномерный числовой массив.</li>
+                </ul>
             </section>
 
         <section class="article-section">

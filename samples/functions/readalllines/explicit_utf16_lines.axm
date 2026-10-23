@@ -4,8 +4,8 @@ DIM path AS STRING = ".artifacts/encoding_examples/utf16_lines.txt"
 
 ' WRITEFILE создаёт UTF-16LE-файл с BOM, строки разделяем LF.
 PRINT WRITEFILE(path, "Первая 😀" + CHR(10) + "Вторая", "UTF-16LE")
-DIM lines() AS STRING
-lines = READALLLINES(path, "UTF-16LE")
-PRINT ARRAYLENGTH(lines) = 2
-PRINT lines(1)
-PRINT lines(2)
+DIM lines[] AS STRING
+lines[] = READALLLINES(path, "UTF-16LE")
+PRINT ARRAYLENGTH(lines[]) = 2
+PRINT lines[1]
+PRINT lines[2]

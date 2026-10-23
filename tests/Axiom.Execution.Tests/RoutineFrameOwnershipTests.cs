@@ -60,20 +60,7 @@ PRINT f()
     public void ByValRecordArgumentIsCopiedOncePerCall()
     {
         var writer = new AllocationProbeWriter();
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("""
-TYPE Box
-    items(1 TO 10000) AS INTEGER
-END TYPE
-DIM shared AS Box
-SUB Observe(copy AS Box)
-    DIM marker AS INTEGER = copy.items(1)
-END SUB
-PRINT "start"
-FOR i = 1 TO 30
-    Observe(shared)
-NEXT
-PRINT "end"
-""", outputWriter: writer));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("TYPE Box\r\n    items[1 TO 10000] AS INTEGER\r\nEND TYPE\r\nDIM shared AS Box\r\nSUB Observe(copy AS Box)\r\n    DIM marker AS INTEGER = copy.items[1]\r\nEND SUB\r\nPRINT \"start\"\r\nFOR i = 1 TO 30\r\n    Observe(shared)\r\nNEXT\r\nPRINT \"end\"", outputWriter: writer));
 
         Assert.True(result.Succeeded, string.Join("\n", result.Diagnostics.Select(d => d.Message)));
         Assert.True(writer.TryGetAllocations("start", out var start));

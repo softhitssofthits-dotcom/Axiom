@@ -140,7 +140,7 @@ public sealed class EditorSymbolIndexTests
     [Fact]
     public void ConstantsInFixedSizesKeepTheirReferencesIncludingForwardDeclarations()
     {
-        const string source = "TYPE Box\nitems(1 TO width) AS INTEGER\nlabel AS STRING * width\nEND TYPE\nCONST width AS INTEGER = 8\nDIM text AS STRING * width\nSUB Show()\nCONST localWidth AS INTEGER = 3\nDIM localText AS STRING * localWidth\nEND SUB";
+        const string source = "TYPE Box\nitems[1 TO width] AS INTEGER\nlabel AS STRING * width\nEND TYPE\nCONST width AS INTEGER = 8\nDIM text AS STRING * width\nSUB Show()\nCONST localWidth AS INTEGER = 3\nDIM localText AS STRING * localWidth\nEND SUB";
         var syntax = Parser.Parse(source, out _, "main.axm");
         var program = Binder.BindModules([new("main", syntax)], "main", out var errors,
             checkGraphicsModes: false, collectEditorSymbols: true);

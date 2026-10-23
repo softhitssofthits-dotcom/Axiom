@@ -6,16 +6,16 @@ CLS RGB(0, 0, 0)
 VIEWPORT (10, 6)-(15, 11)
 CAMERA 100, 50
 
-DIM buffer(1 TO 2, 5 TO 6) AS INTEGER
+DIM buffer[1 TO 2, 5 TO 6] AS INTEGER
 
 ' Готовим маленький буфер вручную.
-buffer(1, 5) = 6
-buffer(2, 5) = 9
-buffer(1, 6) = 12
-buffer(2, 6) = 15
+buffer[1, 5] = 6
+buffer[2, 5] = 9
+buffer[1, 6] = 12
+buffer[2, 6] = 15
 
 ' Возвращаем буфер в мировую точку.
-PUT (100, 50), buffer, PSET
+PUT (100, 50), buffer[], PSET
 
 ' POINT читает физические пиксели и не применяет CAMERA повторно.
 PRINT POINT(10, 6)

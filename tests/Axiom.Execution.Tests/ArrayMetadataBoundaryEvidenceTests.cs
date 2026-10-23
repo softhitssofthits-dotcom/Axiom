@@ -5,46 +5,7 @@ public sealed class ArrayMetadataBoundaryEvidenceTests
     [Fact]
     public void ExtremeBoundsAndEmptyShapeRemainExactAndIndependent()
     {
-        var source = """
-            DIM grid(-2147483647 TO -2147483646, 2147483646 TO 2147483647) AS STRING
-            DIM bounds(,) AS INTEGER
-            DIM empty(,) AS STRING
-            PRINT LBOUND(grid)
-            PRINT UBOUND(grid)
-            PRINT LBOUND(grid, 2)
-            PRINT UBOUND(grid, 2)
-            PRINT ARRAYRANK(grid)
-            PRINT ARRAYLENGTH(grid)
-            PRINT ARRAYISALLOCATED(grid)
-            bounds = ARRAYBOUNDS(grid)
-            PRINT ARRAYRANK(bounds)
-            PRINT ARRAYLENGTH(bounds)
-            PRINT bounds(1, 1)
-            PRINT bounds(1, 2)
-            PRINT bounds(2, 1)
-            PRINT bounds(2, 2)
-            bounds(1, 1) = 99
-            PRINT LBOUND(grid)
-            empty = ARRAYTAKE(grid, 0, 2)
-            PRINT ARRAYISALLOCATED(empty)
-            PRINT ARRAYLENGTH(empty)
-            PRINT ARRAYRANK(empty)
-            bounds = ARRAYBOUNDS(empty)
-            PRINT bounds(1, 1)
-            PRINT bounds(1, 2)
-            PRINT bounds(2, 1)
-            PRINT bounds(2, 2)
-            DIM absent(,) AS STRING
-            PRINT ARRAYISALLOCATED(absent)
-            PRINT ARRAYLENGTH(absent)
-            PRINT ARRAYRANK(absent)
-            TRY
-                bounds = ARRAYBOUNDS(absent)
-            CATCH err
-                PRINT err.Code
-            END TRY
-            PRINT bounds(2, 2)
-            """;
+        var source = "DIM grid[-2147483647 TO -2147483646, 2147483646 TO 2147483647] AS STRING\r\nDIM bounds[,] AS INTEGER\r\nDIM empty[,] AS STRING\r\nPRINT LBOUND(grid[])\r\nPRINT UBOUND(grid[])\r\nPRINT LBOUND(grid[], 2)\r\nPRINT UBOUND(grid[], 2)\r\nPRINT ARRAYRANK(grid[])\r\nPRINT ARRAYLENGTH(grid[])\r\nPRINT ARRAYISALLOCATED(grid[])\r\nbounds[] = ARRAYBOUNDS(grid[])\r\nPRINT ARRAYRANK(bounds[])\r\nPRINT ARRAYLENGTH(bounds[])\r\nPRINT bounds[1, 1]\r\nPRINT bounds[1, 2]\r\nPRINT bounds[2, 1]\r\nPRINT bounds[2, 2]\r\nbounds[1, 1] = 99\r\nPRINT LBOUND(grid[])\r\nempty[] = ARRAYTAKE(grid[], 0, 2)\r\nPRINT ARRAYISALLOCATED(empty[])\r\nPRINT ARRAYLENGTH(empty[])\r\nPRINT ARRAYRANK(empty[])\r\nbounds[] = ARRAYBOUNDS(empty[])\r\nPRINT bounds[1, 1]\r\nPRINT bounds[1, 2]\r\nPRINT bounds[2, 1]\r\nPRINT bounds[2, 2]\r\nDIM absent[,] AS STRING\r\nPRINT ARRAYISALLOCATED(absent[])\r\nPRINT ARRAYLENGTH(absent[])\r\nPRINT ARRAYRANK(absent[])\r\nTRY\r\n    bounds[] = ARRAYBOUNDS(absent[])\r\nCATCH err\r\n    PRINT err.Code\r\nEND TRY\r\nPRINT bounds[2, 2]";
         var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);

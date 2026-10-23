@@ -2,9 +2,9 @@
 SCREEN 1, , 1, 0
 PALETTE 12, 46
 PSET (20, 60), 12
-DIM buffer(0 TO 1, 0 TO 1) AS INTEGER
-GET (20, 60)-(21, 61), buffer
-PUT (30, 60), buffer, PSET
+DIM buffer[0 TO 1, 0 TO 1] AS INTEGER
+GET (20, 60)-(21, 61), buffer[]
+PUT (30, 60), buffer[], PSET
 PCOPY 1, 0
 PRINT "POINT сохраняет индекс: "; POINT(20, 60) = 12
 DIM answer AS STRING

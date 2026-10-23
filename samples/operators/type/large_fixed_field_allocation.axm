@@ -7,19 +7,19 @@
 ' 42
 
 TYPE Big
-    Data(0 TO 67108864) AS INTEGER
+    Data[0 TO 67108864] AS INTEGER
 END TYPE
 
 SUB NeverCalled()
     DIM local AS Big
-    PRINT UBOUND(local.Data)
+    PRINT UBOUND(local.Data[])
 END SUB
 
 PRINT 42
 
 TRY
     DIM local AS Big
-    PRINT UBOUND(local.Data)
+    PRINT UBOUND(local.Data[])
 CATCH problem
     PRINT problem.Code
 END TRY

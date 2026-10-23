@@ -3,6 +3,7 @@
     "src/Axiom.Core/AxiomLanguageKeywords.cs",
     "src/Axiom.Lexing/Lexer.cs",
     "src/Axiom.Lexing/TokenKind.cs",
+    "src/Axiom.Parsing/Parser.Arrays.cs",
     "src/Axiom.Parsing/Parser.Declarations.cs",
     "src/Axiom.Parsing/Parser.Expressions.cs",
     "src/Axiom.Parsing/Parser.Statements.cs",
@@ -25,7 +26,7 @@
     "src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.cs",
     "src/Axiom.Syntax/SyntaxKind.cs"
   ],
-  "sourceFingerprint": "037f5a5dafd9f999d3c3b08b56346daa8f589cd0abe5e9f6fe61d9f3392a9ce8",
+  "sourceFingerprint": "58fc941d9b5d43e783cb93de6145449317be5839d27da3bfcc077eb1ee9ca3b8",
   "functions": [
     {
       "name": "ABS",
@@ -148,7 +149,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
           "returnType": "DOUBLE",
@@ -169,7 +170,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "value",
@@ -187,7 +188,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "value",
@@ -216,10 +217,10 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
-          "returnType": "INTEGER(,)",
+          "returnType": "INTEGER[,]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"
@@ -237,10 +238,10 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
-          "returnType": "INTEGER()",
+          "returnType": "INTEGER[]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "SameAsFirstArgument"
@@ -258,14 +259,14 @@
           "parameters": [
             {
               "name": "left",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "right",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
-          "returnType": "INTEGER()",
+          "returnType": "INTEGER[]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "SameAsFirstArgument"
@@ -276,18 +277,18 @@
           "parameters": [
             {
               "name": "left",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "right",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "dimension",
               "type": "INTEGER"
             }
           ],
-          "returnType": "INTEGER()",
+          "returnType": "INTEGER[]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "SameAsFirstArgument"
@@ -305,7 +306,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "value",
@@ -330,7 +331,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "value",
@@ -355,10 +356,10 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
-          "returnType": "INTEGER()",
+          "returnType": "INTEGER[]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "ArrayOfFirstArrayElementType"
@@ -376,7 +377,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "predicate",
@@ -401,7 +402,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "value",
@@ -426,14 +427,14 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "predicate",
               "type": "FUNCTION(INTEGER) AS BOOLEAN"
             }
           ],
-          "returnType": "INTEGER()",
+          "returnType": "INTEGER[]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "ArrayOfFirstArrayElementType"
@@ -451,14 +452,14 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "value",
               "type": "INTEGER"
             }
           ],
-          "returnType": "INTEGER()",
+          "returnType": "INTEGER[]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "ArrayFindAllCoordinateResult"
@@ -476,10 +477,10 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
-          "returnType": "INTEGER()",
+          "returnType": "INTEGER[]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "ArrayOfFirstArrayElementType"
@@ -497,7 +498,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "value",
@@ -522,7 +523,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "index",
@@ -544,7 +545,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "index",
@@ -577,7 +578,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
           "returnType": "BOOLEAN",
@@ -598,7 +599,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "value",
@@ -623,7 +624,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
           "returnType": "INTEGER",
@@ -644,14 +645,14 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "selector",
               "type": "FUNCTION(INTEGER) AS INTEGER"
             }
           ],
-          "returnType": "INTEGER()",
+          "returnType": "INTEGER[]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "ArrayMapSelectorReturnArray"
@@ -669,7 +670,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
           "returnType": "INTEGER",
@@ -690,7 +691,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
           "returnType": "INTEGER",
@@ -711,7 +712,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
           "returnType": "INTEGER",
@@ -725,7 +726,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "dimension",
@@ -750,7 +751,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "value",
@@ -768,7 +769,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "value",
@@ -797,7 +798,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
           "returnType": "INTEGER",
@@ -818,7 +819,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "seed",
@@ -847,7 +848,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "index",
@@ -865,7 +866,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "index",
@@ -894,14 +895,14 @@
           "parameters": [
             {
               "name": "source",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "template",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
-          "returnType": "INTEGER()",
+          "returnType": "INTEGER[]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "SameAsSecondArgument"
@@ -919,7 +920,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
           "returnType": "VOID",
@@ -933,7 +934,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "dimension",
@@ -958,14 +959,14 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "count",
               "type": "INTEGER"
             }
           ],
-          "returnType": "INTEGER()",
+          "returnType": "INTEGER[]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "SameAsFirstArgument"
@@ -976,7 +977,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "count",
@@ -987,7 +988,7 @@
               "type": "INTEGER"
             }
           ],
-          "returnType": "INTEGER()",
+          "returnType": "INTEGER[]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "SameAsFirstArgument"
@@ -1005,7 +1006,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "start",
@@ -1016,7 +1017,7 @@
               "type": "INTEGER"
             }
           ],
-          "returnType": "INTEGER()",
+          "returnType": "INTEGER[]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "SameAsFirstArgument"
@@ -1027,7 +1028,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "start",
@@ -1042,7 +1043,7 @@
               "type": "INTEGER"
             }
           ],
-          "returnType": "INTEGER()",
+          "returnType": "INTEGER[]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "SameAsFirstArgument"
@@ -1060,7 +1061,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "predicate",
@@ -1085,7 +1086,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
           "returnType": "VOID",
@@ -1099,7 +1100,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "dimension",
@@ -1124,7 +1125,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
           "returnType": "INTEGER",
@@ -1145,14 +1146,14 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "count",
               "type": "INTEGER"
             }
           ],
-          "returnType": "INTEGER()",
+          "returnType": "INTEGER[]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "SameAsFirstArgument"
@@ -1163,7 +1164,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "count",
@@ -1174,7 +1175,7 @@
               "type": "INTEGER"
             }
           ],
-          "returnType": "INTEGER()",
+          "returnType": "INTEGER[]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "SameAsFirstArgument"
@@ -1192,10 +1193,10 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
-          "returnType": "INTEGER()",
+          "returnType": "INTEGER[]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "SameAsFirstArgument"
@@ -1206,14 +1207,14 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "dimension",
               "type": "INTEGER"
             }
           ],
-          "returnType": "INTEGER()",
+          "returnType": "INTEGER[]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "SameAsFirstArgument"
@@ -1231,10 +1232,10 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
-          "returnType": "INTEGER()",
+          "returnType": "INTEGER[]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "SameAsFirstArgument"
@@ -1245,14 +1246,14 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "dimension",
               "type": "INTEGER"
             }
           ],
-          "returnType": "INTEGER()",
+          "returnType": "INTEGER[]",
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "SameAsFirstArgument"
@@ -3135,7 +3136,7 @@
               "type": "STRING"
             }
           ],
-          "returnType": "STRING()",
+          "returnType": "STRING[]",
           "binding": "Default",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"
@@ -3153,7 +3154,7 @@
               "type": "STRING"
             }
           ],
-          "returnType": "STRING()",
+          "returnType": "STRING[]",
           "binding": "Default",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"
@@ -3174,7 +3175,7 @@
               "type": "STRING"
             }
           ],
-          "returnType": "STRING()",
+          "returnType": "STRING[]",
           "binding": "Default",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"
@@ -3192,7 +3193,7 @@
               "type": "STRING"
             }
           ],
-          "returnType": "STRING()",
+          "returnType": "STRING[]",
           "binding": "Default",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"
@@ -3601,7 +3602,7 @@
           "parameters": [
             {
               "name": "items",
-              "type": "STRING()"
+              "type": "STRING[]"
             }
           ],
           "returnType": "STRING",
@@ -3615,7 +3616,7 @@
           "parameters": [
             {
               "name": "items",
-              "type": "STRING()"
+              "type": "STRING[]"
             },
             {
               "name": "separator",
@@ -3682,7 +3683,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
           "returnType": "INTEGER",
@@ -3696,7 +3697,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "dimension",
@@ -5618,7 +5619,7 @@
               "type": "STRING"
             }
           ],
-          "returnType": "STRING()",
+          "returnType": "STRING[]",
           "binding": "Default",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"
@@ -5636,7 +5637,7 @@
               "type": "STRING"
             }
           ],
-          "returnType": "STRING()",
+          "returnType": "STRING[]",
           "binding": "Default",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"
@@ -5721,7 +5722,7 @@
               "type": "INTEGER"
             }
           ],
-          "returnType": "STRING()",
+          "returnType": "STRING[]",
           "binding": "Default",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"
@@ -5898,7 +5899,7 @@
               "type": "INTEGER"
             }
           ],
-          "returnType": "STRING()",
+          "returnType": "STRING[]",
           "binding": "Default",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"
@@ -5924,7 +5925,7 @@
               "type": "STRING"
             }
           ],
-          "returnType": "STRING()",
+          "returnType": "STRING[]",
           "binding": "Default",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"
@@ -6043,7 +6044,7 @@
               "type": "STRING"
             }
           ],
-          "returnType": "STRING()",
+          "returnType": "STRING[]",
           "binding": "Default",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"
@@ -6065,7 +6066,7 @@
               "type": "STRING"
             }
           ],
-          "returnType": "STRING()",
+          "returnType": "STRING[]",
           "binding": "Default",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"
@@ -6201,7 +6202,7 @@
               "type": "STRING"
             }
           ],
-          "returnType": "STRING()",
+          "returnType": "STRING[]",
           "binding": "Default",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"
@@ -6223,7 +6224,7 @@
               "type": "STRING"
             }
           ],
-          "returnType": "STRING()",
+          "returnType": "STRING[]",
           "binding": "Default",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"
@@ -6378,11 +6379,11 @@
             },
             {
               "name": "oldItems",
-              "type": "STRING()"
+              "type": "STRING[]"
             },
             {
               "name": "newItems",
-              "type": "STRING()"
+              "type": "STRING[]"
             }
           ],
           "returnType": "STRING",
@@ -6840,7 +6841,7 @@
               "type": "STRING"
             }
           ],
-          "returnType": "STRING()",
+          "returnType": "STRING[]",
           "binding": "Default",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"
@@ -6858,7 +6859,7 @@
               "type": "STRING"
             }
           ],
-          "returnType": "STRING()",
+          "returnType": "STRING[]",
           "binding": "Default",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"
@@ -7514,7 +7515,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             }
           ],
           "returnType": "INTEGER",
@@ -7528,7 +7529,7 @@
           "parameters": [
             {
               "name": "array",
-              "type": "INTEGER()"
+              "type": "INTEGER[]"
             },
             {
               "name": "dimension",
@@ -8522,6 +8523,7 @@
     "UTCDATETIME"
   ],
   "internalSyntax": {
+    "ModuleStatementSyntax": "Обёртка инструкции с PUBLIC или PRIVATE; модификаторы описаны в разделе видимости.",
     "GlobalStatementSyntax": "Обёртка инструкции верхнего уровня; отдельного оператора GLOBAL нет.",
     "LocalSubDeclarationStatementSyntax": "Локальное объявление SUB; описано вместе с SUB.",
     "LocalFunctionDeclarationStatementSyntax": "Локальное объявление FUNCTION; описано вместе с FUNCTION."

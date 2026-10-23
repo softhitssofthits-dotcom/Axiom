@@ -146,6 +146,12 @@ public sealed partial class Parser
                 continue;
             }
 
+            if (Current.Kind == SyntaxKind.OpenBracketToken && !LooksLikeBracketRedimBounds())
+            {
+                expression = ParseArrayAccessExpression(expression);
+                continue;
+            }
+
             if (Current.Kind == SyntaxKind.OpenParenToken && !LooksLikeRedimBounds())
             {
                 var openParenToken = NextToken();
@@ -208,6 +214,11 @@ public sealed partial class Parser
 
     private ArrayBoundsSyntax ParseExplicitArrayBounds()
     {
+        if (Current.Kind == SyntaxKind.OpenBracketToken)
+        {
+            return ParseBracketArrayBounds(requireExplicitBounds: true);
+        }
+
         var openParenToken = Match(SyntaxKind.OpenParenToken, "(");
         var dimensions = new List<ArrayDimensionSyntax>();
         var commaTokens = new List<SyntaxToken>();

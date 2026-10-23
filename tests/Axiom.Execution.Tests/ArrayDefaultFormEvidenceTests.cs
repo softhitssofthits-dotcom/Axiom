@@ -5,24 +5,18 @@ namespace Axiom.Execution.Tests;
 
 public sealed class ArrayDefaultFormEvidenceTests
 {
-    private const string Setup = """
-DIM a(5 TO 7) AS INTEGER
-DIM result() AS INTEGER
-a(5) = 30
-a(6) = 10
-a(7) = 20
-""";
+    private const string Setup = "DIM a[5 TO 7] AS INTEGER\r\nDIM result[] AS INTEGER\r\na[5] = 30\r\na[6] = 10\r\na[7] = 20";
 
     public static IEnumerable<object[]> Forms()
     {
-        yield return new object[] { "ArrayToSorted", "result = ARRAYTOSORTED(a)", "array", "result", new[] { "10", "20", "30", "30" } };
-        yield return new object[] { "ArrayToReversed", "result = ARRAYTOREVERSED(a)", "array", "result", new[] { "20", "10", "30", "30" } };
-        yield return new object[] { "ArraySort", "ARRAYSORT(a)", "void", "a", new[] { "10", "20", "30", "10" } };
-        yield return new object[] { "ArrayReverse", "ARRAYREVERSE(a)", "void", "a", new[] { "20", "10", "30", "20" } };
-        yield return new object[] { "ArrayPush", "ARRAYPUSH(a, 40)", "void", "a", new[] { "30", "10", "20", "40", "30" } };
-        yield return new object[] { "ArrayInsert", "ARRAYINSERT(a, 6, 40)", "void", "a", new[] { "30", "40", "10", "20", "30" } };
-        yield return new object[] { "ArrayPop", "PRINT ARRAYPOP(a)", "scalar", "a", new[] { "20", "30", "10", "30" } };
-        yield return new object[] { "ArrayRemove", "PRINT ARRAYREMOVE(a, 6)", "scalar", "a", new[] { "10", "30", "20", "30" } };
+        yield return new object[] { "ArrayToSorted", "result[] = ARRAYTOSORTED(a[])", "array", "result", new[] { "10", "20", "30", "30" } };
+        yield return new object[] { "ArrayToReversed", "result[] = ARRAYTOREVERSED(a[])", "array", "result", new[] { "20", "10", "30", "30" } };
+        yield return new object[] { "ArraySort", "ARRAYSORT(a[])", "void", "a", new[] { "10", "20", "30", "10" } };
+        yield return new object[] { "ArrayReverse", "ARRAYREVERSE(a[])", "void", "a", new[] { "20", "10", "30", "20" } };
+        yield return new object[] { "ArrayPush", "ARRAYPUSH(a[], 40)", "void", "a", new[] { "30", "10", "20", "40", "30" } };
+        yield return new object[] { "ArrayInsert", "ARRAYINSERT(a[], 6, 40)", "void", "a", new[] { "30", "40", "10", "20", "30" } };
+        yield return new object[] { "ArrayPop", "PRINT ARRAYPOP(a[])", "scalar", "a", new[] { "20", "30", "10", "30" } };
+        yield return new object[] { "ArrayRemove", "PRINT ARRAYREMOVE(a[], 6)", "scalar", "a", new[] { "10", "30", "20", "30" } };
     }
 
     [Theory]
@@ -51,7 +45,7 @@ a(7) = 20
             Assert.Equal(TypeSymbol.Integer, call.Type);
         else
             Assert.Equal("VOID", call.Type.Name.ToUpperInvariant());
-        var source = Setup + "\n" + statement + $"\nFOR i = LBOUND({target}) TO UBOUND({target})\nPRINT {target}(i)\nNEXT i\nPRINT a(5)";
+        var source = Setup + "\n" + statement + $"\nFOR i = LBOUND({target}[]) TO UBOUND({target}[])\nPRINT {target}[i]\nNEXT i\nPRINT a[5]";
 
         {
             var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));

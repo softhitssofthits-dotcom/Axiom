@@ -6,7 +6,7 @@ CLS RGB(0, 0, 0)
 VIEWPORT (10, 6)-(15, 11)
 CAMERA 100, 50
 
-DIM buffer(1 TO 2, 5 TO 6) AS INTEGER
+DIM buffer[1 TO 2, 5 TO 6] AS INTEGER
 
 ' Рисуем блок в мировых координатах.
 PSET (100, 50), 6
@@ -15,13 +15,13 @@ PSET (100, 51), 12
 PSET (101, 51), 15
 
 ' Читаем тот же мировой прямоугольник в массив.
-GET (100, 50)-(101, 51), buffer
+GET (100, 50)-(101, 51), buffer[]
 
 ' Показываем значения, чтобы их было легко сверить в IDE.
-PRINT buffer(1, 5)
-PRINT buffer(2, 5)
-PRINT buffer(1, 6)
-PRINT buffer(2, 6)
+PRINT buffer[1, 5]
+PRINT buffer[2, 5]
+PRINT buffer[1, 6]
+PRINT buffer[2, 6]
 
 PRESENT
 SLEEP 500

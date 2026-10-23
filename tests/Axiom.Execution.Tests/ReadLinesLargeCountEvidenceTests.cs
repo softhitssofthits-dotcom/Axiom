@@ -42,12 +42,12 @@ public sealed class ReadLinesLargeCountEvidenceTests
         {
             var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($$"""
                 DIM f AS FILE
-                DIM lines() AS STRING
+                DIM lines[] AS STRING
                 OPEN "{{path}}" FOR INPUT AS f USING "UTF-8"
-                lines = READLINES(f, 2147483647)
-                PRINT ARRAYLENGTH(lines)
-                IF ARRAYLENGTH(lines) > 0 THEN
-                    PRINT lines(1)
+                lines[] = READLINES(f, 2147483647)
+                PRINT ARRAYLENGTH(lines[])
+                IF ARRAYLENGTH(lines[]) > 0 THEN
+                    PRINT lines[1]
                 END IF
                 PRINT EOF(f)
                 CLOSE f

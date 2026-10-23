@@ -1,8 +1,8 @@
 ' Эмодзи используется как целая строка-разделитель.
-DIM parts() AS STRING
-parts = SPLIT("😀А😀😀Б😀", "😀")
+DIM parts[] AS STRING
+parts[] = SPLIT("😀А😀😀Б😀", "😀")
 ' Разделители на краях и два подряд сохраняют пустые элементы.
 PRINT "Количество частей, ожидается 5:"
-PRINT ARRAYLENGTH(parts)
+PRINT ARRAYLENGTH(parts[])
 PRINT "Соединённые части, ожидается |А||Б|:"
-PRINT JOIN(parts, "|")
+PRINT JOIN(parts[], "|")

@@ -117,8 +117,8 @@ PRINT moment
         var programs = new[]
         {
             """
-            DIM values(1 TO 2) AS DATE
-            INPUT values(1)
+            DIM values[1 TO 2] AS DATE
+            INPUT values[1]
             """,
             """
             TYPE Entry

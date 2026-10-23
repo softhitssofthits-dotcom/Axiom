@@ -3,8 +3,8 @@
 ' Повторяем операции много раз, чтобы измерять обработку данных массива,
 ' а не только начальную подготовку программы к запуску.
 
-DIM hyper(,,,,,,,) AS INTEGER
-DIM bounds(,) AS INTEGER
+DIM hyper[,,,,,,,] AS INTEGER
+DIM bounds[,] AS INTEGER
 DIM rankChecksum AS LONG = 0
 DIM lowerChecksum AS LONG = 0
 DIM upperChecksum AS LONG = 0
@@ -12,23 +12,23 @@ DIM lengthChecksum AS LONG = 0
 DIM boundsChecksum AS LONG = 0
 DIM allocationChecksum AS LONG = 0
 
-REDIM hyper(1 TO 2, 1 TO 2, 1 TO 2, 1 TO 2, 1 TO 2, 1 TO 2, 1 TO 2, 1 TO 2)
-hyper(1, 2, 1, 2, 1, 2, 1, 2) = 812
+REDIM hyper[1 TO 2, 1 TO 2, 1 TO 2, 1 TO 2, 1 TO 2, 1 TO 2, 1 TO 2, 1 TO 2]
+hyper[1, 2, 1, 2, 1, 2, 1, 2] = 812
 
 FOR roundIndex = 1 TO 260
-    bounds = ARRAYBOUNDS(hyper)
+    bounds[] = ARRAYBOUNDS(hyper[])
 
-    rankChecksum = rankChecksum + ARRAYRANK(hyper)
-    lengthChecksum = lengthChecksum + ARRAYLENGTH(bounds)
+    rankChecksum = rankChecksum + ARRAYRANK(hyper[])
+    lengthChecksum = lengthChecksum + ARRAYLENGTH(bounds[])
 
-    IF ARRAYISALLOCATED(hyper) THEN
+    IF ARRAYISALLOCATED(hyper[]) THEN
         allocationChecksum = allocationChecksum + 1
     END IF
 
     FOR dimensionIndex = 1 TO 8
-        lowerChecksum = lowerChecksum + LBOUND(hyper, dimensionIndex)
-        upperChecksum = upperChecksum + UBOUND(hyper, dimensionIndex)
-        boundsChecksum = boundsChecksum + bounds(dimensionIndex, 1) + bounds(dimensionIndex, 2)
+        lowerChecksum = lowerChecksum + LBOUND(hyper[], dimensionIndex)
+        upperChecksum = upperChecksum + UBOUND(hyper[], dimensionIndex)
+        boundsChecksum = boundsChecksum + bounds[dimensionIndex, 1] + bounds[dimensionIndex, 2]
     NEXT
 NEXT
 
@@ -36,5 +36,5 @@ PRINT rankChecksum
 PRINT lowerChecksum
 PRINT upperChecksum
 PRINT lengthChecksum
-PRINT boundsChecksum + hyper(1, 2, 1, 2, 1, 2, 1, 2)
+PRINT boundsChecksum + hyper[1, 2, 1, 2, 1, 2, 1, 2]
 PRINT allocationChecksum

@@ -1,0 +1,22 @@
+' Обычная строка, массив целиком, общий массив и независимая копия.
+DIM fruit AS STRING = "яблоко"
+DIM fruits[] AS STRING = MakeFruits()
+DIM basket[] = fruits[]
+
+' Два имени разделяют память, поэтому замена видна через fruits[].
+basket[2] = "груша"
+PRINT fruit
+PRINT fruits[2]
+
+' Копия хранит собственные элементы и не меняет исходный массив.
+DIM independent[] = ARRAYCLONE(fruits[])
+independent[2] = "апельсин"
+PRINT fruits[2]
+PRINT independent[2]
+
+' Круглые скобки вызывают функцию, квадратные выбирают элемент результата.
+PRINT MakeFruits()[2]
+
+FUNCTION MakeFruits() AS STRING[]
+    RETURN SPLIT("яблоко,банан", ",")
+END FUNCTION

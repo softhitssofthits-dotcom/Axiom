@@ -478,6 +478,12 @@ public sealed partial class Lexer
             case ')':
                 _position++;
                 return CreateToken(TokenKind.CloseParenToken, start, 1);
+            case '[':
+                _position++;
+                return CreateToken(TokenKind.OpenBracketToken, start, 1);
+            case ']':
+                _position++;
+                return CreateToken(TokenKind.CloseBracketToken, start, 1);
             case ',':
                 _position++;
                 return CreateToken(TokenKind.CommaToken, start, 1);

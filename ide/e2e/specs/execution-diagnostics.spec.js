@@ -64,7 +64,7 @@ module.exports = [{
   name: 'Ошибка исполнения не стирается фоновой проверкой при неизменённом тексте',
   async fn({ S, C }) {
     const directory = testWorkspace('execution-diagnostics-live-check');
-    const file = writeAxm(directory, 'огромный_массив.axm', 'DIM a(,) AS INTEGER\nREDIM a(1 TO 100000, 1 TO 100000)\n');
+    const file = writeAxm(directory, 'огромный_массив.axm', 'DIM a[,] AS INTEGER\nREDIM a[1 TO 100000, 1 TO 100000]\n');
     await S.launch();
     await S.stubOpenDialog([file]);
     await S.page.evaluate(() => window.__ide.handleAction('open'));

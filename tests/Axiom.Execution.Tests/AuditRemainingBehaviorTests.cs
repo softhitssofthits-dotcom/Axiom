@@ -5,66 +5,27 @@ public sealed class AuditRemainingBehaviorTests
     [Fact]
     public void Average_PreservesTinyRemainderAfterLargeCancellation()
     {
-        const string source = """
-            DIM values(1 TO 3) AS DOUBLE
-            values(1) = VAL("1e308")
-            values(2) = -VAL("1e308")
-            values(3) = VAL("1e-308")
-            PRINT ARRAYAVERAGE(values) = VAL("1e-308") / 3
-            values(2) = VAL("1e-308")
-            values(3) = -VAL("1e308")
-            PRINT ARRAYAVERAGE(values) = VAL("1e-308") / 3
-            """;
+        const string source = "DIM values[1 TO 3] AS DOUBLE\r\nvalues[1] = VAL(\"1e308\")\r\nvalues[2] = -VAL(\"1e308\")\r\nvalues[3] = VAL(\"1e-308\")\r\nPRINT ARRAYAVERAGE(values[]) = VAL(\"1e-308\") / 3\r\nvalues[2] = VAL(\"1e-308\")\r\nvalues[3] = -VAL(\"1e308\")\r\nPRINT ARRAYAVERAGE(values[]) = VAL(\"1e-308\") / 3";
         AssertProgram(source, ["TRUE", "TRUE"]);
     }
 
     [Fact]
     public void Average_RoundsSubnormalTiesAndMaximumFiniteValues()
     {
-        const string source = """
-            DIM values(1 TO 2) AS DOUBLE
-            values(1) = VAL("4.9406564584124654e-324")
-            values(2) = 0
-            PRINT ARRAYAVERAGE(values) = 0
-            values(2) = VAL("9.8813129168249309e-324")
-            PRINT ARRAYAVERAGE(values) = values(2)
-            values(1) = VAL("1.7976931348623157e308")
-            values(2) = values(1)
-            PRINT ARRAYAVERAGE(values) = values(1)
-            values(1) = -values(1)
-            values(2) = values(1)
-            PRINT ARRAYAVERAGE(values) = values(1)
-            """;
+        const string source = "DIM values[1 TO 2] AS DOUBLE\r\nvalues[1] = VAL(\"4.9406564584124654e-324\")\r\nvalues[2] = 0\r\nPRINT ARRAYAVERAGE(values[]) = 0\r\nvalues[2] = VAL(\"9.8813129168249309e-324\")\r\nPRINT ARRAYAVERAGE(values[]) = values[2]\r\nvalues[1] = VAL(\"1.7976931348623157e308\")\r\nvalues[2] = values[1]\r\nPRINT ARRAYAVERAGE(values[]) = values[1]\r\nvalues[1] = -values[1]\r\nvalues[2] = values[1]\r\nPRINT ARRAYAVERAGE(values[]) = values[1]";
         AssertProgram(source, ["TRUE", "TRUE", "TRUE", "TRUE"]);
     }
     [Fact]
     public void Average_LargeFiniteValuesDoNotOverflow()
     {
-        const string source = """
-            DIM values(1 TO 2) AS DOUBLE
-            values(1) = VAL("1e308")
-            values(2) = VAL("1e308")
-            PRINT ARRAYAVERAGE(values) = VAL("1e308")
-            values(2) = -values(1)
-            PRINT ARRAYAVERAGE(values)
-            """;
+        const string source = "DIM values[1 TO 2] AS DOUBLE\r\nvalues[1] = VAL(\"1e308\")\r\nvalues[2] = VAL(\"1e308\")\r\nPRINT ARRAYAVERAGE(values[]) = VAL(\"1e308\")\r\nvalues[2] = -values[1]\r\nPRINT ARRAYAVERAGE(values[])";
         AssertProgram(source, ["TRUE", "0"]);
     }
 
     [Fact]
     public void Aggregates_AcceptMultidimensionalArrays()
     {
-        const string source = """
-            DIM values(1 TO 2, 1 TO 2) AS INTEGER
-            values(1, 1) = 1
-            values(1, 2) = 2
-            values(2, 1) = 3
-            values(2, 2) = 4
-            PRINT ARRAYSUM(values)
-            PRINT ARRAYMIN(values)
-            PRINT ARRAYMAX(values)
-            PRINT ARRAYAVERAGE(values)
-            """;
+        const string source = "DIM values[1 TO 2, 1 TO 2] AS INTEGER\r\nvalues[1, 1] = 1\r\nvalues[1, 2] = 2\r\nvalues[2, 1] = 3\r\nvalues[2, 2] = 4\r\nPRINT ARRAYSUM(values[])\r\nPRINT ARRAYMIN(values[])\r\nPRINT ARRAYMAX(values[])\r\nPRINT ARRAYAVERAGE(values[])";
         AssertProgram(source, ["10", "1", "4", "2.5"]);
     }
 
@@ -74,9 +35,9 @@ public sealed class AuditRemainingBehaviorTests
         foreach (var functionName in new[] { "ARRAYMIN", "ARRAYMAX" })
         {
             var source = $"""
-                DIM flags(1 TO 1) AS BOOLEAN
-                flags(1) = TRUE
-                PRINT {functionName}(flags)
+                DIM flags[1 TO 1] AS BOOLEAN
+                flags[1] = TRUE
+                PRINT {functionName}(flags[])
                 """;
 
             var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));

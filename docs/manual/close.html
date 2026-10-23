@@ -7,13 +7,10 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор CLOSE</span></nav>
-<p class="eyebrow">14 · Файловая система</p><h1 class="page-title">Оператор CLOSE</h1><p class="lead">CLOSE — оператор языка Axiom, который закрывает открытый текстовый файл, завершает накопленную запись и освобождает ресурс FILE. Закрытую переменную можно снова использовать в OPEN.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-<section class="article-section"><h2>Назначение и контекст</h2><p>CLOSE завершает текущий период работы с файлом. Он доступен в любом выполняемом участке программы без SCREEN и применяется к ресурсу, ранее открытому оператором OPEN.</p></section>
-<section class="article-section"><h2>Синтаксис</h2><pre><code class="language-axiom">CLOSE &lt;файл&gt;</code></pre></section>
+<p class="eyebrow">14 · Файловая система</p><h1 class="page-title">Оператор CLOSE</h1><p class="lead">Открытый файл удерживает ресурс и часть записанного текста до тех пор, пока запись не будет завершена. CLOSE закрывает открытый текстовый файл: передаёт в поток накопленные байты и освобождает переменную FILE, после чего её снова можно открыть оператором OPEN.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Синтаксис</h2><p>Оператор состоит из ключевого слова CLOSE и имени файловой переменной.</p><pre><code class="language-axiom">CLOSE &lt;файл&gt;</code></pre><p>Он завершает текущий период работы с файлом, поэтому применяется к ресурсу, ранее открытому оператором OPEN, и доступен в любом выполняемом участке программы без SCREEN.</p></section>
 <section class="article-section"><h2>Аргумент</h2><p>Файл — простая переменная типа FILE, содержащая открытый ресурс. Выражение пути, поле записи и список нескольких файлов не являются этой формой.</p></section>
-<section class="article-section"><h2>Действие и ограничения</h2><p>Накопленные байты передаются в поток, затем ресурс освобождается. После успешного закрытия ISOPEN возвращает FALSE; остальные файловые функции, требующие открытого ресурса, недоступны до нового OPEN. Повторное закрытие недопустимо.</p><p>Даже при ошибке завершения записи ресурс освобождается. Часть текста могла не сохраниться; повторять CLOSE для этого ресурса не нужно. При завершении запуска исполнитель пытается закрыть все оставшиеся ресурсы. Отказ одного закрытия не отменяет другие попытки.</p></section>
-<section class="article-section"><h2>Диагностика</h2><p>MB2003 означает переменную другого типа. MB3007 возникает при закрытии неоткрытого ресурса и при ошибке завершения записи; такую ошибку можно перехватить через TRY.</p></section>
-<section class="article-section"><h2>Пример</h2><pre><code class="language-axiom">DIM path AS STRING = MAKETEMPFILE("manual_")
+<section class="article-section"><h2>Действие и ограничения</h2><p>Накопленные байты передаются в поток, затем ресурс освобождается. После успешного закрытия ISOPEN возвращает FALSE; остальные файловые функции, требующие открытого ресурса, недоступны до нового OPEN. Повторное закрытие недопустимо.</p><p>Даже при ошибке завершения записи ресурс освобождается. Часть текста могла не сохраниться; повторять CLOSE для этого ресурса не нужно. При завершении запуска исполнитель пытается закрыть все оставшиеся ресурсы, и отказ одного закрытия не отменяет другие попытки.</p><p>Проверить момент освобождения позволяет ISOPEN до и после закрытия:</p><pre><code class="language-axiom">DIM path AS STRING = MAKETEMPFILE("manual_")
 DIM f AS FILE
 OPEN path FOR OUTPUT AS f
 WRITE(f, "Axiom")
@@ -23,7 +20,8 @@ PRINT ISOPEN(f)
 PRINT READFILE(path)
 DELETEFILE(path)</code></pre><p>Ожидаемый вывод:</p><pre><code>TRUE
 FALSE
-Axiom</code></pre></section>
+Axiom</code></pre><p>Первое значение TRUE относится к ещё открытому ресурсу. Второе FALSE появляется уже после CLOSE, а третья строка показывает, что записанный текст к этому моменту находится в файле и доступен обычному чтению по пути.</p></section>
+<section class="article-section"><h2>Диагностика</h2><p>MB2003 означает переменную другого типа. MB3007 возникает при закрытии неоткрытого ресурса и при ошибке завершения записи; такую ошибку можно перехватить через TRY.</p></section>
 <section class="article-section"><h2>См. также</h2><p><a href="open.html">OPEN</a> · <a href="file-system-functions-open-files.html">Функции FILE</a> · <a href="try.html">TRY</a></p></section>
 <div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
 <script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

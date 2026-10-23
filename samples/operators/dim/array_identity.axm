@@ -1,0 +1,17 @@
+' В IDE grade, fruits и MakeFruits имеют три разных цвета.
+' Подсказки: fruits — массив STRING, 1 измерение; grid — INTEGER, 2 измерения.
+' Ожидаемый вывод:
+' 3 банан
+' 2
+' 2
+DIM grade AS INTEGER = 3
+DIM fruits[] AS STRING = MakeFruits()
+DIM basket[] = fruits[]
+DIM grid[-1 TO 0, 7 TO 8] AS INTEGER
+PRINT grade, basket[2]
+PRINT ARRAYLENGTH(fruits[])
+PRINT ARRAYRANK(grid[])
+
+FUNCTION MakeFruits() AS STRING []
+    RETURN SPLIT("яблоко,банан", ",")
+END FUNCTION

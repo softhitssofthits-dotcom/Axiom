@@ -1,0 +1,10 @@
+' Массивная константа обозначается квадратными скобками после имени.
+CONST fruits[] AS STRING = SPLIT("яблоко,банан", ",")
+PRINT fruits[2]
+PRINT ARRAYLENGTH(fruits[])
+
+' ARRAYCLONE создаёт независимый изменяемый массив.
+DIM basket[] = ARRAYCLONE(fruits[])
+basket[2] = "груша"
+PRINT fruits[2]
+PRINT basket[2]

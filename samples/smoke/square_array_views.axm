@@ -1,0 +1,26 @@
+' Таблица, представление строки, массивное поле TYPE и замена через BYREF.
+TYPE Basket
+    fruits[] AS STRING
+END TYPE
+
+DIM grades[-1 TO 0, 4 TO 5] AS INTEGER
+grades[0, 4] = 3
+DIM rowValues[] = grades[0]
+
+' Представление сохраняет границы и меняет исходную таблицу.
+rowValues[5] = 4
+PRINT grades[0, 4]; " "; grades[0, 5]
+PRINT LBOUND(rowValues[])
+
+DIM bag AS Basket
+bag.fruits[] = SPLIT("яблоко,банан", ",")
+DIM fruits[] = bag.fruits[]
+
+' BYREF заменяет саму переменную fruits[], а не прежнее поле bag.fruits[].
+Refill(fruits[])
+PRINT fruits[1]
+PRINT bag.fruits[1]
+
+SUB Refill(BYREF values[] AS STRING)
+    values[] = SPLIT("груша", ",")
+END SUB

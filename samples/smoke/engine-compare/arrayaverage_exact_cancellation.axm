@@ -1,17 +1,17 @@
 ' Измеряем точное среднее после сокращения больших чисел.
-DIM values(1 TO 30000) AS DOUBLE
+DIM values[1 TO 30000] AS DOUBLE
 DIM large AS DOUBLE = VAL("1e308")
 DIM tiny AS DOUBLE = VAL("1e-308")
 FOR index = 1 TO 30000 STEP 3
     ' Каждая тройка сохраняет только малый остаток.
-    values(index) = large
-    values(index + 1) = -large
-    values(index + 2) = tiny
+    values[index] = large
+    values[index + 1] = -large
+    values[index + 2] = tiny
 NEXT
 
 DIM correct AS BOOLEAN = TRUE
 FOR pass = 1 TO 8
     ' Повторяем именно вычисление среднего, не заполнение массива.
-    correct = correct AND ARRAYAVERAGE(values) = tiny / 3
+    correct = correct AND ARRAYAVERAGE(values[]) = tiny / 3
 NEXT
 PRINT correct

@@ -6,20 +6,20 @@
 ' item:10
 ' item:20
 ' item:30
-DIM values(5 TO 7) AS INTEGER
+DIM values[5 TO 7] AS INTEGER
 DIM prefix AS STRING = "item:"
-DIM mapped() AS STRING
+DIM mapped[] AS STRING
 
-values(5) = 10
-values(6) = 20
-values(7) = 30
+values[5] = 10
+values[6] = 20
+values[7] = 30
 
-mapped = ARRAYMAP(values, FormatValue)
-PRINT LBOUND(mapped)
-PRINT UBOUND(mapped)
-PRINT mapped(5)
-PRINT mapped(6)
-PRINT mapped(7)
+mapped[] = ARRAYMAP(values[], FormatValue)
+PRINT LBOUND(mapped[])
+PRINT UBOUND(mapped[])
+PRINT mapped[5]
+PRINT mapped[6]
+PRINT mapped[7]
 
 FUNCTION FormatValue(value AS INTEGER) AS STRING
     RETURN prefix + STR(value)

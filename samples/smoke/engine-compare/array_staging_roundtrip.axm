@@ -1,32 +1,32 @@
 ' Сравнительный сценарий: двухфазный staging через массивы.
 ' Нагружает запись и чтение массивов строк и чисел без файлового слоя.
 
-DIM rootPaths() AS STRING
-DIM filePaths() AS STRING
-DIM checksums() AS LONG
+DIM rootPaths[] AS STRING
+DIM filePaths[] AS STRING
+DIM checksums[] AS LONG
 DIM checksum AS LONG = 0
 
-REDIM rootPaths(1 TO 60)
-REDIM filePaths(1 TO 60)
-REDIM checksums(1 TO 60)
+REDIM rootPaths[1 TO 60]
+REDIM filePaths[1 TO 60]
+REDIM checksums[1 TO 60]
 
 FOR passIndex = 1 TO 60
-    rootPaths(passIndex) = "temp-dir-" + STR(passIndex)
-    filePaths(passIndex) = "root-" + STR(passIndex) + ".txt"
-    checksums(passIndex) = passIndex
+    rootPaths[passIndex] = "temp-dir-" + STR(passIndex)
+    filePaths[passIndex] = "root-" + STR(passIndex) + ".txt"
+    checksums[passIndex] = passIndex
 NEXT
 
 FOR passIndex = 1 TO 60
-    DIM tempDir AS STRING = rootPaths(passIndex)
-    DIM rootFile AS STRING = filePaths(passIndex)
+    DIM tempDir AS STRING = rootPaths[passIndex]
+    DIM rootFile AS STRING = filePaths[passIndex]
 
-    checksum = checksum + checksums(passIndex)
+    checksum = checksum + checksums[passIndex]
     checksum = checksum + LEN(tempDir)
     checksum = checksum + LEN(rootFile)
 
-    rootPaths(passIndex) = tempDir + "-done"
-    filePaths(passIndex) = rootFile + "-done"
-    checksums(passIndex) = checksums(passIndex) + 1
+    rootPaths[passIndex] = tempDir + "-done"
+    filePaths[passIndex] = rootFile + "-done"
+    checksums[passIndex] = checksums[passIndex] + 1
 NEXT
 
 PRINT checksum

@@ -98,7 +98,7 @@ test('Два процесса не могут сохранить разные т
 });
 
 test('Умный идентификатор сохраняет прежние имена, строки и комментарии в обоих стилях',()=>withHost(async h=>{
- const sourceText='DIM PlayerSpeed AS INTEGER\nCONST MaxSpeed AS INTEGER = 9\nDIM Cells(0 TO 2) AS INTEGER\nplayerspeed = maxspeed\ncells(1) = playerspeed\nPRINT Twice(playerspeed), "playerspeed" \' playerspeed\n\nFUNCTION Twice(InputValue AS INTEGER) AS INTEGER\nRETURN inputvalue * 2\nEND FUNCTION\n';
+ const sourceText='DIM PlayerSpeed AS INTEGER\nCONST MaxSpeed AS INTEGER = 9\nDIM Cells[0 TO 2] AS INTEGER\nplayerspeed = maxspeed\ncells[1] = playerspeed\nPRINT Twice(playerspeed), "playerspeed" \' playerspeed\n\nFUNCTION Twice(InputValue AS INTEGER) AS INTEGER\nRETURN inputvalue * 2\nEND FUNCTION\n';
  const snapshot={documentId:'smart',documentRevision:8,sourceText};
  const compiled=await h.request('document.compile',snapshot);assert.equal(compiled.ok,true);assert.deepEqual(compiled.payload.diagnostics,[]);
  const disabled=await h.request('document.normalizeIdentifiers',snapshot);
@@ -106,7 +106,7 @@ test('Умный идентификатор сохраняет прежние и
  for(const formattingStyle of ['Classic','Modern']){
   const r=await h.request('document.format',{...snapshot,formattingStyle,smartIdentifierEnabled:true});
   assert.equal(r.ok,true);assert.equal(r.payload.documentRevision,8);
-  assert.match(r.payload.sourceText,/PlayerSpeed = MaxSpeed/);assert.match(r.payload.sourceText,/Cells\(1\) = PlayerSpeed/);
+  assert.match(r.payload.sourceText,/PlayerSpeed = MaxSpeed/);assert.match(r.payload.sourceText,/Cells\[1\] = PlayerSpeed/);
   assert.match(r.payload.sourceText,/Twice\(PlayerSpeed\)/);assert.match(r.payload.sourceText,/InputValue \* 2/);
   assert.ok(r.payload.sourceText.includes('"playerspeed" \' playerspeed'));
  }

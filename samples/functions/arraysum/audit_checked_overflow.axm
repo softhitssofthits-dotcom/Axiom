@@ -1,10 +1,10 @@
 ' Проверка исправления LA26-002: CATCH обрабатывает ошибку MB3008.
-DIM numbers(1 TO 2) AS INTEGER
-numbers(1) = 2147483647
-numbers(2) = 1
+DIM numbers[1 TO 2] AS INTEGER
+numbers[1] = 2147483647
+numbers[2] = 1
 TRY
     ' Сумма не помещается в INTEGER.
-    PRINT ARRAYSUM(numbers)
+    PRINT ARRAYSUM(numbers[])
 CATCH err
     PRINT "Поймана ошибка:", err.Code
 FINALLY

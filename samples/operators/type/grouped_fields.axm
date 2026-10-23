@@ -12,7 +12,7 @@
 
 TYPE Person
     Name, Alias AS STRING
-    Scores(), Flags(1 TO 2) AS INTEGER
+    Scores[], Flags[1 TO 2] AS INTEGER
 END TYPE
 
 DIM first AS Person
@@ -20,23 +20,23 @@ DIM second AS Person
 
 PRINT first.Name
 PRINT first.Alias
-PRINT first.Flags(1)
+PRINT first.Flags[1]
 
-REDIM first.Scores(1 TO 2)
+REDIM first.Scores[1 TO 2]
 first.Name = "Ada"
 first.Alias = "Analyst"
-first.Scores(1) = 10
-first.Scores(2) = 20
-first.Flags(2) = 7
+first.Scores[1] = 10
+first.Scores[2] = 20
+first.Flags[2] = 7
 
 second = first
 
 first.Alias = "Changed"
-first.Scores(1) = 99
-first.Flags(2) = 42
+first.Scores[1] = 99
+first.Flags[2] = 42
 
 PRINT second.Name
 PRINT second.Alias
-PRINT second.Scores(1)
-PRINT second.Scores(2)
-PRINT second.Flags(2)
+PRINT second.Scores[1]
+PRINT second.Scores[2]
+PRINT second.Flags[2]

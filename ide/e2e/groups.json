@@ -61,6 +61,7 @@
     "shell.spec.js",
     "single-line-if.spec.js",
     "smart-identifier.spec.js",
+    "square-brackets.spec.js",
     "startup.spec.js",
     "stop-failure.spec.js",
     "studio.spec.js",
@@ -93,7 +94,8 @@
     "outline-navigation.spec.js",
     "problems.spec.js",
     "program-assistant.spec.js",
-    "project-symbols.spec.js"
+    "project-symbols.spec.js",
+    "square-brackets.spec.js"
   ],
   "e2e-settings": [
     "editor-settings-all.spec.js",
@@ -135,7 +137,8 @@
     "trace-partial-file.spec.js",
     "trace-points.spec.js",
     "trace-restart.spec.js",
-    "trace.spec.js"
+    "trace.spec.js",
+    "square-brackets.spec.js"
   ],
   "e2e-graphics": [
     "canvas-mouse.spec.js",

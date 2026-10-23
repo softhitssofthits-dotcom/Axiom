@@ -42,14 +42,7 @@ public sealed partial class LanguageContractTests
     [Fact]
     public void Execute_EnglishArrayMessageKeepsIndicesAndBounds()
     {
-        var (_, host, result) = ExecuteProgram("""
-            DIM a(1 TO 3) AS INTEGER
-            TRY
-                PRINT a(5)
-            CATCH err
-                PRINT err.Message
-            END TRY
-            """);
+        var (_, host, result) = ExecuteProgram("DIM a[1 TO 3] AS INTEGER\r\nTRY\r\n    PRINT a[5]\r\nCATCH err\r\n    PRINT err.Message\r\nEND TRY");
         Assert.True(result.Succeeded);
         Assert.Equal(["Indices (5) are outside the bounds of array 'a' (1..3)."], host.Output);
     }

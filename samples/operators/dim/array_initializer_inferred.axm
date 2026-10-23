@@ -1,0 +1,13 @@
+' Тип массива выводится из результата функции, которая вызывается один раз.
+' Ожидаемый вывод:
+' банан
+' 1
+DIM calls AS INTEGER
+DIM fruits[] = MakeFruits()
+PRINT fruits[2]
+PRINT calls
+
+FUNCTION MakeFruits() AS STRING []
+    calls = calls + 1
+    RETURN SPLIT("яблоко,банан,апельсин", ",")
+END FUNCTION

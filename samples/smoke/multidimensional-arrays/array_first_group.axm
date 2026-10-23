@@ -1,27 +1,27 @@
 ' Пример показывает первую группу встроенных функций для многомерных массивов:
 ' независимую копию через ARRAYCLONE, поиск значений и заполнение
 ' выделенного представления через ARRAYFILL.
-DIM source(1 TO 3, 10 TO 12) AS INTEGER
-DIM copy(,) AS INTEGER
+DIM source[1 TO 3, 10 TO 12] AS INTEGER
+DIM copy[,] AS INTEGER
 
-source(1, 10) = 5
-source(2, 11) = 20
-source(2, 12) = 20
-source(3, 11) = 20
-source(3, 12) = 20
+source[1, 10] = 5
+source[2, 11] = 20
+source[2, 12] = 20
+source[3, 11] = 20
+source[3, 12] = 20
 
-copy = ARRAYCLONE(source(2 TO 3, 11 TO 12))
-copy(2, 11) = 99
+copy[] = ARRAYCLONE(source[2 TO 3, 11 TO 12])
+copy[2, 11] = 99
 
-PRINT LBOUND(copy, 1)
-PRINT UBOUND(copy, 1)
-PRINT LBOUND(copy, 2)
-PRINT UBOUND(copy, 2)
-PRINT source(2, 11)
-PRINT copy(2, 11)
-PRINT ARRAYCONTAINS(source(2 TO 3, 11 TO 12), 20)
-PRINT ARRAYCOUNT(source(2 TO 3, 11 TO 12), 20)
+PRINT LBOUND(copy[], 1)
+PRINT UBOUND(copy[], 1)
+PRINT LBOUND(copy[], 2)
+PRINT UBOUND(copy[], 2)
+PRINT source[2, 11]
+PRINT copy[2, 11]
+PRINT ARRAYCONTAINS(source[2 TO 3, 11 TO 12], 20)
+PRINT ARRAYCOUNT(source[2 TO 3, 11 TO 12], 20)
 
-ARRAYFILL(source(2 TO 3, 11 TO 12), 8)
-PRINT source(2, 11)
-PRINT source(3, 12)
+ARRAYFILL(source[2 TO 3, 11 TO 12], 8)
+PRINT source[2, 11]
+PRINT source[3, 12]

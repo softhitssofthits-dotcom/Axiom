@@ -287,6 +287,59 @@ public sealed class LexerTests
     }
 
     [Fact]
+    public void Lex_RecognizesArrayBracketsAndPreservesLocations()
+    {
+        var tokens = Lex("fruits[ChooseFruit()]\r\ngrid[-1, 7 TO 8]", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        AssertTokenKinds(
+            tokens,
+            TokenKind.IdentifierToken,
+            TokenKind.OpenBracketToken,
+            TokenKind.IdentifierToken,
+            TokenKind.OpenParenToken,
+            TokenKind.CloseParenToken,
+            TokenKind.CloseBracketToken,
+            TokenKind.NewLineToken,
+            TokenKind.IdentifierToken,
+            TokenKind.OpenBracketToken,
+            TokenKind.MinusToken,
+            TokenKind.IntegerLiteralToken,
+            TokenKind.CommaToken,
+            TokenKind.IntegerLiteralToken,
+            TokenKind.ToKeyword,
+            TokenKind.IntegerLiteralToken,
+            TokenKind.CloseBracketToken,
+            TokenKind.EndOfFileToken);
+        Assert.Equal("[", tokens[1].Text);
+        Assert.Equal(new TextSpan(6, 1), tokens[1].Location.Span);
+        Assert.Equal("]", tokens[5].Text);
+        Assert.Equal(new TextSpan(20, 1), tokens[5].Location.Span);
+        Assert.Equal(new TextSpan(27, 1), tokens[8].Location.Span);
+    }
+
+    [Fact]
+    public void Lex_RecognizesBracketsOnlyInInterpolationExpression()
+    {
+        var tokens = Lex("$\"fruits[]: {fruits[2]}\"", out var diagnostics);
+        Assert.Empty(diagnostics);
+        Assert.Single(tokens, token => token.Kind == TokenKind.OpenBracketToken);
+        Assert.Single(tokens, token => token.Kind == TokenKind.CloseBracketToken);
+        Assert.Equal("[", tokens.Single(token => token.Kind == TokenKind.OpenBracketToken).Text);
+        Assert.Contains(tokens, token => token.Kind == TokenKind.InterpolatedStringTextToken && token.Text.Contains("fruits[]"));
+    }
+
+    [Fact]
+    public void Lex_LeavesBracketsInsideStringsAndCommentsUntouched()
+    {
+        var tokens = Lex("PRINT \"fruits[2] fruits(2)\" ' fruits[]\nREM grid[,]", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        Assert.DoesNotContain(tokens, token => token.Kind is TokenKind.OpenBracketToken or TokenKind.CloseBracketToken);
+        Assert.Equal("fruits[2] fruits(2)", tokens[1].Value);
+    }
+
+    [Fact]
     public void Lex_ReportsHexLiteralWithoutDigits()
     {
         var tokens = Lex("&H", out var diagnostics);

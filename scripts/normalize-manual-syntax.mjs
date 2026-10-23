@@ -3,6 +3,27 @@ const names={array:'массив',buffer:'буфер',text:'текст',pattern:
 export const formalParameterName=name=>names[name]||name;
 const decode=s=>s.replaceAll('&lt;','<').replaceAll('&gt;','>').replaceAll('&amp;','&').replaceAll('&quot;','"');
 const escape=s=>s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+// ⟦…⟧ — метанотация необязательных частей; [] — буквальный синтаксис массива.
+// Старые схемы переводятся только по признакам метанотации, не по всем скобкам.
+export function normalizeOptionalNotation(source){
+ let result='',quoted=false;const brackets=[];
+ for(let i=0;i<source.length;i++){
+  const char=source[i];
+  if(char==='"'){
+   result+=char;
+   if(quoted&&source[i+1]==='"'){result+=source[++i];continue;}
+   quoted=!quoted;continue;
+  }
+  if(!quoted&&char==='['){
+   const tail=source.slice(i+1);
+   const attached=/[A-Za-zА-Яа-яЁё0-9_>\])]$/.test(source.slice(0,i));
+   const optional=/^[,;]\s*(?:<|[A-Za-zА-Яа-яЁё]|\.\.\.|\|)/.test(tail)||!attached&&/^(?:<|STEP\b|ELSEIF\b|ELSE\b|CASE\b)/.test(tail);
+   brackets.push(optional);result+=optional?'⟦':'[';
+  }else if(!quoted&&char===']')result+=brackets.pop()?'⟧':']';
+  else result+=char;
+ }
+ return result;
+}
 function formal(source,dictionary){
  const known=new Set([...dictionary.keywords,...dictionary.types,...dictionary.builtins].map(word=>word.toUpperCase()));
  const builtins=new Set(dictionary.builtins.map(word=>word.toUpperCase()));
@@ -32,7 +53,7 @@ export function normalizeManualSyntax(html,dictionary){
  return html.replace(/<h([234])\b[^>]*>([\s\S]*?)<\/h\1>|<pre><code class="language-axiom">([\s\S]*?)<\/code><\/pre>/g,(match,rank,title,code)=>{
   if(rank){while(stack.length&&stack.at(-1).rank>=Number(rank))stack.pop();stack.push({rank:Number(rank),syntax:/^Синтаксис/.test(title.replace(/<[^>]*>/g,'').trim())});return match;}
   if(!stack.some(heading=>heading.syntax))return match;
-  const normalized=formal(decode(code),dictionary);
+  const normalized=normalizeOptionalNotation(formal(decode(code),dictionary));
   const lines=normalized.split('\n').filter(line=>line.trim());
   const separate=lines.length>1&&lines.every(line=>/^[A-Z][A-Z_0-9]*\s*(?:\(|STEP\b|<)/.test(line)&&!/^\s*(?:FOR|IF|WHILE|DO|SUB|FUNCTION|TYPE|SELECT|TRY|ELSE|CASE|END|LOOP|NEXT|RETURN)\b/.test(line));
   return (separate?lines:[normalized]).map(value=>'<pre><code class="language-axiom">'+escape(value)+'</code></pre>').join('\n');

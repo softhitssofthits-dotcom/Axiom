@@ -10,27 +10,27 @@
 ' 90
 ' 120
 ' 100
-DIM values(5 TO 8) AS INTEGER
-DIM mapped() AS INTEGER
+DIM values[5 TO 8] AS INTEGER
+DIM mapped[] AS INTEGER
 DIM factor AS INTEGER = 3
 
-values(5) = 10
-values(6) = 20
-values(7) = 30
-values(8) = 40
+values[5] = 10
+values[6] = 20
+values[7] = 30
+values[8] = 40
 
-mapped = ARRAYMAP(values, Multiply)
-PRINT LBOUND(mapped)
-PRINT UBOUND(mapped)
-PRINT ARRAYLENGTH(mapped)
-PRINT mapped(5)
-PRINT mapped(6)
-PRINT mapped(7)
-PRINT mapped(8)
+mapped[] = ARRAYMAP(values[], Multiply)
+PRINT LBOUND(mapped[])
+PRINT UBOUND(mapped[])
+PRINT ARRAYLENGTH(mapped[])
+PRINT mapped[5]
+PRINT mapped[6]
+PRINT mapped[7]
+PRINT mapped[8]
 
 factor = 10
-mapped = ARRAYMAP(values, Multiply)
-PRINT mapped(5)
+mapped[] = ARRAYMAP(values[], Multiply)
+PRINT mapped[5]
 
 FUNCTION Multiply(value AS INTEGER) AS INTEGER
     RETURN value * factor

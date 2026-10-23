@@ -14,6 +14,7 @@ public sealed partial class Binder
     public const string SingleModuleName = "<single>";
     private readonly IReadOnlyList<ModuleSymbol> _imports;
     private readonly TextLocation _moduleLocation;
+    private bool _usesSquareArraySyntax;
     private readonly Dictionary<string, UserDefinedTypeSymbol> _importedTypes = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _injectedFunctionNames = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _injectedVariableNames = new(StringComparer.OrdinalIgnoreCase);
@@ -124,6 +125,7 @@ public sealed partial class Binder
 
     private void DeclareModule(ProgramSyntax program)
     {
+        _usesSquareArraySyntax = program.UsesSquareArraySyntax;
         DeclareTypeNames(program.Members);
         PrepareTypeDeclarations(program.Members);
         DeclareFunctions(program.Members);

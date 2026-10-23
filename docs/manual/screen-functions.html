@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Функции состояния SCREEN — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
 <body data-page="screen-functions"><a class="skip-link" href="#main-content">Перейти к статье</a>
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
@@ -7,60 +7,55 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Функции состояния SCREEN</span></nav>
-<p class="eyebrow">Встроенные функции</p><h1 class="page-title">Функции состояния SCREEN</h1><p class="lead">Раздел экранных функций описывает <code>SCREENISACTIVE</code>, <code>SCREENMODE</code>, <code>SCREENWIDTH</code> и <code>SCREENHEIGHT</code>. Они позволяют узнать режим и размеры окна <code>SCREEN</code>; координаты рисования отдельно возвращает форма <code>POINT(selector)</code>.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-
+<p class="eyebrow">Встроенные функции</p><h1 class="page-title">Функции состояния SCREEN</h1><p class="lead">Программе иногда нужно узнать, что сейчас открыто и какого размера получилась поверхность: от этого зависят раскладка текста и координаты рисунка. Для этого служат <code>SCREENISACTIVE</code>, <code>SCREENMODE</code>, <code>SCREENWIDTH</code> и <code>SCREENHEIGHT</code>. Отдельно от них координату текущей графической позиции возвращает форма <code>POINT(selector)</code>.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
             <section class="article-section">
-                <h2>Где работают эти функции</h2>
-                <p>Функции читают состояние окна <code>SCREEN</code> и не открывают его.</p>
-                <p>Состояние текстового режима доступно тем же функциям, что и состояние графических режимов. Наличие графики проверяется отдельно.</p>
+                <h2>Что читают эти функции</h2>
+                <p>Функции читают состояние окна <code>SCREEN</code> и не открывают его. Состояние текстового режима доступно тем же функциям, что и состояние графических режимов, а наличие графики проверяется отдельно. Аргументов у этих четырёх функций нет.</p>
+                <p>Типы результатов различаются: <code>SCREENISACTIVE</code> возвращает <code>BOOLEAN</code>, а <code>SCREENMODE</code>, <code>SCREENWIDTH</code> и <code>SCREENHEIGHT</code> — <code>INTEGER</code>. Без открытой поверхности обычная среда возвращает <code>FALSE</code>, 0, 0 и 0 соответственно.</p>
             </section>
 
             <section class="article-section" id="screenisactive">
                 <h2>SCREENISACTIVE</h2>
-                <p>Встроенная функция <code>SCREENISACTIVE</code> проверяет, выбран ли графический режим <code>SCREEN</code>.</p>
+                <p><code>SCREENISACTIVE</code> проверяет, выбран ли графический режим <code>SCREEN</code>: для режимов <code>1..10</code> результат равен <code>TRUE</code>, для текстового режима <code>0</code> — <code>FALSE</code>.</p>
 <pre><code class="language-axiom">SCREENISACTIVE()</code></pre>
-                <p>Для режимов <code>1..10</code> результат равен <code>TRUE</code>.</p>
-                <p>Для текстового режима <code>0</code> результат равен <code>FALSE</code>.</p>
+                <p>Проверяется именно графический <code>SCREEN</code>: для <code>SCREEN</code> 0 и <code>CANVAS</code> результат <code>FALSE</code>.</p>
             </section>
 
             <section class="article-section" id="screenmode">
                 <h2>SCREENMODE</h2>
-                <p>Встроенная функция <code>SCREENMODE</code> сообщает номер выбранного режима.</p>
+                <p><code>SCREENMODE</code> сообщает номер выбранного режима. Текстовый режим имеет номер <code>0</code>; тот же ноль возвращается для холста.</p>
 <pre><code class="language-axiom">SCREENMODE()</code></pre>
-                <p>Текстовый режим имеет номер <code>0</code>.</p>
             </section>
 
             <section class="article-section" id="screenwidth">
                 <h2>SCREENWIDTH</h2>
-                <p>Встроенная функция <code>SCREENWIDTH</code> сообщает ширину окна в пикселях.</p>
+                <p><code>SCREENWIDTH</code> сообщает ширину окна в пикселях. После явного вызова <code>SCREEN 0</code> ширина равна <code>640</code>, а в адаптивном режиме <code>10</code> возвращается фактическая ширина выбранного окна.</p>
 <pre><code class="language-axiom">SCREENWIDTH()</code></pre>
-                <p>После явного вызова <code>SCREEN 0</code> ширина равна <code>640</code>.</p>
-                <p>В адаптивном режиме <code>10</code> возвращается фактическая ширина выбранного окна.</p>
+                <p>Функция читает текущую поверхность: после <code>CANVAS</code> она возвращает размеры холста в пикселях.</p>
             </section>
 
             <section class="article-section" id="screenheight">
                 <h2>SCREENHEIGHT</h2>
-                <p>Встроенная функция <code>SCREENHEIGHT</code> сообщает высоту окна в пикселях.</p>
+                <p><code>SCREENHEIGHT</code> сообщает высоту окна в пикселях. После явного вызова <code>SCREEN 0</code> высота равна <code>300</code>, а в адаптивном режиме <code>10</code> возвращается фактическая высота выбранного окна.</p>
 <pre><code class="language-axiom">SCREENHEIGHT()</code></pre>
-                <p>После явного вызова <code>SCREEN 0</code> высота равна <code>300</code>.</p>
-                <p>В адаптивном режиме <code>10</code> возвращается фактическая высота выбранного окна.</p>
+                <p>Как и <code>SCREENWIDTH</code>, функция читает текущую поверхность и после <code>CANVAS</code> сообщает размеры холста. Эти функции не требуют графического режима и не вызывают <code>MB3010</code> из-за отсутствия окна.</p>
             </section>
 
             <section class="article-section">
                 <h2>POINT(selector)</h2>
-                <p>Форма <code>POINT(selector)</code> читает координату текущей графической позиции. Её селекторы и ограничения описаны в <a href="graphics-primitives.html#point">справочнике POINT</a>.</p>
-                <p>На результат <code>POINT(selector)</code> влияют настройки <a href="view.html">VIEW</a> и <a href="window.html">WINDOW</a>.</p>
+                <p>Форма <code>POINT(selector)</code> читает координату текущей графической позиции. Её селекторы и ограничения описаны в <a href="graphics-primitives.html#point">справочнике POINT</a>. На результат влияют настройки <a href="view.html">VIEW</a> и <a href="window.html">WINDOW</a>.</p>
             </section>
 
             <section class="article-section">
-                <h2>Правила работы</h2>
-                <p>Адаптивное окно сохраняет пропорцию <code>16:9</code> и помещается в рабочую область монитора. Поэтому его ширину и высоту следует читать после вызова <code>SCREEN 10</code>.</p>
-                <p>Число текстовых столбцов и строк в этом режиме равно <code>SCREENWIDTH() \ 8</code> и <code>SCREENHEIGHT() \ 12</code>.</p>
+                <h2>Адаптивное окно режима 10</h2>
+                <p>Адаптивное окно сохраняет пропорцию <code>16:9</code> и помещается в рабочую область монитора, поэтому ширина и высота имеют смысл только после вызова <code>SCREEN 10</code>. Число текстовых столбцов и строк в этом режиме равно <code>SCREENWIDTH() \ 8</code> и <code>SCREENHEIGHT() \ 12</code>.</p>
             </section>
-<section class="article-section"><h2>Типы результатов и состояние холста</h2><p><code>SCREENISACTIVE</code> возвращает <code>BOOLEAN</code>; <code>SCREENMODE</code>, <code>SCREENWIDTH</code> и <code>SCREENHEIGHT</code> возвращают <code>INTEGER</code>. Аргументов у этих четырёх функций нет. Без открытой поверхности обычная среда возвращает <code>FALSE</code>, 0, 0 и 0 соответственно.</p>
-<p><code>SCREENISACTIVE</code> проверяет именно графический <code>SCREEN</code>: для <code>SCREEN</code> 0 и <code>CANVAS</code> результат <code>FALSE</code>. <code>SCREENMODE</code> возвращает 0 для текстового экрана и холста. <code>SCREENWIDTH</code> и <code>SCREENHEIGHT</code> читают текущую поверхность: после <code>CANVAS</code> они возвращают размеры холста в пикселях. Эти функции не требуют графического режима и не вызывают <code>MB3010</code> из-за отсутствия окна.</p></section>
 
+            <section class="article-section">
+                <h2>Диагностика</h2>
+                <p>Четыре функции состояния могут читать состояние без активной графики; отсутствие графического режима само по себе не вызывает ошибку выполнения. Для формы <code>POINT(selector)</code> действуют отдельные ошибки: <code>MB3007</code> при неверном селекторе и <code>MB3010</code> при отсутствии графического <code>SCREEN 1..10</code>.</p>
+            </section>
 
             <section class="article-section">
                 <h2>Пример</h2>
@@ -70,8 +65,23 @@ PRINT SCREENMODE()
 PRINT SCREENWIDTH()
 PRINT SCREENHEIGHT()
 SLEEP</code></pre>
-                <p>Программа печатает признак активности графики, номер режима и фактические размеры окна.</p>
+                <p>Программа печатает признак активности графики, номер режима и фактические размеры окна. Размеры читаются после выбора режима, поэтому соответствуют уже созданной поверхности.</p>
             </section>
+
+            <section class="article-section"><h2>Переполнение координат POINT</h2><p>Одноаргументная встроенная функция <code>POINT(number)</code> возвращает <code>INTEGER</code>. Если текущая логическая или преобразованная координата не помещается в этот тип, функция вызывает <code>MB3008</code>. Ошибку можно перехватить через <code>TRY...CATCH</code>; выход за диапазон не аварийно завершает служебный процесс.</p><pre><code class="language-axiom">SCREEN 1
+PSET (2147483648, 0), 1
+TRY
+    PRINT POINT(2)
+CATCH err
+    PRINT err.Code
+END TRY</code></pre><p>Программа печатает <code>MB3008</code>. Двухаргументная функция <code>POINT(x, y)</code> по-прежнему читает цвет пикселя.</p></section>
+
+            <section class="article-section"><h2>Короткие проверки функций</h2><p>До открытия экрана ширина и высота равны <code>0</code>. После <code>SCREEN 0</code> они равны <code>640</code> и <code>300</code>, а текст идёт в отдельное окно. Признак <code>SCREENISACTIVE</code> остаётся ложным, поскольку текстовый режим не включает графику.</p><ul>
+                    <li><a href="../../samples/functions/screenwidth/text_mode_state.axm">SCREENWIDTH: короткая проверка результата</a></li>
+                    <li><a href="../../samples/functions/screenheight/text_mode_state.axm">SCREENHEIGHT: короткая проверка результата</a></li>
+                    <li><a href="../../samples/functions/screenmode/text_mode_state.axm">SCREENMODE: короткая проверка результата</a></li>
+                    <li><a href="../../samples/functions/screenisactive/text_mode_state.axm">SCREENISACTIVE: короткая проверка результата</a></li>
+                </ul></section>
 
             <section class="article-section">
                 <h2>Запускаемые примеры</h2>
@@ -84,19 +94,6 @@ SLEEP</code></pre>
             </section>
 
             <section class="article-section">
-                <h2>Диагностика</h2>
-                <p>Четыре функции состояния могут читать состояние без активной графики; отсутствие графического режима само по себе не вызывает ошибку выполнения.</p>
-                <p>Для формы <code>POINT(selector)</code> действуют отдельные ошибки: <code>MB3007</code> при неверном селекторе и <code>MB3010</code> при отсутствии графического <code>SCREEN 1..10</code>.</p>
-            </section>
-
-            <section class="article-section"><h2>Переполнение координат POINT</h2><p>Одноаргументная встроенная функция <code>POINT(number)</code> возвращает <code>INTEGER</code>. Если текущая логическая или преобразованная координата не помещается в этот тип, функция вызывает <code>MB3008</code>. Ошибку можно перехватить через <code>TRY...CATCH</code>; выход за диапазон не аварийно завершает служебный процесс.</p><pre><code class="language-axiom">SCREEN 1
-PSET (2147483648, 0), 1
-TRY
-    PRINT POINT(2)
-CATCH err
-    PRINT err.Code
-END TRY</code></pre><p>Программа печатает <code>MB3008</code>. Двухаргументная функция <code>POINT(x, y)</code> по-прежнему читает цвет пикселя.</p></section>
-<section class="article-section">
                 <h2>См. также</h2>
                 <div class="link-list">
                     <a href="screen.html">Оператор SCREEN</a>
@@ -106,13 +103,6 @@ END TRY</code></pre><p>Программа печатает <code>MB3008</code>. 
                     <a href="window.html">Оператор WINDOW</a>
                 </div>
             </section>
-
-            <section class="article-section"><h2>Короткие проверки функций</h2><p>До открытия экрана ширина и высота равны <code>0</code>. После <code>SCREEN 0</code> они равны <code>640</code> и <code>300</code>, а текст идёт в отдельное окно. Признак <code>SCREENISACTIVE</code> остаётся ложным, поскольку текстовый режим не включает графику.</p><ul>
-                    <li><a href="../../samples/functions/screenwidth/text_mode_state.axm">SCREENWIDTH: короткая проверка результата</a></li>
-                    <li><a href="../../samples/functions/screenheight/text_mode_state.axm">SCREENHEIGHT: короткая проверка результата</a></li>
-                    <li><a href="../../samples/functions/screenmode/text_mode_state.axm">SCREENMODE: короткая проверка результата</a></li>
-                    <li><a href="../../samples/functions/screenisactive/text_mode_state.axm">SCREENISACTIVE: короткая проверка результата</a></li>
-                </ul></section>
 
 
 

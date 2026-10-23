@@ -271,14 +271,7 @@ PALETTE
     [Fact]
     public void Execute_PaletteUsingAppliesVisibleArrayValues()
     {
-        const string text = """
-SCREEN 1
-DIM colors(0 TO 2) AS INTEGER
-colors(0) = 16
-colors(1) = 196
-colors(2) = 46
-PALETTE USING colors
-""";
+        const string text = "SCREEN 1\r\nDIM colors[0 TO 2] AS INTEGER\r\ncolors[0] = 16\r\ncolors[1] = 196\r\ncolors[2] = 46\r\nPALETTE USING colors[]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -298,13 +291,7 @@ PALETTE USING colors
     [Fact]
     public void Execute_PaletteUsingRequiresGraphicsScreen()
     {
-        const string text = """
-DIM colors(0 TO 2) AS INTEGER
-colors(0) = 16
-colors(1) = 196
-colors(2) = 46
-PALETTE USING colors
-""";
+        const string text = "DIM colors[0 TO 2] AS INTEGER\r\ncolors[0] = 16\r\ncolors[1] = 196\r\ncolors[2] = 46\r\nPALETTE USING colors[]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -315,12 +302,7 @@ PALETTE USING colors
     [Fact]
     public void Execute_PaletteUsingUnallocatedArrayAbortsExecution()
     {
-        const string text = """
-SCREEN 1
-DIM colors() AS INTEGER
-PALETTE USING colors
-PRINT "after"
-""";
+        const string text = "SCREEN 1\r\nDIM colors[] AS INTEGER\r\nPALETTE USING colors[]\r\nPRINT \"after\"";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1304,33 +1286,7 @@ PRINT PMAP(1, 4)
     [Fact]
     public void Execute_GetAndPutSupportWindowCoordinatesAndPreservePosition()
     {
-        const string text = """
-SCREEN 1
-VIEW SCREEN (10, 10)-(30, 30)
-WINDOW SCREEN (100, 200)-(120, 220)
-DIM buffer(1 TO 2, 5 TO 6) AS INTEGER
-PSET (104, 205), 6
-PSET (105, 205), 9
-PSET (104, 206), 12
-PSET (105, 206), 15
-PRINT POINT(0)
-PRINT POINT(1)
-GET (105, 206)-(104, 205), buffer
-PRINT POINT(0)
-PRINT POINT(1)
-LINE (104, 205)-(105, 206), 0, BF
-PUT (104, 205), buffer
-PRINT POINT(0)
-PRINT POINT(1)
-PRINT buffer(1, 5)
-PRINT buffer(2, 5)
-PRINT buffer(1, 6)
-PRINT buffer(2, 6)
-PRINT POINT(104, 205)
-PRINT POINT(105, 205)
-PRINT POINT(104, 206)
-PRINT POINT(105, 206)
-""";
+        const string text = "SCREEN 1\r\nVIEW SCREEN (10, 10)-(30, 30)\r\nWINDOW SCREEN (100, 200)-(120, 220)\r\nDIM buffer[1 TO 2, 5 TO 6] AS INTEGER\r\nPSET (104, 205), 6\r\nPSET (105, 205), 9\r\nPSET (104, 206), 12\r\nPSET (105, 206), 15\r\nPRINT POINT(0)\r\nPRINT POINT(1)\r\nGET (105, 206)-(104, 205), buffer[]\r\nPRINT POINT(0)\r\nPRINT POINT(1)\r\nLINE (104, 205)-(105, 206), 0, BF\r\nPUT (104, 205), buffer[]\r\nPRINT POINT(0)\r\nPRINT POINT(1)\r\nPRINT buffer[1, 5]\r\nPRINT buffer[2, 5]\r\nPRINT buffer[1, 6]\r\nPRINT buffer[2, 6]\r\nPRINT POINT(104, 205)\r\nPRINT POINT(105, 205)\r\nPRINT POINT(104, 206)\r\nPRINT POINT(105, 206)";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1345,31 +1301,7 @@ PRINT POINT(105, 206)
     [Fact]
     public void Execute_GetAndPutSupportCanvasViewportAndCamera()
     {
-        const string text = """
-CANVAS 24, 18
-CLS RGB(0, 0, 0)
-VIEWPORT (10, 6)-(15, 11)
-CAMERA 100, 50
-DIM buffer(1 TO 2, 5 TO 6) AS INTEGER
-PSET (100, 50), 6
-PSET (101, 50), 9
-PSET (100, 51), 12
-PSET (101, 51), 15
-GET (100, 50)-(101, 51), buffer
-PRESET (100, 50), 0
-PRESET (101, 50), 0
-PRESET (100, 51), 0
-PRESET (101, 51), 0
-PUT (100, 50), buffer, PSET
-PRINT buffer(1, 5)
-PRINT buffer(2, 5)
-PRINT buffer(1, 6)
-PRINT buffer(2, 6)
-PRINT POINT(10, 6)
-PRINT POINT(11, 6)
-PRINT POINT(10, 7)
-PRINT POINT(11, 7)
-""";
+        const string text = "CANVAS 24, 18\r\nCLS RGB(0, 0, 0)\r\nVIEWPORT (10, 6)-(15, 11)\r\nCAMERA 100, 50\r\nDIM buffer[1 TO 2, 5 TO 6] AS INTEGER\r\nPSET (100, 50), 6\r\nPSET (101, 50), 9\r\nPSET (100, 51), 12\r\nPSET (101, 51), 15\r\nGET (100, 50)-(101, 51), buffer[]\r\nPRESET (100, 50), 0\r\nPRESET (101, 50), 0\r\nPRESET (100, 51), 0\r\nPRESET (101, 51), 0\r\nPUT (100, 50), buffer[], PSET\r\nPRINT buffer[1, 5]\r\nPRINT buffer[2, 5]\r\nPRINT buffer[1, 6]\r\nPRINT buffer[2, 6]\r\nPRINT POINT(10, 6)\r\nPRINT POINT(11, 6)\r\nPRINT POINT(10, 7)\r\nPRINT POINT(11, 7)";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1384,21 +1316,7 @@ PRINT POINT(11, 7)
     [Fact]
     public void Execute_PutSupportsRelativePresetAndNormalizesBufferValues()
     {
-        const string text = """
-SCREEN 1
-DIM buffer(1 TO 2, 1 TO 1) AS DOUBLE
-buffer(1, 1) = 1.9
-buffer(2, 1) = -2.2
-PUT (10, 10), buffer
-PRINT POINT(10, 10)
-PRINT POINT(11, 10)
-PSET (12, 10), 0
-PUT STEP (2, 0), buffer, PRESET
-PRINT POINT(14, 10)
-PRINT POINT(15, 10)
-PRINT POINT(0)
-PRINT POINT(1)
-""";
+        const string text = "SCREEN 1\r\nDIM buffer[1 TO 2, 1 TO 1] AS DOUBLE\r\nbuffer[1, 1] = 1.9\r\nbuffer[2, 1] = -2.2\r\nPUT (10, 10), buffer[]\r\nPRINT POINT(10, 10)\r\nPRINT POINT(11, 10)\r\nPSET (12, 10), 0\r\nPUT STEP (2, 0), buffer[], PRESET\r\nPRINT POINT(14, 10)\r\nPRINT POINT(15, 10)\r\nPRINT POINT(0)\r\nPRINT POINT(1)";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -1413,11 +1331,7 @@ PRINT POINT(1)
     [Fact]
     public void Execute_GetRejectsBufferShapeMismatch()
     {
-        const string text = """
-SCREEN 1
-DIM buffer(1 TO 3, 1 TO 1) AS INTEGER
-GET (10, 10)-(11, 11), buffer
-""";
+        const string text = "SCREEN 1\r\nDIM buffer[1 TO 3, 1 TO 1] AS INTEGER\r\nGET (10, 10)-(11, 11), buffer[]";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -1429,10 +1343,7 @@ GET (10, 10)-(11, 11), buffer
     [Fact]
     public void Execute_GetStillRequiresScreenOrCanvas()
     {
-        var (_, _, result) = ExecuteProgram("""
-DIM buffer(1 TO 2, 1 TO 2) AS INTEGER
-GET (0, 0)-(1, 1), buffer
-""");
+        var (_, _, result) = ExecuteProgram("DIM buffer[1 TO 2, 1 TO 2] AS INTEGER\r\nGET (0, 0)-(1, 1), buffer[]");
 
         Assert.False(result.Succeeded);
         Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");
@@ -1441,10 +1352,7 @@ GET (0, 0)-(1, 1), buffer
     [Fact]
     public void Execute_PutStillRequiresScreenOrCanvas()
     {
-        var (_, _, result) = ExecuteProgram("""
-DIM buffer(1 TO 2, 1 TO 1) AS INTEGER
-PUT (0, 0), buffer
-""");
+        var (_, _, result) = ExecuteProgram("DIM buffer[1 TO 2, 1 TO 1] AS INTEGER\r\nPUT (0, 0), buffer[]");
 
         Assert.False(result.Succeeded);
         Assert.Contains(result.Diagnostics, static diagnostic => diagnostic.Code == "MB3010");

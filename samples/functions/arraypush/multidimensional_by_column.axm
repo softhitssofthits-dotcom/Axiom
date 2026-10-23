@@ -1,18 +1,18 @@
 ' ARRAYPUSH по COLUMN добавляет по одному значению в каждую строку.
-DIM board(1 TO 2, 10 TO 11) AS INTEGER
-DIM newColumn(1 TO 2) AS INTEGER
+DIM board[1 TO 2, 10 TO 11] AS INTEGER
+DIM newColumn[1 TO 2] AS INTEGER
 
-board(1, 10) = 110
-board(1, 11) = 111
-board(2, 10) = 210
-board(2, 11) = 211
+board[1, 10] = 110
+board[1, 11] = 111
+board[2, 10] = 210
+board[2, 11] = 211
 
-newColumn(1) = 112
-newColumn(2) = 212
+newColumn[1] = 112
+newColumn[2] = 212
 
-ARRAYPUSH(board, newColumn, COLUMN)
+ARRAYPUSH(board[], newColumn[], COLUMN)
 
-PRINT LBOUND(board, COLUMN)
-PRINT UBOUND(board, COLUMN)
-PRINT board(1, 12)
-PRINT board(2, 12)
+PRINT LBOUND(board[], COLUMN)
+PRINT UBOUND(board[], COLUMN)
+PRINT board[1, 12]
+PRINT board[2, 12]

@@ -2,23 +2,23 @@
 ' Проверяются ARRAYCONTAINS, ARRAYINDEXOF, ARRAYLASTINDEXOF и ARRAYCOUNT,
 ' а также ARRAYFINDALL и ARRAYBINARYSEARCH на одномерных и двумерных массивах.
 
-DIM values(1 TO 360) AS INTEGER
-DIM board(1 TO 18, 1 TO 20) AS INTEGER
-DIM hit() AS INTEGER
-DIM lastHit() AS INTEGER
-DIM missingHit() AS INTEGER
-DIM hits(,) AS INTEGER
-DIM missingHits(,) AS INTEGER
+DIM values[1 TO 360] AS INTEGER
+DIM board[1 TO 18, 1 TO 20] AS INTEGER
+DIM hit[] AS INTEGER
+DIM lastHit[] AS INTEGER
+DIM missingHit[] AS INTEGER
+DIM hits[,] AS INTEGER
+DIM missingHits[,] AS INTEGER
 DIM checksum AS LONG = 0
 DIM flags AS LONG = 0
 
-FOR valueIndex = 1 TO ARRAYLENGTH(values)
-    values(valueIndex) = ((valueIndex - 1) \ 6) * 3
+FOR valueIndex = 1 TO ARRAYLENGTH(values[])
+    values[valueIndex] = ((valueIndex - 1) \ 6) * 3
 NEXT
 
 FOR rowIndex = 1 TO 18
     FOR columnIndex = 1 TO 20
-        board(rowIndex, columnIndex) = ((rowIndex * 3 + columnIndex * 2) MOD 11) * 5
+        board[rowIndex, columnIndex] = ((rowIndex * 3 + columnIndex * 2) MOD 11) * 5
     NEXT
 NEXT
 
@@ -27,37 +27,37 @@ FOR roundIndex = 1 TO 80
     DIM missingNeedle AS INTEGER = 1000 + roundIndex
     DIM binaryNeedle AS INTEGER = ((roundIndex * 5) MOD 60) * 3
 
-    IF ARRAYCONTAINS(board, needle) THEN
+    IF ARRAYCONTAINS(board[], needle) THEN
         flags = flags + 1
     END IF
 
-    IF NOT ARRAYCONTAINS(board, missingNeedle) THEN
+    IF NOT ARRAYCONTAINS(board[], missingNeedle) THEN
         flags = flags + 10
     END IF
 
-    checksum = checksum + ARRAYCOUNT(board, needle)
+    checksum = checksum + ARRAYCOUNT(board[], needle)
 
-    hit = ARRAYINDEXOF(board, needle)
-    lastHit = ARRAYLASTINDEXOF(board, needle)
-    missingHit = ARRAYINDEXOF(board, missingNeedle)
+    hit[] = ARRAYINDEXOF(board[], needle)
+    lastHit[] = ARRAYLASTINDEXOF(board[], needle)
+    missingHit[] = ARRAYINDEXOF(board[], missingNeedle)
 
-    checksum = checksum + hit(1) * 13 + hit(2)
-    checksum = checksum + lastHit(1) * 17 + lastHit(2)
-    checksum = checksum + LBOUND(missingHit) + UBOUND(missingHit)
+    checksum = checksum + hit[1] * 13 + hit[2]
+    checksum = checksum + lastHit[1] * 17 + lastHit[2]
+    checksum = checksum + LBOUND(missingHit[]) + UBOUND(missingHit[])
 
-    hits = ARRAYFINDALL(board, needle)
-    missingHits = ARRAYFINDALL(board, missingNeedle)
+    hits[] = ARRAYFINDALL(board[], needle)
+    missingHits[] = ARRAYFINDALL(board[], missingNeedle)
 
-    checksum = checksum + UBOUND(hits, 1) * 19 + UBOUND(hits, 2)
-    checksum = checksum + LBOUND(missingHits, 1) + UBOUND(missingHits, 1)
-    checksum = checksum + LBOUND(missingHits, 2) + UBOUND(missingHits, 2)
+    checksum = checksum + UBOUND(hits[], 1) * 19 + UBOUND(hits[], 2)
+    checksum = checksum + LBOUND(missingHits[], 1) + UBOUND(missingHits[], 1)
+    checksum = checksum + LBOUND(missingHits[], 2) + UBOUND(missingHits[], 2)
 
-    checksum = checksum + ARRAYBINARYSEARCH(values, binaryNeedle)
-    checksum = checksum + ARRAYBINARYSEARCH(values, -1)
+    checksum = checksum + ARRAYBINARYSEARCH(values[], binaryNeedle)
+    checksum = checksum + ARRAYBINARYSEARCH(values[], -1)
 NEXT
 
 PRINT checksum
 PRINT flags
-PRINT ARRAYBINARYSEARCH(values, 90)
-PRINT ARRAYCOUNT(board, 25)
-PRINT ARRAYCONTAINS(board, 12345)
+PRINT ARRAYBINARYSEARCH(values[], 90)
+PRINT ARRAYCOUNT(board[], 25)
+PRINT ARRAYCONTAINS(board[], 12345)

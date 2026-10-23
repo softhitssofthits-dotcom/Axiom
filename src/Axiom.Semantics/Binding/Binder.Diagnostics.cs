@@ -274,7 +274,47 @@ public sealed partial class Binder
     {
         _diagnostics.Report(
             DiagnosticCodes.TypeMismatch,
-            $"Массив '{name}' нельзя инициализировать значением при объявлении. Используйте REDIM и присваивание элементов.",
+            $"Массив '{name}' с заданными границами нельзя инициализировать значением при объявлении. Используйте пустые скобки или присваивание элементов.",
+            location);
+    }
+
+    private void ReportArrayNameRequiresBrackets(string name, TextLocation location)
+    {
+        _diagnostics.Report(
+            DiagnosticCodes.TypeMismatch,
+            $"Массив '{name}' в квадратном синтаксисе нужно записывать с суффиксом [] или индексами в [].",
+            location);
+    }
+
+    private void ReportArrayParenthesesForbidden(string name, TextLocation location)
+    {
+        _diagnostics.Report(
+            DiagnosticCodes.TypeMismatch,
+            $"Обращение к массиву '{name}' через круглые скобки запрещено; используйте [] или индексы в квадратных скобках.",
+            location);
+    }
+
+    private void ReportArrayTypeSuffixForbidden(TextLocation location)
+    {
+        _diagnostics.Report(
+            DiagnosticCodes.TypeMismatch,
+            "В строгом квадратном синтаксисе суффикс массива после AS должен быть записан после имени: используйте имя[] AS тип.",
+            location);
+    }
+
+    private void ReportAnonymousArrayTypeRequiresBrackets(TextLocation location)
+    {
+        _diagnostics.Report(
+            DiagnosticCodes.TypeMismatch,
+            "Массивный тип без имени записывается с квадратными скобками: тип[] или тип[,], а не с круглыми скобками.",
+            location);
+    }
+
+    private void ReportArrayAssignmentRequiresFullIndices(TextLocation location)
+    {
+        _diagnostics.Report(
+            DiagnosticCodes.TypeMismatch,
+            "Присваивание элемента массива требует полных индексов без среза; для всего массива используйте [].",
             location);
     }
 

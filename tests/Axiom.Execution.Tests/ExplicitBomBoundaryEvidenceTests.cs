@@ -39,11 +39,11 @@ public sealed class ExplicitBomBoundaryEvidenceTests
                     PRINT err.Code
                 END TRY
                 TRY
-                    DIM lines() AS STRING
-                    lines = READALLLINES("{{path}}", encoding)
-                    PRINT ARRAYLENGTH(lines)
-                    IF ARRAYLENGTH(lines) > 0 THEN
-                        PRINT lines(1) = "{{expected}}"
+                    DIM lines[] AS STRING
+                    lines[] = READALLLINES("{{path}}", encoding)
+                    PRINT ARRAYLENGTH(lines[])
+                    IF ARRAYLENGTH(lines[]) > 0 THEN
+                        PRINT lines[1] = "{{expected}}"
                     END IF
                 CATCH err
                     PRINT err.Code

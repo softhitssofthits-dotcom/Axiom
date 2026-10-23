@@ -15,26 +15,40 @@ public sealed partial class Binder
 
             foreach (var declarator in declaration.Declarators)
             {
+                var hasValidArrayDeclarator = ValidateArrayDeclaratorBrackets(declarator.Identifier.Text, declarator.ArrayBounds);
                 var arrayRank = declarator.ArrayBounds?.Rank ?? 0;
-                var variableType = declarator.ArrayBounds is null
-                    ? type
-                    : BindArrayVariableType(type, arrayRank);
+                var elementType = declaration.TypeClause is null && type is ArrayTypeSymbol inferredArray
+                    ? inferredArray.ElementType : type;
+                var variableType = !hasValidArrayDeclarator
+                    ? TypeSymbol.Error
+                    : declarator.ArrayBounds is null
+                        ? type
+                        : BindArrayVariableType(elementType, arrayRank);
+                if (_usesSquareArraySyntax && variableType is ArrayTypeSymbol && declarator.ArrayBounds is null)
+                {
+                    ReportArrayNameRequiresBrackets(declarator.Identifier.Text, declarator.Identifier.Location);
+                }
+
                 var variable = new VariableSymbol(
                     declarator.Identifier.Text,
                     variableType,
                     isReadOnly: false,
                     isGlobal: _currentFunction is null,
-                    fixedStringLength: fixedStringLength);
+                    fixedStringLength: variableType == TypeSymbol.Error ? null : fixedStringLength);
 
                 TryDeclareScopedVariable(variable, declarator.Identifier.Location);
 
                 var arrayBounds = BindDeclaratorArrayBounds(declarator);
                 var declaratorInitializer = initializer;
 
-                if (declarator.ArrayBounds is not null && declaratorInitializer is not null)
+                if (declarator.ArrayBounds is { IsDynamic: false } && declaratorInitializer is not null)
                 {
                     ReportArrayInitializerNotSupported(declarator.Identifier.Text, declarator.Identifier.Location);
                     declaratorInitializer = null;
+                }
+                else if (declaratorInitializer is not null && variableType != TypeSymbol.Error)
+                {
+                    declaratorInitializer = ApplyExpectedType(declaration.Initializer!, declaratorInitializer, variableType);
                 }
 
                 declarations.Add(new BoundVariableDeclarationStatement(GetLocation(statement), variable, declaratorInitializer, arrayBounds, declarator.Identifier.Location));
@@ -50,6 +64,13 @@ public sealed partial class Binder
     {
         if (declaration.TypeClause is not null)
         {
+            if (_usesSquareArraySyntax && declaration.TypeClause.Type is ArrayTypeSyntax suffix)
+            {
+                ReportArrayTypeSuffixForbidden(suffix.OpenDelimiterToken.Location);
+                var invalidInitializer = declaration.Initializer is null ? null : BindExpression(declaration.Initializer);
+                return (TypeSymbol.Error, invalidInitializer, null);
+            }
+
             if (!TryResolveFixedStringLength(
                     declaration.Declarators[0].Identifier.Text,
                     declaration.TypeClause,
@@ -64,10 +85,6 @@ public sealed partial class Binder
             if (declaration.Initializer is not null)
             {
                 explicitInitializer = BindExpression(declaration.Initializer);
-                if (explicitType != TypeSymbol.Error)
-                {
-                    explicitInitializer = ApplyExpectedType(declaration.Initializer, explicitInitializer, explicitType);
-                }
             }
 
             return (explicitType, explicitInitializer, fixedStringLength);
@@ -90,9 +107,37 @@ public sealed partial class Binder
         var declarationName = string.IsNullOrWhiteSpace(declaration.Identifier.Text)
             ? statement.ConstKeyword.Text
             : declaration.Identifier.Text;
-        var type = ReportUnsupportedFixedStringType(declaration.TypeClause, declarationName)
-            ? TypeSymbol.Error
-            : ResolveType(declaration.TypeClause);
+        TypeSymbol type;
+        if (_usesSquareArraySyntax && declaration.TypeClause.Type is ArrayTypeSyntax suffix)
+        {
+            ReportArrayTypeSuffixForbidden(suffix.OpenDelimiterToken.Location);
+            type = TypeSymbol.Error;
+        }
+        else
+        {
+            type = ReportUnsupportedFixedStringType(declaration.TypeClause, declarationName)
+                ? TypeSymbol.Error
+                : ResolveType(declaration.TypeClause);
+        }
+
+        if (declaration.ArrayBounds is { } bounds)
+        {
+            if (!ValidateArrayDeclaratorBrackets(declarationName, bounds) || !bounds.IsDynamic)
+            {
+                if (!bounds.IsDynamic)
+                {
+                    ReportInvalidArrayBoundsForm(declarationName, bounds.OpenDelimiterToken.Location,
+                        "В CONST указывается только число измерений: [] или [,].");
+                }
+
+                type = TypeSymbol.Error;
+            }
+            else
+            {
+                type = ArrayTypeSymbol.Create(type, bounds.Rank);
+            }
+        }
+
         var initializer = BindExpression(declaration.Initializer);
         if (type != TypeSymbol.Error)
         {
@@ -123,7 +168,7 @@ public sealed partial class Binder
 
     private BoundStatement BindAssignmentStatement(AssignmentStatementSyntax statement)
     {
-        var target = BindAssignableTarget(statement.Target);
+        var target = BindAssignableTarget(statement.Target, reportInvalidTarget: true);
         var variable = TryGetAssignedVariable(target);
 
         if (variable is not null && variable.IsReadOnly)
@@ -195,6 +240,12 @@ public sealed partial class Binder
 
     private BoundStatement BindEraseStatement(EraseStatementSyntax statement)
     {
+        if (_usesSquareArraySyntax && statement.Target is not ArrayAccessExpressionSyntax { IsWholeArray: true })
+        {
+            Report(Axiom.Core.DiagnosticCodes.TypeMismatch,
+                "В ERASE массив целиком нужно обозначить суффиксом [] после имени или поля.", GetLocation(statement.Target));
+        }
+
         var target = BindExpression(statement.Target);
         var variable = TryGetAssignedVariable(target);
         var displayName = GetArrayTargetDisplayName(target);
@@ -219,7 +270,8 @@ public sealed partial class Binder
 
     private BoundStatement BindRedimStatement(RedimStatementSyntax statement)
     {
-        var target = BindExpression(statement.Target);
+        var target = BindArrayTarget(statement.Target);
+        ValidateArrayDeclaratorBrackets(GetArrayTargetDisplayName(target), statement.ArrayBounds);
         var variable = TryGetAssignedVariable(target);
         var displayName = GetArrayTargetDisplayName(target);
         var field = target as BoundFieldAccessExpression;
@@ -241,7 +293,7 @@ public sealed partial class Binder
         if (target.Type is ArrayTypeSymbol arrayType
             && statement.ArrayBounds.Rank != arrayType.Rank)
         {
-            ReportWrongArgumentCount(displayName, arrayType.Rank, statement.ArrayBounds.Rank, statement.ArrayBounds.OpenParenToken.Location);
+            ReportWrongArgumentCount(displayName, arrayType.Rank, statement.ArrayBounds.Rank, statement.ArrayBounds.OpenDelimiterToken.Location);
         }
 
         var arrayBounds = statement.ArrayBounds.Dimensions
@@ -261,7 +313,7 @@ public sealed partial class Binder
         {
             ReportInvalidArrayBoundsForm(
                 declarator.Identifier.Text,
-                declarator.ArrayBounds.OpenParenToken.Location,
+                declarator.ArrayBounds.OpenDelimiterToken.Location,
                 "Либо укажите границы для каждого измерения, либо оставьте все измерения пустыми.");
             return [];
         }

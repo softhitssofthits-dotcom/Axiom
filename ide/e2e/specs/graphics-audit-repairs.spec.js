@@ -72,7 +72,7 @@ module.exports = [
   }},
   {id:'graphics-repair-bulk-put',name:'Пакетная запись PUT на настоящем CANVAS',async fn({S,C}) {
     await S.launch(); const dir=testWorkspace('graphics-repair-bulk-put');
-    const file=writeAxm(dir,'put.axm','CANVAS 128,128\nDIM b(0 TO 127,0 TO 127) AS INTEGER\nFOR x=0 TO 127\nFOR y=0 TO 127\nb(x,y)=12\nNEXT\nNEXT\nBEGINFRAME\nPUT (0,0),b,PSET\nPRESENT\nDIM answer AS STRING\nINPUT answer\n');
+    const file=writeAxm(dir,'put.axm','CANVAS 128,128\nDIM b[0 TO 127,0 TO 127] AS INTEGER\nFOR x=0 TO 127\nFOR y=0 TO 127\nb[x,y]=12\nNEXT\nNEXT\nBEGINFRAME\nPUT (0,0),b[],PSET\nPRESENT\nDIM answer AS STRING\nINPUT answer\n');
     await S.page.evaluate(async p=>{await window.__ide.openFile(p);await window.__ide.run();},file);
     await S.page.waitForFunction(()=>window.__ide.execution.inputRequestId!==null&&window.__ide.execution.surface?.windowVisible===true,null,{timeout:15000});
     const surface=await S.page.evaluate(()=>window.__ide.execution.surface);

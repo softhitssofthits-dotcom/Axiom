@@ -1,8 +1,8 @@
 ' Пример показывает объявление одномерного массива через DIM
 ' и обращение к отдельному элементу.
 ' Ожидается вывод: 20.
-DIM numbers(1 TO 3) AS INTEGER
-numbers(1) = 10
-numbers(2) = 20
-numbers(3) = 30
-PRINT numbers(2)
+DIM numbers[1 TO 3] AS INTEGER
+numbers[1] = 10
+numbers[2] = 20
+numbers[3] = 30
+PRINT numbers[2]

@@ -7,6 +7,73 @@ async function open(S, source, tag) {
   return file;
 }
 module.exports = [
+  { id: 'language-array-colors-hover', name: 'Массивы отличаются от переменных и функций во всех темах и подсказках', async fn({S,C}) {
+    const source = 'DIM grade AS INTEGER = 3\nDIM fruits[] AS STRING = SPLIT("яблоко,банан", ",")\nDIM basket[] = fruits[]\nDIM grid[-1 TO 0, 7 TO 8] AS INTEGER\nPRINT grade, basket[2]\nPRINT ARRAYLENGTH(MakeFruits())\nFUNCTION MakeFruits() AS STRING[]\nRETURN fruits[]\nEND FUNCTION\n';
+    await open(S, source, 'array-colors-hover');
+    await S.page.evaluate(async()=>{const i=window.__ide; await i.check(false);});
+    C.ok(await S.page.evaluate(()=>!window.__ide._lastDiagnostics.some(d=>d.severity==='error')), 'Квадратные массивы и круглые вызовы различаются компилятором');
+    for (const theme of ['dark','light','basic','borland']) {
+      const palette = await S.page.evaluate(theme=>{window.__ide.setTheme(theme);return window.AxiomThemes.semanticTokenColors(theme);},theme);
+      C.eq(new Set([palette.variable,palette.array,palette.function]).size,3,'Три разных цвета: '+theme);
+      for (const [word,category] of [['grade','variable'],['fruits','array'],['basket','array'],['grid','array'],['MakeFruits','function']]) {
+        await S.page.waitForFunction(({word,hex})=>{
+          const rgb='rgb('+[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)).join(', ')+')';
+          const spans=[...document.querySelectorAll('.view-lines span')].filter(s=>s.textContent.trim()===word);
+          return spans.length>0&&spans.every(s=>getComputedStyle(s).color===rgb);
+        },{word,hex:palette[category]},{timeout:10000});
+        C.ok(true,word+' имеет цвет '+category+' в '+theme);
+      }
+    }
+    for(const locale of ['ru','en']) {
+      await S.page.evaluate(locale=>window.__ide.setLanguage(locale),locale);
+      for(const [lineNumber,column,rank,type] of [[2,5,1,'STRING'],[3,5,1,'STRING'],[4,5,2,'INTEGER'],[8,8,1,'STRING']]) {
+        const text=await S.page.evaluate(async position=>{
+          const h=await window.LangFeatures._hoverProvider.provideHover(window.__ide.editor.getModel(),position);
+          return h?.contents.map(c=>c.value).join('\n')||'';
+        },{lineNumber,column});
+        C.ok(text.includes(locale==='ru'?'— массив':'— array')&&text.includes((locale==='ru'?'Тип элементов':'Element type')+': `'+type+'`')&&text.includes((locale==='ru'?'Измерений':'Dimensions')+': '+rank),'Подсказка массива, строка '+lineNumber+', '+locale);
+      }
+    }
+    await S.page.evaluate(()=>window.__ide.run()); await S.waitIdle();
+    C.eq(await S.page.evaluate(()=>window.__ide.execution.outputText.replace(/\r/g,'').trim()),'3 банан\n2','Массив целиком и вызов функции выполняются');
+    await S.page.evaluate(()=>{window.__ide.setLanguage('ru');window.__ide.setTheme('dark');});
+    await S.page.waitForFunction(()=>['fruits','basket','grid'].every(word=>[...document.querySelectorAll('.view-lines span')].some(s=>s.textContent.trim()===word&&getComputedStyle(s).color==='rgb(185, 163, 227)')));
+    await S.page.evaluate(async()=>{const e=window.__ide.editor;e.setPosition({lineNumber:4,column:6});e.focus();await e.getAction('editor.action.showHover').run();});
+    await S.page.waitForFunction(()=>[...document.querySelectorAll('.monaco-hover')].some(e=>e.textContent.includes('Тип элементов: INTEGER')&&e.textContent.includes('Измерений: 2')));
+    C.ok(true,'Настоящее окно подсказки показывает тип элементов и число измерений');
+    await S.screenshot('array-colors-hover');
+  } },
+  { id: 'language-array-initializers', name: 'Массивные инициализаторы: явный и выведенный тип, форматирование, подсветка и запуск', async fn({ S, C }) {
+    const source = 'DIM inferredFruits[] = SPLIT("яблоко,банан", ",")\nDIM typedFruits[] AS STRING = inferredFruits[]\nPRINT typedFruits[2]\ntypedFruits[2] = "апельсин"\nPRINT inferredFruits[2]\n';
+    await open(S, source, 'array-initializers');
+    await S.page.evaluate(() => window.__ide.setLanguage('ru'));
+    for (const style of ['Classic', 'Modern']) {
+      await S.page.evaluate(async ({ source, style }) => {
+        const i = window.__ide;
+        i.editor.getModel().setValue(source);
+        i.settings.formattingStyle = style;
+        await i.formatWholeDocument('array-initializers');
+        await i.check(false);
+      }, { source, style });
+      C.ok(await S.page.evaluate(() => !window.__ide._lastDiagnostics.some(d => d.severity === 'error')), 'Обе формы проверяются в стиле ' + style);
+      for (const lineNumber of [1, 2]) {
+        const hover = await S.page.evaluate(async lineNumber => {
+          const result = await window.LangFeatures._hoverProvider.provideHover(window.__ide.editor.getModel(), { lineNumber, column: 5 });
+          return result?.contents.map(item => item.value).join('\n') || '';
+        }, lineNumber);
+        C.ok(/STRING\s*\[\s*\]/i.test(hover), 'Тип STRING[] у объявления строки ' + lineNumber + ', ' + style);
+      }
+      const tokens = await S.page.evaluate(() => {
+        const i = window.__ide;
+        return i.monaco.editor.tokenize(i.editor.getValue(), 'axiom');
+      });
+      C.ok(tokens[0].some(t => t.type === 'keyword.axiom') && tokens[0].some(t => t.type === 'support.function.axiom'), 'DIM и SPLIT имеют свои категории, ' + style);
+      C.ok(tokens[1].some(t => t.type === 'type.axiom'), 'STRING имеет категорию типа, ' + style);
+      await S.page.evaluate(() => window.__ide.run());
+      await S.waitIdle();
+      C.eq(await S.page.evaluate(() => window.__ide.execution.outputText.replace(/\r/g, '').trim()), 'банан\nапельсин', 'Запуск и общий массив, ' + style);
+    }
+  } },
   { id: 'format-smooth-two-styles', name: 'SMOOTH форматируется через меню и Enter в Classic и Modern', async fn({ S, C }) {
     const source = 'smooth on\nsMoOtH oFf\nprint "smooth on"\n\' smooth off\n';
     await open(S, source, 'format-smooth');
@@ -153,11 +220,11 @@ module.exports = [
   { id: 'language-hover-symbol-types', name: 'Подсказки Monaco показывают типы компилятора, сигнатуры и перегрузки', async fn({ S, C }) {
     const source = [
       'DIM price AS DECIMAL = -10.5', 'DIM title AS STRING = "Цена"',
-      'DIM grid(1 TO 2, 1 TO 3) AS INTEGER', 'CONST limit AS INTEGER = 2',
+      'DIM grid[1 TO 2, 1 TO 3] AS INTEGER', 'CONST limit AS INTEGER = 2',
       'TYPE Product', '    Price AS DECIMAL', 'END TYPE', 'DIM item AS Product',
       'FUNCTION Twice(BYREF value AS DECIMAL) AS DECIMAL', '    RETURN value * 2', 'END FUNCTION',
       'SUB Show(value AS STRING)', '    PRINT value', 'END SUB',
-      'PRINT price, title, grid(1, 1), limit, item.Price, Twice(price), LEN(title)',
+      'PRINT price, title, grid[1, 1], limit, item.Price, Twice(price), LEN(title)',
       'PRINT $"Цена {price}"', 'PRINT "price LEN"', "' price LEN", 'REM price LEN',
     ].join('\n');
     await open(S, source, 'hover-symbol-types');
@@ -174,7 +241,7 @@ module.exports = [
     C.contains(await hover('price AS'), 'Тип: `DECIMAL`', 'DECIMAL в объявлении');
     C.contains(await hover('price, title'), 'Тип: `DECIMAL`', 'DECIMAL при использовании');
     C.contains(await hover('title, grid'), 'Тип: `STRING`', 'Строковая переменная');
-    C.contains(await hover('grid(1, 1)'), 'Тип: `INTEGER(,)`', 'Ранг массива');
+    C.contains(await hover('grid[1, 1]'), 'Тип: `INTEGER[,]`', 'Ранг массива');
     C.contains(await hover('limit, item'), 'константа', 'Категория CONST');
     C.contains(await hover('value * 2'), 'Тип: `DECIMAL`', 'Параметр функции');
     C.contains(await hover('value\nEND SUB'), 'Тип: `STRING`', 'Одноимённый параметр другой процедуры');

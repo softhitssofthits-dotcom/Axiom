@@ -113,7 +113,8 @@ public sealed partial class BoundProgramLowerer
     {
         if (declaration.Initializer is not null)
         {
-            ReportUnsupported(declaration, "инициализатор массива");
+            LowerExpression(declaration.Initializer, instructions);
+            instructions.Add(LoweredInstruction.StoreVariable(declaration.Location, declaration.Variable));
             return;
         }
 

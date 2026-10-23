@@ -1,0 +1,21 @@
+' Удаление последней оценки возвращает её значение.
+' После удаления всех оценок массив остаётся выделенным с границами 1 TO 0.
+' Ожидаемый вывод:
+' 5
+' 4
+' 3
+' 1
+' 0
+' 0
+' TRUE
+DIM grades[-1 TO 1] AS INTEGER
+grades[-1] = 3
+grades[0] = 4
+grades[1] = 5
+PRINT ARRAYREMOVE(grades[], UBOUND(grades[]))
+PRINT ARRAYREMOVE(grades[], UBOUND(grades[]), 1)
+PRINT ARRAYREMOVE(grades[], UBOUND(grades[]))
+PRINT LBOUND(grades[])
+PRINT UBOUND(grades[])
+PRINT ARRAYLENGTH(grades[])
+PRINT ARRAYISALLOCATED(grades[])

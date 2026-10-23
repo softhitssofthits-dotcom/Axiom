@@ -6,7 +6,7 @@ namespace Axiom.Semantics;
 public sealed record EditorIdentifier(string Name, TextSpan Span);
 public sealed record EditorHoverInfo(int Start, int Length, string Name, string Kind,
     string? Type = null, string? Signature = null, IReadOnlyList<string>? Fields = null,
-    IReadOnlyList<string>? Parameters = null);
+    IReadOnlyList<string>? Parameters = null, string? ElementType = null, int? ArrayRank = null);
 
 public sealed partial class Binder
 {
@@ -23,15 +23,18 @@ public sealed partial class Binder
         var items = new Dictionary<int, EditorHoverInfo>();
 
         void Add(TextSpan span, string name, string kind, string? type = null,
-            string? signature = null, IReadOnlyList<string>? fields = null, IReadOnlyList<string>? parameters = null)
+            string? signature = null, IReadOnlyList<string>? fields = null, IReadOnlyList<string>? parameters = null,
+            TypeSymbol? valueType = null)
         {
             if (span.Length == 0 || type == TypeSymbol.Error.Name) return;
-            items[span.Start] = new(span.Start, span.Length, name, kind, type, signature, fields, parameters);
+            var array = valueType as ArrayTypeSymbol;
+            items[span.Start] = new(span.Start, span.Length, name, kind, type, signature, fields, parameters,
+                array?.ElementType.Name, array?.Rank);
         }
         void Variable(TextSpan span, VariableSymbol symbol) => Add(span, symbol.Name,
             symbol is ParameterSymbol ? "parameter" :
             symbol.Type == TypeSymbol.RuntimeError && symbol.IsReadOnly ? "errorVariable" :
-            symbol.IsReadOnly ? "constant" : "variable", symbol.Type.Name);
+            symbol.IsReadOnly ? "constant" : "variable", symbol.Type.Name, valueType: symbol.Type);
         void Function(TextSpan span, FunctionSymbol symbol)
         {
             if (symbol.IsBuiltIn) return; // Все перегрузки берутся из реестра языка.
@@ -53,7 +56,7 @@ public sealed partial class Binder
                     Variable(variable.Location.Span, variable.Variable);
                     break;
                 case BoundFieldAccessExpression field:
-                    Add(field.Location.Span, field.Field.Name, "field", field.Type.Name);
+                    Add(field.Location.Span, field.Field.Name, "field", field.Type.Name, valueType: field.Type);
                     break;
                 case BoundFunctionExpression function:
                     Function(function.Location.Span, function.Function);
@@ -119,7 +122,7 @@ public sealed partial class Binder
                 foreach (var declaration in fieldSyntax.Declarators)
                 {
                     var field = type.Fields.FirstOrDefault(f => f.Name.Equals(declaration.Identifier.Text, StringComparison.OrdinalIgnoreCase));
-                    if (field is not null) Add(declaration.Identifier.Span, field.Name, "field", field.Type.Name);
+                    if (field is not null) Add(declaration.Identifier.Span, field.Name, "field", field.Type.Name, valueType: field.Type);
                 }
         }
         foreach (var (member, symbol) in binder._declaredFunctions)

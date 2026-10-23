@@ -6,12 +6,12 @@ public sealed class PlannedSyntaxEvidenceTests
     {
         var forms = new (string Name, string Source)[]
         {
-            ("array-literal", "DIM values() AS INTEGER = {1, 2}\nPRINT values(1)"),
-            ("for-each", "DIM values(1 TO 2) AS INTEGER\nFOR EACH value IN values\nPRINT value\nNEXT value"),
+            ("array-literal", "DIM values[] AS INTEGER = {1, 2}\nPRINT values[1]"),
+            ("for-each", "DIM values[1 TO 2] AS INTEGER\nFOR EACH value IN values[]\nPRINT value\nNEXT value"),
             ("multiline-string", "DIM text AS STRING = \"\"\"первая\nвторая\"\"\"\nPRINT text"),
-            ("dictionary-literal", "DIM ages() = {\"Алиса\": 25}\nPRINT ages(\"Алиса\")"),
+            ("dictionary-literal", "DIM ages[] = {\"Алиса\": 25}\nPRINT ages[\"Алиса\"]"),
             ("default-parameter", "FUNCTION Plus(value AS INTEGER, extra AS INTEGER = 1) AS INTEGER\nRETURN value + extra\nEND FUNCTION\nPRINT Plus(2)"),
-            ("lambda", "DIM values(1 TO 2) AS INTEGER\nDIM result() AS INTEGER\nresult = ARRAYMAP(values, x => x * 2)"),
+            ("lambda", "DIM values[1 TO 2] AS INTEGER\nDIM result[] AS INTEGER\nresult[] = ARRAYMAP(values[], x => x * 2)"),
             ("data", "DATA 1, 2"),
             ("read", "DIM value AS INTEGER\nREAD value"),
             ("restore", "RESTORE"),
@@ -40,8 +40,8 @@ public sealed class PlannedSyntaxEvidenceTests
     {
         var cases = new (string Source, string[] Expected)[]
         {
-            ("DIM values(-1 TO 1) AS INTEGER\nvalues(-1) = 10\nvalues(0) = 20\nvalues(1) = 30\nFOR index = LBOUND(values) TO UBOUND(values)\nPRINT values(index)\nNEXT index", ["10", "20", "30"]),
-            ("DIM values(1 TO 2) AS INTEGER\nvalues(1) = 3\nvalues(2) = 7\nDIM result() AS INTEGER\nresult = ARRAYMAP(values, Twice)\nPRINT result(1)\nPRINT result(2)\nFUNCTION Twice(value AS INTEGER) AS INTEGER\nRETURN value * 2\nEND FUNCTION", ["6", "14"]),
+            ("DIM values[-1 TO 1] AS INTEGER\nvalues[-1] = 10\nvalues[0] = 20\nvalues[1] = 30\nFOR index = LBOUND(values[]) TO UBOUND(values[])\nPRINT values[index]\nNEXT index", ["10", "20", "30"]),
+            ("DIM values[1 TO 2] AS INTEGER\nvalues[1] = 3\nvalues[2] = 7\nDIM result[] AS INTEGER\nresult[] = ARRAYMAP(values[], Twice)\nPRINT result[1]\nPRINT result[2]\nFUNCTION Twice(value AS INTEGER) AS INTEGER\nRETURN value * 2\nEND FUNCTION", ["6", "14"]),
             ("FUNCTION Plus(value AS INTEGER, extra AS INTEGER) AS INTEGER\nRETURN value + extra\nEND FUNCTION\nFUNCTION PlusOne(value AS INTEGER) AS INTEGER\nRETURN Plus(value, 1)\nEND FUNCTION\nPRINT PlusOne(2)\nPRINT Plus(2, 4)\nPRINT \"первая\" + CHRW(10) + \"вторая\"", ["3", "6", "первая\nвторая"])
         };
 

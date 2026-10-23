@@ -3,19 +3,19 @@
 ' код MB3014
 ' новое представление 0
 
-DIM grid(1 TO 3, 1 TO 3) AS INTEGER
-grid(2, 2) = 7
+DIM grid[1 TO 3, 1 TO 3] AS INTEGER
+grid[2, 2] = 7
 
-DIM rowView() AS INTEGER
-rowView = grid(2)           ' Представление строки 2.
+DIM rowView[] AS INTEGER
+rowView[] = grid[2]           ' Представление строки 2.
 
-REDIM grid(1 TO 5, 1 TO 5)  ' Корень получает новое хранилище.
+REDIM grid[1 TO 5, 1 TO 5]  ' Корень получает новое хранилище.
 
 TRY
-    PRINT rowView(2)        ' Старое представление больше не связано с корнем.
+    PRINT rowView[2]        ' Старое представление больше не связано с корнем.
 CATCH err
     PRINT "код "; err.Code
 END TRY
 
-rowView = grid(2)           ' Представление создаётся заново.
-PRINT "новое представление "; rowView(2)
+rowView[] = grid[2]           ' Представление создаётся заново.
+PRINT "новое представление "; rowView[2]

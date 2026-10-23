@@ -18,11 +18,11 @@ public sealed class ExplicitTextEncodingTests
 PRINT WRITEFILE("text.txt", "{{first}}" + CHR(10) + "я", "{{name}}")
 PRINT APPENDFILE("text.txt", "!" + CHR(10), "{{name}}")
 PRINT READFILE("text.txt", "{{name}}") = "{{first}}" + CHR(10) + "я!" + CHR(10)
-DIM lines() AS STRING
-lines = READALLLINES("text.txt", "{{name}}")
-PRINT ARRAYLENGTH(lines)
-PRINT lines(1) = "{{first}}"
-PRINT lines(2) = "я!"
+DIM lines[] AS STRING
+lines[] = READALLLINES("text.txt", "{{name}}")
+PRINT ARRAYLENGTH(lines[])
+PRINT lines[1] = "{{first}}"
+PRINT lines[2] = "я!"
 """;
             AssertProgram(source, root, ["TRUE", "TRUE", "TRUE", "2", "TRUE", "TRUE"]);
             var encoding = EncodingFor(name);

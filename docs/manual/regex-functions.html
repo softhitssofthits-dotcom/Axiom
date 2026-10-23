@@ -7,154 +7,165 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Регулярные выражения</span></nav>
-<p class="eyebrow">Глава 15</p><h1 class="page-title">Регулярные выражения</h1><p class="lead">Регулярное выражение — строковый шаблон для поиска текста по форме, а не по буквальному фрагменту. Встроенные функции REGEXISMATCH, REGEXMATCH, REGEXEXTRACT, REGEXMATCHES, REGEXEXTRACTALL, REGEXSPLIT, REGEXREPLACE и REGEXCOUNT проверяют, извлекают, разделяют, заменяют и считают совпадения.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<p class="eyebrow">Глава 15</p><h1 class="page-title">Регулярные выражения</h1><p class="lead">Текст редко приходится сравнивать с точной строкой целиком: чаще нужно узнать, есть ли в нём число, какие фрагменты похожи на образец и чем разделены части. Такой образец задаёт регулярное выражение — строковый шаблон, описывающий форму текста, а не его буквальное содержимое. Встроенные функции REGEXISMATCH, REGEXMATCH, REGEXEXTRACT, REGEXMATCHES, REGEXEXTRACTALL, REGEXSPLIT, REGEXREPLACE и REGEXCOUNT проверяют, извлекают, разделяют, заменяют и считают совпадения.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section">
+<h2>Аргументы и режимы</h2>
+<p>Параметры STRING <code>text</code> и <code>pattern</code> задают текст и шаблон. Необязательный STRING <code>modes</code> объединяет режимы, например "im"; без него поиск выполняется в обычном режиме.</p>
+<table class="reference-table">
+    <thead>
+        <tr>
+            <th>Режим</th>
+            <th>Назначение</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td><code>i</code></td><td>Не различать строчные и прописные буквы.</td></tr>
+        <tr><td><code>m</code></td><td>Считать начало и конец каждой строки отдельными границами для <code>^</code> и <code>$</code>.</td></tr>
+        <tr><td><code>s</code></td><td>Разрешить точке <code>.</code> совпадать с переводом строки.</td></tr>
+        <tr><td><code>x</code></td><td>Игнорировать незначащие пробелы в образце, если они не экранированы и не входят в набор символов.</td></tr>
+    </tbody>
+</table>
+<p>Шаблон обрабатывается движком .NET Regex. В таблицах приведены основные конструкции, применяемые в подтверждённых примерах Axiom; они составляют язык шаблона внутри строкового аргумента, а не синтаксис самой программы.</p>
+</section>
 
+<section class="article-section">
+<h2>Основные правила</h2>
+<p>Нулевая группа представляет всё совпадение, а захватывающие группы нумеруются по правилам .NET, включая явно заданные непоследовательные номера. От этой нумерации зависит, что вернёт функция, выбирающая группу по номеру.</p>
+<p>Пустой результат тоже имеет свой договор. REGEXMATCHES и REGEXEXTRACTALL при отсутствии совпадений возвращают массив 1 TO 0. REGEXSPLIT также возвращает массив строк, но при отсутствии разделителя сохраняет непустой текст одним элементом.</p>
+<p>Ошибкой считаются три случая: неверный pattern, неизвестный modes и отрицательный groupNumber — каждый из них вызывает MB3007. Отсутствующая положительная группа ошибкой не является и даёт пустую строку. При count = 0 REGEXREPLACE пропускает проверку pattern и modes, однако выражения аргументов всё равно вычисляются.</p>
+</section>
 
+<section class="article-section">
+<h2>Синтаксис шаблонов</h2>
+<p>Шаблон записывается внутри строкового аргумента, поэтому к нему применяются правила строк Axiom. Обратная косая черта в строке сохраняется буквально, и для класса цифр pattern содержит одну косую черту: <code>\d</code>. Две косые черты нужны самому шаблону для поиска буквальной косой черты. Пример: <a href="../../samples/functions/regexextract/pattern_backslash.axm">pattern_backslash.axm</a>.</p>
 
-            <section class="article-section">
-                <h2>Аргументы и режимы</h2>
-                <p>Параметры STRING <code>text</code> и <code>pattern</code> задают текст и шаблон. Необязательный STRING <code>modes</code> объединяет режимы, например "im"; без него поиск выполняется в обычном режиме.</p>
-                <table class="reference-table">
-                    <thead>
-                        <tr>
-                            <th>Режим</th>
-                            <th>Назначение</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>i</code></td><td>Не различать строчные и прописные буквы.</td></tr>
-                        <tr><td><code>m</code></td><td>Считать начало и конец каждой строки отдельными границами для <code>^</code> и <code>$</code>.</td></tr>
-                        <tr><td><code>s</code></td><td>Разрешить точке <code>.</code> совпадать с переводом строки.</td></tr>
-                        <tr><td><code>x</code></td><td>Игнорировать незначащие пробелы в образце, если они не экранированы и не входят в набор символов.</td></tr>
-                    </tbody>
-                </table>
-                <p>Шаблон обрабатывается движком .NET Regex. В таблицах приведены основные конструкции, применяемые в подтверждённых примерах Axiom; они составляют язык шаблона внутри строкового аргумента, а не синтаксис самой программы.</p>
-            </section>
+<h3>Буквальные символы и классы</h3>
+<table class="reference-table">
+    <thead>
+        <tr>
+            <th>Запись</th>
+            <th>Значение</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td><code>abc</code></td><td>Буквальное совпадение со строкой <code>abc</code>.</td></tr>
+        <tr><td><code>.</code></td><td>Одна единица UTF-16, кроме LF (<code>CHR(10)</code>). CR (<code>CHR(13)</code>) совпадает и без режима <code>s</code>. В режиме <code>s</code> точка включает также LF.</td></tr>
+        <tr><td><code>[abc]</code></td><td>Один символ из набора: <code>a</code>, <code>b</code> или <code>c</code>.</td></tr>
+        <tr><td><code>[^abc]</code></td><td>Один символ, кроме перечисленных в наборе.</td></tr>
+        <tr><td><code>[a-z]</code></td><td>Один символ из диапазона.</td></tr>
+        <tr><td><code>\d</code></td><td>Цифра.</td></tr>
+        <tr><td><code>\D</code></td><td>Любой символ, кроме цифры.</td></tr>
+        <tr><td><code>\w</code></td><td>Буква, десятичная цифра Unicode, комбинируемый знак категории Mn или соединительный знак пунктуации, включая подчёркивание. Например, знак U+0301 также совпадает с <code>\w</code>.</td></tr>
+        <tr><td><code>\W</code></td><td>Любой символ, кроме <code>\w</code>.</td></tr>
+        <tr><td><code>\s</code></td><td>Пробельный символ: пробел, табуляция, перевод строки и подобные.</td></tr>
+        <tr><td><code>\S</code></td><td>Любой символ, кроме пробельного.</td></tr>
+        <tr><td><code>\t</code>, <code>\r</code>, <code>\n</code></td><td>Табуляция, возврат каретки и перевод строки.</td></tr>
+        <tr><td><code>\\</code></td><td>Обратная косая черта как буквальный символ.</td></tr>
+        <tr><td><code>\.</code>, <code>\*</code>, <code>\+</code>, <code>\?</code></td><td>Спецсимвол как обычный текст, а не как команда regex.</td></tr>
+    </tbody>
+</table>
 
-            <section class="article-section">
-                <h2>Основные правила</h2>
-                <ul>
-                    <li>Нулевая группа представляет всё совпадение. Захватывающие группы нумеруются по правилам .NET, включая явно заданные непоследовательные номера.</li>
-                    <li>REGEXMATCHES и REGEXEXTRACTALL при отсутствии совпадений возвращают массив 1 TO 0. REGEXSPLIT также возвращает массив строк, но при отсутствии разделителя сохраняет непустой текст одним элементом.</li>
-                    <li>Неверный pattern, неизвестный modes и отрицательный groupNumber вызывают MB3007. Отсутствующая положительная группа даёт пустую строку. При count = 0 REGEXREPLACE пропускает проверку pattern и modes; выражения аргументов всё равно вычисляются.</li>
-                </ul>
-            </section>
+<h3>Повторы и жадность</h3>
+<p>Повторители относятся к непосредственно предшествующему элементу: символу, классу или группе. Скобки позволяют объединить последовательность перед применением повторителя.</p>
+<table class="reference-table">
+    <thead>
+        <tr>
+            <th>Запись</th>
+            <th>Значение</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td><code>*</code></td><td>Ноль или больше повторений предыдущего элемента.</td></tr>
+        <tr><td><code>+</code></td><td>Одно или больше повторений предыдущего элемента.</td></tr>
+        <tr><td><code>?</code></td><td>Ноль или одно повторение предыдущего элемента.</td></tr>
+        <tr><td><code>{n}</code></td><td>Ровно <code>n</code> повторений.</td></tr>
+        <tr><td><code>{n,}</code></td><td>Не меньше <code>n</code> повторений.</td></tr>
+        <tr><td><code>{n,m}</code></td><td>От <code>n</code> до <code>m</code> повторений включительно.</td></tr>
+        <tr><td><code>*?</code>, <code>+?</code>, <code>??</code>, <code>{n,m}?</code></td><td>Нежадные формы: берут минимально возможное совпадение.</td></tr>
+    </tbody>
+</table>
+<p>Шаблон <code>"[,;]\s*"</code> выбирает запятую либо точку с запятой и следующие за ней пробельные символы; повторитель * разрешает отсутствие таких пробелов.</p>
 
-            <section class="article-section">
-                <h2>Unicode и пустые совпадения</h2><p>Движок сопоставляет единицы UTF-16. Для текста "😀" шаблон "." имеет два совпадения, пустой шаблон — три, по одному на каждой границе. Извлечённый фрагмент может содержать половину суррогатной пары.</p><p>Пустой STRING от REGEXMATCH может означать отсутствие совпадения либо успешное пустое совпадение. REGEXISMATCH позволяет их различить. Для пустого text и пустого pattern функция REGEXMATCHES возвращает один пустой элемент; REGEXSPLIT при пустом text возвращает пустой массив. При непустом text разбиение сохраняет крайние пустые части и захватывающие группы разделителя.</p><h2>Ограничение поиска по времени</h2><p>Для отдельного поиска установлен предел пять секунд. Превышение вызывает MB3007, доступную для обработки в TRY/CATCH. Предел относится к поиску движка, а не к суммарному времени программы или всех совпадений.</p><h2>Отмена и ресурсы</h2><p>При остановке программы исполнитель проверяет запрос отмены перед поиском, после него и между совпадениями. Отмена завершает запуск и не является ошибкой MB3007: пользовательские CATCH и FINALLY не выполняются. Уже начавшийся отдельный поиск движка не прерывается немедленно; до следующей проверки отмены он может занять до пяти секунд. Общее время всех совпадений не ограничивается пятью секундами.</p><p>Исполнитель хранит не более 128 последних использованных сочетаний шаблона и режимов. Вытеснение записи влияет только на повторную подготовку шаблона, а не на результат. Разные записи одинаковых режимов, например <code>i</code>, <code>I</code> и <code>ii</code>, не создают отдельные сохранённые строки режимов.</p><p>REGEXCOUNT подсчитывает совпадения без коллекции их объектов. Массивные функции выделяют память под результат; число результатов и их длина по-прежнему влияют на расход памяти. REGEXREPLACE выполняет буквальную замену за один проход без предварительного повторного поиска.</p><h2>Сообщения об ошибках</h2><p>В поле <code>Message</code> значения ошибки сохраняются английское описание причины и имя аргумента. Неверный шаблон сообщает <code>Invalid pattern</code>, смещение и вид ошибки разбора; неизвестный режим — <code>Unknown mode</code> и допустимые буквы; отрицательная группа или количество — <code>cannot be negative</code>; превышение времени — <code>Pattern matching exceeded the 5 second timeout</code>. Смещение разбора относится к строке шаблона. Поля <code>Line</code> и <code>Column</code> указывают место вызова в программе.</p><h2>Синтаксис шаблонов</h2><p>Обратная косая черта в строке Axiom сохраняется буквально. Для класса цифр pattern содержит одну косую черту: <code>\d</code>. Две косые черты нужны самому шаблону для поиска буквальной косой черты. Пример: <a href="../../samples/functions/regexextract/pattern_backslash.axm">pattern_backslash.axm</a>.</p>
-                <p>Повторители в таблице относятся к непосредственно предшествующему элементу: символу, классу или группе. Скобки позволяют объединить последовательность перед применением повторителя.</p>
+<h3>Границы, группы и ветвление</h3>
+<table class="reference-table">
+    <thead>
+        <tr>
+            <th>Запись</th>
+            <th>Значение</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td><code>^</code></td><td>Начало текста. В режиме <code>m</code> также начало каждой строки.</td></tr>
+        <tr><td><code>$</code></td><td>Конец текста либо позиция перед завершающим LF. В режиме <code>m</code> также позиция перед каждым LF. CR перед LF не пропускается автоматически.</td></tr><tr><td><code>\A</code>, <code>\z</code></td><td>Строгое начало и конец всего текста независимо от режима <code>m</code>. Для проверки всего текста используйте <code>"\Aa\d+\z"</code>.</td></tr>
+        <tr><td><code>(...)</code></td><td>Захватывающая группа. Её можно извлекать через <code>REGEXEXTRACT</code> и <code>REGEXEXTRACTALL</code>.</td></tr>
+        <tr><td><code>(?:...)</code></td><td>Незахватывающая группа: группирует шаблон, но не создаёт номер группы.</td></tr>
+        <tr><td><code>a|b</code></td><td>Альтернатива: подходит либо <code>a</code>, либо <code>b</code>.</td></tr>
+        <tr><td><code>\1</code>, <code>\2</code></td><td>Обратная ссылка на уже захваченную группу по номеру.</td></tr>
+        <tr><td><code>(?&lt;name&gt;...)</code></td><td>Именованная группа .NET.</td></tr>
+        <tr><td><code>\k&lt;name&gt;</code></td><td>Обратная ссылка на именованную группу.</td></tr>
+    </tbody>
+</table>
 
-                <h3>Буквальные символы и классы</h3>
-                <table class="reference-table">
-                    <thead>
-                        <tr>
-                            <th>Запись</th>
-                            <th>Значение</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>abc</code></td><td>Буквальное совпадение со строкой <code>abc</code>.</td></tr>
-                        <tr><td><code>.</code></td><td>Одна единица UTF-16, кроме LF (<code>CHR(10)</code>). CR (<code>CHR(13)</code>) совпадает и без режима <code>s</code>. В режиме <code>s</code> точка включает также LF.</td></tr>
-                        <tr><td><code>[abc]</code></td><td>Один символ из набора: <code>a</code>, <code>b</code> или <code>c</code>.</td></tr>
-                        <tr><td><code>[^abc]</code></td><td>Один символ, кроме перечисленных в наборе.</td></tr>
-                        <tr><td><code>[a-z]</code></td><td>Один символ из диапазона.</td></tr>
-                        <tr><td><code>\d</code></td><td>Цифра.</td></tr>
-                        <tr><td><code>\D</code></td><td>Любой символ, кроме цифры.</td></tr>
-                        <tr><td><code>\w</code></td><td>Буква, десятичная цифра Unicode, комбинируемый знак категории Mn или соединительный знак пунктуации, включая подчёркивание. Например, знак U+0301 также совпадает с <code>\w</code>.</td></tr>
-                        <tr><td><code>\W</code></td><td>Любой символ, кроме <code>\w</code>.</td></tr>
-                        <tr><td><code>\s</code></td><td>Пробельный символ: пробел, табуляция, перевод строки и подобные.</td></tr>
-                        <tr><td><code>\S</code></td><td>Любой символ, кроме пробельного.</td></tr>
-                        <tr><td><code>\t</code>, <code>\r</code>, <code>\n</code></td><td>Табуляция, возврат каретки и перевод строки.</td></tr>
-                        <tr><td><code>\\</code></td><td>Обратная косая черта как буквальный символ.</td></tr>
-                        <tr><td><code>\.</code>, <code>\*</code>, <code>\+</code>, <code>\?</code></td><td>Спецсимвол как обычный текст, а не как команда regex.</td></tr>
-                    </tbody>
-                </table>
+<h3>Проверки без захвата</h3>
+<table class="reference-table">
+    <thead>
+        <tr>
+            <th>Запись</th>
+            <th>Значение</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td><code>(?=...)</code></td><td>Положительный просмотр вперёд: справа должен стоять указанный шаблон.</td></tr>
+        <tr><td><code>(?!...)</code></td><td>Отрицательный просмотр вперёд: справа не должно быть указанного шаблона.</td></tr>
+        <tr><td><code>(?&lt;=...)</code></td><td>Положительный просмотр назад: слева должен стоять указанный шаблон.</td></tr>
+        <tr><td><code>(?&lt;!...)</code></td><td>Отрицательный просмотр назад: слева не должно быть указанного шаблона.</td></tr>
+    </tbody>
+</table>
+</section>
 
-                <h3>Повторы и жадность</h3>
-                <table class="reference-table">
-                    <thead>
-                        <tr>
-                            <th>Запись</th>
-                            <th>Значение</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>*</code></td><td>Ноль или больше повторений предыдущего элемента.</td></tr>
-                        <tr><td><code>+</code></td><td>Одно или больше повторений предыдущего элемента.</td></tr>
-                        <tr><td><code>?</code></td><td>Ноль или одно повторение предыдущего элемента.</td></tr>
-                        <tr><td><code>{n}</code></td><td>Ровно <code>n</code> повторений.</td></tr>
-                        <tr><td><code>{n,}</code></td><td>Не меньше <code>n</code> повторений.</td></tr>
-                        <tr><td><code>{n,m}</code></td><td>От <code>n</code> до <code>m</code> повторений включительно.</td></tr>
-                        <tr><td><code>*?</code>, <code>+?</code>, <code>??</code>, <code>{n,m}?</code></td><td>Нежадные формы: берут минимально возможное совпадение.</td></tr>
-                    </tbody>
-                </table>
-                <p>Шаблон <code>"[,;]\s*"</code> выбирает запятую либо точку с запятой и следующие за ней пробельные символы; повторитель * разрешает отсутствие таких пробелов.</p>
+<section class="article-section">
+    <h2>Unicode и пустые совпадения</h2><p>Движок сопоставляет единицы UTF-16. Для текста "😀" шаблон "." имеет два совпадения, пустой шаблон — три, по одному на каждой границе. Извлечённый фрагмент может содержать половину суррогатной пары.</p><p>Пустой STRING от REGEXMATCH может означать отсутствие совпадения либо успешное пустое совпадение. REGEXISMATCH позволяет их различить. Для пустого text и пустого pattern функция REGEXMATCHES возвращает один пустой элемент; REGEXSPLIT при пустом text возвращает пустой массив. При непустом text разбиение сохраняет крайние пустые части и захватывающие группы разделителя.</p>
+</section>
 
-                <h3>Границы, группы и ветвление</h3>
-                <table class="reference-table">
-                    <thead>
-                        <tr>
-                            <th>Запись</th>
-                            <th>Значение</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>^</code></td><td>Начало текста. В режиме <code>m</code> также начало каждой строки.</td></tr>
-                        <tr><td><code>$</code></td><td>Конец текста либо позиция перед завершающим LF. В режиме <code>m</code> также позиция перед каждым LF. CR перед LF не пропускается автоматически.</td></tr><tr><td><code>\A</code>, <code>\z</code></td><td>Строгое начало и конец всего текста независимо от режима <code>m</code>. Для проверки всего текста используйте <code>"\Aa\d+\z"</code>.</td></tr>
-                        <tr><td><code>(...)</code></td><td>Захватывающая группа. Её можно извлекать через <code>REGEXEXTRACT</code> и <code>REGEXEXTRACTALL</code>.</td></tr>
-                        <tr><td><code>(?:...)</code></td><td>Незахватывающая группа: группирует шаблон, но не создаёт номер группы.</td></tr>
-                        <tr><td><code>a|b</code></td><td>Альтернатива: подходит либо <code>a</code>, либо <code>b</code>.</td></tr>
-                        <tr><td><code>\1</code>, <code>\2</code></td><td>Обратная ссылка на уже захваченную группу по номеру.</td></tr>
-                        <tr><td><code>(?&lt;name&gt;...)</code></td><td>Именованная группа .NET.</td></tr>
-                        <tr><td><code>\k&lt;name&gt;</code></td><td>Обратная ссылка на именованную группу.</td></tr>
-                    </tbody>
-                </table>
+<section class="article-section">
+<h2>Предел времени поиска</h2><p>Для отдельного поиска установлен предел пять секунд. Превышение вызывает MB3007, доступную для обработки в TRY/CATCH. Предел относится к поиску движка, а не к суммарному времени программы или всех совпадений.</p>
+</section>
 
-                <h3>Проверки без захвата</h3>
-                <table class="reference-table">
-                    <thead>
-                        <tr>
-                            <th>Запись</th>
-                            <th>Значение</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>(?=...)</code></td><td>Положительный просмотр вперёд: справа должен стоять указанный шаблон.</td></tr>
-                        <tr><td><code>(?!...)</code></td><td>Отрицательный просмотр вперёд: справа не должно быть указанного шаблона.</td></tr>
-                        <tr><td><code>(?&lt;=...)</code></td><td>Положительный просмотр назад: слева должен стоять указанный шаблон.</td></tr>
-                        <tr><td><code>(?&lt;!...)</code></td><td>Отрицательный просмотр назад: слева не должно быть указанного шаблона.</td></tr>
-                    </tbody>
-                </table>
-            </section>
+<section class="article-section">
+<h2>Отмена и ресурсы</h2><p>При остановке программы исполнитель проверяет запрос отмены перед поиском, после него и между совпадениями. Отмена завершает запуск и не является ошибкой MB3007: пользовательские CATCH и FINALLY не выполняются. Уже начавшийся отдельный поиск движка не прерывается немедленно; до следующей проверки отмены он может занять до пяти секунд. Общее время всех совпадений не ограничивается пятью секундами.</p><p>Стоимость самих функций различна. Исполнитель хранит не более 128 последних использованных сочетаний шаблона и режимов. Вытеснение записи влияет только на повторную подготовку шаблона, а не на результат. Разные записи одинаковых режимов, например <code>i</code>, <code>I</code> и <code>ii</code>, не создают отдельные сохранённые строки режимов.</p><p>REGEXCOUNT подсчитывает совпадения без коллекции их объектов. Массивные функции выделяют память под результат; число результатов и их длина по-прежнему влияют на расход памяти. REGEXREPLACE выполняет буквальную замену за один проход без предварительного повторного поиска.</p>
+</section>
 
-            <section class="article-section">
-                <h2>Темы главы</h2>
-                <div class="link-list">
-                    <a href="regex-functions-match-and-extract.html">Проверка, первое совпадение и группы</a>
-                    <a href="regex-functions-arrays-and-split.html">Все совпадения, группы и разбиение</a>
-                    <a href="regex-functions-replace-and-count.html">Замена и подсчёт совпадений</a>
-                </div>
-            </section>
+<section class="article-section">
+<h2>Сообщения об ошибках</h2><p>В поле <code>Message</code> значения ошибки сохраняются английское описание причины и имя аргумента. Неверный шаблон сообщает <code>Invalid pattern</code>, смещение и вид ошибки разбора; неизвестный режим — <code>Unknown mode</code> и допустимые буквы; отрицательная группа или количество — <code>cannot be negative</code>; превышение времени — <code>Pattern matching exceeded the 5 second timeout</code>. Смещение разбора относится к строке шаблона. Поля <code>Line</code> и <code>Column</code> указывают место вызова в программе.</p>
+</section>
 
-            <section class="article-section">
-                <h2>Когда регулярное выражение лучше обычного поиска</h2>
-                <p>Шаблоны подходят для проверки формата, извлечения групп и работы с переменным разделителем. Для буквального фрагмента используйте <a href="string-functions-search-and-replace.html">строковый поиск и замену</a>.</p>
-            </section>
+<section class="article-section">
+    <h2>Темы главы</h2>
+    <p>Формы вызова и правила каждой функции собраны на отдельных страницах.</p>
+    <div class="link-list">
+        <a href="regex-functions-match-and-extract.html">Проверка, первое совпадение и группы</a>
+        <a href="regex-functions-arrays-and-split.html">Все совпадения, группы и разбиение</a>
+        <a href="regex-functions-replace-and-count.html">Замена и подсчёт совпадений</a>
+    </div>
+</section>
 
-            <section class="article-section">
-                <h2>Запускаемые примеры</h2>
-                <ul class="resource-list">
-                    <li><a href="../../samples/functions/regexismatch/basic_usage.axm">REGEXISMATCH: проверка совпадения</a></li>
-                    <li><a href="../../samples/functions/regexmatches/all_matches.axm">REGEXMATCHES: все совпадения</a></li>
-                    <li><a href="../../samples/functions/regexreplace/basic_usage.axm">REGEXREPLACE: замена по шаблону</a></li>
-                    <li><a href="../../samples/functions/regexcount/basic_usage.axm">REGEXCOUNT: подсчёт совпадений</a></li>
+<section class="article-section">
+    <h2>Когда регулярное выражение лучше обычного поиска</h2>
+    <p>Шаблоны подходят для проверки формата, извлечения групп и работы с переменным разделителем. Для буквального фрагмента используйте <a href="string-functions-search-and-replace.html">строковый поиск и замену</a>.</p>
+</section>
+
+<section class="article-section">
+    <h2>Запускаемые примеры</h2>
+    <ul class="resource-list">
+        <li><a href="../../samples/functions/regexismatch/basic_usage.axm">REGEXISMATCH: проверка совпадения</a></li>
+        <li><a href="../../samples/functions/regexmatches/all_matches.axm">REGEXMATCHES: все совпадения</a></li>
+        <li><a href="../../samples/functions/regexreplace/basic_usage.axm">REGEXREPLACE: замена по шаблону</a></li>
+        <li><a href="../../samples/functions/regexcount/basic_usage.axm">REGEXCOUNT: подсчёт совпадений</a></li>
 <li><a href="../../samples/functions/regexismatch/strict_boundaries.axm">Строгие границы текста и LF/CRLF</a></li>
 <li><a href="../../samples/functions/regexreplace/replacement_tokens.axm">Захваты и подстановки в замене</a></li>
 <li><a href="../../samples/smoke/regex_context_matrix.axm">Регулярные выражения в конструкциях языка</a></li>
-                </ul>
-            </section>
+    </ul>
+</section>
 
-
-
-            <section class="article-section"><h2>См. также</h2><div class="link-list"><a href="reference.html">Алфавитный указатель</a><a href="diagnostics.html">Каталог диагностик</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<section class="article-section"><h2>См. также</h2><div class="link-list"><a href="reference.html">Алфавитный указатель</a><a href="diagnostics.html">Каталог диагностик</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
 <script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

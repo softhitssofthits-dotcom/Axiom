@@ -2,41 +2,41 @@
 ' Проверяются ARRAYDISTINCT, ARRAYTOREVERSED, ARRAYREVERSE,
 ' ARRAYFLATTEN и ARRAYRESHAPE на одном двумерном массиве.
 
-DIM template(1 TO 18, 1 TO 18) AS INTEGER
-DIM current(,) AS INTEGER
-DIM reversed(,) AS INTEGER
-DIM flat() AS INTEGER
-DIM uniqueValues() AS INTEGER
-DIM reshaped(,) AS INTEGER
+DIM template[1 TO 18, 1 TO 18] AS INTEGER
+DIM current[,] AS INTEGER
+DIM reversed[,] AS INTEGER
+DIM flat[] AS INTEGER
+DIM uniqueValues[] AS INTEGER
+DIM reshaped[,] AS INTEGER
 DIM checksum AS LONG = 0
 DIM widthChecksum AS LONG = 0
 
 FOR rowIndex = 1 TO 18
     FOR columnIndex = 1 TO 18
-        template(rowIndex, columnIndex) = ((rowIndex * 5 + columnIndex * 7) MOD 9) * 3
+        template[rowIndex, columnIndex] = ((rowIndex * 5 + columnIndex * 7) MOD 9) * 3
     NEXT
 NEXT
 
-current = template
+current[] = template[]
 
 FOR roundIndex = 1 TO 70
-    reversed = ARRAYTOREVERSED(current, COLUMN)
-    ARRAYREVERSE(reversed, ROW)
+    reversed[] = ARRAYTOREVERSED(current[], COLUMN)
+    ARRAYREVERSE(reversed[], ROW)
 
-    flat = ARRAYFLATTEN(reversed)
-    uniqueValues = ARRAYDISTINCT(reversed)
-    reshaped = ARRAYRESHAPE(flat, current)
+    flat[] = ARRAYFLATTEN(reversed[])
+    uniqueValues[] = ARRAYDISTINCT(reversed[])
+    reshaped[] = ARRAYRESHAPE(flat[], current[])
 
-    checksum = checksum + flat(1) + flat(ARRAYLENGTH(flat))
-    checksum = checksum + uniqueValues(1) * roundIndex + uniqueValues(ARRAYLENGTH(uniqueValues))
-    checksum = checksum + reshaped(1, 1) + reshaped(18, 18)
-    widthChecksum = widthChecksum + ARRAYLENGTH(flat) + ARRAYLENGTH(uniqueValues)
+    checksum = checksum + flat[1] + flat[ARRAYLENGTH(flat[])]
+    checksum = checksum + uniqueValues[1] * roundIndex + uniqueValues[ARRAYLENGTH(uniqueValues[])]
+    checksum = checksum + reshaped[1, 1] + reshaped[18, 18]
+    widthChecksum = widthChecksum + ARRAYLENGTH(flat[]) + ARRAYLENGTH(uniqueValues[])
 
-    current = reshaped
+    current[] = reshaped[]
 NEXT
 
 PRINT checksum
 PRINT widthChecksum
-PRINT current(1, 1)
-PRINT current(18, 18)
-PRINT ARRAYLENGTH(uniqueValues)
+PRINT current[1, 1]
+PRINT current[18, 18]
+PRINT ARRAYLENGTH(uniqueValues[])

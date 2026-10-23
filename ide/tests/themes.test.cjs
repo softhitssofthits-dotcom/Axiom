@@ -11,6 +11,13 @@ const SYNTAX_KEYS = ['comment', 'commentStyle', 'string', 'stringEscape', 'inter
 const CONSOLE_KEYS = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white', 'brightBlack',
   'brightRed', 'brightGreen', 'brightYellow', 'brightBlue', 'brightMagenta', 'brightCyan', 'brightWhite'];
 
+test('Во всех четырёх темах массивы, переменные и функции имеют разные цвета', () => {
+  for (const theme of Themes.list) {
+    assert.equal(new Set([theme.syntax.variable, theme.syntax.function, theme.syntax.array].map(c => c.toUpperCase())).size, 3, theme.id);
+    assert.equal(theme.syntax.builtin.toUpperCase(), theme.syntax.function.toUpperCase(), theme.id + ': встроенные функции');
+  }
+});
+
 test('реестр тем объявляет ровно четыре темы в стабильном порядке', () => {
   assert.deepEqual(Themes.ids(), ['dark', 'light', 'basic', 'borland']);
   assert.equal(Themes.defaultId, 'dark');

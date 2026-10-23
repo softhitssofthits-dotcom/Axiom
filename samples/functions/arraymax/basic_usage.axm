@@ -1,10 +1,10 @@
 ' ARRAYMAX возвращает наибольший элемент массива.
 ' Ожидаемый вывод:
 ' 40
-DIM heights(1 TO 3) AS INTEGER
+DIM heights[1 TO 3] AS INTEGER
 
-heights(1) = 12
-heights(2) = 40
-heights(3) = 25
+heights[1] = 12
+heights[2] = 40
+heights[3] = 25
 
-PRINT ARRAYMAX(heights)
+PRINT ARRAYMAX(heights[])

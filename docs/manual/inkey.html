@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Функция INKEY — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
 <body data-page="inkey"><a class="skip-link" href="#main-content">Перейти к статье</a>
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
@@ -7,33 +7,22 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Функция INKEY</span></nav>
-<p class="eyebrow">Встроенная функция</p><h1 class="page-title">Функция INKEY</h1><p class="lead"><code>INKEY</code> — встроенная функция языка Axiom, которая извлекает следующую клавишу из очереди ввода без ожидания. Если очередь пуста, результатом будет пустая строка.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-
+<p class="eyebrow">Встроенная функция</p><h1 class="page-title">Функция INKEY</h1><p class="lead">Интерактивной программе нужна очередная клавиша, но останавливать ради неё всю работу нельзя. Функция <code>INKEY</code> извлекает следующую клавишу из очереди ввода без ожидания: если очередь пуста, результатом будет пустая строка, и цикл продолжит выполняться.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
         <section class="article-section">
-            <h2>Применение</h2>
-            <p>Вызывайте функцию в интерактивном цикле, когда программе нужна очередная клавиша, а остальная работа должна продолжаться без ожидания <code>Enter</code>.</p>
+            <h2>Где читается очередь</h2>
+            <p>Функция читает очередь активной поверхности ввода. В обычной текстовой программе это область ввода IDE, а после открытия <code>SCREEN 0</code> или <code>SCREEN 1..10</code> — экранное окно. Источник клавиш определяется поверхностью, имеющей фокус; подробнее см. <a href="keyboard-mouse-events.html">клавиатура, мышь и события</a>.</p>
+            <p>Опрос не требует графической поверхности и не создаёт её. <code>SLEEP</code> без аргумента также извлекает клавишу из этой очереди.</p>
         </section>
 
         <section class="article-section">
-            <h2>Контекст выполнения</h2>
-            <p>Функция читает очередь активной поверхности ввода. В обычной текстовой программе это область ввода IDE, а после открытия <code>SCREEN 0</code> или <code>SCREEN 1..10</code> — экранное окно.</p>
-            <p>Источник клавиш определяется поверхностью, имеющей фокус; подробнее см. <a href="keyboard-mouse-events.html">клавиатура, мышь и события</a>.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Синтаксис</h2>
+            <h2>Синтаксис и аргументы</h2>
 <pre><code class="language-axiom">INKEY()</code></pre>
-            <p>Единственная форма вызова — <code>INKEY()</code>.</p>
+            <p>Единственная форма вызова — <code>INKEY()</code>. Аргументов нет, но пустые скобки обязательны в записи вызова.</p>
         </section>
 
         <section class="article-section">
-            <h2>Аргументы</h2>
-            <p>Аргументов нет; пустые скобки обязательны в записи вызова.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Что возвращает функция INKEY</h2>
+            <h2>Что возвращает функция</h2>
             <p>Результат имеет тип <code>STRING</code>. Таблица показывает, как представляются обычная клавиша, специальная клавиша и отсутствие ввода.</p>
             <table>
                 <thead><tr><th>Ситуация</th><th>Результат</th></tr></thead>
@@ -43,16 +32,14 @@
                     <tr><td>В очереди нет клавиши.</td><td>Возвращается пустая строка <code>""</code>.</td></tr>
                 </tbody>
             </table>
+            <p>Вызов извлекает только одно событие и сохраняет последующие события для следующих вызовов.</p>
         </section>
 
         <section class="article-section">
-            <h2>Правила работы</h2>
-            <p>Функция не показывает приглашение и не читает целую строку. Для ввода строки или нескольких значений используйте оператор <a href="input.html">INPUT</a>.</p>
-            <p>Обработчик <a href="on-key.html">ON KEY</a> может получить событие раньше вызова функции. Уже обработанная клавиша удаляется из очереди и не возвращается последующим опросом.</p>
-            <p>Для проверки текущего удержания клавиши используйте <a href="keydown.html">KEYDOWN</a>; чтение очереди сообщает события нажатия.</p>
+            <h2>Очередь и другие способы чтения</h2>
+            <p>Функция не показывает приглашение и не читает целую строку: ввод строки или нескольких значений выполняет оператор <a href="input.html">INPUT</a>.</p>
+            <p>Обработчик <a href="on-key.html">ON KEY</a> может получить событие раньше вызова функции. Уже обработанная клавиша удаляется из очереди и не возвращается последующим опросом. Текущее удержание клавиши проверяет <a href="keydown.html">KEYDOWN</a>: чтение очереди сообщает события нажатия, а не состояние клавиши.</p>
         </section>
-<section class="article-section"><h2>Отсутствие событий и общий ввод</h2><p><code>INKEY</code> возвращает <code>STRING</code> без ожидания: пустая очередь даёт пустую строку. Вызов извлекает только одно событие, сохраняя последующие события для следующих вызовов. Опрос не требует графической поверхности и не создаёт её. <code>SLEEP</code> без аргумента также извлекает клавишу из этой очереди.</p></section>
-
 
         <section class="article-section">
             <h2>Диагностика</h2>
@@ -71,7 +58,7 @@ IF pressedKey = "" THEN
 ELSE
     PRINT "Нажата клавиша: "; pressedKey
 END IF</code></pre>
-            <p>Пример делает один опрос и печатает результат. Пустая очередь не приостанавливает программу.</p>
+            <p>Пример делает один опрос и печатает результат. Пустая очередь не приостанавливает программу: пустая строка отличается от любого имени клавиши, и ветвь <code>ELSE</code> выполняется только при действительно нажатой клавише.</p>
         </section>
 
         <section class="article-section">

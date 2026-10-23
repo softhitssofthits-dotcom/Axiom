@@ -18,6 +18,7 @@ public sealed partial class Binder
             ParenthesizedExpressionSyntax parenthesizedExpression => BindExpression(parenthesizedExpression.Expression),
             NamedArgumentExpressionSyntax namedArgumentExpression => BindExpression(namedArgumentExpression.Expression),
             CallExpressionSyntax callExpression => BindCallExpression(callExpression),
+            ArrayAccessExpressionSyntax arrayAccessExpression => BindSquareArrayAccessExpression(arrayAccessExpression),
             FieldAccessExpressionSyntax fieldAccessExpression => BindFieldAccessExpression(fieldAccessExpression),
             InterpolatedStringExpressionSyntax interpolatedExpression => BindInterpolatedStringExpression(interpolatedExpression),
             ErrorExpressionSyntax errorExpression => new BoundErrorExpression(errorExpression.Token.Location),
@@ -122,11 +123,17 @@ public sealed partial class Binder
         return new BoundInterpolatedStringExpression(expression.StartToken.Location, parts);
     }
 
-    private BoundExpression BindNameExpression(NameExpressionSyntax expression)
+    private BoundExpression BindNameExpression(NameExpressionSyntax expression, bool allowArrayTarget = false)
     {
         if (_scope.TryLookupVariable(expression.IdentifierToken.Text, out var variable) && variable is not null)
         {
             _editorReferences?.Add(new(variable, expression.IdentifierToken.Location, false));
+            if (_usesSquareArraySyntax && variable.IsArray && !allowArrayTarget)
+            {
+                ReportArrayNameRequiresBrackets(variable.Name, expression.IdentifierToken.Location);
+                return new BoundErrorExpression(expression.IdentifierToken.Location);
+            }
+
             return new BoundVariableExpression(expression.IdentifierToken.Location, variable);
         }
 

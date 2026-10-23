@@ -22,7 +22,7 @@ public sealed class VariableUsageAnalysisTests
     [InlineData("DIM value AS INTEGER = 42\nPRINT value")]
     [InlineData("DIM value AS INTEGER\nINPUT value\nPRINT value")]
     [InlineData("DIM value AS INTEGER = 42\nSUB Work()\nPRINT value\nEND SUB")]
-    [InlineData("DIM value(0 TO 2) AS INTEGER\nvalue(1) = 42\nPRINT value(1)")]
+    [InlineData("DIM value[0 TO 2] AS INTEGER\nvalue[1] = 42\nPRINT value[1]")]
     [InlineData("DIM finish AS INTEGER = 3\nFOR value = 1 TO finish\nPRINT value\nNEXT")]
     public void ReadValue_DoesNotProduceWarning(string source) => Assert.Empty(Analyze(source));
 

@@ -1,12 +1,12 @@
 ' Ожидается: 1, alpha.
 DIM path AS STRING = MAKETEMPFILE("readalllines_bom_")
 DIM ok AS BOOLEAN
-DIM lines() AS STRING
+DIM lines[] AS STRING
 
 ok = WRITEFILE(path, CHR(65279) + "alpha")
-lines = READALLLINES(path)
+lines[] = READALLLINES(path)
 
-PRINT ARRAYLENGTH(lines)
-PRINT lines(1)
+PRINT ARRAYLENGTH(lines[])
+PRINT lines[1]
 
 ok = DELETEFILE(path)

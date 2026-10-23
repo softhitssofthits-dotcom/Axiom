@@ -5,14 +5,7 @@ namespace Axiom.Execution.Tests;
 
 public sealed class StringCaseFormEvidenceTests
 {
-    private const string Setup = """
-DIM oldItems(1 TO 2) AS STRING
-DIM newItems(1 TO 2) AS STRING
-oldItems(1) = "a"
-oldItems(2) = "b"
-newItems(1) = "x"
-newItems(2) = "y"
-""";
+    private const string Setup = "DIM oldItems[1 TO 2] AS STRING\r\nDIM newItems[1 TO 2] AS STRING\r\noldItems[1] = \"a\"\r\noldItems[2] = \"b\"\r\nnewItems[1] = \"x\"\r\nnewItems[2] = \"y\"";
 
     public static IEnumerable<object[]> Forms()
     {

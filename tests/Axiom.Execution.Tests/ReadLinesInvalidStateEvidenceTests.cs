@@ -24,9 +24,9 @@ public sealed class ReadLinesInvalidStateEvidenceTests
                 : $"OPEN \"{path}\" FOR INPUT AS f USING \"UTF-8\"\n";
             if (scenario.StartsWith("closed", StringComparison.Ordinal)) setup += "CLOSE f\n";
             var count = scenario == "negative-open" ? -1 : scenario.EndsWith("zero", StringComparison.Ordinal) ? 0 : 1;
-            var source = "DIM f AS FILE\nDIM lines() AS STRING\n" + setup + $$"""
+            var source = "DIM f AS FILE\nDIM lines[] AS STRING\n" + setup + $$"""
                 TRY
-                    lines = READLINES(f, {{count}})
+                    lines[] = READLINES(f, {{count}})
                     PRINT "Ошибочно прочитано"
                 CATCH err
                     PRINT err.Code

@@ -97,10 +97,10 @@ PRINT STARTSWITH("Hello", "He")
 PRINT ENDSWITH("Hello", "lo")
 
 ' SPLIT и JOIN дают быстрый интеграционный тест строк и массивов.
-DIM parts() AS STRING
-parts = SPLIT(TRIM(text), ",")
-PRINT ARRAYLENGTH(parts)
-PRINT JOIN(parts, "/")
+DIM parts[] AS STRING
+parts[] = SPLIT(TRIM(text), ",")
+PRINT ARRAYLENGTH(parts[])
+PRINT JOIN(parts[], "/")
 
 ' Числовые встроенные функции.
 PRINT ABS(-5)
@@ -112,63 +112,63 @@ PRINT MAX(10, 3)
 PRINT CLAMP(20, 1, 10)
 
 ' Базовый массив, индексирование и поисковые функции.
-DIM numbers(1 TO 5) AS INTEGER
-numbers(1) = 10
-numbers(2) = 20
-numbers(3) = 30
-numbers(4) = 20
-numbers(5) = 15
+DIM numbers[1 TO 5] AS INTEGER
+numbers[1] = 10
+numbers[2] = 20
+numbers[3] = 30
+numbers[4] = 20
+numbers[5] = 15
 
-PRINT ARRAYLENGTH(numbers)
-PRINT ARRAYCONTAINS(numbers, 30)
-PRINT ARRAYINDEXOF(numbers, 20)
-PRINT ARRAYLASTINDEXOF(numbers, 20)
+PRINT ARRAYLENGTH(numbers[])
+PRINT ARRAYCONTAINS(numbers[], 30)
+PRINT ARRAYINDEXOF(numbers[], 20)
+PRINT ARRAYLASTINDEXOF(numbers[], 20)
 
 ' Функции высшего порядка для массивов: ARRAYMAP, ARRAYFILTER и ARRAYREDUCE принимают другие функции как аргументы.
-DIM doubled() AS INTEGER
-doubled = ARRAYMAP(numbers, DoubleValue)
-PRINT doubled(3)
+DIM doubled[] AS INTEGER
+doubled[] = ARRAYMAP(numbers[], DoubleValue)
+PRINT doubled[3]
 
-DIM filtered() AS INTEGER
-filtered = ARRAYFILTER(numbers, IsLarge)
-PRINT ARRAYLENGTH(filtered)
-PRINT filtered(1)
+DIM filtered[] AS INTEGER
+filtered[] = ARRAYFILTER(numbers[], IsLarge)
+PRINT ARRAYLENGTH(filtered[])
+PRINT filtered[1]
 
-PRINT ARRAYREDUCE(numbers, 0, AddValues)
+PRINT ARRAYREDUCE(numbers[], 0, AddValues)
 
 ' Мутирующие и чистые массивные операции.
-ARRAYPUSH(numbers, 40)
-PRINT UBOUND(numbers)
-PRINT ARRAYPOP(numbers)
+ARRAYPUSH(numbers[], 40)
+PRINT UBOUND(numbers[])
+PRINT ARRAYPOP(numbers[])
 
-DIM sorted() AS INTEGER
-sorted = ARRAYTOSORTED(numbers)
-PRINT sorted(1)
-PRINT sorted(UBOUND(sorted))
+DIM sorted[] AS INTEGER
+sorted[] = ARRAYTOSORTED(numbers[])
+PRINT sorted[1]
+PRINT sorted[UBOUND(sorted[])]
 
-DIM reversed() AS INTEGER
-reversed = ARRAYTOREVERSED(numbers)
-PRINT reversed(1)
+DIM reversed[] AS INTEGER
+reversed[] = ARRAYTOREVERSED(numbers[])
+PRINT reversed[1]
 
-DIM slice() AS INTEGER
-slice = ARRAYSLICE(numbers, 2, 2)
-PRINT JOIN(ARRAYMAP(slice, IntToString), ",")
+DIM slice[] AS INTEGER
+slice[] = ARRAYSLICE(numbers[], 2, 2)
+PRINT JOIN(ARRAYMAP(slice[], IntToString), ",")
 
 ' Пользовательский TYPE: строковое поле, динамическое массивное поле и фиксированное поле.
 TYPE Person
     Name AS STRING
-    Scores(), Flags(1 TO 2) AS INTEGER
+    Scores[], Flags[1 TO 2] AS INTEGER
 END TYPE
 
 DIM user AS Person
 user.Name = "Ada"
-REDIM user.Scores(1 TO 2)
-user.Scores(1) = 99
-user.Scores(2) = 100
-user.Flags(2) = 7
+REDIM user.Scores[1 TO 2]
+user.Scores[1] = 99
+user.Scores[2] = 100
+user.Flags[2] = 7
 PRINT user.Name
-PRINT user.Scores(2)
-PRINT user.Flags(2)
+PRINT user.Scores[2]
+PRINT user.Flags[2]
 
 ' Функциональное значение и замыкание: MakeAdder возвращает локальную функцию Add.
 DIM adder AS FUNCTION (INTEGER) AS INTEGER
@@ -180,10 +180,10 @@ ShowMessage("sub:ok")
 
 ' Регулярные выражения: проверка совпадения, массив совпадений и замена по группам.
 PRINT REGEXISMATCH("A12", "^a\d+", "i")
-DIM matches() AS STRING
-matches = REGEXMATCHES("Order 42 and 100", "\d+")
-PRINT ARRAYLENGTH(matches)
-PRINT matches(1)
+DIM matches[] AS STRING
+matches[] = REGEXMATCHES("Order 42 and 100", "\d+")
+PRINT ARRAYLENGTH(matches[])
+PRINT matches[1]
 PRINT REGEXREPLACE("A12 B34", "([A-Z])(\d+)", "$1-$2")
 
 ' Дата и время: используем стабильные формы, а текущие значения проверяем предикатами.
@@ -206,16 +206,16 @@ PRINT UTCOFFSET("2026-04-20 14:05:06", "UTC")
 DIM path AS STRING = MAKETEMPFILE("axiom_full_smoke_")
 DIM ok AS BOOLEAN
 DIM reader AS FILE
-DIM fileLines() AS STRING
+DIM fileLines[] AS STRING
 
 PRINT FILEEXISTS(path)
 ok = WRITEFILE(path, "alpha" + CHR(10) + "beta")
 PRINT ok
 PRINT FILESIZE(path) > 0
 
-fileLines = READALLLINES(path)
-PRINT ARRAYLENGTH(fileLines)
-PRINT fileLines(1)
+fileLines[] = READALLLINES(path)
+PRINT ARRAYLENGTH(fileLines[])
+PRINT fileLines[1]
 PRINT APPENDFILE(path, CHR(10) + "gamma")
 PRINT FILENAME(path) <> ""
 PRINT LEN(FILEDATE(path)) > 0

@@ -1,9 +1,9 @@
 ' Ожидается: 3, red, green, blue.
 
-DIM parts() AS STRING
-parts = SPLIT("red,green,blue", ",")
+DIM parts[] AS STRING
+parts[] = SPLIT("red,green,blue", ",")
 
-PRINT ARRAYLENGTH(parts)
-PRINT parts(1)
-PRINT parts(2)
-PRINT parts(3)
+PRINT ARRAYLENGTH(parts[])
+PRINT parts[1]
+PRINT parts[2]
+PRINT parts[3]

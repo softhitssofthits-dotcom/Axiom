@@ -2,13 +2,13 @@
 ' Программа нагружает изменяющие ARRAY-функции на STRING()-массивах
 ' и одновременно трогает несколько форм цикла.
 
-DIM source(1 TO 180) AS STRING
-DIM schedule(1 TO 24) AS STRING
-DIM seeded() AS STRING
-DIM working() AS STRING
-DIM prefix() AS STRING
-DIM suffix() AS STRING
-DIM merged() AS STRING
+DIM source[1 TO 180] AS STRING
+DIM schedule[1 TO 24] AS STRING
+DIM seeded[] AS STRING
+DIM working[] AS STRING
+DIM prefix[] AS STRING
+DIM suffix[] AS STRING
+DIM merged[] AS STRING
 DIM removedLine AS STRING
 DIM poppedLine AS STRING
 DIM checksum AS INTEGER
@@ -17,39 +17,39 @@ DIM countIndex AS INTEGER
 DIM headIndex AS INTEGER
 DIM tailIndex AS INTEGER
 
-FOR lineIndex = 1 TO ARRAYLENGTH(source)
-    source(lineIndex) = BuildDraftLine(lineIndex)
+FOR lineIndex = 1 TO ARRAYLENGTH(source[])
+    source[lineIndex] = BuildDraftLine(lineIndex)
 NEXT
 
-FOR slotIndex = 1 TO ARRAYLENGTH(schedule)
-    schedule(slotIndex) = BuildScheduleEntry(slotIndex)
+FOR slotIndex = 1 TO ARRAYLENGTH(schedule[])
+    schedule[slotIndex] = BuildScheduleEntry(slotIndex)
 NEXT
 
-seeded = ARRAYCONCAT(source, schedule)
-working = ARRAYCLONE(seeded)
+seeded[] = ARRAYCONCAT(source[], schedule[])
+working[] = ARRAYCLONE(seeded[])
 
 DIM normalizeIndex AS INTEGER = 1
 
-WHILE normalizeIndex <= ARRAYLENGTH(working)
-    working(normalizeIndex) = NormalizeDraftLine(working(normalizeIndex), normalizeIndex)
+WHILE normalizeIndex <= ARRAYLENGTH(working[])
+    working[normalizeIndex] = NormalizeDraftLine(working[normalizeIndex], normalizeIndex)
     normalizeIndex = normalizeIndex + 1
 END WHILE
 
-ARRAYINSERT(working, 1, "заголовок раздела: готово, пакет строк")
-ARRAYPUSH(working, "хвост пакета: готово, итоговый маркер")
+ARRAYINSERT(working[], 1, "заголовок раздела: готово, пакет строк")
+ARRAYPUSH(working[], "хвост пакета: готово, итоговый маркер")
 
-removedLine = ARRAYREMOVE(working, 2)
-poppedLine = ARRAYPOP(working)
+removedLine = ARRAYREMOVE(working[], 2)
+poppedLine = ARRAYPOP(working[])
 
-prefix = ARRAYTAKE(working, 102)
-suffix = ARRAYSKIP(working, 102)
-merged = ARRAYCONCAT(prefix, suffix)
+prefix[] = ARRAYTAKE(working[], 102)
+suffix[] = ARRAYSKIP(working[], 102)
+merged[] = ARRAYCONCAT(prefix[], suffix[])
 
 checksum = 0
 countIndex = 1
 
-DO WHILE countIndex <= ARRAYLENGTH(merged)
-    IF CONTAINS(merged(countIndex), "готово") THEN
+DO WHILE countIndex <= ARRAYLENGTH(merged[])
+    IF CONTAINS(merged[countIndex], "готово") THEN
         checksum = checksum + 1
     END IF
 
@@ -60,7 +60,7 @@ digest = ""
 headIndex = 1
 
 DO
-    digest = digest + LEFT(merged(headIndex), 14)
+    digest = digest + LEFT(merged[headIndex], 14)
 
     IF headIndex = 3 THEN
         EXIT DO
@@ -70,16 +70,16 @@ DO
     headIndex = headIndex + 1
 LOOP
 
-tailIndex = ARRAYLENGTH(merged) - 2
+tailIndex = ARRAYLENGTH(merged[]) - 2
 
-DO UNTIL tailIndex > ARRAYLENGTH(merged)
-    digest = digest + " // " + RIGHT(merged(tailIndex), 14)
+DO UNTIL tailIndex > ARRAYLENGTH(merged[])
+    digest = digest + " // " + RIGHT(merged[tailIndex], 14)
     tailIndex = tailIndex + 1
 LOOP
 
-PRINT ARRAYLENGTH(source)
-PRINT ARRAYLENGTH(working)
-PRINT ARRAYLENGTH(merged)
+PRINT ARRAYLENGTH(source[])
+PRINT ARRAYLENGTH(working[])
+PRINT ARRAYLENGTH(merged[])
 PRINT LEN(removedLine)
 PRINT LEN(poppedLine)
 PRINT checksum

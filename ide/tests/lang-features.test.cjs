@@ -7,6 +7,136 @@ const context = { window: {} };
 vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/renderer/lang-features.js'), 'utf8'), context);
 const signature = context.window.LangFeatures.builtinSignature;
 
+test('Квадратные объявления сохраняют тип, ранг, параметры и массивный результат', () => {
+  const source = 'DIM values[] AS STRING\nDIM grid[1 TO 2, Choose(1, 2) TO 3] AS INTEGER\nDIM inferred[] = Make()\nDIM legacy(1, 2) AS INTEGER\nDIM oldType AS STRING ()\nFUNCTION Make(BYREF rows[,] AS INTEGER, names[] AS STRING) AS STRING[]\nEND FUNCTION\nSUB Work(callback AS FUNCTION(INTEGER[,], STRING[]) AS STRING[], count AS INTEGER)\nEND SUB\nTYPE Box\nitems[] AS STRING\nEND TYPE';
+  const doc = context.window.LangFeatures.scanDoc({getValue: () => source});
+  assert.equal(doc.vars[0].type, 'STRING[]'); assert.equal(doc.vars[0].arrayRank, 1);
+  assert.equal(doc.vars[1].type, 'INTEGER[,]'); assert.equal(doc.vars[1].arrayRank, 2);
+  assert.equal(doc.vars[2].type, null); assert.equal(doc.vars[2].arrayRank, 1);
+  assert.equal(doc.vars[3].type, 'INTEGER(,)'); assert.equal(doc.vars[4].type, 'STRING()');
+  assert.equal(doc.functions[0].returnType, 'STRING[]');
+  assert.equal(doc.functions[0].params.length, 2);
+  assert.equal(doc.functions[0].params[0].name, 'rows'); assert.equal(doc.functions[0].params[0].type, 'INTEGER[,]');
+  assert.equal(doc.subs[0].params.length, 2);
+  assert.equal(doc.subs[0].params[0].type, 'FUNCTION(INTEGER[,], STRING[]) AS STRING[]');
+  assert.equal(doc.types[0].fields[0].type, 'STRING[]');
+});
+
+test('Список DIM отделяет объявления от запятых ранга, вызовов и строк', () => {
+  const source = 'DIM grid[,] AS INTEGER, names[] AS STRING = SPLIT("а,б", ","), value AS INTEGER';
+  const doc = context.window.LangFeatures.scanDoc({getValue: () => source});
+  assert.equal(doc.vars.length, 3);
+  assert.equal(doc.vars[0].type, 'INTEGER[,]'); assert.equal(doc.vars[1].type, 'STRING[]'); assert.equal(doc.vars[2].type, 'INTEGER');
+});
+
+test('Неполное квадратное объявление не получает выдуманный тип или ранг', () => {
+  const doc = context.window.LangFeatures.scanDoc({getValue: () => 'DIM broken[1,\nPRINT broken'});
+  assert.equal(doc.vars[0].type, null); assert.equal(doc.vars[0].arrayRank, 0);
+});
+
+test('Дополнение массивного имени вставляет [] без дублирования готовых скобок', () => {
+  const p = providers('DIM values[] AS STRING\nval');
+  const item = () => p.features._completionProvider.provideCompletionItems(p.model, {lineNumber: 2, column: 4}).suggestions.find(s => s.label === 'values');
+  assert.equal(item().insertText, 'values[]'); assert.equal(item().detail, 'STRING[]');
+  p.edit('DIM values[] AS STRING\nval[2]'); assert.equal(item().insertText, 'values');
+});
+
+for (const [source, expected, parameter] of [
+  ['LEFT(grid[1, 2], ', 'LEFT', 1],
+  ['LEFT(grid[1, ', 'LEFT', 0],
+  ['LEFT(grid[LEN(', 'LEN', 0],
+  ['LEFT(grid[(1 + 2), 3], ', 'LEFT', 1],
+  ['LEFT(Make()[1, 2], ', 'LEFT', 1],
+  ['LEFT(grid[other[1, 2], 3], ', 'LEFT', 1],
+  ['PRINT grid[1, ', null, 0],
+  ['PRINT LEN[1, ', null, 0],
+  ['PRINT $"Значение {LEFT(grid[1, 2], ', 'LEFT', 1],
+  ['LEFT("значение", $"{grid[1, 2]}", ', 'LEFT', 1],
+]) test('Подпись отличает [] от вызова: ' + source, async () => {
+  const p = providers(source);
+  const help = (await p.features._sigProvider.provideSignatureHelp(p.model, {lineNumber: 1, column: source.length + 1})).value;
+  assert.equal(help.signatures.length > 0, !!expected);
+  if (expected) { assert.ok(help.signatures[0].label.startsWith(expected + '(')); assert.equal(help.activeParameter, parameter); }
+});
+
+test('Старое объявление распознаётся без принудительной вставки нового синтаксиса', () => {
+  const p = providers('DIM legacy(1 TO 3) AS STRING\nleg');
+  const item = p.features._completionProvider.provideCompletionItems(p.model, {lineNumber: 2, column: 4}).suggestions.find(s => s.label === 'legacy');
+  assert.equal(item.insertText, 'legacy');
+});
+
+test('Массивные параметры резервной подписи разделяются по верхнему уровню', async () => {
+  const source = 'SUB Show(values[,] AS INTEGER, count AS INTEGER)\nEND SUB\nShow(grid[1, 2], ';
+  const p = providers(source); delete p.ide.documentServices;
+  const help = (await p.features._sigProvider.provideSignatureHelp(p.model, {lineNumber: 3, column: 'Show(grid[1, 2], '.length + 1})).value;
+  assert.equal(help.activeParameter, 1); assert.equal(help.signatures[0].parameters.length, 2);
+  assert.equal(help.signatures[0].parameters[0].label, 'values[,] AS INTEGER');
+});
+
+test('Запятые квадратного индекса не смещают третий аргумент функции', async () => {
+  const source = 'RGB(grid[1, 2], 3, ';
+  const p = providers(source);
+  p.ide.langMeta.builtins.push({name: 'RGB', params: [{name: 'red'}, {name: 'green'}, {name: 'blue'}]});
+  const help = (await p.features._sigProvider.provideSignatureHelp(p.model, {lineNumber: 1, column: source.length + 1})).value;
+  assert.equal(help.activeParameter, 2);
+});
+
+for (const action of ['edit', 'cancel', 'dispose']) test('Квадратная подпись не применяет поздний семантический ответ: ' + action, async () => {
+  const source = 'Show(grid[1, 2], ', p = providers(source);
+  let resolve;
+  p.ide.documentServices.request = () => new Promise(done => {resolve = done;});
+  const cancellation = {isCancellationRequested: false};
+  const request = p.features._sigProvider.provideSignatureHelp(p.model, {lineNumber: 1, column: source.length + 1}, cancellation);
+  if (action === 'edit') p.edit('PRINT 1');
+  else if (action === 'cancel') cancellation.isCancellationRequested = true;
+  else p.model.isDisposed = () => true;
+  resolve({hovers: [{start: 0, length: 4, kind: 'sub', signature: 'SUB Show(values[,] AS INTEGER, count AS INTEGER)', parameters: ['values[,] AS INTEGER', 'count AS INTEGER']}]});
+  assert.equal((await request).value.signatures.length, 0);
+});
+
+test('Функция с массивным результатом остаётся функцией, а не массивом', async () => {
+  const p = providers('PRINT Make()', [{start: 6, length: 4, kind: 'function', type: 'STRING[]', arrayRank: 1,
+    elementType: 'STRING', signature: 'FUNCTION Make() AS STRING[]', parameters: []}]);
+  const text = (await p.features._hoverProvider.provideHover(p.model, {lineNumber: 1, column: 7})).contents[0].value;
+  assert.match(text, /— функция/); assert.doesNotMatch(text, /— массив/);
+});
+
+test('Группировка внутри индекса не скрывает внешнюю функцию', async () => {
+  const source = 'LEFT(grid[(1 + ';
+  const p = providers(source);
+  const help = (await p.features._sigProvider.provideSignatureHelp(p.model, {lineNumber: 1, column: source.length + 1})).value;
+  assert.ok(help.signatures[0].label.startsWith('LEFT(')); assert.equal(help.activeParameter, 0);
+});
+
+test('Квадратный тип в семантической карточке сохраняет категорию массива на обоих языках', async () => {
+  const p = providers('PRINT grid[1, 2]', [{start: 6, length: 4, kind: 'variable', type: 'INTEGER[,]'}]);
+  for (const locale of ['ru', 'en']) {
+    p.language(locale);
+    const text = (await p.features._hoverProvider.provideHover(p.model, {lineNumber: 1, column: 7})).contents[0].value;
+    assert.match(text, /INTEGER\[,\]/); assert.match(text, locale === 'ru' ? /Измерений: 2/ : /Dimensions: 2/);
+  }
+});
+
+test('Массив в подсказке назван массивом, показаны тип элементов и число измерений', async () => {
+  const p = providers('PRINT grades', [{start: 6, length: 6, name: 'grades', kind: 'variable', type: 'INTEGER(,)'}]);
+  const hover = () => p.features._hoverProvider.provideHover(p.model, {lineNumber: 1, column: 7});
+  assert.match((await hover()).contents[0].value, /массив/);
+  assert.match((await hover()).contents[0].value, /Тип элементов: `INTEGER`/);
+  assert.match((await hover()).contents[0].value, /Измерений: 2/);
+  p.language('en');
+  assert.match((await hover()).contents[0].value, /array/);
+  assert.match((await hover()).contents[0].value, /Element type: `INTEGER`/);
+  assert.match((await hover()).contents[0].value, /Dimensions: 2/);
+});
+
+for (const declaration of ['DIM fruits[] = SPLIT("яблоко,банан", ",")', 'DIM fruits[] AS STRING = SPLIT("яблоко,банан", ",")']) {
+  test('Подсказка массивного инициализатора сохраняет тип массива: ' + declaration, async () => {
+    const p = providers(declaration, [{ start: 4, length: 6, name: 'fruits', kind: 'variable', type: 'STRING[]', arrayRank: 1 }]);
+    const hover = await p.features._hoverProvider.provideHover(p.model, { lineNumber: 1, column: 5 });
+    assert.match(hover.contents[0].value, /Тип: `STRING\[\]`/);
+  });
+}
+
 test('Семантическая подсказка обновляется после правки зависимости при неизменном основном тексте',async()=>{
  const p=providers('PRINT value');let revision=0,calls=0;
  p.ide.openFiles.captureProject=()=>{const captured=revision;return {isCurrent:()=>captured===revision};};
@@ -141,6 +271,7 @@ function providers(source, hovers = []) {
     getValueInRange: r => model.getLineContent(r.startLineNumber).slice(r.startColumn - 1, r.endColumn - 1),
   };
   const runtime = {window: {}, document: {querySelectorAll: () => []}};
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/renderer/semantic-colors.js'), 'utf8'), runtime);
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/renderer/locale.js'), 'utf8'), runtime);
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/renderer/lang-features.js'), 'utf8'), runtime);
   const features = runtime.window.LangFeatures;

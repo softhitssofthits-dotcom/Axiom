@@ -33,9 +33,9 @@ public sealed class FileSystemAuditRegressionTests
         {
             Directory.CreateDirectory(Path.Combine(root, "nested"));
             var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($$"""
-                DIM entries() AS STRING
+                DIM entries[] AS STRING
                 TRY
-                    entries = {{operation}}("{{root}}", "{{mask}}")
+                    entries[] = {{operation}}("{{root}}", "{{mask}}")
                     PRINT "accepted"
                 CATCH e
                     PRINT e.Code
@@ -89,9 +89,9 @@ public sealed class FileSystemAuditRegressionTests
     public void InvalidListingPathIsNotReportedAsPattern(string operation)
     {
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($$"""
-            DIM entries() AS STRING
+            DIM entries[] AS STRING
             TRY
-                entries = {{operation}}(CHR(0), "*")
+                entries[] = {{operation}}(CHR(0), "*")
             CATCH e
                 PRINT INSTR(e.Message, "path") > 0
                 PRINT INSTR(e.Message, "pattern") = 0

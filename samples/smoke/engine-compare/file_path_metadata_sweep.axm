@@ -5,7 +5,7 @@
 DIM artifactsRoot AS STRING = COMBINEPATH(CURRENTDIR(), ".artifacts")
 DIM compareRoot AS STRING = COMBINEPATH(artifactsRoot, "manual-checks")
 DIM sweepRoot AS STRING = COMBINEPATH(compareRoot, "file-path-metadata-sweep")
-DIM files() AS STRING
+DIM files[] AS STRING
 DIM pathChecksum AS LONG = 0
 DIM sizeChecksum AS LONG = 0
 DIM dateChecksum AS LONG = 0
@@ -20,11 +20,11 @@ FOR fileIndex = 1 TO 24
     PRINT WRITEFILE(filePath, BuildPayload(fileIndex))
 NEXT
 
-files = GETFILES(sweepRoot, "*.txt")
+files[] = GETFILES(sweepRoot, "*.txt")
 
 FOR passIndex = 1 TO 120
-    FOR fileIndex = 1 TO ARRAYLENGTH(files)
-        DIM pathValue AS STRING = files(fileIndex)
+    FOR fileIndex = 1 TO ARRAYLENGTH(files[])
+        DIM pathValue AS STRING = files[fileIndex]
         DIM fullPathValue AS STRING = FULLPATH(pathValue)
         DIM directoryValue AS STRING = DIRNAME(fullPathValue)
         DIM fileNameValue AS STRING = FILENAME(fullPathValue)
@@ -50,7 +50,7 @@ FOR passIndex = 1 TO 120
     NEXT
 NEXT
 
-PRINT ARRAYLENGTH(files)
+PRINT ARRAYLENGTH(files[])
 PRINT pathChecksum
 PRINT sizeChecksum
 PRINT dateChecksum

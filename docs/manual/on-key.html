@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Оператор ON KEY — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
 <body data-page="on-key"><a class="skip-link" href="#main-content">Перейти к статье</a>
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
@@ -7,18 +7,12 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор ON KEY</span></nav>
-<p class="eyebrow">Оператор</p><h1 class="page-title">Оператор ON KEY</h1><p class="lead"><code>ON KEY</code> — оператор языка Axiom, который назначает процедуру <code>SUB</code> обработчиком нажатия клавиши. Процедура вызывается между инструкциями программы, когда в очереди есть подходящее событие. Параметр обработчика передаётся по значению; <code>BYREF</code> не допускается.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-
-
-        <section class="article-section">
-            <h2>Когда использовать ON KEY</h2>
-            <p>Обработчик подходит для отдельного действия по клавише. Можно назначить обработчик конкретного имени или запасной обработчик <code>"ANY"</code>. Для непрерывной проверки удержания используйте <a href="keydown.html">KEYDOWN</a>.</p>
-        </section>
+<p class="eyebrow">Оператор</p><h1 class="page-title">Оператор ON KEY</h1><p class="lead">Реакцию на нажатие клавиши можно не проверять в каждом цикле, а вынести в отдельную процедуру. Оператор <code>ON KEY</code> назначает такую процедуру <code>SUB</code> обработчиком нажатия, и среда вызывает её между инструкциями программы, когда в очереди есть подходящее событие. Параметр обработчика передаётся по значению; <code>BYREF</code> не допускается.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
         <section class="article-section">
-            <h2>Контекст выполнения</h2>
-            <p>Оператор использует доступную клавиатурную очередь. Без окна <code>SCREEN</code> события приходят из текстовой области IDE; после открытия текстового или графического экрана — из его окна.</p>
-            <p>Обработчик и опрос читают одну очередь: перехваченное событие уже не попадёт в <a href="inkey.html">INKEY</a>.</p>
+            <h2>Когда обработчик удобнее опроса</h2>
+            <p>Обработчик подходит для отдельного действия по клавише: программа продолжает основную работу, а реакция выполняется в назначенной процедуре. Можно назначить обработчик конкретного имени или запасной обработчик <code>"ANY"</code>. Для непрерывной проверки удержания используется <a href="keydown.html">KEYDOWN</a>.</p>
+            <p>Оператор использует доступную клавиатурную очередь. Без окна <code>SCREEN</code> события приходят из текстовой области IDE; после открытия текстового или графического экрана — из его окна. Обработчик и опрос читают одну очередь: перехваченное событие уже не попадёт в <a href="inkey.html">INKEY</a>.</p>
         </section>
 
         <section class="article-section">
@@ -35,7 +29,7 @@ END SUB</code></pre>
         </section>
 
         <section class="article-section">
-            <h2>Параметры</h2>
+            <h2>Аргументы и состояния</h2>
             <p>В записи синтаксиса <code>keyText</code> обозначает строковое имя, а <code>HandlerName</code> — имя объявленной процедуры, например <code>HandleLeft</code>. Слова <code>ON</code>, <code>STOP</code> и <code>OFF</code> после запятой управляют состоянием обработчика.</p>
             <ul>
                 <li><code>keyText</code> — строковое выражение с именем клавиши, например <code>"LEFT"</code>, <code>"ESCAPE"</code> или <code>"A"</code>. Канонические имена и алиасы перечислены в <a href="keyboard-mouse-events.html#key-aliases">общей таблице имён клавиш</a>. Специальная строка <code>"ANY"</code> задаёт обработчик любой клавиши.</li>
@@ -44,6 +38,7 @@ END SUB</code></pre>
                 <li><code>STOP</code> — пауза ранее зарегистрированного обработчика без удаления регистрации.</li>
                 <li><code>OFF</code> — полное отключение обработчика для той же клавиши.</li>
             </ul>
+            <p>Аргумент клавиши должен иметь тип <code>STRING</code>. Пустая строка и строка из пробелов не создают регистрацию. Повторная регистрация для той же нормализованной цели заменяет прежнюю процедуру. <code>ON</code> и <code>STOP</code> для ещё не зарегистрированной цели не вызывают ошибку и не назначают процедуру.</p>
         </section>
 
         <section class="article-section">
@@ -61,6 +56,7 @@ END SUB</code></pre>
                 <li>Если обработчик объявлен с одним параметром <code>STRING</code>, в него передаётся нормализованное имя фактической клавиши. Для <code>ON KEY("ANY")</code> это не строка <code>"ANY"</code>, а имя сработавшей клавиши, например <code>"LEFT"</code> или <code>"ESC"</code>.</li>
                 <li>Состояния удерживаемых клавиш учитываются в сочетаниях. Сам оператор <code>ON KEY</code> реагирует на события клавиатуры; для мыши используется <code>ON MOUSE</code>.</li>
             </ul>
+            <p>При подходящем событии сначала выбирается включённый обработчик сочетания с удерживаемыми предыдущими клавишами; сочетание с большим числом требуемых клавиш имеет приоритет. Затем проверяются одиночная клавиша и <code>ANY</code>. Поэтому обработчик <code>CTRL+LEFT</code> может получить событие раньше обработчика <code>LEFT</code>.</p>
         </section>
 
         <section class="article-section">
@@ -93,8 +89,7 @@ END SUB</code></pre>
 
         <section class="article-section">
             <h2>Аккорд клавиш</h2>
-            <p>Для сочетания разделите имена знаком <code>+</code>. Последняя клавиша должна прийти событием, а предыдущие — удерживаться.</p>
-            <p>Например, <code>ON KEY("CTRL+LEFT"), Handler</code> реагирует на нажатие <code>LEFT</code> при удерживаемом <code>CTRL</code>. Так же проверяется сочетание в <code>KEYPRESS</code>.</p>
+            <p>Для сочетания разделите имена знаком <code>+</code>. Последняя клавиша должна прийти событием, а предыдущие — удерживаться. Например, <code>ON KEY("CTRL+LEFT"), Handler</code> реагирует на нажатие <code>LEFT</code> при удерживаемом <code>CTRL</code>; так же проверяется сочетание в <code>KEYPRESS</code>.</p>
 <pre><code class="language-axiom">ON KEY("CTRL+LEFT"), HandleChord
 
 FOR i = 1 TO 200000
@@ -121,7 +116,7 @@ END SUB</code></pre>
 
         <section class="article-section">
             <h2>Пауза и возобновление</h2>
-            <p>Режим <code>STOP</code> приостанавливает вызовы, сохраняя регистрацию процедуры. Режим <code>ON</code> возобновляет её вызовы.</p>
+            <p>Режим <code>STOP</code> приостанавливает вызовы, сохраняя регистрацию процедуры; режим <code>ON</code> возобновляет их. Пока обработчик на паузе, клавиша остаётся обычным событием для <code>INKEY()</code> или <code>KEYPRESS()</code>.</p>
 <pre><code class="language-axiom">ON KEY("LEFT"), HandleLeft
 ON KEY("LEFT"), STOP
 
@@ -136,9 +131,6 @@ SUB HandleLeft()
     PRINT "LEFT"
 END SUB</code></pre>
         </section>
-<section class="article-section"><h2>Пустая цель и приоритет сочетаний</h2><p>Аргумент клавиши должен иметь тип <code>STRING</code>. Пустая строка и строка из пробелов не создают регистрацию. Повторная регистрация для той же нормализованной цели заменяет прежнюю процедуру. ON и STOP для ещё не зарегистрированной цели не вызывают ошибку и не назначают процедуру.</p>
-<p>При подходящем событии сначала выбирается включённый обработчик сочетания с удерживаемыми предыдущими клавишами; сочетание с большим числом требуемых клавиш имеет приоритет. Затем проверяются одиночная клавиша и ANY. Поэтому обработчик CTRL+LEFT может получить событие раньше обработчика LEFT.</p></section>
-
 
         <section class="article-section">
             <h2>Диагностика</h2>
@@ -159,6 +151,7 @@ ON KEY("LEFT"), OFF
 SUB HandleLeft()
     PRINT "LEFT handler"
 END SUB</code></pre>
+            <p>Пустой цикл даёт среде точки, на которых проверяется очередь. Обработчик снимается до выхода из программы, поэтому последующие нажатия <code>LEFT</code> снова становятся обычными событиями.</p>
         </section>
 
         <section class="article-section">

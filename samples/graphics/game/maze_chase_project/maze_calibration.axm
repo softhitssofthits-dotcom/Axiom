@@ -16,14 +16,14 @@ Private Dim CALIBRATION_PANEL_X As Integer = 8                                  
 Private Dim CALIBRATION_PANEL_Y As Integer = 88                                                        ' Верхняя координата боковой панели, чтобы она не закрывала верх поля.
 Private Dim CALIBRATION_PANEL_WIDTH As Integer = 264                                                    ' Ширина боковой панели с подсказками.
 Private Dim CALIBRATION_PANEL_HEIGHT As Integer = 172                                                   ' Высота боковой панели увеличена, чтобы длинный статус помещался в две строки.
-Private Dim pelletRowOffset(1 To MAZE_ROWS) As Integer                                                  ' Вертикальная поправка к началу клетки для выравнивания с картинкой.
-Private Dim pelletColOffset(1 To MAZE_COLUMNS) As Integer                                               ' Горизонтальная поправка к началу клетки для выравнивания с картинкой.
-Private Dim parsedRowValues(1 To MAZE_ROWS) As Integer                                                 ' Проверенные значения смещения строк из внешнего файла.
-Private Dim parsedColValues(1 To MAZE_COLUMNS) As Integer                                              ' Проверенные значения смещения столбцов из внешнего файла.
-Private Dim parsedRowSeen(1 To MAZE_ROWS) As Integer                                                   ' Флаги найденных строк таблицы калибровки.
-Private Dim parsedColSeen(1 To MAZE_COLUMNS) As Integer                                                ' Флаги найденных столбцов таблицы калибровки.
+Private Dim pelletRowOffset[1 To MAZE_ROWS] As Integer                                                  ' Вертикальная поправка к началу клетки для выравнивания с картинкой.
+Private Dim pelletColOffset[1 To MAZE_COLUMNS] As Integer                                               ' Горизонтальная поправка к началу клетки для выравнивания с картинкой.
+Private Dim parsedRowValues[1 To MAZE_ROWS] As Integer                                                 ' Проверенные значения смещения строк из внешнего файла.
+Private Dim parsedColValues[1 To MAZE_COLUMNS] As Integer                                              ' Проверенные значения смещения столбцов из внешнего файла.
+Private Dim parsedRowSeen[1 To MAZE_ROWS] As Integer                                                   ' Флаги найденных строк таблицы калибровки.
+Private Dim parsedColSeen[1 To MAZE_COLUMNS] As Integer                                                ' Флаги найденных столбцов таблицы калибровки.
 Private Dim calibrationText As String = ""                                                            ' Текст внешнего снимка калибровки.
-Private Dim calibrationLines() As String                                                               ' Строки внешнего снимка калибровки.
+Private Dim calibrationLines[] As String                                                               ' Строки внешнего снимка калибровки.
 Private Dim calibrationParseError As String = ""                                                      ' Ошибка разбора внешней таблицы калибровки.
 Private Dim calibrationMode As Boolean = False                                                         ' Флаг ручной калибровки: TRUE означает, что стрелки двигают точки, а не героя.
 Private Dim calibrationTarget As Integer = CALIBRATION_ROW_MODE                                        ' Что сейчас калибруем: строку точек или столбец точек.
@@ -65,72 +65,72 @@ End Sub
 Public Sub InitPelletAlignment()                                                                       ' Процедура задаёт реальные центры тоннелей на фоне лабиринта.
     ' Здесь мы задаём высоту точек по строкам карты.                                            ' Больше число = точка ниже. Меньше число = точка выше.
     ' Эти числа удобно крутить вручную и сразу смотреть результат в IDE.                        ' Так проще попасть в центр тоннеля по картинке.
-    pelletRowOffset(1) = -37                                                                   ' Значение строки 1 полностью перенесено из файла калибровки.
-    pelletRowOffset(2) = -37                                                                   ' Значение строки 2 полностью перенесено из файла калибровки.
-    pelletRowOffset(3) = -37                                                                   ' Значение строки 3 полностью перенесено из файла калибровки.
-    pelletRowOffset(4) = -34                                                                   ' Значение строки 4 полностью перенесено из файла калибровки.
-    pelletRowOffset(5) = -33                                                                   ' Значение строки 5 полностью перенесено из файла калибровки.
-    pelletRowOffset(6) = -23                                                                   ' Значение строки 6 полностью перенесено из файла калибровки.
-    pelletRowOffset(7) = -19                                                                   ' Значение строки 7 полностью перенесено из файла калибровки.
-    pelletRowOffset(8) = -16                                                                   ' Значение строки 8 полностью перенесено из файла калибровки.
-    pelletRowOffset(9) = -15                                                                   ' Значение строки 9 полностью перенесено из файла калибровки.
-    pelletRowOffset(10) = -8                                                                   ' Значение строки 10 полностью перенесено из файла калибровки.
-    pelletRowOffset(11) = -3                                                                   ' Значение строки 11 полностью перенесено из файла калибровки.
-    pelletRowOffset(12) = 1                                                                   ' Значение строки 12 полностью перенесено из файла калибровки.
-    pelletRowOffset(13) = 2                                                                   ' Значение строки 13 полностью перенесено из файла калибровки.
-    pelletRowOffset(14) = 1                                                                   ' Значение строки 14 полностью перенесено из файла калибровки.
-    pelletRowOffset(15) = 2                                                                   ' Значение строки 15 полностью перенесено из файла калибровки.
-    pelletRowOffset(16) = 7                                                                   ' Значение строки 16 полностью перенесено из файла калибровки.
-    pelletRowOffset(17) = 10                                                                   ' Значение строки 17 полностью перенесено из файла калибровки.
-    pelletRowOffset(18) = 15                                                                   ' Значение строки 18 полностью перенесено из файла калибровки.
-    pelletRowOffset(19) = 14                                                                   ' Значение строки 19 полностью перенесено из файла калибровки.
-    pelletRowOffset(20) = 14                                                                   ' Значение строки 20 полностью перенесено из файла калибровки.
-    pelletRowOffset(21) = 13                                                                   ' Значение строки 21 полностью перенесено из файла калибровки.
-    pelletRowOffset(22) = 20                                                                   ' Значение строки 22 полностью перенесено из файла калибровки.
-    pelletRowOffset(23) = 21                                                                   ' Значение строки 23 полностью перенесено из файла калибровки.
-    pelletRowOffset(24) = 26                                                                   ' Значение строки 24 полностью перенесено из файла калибровки.
-    pelletRowOffset(25) = 26                                                                   ' Значение строки 25 полностью перенесено из файла калибровки.
-    pelletRowOffset(26) = 24                                                                   ' Значение строки 26 полностью перенесено из файла калибровки.
-    pelletRowOffset(27) = 27                                                                   ' Значение строки 27 полностью перенесено из файла калибровки.
-    pelletRowOffset(28) = 33                                                                   ' Значение строки 28 полностью перенесено из файла калибровки.
-    pelletRowOffset(29) = 40                                                                   ' Значение строки 29 полностью перенесено из файла калибровки.
-    pelletRowOffset(30) = 42                                                                   ' Значение строки 30 полностью перенесено из файла калибровки.
-    pelletRowOffset(31) = 42                                                                   ' Значение строки 31 полностью перенесено из файла калибровки.
-    pelletRowOffset(32) = 40                                                                   ' Значение строки 32 полностью перенесено из файла калибровки.
-    pelletRowOffset(33) = 38                                                                   ' Значение строки 33 полностью перенесено из файла калибровки.
-    pelletRowOffset(34) = -37                                                                   ' Значение строки 34 полностью перенесено из файла калибровки.
-    pelletRowOffset(35) = -37                                                                   ' Значение строки 35 полностью перенесено из файла калибровки.
-    pelletRowOffset(36) = -37                                                                   ' Значение строки 36 полностью перенесено из файла калибровки.
+    pelletRowOffset[1] = -37                                                                   ' Значение строки 1 полностью перенесено из файла калибровки.
+    pelletRowOffset[2] = -37                                                                   ' Значение строки 2 полностью перенесено из файла калибровки.
+    pelletRowOffset[3] = -37                                                                   ' Значение строки 3 полностью перенесено из файла калибровки.
+    pelletRowOffset[4] = -34                                                                   ' Значение строки 4 полностью перенесено из файла калибровки.
+    pelletRowOffset[5] = -33                                                                   ' Значение строки 5 полностью перенесено из файла калибровки.
+    pelletRowOffset[6] = -23                                                                   ' Значение строки 6 полностью перенесено из файла калибровки.
+    pelletRowOffset[7] = -19                                                                   ' Значение строки 7 полностью перенесено из файла калибровки.
+    pelletRowOffset[8] = -16                                                                   ' Значение строки 8 полностью перенесено из файла калибровки.
+    pelletRowOffset[9] = -15                                                                   ' Значение строки 9 полностью перенесено из файла калибровки.
+    pelletRowOffset[10] = -8                                                                   ' Значение строки 10 полностью перенесено из файла калибровки.
+    pelletRowOffset[11] = -3                                                                   ' Значение строки 11 полностью перенесено из файла калибровки.
+    pelletRowOffset[12] = 1                                                                   ' Значение строки 12 полностью перенесено из файла калибровки.
+    pelletRowOffset[13] = 2                                                                   ' Значение строки 13 полностью перенесено из файла калибровки.
+    pelletRowOffset[14] = 1                                                                   ' Значение строки 14 полностью перенесено из файла калибровки.
+    pelletRowOffset[15] = 2                                                                   ' Значение строки 15 полностью перенесено из файла калибровки.
+    pelletRowOffset[16] = 7                                                                   ' Значение строки 16 полностью перенесено из файла калибровки.
+    pelletRowOffset[17] = 10                                                                   ' Значение строки 17 полностью перенесено из файла калибровки.
+    pelletRowOffset[18] = 15                                                                   ' Значение строки 18 полностью перенесено из файла калибровки.
+    pelletRowOffset[19] = 14                                                                   ' Значение строки 19 полностью перенесено из файла калибровки.
+    pelletRowOffset[20] = 14                                                                   ' Значение строки 20 полностью перенесено из файла калибровки.
+    pelletRowOffset[21] = 13                                                                   ' Значение строки 21 полностью перенесено из файла калибровки.
+    pelletRowOffset[22] = 20                                                                   ' Значение строки 22 полностью перенесено из файла калибровки.
+    pelletRowOffset[23] = 21                                                                   ' Значение строки 23 полностью перенесено из файла калибровки.
+    pelletRowOffset[24] = 26                                                                   ' Значение строки 24 полностью перенесено из файла калибровки.
+    pelletRowOffset[25] = 26                                                                   ' Значение строки 25 полностью перенесено из файла калибровки.
+    pelletRowOffset[26] = 24                                                                   ' Значение строки 26 полностью перенесено из файла калибровки.
+    pelletRowOffset[27] = 27                                                                   ' Значение строки 27 полностью перенесено из файла калибровки.
+    pelletRowOffset[28] = 33                                                                   ' Значение строки 28 полностью перенесено из файла калибровки.
+    pelletRowOffset[29] = 40                                                                   ' Значение строки 29 полностью перенесено из файла калибровки.
+    pelletRowOffset[30] = 42                                                                   ' Значение строки 30 полностью перенесено из файла калибровки.
+    pelletRowOffset[31] = 42                                                                   ' Значение строки 31 полностью перенесено из файла калибровки.
+    pelletRowOffset[32] = 40                                                                   ' Значение строки 32 полностью перенесено из файла калибровки.
+    pelletRowOffset[33] = 38                                                                   ' Значение строки 33 полностью перенесено из файла калибровки.
+    pelletRowOffset[34] = -37                                                                   ' Значение строки 34 полностью перенесено из файла калибровки.
+    pelletRowOffset[35] = -37                                                                   ' Значение строки 35 полностью перенесено из файла калибровки.
+    pelletRowOffset[36] = -37                                                                   ' Значение строки 36 полностью перенесено из файла калибровки.
 
     ' Здесь мы задаём положение точек по столбцам карты.                                        ' Больше число = точка правее. Меньше число = точка левее.
-    pelletColOffset(1) = 11                                                                    ' Значение столбца 1 полностью перенесено из файла калибровки.
-    pelletColOffset(2) = 11                                                                    ' Значение столбца 2 полностью перенесено из файла калибровки.
-    pelletColOffset(3) = 13                                                                    ' Значение столбца 3 полностью перенесено из файла калибровки.
-    pelletColOffset(4) = 18                                                                    ' Значение столбца 4 полностью перенесено из файла калибровки.
-    pelletColOffset(5) = 15                                                                    ' Значение столбца 5 полностью перенесено из файла калибровки.
-    pelletColOffset(6) = 14                                                                    ' Значение столбца 6 полностью перенесено из файла калибровки.
-    pelletColOffset(7) = 16                                                                    ' Значение столбца 7 полностью перенесено из файла калибровки.
-    pelletColOffset(8) = 14                                                                    ' Значение столбца 8 полностью перенесено из файла калибровки.
-    pelletColOffset(9) = 11                                                                    ' Значение столбца 9 полностью перенесено из файла калибровки.
-    pelletColOffset(10) = 12                                                                    ' Значение столбца 10 полностью перенесено из файла калибровки.
-    pelletColOffset(11) = 11                                                                    ' Значение столбца 11 полностью перенесено из файла калибровки.
-    pelletColOffset(12) = 12                                                                    ' Значение столбца 12 полностью перенесено из файла калибровки.
-    pelletColOffset(13) = 11                                                                    ' Значение столбца 13 полностью перенесено из файла калибровки.
-    pelletColOffset(14) = 11                                                                    ' Значение столбца 14 полностью перенесено из файла калибровки.
-    pelletColOffset(15) = 7                                                                    ' Значение столбца 15 полностью перенесено из файла калибровки.
-    pelletColOffset(16) = 6                                                                    ' Значение столбца 16 полностью перенесено из файла калибровки.
-    pelletColOffset(17) = 6                                                                    ' Значение столбца 17 полностью перенесено из файла калибровки.
-    pelletColOffset(18) = 3                                                                    ' Значение столбца 18 полностью перенесено из файла калибровки.
-    pelletColOffset(19) = 4                                                                    ' Значение столбца 19 полностью перенесено из файла калибровки.
-    pelletColOffset(20) = 3                                                                    ' Значение столбца 20 полностью перенесено из файла калибровки.
-    pelletColOffset(21) = 2                                                                    ' Значение столбца 21 полностью перенесено из файла калибровки.
-    pelletColOffset(22) = -1                                                                    ' Значение столбца 22 полностью перенесено из файла калибровки.
-    pelletColOffset(23) = 0                                                                    ' Значение столбца 23 полностью перенесено из файла калибровки.
-    pelletColOffset(24) = -2                                                                    ' Значение столбца 24 полностью перенесено из файла калибровки.
-    pelletColOffset(25) = -3                                                                    ' Значение столбца 25 полностью перенесено из файла калибровки.
-    pelletColOffset(26) = 0                                                                    ' Значение столбца 26 полностью перенесено из файла калибровки.
-    pelletColOffset(27) = 5                                                                    ' Значение столбца 27 полностью перенесено из файла калибровки.
-    pelletColOffset(28) = 6                                                                    ' Значение столбца 28 полностью перенесено из файла калибровки.
+    pelletColOffset[1] = 11                                                                    ' Значение столбца 1 полностью перенесено из файла калибровки.
+    pelletColOffset[2] = 11                                                                    ' Значение столбца 2 полностью перенесено из файла калибровки.
+    pelletColOffset[3] = 13                                                                    ' Значение столбца 3 полностью перенесено из файла калибровки.
+    pelletColOffset[4] = 18                                                                    ' Значение столбца 4 полностью перенесено из файла калибровки.
+    pelletColOffset[5] = 15                                                                    ' Значение столбца 5 полностью перенесено из файла калибровки.
+    pelletColOffset[6] = 14                                                                    ' Значение столбца 6 полностью перенесено из файла калибровки.
+    pelletColOffset[7] = 16                                                                    ' Значение столбца 7 полностью перенесено из файла калибровки.
+    pelletColOffset[8] = 14                                                                    ' Значение столбца 8 полностью перенесено из файла калибровки.
+    pelletColOffset[9] = 11                                                                    ' Значение столбца 9 полностью перенесено из файла калибровки.
+    pelletColOffset[10] = 12                                                                    ' Значение столбца 10 полностью перенесено из файла калибровки.
+    pelletColOffset[11] = 11                                                                    ' Значение столбца 11 полностью перенесено из файла калибровки.
+    pelletColOffset[12] = 12                                                                    ' Значение столбца 12 полностью перенесено из файла калибровки.
+    pelletColOffset[13] = 11                                                                    ' Значение столбца 13 полностью перенесено из файла калибровки.
+    pelletColOffset[14] = 11                                                                    ' Значение столбца 14 полностью перенесено из файла калибровки.
+    pelletColOffset[15] = 7                                                                    ' Значение столбца 15 полностью перенесено из файла калибровки.
+    pelletColOffset[16] = 6                                                                    ' Значение столбца 16 полностью перенесено из файла калибровки.
+    pelletColOffset[17] = 6                                                                    ' Значение столбца 17 полностью перенесено из файла калибровки.
+    pelletColOffset[18] = 3                                                                    ' Значение столбца 18 полностью перенесено из файла калибровки.
+    pelletColOffset[19] = 4                                                                    ' Значение столбца 19 полностью перенесено из файла калибровки.
+    pelletColOffset[20] = 3                                                                    ' Значение столбца 20 полностью перенесено из файла калибровки.
+    pelletColOffset[21] = 2                                                                    ' Значение столбца 21 полностью перенесено из файла калибровки.
+    pelletColOffset[22] = -1                                                                    ' Значение столбца 22 полностью перенесено из файла калибровки.
+    pelletColOffset[23] = 0                                                                    ' Значение столбца 23 полностью перенесено из файла калибровки.
+    pelletColOffset[24] = -2                                                                    ' Значение столбца 24 полностью перенесено из файла калибровки.
+    pelletColOffset[25] = -3                                                                    ' Значение столбца 25 полностью перенесено из файла калибровки.
+    pelletColOffset[26] = 0                                                                    ' Значение столбца 26 полностью перенесено из файла калибровки.
+    pelletColOffset[27] = 5                                                                    ' Значение столбца 27 полностью перенесено из файла калибровки.
+    pelletColOffset[28] = 6                                                                    ' Значение столбца 28 полностью перенесено из файла калибровки.
 End Sub                                                                                         ' Завершаем настройку центров точек.
 
 ' #endregion
@@ -155,10 +155,10 @@ Public Sub LoadPelletAlignment()                                                
     End If
 
     For rowIndex = 1 To MAZE_ROWS                                                               ' Применяем только прошедшие полную проверку смещения.
-        pelletRowOffset(rowIndex) = parsedRowValues(rowIndex)
+        pelletRowOffset[rowIndex] = parsedRowValues[rowIndex]
     Next
     For colIndex = 1 To MAZE_COLUMNS
-        pelletColOffset(colIndex) = parsedColValues(colIndex)
+        pelletColOffset[colIndex] = parsedColValues[colIndex]
     Next
 End Sub                                                                                         ' Завершаем чтение внешней калибровки.
 
@@ -166,23 +166,23 @@ End Sub                                                                         
 Private Sub ResetParsedCalibration()                                                                    ' Процедура очищает таблицы перед новым разбором файла.
     calibrationParseError = ""                                                                  ' Сбрасываем прежнюю ошибку.
     For rowIndex = 1 To MAZE_ROWS                                                               ' Очищаем значения и признаки строк.
-        parsedRowValues(rowIndex) = 0
-        parsedRowSeen(rowIndex) = 0
+        parsedRowValues[rowIndex] = 0
+        parsedRowSeen[rowIndex] = 0
     Next
     For colIndex = 1 To MAZE_COLUMNS                                                            ' Очищаем значения и признаки столбцов.
-        parsedColValues(colIndex) = 0
-        parsedColSeen(colIndex) = 0
+        parsedColValues[colIndex] = 0
+        parsedColSeen[colIndex] = 0
     Next
 End Sub                                                                                         ' Завершаем очистку служебных таблиц.
 
 ' ParseCalibrationText — Процедура разбирает снимок построчно и отвергает неизвестные записи.
 Private Sub ParseCalibrationText(sourceText As String)                                                  ' Процедура разбирает снимок построчно и отвергает неизвестные записи.
     Dim currentCalibrationLine As String = ""
-    calibrationLines = Split(sourceText, Chr(10))                                               ' Поддерживаем обычные файлы с переводом строк LF или CRLF.
+    calibrationLines[] = Split(sourceText, Chr(10))                                               ' Поддерживаем обычные файлы с переводом строк LF или CRLF.
     ResetParsedCalibration()                                                                    ' Каждое чтение начинает проверку с чистого состояния.
 
-    For lineIndex = 1 To Arraylength(calibrationLines)                                          ' Идём по всем строкам файла.
-        currentCalibrationLine = Trim(TrimTrailingCr(calibrationLines(lineIndex)))             ' Убираем пробелы и CR в конце CRLF.
+    For lineIndex = 1 To Arraylength(calibrationLines[])                                          ' Идём по всем строкам файла.
+        currentCalibrationLine = Trim(TrimTrailingCr(calibrationLines[lineIndex]))             ' Убираем пробелы и CR в конце CRLF.
         If currentCalibrationLine <> "" And Left(currentCalibrationLine, 1) <> "'" Then       ' Пропускаем пустые строки и комментарии.
             If Startswith(currentCalibrationLine, "pelletRowOffset(") Then                    ' Разбираем смещение каждой строки карты.
                 ApplyCalibrationLine(currentCalibrationLine, MAZE_ROWS, True)
@@ -198,13 +198,13 @@ Private Sub ParseCalibrationText(sourceText As String)                          
     Next
 
     For rowIndex = 1 To MAZE_ROWS                                                               ' Полный файл обязан содержать каждую строку ровно один раз.
-        If parsedRowSeen(rowIndex) = 0 Then
+        If parsedRowSeen[rowIndex] = 0 Then
             calibrationParseError = "нет pelletRowOffset(" + Trim(Str(rowIndex)) + ")."
             Return
         End If
     Next
     For colIndex = 1 To MAZE_COLUMNS                                                            ' Полный файл обязан содержать каждый столбец ровно один раз.
-        If parsedColSeen(colIndex) = 0 Then
+        If parsedColSeen[colIndex] = 0 Then
             calibrationParseError = "нет pelletColOffset(" + Trim(Str(colIndex)) + ")."
             Return
         End If
@@ -250,19 +250,19 @@ Private Sub ApplyCalibrationLine(lineText As String, maxIndex As Integer, isRowL
 
     parsedIndex = Int(indexNumber)
     If isRowLine Then
-        If parsedRowSeen(parsedIndex) <> 0 Then
+        If parsedRowSeen[parsedIndex] <> 0 Then
             calibrationParseError = "повтор pelletRowOffset(" + Trim(Str(parsedIndex)) + ")."
             Return
         End If
-        parsedRowSeen(parsedIndex) = 1
-        parsedRowValues(parsedIndex) = Int(valueNumber)
+        parsedRowSeen[parsedIndex] = 1
+        parsedRowValues[parsedIndex] = Int(valueNumber)
     Else
-        If parsedColSeen(parsedIndex) <> 0 Then
+        If parsedColSeen[parsedIndex] <> 0 Then
             calibrationParseError = "повтор pelletColOffset(" + Trim(Str(parsedIndex)) + ")."
             Return
         End If
-        parsedColSeen(parsedIndex) = 1
-        parsedColValues(parsedIndex) = Int(valueNumber)
+        parsedColSeen[parsedIndex] = 1
+        parsedColValues[parsedIndex] = Int(valueNumber)
     End If
 End Sub                                                                                         ' Завершаем проверку одной строки.
 
@@ -312,22 +312,22 @@ Public Sub HandleCalibrationInput()                                             
 
     If calibrationTarget = CALIBRATION_ROW_MODE Then                                            ' Если сейчас двигаем строку точек...
         If Keypress("UP") Then                                                                  ' Если нажали стрелку вверх...
-            pelletRowOffset(calibrationRow) = pelletRowOffset(calibrationRow) - 1              ' ...поднимаем выбранную строку на один пиксель.
+            pelletRowOffset[calibrationRow] = pelletRowOffset[calibrationRow] - 1              ' ...поднимаем выбранную строку на один пиксель.
             SetCalibrationStatusText("Строка поднята.", CalibrationAssignmentText())            ' Показываем новое значение в две строки.
         End If                                                                                  ' Завершаем обработку стрелки вверх.
 
         If Keypress("DOWN") Then                                                                ' Если нажали стрелку вниз...
-            pelletRowOffset(calibrationRow) = pelletRowOffset(calibrationRow) + 1              ' ...опускаем выбранную строку на один пиксель.
+            pelletRowOffset[calibrationRow] = pelletRowOffset[calibrationRow] + 1              ' ...опускаем выбранную строку на один пиксель.
             SetCalibrationStatusText("Строка опущена.", CalibrationAssignmentText())            ' Показываем новое значение в две строки.
         End If                                                                                  ' Завершаем обработку стрелки вниз.
     Else                                                                                        ' Иначе сейчас двигаем столбец точек.
         If Keypress("LEFT") Then                                                                ' Если нажали стрелку влево...
-            pelletColOffset(calibrationCol) = pelletColOffset(calibrationCol) - 1              ' ...сдвигаем выбранный столбец на один пиксель влево.
+            pelletColOffset[calibrationCol] = pelletColOffset[calibrationCol] - 1              ' ...сдвигаем выбранный столбец на один пиксель влево.
             SetCalibrationStatusText("Столбец влево.", CalibrationAssignmentText())             ' Показываем новое значение и сохраняем короткий статус.
         End If                                                                                  ' Завершаем обработку стрелки влево.
 
         If Keypress("RIGHT") Then                                                               ' Если нажали стрелку вправо...
-            pelletColOffset(calibrationCol) = pelletColOffset(calibrationCol) + 1              ' ...сдвигаем выбранный столбец на один пиксель вправо.
+            pelletColOffset[calibrationCol] = pelletColOffset[calibrationCol] + 1              ' ...сдвигаем выбранный столбец на один пиксель вправо.
             SetCalibrationStatusText("Столбец вправо.", CalibrationAssignmentText())            ' Показываем новое значение и сохраняем короткий статус.
         End If                                                                                  ' Завершаем обработку стрелки вправо.
     End If                                                                                      ' Завершаем обработку сдвига выбранной линии.
@@ -350,10 +350,10 @@ End Sub                                                                         
 ' CalibrationSelectionText — Функция возвращает человекочитаемое описание текущего выбора.
 Private Function CalibrationSelectionText() As String                                                   ' Функция возвращает человекочитаемое описание текущего выбора.
     If calibrationTarget = CALIBRATION_ROW_MODE Then                                            ' Если выбрана строка...
-        Return "строка " + Trim(Str(calibrationRow)) + ", значение " + Trim(Str(pelletRowOffset(calibrationRow))) ' Возвращаем номер строки и её Y-сдвиг.
+        Return "строка " + Trim(Str(calibrationRow)) + ", значение " + Trim(Str(pelletRowOffset[calibrationRow])) ' Возвращаем номер строки и её Y-сдвиг.
     End If                                                                                      ' Завершаем строковый режим.
 
-    Return "столбец " + Trim(Str(calibrationCol)) + ", значение " + Trim(Str(pelletColOffset(calibrationCol))) ' Возвращаем номер столбца и его X-сдвиг.
+    Return "столбец " + Trim(Str(calibrationCol)) + ", значение " + Trim(Str(pelletColOffset[calibrationCol])) ' Возвращаем номер столбца и его X-сдвиг.
 End Function                                                                                    ' Завершаем описание текущего выбора.
 
 ' CalibrationAssignmentText — Функция собирает точную строку присваивания для файла калибровки.
@@ -508,12 +508,12 @@ End Sub                                                                         
 
 ' CalibrationRowAssignmentText — Функция собирает строку присваивания для одной строки точек.
 Private Function CalibrationRowAssignmentText(rowIndex As Integer) As String                            ' Функция собирает строку присваивания для одной строки точек.
-    Return "pelletRowOffset(" + Trim(Str(rowIndex)) + ") = " + Trim(Str(pelletRowOffset(rowIndex))) ' Возвращаем готовую строку `pelletRowOffset`.
+    Return "pelletRowOffset(" + Trim(Str(rowIndex)) + ") = " + Trim(Str(pelletRowOffset[rowIndex])) ' Возвращаем готовую строку `pelletRowOffset`.
 End Function                                                                                    ' Завершаем сборку строки для вертикального центра.
 
 ' CalibrationColAssignmentText — Функция собирает строку присваивания для одного столбца точек.
 Private Function CalibrationColAssignmentText(colIndex As Integer) As String                            ' Функция собирает строку присваивания для одного столбца точек.
-    Return "pelletColOffset(" + Trim(Str(colIndex)) + ") = " + Trim(Str(pelletColOffset(colIndex))) ' Возвращаем готовую строку `pelletColOffset`.
+    Return "pelletColOffset(" + Trim(Str(colIndex)) + ") = " + Trim(Str(pelletColOffset[colIndex])) ' Возвращаем готовую строку `pelletColOffset`.
 End Function                                                                                    ' Завершаем сборку строки для горизонтального центра.
 
 ' #endregion
@@ -522,12 +522,12 @@ End Function                                                                    
 
 ' PelletPixelX — Функция возвращает реальную X-координату точки внутри клетки.
 Public Function PelletPixelX(tileCol As Integer) As Integer                                            ' Функция возвращает реальную X-координату точки внутри клетки.
-    Return (tileCol - 1) * TILE + pelletColOffset(tileCol)                                    ' Добавляем к клетке не математический центр, а измеренный центр тоннеля.
+    Return (tileCol - 1) * TILE + pelletColOffset[tileCol]                                    ' Добавляем к клетке не математический центр, а измеренный центр тоннеля.
 End Function                                                                                    ' Завершаем вычисление X точки.
 
 ' PelletPixelY — Функция возвращает реальную Y-координату точки внутри клетки.
 Public Function PelletPixelY(tileRow As Integer) As Integer                                            ' Функция возвращает реальную Y-координату точки внутри клетки.
-    Return (tileRow - 1) * TILE + pelletRowOffset(tileRow)                                    ' Берём верх мира и добавляем к строке измеренный центр прохода.
+    Return (tileRow - 1) * TILE + pelletRowOffset[tileRow]                                    ' Берём верх мира и добавляем к строке измеренный центр прохода.
 End Function                                                                                    ' Завершаем вычисление Y точки.
 
 ' WorldViewportLeft — Функция вычисляет левую экранную границу viewport мира.

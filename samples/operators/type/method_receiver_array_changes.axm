@@ -11,17 +11,17 @@ TYPE Leaf
 
     SUB Change()
         SELF.Value = 10
-        items(1).Value = 99
+        items[1].Value = 99
     END SUB
 END TYPE
 
-DIM items(0 TO 1) AS Leaf
+DIM items[0 TO 1] AS Leaf
 DIM calls AS INTEGER
 
-items(Pick()).Change()
+items[Pick()].Change()
 PRINT calls
-PRINT items(0).Value
-PRINT items(1).Value
+PRINT items[0].Value
+PRINT items[1].Value
 
 FUNCTION Pick() AS INTEGER
     calls = calls + 1

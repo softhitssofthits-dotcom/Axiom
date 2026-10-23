@@ -12,29 +12,29 @@
 ' 4
 ' 5
 ' 6
-DIM board(1 TO 2, 10 TO 12) AS INTEGER
-DIM flat() AS INTEGER
-DIM sorted() AS INTEGER
-DIM reshaped(,) AS INTEGER
+DIM board[1 TO 2, 10 TO 12] AS INTEGER
+DIM flat[] AS INTEGER
+DIM sorted[] AS INTEGER
+DIM reshaped[,] AS INTEGER
 
-board(1, 10) = 3
-board(1, 11) = 1
-board(1, 12) = 2
-board(2, 10) = 6
-board(2, 11) = 4
-board(2, 12) = 5
+board[1, 10] = 3
+board[1, 11] = 1
+board[1, 12] = 2
+board[2, 10] = 6
+board[2, 11] = 4
+board[2, 12] = 5
 
-flat = ARRAYFLATTEN(board)
-sorted = ARRAYTOSORTED(flat)
-reshaped = ARRAYRESHAPE(sorted, board)
+flat[] = ARRAYFLATTEN(board[])
+sorted[] = ARRAYTOSORTED(flat[])
+reshaped[] = ARRAYRESHAPE(sorted[], board[])
 
-PRINT LBOUND(reshaped, ROW)
-PRINT UBOUND(reshaped, ROW)
-PRINT LBOUND(reshaped, COLUMN)
-PRINT UBOUND(reshaped, COLUMN)
-PRINT reshaped(1, 10)
-PRINT reshaped(1, 11)
-PRINT reshaped(1, 12)
-PRINT reshaped(2, 10)
-PRINT reshaped(2, 11)
-PRINT reshaped(2, 12)
+PRINT LBOUND(reshaped[], ROW)
+PRINT UBOUND(reshaped[], ROW)
+PRINT LBOUND(reshaped[], COLUMN)
+PRINT UBOUND(reshaped[], COLUMN)
+PRINT reshaped[1, 10]
+PRINT reshaped[1, 11]
+PRINT reshaped[1, 12]
+PRINT reshaped[2, 10]
+PRINT reshaped[2, 11]
+PRINT reshaped[2, 12]

@@ -328,7 +328,7 @@ NEXT i
         var sum = Assert.Single(builtins, b => b.GetProperty("name").GetString() == "ARRAYSUM");
         Assert.Equal("ElementTypeOfFirstArrayArgument", sum.GetProperty("resultTypePolicy").GetString());
         Assert.Equal("T", sum.GetProperty("displayReturnType").GetString());
-        Assert.Equal("T()", sum.GetProperty("params")[0].GetProperty("displayType").GetString());
+        Assert.Equal("T[]", sum.GetProperty("params")[0].GetProperty("displayType").GetString());
         var abs = Assert.Single(builtins, b => b.GetProperty("name").GetString() == "ABS");
         Assert.Equal("SameAsFirstArgument", abs.GetProperty("resultTypePolicy").GetString());
         Assert.Equal("T", abs.GetProperty("displayReturnType").GetString());

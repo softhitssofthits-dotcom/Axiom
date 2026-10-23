@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Переход массивов на квадратные скобки — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="arrays-migration"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"/><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Массивы</span><span>/</span><span>Переход на квадратные скобки</span></nav>
+<p class="eyebrow">10 · Массивы</p><h1 class="page-title">Переход массивов на квадратные скобки</h1><p class="lead">В действующем договоре Axiom квадратные скобки различают массивное имя, индекс и срез, а круглые скобки сохраняют назначение вызова функции и группировки выражения. Эта страница сопоставляет прежнюю запись с новой и перечисляет формы, которые нужно исправлять в исходных программах.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section" id="summary"><h2>Было и стало</h2><table><thead><tr><th>Прежняя запись</th><th>Действующая запись</th><th>Смысл</th></tr></thead><tbody>
+<tr><td><code>DIM fruits() AS STRING</code></td><td><code>DIM fruits[] AS STRING</code></td><td>Динамический массив ранга 1.</td></tr>
+<tr><td><code>DIM grid(,) AS INTEGER</code></td><td><code>DIM grid[,] AS INTEGER</code></td><td>Динамический массив ранга 2.</td></tr>
+<tr><td><code>DIM values(1 TO 3) AS INTEGER</code></td><td><code>DIM values[1 TO 3] AS INTEGER</code></td><td>Массив с заданными границами.</td></tr>
+<tr><td><code>values(2)</code></td><td><code>values[2]</code></td><td>Элемент массива.</td></tr>
+<tr><td><code>values()</code></td><td><code>values[]</code></td><td>Массив целиком.</td></tr>
+<tr><td><code>values(1 TO 2)</code></td><td><code>values[1 TO 2]</code></td><td>Срез или представление выбранной области.</td></tr>
+<tr><td><code>DIM values AS STRING () = ...</code></td><td><code>DIM values[] AS STRING = ...</code></td><td>Инициализация с явным типом; суффикс находится только после имени.</td></tr>
+<tr><td><code>DIM values = ...</code></td><td><code>DIM values[] = ...</code></td><td>Инициализация с выводом типа по массивному результату.</td></tr>
+<tr><td><code>STRING()</code>, <code>INTEGER(,)</code></td><td><code>STRING[]</code>, <code>INTEGER[,]</code></td><td>Массивный тип без имени, например в результате функции или безымянном параметре функционального типа.</td></tr>
+<tr><td><code>SUB Show(values AS STRING())</code></td><td><code>SUB Show(values[] AS STRING)</code></td><td>Именованный параметр массива; список параметров остаётся круглым.</td></tr>
+<tr><td><code>FUNCTION MakeFruits() AS STRING()</code></td><td><code>FUNCTION MakeFruits() AS STRING[]</code></td><td>Тип массивного результата без имени.</td></tr>
+<tr><td><code>REDIM PRESERVE values(1 TO 5)</code></td><td><code>REDIM PRESERVE values[1 TO 5]</code></td><td>Изменение границ с сохранением пересечения.</td></tr>
+<tr><td><code>ERASE values</code></td><td><code>ERASE values[]</code></td><td>Освобождение целого массива.</td></tr>
+<tr><td><code>bag.items</code> или <code>bag.items()</code></td><td><code>bag.items[]</code></td><td>Массивное поле целиком.</td></tr>
+</tbody></table></section>
+<section class="article-section" id="whole"><h2>Целый массив и элемент</h2><p>Квадратный суффикс [] обязателен у объявленного массивного имени или поля, когда выражение обозначает массив целиком. Суффикс не создаёт копию и не означает пустое хранилище. Общее хранилище сохраняется:</p><pre><code class="language-axiom">DIM fruits[] AS STRING = SPLIT("яблоко,банан", ",")
+DIM basket[] = fruits[]
+basket[2] = "груша"
+PRINT fruits[2]
+DIM copy[] = ARRAYCLONE(fruits[])
+copy[1] = "слива"
+PRINT fruits[1]</code></pre><p>Вывод:</p><pre><code>груша
+яблоко</code></pre><p>Первая запись меняет общий массив, а <code>ARRAYCLONE(fruits[])</code> создаёт независимую копию. Для массива любого ранга целая форма остаётся <code>name[]</code>; ранг определяется его типом.</p></section>
+<section class="article-section" id="calls"><h2>Вызов функции не становится индексированием</h2><p>Круглые скобки сохраняются у функций и процедур. Функция, возвращающая массив, вызывается обычной записью <code>MakeFruits()</code>. Элемент результата выбирается после вызова: <code>MakeFruits()[2]</code>. Дополнительный суффикс <code>[]</code> после вызова для обозначения результата не нужен.</p><pre><code class="language-axiom">FUNCTION MakeFruits() AS STRING[]
+    DIM result[] AS STRING = SPLIT("яблоко,банан", ",")
+    RETURN result[]
+END FUNCTION
+
+DIM basket[] = MakeFruits()
+PRINT MakeFruits()[2]</code></pre><p>Вызов функции и квадратное индексирование могут находиться в одном выражении. Вложенный вызов внутри индекса также остаётся вызовом: <code>fruits[ChooseFruit()]</code>.</p></section>
+<section class="article-section" id="parameters"><h2>Параметры и возвращаемые типы</h2><p>Именованный параметр массива получает квадратный суффикс после имени: <code>SUB ShowBasket(values[] AS STRING)</code> или <code>BYREF values[] AS STRING</code>. В функциональном типе и возвращаемом типе имя отсутствует, поэтому ранг входит в запись типа: <code>STRING[]</code>, <code>INTEGER[,]</code>. Круглые скобки списка параметров и вызова не меняются.</p><pre><code class="language-axiom">SUB ShowBasket(values[] AS STRING)
+    PRINT values[2]
+END SUB
+
+FUNCTION MakeGrid() AS INTEGER[,]
+    DIM grid[,] AS INTEGER
+    RETURN grid[]
+END FUNCTION</code></pre><p>Передача массива в функцию сохраняет круглые скобки вызова: <code>ARRAYSLICE(fruits[], 1, 2)</code>. Внутри них <code>fruits[]</code> обозначает весь массив, а не отдельный элемент.</p></section>
+<section class="article-section" id="declarations"><h2>REDIM, ERASE и поля TYPE</h2><p>Границы REDIM записываются в квадратных скобках после имени. Целый динамический массив передаётся как <code>values[]</code>, а элемент — как <code>values[2]</code>. Для массивного поля действуют те же правила: <code>bag.items[]</code>, <code>bag.items[1]</code>, <code>ERASE bag.items[]</code>. Суффикс типа после AS не используется в DIM: запись <code>DIM values AS STRING[]</code> не заменяет <code>DIM values[] AS STRING</code>.</p><pre><code class="language-axiom">TYPE Basket
+    Items[] AS STRING
+END TYPE
+DIM bag AS Basket
+REDIM bag.Items[1 TO 2]
+bag.Items[1] = "яблоко"
+ERASE bag.Items[]</code></pre><p>Размер, границы, общая память, представления, BYREF и правила копирования не меняются. Меняется только запись синтаксических узлов.</p></section>
+<section class="article-section" id="errors"><h2>Формы, которые нужно исправить</h2><ul><li><code>values(2)</code> заменяется на <code>values[2]</code>; круглая запись массива не является действующей формой.</li><li><code>values</code> в месте, где требуется массив целиком, заменяется на <code>values[]</code>; имя без суффикса не угадывает массивный тип.</li><li><code>DIM values AS STRING () = ...</code> заменяется на <code>DIM values[] AS STRING = ...</code>; суффикс после типа запрещён.</li><li><code>DIM values = SPLIT(...)</code> заменяется на <code>DIM values[] = SPLIT(...)</code>; выведенное объявление массива без суффикса запрещено.</li><li>Круглые скобки у <code>FUNCTION</code>, <code>SUB</code>, встроенных функций и математических выражений не заменяются.</li></ul><p>Новые литералы массивов, новые коллекции и новые имена встроенных функций этим переходом не вводятся.</p></section>
+<section class="article-section" id="related"><h2>См. также</h2><p><a href="arrays.html">Массивы</a> · <a href="arrays-indexing.html">Индексирование</a> · <a href="dim.html">DIM</a> · <a href="redim.html">REDIM</a> · <a href="erase.html">ERASE</a> · <a href="calls.html">Вызовы</a> · <a href="type.html">TYPE</a></p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

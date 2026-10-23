@@ -23,9 +23,65 @@ public sealed partial class Binder
                 functionType.ParameterTypes.Select(ResolveType).ToArray(),
                 ResolveType(functionType.ReturnType),
                 functionType.ParameterPassingKeywords.Select(ParameterPassingModes.FromKeyword).ToArray()),
-            ArrayTypeSyntax arrayType => ArrayTypeSymbol.Create(ResolveType(arrayType.ElementType), arrayType.Rank),
+            ArrayTypeSyntax arrayType => ResolveArrayType(arrayType),
             _ => TypeSymbol.Error
         };
+    }
+
+    private TypeSymbol ResolveArrayType(ArrayTypeSyntax arrayType)
+    {
+        if (_usesSquareArraySyntax && arrayType.OpenDelimiterToken.Kind == SyntaxKind.OpenParenToken)
+        {
+            ReportAnonymousArrayTypeRequiresBrackets(arrayType.OpenDelimiterToken.Location);
+            return TypeSymbol.Error;
+        }
+
+        return ArrayTypeSymbol.Create(ResolveType(arrayType.ElementType), arrayType.Rank);
+    }
+
+    private TypeSymbol ResolveParameterType(ParameterSyntax parameter)
+    {
+        if (ReportUnsupportedFixedStringType(parameter.TypeClause, parameter.Identifier.Text))
+        {
+            return TypeSymbol.Error;
+        }
+
+        if (_usesSquareArraySyntax && parameter.TypeClause.Type is ArrayTypeSyntax suffix)
+        {
+            ReportArrayTypeSuffixForbidden(suffix.OpenDelimiterToken.Location);
+            return TypeSymbol.Error;
+        }
+
+        var type = ResolveType(parameter.TypeClause);
+        if (parameter.ArrayBounds is null)
+        {
+            return type;
+        }
+
+        if (!ValidateArrayDeclaratorBrackets(parameter.Identifier.Text, parameter.ArrayBounds)
+            || !parameter.ArrayBounds.IsDynamic)
+        {
+            if (!parameter.ArrayBounds.IsDynamic)
+            {
+                ReportInvalidArrayBoundsForm(parameter.Identifier.Text, parameter.ArrayBounds.OpenDelimiterToken.Location,
+                    "Параметр массива задаёт только число измерений: [] или [,].");
+            }
+
+            return TypeSymbol.Error;
+        }
+
+        return ArrayTypeSymbol.Create(type, parameter.ArrayBounds.Rank);
+    }
+
+    private bool ValidateArrayDeclaratorBrackets(string name, ArrayBoundsSyntax? bounds)
+    {
+        if (!_usesSquareArraySyntax || bounds is null || bounds.OpenDelimiterToken.Kind == SyntaxKind.OpenBracketToken)
+        {
+            return true;
+        }
+
+        ReportArrayParenthesesForbidden(name, bounds.OpenDelimiterToken.Location);
+        return false;
     }
 
     private bool TryResolveFixedStringLength(

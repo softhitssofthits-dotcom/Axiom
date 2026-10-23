@@ -9,17 +9,7 @@ public sealed partial class LanguageContractTests
     [Fact]
     public void Execute_SplitReturnsStringArrayWithOneBasedBounds()
     {
-        const string text = """
-DIM parts() AS STRING
-parts = SPLIT("red,green,,blue", ",")
-PRINT ARRAYISALLOCATED(parts)
-PRINT LBOUND(parts)
-PRINT UBOUND(parts)
-PRINT ARRAYLENGTH(parts)
-PRINT parts(1)
-PRINT parts(3)
-PRINT parts(4)
-""";
+        const string text = "DIM parts[] AS STRING\r\nparts[] = SPLIT(\"red,green,,blue\", \",\")\r\nPRINT ARRAYISALLOCATED(parts[])\r\nPRINT LBOUND(parts[])\r\nPRINT UBOUND(parts[])\r\nPRINT ARRAYLENGTH(parts[])\r\nPRINT parts[1]\r\nPRINT parts[3]\r\nPRINT parts[4]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -30,14 +20,7 @@ PRINT parts(4)
     [Fact]
     public void Execute_SplitEmptyStringReturnsCanonicalEmptyArray()
     {
-        const string text = """
-DIM parts() AS STRING
-parts = SPLIT("", ",")
-PRINT ARRAYISALLOCATED(parts)
-PRINT ARRAYLENGTH(parts)
-PRINT LBOUND(parts)
-PRINT UBOUND(parts)
-""";
+        const string text = "DIM parts[] AS STRING\r\nparts[] = SPLIT(\"\", \",\")\r\nPRINT ARRAYISALLOCATED(parts[])\r\nPRINT ARRAYLENGTH(parts[])\r\nPRINT LBOUND(parts[])\r\nPRINT UBOUND(parts[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -62,11 +45,7 @@ PRINT SPLIT("abc", "")
     [Fact]
     public void Execute_JoinUsesStringArrayBounds()
     {
-        const string text = """
-DIM parts() AS STRING
-parts = SPLIT("red|green|blue", "|")
-PRINT JOIN(parts, "/")
-""";
+        const string text = "DIM parts[] AS STRING\r\nparts[] = SPLIT(\"red|green|blue\", \"|\")\r\nPRINT JOIN(parts[], \"/\")";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -77,12 +56,7 @@ PRINT JOIN(parts, "/")
     [Fact]
     public void Execute_JoinUnallocatedAndEmptyArraysReturnEmptyString()
     {
-        const string text = """
-DIM first() AS STRING
-DIM second(1 TO 0) AS STRING
-PRINT JOIN(first)
-PRINT JOIN(second)
-""";
+        const string text = "DIM first[] AS STRING\r\nDIM second[1 TO 0] AS STRING\r\nPRINT JOIN(first[])\r\nPRINT JOIN(second[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -93,12 +67,7 @@ PRINT JOIN(second)
     [Fact]
     public void Execute_JoinSingleElementReturnsThatElement()
     {
-        const string text = """
-DIM parts(5 TO 5) AS STRING
-parts(5) = "solo"
-PRINT JOIN(parts)
-PRINT JOIN(parts, "/")
-""";
+        const string text = "DIM parts[5 TO 5] AS STRING\r\nparts[5] = \"solo\"\r\nPRINT JOIN(parts[])\r\nPRINT JOIN(parts[], \"/\")";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -330,20 +299,7 @@ PRINT REPLACE("abba", "b", "c")
     [Fact]
     public void Execute_BuiltinReplaceManyUsesOnePassLongestMatchRules()
     {
-        const string text = """
-DIM oldItems(1 TO 4) AS STRING
-DIM newItems(1 TO 4) AS STRING
-oldItems(1) = "ab"
-newItems(1) = "X"
-oldItems(2) = "abc"
-newItems(2) = "Y"
-oldItems(3) = "x"
-newItems(3) = "z"
-oldItems(4) = "one"
-newItems(4) = "two"
-PRINT REPLACEMANY("abc ab x One", oldItems, newItems)
-PRINT REPLACEMANY("one", oldItems, newItems)
-""";
+        const string text = "DIM oldItems[1 TO 4] AS STRING\r\nDIM newItems[1 TO 4] AS STRING\r\noldItems[1] = \"ab\"\r\nnewItems[1] = \"X\"\r\noldItems[2] = \"abc\"\r\nnewItems[2] = \"Y\"\r\noldItems[3] = \"x\"\r\nnewItems[3] = \"z\"\r\noldItems[4] = \"one\"\r\nnewItems[4] = \"two\"\r\nPRINT REPLACEMANY(\"abc ab x One\", oldItems[], newItems[])\r\nPRINT REPLACEMANY(\"one\", oldItems[], newItems[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -584,14 +540,7 @@ PRINT SUBSTRCOUNT("", "a")
     [Fact]
     public void Execute_BuiltinReplaceManyReportsInvalidRules()
     {
-        const string text = """
-DIM oldItems(1 TO 1) AS STRING
-DIM newItems(1 TO 2) AS STRING
-oldItems(1) = ""
-newItems(1) = "x"
-newItems(2) = "y"
-PRINT REPLACEMANY("abc", oldItems, newItems)
-""";
+        const string text = "DIM oldItems[1 TO 1] AS STRING\r\nDIM newItems[1 TO 2] AS STRING\r\noldItems[1] = \"\"\r\nnewItems[1] = \"x\"\r\nnewItems[2] = \"y\"\r\nPRINT REPLACEMANY(\"abc\", oldItems[], newItems[])";
 
         var (_, _, result) = ExecuteProgram(text);
 

@@ -2,9 +2,9 @@
 ' Нагружает ARRAYMAP, ARRAYFILTER, ARRAYREDUCE, ARRAYEVERY и ARRAYSOME
 ' в нескольких проходах по одному и тому же плотному массиву.
 
-DIM source(1 TO 240) AS INTEGER
-DIM mapped() AS INTEGER
-DIM filtered() AS INTEGER
+DIM source[1 TO 240] AS INTEGER
+DIM mapped[] AS INTEGER
+DIM filtered[] AS INTEGER
 DIM checksum AS LONG = 0
 DIM flags AS INTEGER = 0
 
@@ -14,8 +14,8 @@ DIM divisor AS INTEGER
 DIM highWatermark AS INTEGER
 DIM bias AS INTEGER
 
-FOR itemIndex = 1 TO ARRAYLENGTH(source)
-    source(itemIndex) = (itemIndex MOD 19) * 11 + itemIndex
+FOR itemIndex = 1 TO ARRAYLENGTH(source[])
+    source[itemIndex] = (itemIndex MOD 19) * 11 + itemIndex
 NEXT
 
 FOR roundIndex = 1 TO 24
@@ -25,27 +25,27 @@ FOR roundIndex = 1 TO 24
     highWatermark = 500 + roundIndex * 20
     bias = roundIndex * 7
 
-    mapped = ARRAYMAP(source, TransformValue)
-    filtered = ARRAYFILTER(mapped, KeepTransformedValue)
+    mapped[] = ARRAYMAP(source[], TransformValue)
+    filtered[] = ARRAYFILTER(mapped[], KeepTransformedValue)
 
-    checksum = checksum + ARRAYREDUCE(filtered, roundIndex, FoldFilteredValue)
+    checksum = checksum + ARRAYREDUCE(filtered[], roundIndex, FoldFilteredValue)
 
-    IF ARRAYEVERY(filtered, IsStrictlyPositive) THEN
+    IF ARRAYEVERY(filtered[], IsStrictlyPositive) THEN
         flags = flags + 1
     END IF
 
-    IF ARRAYSOME(filtered, IsAboveHighWatermark) THEN
+    IF ARRAYSOME(filtered[], IsAboveHighWatermark) THEN
         flags = flags + 10
     END IF
 NEXT
 
-PRINT ARRAYLENGTH(source)
-PRINT ARRAYLENGTH(mapped)
-PRINT ARRAYLENGTH(filtered)
+PRINT ARRAYLENGTH(source[])
+PRINT ARRAYLENGTH(mapped[])
+PRINT ARRAYLENGTH(filtered[])
 PRINT checksum
 PRINT flags
-PRINT mapped(1) + mapped(ARRAYLENGTH(mapped))
-PRINT filtered(1) + filtered(ARRAYLENGTH(filtered))
+PRINT mapped[1] + mapped[ARRAYLENGTH(mapped[])]
+PRINT filtered[1] + filtered[ARRAYLENGTH(filtered[])]
 
 FUNCTION TransformValue(value AS INTEGER) AS INTEGER
     RETURN value * scale + bias

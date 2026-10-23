@@ -19,10 +19,7 @@ public sealed partial class LanguageContractTests
     [Fact]
     public void Execute_RedimRejectsAllocationBeyondElementLimit()
     {
-        const string text = """
-DIM a(,) AS INTEGER
-REDIM a(1 TO 100000, 1 TO 100000)
-""";
+        const string text = "DIM a[,] AS INTEGER\nREDIM a[1 TO 100000, 1 TO 100000]";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -34,9 +31,7 @@ REDIM a(1 TO 100000, 1 TO 100000)
     [Fact]
     public void Execute_DimRejectsAllocationBeyondElementLimit()
     {
-        const string text = """
-DIM a(1 TO 100000000) AS INTEGER
-""";
+        const string text = "DIM a[1 TO 100000000] AS INTEGER";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -48,22 +43,7 @@ DIM a(1 TO 100000000) AS INTEGER
     [Fact]
     public void Execute_ArrayCloneOneDimensionalRecordsIsIndependent()
     {
-        const string text = """
-TYPE Point
-    X AS INTEGER
-END TYPE
-
-DIM source(1 TO 2) AS Point
-source(1).X = 1
-source(2).X = 2
-
-DIM copy() AS Point
-copy = ARRAYCLONE(source)
-copy(1).X = 99
-
-PRINT source(1).X
-PRINT copy(1).X
-""";
+        const string text = "TYPE Point\n    X AS INTEGER\nEND TYPE\n\nDIM source[1 TO 2] AS Point\nsource[1].X = 1\nsource[2].X = 2\n\nDIM copy[] AS Point\ncopy[] = ARRAYCLONE(source[])\ncopy[1].X = 99\n\nPRINT source[1].X\nPRINT copy[1].X";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -74,21 +54,7 @@ PRINT copy(1).X
     [Fact]
     public void Execute_ArrayCloneTwoDimensionalRecordsIsIndependent()
     {
-        const string text = """
-TYPE Point
-    X AS INTEGER
-END TYPE
-
-DIM source(1 TO 2, 1 TO 2) AS Point
-source(1, 1).X = 1
-
-DIM copy(,) AS Point
-copy = ARRAYCLONE(source)
-copy(1, 1).X = 77
-
-PRINT source(1, 1).X
-PRINT copy(1, 1).X
-""";
+        const string text = "TYPE Point\n    X AS INTEGER\nEND TYPE\n\nDIM source[1 TO 2, 1 TO 2] AS Point\nsource[1, 1].X = 1\n\nDIM copy[,] AS Point\ncopy[] = ARRAYCLONE(source[])\ncopy[1, 1].X = 77\n\nPRINT source[1, 1].X\nPRINT copy[1, 1].X";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -99,21 +65,7 @@ PRINT copy(1, 1).X
     [Fact]
     public void Execute_ArrayCloneOneDimensionalFixedStringKeepsDeclaredLength()
     {
-        const string text = """
-TYPE Holder
-    Names(1 TO 2) AS STRING * 3
-END TYPE
-
-DIM longOnes(1 TO 2) AS STRING
-longOnes(1) = "ABCDE"
-longOnes(2) = "FGHIJ"
-
-DIM holder AS Holder
-holder.Names = longOnes
-
-PRINT LEN(holder.Names(1))
-PRINT holder.Names(1)
-""";
+        const string text = "TYPE Holder\n    Names[1 TO 2] AS STRING * 3\nEND TYPE\n\nDIM longOnes[1 TO 2] AS STRING\nlongOnes[1] = \"ABCDE\"\nlongOnes[2] = \"FGHIJ\"\n\nDIM holder AS Holder\nholder.Names[] = longOnes[]\n\nPRINT LEN(holder.Names[1])\nPRINT holder.Names[1]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -124,20 +76,7 @@ PRINT holder.Names(1)
     [Fact]
     public void Execute_ArrayCloneTwoDimensionalFixedStringKeepsDeclaredLength()
     {
-        const string text = """
-TYPE Holder
-    Names(1 TO 2, 1 TO 2) AS STRING * 3
-END TYPE
-
-DIM longGrid(1 TO 2, 1 TO 2) AS STRING
-longGrid(1, 1) = "ABCDE"
-
-DIM holder AS Holder
-holder.Names = longGrid
-
-PRINT LEN(holder.Names(1, 1))
-PRINT holder.Names(1, 1)
-""";
+        const string text = "TYPE Holder\n    Names[1 TO 2, 1 TO 2] AS STRING * 3\nEND TYPE\n\nDIM longGrid[1 TO 2, 1 TO 2] AS STRING\nlongGrid[1, 1] = \"ABCDE\"\n\nDIM holder AS Holder\nholder.Names[] = longGrid[]\n\nPRINT LEN(holder.Names[1, 1])\nPRINT holder.Names[1, 1]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -148,18 +87,7 @@ PRINT holder.Names(1, 1)
     [Fact]
     public void Execute_ArrayViewAfterRedimReportsExpiredView()
     {
-        const string text = """
-DIM grid(1 TO 3, 1 TO 3) AS INTEGER
-grid(2, 2) = 7
-
-DIM rowView() AS INTEGER
-rowView = grid(2)
-
-REDIM grid(1 TO 5, 1 TO 5)
-grid(2, 2) = 9
-
-PRINT rowView(2)
-""";
+        const string text = "DIM grid[1 TO 3, 1 TO 3] AS INTEGER\ngrid[2, 2] = 7\n\nDIM rowView[] AS INTEGER\nrowView[] = grid[2]\n\nREDIM grid[1 TO 5, 1 TO 5]\ngrid[2, 2] = 9\n\nPRINT rowView[2]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -171,17 +99,7 @@ PRINT rowView(2)
     [Fact]
     public void Execute_ArrayViewAfterEraseReportsExpiredView()
     {
-        const string text = """
-DIM grid(1 TO 2, 1 TO 2) AS INTEGER
-grid(1, 1) = 4
-
-DIM rowView() AS INTEGER
-rowView = grid(1)
-
-ERASE grid
-
-PRINT rowView(1)
-""";
+        const string text = "DIM grid[1 TO 2, 1 TO 2] AS INTEGER\ngrid[1, 1] = 4\n\nDIM rowView[] AS INTEGER\nrowView[] = grid[1]\n\nERASE grid[]\n\nPRINT rowView[1]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -193,24 +111,7 @@ PRINT rowView(1)
     [Fact]
     public void Execute_ExpiredArrayViewIsCatchableAndRootStaysUsable()
     {
-        const string text = """
-DIM grid(1 TO 3, 1 TO 3) AS INTEGER
-grid(2, 2) = 7
-
-DIM rowView() AS INTEGER
-rowView = grid(2)
-
-REDIM grid(1 TO 5, 1 TO 5)
-grid(2, 2) = 9
-
-TRY
-    PRINT rowView(2)
-CATCH err
-    PRINT err.Code
-END TRY
-
-PRINT grid(2, 2)
-""";
+        const string text = "DIM grid[1 TO 3, 1 TO 3] AS INTEGER\ngrid[2, 2] = 7\n\nDIM rowView[] AS INTEGER\nrowView[] = grid[2]\n\nREDIM grid[1 TO 5, 1 TO 5]\ngrid[2, 2] = 9\n\nTRY\n    PRINT rowView[2]\nCATCH err\n    PRINT err.Code\nEND TRY\n\nPRINT grid[2, 2]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -221,21 +122,7 @@ PRINT grid(2, 2)
     [Fact]
     public void Execute_ArrayPushAndPopKeepLogicalOrderAndBounds()
     {
-        const string text = """
-DIM values() AS INTEGER
-REDIM values(1 TO 0)
-
-FOR index = 1 TO 3
-    ARRAYPUSH(values, index * 10)
-NEXT
-
-PRINT ARRAYLENGTH(values)
-PRINT values(1); values(2); values(3)
-PRINT ARRAYPOP(values)
-PRINT ARRAYPOP(values)
-PRINT ARRAYLENGTH(values)
-PRINT LBOUND(values); UBOUND(values)
-""";
+        const string text = "DIM values[] AS INTEGER\nREDIM values[1 TO 0]\n\nFOR index = 1 TO 3\n    ARRAYPUSH(values[], index * 10)\nNEXT\n\nPRINT ARRAYLENGTH(values[])\nPRINT values[1]; values[2]; values[3]\nPRINT ARRAYPOP(values[])\nPRINT ARRAYPOP(values[])\nPRINT ARRAYLENGTH(values[])\nPRINT LBOUND(values[]); UBOUND(values[])";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -246,22 +133,7 @@ PRINT LBOUND(values); UBOUND(values)
     [Fact]
     public void Execute_ArrayPushReusesPoppedCapacity()
     {
-        const string text = """
-DIM values() AS INTEGER
-REDIM values(1 TO 2)
-values(1) = 5
-values(2) = 6
-
-PRINT ARRAYPOP(values)
-PRINT ARRAYPOP(values)
-PRINT ARRAYLENGTH(values)
-
-ARRAYPUSH(values, 7)
-ARRAYPUSH(values, 8)
-
-PRINT ARRAYLENGTH(values)
-PRINT values(1); values(2)
-""";
+        const string text = "DIM values[] AS INTEGER\nREDIM values[1 TO 2]\nvalues[1] = 5\nvalues[2] = 6\n\nPRINT ARRAYPOP(values[])\nPRINT ARRAYPOP(values[])\nPRINT ARRAYLENGTH(values[])\n\nARRAYPUSH(values[], 7)\nARRAYPUSH(values[], 8)\n\nPRINT ARRAYLENGTH(values[])\nPRINT values[1]; values[2]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -272,17 +144,7 @@ PRINT values(1); values(2)
     [Fact]
     public void Execute_ArrayPushPreservesNonCanonicalLowerBound()
     {
-        const string text = """
-DIM values() AS INTEGER
-REDIM values(5 TO 5)
-values(5) = 11
-
-ARRAYPUSH(values, 12)
-
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-PRINT values(5); values(6)
-""";
+        const string text = "DIM values[] AS INTEGER\nREDIM values[5 TO 5]\nvalues[5] = 11\n\nARRAYPUSH(values[], 12)\n\nPRINT LBOUND(values[])\nPRINT UBOUND(values[])\nPRINT values[5]; values[6]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -293,26 +155,7 @@ PRINT values(5); values(6)
     [Fact]
     public void Execute_ArrayDistinctKeepsFirstOccurrenceOrder()
     {
-        const string text = """
-DIM values(1 TO 8) AS INTEGER
-values(1) = 3
-values(2) = 1
-values(3) = 3
-values(4) = 2
-values(5) = 1
-values(6) = 4
-values(7) = 2
-values(8) = 5
-
-DIM distinctValues() AS INTEGER
-distinctValues = ARRAYDISTINCT(values)
-
-PRINT ARRAYLENGTH(distinctValues)
-FOR index = 1 TO ARRAYLENGTH(distinctValues)
-    PRINT distinctValues(index);
-NEXT
-PRINT ""
-""";
+        const string text = "DIM values[1 TO 8] AS INTEGER\nvalues[1] = 3\nvalues[2] = 1\nvalues[3] = 3\nvalues[4] = 2\nvalues[5] = 1\nvalues[6] = 4\nvalues[7] = 2\nvalues[8] = 5\n\nDIM distinctValues[] AS INTEGER\ndistinctValues[] = ARRAYDISTINCT(values[])\n\nPRINT ARRAYLENGTH(distinctValues[])\nFOR index = 1 TO ARRAYLENGTH(distinctValues[])\n    PRINT distinctValues[index];\nNEXT\nPRINT \"\"";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -323,23 +166,7 @@ PRINT ""
     [Fact]
     public void Execute_ArrayDistinctStringComparisonIsOrdinal()
     {
-        const string text = """
-DIM values(1 TO 5) AS STRING
-values(1) = "beta"
-values(2) = "alpha"
-values(3) = "beta"
-values(4) = "Alpha"
-values(5) = "alpha"
-
-DIM distinctValues() AS STRING
-distinctValues = ARRAYDISTINCT(values)
-
-PRINT ARRAYLENGTH(distinctValues)
-FOR index = 1 TO ARRAYLENGTH(distinctValues)
-    PRINT distinctValues(index);
-NEXT
-PRINT ""
-""";
+        const string text = "DIM values[1 TO 5] AS STRING\nvalues[1] = \"beta\"\nvalues[2] = \"alpha\"\nvalues[3] = \"beta\"\nvalues[4] = \"Alpha\"\nvalues[5] = \"alpha\"\n\nDIM distinctValues[] AS STRING\ndistinctValues[] = ARRAYDISTINCT(values[])\n\nPRINT ARRAYLENGTH(distinctValues[])\nFOR index = 1 TO ARRAYLENGTH(distinctValues[])\n    PRINT distinctValues[index];\nNEXT\nPRINT \"\"";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -350,23 +177,7 @@ PRINT ""
     [Fact]
     public void Execute_ArrayPushExpiresExistingViewsOfRoot()
     {
-        const string text = """
-DIM values(1 TO 3) AS INTEGER
-values(1) = 1
-
-DIM part() AS INTEGER
-part = values(1 TO 2)
-
-ARRAYPUSH(values, 4)
-
-TRY
-    PRINT part(1)
-CATCH err
-    PRINT err.Code
-END TRY
-
-PRINT values(4)
-""";
+        const string text = "DIM values[1 TO 3] AS INTEGER\nvalues[1] = 1\n\nDIM part[] AS INTEGER\npart[] = values[1 TO 2]\n\nARRAYPUSH(values[], 4)\n\nTRY\n    PRINT part[1]\nCATCH err\n    PRINT err.Code\nEND TRY\n\nPRINT values[4]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -377,10 +188,7 @@ PRINT values(4)
     [Fact]
     public void Execute_FractionalIndexReportsBuiltinArgument()
     {
-        const string text = """
-DIM values(1 TO 3) AS INTEGER
-PRINT values(2.9)
-""";
+        const string text = "DIM values[1 TO 3] AS INTEGER\nPRINT values[2.9]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -393,10 +201,7 @@ PRINT values(2.9)
     [Fact]
     public void Execute_FractionalIndexOnStoreReportsBuiltinArgument()
     {
-        const string text = """
-DIM values(1 TO 3) AS INTEGER
-values(2.9) = 5
-""";
+        const string text = "DIM values[1 TO 3] AS INTEGER\nvalues[2.9] = 5";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -407,12 +212,7 @@ values(2.9) = 5
     [Fact]
     public void Execute_IntegralDivisionResultIsAcceptedAsIndex()
     {
-        const string text = """
-DIM values(1 TO 3) AS INTEGER
-values(2) = 42
-DIM position AS INTEGER = 4
-PRINT values(position / 2)
-""";
+        const string text = "DIM values[1 TO 3] AS INTEGER\nvalues[2] = 42\nDIM position AS INTEGER = 4\nPRINT values[position / 2]";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -423,9 +223,7 @@ PRINT values(position / 2)
     [Fact]
     public void Execute_FractionalBoundReportsBuiltinArgument()
     {
-        const string text = """
-DIM values(1.5 TO 3) AS INTEGER
-""";
+        const string text = "DIM values[1.5 TO 3] AS INTEGER";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -436,11 +234,7 @@ DIM values(1.5 TO 3) AS INTEGER
     [Fact]
     public void Execute_DescendingRangeReportsArrayBounds()
     {
-        const string text = """
-DIM values(1 TO 5) AS INTEGER
-DIM part() AS INTEGER
-part = values(4 TO 2)
-""";
+        const string text = "DIM values[1 TO 5] AS INTEGER\nDIM part[] AS INTEGER\npart[] = values[4 TO 2]";
 
         var (_, _, result) = ExecuteProgram(text);
 
@@ -451,15 +245,7 @@ part = values(4 TO 2)
     [Fact]
     public void Execute_ZeroCountSliceUsesCanonicalEmptyBounds()
     {
-        const string text = """
-DIM grid(1 TO 2, 1 TO 3) AS INTEGER
-DIM part(,) AS INTEGER
-part = ARRAYSLICE(grid, 99, 0, 2)
-
-PRINT ARRAYLENGTH(part)
-PRINT LBOUND(part, 1); UBOUND(part, 1)
-PRINT LBOUND(part, 2); UBOUND(part, 2)
-""";
+        const string text = "DIM grid[1 TO 2, 1 TO 3] AS INTEGER\nDIM part[,] AS INTEGER\npart[] = ARRAYSLICE(grid[], 99, 0, 2)\n\nPRINT ARRAYLENGTH(part[])\nPRINT LBOUND(part[], 1); UBOUND(part[], 1)\nPRINT LBOUND(part[], 2); UBOUND(part[], 2)";
 
         var (_, host, result) = ExecuteProgram(text);
 
@@ -471,10 +257,10 @@ PRINT LBOUND(part, 2); UBOUND(part, 2)
     public void Execute_ArrayConcatRankMismatchReportsRank()
     {
         const string text = """
-DIM left(1 TO 2) AS INTEGER
-DIM right(1 TO 2, 1 TO 2) AS INTEGER
-DIM merged() AS INTEGER
-merged = ARRAYCONCAT(left, right)
+DIM left[1 TO 2] AS INTEGER
+DIM right[1 TO 2, 1 TO 2] AS INTEGER
+DIM merged[] AS INTEGER
+merged[] = ARRAYCONCAT(left[], right[])
 """;
 
         var diagnostics = GetBindingDiagnostics(text);
@@ -487,7 +273,7 @@ merged = ARRAYCONCAT(left, right)
     public void Execute_ArrayInitializerReportsSemanticDiagnostic()
     {
         const string text = """
-DIM values(1 TO 3) AS INTEGER = 5
+DIM values[1 TO 3] AS INTEGER = 5
 """;
 
         var diagnostics = GetBindingDiagnostics(text);
@@ -502,12 +288,7 @@ DIM values(1 TO 3) AS INTEGER = 5
     {
         // Прежнее ограничение отвергало DATE в ARRAYMIN. Порядковое сравнение
         // временных скаляров уже поддержано, поэтому агрегат использует его же.
-        const string text = """
-DIM values(1 TO 2) AS DATE
-values(1) = "2024-02-29"
-values(2) = "2024-01-15"
-PRINT ARRAYMIN(values)
-""";
+        const string text = "DIM values[1 TO 2] AS DATE\nvalues[1] = \"2024-02-29\"\nvalues[2] = \"2024-01-15\"\nPRINT ARRAYMIN(values[])";
 
         var diagnostics = GetBindingDiagnostics(text);
 

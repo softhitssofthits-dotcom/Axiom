@@ -2992,10 +2992,10 @@ public sealed class AcceptanceProgramTests
                 result.Output);
 
             var updatedGameText = File.ReadAllText(targetGamePath);
-            Assert.Contains("pelletRowOffset(5) = -44", updatedGameText, StringComparison.Ordinal);
-            Assert.Contains("pelletColOffset(26) = 9", updatedGameText, StringComparison.Ordinal);
-            Assert.DoesNotContain("pelletRowOffset(5) = -33", updatedGameText, StringComparison.Ordinal);
-            Assert.DoesNotContain("pelletColOffset(26) = 0", updatedGameText, StringComparison.Ordinal);
+            Assert.Contains("pelletRowOffset[5] = -44", updatedGameText, StringComparison.Ordinal);
+            Assert.Contains("pelletColOffset[26] = 9", updatedGameText, StringComparison.Ordinal);
+            Assert.DoesNotContain("pelletRowOffset[5] = -33", updatedGameText, StringComparison.Ordinal);
+            Assert.DoesNotContain("pelletColOffset[26] = 0", updatedGameText, StringComparison.Ordinal);
         }
         finally
         {

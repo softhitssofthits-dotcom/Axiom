@@ -1,13 +1,13 @@
 ' ARRAYCLONE сохраняет состояния невыделенного и пустого выделенного массива.
-DIM pending() AS STRING
-DIM pendingCopy() AS STRING
+DIM pending[] AS STRING
+DIM pendingCopy[] AS STRING
 
-pendingCopy = ARRAYCLONE(pending)
-PRINT ARRAYISALLOCATED(pendingCopy)
+pendingCopy[] = ARRAYCLONE(pending[])
+PRINT ARRAYISALLOCATED(pendingCopy[])
 
-REDIM pending(1 TO 0)
-pendingCopy = ARRAYCLONE(pending)
-PRINT ARRAYISALLOCATED(pendingCopy)
-PRINT ARRAYLENGTH(pendingCopy)
-PRINT LBOUND(pendingCopy)
-PRINT UBOUND(pendingCopy)
+REDIM pending[1 TO 0]
+pendingCopy[] = ARRAYCLONE(pending[])
+PRINT ARRAYISALLOCATED(pendingCopy[])
+PRINT ARRAYLENGTH(pendingCopy[])
+PRINT LBOUND(pendingCopy[])
+PRINT UBOUND(pendingCopy[])

@@ -1,10 +1,10 @@
 ' Агрегаты обходят все элементы двумерного массива.
-DIM numbers(1 TO 2, 1 TO 2) AS INTEGER
-numbers(1, 1) = 1
-numbers(1, 2) = 2
-numbers(2, 1) = 3
-numbers(2, 2) = 4
-PRINT "Сумма равна десяти:", ARRAYSUM(numbers)
-PRINT "Минимум равен единице:", ARRAYMIN(numbers)
-PRINT "Максимум равен четырём:", ARRAYMAX(numbers)
-PRINT "Среднее равно двум с половиной:", ARRAYAVERAGE(numbers)
+DIM numbers[1 TO 2, 1 TO 2] AS INTEGER
+numbers[1, 1] = 1
+numbers[1, 2] = 2
+numbers[2, 1] = 3
+numbers[2, 2] = 4
+PRINT "Сумма равна десяти:", ARRAYSUM(numbers[])
+PRINT "Минимум равен единице:", ARRAYMIN(numbers[])
+PRINT "Максимум равен четырём:", ARRAYMAX(numbers[])
+PRINT "Среднее равно двум с половиной:", ARRAYAVERAGE(numbers[])

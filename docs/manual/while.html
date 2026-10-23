@@ -7,12 +7,21 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор WHILE</span></nav>
-<p class="eyebrow">Справочная статья</p><h1 class="page-title">Оператор WHILE</h1><p class="lead">WHILE — оператор языка Axiom, который повторяет блок, пока условие истинно. Условие проверяется перед каждым проходом, включая первый.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-<section class="article-section"><h2>Назначение и контекст</h2><p>Оператор работает на верхнем уровне программы и внутри подпрограмм и блоков, в консольной и графической программе. Специальный графический режим не требуется.</p><p>Цикл подходит для работы, продолжительность которой определяется состоянием данных. Если условие изначально ложно, тело полностью пропускается.</p></section>
+<p class="eyebrow">Справочная статья</p><h1 class="page-title">Оператор WHILE</h1><p class="lead">Повторять блок до тех пор, пока сохраняется нужное состояние данных, позволяет WHILE. Условие стоит в заголовке и проверяется перед каждым проходом, включая первый, поэтому тело выполняется только при истинном условии, а цикл завершается на том проходе, после которого условие стало ложным.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Когда нужен цикл с предусловием</h2><p>WHILE работает на верхнем уровне программы, внутри подпрограмм и блоков, в консольной и графической программе; специальный графический режим не требуется. Такой цикл подходит для работы, продолжительность которой определяется состоянием данных, а не заранее известным числом проходов.</p></section>
 <section class="article-section" id="syntax"><h2>Синтаксис</h2><pre><code class="language-axiom">WHILE &lt;условие&gt;
-    [&lt;инструкции&gt;]
+    ⟦&lt;инструкции&gt;⟧
 END WHILE</code></pre></section>
-<section class="article-section"><h2>Условие и тело</h2><p>Условие после <code>WHILE</code> должно иметь тип <code>BOOLEAN</code>. Инструкции тела расположены до <code>END WHILE</code>. После тела условие проверяется снова; значение <code>FALSE</code> завершает цикл.</p><p><code>CONTINUE WHILE</code> в непосредственном теле WHILE переходит к повторной проверке условия. Особенность переходов внутри разных вложенных видов циклов описана на странице <a href="continue.html">CONTINUE</a>. Изменяйте данные, от которых зависит условие, до такого перехода, если это нужно для завершения. Форма <code>EXIT WHILE</code> не поддержана; для выхода из середины тела используйте <code>DO … LOOP</code> и <code>EXIT DO</code>.</p></section>
+<section class="article-section"><h2>Условие и тело</h2><p>Условие после <code>WHILE</code> должно иметь тип <code>BOOLEAN</code>. Инструкции тела расположены до <code>END WHILE</code>. После тела условие проверяется снова; значение <code>FALSE</code> завершает цикл. В следующей программе счётчик начинает с нуля и увеличивается в теле, поэтому условие остаётся истинным ровно три раза:</p>
+<pre><code class="language-axiom">DIM count AS INTEGER = 0
+WHILE count &lt; 3
+    PRINT count
+    count = count + 1
+END WHILE</code></pre><p>Результат:</p>
+<pre><code>0
+1
+2</code></pre><p>Перед четвёртой проверкой счётчик равен трём, условие <code>count &lt; 3</code> становится ложным, и цикл заканчивается, так что число 3 не печатается.</p></section>
+<section class="article-section"><h2>Продолжение и выход</h2><p><code>CONTINUE WHILE</code> в непосредственном теле WHILE переходит к повторной проверке условия. Особенность переходов внутри разных вложенных видов циклов описана на странице <a href="continue.html">CONTINUE</a>. Изменяйте данные, от которых зависит условие, до такого перехода, если это нужно для завершения. Форма <code>EXIT WHILE</code> не поддержана; для выхода из середины тела используйте <code>DO … LOOP</code> и <code>EXIT DO</code>.</p></section>
 <section class="article-section">
                 <h2>Диагностика</h2>
                 <p>Ошибка возникает, если условие <code>WHILE</code> не имеет тип <code>BOOLEAN</code>, если блок не закрыт <code>END WHILE</code> или если в тексте используется неподдержанная форма выхода вроде <code>EXIT WHILE</code>.</p>
@@ -21,15 +30,6 @@ END WHILE</code></pre></section>
                     <li><code>MB2038</code> — <code>CONTINUE WHILE</code> используется вне цикла <code>WHILE ... END WHILE</code>.</li>
                 </ul>
             </section>
-<section class="article-section"><h2>Пример</h2><p>Условие позволяет выполнить три прохода:</p>
-<pre><code class="language-axiom">DIM count AS INTEGER = 0
-WHILE count &lt; 3
-    PRINT count
-    count = count + 1
-END WHILE</code></pre><p>Результат:</p>
-<pre><code>0
-1
-2</code></pre></section>
 <section class="article-section"><h2>Запускаемые примеры</h2><p>Откройте нужный файл в IDE и запустите его. Примеры с ошибкой предназначены для проверки сообщения компилятора или выполнения.</p><ul class="resource-list">
                     <li><a href="../../samples/control-flow/while/basic_loop.axm">WHILE: базовый предусловный цикл</a></li>
                     <li><a href="../../samples/control-flow/while/continue_while.axm">CONTINUE WHILE: пропуск итерации</a></li>

@@ -1,7 +1,7 @@
 ' Ожидается: 0, затем 3.
 
-DIM values() AS INTEGER
+DIM values[] AS INTEGER
 
-PRINT ARRAYLENGTH(values)
-REDIM values(5 TO 7)
-PRINT ARRAYLENGTH(values)
+PRINT ARRAYLENGTH(values[])
+REDIM values[5 TO 7]
+PRINT ARRAYLENGTH(values[])

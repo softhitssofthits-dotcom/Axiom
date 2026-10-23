@@ -25,7 +25,16 @@ public sealed partial class Binder
 
                 if (variable.IsArray)
                 {
+                    _editorReferences?.Add(new(variable, nameExpression.IdentifierToken.Location, false));
+                    if (_usesSquareArraySyntax)
+                    {
+                        return RejectParenthesizedArrayAccess(
+                            new BoundVariableExpression(nameExpression.IdentifierToken.Location, variable), expression);
+                    }
+
                     var arrayType = (ArrayTypeSymbol)variable.Type;
+                    if (expression.Arguments.Count == 0)
+                        return new BoundVariableExpression(nameExpression.IdentifierToken.Location, variable);
 
                     if (!IsValidReadableArrayIndexCount(arrayType, expression.Arguments.Count))
                     {
@@ -83,7 +92,7 @@ public sealed partial class Binder
             return methodCall;
         }
 
-        var target = BindExpression(expression.Target);
+        var target = BindArrayTarget(expression.Target);
 
         if (TryReportUnsupportedNamedArguments(expression))
         {
@@ -92,6 +101,12 @@ public sealed partial class Binder
 
         if (target.Type is ArrayTypeSymbol)
         {
+            if (_usesSquareArraySyntax)
+            {
+                return RejectParenthesizedArrayAccess(target, expression);
+            }
+
+            if (expression.Arguments.Count == 0) return target;
             var displayName = GetArrayTargetDisplayName(target);
             var arrayType = (ArrayTypeSymbol)target.Type;
 
@@ -113,20 +128,45 @@ public sealed partial class Binder
         return BindInvocationExpression(target, expression, GetLocation(expression.Target), "вызываемого значения");
     }
 
-    private BoundExpression BindAssignableTarget(ExpressionSyntax target)
+    private BoundExpression BindAssignableTarget(ExpressionSyntax target, bool reportInvalidTarget = false)
     {
-        return target switch
+        var diagnosticCount = _diagnostics.Count;
+        var boundTarget = target switch
         {
             NameExpressionSyntax nameExpression => BindAssignableNameTarget(nameExpression),
             CallExpressionSyntax callExpression => BindAssignableCallTarget(callExpression),
+            ArrayAccessExpressionSyntax arrayAccessExpression => BindSquareArrayAccessExpression(arrayAccessExpression, forAssignment: true),
             FieldAccessExpressionSyntax fieldAccessExpression => BindFieldAccessExpression(fieldAccessExpression),
             _ => new BoundErrorExpression(GetLocation(target))
         };
+
+        // BYREF сохраняет собственную диагностику. Присваивание не должно
+        // попадать в понижатель с безмолвной ошибкой или временным значением.
+        if (reportInvalidTarget && boundTarget is not (BoundVariableExpression or BoundFieldAccessExpression or BoundArrayAccessExpression))
+        {
+            if (_diagnostics.Count == diagnosticCount)
+            {
+                Report(DiagnosticCodes.TypeMismatch,
+                    "Недопустимая цель присваивания: требуется переменная, поле или элемент массива, а не результат вызова или другое временное значение.",
+                    GetLocation(target));
+            }
+
+            return new BoundErrorExpression(GetLocation(target));
+        }
+
+        return boundTarget;
     }
 
     private BoundExpression BindAssignableNameTarget(NameExpressionSyntax expression)
     {
         var variable = LookupVariable(expression.IdentifierToken.Text, expression.IdentifierToken.Location);
+        _editorReferences?.Add(new(variable, expression.IdentifierToken.Location, false));
+        if (_usesSquareArraySyntax && variable.IsArray)
+        {
+            ReportArrayNameRequiresBrackets(variable.Name, expression.IdentifierToken.Location);
+            return new BoundErrorExpression(expression.IdentifierToken.Location);
+        }
+
         return new BoundVariableExpression(expression.IdentifierToken.Location, variable);
     }
 

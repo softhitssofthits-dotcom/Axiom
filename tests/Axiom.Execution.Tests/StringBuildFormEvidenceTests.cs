@@ -5,12 +5,7 @@ namespace Axiom.Execution.Tests;
 
 public sealed class StringBuildFormEvidenceTests
 {
-    private const string Setup = """
-DIM items(-2 TO 0) AS STRING
-items(-2) = "А"
-items(-1) = "😀"
-items(0) = "Б"
-""";
+    private const string Setup = "DIM items[-2 TO 0] AS STRING\r\nitems[-2] = \"А\"\r\nitems[-1] = \"😀\"\r\nitems[0] = \"Б\"";
 
     public static IEnumerable<object[]> Forms()
     {
@@ -25,10 +20,10 @@ items(0) = "Б"
         yield return new object[] { "PadRightFill", "PADRIGHT(\"я\", 3, \".\")", "я..", "STRING" };
         yield return new object[] { "Center", "CENTER(\"я\", 4)", " я  ", "STRING" };
         yield return new object[] { "CenterFill", "CENTER(\"я\", 4, \".\")", ".я..", "STRING" };
-        yield return new object[] { "Split", "SPLIT(\"А,😀,Б\")", "А|😀|Б", "STRING()" };
-        yield return new object[] { "SplitSeparator", "SPLIT(\"А😀Б😀\", \"😀\")", "А|Б|", "STRING()" };
-        yield return new object[] { "Join", "JOIN(items)", "А,😀,Б", "STRING" };
-        yield return new object[] { "JoinSeparator", "JOIN(items, \"|\")", "А|😀|Б", "STRING" };
+        yield return new object[] { "Split", "SPLIT(\"А,😀,Б\")", "А|😀|Б", "STRING[]" };
+        yield return new object[] { "SplitSeparator", "SPLIT(\"А😀Б😀\", \"😀\")", "А|Б|", "STRING[]" };
+        yield return new object[] { "Join", "JOIN(items[])", "А,😀,Б", "STRING" };
+        yield return new object[] { "JoinSeparator", "JOIN(items[], \"|\")", "А|😀|Б", "STRING" };
     }
     public static IEnumerable<object[]> WrongArguments()
     {
@@ -63,7 +58,7 @@ items(0) = "Б"
         yield return new object[] { "SplitSeparator-arg2", "SPLIT(\"А😀Б😀\", TRUE)" };
         yield return new object[] { "Join-arg1", "JOIN(TRUE)" };
         yield return new object[] { "JoinSeparator-arg1", "JOIN(TRUE, \"|\")" };
-        yield return new object[] { "JoinSeparator-arg2", "JOIN(items, TRUE)" };
+        yield return new object[] { "JoinSeparator-arg2", "JOIN(items[], TRUE)" };
     }
 
     [Theory]
@@ -81,7 +76,7 @@ items(0) = "Б"
         Assert.Equal(expectedType, boundCall.Type.Name.ToUpperInvariant());
 
         {
-            var executionSource = expectedType == "STRING()" ? Setup + "\nPRINT JOIN(" + call + ", \"|\")" : source;
+            var executionSource = expectedType == "STRING[]" ? Setup + "\nPRINT JOIN(" + call + ", \"|\")" : source;
             var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(executionSource));
             Assert.True(result.Succeeded, string.Join("\n", result.Diagnostics.Select(d => d.Message)));
             Assert.Equal(new[] { expected }, result.Output);

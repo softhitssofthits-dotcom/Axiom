@@ -7,13 +7,9 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор EXIT</span></nav>
-<p class="eyebrow">Справочная статья</p><h1 class="page-title">Оператор EXIT</h1><p class="lead">EXIT — оператор языка Axiom, который завершает ближайший охватывающий цикл указанного вида. На странице описаны две отдельные формы: EXIT FOR и EXIT DO.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-<section class="article-section"><h2>Назначение и контекст</h2><p>Оператор EXIT нужен для прекращения повторений, когда результат уже найден или продолжать вычисление не требуется. Форма EXIT FOR допускается внутри охватывающего FOR, а EXIT DO — внутри охватывающего DO. Обе формы работают в консольных и графических программах, включая вложенные условия и подпрограммы, и не принимают аргументов.</p></section>
-<section class="article-section" id="exit-for"><h2>EXIT FOR</h2><pre><code class="language-axiom">EXIT FOR</code></pre><p>Форма допускается внутри <code>FOR … NEXT</code> и передаёт управление после соответствующего <code>NEXT</code>. Счётчик завершённого цикла становится недоступен.</p></section>
-<section class="article-section" id="exit-do"><h2>EXIT DO</h2><pre><code class="language-axiom">EXIT DO</code></pre><p>Форма допускается внутри <code>DO … LOOP</code> и передаёт управление после соответствующего <code>LOOP</code>. Условие завершаемого цикла больше не проверяется.</p></section>
-<section class="article-section"><h2>Вложенные циклы</h2><p>Завершается ближайший охватывающий цикл именно указанного вида. Другие внешние циклы продолжают работу. Аргументов у этих форм нет; формы <code>EXIT WHILE</code> в Axiom нет.</p></section>
-<section class="article-section"><h2>Диагностика</h2><ul><li><code>MB2013</code> — <code>EXIT FOR</code> записан вне цикла <code>FOR</code>.</li><li><code>MB2014</code> — <code>EXIT DO</code> записан вне цикла <code>DO ... LOOP</code>.</li></ul></section>
-<section class="article-section"><h2>Пример</h2><p>Выход при значении три оставляет два напечатанных числа:</p>
+<p class="eyebrow">Справочная статья</p><h1 class="page-title">Оператор EXIT</h1><p class="lead">Повторения иногда нужно прекратить раньше, чем сработает условие цикла: результат уже найден или продолжать вычисление не требуется. EXIT завершает ближайший охватывающий цикл указанного вида и передаёт управление за его окончание. Форм две — EXIT FOR и EXIT DO; каждая действует только в цикле своего вида и не принимает аргументов.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+<section class="article-section"><h2>Формы и допустимый контекст</h2><p>Оператор EXIT нужен для прекращения повторений, когда результат уже найден или продолжать вычисление не требуется. Форма EXIT FOR допускается внутри охватывающего FOR, а EXIT DO — внутри охватывающего DO. Обе формы работают в консольных и графических программах, включая вложенные условия и подпрограммы.</p></section>
+<section class="article-section" id="exit-for"><h2>EXIT FOR</h2><pre><code class="language-axiom">EXIT FOR</code></pre><p>Форма допускается внутри <code>FOR … NEXT</code> и передаёт управление после соответствующего <code>NEXT</code>. Счётчик завершённого цикла становится недоступен. В следующей программе выход происходит на значении три, поэтому напечатаны только два первых числа:</p>
 <pre><code class="language-axiom">FOR index = 1 TO 5
     IF index = 3 THEN
         EXIT FOR
@@ -21,6 +17,9 @@
     PRINT index
 NEXT</code></pre><p>Результат:</p>
 <pre><code>1
-2</code></pre></section>
+2</code></pre><p>Для значения три <code>EXIT FOR</code> выполнился до <code>PRINT</code>, поэтому третье число не появилось, а оставшиеся проходы не начались.</p></section>
+<section class="article-section" id="exit-do"><h2>EXIT DO</h2><pre><code class="language-axiom">EXIT DO</code></pre><p>Форма допускается внутри <code>DO … LOOP</code> и передаёт управление после соответствующего <code>LOOP</code>. Условие завершаемого цикла больше не проверяется.</p></section>
+<section class="article-section"><h2>Вложенные циклы</h2><p>Завершается ближайший охватывающий цикл именно указанного вида. Другие внешние циклы продолжают работу. Аргументов у этих форм нет; формы <code>EXIT WHILE</code> в Axiom нет.</p></section>
+<section class="article-section"><h2>Диагностика</h2><ul><li><code>MB2013</code> — <code>EXIT FOR</code> записан вне цикла <code>FOR</code>.</li><li><code>MB2014</code> — <code>EXIT DO</code> записан вне цикла <code>DO ... LOOP</code>.</li></ul></section>
 <section class="article-section"><h2>См. также</h2><div class="link-list"><a href="loops.html">Циклы</a><a href="for.html">FOR</a><a href="do-loop.html">DO … LOOP</a><a href="continue.html">CONTINUE</a></div></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
 <script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

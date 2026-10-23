@@ -167,29 +167,7 @@ PRINT "Продолжение"
     [Fact]
     public void InstantWorksInRecordsArraysAndSelectCase()
     {
-        const string source = """
-TYPE Event
-    Sent AS UTCDATETIME = "2024-02-29T12:34:56.125Z"
-    Label AS STRING = "событие"
-END TYPE
-
-DIM item AS Event
-PRINT item.Sent
-PRINT item.Label
-
-DIM list(1 TO 2) AS UTCDATETIME
-list(1) = item.Sent
-list(2) = "2024-02-29T10:00:00Z"
-PRINT ARRAYMIN(list)
-PRINT ARRAYMAX(list)
-
-SELECT CASE list(1)
-    CASE IS > list(2)
-        PRINT "позже"
-    CASE ELSE
-        PRINT "не позже"
-END SELECT
-""";
+        const string source = "TYPE Event\n    Sent AS UTCDATETIME = \"2024-02-29T12:34:56.125Z\"\n    Label AS STRING = \"событие\"\nEND TYPE\n\nDIM item AS Event\nPRINT item.Sent\nPRINT item.Label\n\nDIM list[1 TO 2] AS UTCDATETIME\nlist[1] = item.Sent\nlist[2] = \"2024-02-29T10:00:00Z\"\nPRINT ARRAYMIN(list[])\nPRINT ARRAYMAX(list[])\n\nSELECT CASE list[1]\n    CASE IS > list[2]\n        PRINT \"позже\"\n    CASE ELSE\n        PRINT \"не позже\"\nEND SELECT";
 
         var result = Run(source);
 

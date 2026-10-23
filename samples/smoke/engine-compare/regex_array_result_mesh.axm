@@ -2,32 +2,32 @@
 ' Программа собирает большой текстовый корпус и отдельно нагружает
 ' REGEXMATCHES, REGEXEXTRACTALL и REGEXSPLIT с режимом без учёта регистра.
 
-DIM lines() AS STRING
+DIM lines[] AS STRING
 DIM corpus AS STRING
-DIM matches() AS STRING
-DIM users() AS STRING
-DIM parts() AS STRING
+DIM matches[] AS STRING
+DIM users[] AS STRING
+DIM parts[] AS STRING
 
-REDIM lines(1 TO 3200)
+REDIM lines[1 TO 3200]
 
-FOR lineIndex = 1 TO ARRAYLENGTH(lines)
-    lines(lineIndex) = BuildRegexEntry(lineIndex)
+FOR lineIndex = 1 TO ARRAYLENGTH(lines[])
+    lines[lineIndex] = BuildRegexEntry(lineIndex)
 NEXT
 
-corpus = JOIN(lines, CHR(10))
-matches = REGEXMATCHES(corpus, "code=(ERR\d{3}|WARN\d{3})", "i")
-users = REGEXEXTRACTALL(corpus, "user=([A-Z]{2}\d{2})", 1, "i")
-parts = REGEXSPLIT(corpus, "\r?\n", "i")
+corpus = JOIN(lines[], CHR(10))
+matches[] = REGEXMATCHES(corpus, "code=(ERR\d{3}|WARN\d{3})", "i")
+users[] = REGEXEXTRACTALL(corpus, "user=([A-Z]{2}\d{2})", 1, "i")
+parts[] = REGEXSPLIT(corpus, "\r?\n", "i")
 
-PRINT ARRAYLENGTH(matches)
-PRINT ARRAYLENGTH(users)
-PRINT ARRAYLENGTH(parts)
-PRINT matches(1)
-PRINT matches(ARRAYLENGTH(matches))
-PRINT users(1)
-PRINT users(ARRAYLENGTH(users))
-PRINT LEFT(parts(1), 15)
-PRINT RIGHT(parts(ARRAYLENGTH(parts)), 15)
+PRINT ARRAYLENGTH(matches[])
+PRINT ARRAYLENGTH(users[])
+PRINT ARRAYLENGTH(parts[])
+PRINT matches[1]
+PRINT matches[ARRAYLENGTH(matches[])]
+PRINT users[1]
+PRINT users[ARRAYLENGTH(users[])]
+PRINT LEFT(parts[1], 15)
+PRINT RIGHT(parts[ARRAYLENGTH(parts[])], 15)
 
 FUNCTION BuildRegexEntry(lineIndex AS INTEGER) AS STRING
     DIM codeSelector AS INTEGER = lineIndex MOD 4

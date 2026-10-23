@@ -51,3 +51,47 @@ test('Двоичная и шестнадцатеричная запись выд
  assert.ok(tokens.some(token=>token.text==='&HFF'&&token.type==='number.hex'));
  assert.ok(tokens.some(token=>token.text==='&'&&token.type==='operator'));
 });
+
+
+test('Квадратные обращения, вызов внутри индекса и формат интерполяции сохраняются',()=>{
+ const source=`DIM fruits[] AS STRING = MakeFruits()
+PRINT $"{fruits[ChooseFruit() + (offset * 2)]:F2}"
+PRINT MakeFruits()[2]`;
+ const tokens=highlighter().tokenize(source);
+ assert.equal(tokens.map(token=>token.text).join(''),source);
+ for(const bracket of ['[',']'])assert.ok(tokens.some(token=>token.text===bracket&&token.type==='delimiter'));
+ assert.ok(tokens.some(token=>token.text==='F2'&&token.type==='string'));
+ assert.ok(tokens.some(token=>token.text==='MakeFruits'&&token.type==='identifier'));
+ assert.ok(!tokens.some(token=>token.text==='ChooseFruit'&&token.type==='string'));
+});
+
+test('Метанотация необязательных частей отличается от буквальных квадратных скобок',()=>{
+ const source='FUNCTION <имя>(⟦<параметры>⟧) AS STRING[]';
+ const tokens=highlighter().tokenize(source);
+ assert.equal(tokens.map(token=>token.text).join(''),source);
+ for(const symbol of ['⟦','⟧'])assert.ok(tokens.some(token=>token.text===symbol&&token.type==='placeholder'));
+ for(const symbol of ['[',']'])assert.ok(tokens.some(token=>token.text===symbol&&token.type==='delimiter'));
+});
+
+test('Семантика справочника отличает массивный параметр и вызов с массивным результатом',()=>{
+ const context={window:{}};
+ vm.runInNewContext(fs.readFileSync(path.join(root,'docs/manual/scripts/semantic-colors.js'),'utf8'),context);
+ const api=context.window.AxiomSemanticColors;
+ assert.equal(api.arrayType('STRING[]').rank,1);
+ assert.equal(api.arrayType('INTEGER[,]').rank,2);
+ assert.equal(api.arrayType('FUNCTION() AS STRING[]'),null);
+ const source=`DIM fruits[] AS STRING = MakeFruits()
+SUB Show(values[] AS STRING)
+PRINT values[2]
+END SUB
+FUNCTION MakeFruits() AS STRING[]
+RETURN fruits[]
+END FUNCTION`;
+ const lines=source.split('\n');
+ const tokenLines=lines.map(line=>[...line.matchAll(/[A-Za-z_]\w*|[^A-Za-z_]+/g)].map(m=>({offset:m.index,type:/^[A-Za-z_]/.test(m[0])&&!/^(DIM|AS|STRING|SUB|PRINT|END|FUNCTION|RETURN)$/.test(m[0])?'identifier':'keyword.axiom'})));
+ const data=[...api.classify(source,tokenLines).data];let row=0,column=0;const words=[];
+ for(let i=0;i<data.length;i+=5){row+=data[i];column=data[i]===0?column+data[i+1]:data[i+1];words.push({word:lines[row].slice(column,column+data[i+2]),type:data[i+3]});}
+ assert.ok(words.some(t=>t.word==='fruits'&&t.type===3));
+ assert.ok(words.filter(t=>t.word==='values').every(t=>t.type===3));
+ assert.ok(words.filter(t=>t.word==='MakeFruits').every(t=>t.type===1));
+});

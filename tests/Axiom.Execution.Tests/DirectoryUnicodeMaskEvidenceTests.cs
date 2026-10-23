@@ -32,12 +32,12 @@ public sealed class DirectoryUnicodeMaskEvidenceTests
             }
             var argument = pattern == "null" ? "\"é\" + CHRW(0) + \"*\"" : $"\"{pattern}\"";
             var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($$"""
-                DIM entries() AS STRING
+                DIM entries[] AS STRING
                 TRY
-                    entries = {{operation}}("{{root}}", {{argument}})
-                    PRINT ARRAYLENGTH(entries)
-                    FOR index = 1 TO ARRAYLENGTH(entries)
-                        PRINT entries(index)
+                    entries[] = {{operation}}("{{root}}", {{argument}})
+                    PRINT ARRAYLENGTH(entries[])
+                    FOR index = 1 TO ARRAYLENGTH(entries[])
+                        PRINT entries[index]
                     NEXT index
                 CATCH err
                     PRINT err.Code

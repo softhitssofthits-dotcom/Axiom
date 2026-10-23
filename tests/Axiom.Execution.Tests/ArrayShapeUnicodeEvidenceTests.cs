@@ -5,47 +5,7 @@ public sealed class ArrayShapeUnicodeEvidenceTests
     [Fact]
     public void VisibleUnicodeOrderAndIndependentTemplateShapeArePreserved()
     {
-        var source = """
-            DIM grid(-1 TO 1, 5 TO 7) AS STRING
-            DIM flat() AS STRING
-            DIM shaped(,) AS STRING
-            DIM pattern(8 TO 11, -2 TO -1) AS STRING
-            DIM token AS STRING = LEFT("😀", 1) + CHRW(0)
-            grid(-1, 5) = "Внешний"
-            grid(0, 6) = token
-            grid(0, 7) = "é"
-            grid(1, 6) = "😀"
-            grid(1, 7) = "é"
-            pattern(9, -2) = "Шаблон"
-            flat = ARRAYFLATTEN(grid(0 TO 1, 6 TO 7))
-            PRINT LBOUND(flat)
-            PRINT UBOUND(flat)
-            PRINT flat(1) = token
-            PRINT flat(2) = "é"
-            PRINT flat(3) = "😀"
-            PRINT flat(4) = "é"
-            shaped = ARRAYRESHAPE(flat, pattern(9 TO 10, -2 TO -1))
-            PRINT LBOUND(shaped, 1)
-            PRINT UBOUND(shaped, 1)
-            PRINT LBOUND(shaped, 2)
-            PRINT UBOUND(shaped, 2)
-            PRINT shaped(9, -2) = token
-            PRINT shaped(9, -1) = "é"
-            PRINT shaped(10, -2) = "😀"
-            PRINT shaped(10, -1) = "é"
-            flat(1) = "Замена"
-            PRINT grid(0, 6) = token
-            PRINT shaped(9, -2) = token
-            shaped(9, -2) = "Другая замена"
-            PRINT pattern(9, -2) = "Шаблон"
-            TRY
-                shaped = ARRAYRESHAPE(flat, pattern)
-            CATCH err
-                PRINT err.Code
-            END TRY
-            PRINT shaped(9, -2) = "Другая замена"
-            PRINT grid(-1, 5) = "Внешний"
-            """;
+        var source = "DIM grid[-1 TO 1, 5 TO 7] AS STRING\r\nDIM flat[] AS STRING\r\nDIM shaped[,] AS STRING\r\nDIM pattern[8 TO 11, -2 TO -1] AS STRING\r\nDIM token AS STRING = LEFT(\"😀\", 1) + CHRW(0)\r\ngrid[-1, 5] = \"Внешний\"\r\ngrid[0, 6] = token\r\ngrid[0, 7] = \"é\"\r\ngrid[1, 6] = \"😀\"\r\ngrid[1, 7] = \"é\"\r\npattern[9, -2] = \"Шаблон\"\r\nflat[] = ARRAYFLATTEN(grid[0 TO 1, 6 TO 7])\r\nPRINT LBOUND(flat[])\r\nPRINT UBOUND(flat[])\r\nPRINT flat[1] = token\r\nPRINT flat[2] = \"é\"\r\nPRINT flat[3] = \"😀\"\r\nPRINT flat[4] = \"é\"\r\nshaped[] = ARRAYRESHAPE(flat[], pattern[9 TO 10, -2 TO -1])\r\nPRINT LBOUND(shaped[], 1)\r\nPRINT UBOUND(shaped[], 1)\r\nPRINT LBOUND(shaped[], 2)\r\nPRINT UBOUND(shaped[], 2)\r\nPRINT shaped[9, -2] = token\r\nPRINT shaped[9, -1] = \"é\"\r\nPRINT shaped[10, -2] = \"😀\"\r\nPRINT shaped[10, -1] = \"é\"\r\nflat[1] = \"Замена\"\r\nPRINT grid[0, 6] = token\r\nPRINT shaped[9, -2] = token\r\nshaped[9, -2] = \"Другая замена\"\r\nPRINT pattern[9, -2] = \"Шаблон\"\r\nTRY\r\n    shaped[] = ARRAYRESHAPE(flat[], pattern[])\r\nCATCH err\r\n    PRINT err.Code\r\nEND TRY\r\nPRINT shaped[9, -2] = \"Другая замена\"\r\nPRINT grid[-1, 5] = \"Внешний\"";
         var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);

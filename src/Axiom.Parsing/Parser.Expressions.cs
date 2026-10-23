@@ -136,8 +136,19 @@ public sealed partial class Parser
     {
         var expression = target;
 
-        while (Current.Kind is SyntaxKind.OpenParenToken or SyntaxKind.DotToken)
+        while (Current.Kind is SyntaxKind.OpenParenToken or SyntaxKind.OpenBracketToken or SyntaxKind.DotToken)
         {
+            if (Current.Kind == SyntaxKind.OpenBracketToken)
+            {
+                if (_fixedStringLengthDepth > 0 && IsArrayTypeSuffix())
+                {
+                    break;
+                }
+
+                expression = ParseArrayAccessExpression(expression);
+                continue;
+            }
+
             if (Current.Kind == SyntaxKind.OpenParenToken)
             {
                 var openParenToken = NextToken();

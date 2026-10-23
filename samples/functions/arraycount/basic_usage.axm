@@ -1,11 +1,11 @@
 ' ARRAYCOUNT: число совпадений в уже выделенном массиве.
 
-Dim values(5 To 8) As Integer
+Dim values[5 To 8] As Integer
 
-values(5) = 20
-values(6) = 10
-values(7) = 20
-values(8) = 20
+values[5] = 20
+values[6] = 10
+values[7] = 20
+values[8] = 20
 
-Print ARRAYCOUNT(values, 20)
-Print ARRAYCOUNT(values, 99)
+Print ARRAYCOUNT(values[], 20)
+Print ARRAYCOUNT(values[], 99)

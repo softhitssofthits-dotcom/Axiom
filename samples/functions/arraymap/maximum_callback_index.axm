@@ -1,18 +1,18 @@
 REM Проверяем один элемент на последнем допустимом индексе INTEGER.
-DIM values(2147483647 TO 2147483647) AS INTEGER
-DIM mapped() AS INTEGER
-DIM filtered() AS INTEGER
-values(2147483647) = 42
+DIM values[2147483647 TO 2147483647] AS INTEGER
+DIM mapped[] AS INTEGER
+DIM filtered[] AS INTEGER
+values[2147483647] = 42
 REM Обе проверки должны завершиться без перехода за последний индекс.
-PRINT ARRAYEVERY(values, Positive)
-PRINT ARRAYSOME(values, Negative)
+PRINT ARRAYEVERY(values[], Positive)
+PRINT ARRAYSOME(values[], Negative)
 REM Отбор создаёт компактный массив; преобразование сохраняет границы.
-filtered = ARRAYFILTER(values, Positive)
-mapped = ARRAYMAP(values, Twice)
-PRINT filtered(1)
-PRINT mapped(2147483647)
+filtered[] = ARRAYFILTER(values[], Positive)
+mapped[] = ARRAYMAP(values[], Twice)
+PRINT filtered[1]
+PRINT mapped[2147483647]
 REM Свёртка прибавляет единственное значение к начальному 8.
-PRINT ARRAYREDUCE(values, 8, Add)
+PRINT ARRAYREDUCE(values[], 8, Add)
 FUNCTION Positive(value AS INTEGER) AS BOOLEAN
     RETURN value > 0
 END FUNCTION

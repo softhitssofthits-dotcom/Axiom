@@ -26,21 +26,21 @@ public sealed class DirectoryListingEvidenceTests
             var pattern = operation == "GETFILES" ? "*.txt" : "A*";
             var arguments = filtered ? $"\"{root}\", \"{pattern}\"" : $"\"{root}\"";
             var result = new AxiomExecutionPipeline().Run(new ExecutionRequest($$"""
-                DIM entries() AS STRING
-                entries = {{operation}}({{arguments}})
-                PRINT ARRAYLENGTH(entries)
-                FOR index = 1 TO ARRAYLENGTH(entries)
-                    PRINT entries(index)
+                DIM entries[] AS STRING
+                entries[] = {{operation}}({{arguments}})
+                PRINT ARRAYLENGTH(entries[])
+                FOR index = 1 TO ARRAYLENGTH(entries[])
+                    PRINT entries[index]
                 NEXT index
-                entries = {{operation}}("{{root}}", "*.missing")
-                PRINT ARRAYLENGTH(entries)
+                entries[] = {{operation}}("{{root}}", "*.missing")
+                PRINT ARRAYLENGTH(entries[])
                 TRY
-                    entries = {{operation}}("{{root}}", "")
+                    entries[] = {{operation}}("{{root}}", "")
                 CATCH err
                     PRINT err.Code
                 END TRY
                 TRY
-                    entries = {{operation}}("{{root}}/missing")
+                    entries[] = {{operation}}("{{root}}/missing")
                 CATCH err
                     PRINT err.Code
                 END TRY

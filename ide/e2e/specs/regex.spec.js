@@ -60,7 +60,7 @@ module.exports = [{
   id: 'regex-debug-array-step-back',
   name: 'RegEx: массивный результат после шага назад и повторного исполнения',
   async fn({ S, C }) {
-    await open(S, 'debug', 'DIM values() AS STRING\nvalues = REGEXMATCHES("A12 B34", "\\d+")\nPRINT values(2)\nvalues = REGEXEXTRACTALL("C56", "([A-Z])(\\d+)", 2)\nPRINT values(1)\n');
+    await open(S, 'debug', 'DIM values[] AS STRING\nvalues[] = REGEXMATCHES("A12 B34", "\\d+")\nPRINT values[2]\nvalues[] = REGEXEXTRACTALL("C56", "([A-Z])(\\d+)", 2)\nPRINT values[1]\n');
     await S.page.evaluate(() => window.__ide.run('debug'));
     await S.page.waitForFunction(() => !!window.__ide.execution.stopId);
     C.eq(await S.page.evaluate(() => window.__ide.execution.line), 2, 'Первая исполняемая строка — присваивание массива');

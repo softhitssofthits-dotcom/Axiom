@@ -1,8 +1,8 @@
 ' ARRAYISALLOCATED показывает разницу между невыделенным
 ' и уже выделенным динамическим массивом.
 
-DIM values() AS INTEGER
+DIM values[] AS INTEGER
 
-PRINT ARRAYISALLOCATED(values)
-REDIM values(5 TO 7)
-PRINT ARRAYISALLOCATED(values)
+PRINT ARRAYISALLOCATED(values[])
+REDIM values[5 TO 7]
+PRINT ARRAYISALLOCATED(values[])

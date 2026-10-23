@@ -59,8 +59,8 @@ public sealed class PrivateTypeIdentityTests
     {
         var result = Run(
             "IMPORT first\nIMPORT second\nPRINT FirstRead()\nPRINT SecondRead()",
-            "TYPE Box\nItem AS INTEGER\nEND TYPE\nPUBLIC FUNCTION FirstRead() AS INTEGER\nDIM boxes(0 TO 1) AS Box\nboxes(0).Item=11\nRETURN boxes(0).Item\nEND FUNCTION",
-            "TYPE Box\nItem AS STRING\nEND TYPE\nPUBLIC FUNCTION SecondRead() AS STRING\nDIM boxes(0 TO 1) AS Box\nboxes(0).Item=\"hello\"\nRETURN boxes(0).Item\nEND FUNCTION");
+            "TYPE Box\nItem AS INTEGER\nEND TYPE\nPUBLIC FUNCTION FirstRead() AS INTEGER\nDIM boxes[0 TO 1] AS Box\nboxes[0].Item=11\nRETURN boxes[0].Item\nEND FUNCTION",
+            "TYPE Box\nItem AS STRING\nEND TYPE\nPUBLIC FUNCTION SecondRead() AS STRING\nDIM boxes[0 TO 1] AS Box\nboxes[0].Item=\"hello\"\nRETURN boxes[0].Item\nEND FUNCTION");
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(["11", "hello"], result.Output);

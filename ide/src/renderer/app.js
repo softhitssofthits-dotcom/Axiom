@@ -239,7 +239,7 @@ class AxiomIDE {
       [/\d+/, 'number'],
       [/<>|<=|>=|<<|>>|=|<|>/, 'operator'],
       [/\+|-|\*|\/|\\|\^|&/, 'operator'],
-      [/[()]/, '@brackets'],
+      [/[()[\]]/, '@brackets'],
       [/[,;:.]/, 'delimiter'],
       [/[#%$]/, 'invalid'],
       [/[^\x00-\x7F\s]+/, 'invalid'],
@@ -311,15 +311,20 @@ class AxiomIDE {
 
     monaco.languages.registerDocumentSemanticTokensProvider('axiom', {
       getLegend: () => window.AxiomSemanticColors.legend,
-      provideDocumentSemanticTokens: model => window.AxiomSemanticColors.classify(model.getValue(), monaco.editor.tokenize(model.getValue(), 'axiom')),
+      provideDocumentSemanticTokens: async (model, lastResultId, cancellation) => {
+        const version = model.getVersionId(), source = model.getValue();
+        const symbols = await window.LangFeatures?.getSemanticHovers?.(model);
+        if (model.isDisposed() || model.getVersionId() !== version || cancellation?.isCancellationRequested) return null;
+        return window.AxiomSemanticColors.classify(source, monaco.editor.tokenize(source, 'axiom'), symbols || []);
+      },
       releaseDocumentSemanticTokens() {},
     });
 
-    // Круглые скобки выражений участвуют в сопоставлении и раскраске вложенности.
+    // Вызовы/группировка и массивы имеют собственные пары для сопоставления и раскраски.
     monaco.languages.setLanguageConfiguration('axiom', {
       comments: { lineComment: "'" },
-      brackets: [['(', ')']],
-      colorizedBracketPairs: [['(', ')']],
+      brackets: [['(', ')'], ['[', ']']],
+      colorizedBracketPairs: [['(', ')'], ['[', ']']],
       folding: { markers: { start: /^\s*'\s*#region\s+\S.*$/i, end: /^\s*'\s*#endregion\s*$/i } },
       indentationRules: {
         increaseIndentPattern: /^\s*(?:(?:If|ElseIf)\b.*\bThen|Else|For\b.*|While\b.*|Do(?:\s+(?:While|Until)\b.*)?|(?:Sub|Function|Type)\b.*|Select\s+Case\b.*|Case\b.*|Try|Catch\b.*|Finally)\s*(?:'.*)?$/i,
@@ -327,10 +332,12 @@ class AxiomIDE {
       },
       autoClosingPairs: [
         { open: '(', close: ')' },
+        { open: '[', close: ']' },
         { open: '"', close: '"' },
       ],
       surroundingPairs: [
         { open: '(', close: ')' },
+        { open: '[', close: ']' },
         { open: '"', close: '"' },
       ],
     });

@@ -27,37 +27,7 @@ public sealed class RegexArrayUnicodeFormEvidenceTests
     [Fact]
     public void ArraysPreserveUtf16UnitsAndCapturedSeparators()
     {
-        var source = """
-            DIM high AS STRING = LEFT("😀", 1)
-            DIM low AS STRING = RIGHT("😀", 1)
-            DIM nul AS STRING = CHRW(0)
-            DIM values() AS STRING
-            values = REGEXMATCHES(high + nul + low, ".")
-            PRINT LBOUND(values)
-            PRINT UBOUND(values)
-            PRINT values(1) = high
-            PRINT values(2) = nul
-            PRINT values(3) = low
-            values = REGEXMATCHES("😀", "", "s")
-            PRINT ARRAYLENGTH(values)
-            PRINT JOIN(values, "|") = "||"
-            values = REGEXSPLIT("😀", "")
-            PRINT ARRAYLENGTH(values)
-            PRINT values(1) = ""
-            PRINT values(2) = high
-            PRINT values(3) = low
-            PRINT values(4) = ""
-            values = REGEXSPLIT(high + nul + low, "(.)", "s")
-            PRINT ARRAYLENGTH(values)
-            PRINT values(2) = high
-            PRINT values(4) = nul
-            PRINT values(6) = low
-            PRINT values(1) = ""
-            PRINT values(7) = ""
-            values = REGEXMATCHES("é", "é", "i")
-            PRINT ARRAYISALLOCATED(values)
-            PRINT ARRAYLENGTH(values)
-            """;
+        var source = "DIM high AS STRING = LEFT(\"😀\", 1)\r\nDIM low AS STRING = RIGHT(\"😀\", 1)\r\nDIM nul AS STRING = CHRW(0)\r\nDIM values[] AS STRING\r\nvalues[] = REGEXMATCHES(high + nul + low, \".\")\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])\r\nPRINT values[1] = high\r\nPRINT values[2] = nul\r\nPRINT values[3] = low\r\nvalues[] = REGEXMATCHES(\"😀\", \"\", \"s\")\r\nPRINT ARRAYLENGTH(values[])\r\nPRINT JOIN(values[], \"|\") = \"||\"\r\nvalues[] = REGEXSPLIT(\"😀\", \"\")\r\nPRINT ARRAYLENGTH(values[])\r\nPRINT values[1] = \"\"\r\nPRINT values[2] = high\r\nPRINT values[3] = low\r\nPRINT values[4] = \"\"\r\nvalues[] = REGEXSPLIT(high + nul + low, \"(.)\", \"s\")\r\nPRINT ARRAYLENGTH(values[])\r\nPRINT values[2] = high\r\nPRINT values[4] = nul\r\nPRINT values[6] = low\r\nPRINT values[1] = \"\"\r\nPRINT values[7] = \"\"\r\nvalues[] = REGEXMATCHES(\"é\", \"é\", \"i\")\r\nPRINT ARRAYISALLOCATED(values[])\r\nPRINT ARRAYLENGTH(values[])";
         var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);

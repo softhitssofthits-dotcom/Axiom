@@ -7,18 +7,18 @@
 ' 99
 ' 30
 ' 20
-DIM source(5 TO 7) AS INTEGER
-DIM part() AS INTEGER
+DIM source[5 TO 7] AS INTEGER
+DIM part[] AS INTEGER
 
-source(5) = 10
-source(6) = 20
-source(7) = 30
+source[5] = 10
+source[6] = 20
+source[7] = 30
 
-part = ARRAYSKIP(source, 1)
-part(1) = 99
+part[] = ARRAYSKIP(source[], 1)
+part[1] = 99
 
-PRINT LBOUND(part)
-PRINT UBOUND(part)
-PRINT part(1)
-PRINT part(2)
-PRINT source(6)
+PRINT LBOUND(part[])
+PRINT UBOUND(part[])
+PRINT part[1]
+PRINT part[2]
+PRINT source[6]

@@ -246,6 +246,7 @@ public sealed partial class Parser
             or SyntaxKind.CommaToken
             or SyntaxKind.SemicolonToken
             or SyntaxKind.CloseParenToken
+            or SyntaxKind.CloseBracketToken
             or SyntaxKind.ThenKeyword
             or SyntaxKind.ForKeyword
             or SyntaxKind.ToKeyword
@@ -298,6 +299,8 @@ public sealed partial class Parser
             TokenKind.GreaterGreaterToken => SyntaxKind.GreaterGreaterToken,
             TokenKind.OpenParenToken => SyntaxKind.OpenParenToken,
             TokenKind.CloseParenToken => SyntaxKind.CloseParenToken,
+            TokenKind.OpenBracketToken => SyntaxKind.OpenBracketToken,
+            TokenKind.CloseBracketToken => SyntaxKind.CloseBracketToken,
             TokenKind.CommaToken => SyntaxKind.CommaToken,
             TokenKind.SemicolonToken => SyntaxKind.SemicolonToken,
             TokenKind.DotToken => SyntaxKind.DotToken,

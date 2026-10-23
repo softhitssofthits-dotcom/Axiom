@@ -12,16 +12,16 @@ public sealed class WholeFileDefaultEvidenceTests
                 PRINT WRITEFILE("{{path}}", "А😀" + CHRW(13) + CHRW(10) + CHRW(10))
                 PRINT APPENDFILE("{{path}}", "Б")
                 PRINT READFILE("{{path}}") = "А😀" + CHRW(13) + CHRW(10) + CHRW(10) + "Б"
-                DIM lines() AS STRING
-                lines = READALLLINES("{{path}}")
-                PRINT ARRAYLENGTH(lines)
-                PRINT lines(1) = "А😀"
-                PRINT lines(2) = ""
-                PRINT lines(3) = "Б"
+                DIM lines[] AS STRING
+                lines[] = READALLLINES("{{path}}")
+                PRINT ARRAYLENGTH(lines[])
+                PRINT lines[1] = "А😀"
+                PRINT lines[2] = ""
+                PRINT lines[3] = "Б"
                 PRINT WRITEFILE("{{path}}", "")
                 PRINT READFILE("{{path}}") = ""
-                lines = READALLLINES("{{path}}")
-                PRINT ARRAYLENGTH(lines)
+                lines[] = READALLLINES("{{path}}")
+                PRINT ARRAYLENGTH(lines[])
                 PRINT WRITEFILE("{{path}}", "А😀" + CHRW(13) + CHRW(10) + CHRW(10))
                 PRINT APPENDFILE("{{path}}", "Б")
                 """));

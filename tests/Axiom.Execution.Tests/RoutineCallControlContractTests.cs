@@ -101,20 +101,7 @@ PRINT action()
     public void ArrayMapCallbackBreakpointStopsInsideCallbackAndResumesAllElements()
     {
         var output = new CollectingOutputWriter();
-        var (result, timedOut) = RunWithWatchdog(() => new AxiomExecutionPipeline().Run(new ExecutionRequest("""
-FUNCTION Twice(value AS INTEGER) AS INTEGER
-    RETURN value * 2
-END FUNCTION
-DIM values(1 TO 3) AS INTEGER
-values(1) = 1
-values(2) = 2
-values(3) = 3
-DIM mapped AS INTEGER()
-mapped = ARRAYMAP(values, Twice)
-PRINT mapped(1)
-PRINT mapped(2)
-PRINT mapped(3)
-""", outputWriter: output, sourceBreakpointLines: [2])));
+        var (result, timedOut) = RunWithWatchdog(() => new AxiomExecutionPipeline().Run(new ExecutionRequest("FUNCTION Twice(value AS INTEGER) AS INTEGER\r\n    RETURN value * 2\r\nEND FUNCTION\r\nDIM values[1 TO 3] AS INTEGER\r\nvalues[1] = 1\r\nvalues[2] = 2\r\nvalues[3] = 3\r\nDIM mapped[] AS INTEGER\r\nmapped[] = ARRAYMAP(values[], Twice)\r\nPRINT mapped[1]\r\nPRINT mapped[2]\r\nPRINT mapped[3]", outputWriter: output, sourceBreakpointLines: [2])));
 
         Assert.False(timedOut, "Обратный вызов ARRAYMAP не вернул управление после точки останова.");
         Assert.True(result.Stopped);
@@ -129,22 +116,7 @@ PRINT mapped(3)
     [Fact]
     public void ArrayMapCallbackLoopObservesCancellation()
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("""
-FUNCTION Slow(value AS INTEGER) AS INTEGER
-    DIM total AS INTEGER = 0
-    FOR i = 1 TO 1000
-        total = total + 1
-    NEXT
-    RETURN value
-END FUNCTION
-DIM values(1 TO 200) AS INTEGER
-FOR i = 1 TO 200
-    values(i) = i
-NEXT
-DIM mapped AS INTEGER()
-mapped = ARRAYMAP(values, Slow)
-PRINT mapped(200)
-""", cancellationProvider: new CancelAfterChecks(256)));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("FUNCTION Slow(value AS INTEGER) AS INTEGER\r\n    DIM total AS INTEGER = 0\r\n    FOR i = 1 TO 1000\r\n        total = total + 1\r\n    NEXT\r\n    RETURN value\r\nEND FUNCTION\r\nDIM values[1 TO 200] AS INTEGER\r\nFOR i = 1 TO 200\r\n    values[i] = i\r\nNEXT\r\nDIM mapped[] AS INTEGER\r\nmapped[] = ARRAYMAP(values[], Slow)\r\nPRINT mapped[200]", cancellationProvider: new CancelAfterChecks(256)));
 
         Assert.Equal(ExecutionStatus.Cancelled, result.Status);
     }
@@ -238,16 +210,7 @@ PRINT action()
     public void ArrayMapCallbackBreakpointDoesNotOfferStepBackAcrossContinuation()
     {
         var output = new CollectingOutputWriter();
-        var (result, timedOut) = RunWithWatchdog(() => new AxiomExecutionPipeline().Run(new ExecutionRequest("""
-FUNCTION Twice(value AS INTEGER) AS INTEGER
-    RETURN value * 2
-END FUNCTION
-DIM values(1 TO 1) AS INTEGER
-values(1) = 1
-DIM mapped AS INTEGER()
-mapped = ARRAYMAP(values, Twice)
-PRINT mapped(1)
-""", outputWriter: output, sourceBreakpointLines: [2])));
+        var (result, timedOut) = RunWithWatchdog(() => new AxiomExecutionPipeline().Run(new ExecutionRequest("FUNCTION Twice(value AS INTEGER) AS INTEGER\r\n    RETURN value * 2\r\nEND FUNCTION\r\nDIM values[1 TO 1] AS INTEGER\r\nvalues[1] = 1\r\nDIM mapped[] AS INTEGER\r\nmapped[] = ARRAYMAP(values[], Twice)\r\nPRINT mapped[1]", outputWriter: output, sourceBreakpointLines: [2])));
 
         Assert.False(timedOut);
         Assert.True(result.Stopped);
@@ -263,40 +226,7 @@ PRINT mapped(1)
     [Fact]
     public void PositiveRoutineContractsRemainStable()
     {
-        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("""
-FUNCTION Make(seed AS INTEGER) AS FUNCTION() AS INTEGER
-    DIM current AS INTEGER = seed
-    FUNCTION NextValue() AS INTEGER
-        current = current + 1
-        RETURN current
-    END FUNCTION
-    RETURN NextValue
-END FUNCTION
-DIM first AS FUNCTION() AS INTEGER
-DIM second AS FUNCTION() AS INTEGER
-first = Make(10)
-second = Make(100)
-PRINT first()
-PRINT second()
-PRINT first()
-
-SUB Edit(items AS INTEGER ())
-    items(1) = 20
-    DIM replacement(1 TO 1) AS INTEGER
-    replacement(1) = 99
-    items = replacement
-END SUB
-DIM data(1 TO 1) AS INTEGER
-data(1) = 10
-Edit(data)
-PRINT data(1)
-
-FUNCTION Deep(n AS INTEGER) AS INTEGER
-    IF n = 0 THEN RETURN 0
-    RETURN Deep(n - 1) + 1
-END FUNCTION
-PRINT Deep(5)
-"""));
+        var result = new AxiomExecutionPipeline().Run(new ExecutionRequest("FUNCTION Make(seed AS INTEGER) AS FUNCTION() AS INTEGER\r\n    DIM current AS INTEGER = seed\r\n    FUNCTION NextValue() AS INTEGER\r\n        current = current + 1\r\n        RETURN current\r\n    END FUNCTION\r\n    RETURN NextValue\r\nEND FUNCTION\r\nDIM first AS FUNCTION() AS INTEGER\r\nDIM second AS FUNCTION() AS INTEGER\r\nfirst = Make(10)\r\nsecond = Make(100)\r\nPRINT first()\r\nPRINT second()\r\nPRINT first()\r\n\r\nSUB Edit(items[] AS INTEGER )\r\n    items[1] = 20\r\n    DIM replacement[1 TO 1] AS INTEGER\r\n    replacement[1] = 99\r\n    items[] = replacement[]\r\nEND SUB\r\nDIM data[1 TO 1] AS INTEGER\r\ndata[1] = 10\r\nEdit(data[])\r\nPRINT data[1]\r\n\r\nFUNCTION Deep(n AS INTEGER) AS INTEGER\r\n    IF n = 0 THEN RETURN 0\r\n    RETURN Deep(n - 1) + 1\r\nEND FUNCTION\r\nPRINT Deep(5)"));
 
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Equal(["11", "101", "12", "20", "5"], result.Output);

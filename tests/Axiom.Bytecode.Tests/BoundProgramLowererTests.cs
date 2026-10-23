@@ -1507,13 +1507,7 @@ public sealed class BoundProgramLowererTests
     [Fact]
     public void Lower_ArrayStatements_EmitArrayInstructions()
     {
-        var result = Lower("""
-            DIM values(1 TO 3) AS INTEGER
-            values(1) = 10
-            PRINT values(1)
-            REDIM PRESERVE values(1 TO 4)
-            ERASE values
-            """);
+        var result = Lower("DIM values[1 TO 3] AS INTEGER\r\nvalues[1] = 10\r\nPRINT values[1]\r\nREDIM PRESERVE values[1 TO 4]\r\nERASE values[]");
 
         Assert.True(result.Succeeded);
         Assert.NotNull(result.Program);

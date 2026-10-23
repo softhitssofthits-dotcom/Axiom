@@ -5,6 +5,17 @@ namespace Axiom.Semantics.Tests;
 
 public sealed class EditorHoverTests
 {
+    [Fact]
+    public void ArrayHoversExposeElementTypeAndRankForDeclarationsFieldsParametersAndReferences()
+    {
+        const string source = "TYPE Basket\nitems[,] AS INTEGER\nEND TYPE\nDIM fruits[] AS STRING = SPLIT(\"яблоко,банан\", \",\")\nDIM bag AS Basket\nPRINT fruits[2], ARRAYRANK(bag.items[])\nSUB Show(values[,] AS INTEGER )\nPRINT values[1, 1]\nEND SUB";
+        var items = Hovers(source);
+        Assert.Equal(2, items.Count(h => h.Name == "fruits" && h.ArrayRank == 1 && h.ElementType == "STRING"));
+        Assert.Equal(2, items.Count(h => h.Name == "items" && h.ArrayRank == 2 && h.ElementType == "INTEGER"));
+        Assert.Equal(2, items.Count(h => h.Name == "values" && h.ArrayRank == 2 && h.ElementType == "INTEGER"));
+        Assert.Contains(items, h => h.Name == "bag" && h.ArrayRank is null && h.ElementType is null);
+    }
+
     private static IReadOnlyList<EditorHoverInfo> Hovers(string source)
     {
         var syntax = Parser.Parse(source, out var errors);
@@ -40,23 +51,14 @@ public sealed class EditorHoverTests
     [Fact]
     public void InferredArraysGroupedDeclarationsConstantsAndParameters()
     {
-        var source = """
-            DIM amount = CDEC(2)
-            DIM label, title AS STRING
-            DIM grid(1 TO 2, 1 TO 3) AS DECIMAL
-            CONST limit AS INTEGER = 5
-            SUB Show(BYREF value AS DECIMAL, values AS INTEGER())
-                PRINT value, values(0)
-            END SUB
-            PRINT amount, label, title, grid(1, 1), limit
-            """;
+        var source = "DIM amount = CDEC(2)\r\nDIM label, title AS STRING\r\nDIM grid[1 TO 2, 1 TO 3] AS DECIMAL\r\nCONST limit AS INTEGER = 5\r\nSUB Show(BYREF value AS DECIMAL, values[] AS INTEGER)\r\n    PRINT value, values[0]\r\nEND SUB\r\nPRINT amount, label, title, grid[1, 1], limit";
         var items = Hovers(source);
         Assert.All(items.Where(h => h.Name == "amount"), h => Assert.Equal("DECIMAL", h.Type));
         Assert.Equal(2, items.Count(h => h.Name == "label" && h.Type == "STRING"));
-        Assert.Equal(2, items.Count(h => h.Name == "grid" && h.Type == "DECIMAL(,)"));
+        Assert.Equal(2, items.Count(h => h.Name == "grid" && h.Type == "DECIMAL[,]"));
         Assert.All(items.Where(h => h.Name == "limit"), h => Assert.Equal("constant", h.Kind));
         Assert.Equal(2, items.Count(h => h.Name == "value" && h.Kind == "parameter" && h.Type == "DECIMAL"));
-        Assert.Contains(items, h => h.Name == "Show" && h.Signature == "SUB Show(BYREF value AS DECIMAL, values AS INTEGER())");
+        Assert.Contains(items, h => h.Name == "Show" && h.Signature == "SUB Show(BYREF value AS DECIMAL, values AS INTEGER[])");
     }
 
     [Theory]

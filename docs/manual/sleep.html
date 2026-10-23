@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Оператор SLEEP — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
 <body data-page="sleep"><a class="skip-link" href="#main-content">Перейти к статье</a>
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
@@ -7,30 +7,25 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор SLEEP</span></nav>
-<p class="eyebrow">Оператор</p><h1 class="page-title">Оператор SLEEP</h1><p class="lead"><code>SLEEP</code> — оператор языка Axiom, который приостанавливает программу на заданное время или до нажатия клавиши. Его используют для паузы в интерактивном цикле и ожидания перед закрытием результата.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-
+<p class="eyebrow">Оператор</p><h1 class="page-title">Оператор SLEEP</h1><p class="lead">Готовый результат нужно успеть рассмотреть, а интерактивный цикл — не занимать процессор вхолостую. Оператор <code>SLEEP</code> приостанавливает программу на заданное время или до нажатия клавиши; выбор формы зависит от того, нужна ли фиксированная пауза или ожидание ввода.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
 <section class="article-section">
-<h2>Два режима ожидания</h2>
-<p>Числовой аргумент задаёт задержку в миллисекундах. Вызов без аргумента ждёт любую клавишу и удаляет её из очереди ввода.</p>
-</section>
-
-        <section class="article-section">
-<h2>Контекст выполнения</h2>
-<p>Оба режима ожидания доступны в консоли, текстовом и графическом окне. Оператор не требует предварительного вызова <code>SCREEN</code>.</p>
+<h2>Две формы ожидания</h2>
+<p>Числовой аргумент задаёт задержку в миллисекундах. Вызов без аргумента ждёт любую клавишу и удаляет её из очереди ввода. Это разные формы, а не одно и то же действие с разными параметрами: первая только ожидает время, вторая извлекает клавишу.</p>
+<p>Оба режима доступны в консоли, текстовом и графическом окне. Оператор не требует предварительного вызова <code>SCREEN</code>.</p>
 </section>
 
         <section class="article-section">
 <h2>Синтаксис</h2>
 <pre><code class="language-axiom">SLEEP</code></pre>
 <pre><code class="language-axiom">SLEEP &lt;миллисекунды&gt;</code></pre>
-</section>
+        </section>
 
         <section class="article-section">
-<h2>Параметры</h2>
-<p>Выражение <code>milliseconds</code> приводится к <code>LONG</code>. Результат должен быть неотрицательным и помещаться в поддерживаемый диапазон ожидания среды выполнения.</p>
-<p>При пропуске аргумента используется ожидание клавиши, а не нулевая задержка.</p>
-</section>
+<h2>Аргумент длительности</h2>
+<p>Выражение <code>milliseconds</code> приводится к <code>LONG</code> и должно лежать в <code>0..2147483647</code> миллисекунд включительно. При пропуске аргумента используется ожидание клавиши, а не нулевая задержка.</p>
+<p><code>SLEEP</code> является оператором, а не функцией, поэтому внутри выражения его использовать нельзя.</p>
+        </section>
 
         <section class="article-section">
 <h2>Точность паузы и очередь клавиатуры</h2>
@@ -38,13 +33,10 @@
 <li><code>SLEEP 0</code> допустим и сразу возвращает управление программе.</li>
 <li><code>SLEEP 500</code> делает паузу примерно на 500 миллисекунд. Фактическая точность зависит от планировщика операционной системы.</li>
 <li><code>SLEEP</code> без аргумента удаляет первую доступную клавишу из очереди, поэтому следующий вызов <code>INKEY()</code> или <code>KEYPRESS(...)</code> уже не увидит именно это событие.</li>
-<li><code>SLEEP</code> является оператором, а не функцией: его нельзя использовать внутри выражения.</li>
-<li>Аргумент оператора <code>SLEEP</code> задаёт длительность паузы в миллисекундах.</li>
 </ul>
 </section>
-<section class="article-section"><h2>Диапазон и выполнение обработчиков</h2><p>Аргумент длительности приводится к <code>LONG</code> и должен лежать в 0..2147483647 миллисекунд включительно. <code>SLEEP</code> без аргумента и <code>SLEEP</code> с длительностью — разные формы: первая извлекает клавишу, вторая только ожидает время.</p>
-<p>Во время ожидания <code>SLEEP</code> не вызывает обработчики ON KEY и ON MOUSE; они получают управление на границах инструкций после завершения ожидания. Остановка программы может прервать ожидание. Для наблюдения за событиями используйте цикл с короткими задержками.</p></section>
 
+<section class="article-section"><h2>Обработчики во время ожидания</h2><p>Во время ожидания <code>SLEEP</code> не вызывает обработчики <code>ON KEY</code> и <code>ON MOUSE</code>; они получают управление на границах инструкций после завершения ожидания. Остановка программы может прервать ожидание. Для наблюдения за событиями используется цикл с короткими задержками.</p></section>
 
         <section class="article-section">
 <h2>Диагностика</h2>
@@ -60,6 +52,7 @@ PRINT "Нажмите любую клавишу."
 SLEEP
 
 PRINT "Готово"</code></pre>
+<p>Первая пауза отсчитывает время и не трогает очередь ввода, поэтому нажатие во время неё остаётся доступным. Вторая форма ждёт клавишу и забирает её, после чего выполняется последний <code>PRINT</code>.</p>
 </section>
 
         <section class="article-section">

@@ -4,12 +4,12 @@ namespace Axiom.Execution.Tests;
 public sealed class GraphicsAuditRepairTests
 {
     [Theory]
-    [InlineData("GET (0,0)-(0,0),b")]
-    [InlineData("PUT (0,0),b,AND")]
-    [InlineData("PUT (0,0),b,PSET")]
+    [InlineData("GET (0,0)-(0,0),b[]")]
+    [InlineData("PUT (0,0),b[],AND")]
+    [InlineData("PUT (0,0),b[],PSET")]
     [InlineData("PAINT (0,0),6,9")]
     public void GraphicsAllocationFailureIsCatchable(string command) =>
-        Check("SCREEN 1\nDIM b(0 TO 0,0 TO 0) AS INTEGER\n" + Catch(command),
+        Check("SCREEN 1\nDIM b[0 TO 0,0 TO 0] AS INTEGER\n" + Catch(command),
             new ProbeHost { FailAllocation = true }, ["MB3005", "42"]);
 
     [Theory]
@@ -37,17 +37,17 @@ public sealed class GraphicsAuditRepairTests
     public void PutUsesOneBulkWriteAndReadsOnlyForLogicalActions(string action, int expected, int reads)
     {
         var host = new ProbeHost { UseBulk = true };
-        Check($"SCREEN 1\nDIM b(10 TO 11,20 TO 21) AS INTEGER\nb(10,20)=5\nb(11,20)=5\nb(10,21)=5\nb(11,21)=5\nPUT (0,0),b,{action}", host, []);
+        Check($"SCREEN 1\nDIM b[10 TO 11,20 TO 21] AS INTEGER\nb[10,20]=5\nb[11,20]=5\nb[10,21]=5\nb[11,21]=5\nPUT (0,0),b[],{action}", host, []);
         Assert.Equal(reads, host.Captures);
         Assert.Equal(1, host.BulkCalls);
         Assert.All(host.BulkPixels!, pixel => Assert.Equal(expected, pixel));
         Assert.Empty(host.Calls);
     }
     [Theory]
-    [InlineData("DIM b(2147483647 TO 2147483647,0 TO 0) AS INTEGER\nGET (0,0)-(0,0),b")]
-    [InlineData("DIM b(0 TO 0,2147483647 TO 2147483647) AS INTEGER\nGET (0,0)-(0,0),b")]
-    [InlineData("DIM b(2147483647 TO 2147483647,0 TO 0) AS INTEGER\nPUT (0,0),b,PSET")]
-    [InlineData("DIM b(0 TO 0,2147483647 TO 2147483647) AS INTEGER\nPUT (0,0),b,PSET")]
+    [InlineData("DIM b[2147483647 TO 2147483647,0 TO 0] AS INTEGER\nGET (0,0)-(0,0),b[]")]
+    [InlineData("DIM b[0 TO 0,2147483647 TO 2147483647] AS INTEGER\nGET (0,0)-(0,0),b[]")]
+    [InlineData("DIM b[2147483647 TO 2147483647,0 TO 0] AS INTEGER\nPUT (0,0),b[],PSET")]
+    [InlineData("DIM b[0 TO 0,2147483647 TO 2147483647] AS INTEGER\nPUT (0,0),b[],PSET")]
     public void TransferWithMaximumBoundsFinishes(string command) => Check("SCREEN 1\n"+command+"\nPRINT 42",new ProbeHost(),["42"]);
 
     [Theory]

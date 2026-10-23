@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Изображения IMAGE — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
 <body data-page="images"><a class="skip-link" href="#main-content">Перейти к статье</a>
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
@@ -7,33 +7,18 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Изображения IMAGE</span></nav>
-<p class="eyebrow">Тип, функции и операторы</p><h1 class="page-title">Изображения IMAGE</h1><p class="lead">Раздел изображений описывает тип данных <code>IMAGE</code>, функции <code>LOADIMAGE</code>, <code>IMAGEWIDTH</code>, <code>IMAGEHEIGHT</code> и оператор <code>DRAWIMAGE</code>. Изображение загружается в память, после чего его можно измерять и выводить на экран или холст.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-
+<p class="eyebrow">Тип, функции и операторы</p><h1 class="page-title">Изображения IMAGE</h1><p class="lead">Готовая картинка из файла используется в программе как отдельное значение: её загружают один раз, при необходимости измеряют и выводят в нужное место экрана или холста. Для этого служат тип <code>IMAGE</code>, функция <code>LOADIMAGE</code>, функции размеров <code>IMAGEWIDTH</code> и <code>IMAGEHEIGHT</code> и оператор <code>DRAWIMAGE</code>.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
             <section class="article-section" id="type">
-                <h2>Что такое тип IMAGE</h2>
-                <p>Тип <code>IMAGE</code> хранит ссылку на загруженное полноцветное изображение.</p>
-                <p>Вызов функции <code>LOADIMAGE</code> создаёт значение, которое затем передают в оператор <code>DRAWIMAGE</code>.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Где работают функции и оператор</h2>
-                <p>Загрузка и измерение относятся к данным изображения; они не требуют открытия графической поверхности.</p>
-                <p>Для вывода оператором <code>DRAWIMAGE</code> требуется графический <code>SCREEN 1..10</code> или полноцветный холст <code>CANVAS</code>.</p>
-            </section>
-
-            <section class="article-section">
-                <h2>Синтаксис</h2>
+                <h2>Значение типа IMAGE и загрузка</h2>
+                <p>Тип <code>IMAGE</code> хранит ссылку на загруженное полноцветное изображение. Вызов функции <code>LOADIMAGE</code> создаёт значение, которое затем передают в оператор <code>DRAWIMAGE</code>.</p>
 <pre><code class="language-axiom">DIM &lt;имя&gt; AS IMAGE</code></pre>
 <pre><code class="language-axiom">LOADIMAGE(&lt;путь&gt;)</code></pre>
-<pre><code class="language-axiom">IMAGEWIDTH(&lt;изображение&gt;)</code></pre>
-<pre><code class="language-axiom">IMAGEHEIGHT(&lt;изображение&gt;)</code></pre>
-<pre><code class="language-axiom">DRAWIMAGE &lt;изображение&gt;, &lt;координата X&gt;, &lt;координата Y&gt;</code></pre>
-<pre><code class="language-axiom">DRAWIMAGE &lt;изображение&gt;, &lt;координата X&gt;, &lt;координата Y&gt;, &lt;ширина&gt;, &lt;высота&gt;</code></pre>
+                <p>Загрузка и измерение относятся к данным изображения и не требуют открытия графической поверхности. Для вывода оператором <code>DRAWIMAGE</code> требуется графический <code>SCREEN 1..10</code> или полноцветный холст <code>CANVAS</code>.</p>
             </section>
 
             <section class="article-section">
-                <h2>Параметры</h2>
+                <h2>Части записи</h2>
                 <table>
                     <thead>
                         <tr><th>Часть</th><th>Описание</th></tr>
@@ -50,42 +35,37 @@
 
             <section class="article-section" id="loadimage">
                 <h2>Функция LOADIMAGE</h2>
-                <p>Встроенная функция <code>LOADIMAGE</code> читает файл и возвращает изображение типа <code>IMAGE</code>.</p>
-<h3>Синтаксис</h3>
+                <p><code>LOADIMAGE</code> читает файл и возвращает изображение типа <code>IMAGE</code>. Аргумент <code>&lt;путь&gt;</code> имеет тип <code>STRING</code>.</p>
+                <h3>Синтаксис</h3>
 <pre><code class="language-axiom">LOADIMAGE(&lt;путь&gt;)</code></pre>
-                <p>Передайте путь в аргументе <code>&lt;путь&gt;</code> типа <code>STRING</code>.</p>
                 <p>Абсолютный путь используется непосредственно. В сохранённой программе относительный путь отсчитывается от каталога её файла <code>.axm</code>.</p>
             </section>
 
             <section class="article-section" id="size">
                 <h2>Функции IMAGEWIDTH и IMAGEHEIGHT</h2>
-                <p>Встроенные функции <code>IMAGEWIDTH</code> и <code>IMAGEHEIGHT</code> измеряют загруженное изображение в пикселях.</p>
+                <p>Загруженное изображение измеряется в пикселях: <code>IMAGEWIDTH</code> возвращает <code>INTEGER</code> с шириной исходного изображения, <code>IMAGEHEIGHT</code> — с его высотой. У пустого значения обе величины равны <code>0</code>.</p>
 <pre><code class="language-axiom">IMAGEWIDTH(&lt;изображение&gt;)</code></pre>
 <pre><code class="language-axiom">IMAGEHEIGHT(&lt;изображение&gt;)</code></pre>
-                <p>Вызов <code>IMAGEWIDTH</code> возвращает <code>INTEGER</code> с шириной исходного изображения в пикселях.</p>
-                <p>Вызов <code>IMAGEHEIGHT</code> возвращает <code>INTEGER</code> с высотой исходного изображения в пикселях.</p>
-                <p>У пустого значения обе величины равны <code>0</code>.</p>
+                <p>Обе функции принимают выражение типа <code>IMAGE</code> и читают свойства значения без графического окна, поэтому результат доступен сразу после загрузки.</p>
             </section>
 
             <section class="article-section" id="drawimage">
                 <h2>Оператор DRAWIMAGE</h2>
-                <p>Оператор <code>DRAWIMAGE</code> рисует изображение на текущей поверхности.</p>
+                <p><code>DRAWIMAGE</code> рисует изображение на текущей поверхности. Форма без размеров сохраняет натуральный размер изображения, а форма с аргументами <code>width</code> и <code>height</code> масштабирует его до заданного размера в пикселях.</p>
 <pre><code class="language-axiom">DRAWIMAGE &lt;изображение&gt;, &lt;координата X&gt;, &lt;координата Y&gt;</code></pre>
 <pre><code class="language-axiom">DRAWIMAGE &lt;изображение&gt;, &lt;координата X&gt;, &lt;координата Y&gt;, &lt;ширина&gt;, &lt;высота&gt;</code></pre>
-                <p>Форма без размеров сохраняет натуральный размер изображения.</p>
-                <p>Форма с аргументами <code>width</code> и <code>height</code> масштабирует изображение до заданного размера в пикселях.</p>
-                <p>Экран преобразует координаты текущими <code>VIEW</code> и <code>WINDOW</code>. На холсте координаты мировые и учитывают <code>CAMERA</code>.</p>
-                <p>Прозрачность альфа-канала учитывается при наложении на уже нарисованные пиксели.</p>
+                <p>Координаты задают левый верхний угол вывода и имеют тип <code>LONG</code>; размеры вывода также передаются как <code>LONG</code> и должны быть положительными. Экран преобразует координаты текущими <code>VIEW</code> и <code>WINDOW</code>, а на холсте координаты мировые и учитывают <code>CAMERA</code>. Прозрачность альфа-канала учитывается при наложении на уже нарисованные пиксели, а часть изображения вне доступных границ экрана или холста обрезается.</p>
             </section>
 
             <section class="article-section">
-                <h2>Правила работы</h2>
-                <p>Присваивание значения <code>IMAGE</code> копирует ссылку. Обе переменные указывают на одно изображение; отдельная копия пикселей не создаётся.</p>
-                <p>На экране рисование изменяет активную страницу, а на холсте — рабочий кадр. Оператор <code>PRESENT</code> явно показывает подготовленный кадр холста. Для подготовки без промежуточного показа используйте пару <code>BEGINFRAME</code>/<code>PRESENT</code>; вне этой пары вывод ресурсов может автоматически обновлять окно.</p>
-                <p>Часть изображения вне доступных границ экрана или холста обрезается.</p>
+                <h2>Ссылка на изображение и показ кадра</h2>
+                <p>Присваивание значения <code>IMAGE</code> копирует ссылку: обе переменные указывают на одно изображение, и отдельная копия пикселей не создаётся.</p>
+                <p>На экране рисование изменяет активную страницу, а на холсте — рабочий кадр. Оператор <code>PRESENT</code> явно показывает подготовленный кадр холста. Для подготовки без промежуточного показа используется пара <code>BEGINFRAME</code>/<code>PRESENT</code>; вне этой пары вывод ресурсов может автоматически обновлять окно.</p>
             </section>
-<section class="article-section"><h2>Встроенная функция IMAGEWIDTH</h2><p><code>IMAGEWIDTH</code> — встроенная функция языка Axiom, которая возвращает ширину исходного изображения в пикселях. Она читает свойства значения без графического окна; результат доступен сразу.</p><h3>Синтаксис</h3><pre><code class="language-axiom">IMAGEWIDTH(&lt;изображение&gt;)</code></pre><h3>Аргумент</h3><p>Передайте выражение типа <code>IMAGE</code>, свойства которого нужно прочитать. Пустая переменная после объявления допустима.</p><h3>Результат, ограничения и диагностика</h3><p>Функция возвращает <code>INTEGER</code>. Для пустого значения результат равен 0. Чтение свойства не загружает файл и не вызывает ошибку из-за пустого ресурса. Несовместимый тип или неверное число аргументов отклоняется компилятором.</p><h3>Пример</h3><pre><code class="language-axiom">DIM picture AS IMAGE
-PRINT IMAGEWIDTH(picture)</code></pre><p>Программа печатает 0, поскольку ресурс ещё не загружен. После успешной загрузки функция возвращает фактическое свойство.</p><h3>См. также</h3><p><a href="images.html">Загрузка и рисование ресурса</a>.</p></section><section class="article-section"><h2>Встроенная функция IMAGEHEIGHT</h2><p><code>IMAGEHEIGHT</code> — встроенная функция языка Axiom, которая возвращает высоту исходного изображения в пикселях. Она читает свойства значения без графического окна; результат доступен сразу.</p><h3>Синтаксис</h3><pre><code class="language-axiom">IMAGEHEIGHT(&lt;изображение&gt;)</code></pre><h3>Аргумент</h3><p>Передайте выражение типа <code>IMAGE</code>, свойства которого нужно прочитать. Пустая переменная после объявления допустима.</p><h3>Результат, ограничения и диагностика</h3><p>Функция возвращает <code>INTEGER</code>. Для пустого значения результат равен 0. Чтение свойства не загружает файл и не вызывает ошибку из-за пустого ресурса. Несовместимый тип или неверное число аргументов отклоняется компилятором.</p><h3>Пример</h3><pre><code class="language-axiom">DIM picture AS IMAGE
-PRINT IMAGEHEIGHT(picture)</code></pre><p>Программа печатает 0, поскольку ресурс ещё не загружен. После успешной загрузки функция возвращает фактическое свойство.</p><h3>См. также</h3><p><a href="images.html">Загрузка и рисование ресурса</a>.</p></section><section class="article-section"><h2>Пределы загрузки и размера вывода</h2><p>При загрузке изображения в IDE размер каждой стороны должен быть от 1 до 16384 пикселей, площадь — не более 16 777 216 пикселей, размер файла — не более 64 МиБ. Ограничения проверяются до выделения массива пикселей. Неподдерживаемое или слишком большое изображение приводит к <code>MB3005</code> у функции <code>LOADIMAGE</code>.</p><p>У оператора <code>DRAWIMAGE</code> явно заданные ширина и высота вывода должны быть целыми числами от 1 до 2147483647. Координаты должны находиться в диапазоне ±1 000 000 000. Нарушение вызывает <code>MB3007</code>; команда не пропускается молча и не меняет текущую позицию. Масштабированный вывод за пределами поверхности отсекается и не создаёт отдельное изображение целевого размера.</p></section>
+
+            <section class="article-section"><h2>Пределы загрузки и размера вывода</h2><p>При загрузке изображения в IDE размер каждой стороны должен быть от 1 до 16384 пикселей, площадь — не более 16 777 216 пикселей, размер файла — не более 64 МиБ. Ограничения проверяются до выделения массива пикселей. Неподдерживаемое или слишком большое изображение приводит к <code>MB3005</code> у функции <code>LOADIMAGE</code>.</p><p>У оператора <code>DRAWIMAGE</code> явно заданные ширина и высота вывода должны быть целыми числами от 1 до 2147483647. Координаты должны находиться в диапазоне ±1 000 000 000. Нарушение вызывает <code>MB3007</code>; команда не пропускается молча и не меняет текущую позицию. Масштабированный вывод за пределами поверхности отсекается и не создаёт отдельное изображение целевого размера.</p></section>
+<section class="article-section"><h2>Встроенная функция IMAGEWIDTH</h2><p><code>IMAGEWIDTH</code> возвращает ширину исходного изображения в пикселях. Она читает свойства значения без графического окна, поэтому результат доступен сразу.</p><h3>Синтаксис</h3><pre><code class="language-axiom">IMAGEWIDTH(&lt;изображение&gt;)</code></pre><h3>Аргумент</h3><p>Передайте выражение типа <code>IMAGE</code>, свойства которого нужно прочитать. Пустая переменная после объявления допустима.</p><h3>Результат, ограничения и диагностика</h3><p>Функция возвращает <code>INTEGER</code>. Для пустого значения результат равен 0. Чтение свойства не загружает файл и не вызывает ошибку из-за пустого ресурса. Несовместимый тип или неверное число аргументов отклоняется компилятором.</p><h3>Пример</h3><pre><code class="language-axiom">DIM picture AS IMAGE
+PRINT IMAGEWIDTH(picture)</code></pre><p>Программа печатает 0, поскольку ресурс ещё не загружен. После успешной загрузки функция возвращает фактическое свойство.</p><h3>См. также</h3><p><a href="images.html">Загрузка и рисование ресурса</a>.</p></section><section class="article-section"><h2>Встроенная функция IMAGEHEIGHT</h2><p><code>IMAGEHEIGHT</code> возвращает высоту исходного изображения в пикселях. Она читает свойства значения без графического окна, поэтому результат доступен сразу.</p><h3>Синтаксис</h3><pre><code class="language-axiom">IMAGEHEIGHT(&lt;изображение&gt;)</code></pre><h3>Аргумент</h3><p>Передайте выражение типа <code>IMAGE</code>, свойства которого нужно прочитать. Пустая переменная после объявления допустима.</p><h3>Результат, ограничения и диагностика</h3><p>Функция возвращает <code>INTEGER</code>. Для пустого значения результат равен 0. Чтение свойства не загружает файл и не вызывает ошибку из-за пустого ресурса. Несовместимый тип или неверное число аргументов отклоняется компилятором.</p><h3>Пример</h3><pre><code class="language-axiom">DIM picture AS IMAGE
+PRINT IMAGEHEIGHT(picture)</code></pre><p>Программа печатает 0, поскольку ресурс ещё не загружен. После успешной загрузки функция возвращает фактическое свойство.</p><h3>См. также</h3><p><a href="images.html">Загрузка и рисование ресурса</a>.</p></section>
 <div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
 <script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

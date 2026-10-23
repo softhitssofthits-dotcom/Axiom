@@ -1,67 +1,67 @@
 ' Сравнительный сценарий: один смешанный конвейер с циклами, массивами,
 ' строками, регулярными выражениями, датой-временем и SELECT CASE.
 
-DIM numericValues(1 TO 160) AS INTEGER
-DIM eventLines(1 TO 160) AS STRING
-DIM scheduleLines(1 TO 28) AS STRING
-DIM combined() AS STRING
-DIM working() AS STRING
-DIM headSlice() AS STRING
-DIM tailSlice() AS STRING
-DIM merged() AS STRING
+DIM numericValues[1 TO 160] AS INTEGER
+DIM eventLines[1 TO 160] AS STRING
+DIM scheduleLines[1 TO 28] AS STRING
+DIM combined[] AS STRING
+DIM working[] AS STRING
+DIM headSlice[] AS STRING
+DIM tailSlice[] AS STRING
+DIM merged[] AS STRING
 DIM removedLine AS STRING
 DIM poppedLine AS STRING
 DIM reportText AS STRING
 DIM normalizedText AS STRING
-DIM warnMatches() AS STRING
-DIM userGroups() AS STRING
-DIM reportParts() AS STRING
+DIM warnMatches[] AS STRING
+DIM userGroups[] AS STRING
+DIM reportParts[] AS STRING
 DIM severityScore AS INTEGER
 DIM digest AS STRING
 
-FOR valueIndex = 1 TO ARRAYLENGTH(numericValues)
-    numericValues(valueIndex) = (valueIndex MOD 9) * (valueIndex MOD 5) + valueIndex
+FOR valueIndex = 1 TO ARRAYLENGTH(numericValues[])
+    numericValues[valueIndex] = (valueIndex MOD 9) * (valueIndex MOD 5) + valueIndex
 NEXT
 
-FOR lineIndex = 1 TO ARRAYLENGTH(eventLines)
-    eventLines(lineIndex) = BuildEventLine(lineIndex, numericValues(lineIndex))
+FOR lineIndex = 1 TO ARRAYLENGTH(eventLines[])
+    eventLines[lineIndex] = BuildEventLine(lineIndex, numericValues[lineIndex])
 NEXT
 
-FOR slotIndex = 1 TO ARRAYLENGTH(scheduleLines)
-    scheduleLines(slotIndex) = BuildScheduleLine(slotIndex)
+FOR slotIndex = 1 TO ARRAYLENGTH(scheduleLines[])
+    scheduleLines[slotIndex] = BuildScheduleLine(slotIndex)
 NEXT
 
-combined = ARRAYCONCAT(eventLines, scheduleLines)
-working = ARRAYCLONE(combined)
+combined[] = ARRAYCONCAT(eventLines[], scheduleLines[])
+working[] = ARRAYCLONE(combined[])
 
-ARRAYINSERT(working, 1, "section=header level=INFO user=SYS00 token=hdr000 route=/summary text=header ready")
-ARRAYPUSH(working, "section=footer level=INFO user=SYS99 token=ftr999 route=/summary text=footer ready")
+ARRAYINSERT(working[], 1, "section=header level=INFO user=SYS00 token=hdr000 route=/summary text=header ready")
+ARRAYPUSH(working[], "section=footer level=INFO user=SYS99 token=ftr999 route=/summary text=footer ready")
 
-removedLine = ARRAYREMOVE(working, 3)
-poppedLine = ARRAYPOP(working)
+removedLine = ARRAYREMOVE(working[], 3)
+poppedLine = ARRAYPOP(working[])
 
 DIM normalizeIndex AS INTEGER = 1
 
-WHILE normalizeIndex <= ARRAYLENGTH(working)
-    working(normalizeIndex) = NormalizeMixedLine(working(normalizeIndex), normalizeIndex)
+WHILE normalizeIndex <= ARRAYLENGTH(working[])
+    working[normalizeIndex] = NormalizeMixedLine(working[normalizeIndex], normalizeIndex)
     normalizeIndex = normalizeIndex + 1
 END WHILE
 
-headSlice = ARRAYTAKE(working, 126)
-tailSlice = ARRAYSKIP(working, 54)
-merged = ARRAYCONCAT(headSlice, tailSlice)
+headSlice[] = ARRAYTAKE(working[], 126)
+tailSlice[] = ARRAYSKIP(working[], 54)
+merged[] = ARRAYCONCAT(headSlice[], tailSlice[])
 
-reportText = JOIN(merged, CHR(10))
+reportText = JOIN(merged[], CHR(10))
 normalizedText = REGEXREPLACE(reportText, "token=[a-z]{3}\d{3}", "token=#", "i", 1)
-warnMatches = REGEXMATCHES(reportText, "WARN-\d{3}", "i")
-userGroups = REGEXEXTRACTALL(reportText, "user=([A-Z]{2}\d{2}|SYS\d{2})", 1, "i")
-reportParts = REGEXSPLIT(normalizedText, "\r?\n", "i")
+warnMatches[] = REGEXMATCHES(reportText, "WARN-\d{3}", "i")
+userGroups[] = REGEXEXTRACTALL(reportText, "user=([A-Z]{2}\d{2}|SYS\d{2})", 1, "i")
+reportParts[] = REGEXSPLIT(normalizedText, "\r?\n", "i")
 
 severityScore = 0
 DIM scoreIndex AS INTEGER = 1
 
-DO WHILE scoreIndex <= ARRAYLENGTH(merged)
-    SELECT CASE SeverityBucket(scoreIndex, merged(scoreIndex))
+DO WHILE scoreIndex <= ARRAYLENGTH(merged[])
+    SELECT CASE SeverityBucket(scoreIndex, merged[scoreIndex])
         CASE 3
             severityScore = severityScore + 3
         CASE 2
@@ -79,7 +79,7 @@ digest = ""
 DIM digestIndex AS INTEGER = 1
 
 DO
-    digest = digest + LEFT(merged(digestIndex), 12)
+    digest = digest + LEFT(merged[digestIndex], 12)
 
     IF digestIndex = 4 THEN
         EXIT DO
@@ -89,20 +89,20 @@ DO
     digestIndex = digestIndex + 1
 LOOP
 
-DIM tailIndex AS INTEGER = ARRAYLENGTH(merged) - 2
+DIM tailIndex AS INTEGER = ARRAYLENGTH(merged[]) - 2
 
-DO UNTIL tailIndex > ARRAYLENGTH(merged)
-    digest = digest + " // " + RIGHT(merged(tailIndex), 12)
+DO UNTIL tailIndex > ARRAYLENGTH(merged[])
+    digest = digest + " // " + RIGHT(merged[tailIndex], 12)
     tailIndex = tailIndex + 1
 LOOP
 
-PRINT ARRAYLENGTH(combined)
-PRINT ARRAYLENGTH(working)
-PRINT ARRAYLENGTH(merged)
+PRINT ARRAYLENGTH(combined[])
+PRINT ARRAYLENGTH(working[])
+PRINT ARRAYLENGTH(merged[])
 PRINT REGEXCOUNT(reportText, "ERROR-\d{3}", "i")
-PRINT ARRAYLENGTH(warnMatches)
-PRINT ARRAYLENGTH(userGroups)
-PRINT ARRAYLENGTH(reportParts)
+PRINT ARRAYLENGTH(warnMatches[])
+PRINT ARRAYLENGTH(userGroups[])
+PRINT ARRAYLENGTH(reportParts[])
 PRINT LEN(removedLine) + LEN(poppedLine)
 PRINT severityScore
 PRINT LEFT(digest, 56)

@@ -116,6 +116,18 @@ public sealed class DeclarationSyntaxTests
     }
 
     [Fact]
+    public void ArrayBounds_UseNeutralDelimiterPropertyNames()
+    {
+        var open = Token(SyntaxKind.OpenParenToken, "(");
+        var close = Token(SyntaxKind.CloseParenToken, ")");
+        var bounds = new ArrayBoundsSyntax(open, [], [], close);
+
+        Assert.Equal(SyntaxKind.ArrayBounds, bounds.Kind);
+        Assert.Same(open, bounds.OpenDelimiterToken);
+        Assert.Same(close, bounds.CloseDelimiterToken);
+    }
+
+    [Fact]
     public void ArrayType_HasCorrectKind()
     {
         var elementType = new NamedTypeSyntax(Token(SyntaxKind.IntegerKeyword, "INTEGER"));
@@ -124,6 +136,8 @@ public sealed class DeclarationSyntaxTests
         var arrayType = new ArrayTypeSyntax(elementType, open, [], close);
         Assert.Equal(SyntaxKind.ArrayType, arrayType.Kind);
         Assert.Equal(1, arrayType.Rank);
+        Assert.Same(open, arrayType.OpenDelimiterToken);
+        Assert.Same(close, arrayType.CloseDelimiterToken);
     }
 
     [Fact]
@@ -146,6 +160,21 @@ public sealed class DeclarationSyntaxTests
         var param = new ParameterSyntax(null, id, typeClause);
         Assert.Equal(SyntaxKind.Parameter, param.Kind);
         Assert.Null(param.PassingKeyword);
+        Assert.Null(param.ArrayBounds);
+    }
+
+    [Fact]
+    public void Parameter_WithArrayBounds_TracksNameSuffix()
+    {
+        var id = Token(SyntaxKind.IdentifierToken, "values");
+        var asKeyword = Token(SyntaxKind.AsKeyword, "AS");
+        var typeClause = new TypeClauseSyntax(asKeyword, new NamedTypeSyntax(Token(SyntaxKind.StringKeyword, "STRING")));
+        var open = Token(SyntaxKind.OpenParenToken, "(");
+        var close = Token(SyntaxKind.CloseParenToken, ")");
+        var bounds = new ArrayBoundsSyntax(open, [], [], close);
+        var param = new ParameterSyntax(null, id, typeClause, bounds);
+
+        Assert.Same(bounds, param.ArrayBounds);
     }
 
     [Fact]

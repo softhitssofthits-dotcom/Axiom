@@ -5,28 +5,28 @@
 DIM scenarioRoot AS STRING = MAKETEMPDIR("file-cleanup-navigation_")
 DIM workspaceRoot AS STRING = COMBINEPATH(scenarioRoot, "workspace")
 DIM originalDir AS STRING = CURRENTDIR()
-DIM branchRoots() AS STRING
-DIM nestedRoots() AS STRING
-DIM filePaths() AS STRING
+DIM branchRoots[] AS STRING
+DIM nestedRoots[] AS STRING
+DIM filePaths[] AS STRING
 DIM checksum AS LONG = 0
 
-REDIM branchRoots(1 TO 60)
-REDIM nestedRoots(1 TO 60)
-REDIM filePaths(1 TO 60)
+REDIM branchRoots[1 TO 60]
+REDIM nestedRoots[1 TO 60]
+REDIM filePaths[1 TO 60]
 
 MAKEDIR(workspaceRoot)
 
 FOR passIndex = 1 TO 60
-    branchRoots(passIndex) = COMBINEPATH(workspaceRoot, "branch_" + TRIM(STR(passIndex)))
-    nestedRoots(passIndex) = COMBINEPATH(branchRoots(passIndex), "nested")
-    filePaths(passIndex) = COMBINEPATH(nestedRoots(passIndex), "note.txt")
+    branchRoots[passIndex] = COMBINEPATH(workspaceRoot, "branch_" + TRIM(STR(passIndex)))
+    nestedRoots[passIndex] = COMBINEPATH(branchRoots[passIndex], "nested")
+    filePaths[passIndex] = COMBINEPATH(nestedRoots[passIndex], "note.txt")
 NEXT
 
 FOR cycleIndex = 1 TO 4
     FOR passIndex = 1 TO 60
-        DIM branchRoot AS STRING = branchRoots(passIndex)
-        DIM nestedRoot AS STRING = nestedRoots(passIndex)
-        DIM filePath AS STRING = filePaths(passIndex)
+        DIM branchRoot AS STRING = branchRoots[passIndex]
+        DIM nestedRoot AS STRING = nestedRoots[passIndex]
+        DIM filePath AS STRING = filePaths[passIndex]
 
         MAKEDIR(branchRoot)
         MAKEDIR(nestedRoot)

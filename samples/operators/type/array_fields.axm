@@ -9,24 +9,24 @@
 ' 9
 ' 0
 TYPE Person
-    Scores() AS INTEGER
+    Scores[] AS INTEGER
 END TYPE
 
 DIM user AS Person
-REDIM user.Scores(1 TO 2)
-user.Scores(1) = 10
-user.Scores(2) = 20
-PRINT user.Scores(1)
-PRINT user.Scores(2)
-ERASE user.Scores
-PRINT ARRAYISALLOCATED(user.Scores)
+REDIM user.Scores[1 TO 2]
+user.Scores[1] = 10
+user.Scores[2] = 20
+PRINT user.Scores[1]
+PRINT user.Scores[2]
+ERASE user.Scores[]
+PRINT ARRAYISALLOCATED(user.Scores[])
 
-DIM people(1 TO 1) AS Person
-REDIM people(1).Scores(2 TO 3)
-people(1).Scores(2) = 7
-people(1).Scores(3) = 9
-PRINT people(1).Scores(2)
-PRINT people(1).Scores(3)
-REDIM PRESERVE people(1).Scores(3 TO 4)
-PRINT people(1).Scores(3)
-PRINT people(1).Scores(4)
+DIM people[1 TO 1] AS Person
+REDIM people[1].Scores[2 TO 3]
+people[1].Scores[2] = 7
+people[1].Scores[3] = 9
+PRINT people[1].Scores[2]
+PRINT people[1].Scores[3]
+REDIM PRESERVE people[1].Scores[3 TO 4]
+PRINT people[1].Scores[3]
+PRINT people[1].Scores[4]

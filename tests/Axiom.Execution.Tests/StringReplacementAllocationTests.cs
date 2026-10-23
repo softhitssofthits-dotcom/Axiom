@@ -7,13 +7,7 @@ public sealed class StringReplacementAllocationTests
     [Fact]
     public void LongRuleDoesNotCreateOneNodePerCharacter()
     {
-        const string source = """
-DIM oldItems(1 TO 1) AS STRING
-DIM newItems(1 TO 1) AS STRING
-oldItems(1) = REPEAT("z", 100000)
-newItems(1) = "!"
-PRINT REPLACEMANY(REPEAT("a", 100000), oldItems, newItems) = REPEAT("a", 100000)
-""";
+        const string source = "DIM oldItems[1 TO 1] AS STRING\r\nDIM newItems[1 TO 1] AS STRING\r\noldItems[1] = REPEAT(\"z\", 100000)\r\nnewItems[1] = \"!\"\r\nPRINT REPLACEMANY(REPEAT(\"a\", 100000), oldItems[], newItems[]) = REPEAT(\"a\", 100000)";
         var pipeline = new AxiomExecutionPipeline();
         var compiled = pipeline.Compile(new CompilationRequest(source));
         Assert.True(compiled.Succeeded);

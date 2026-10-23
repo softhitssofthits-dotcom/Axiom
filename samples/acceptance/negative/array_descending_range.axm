@@ -2,6 +2,6 @@
 ' Ожидаемая диагностика:
 ' MB3002 — Диапазон (4 TO 2) массива 'values' имеет нижнюю границу больше верхней.
 
-DIM values(1 TO 5) AS INTEGER
-DIM part() AS INTEGER
-part = values(4 TO 2)
+DIM values[1 TO 5] AS INTEGER
+DIM part[] AS INTEGER
+part[] = values[4 TO 2]

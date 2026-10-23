@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Функция MOUSEPRESS — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
 <body data-page="mousepress"><a class="skip-link" href="#main-content">Перейти к статье</a>
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
@@ -7,27 +7,17 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Функция MOUSEPRESS</span></nav>
-<p class="eyebrow">Встроенная функция</p><h1 class="page-title">Функция MOUSEPRESS</h1><p class="lead"><code>MOUSEPRESS</code> — встроенная функция языка Axiom, которая извлекает непрочитанное нажатие указанной кнопки мыши. При найденном событии результат равен <code>TRUE</code>.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-
+<p class="eyebrow">Встроенная функция</p><h1 class="page-title">Функция MOUSEPRESS</h1><p class="lead">Щелчок кнопкой мыши обычно должен вызвать одно действие, а не повторяться всё время, пока кнопка удерживается. Функция <code>MOUSEPRESS</code> извлекает непрочитанное нажатие указанной кнопки: при найденном событии результат равен <code>TRUE</code>, и это событие больше не повторится.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
         <section class="article-section">
-            <h2>Применение</h2>
-            <p>За один вызов удаляется только первое подходящее нажатие. Если оно было единственным, повторный вызов возвращает <code>FALSE</code> до появления нового события.</p>
+            <h2>Где доступен опрос</h2>
+            <p>Для опроса нужен графический <code>SCREEN 1..10</code> или активный <code>CANVAS</code>; отсутствие поверхности вызывает <code>MB3010</code>. Текущее удержание отдельно проверяет <a href="mousebutton.html">MOUSEBUTTON</a>, и его результат не расходует событие.</p>
         </section>
 
         <section class="article-section">
-            <h2>Контекст выполнения</h2>
-            <p>Для опроса нужен графический <code>SCREEN 1..10</code> или активный <code>CANVAS</code>. Отсутствие поверхности вызывает <code>MB3010</code>.</p>
-            <p>Текущее удержание отдельно проверяет <a href="mousebutton.html">MOUSEBUTTON</a>; его результат не расходует событие.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Синтаксис</h2>
+            <h2>Синтаксис и аргумент</h2>
 <pre><code class="language-axiom">MOUSEPRESS(&lt;номер кнопки&gt;)</code></pre>
-        </section>
-
-        <section class="article-section">
-            <h2>Аргументы</h2>
+            <p>Передайте <code>INTEGER</code> с номером кнопки.</p>
             <table>
                 <thead><tr><th>Аргумент</th><th>Тип</th><th>Описание</th></tr></thead>
                 <tbody>
@@ -37,25 +27,23 @@
         </section>
 
         <section class="article-section">
-            <h2>Что возвращает функция MOUSEPRESS</h2>
+            <h2>Что возвращает функция</h2>
             <p>Функция возвращает значение типа <code>BOOLEAN</code>.</p>
             <ul>
                 <li><code>TRUE</code>, если в очереди есть ещё не прочитанное нажатие указанной кнопки. Это нажатие удаляется из очереди.</li>
                 <li><code>FALSE</code>, если такого нажатия сейчас нет или передан неподдерживаемый номер кнопки.</li>
             </ul>
+            <p>Для номера вне <code>1..3</code> возвращается <code>FALSE</code>; неподходящий номер не вызывает <code>MB3007</code>.</p>
         </section>
 
         <section class="article-section">
             <h2>Очередь нажатий мыши</h2>
+            <p>За один вызов удаляется только первое подходящее событие нажатия, поэтому повторный вызов вернёт <code>FALSE</code>, пока пользователь не нажмёт кнопку снова. Повторные нажатия и нажатия других кнопок не теряются и остаются доступными для следующих вызовов <code>MOUSEPRESS</code>.</p>
             <ul>
-                <li>Встроенная функция <code>MOUSEPRESS</code> удаляет только первое подходящее событие нажатия, поэтому повторный вызов вернёт <code>FALSE</code>, пока пользователь не нажмёт кнопку снова.</li>
-                <li>Неподходящие нажатия не теряются и остаются доступными для следующих вызовов <code>MOUSEPRESS</code>.</li>
                 <li>Это именно нажатие кнопки, а не проверка удержания: для текущего состояния используется встроенная функция <a href="mousebutton.html"><code>MOUSEBUTTON</code></a>.</li>
                 <li>Отпускание, перемещение и колесо не читаются функцией <code>MOUSEPRESS</code>, но доступны обработчикам оператора <a href="on-mouse.html"><code>ON MOUSE</code></a>.</li>
             </ul>
         </section>
-<section class="article-section"><h2>Аргумент функции</h2><p>Передайте <code>INTEGER</code> с номером кнопки: 1 — левая, 2 — правая, 3 — средняя. <code>MOUSEPRESS</code> возвращает <code>BOOLEAN</code> и извлекает одно подходящее событие нажатия. Повторные нажатия и события других кнопок сохраняются. Для номера вне 1..3 возвращается <code>FALSE</code>; неподходящий номер не вызывает <code>MB3007</code>.</p></section>
-
 
         <section class="article-section">
             <h2>Диагностика</h2>
@@ -71,6 +59,7 @@
 <pre><code class="language-axiom">IF MOUSEPRESS(1) THEN
     PRINT "LEFT ONCE"
 END IF</code></pre>
+            <p>Строка печатается один раз на нажатие: следующая проверка в том же удержании уже не найдёт события.</p>
         </section>
 
         <section class="article-section">

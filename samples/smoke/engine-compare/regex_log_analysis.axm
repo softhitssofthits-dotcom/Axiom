@@ -2,33 +2,33 @@
 ' Программа строит большой журнал, затем считает совпадения, извлекает группы
 ' и делит текст обратно на строки.
 
-DIM lines() AS STRING
+DIM lines[] AS STRING
 DIM logText AS STRING
 DIM maskedText AS STRING
-DIM errorMatches() AS STRING
-DIM userIds() AS STRING
-DIM parts() AS STRING
+DIM errorMatches[] AS STRING
+DIM userIds[] AS STRING
+DIM parts[] AS STRING
 
-REDIM lines(1 TO 2400)
+REDIM lines[1 TO 2400]
 
-FOR lineIndex = 1 TO ARRAYLENGTH(lines)
-    lines(lineIndex) = BuildLogLine(lineIndex)
+FOR lineIndex = 1 TO ARRAYLENGTH(lines[])
+    lines[lineIndex] = BuildLogLine(lineIndex)
 NEXT
 
-logText = JOIN(lines, CHR(10))
+logText = JOIN(lines[], CHR(10))
 maskedText = REGEXREPLACE(logText, "session=[A-Z]{2}\d{4}", "session=#")
-errorMatches = REGEXMATCHES(maskedText, "ERR\d{3}")
-userIds = REGEXEXTRACTALL(maskedText, "user=(\d+)", 1)
-parts = REGEXSPLIT(maskedText, "\r?\n")
+errorMatches[] = REGEXMATCHES(maskedText, "ERR\d{3}")
+userIds[] = REGEXEXTRACTALL(maskedText, "user=(\d+)", 1)
+parts[] = REGEXSPLIT(maskedText, "\r?\n")
 
 PRINT REGEXCOUNT(maskedText, "WARN\d{3}")
-PRINT ARRAYLENGTH(errorMatches)
-PRINT ARRAYLENGTH(userIds)
-PRINT ARRAYLENGTH(parts)
-PRINT errorMatches(1)
-PRINT errorMatches(ARRAYLENGTH(errorMatches))
-PRINT userIds(1)
-PRINT userIds(ARRAYLENGTH(userIds))
+PRINT ARRAYLENGTH(errorMatches[])
+PRINT ARRAYLENGTH(userIds[])
+PRINT ARRAYLENGTH(parts[])
+PRINT errorMatches[1]
+PRINT errorMatches[ARRAYLENGTH(errorMatches[])]
+PRINT userIds[1]
+PRINT userIds[ARRAYLENGTH(userIds[])]
 
 FUNCTION BuildLogLine(lineIndex AS INTEGER) AS STRING
     DIM levelSelector AS INTEGER = lineIndex MOD 3

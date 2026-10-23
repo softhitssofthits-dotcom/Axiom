@@ -647,6 +647,14 @@ public sealed partial class BytecodeVm
             var newUpperBound = isEmpty ? 1 : GetExpandedArrayUpperBound("ARRAYINSERT", array, dimension: 1, location);
             var previousUpperBound = isEmpty ? 0 : array.UpperBound;
 
+            if (insertionIndex == newUpperBound
+                && (!isEmpty || array.LowerBound == 1)
+                && array.Length < RuntimeArrayValue.MaxElementCount
+                && array.TryAppendOneDimensional(arguments[2]))
+            {
+                return RuntimeValue.Void;
+            }
+
             array.AllocatePreserving(isEmpty ? 1 : array.LowerBound, newUpperBound);
 
             if (!array.TryMoveOneDimensionalRange(
@@ -717,6 +725,11 @@ public sealed partial class BytecodeVm
         if (array.Rank == 1)
         {
             var removalIndex = RequireArrayRemovalIndex("ARRAYREMOVE", array, index, dimension: 1, location, emptyParameterName: "index");
+            if (removalIndex == array.UpperBound && array.TryPopOneDimensional(out var poppedValue))
+            {
+                return poppedValue;
+            }
+
             var removedValue = array.GetValue(removalIndex);
 
             if (array.Length == 1)

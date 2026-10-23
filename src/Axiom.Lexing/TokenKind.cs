@@ -31,6 +31,8 @@ public enum TokenKind
     GreaterGreaterToken,
     OpenParenToken,
     CloseParenToken,
+    OpenBracketToken,
+    CloseBracketToken,
     CommaToken,
     SemicolonToken,
     DotToken,

@@ -35,61 +35,21 @@ PRINT first <> second
     [Fact]
     public void UtcDistinctKeepsFirstOccurrencesAndDoesNotChangeSource()
     {
-        const string source = """
-DIM values(-2 TO 1) AS UTCDATETIME
-values(-2) = "2024-02-29T12:34:56.0000002Z"
-values(-1) = "2024-02-29T12:34:56.0000001Z"
-values(0) = values(-2)
-values(1) = "2024-02-29T12:34:56.0000003Z"
-DIM result() AS UTCDATETIME
-result = ARRAYDISTINCT(values)
-PRINT LBOUND(result)
-PRINT UBOUND(result)
-PRINT result(1)
-PRINT result(2)
-PRINT result(3)
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-PRINT values(0)
-""";
+        const string source = "DIM values[-2 TO 1] AS UTCDATETIME\r\nvalues[-2] = \"2024-02-29T12:34:56.0000002Z\"\r\nvalues[-1] = \"2024-02-29T12:34:56.0000001Z\"\r\nvalues[0] = values[-2]\r\nvalues[1] = \"2024-02-29T12:34:56.0000003Z\"\r\nDIM result[] AS UTCDATETIME\r\nresult[] = ARRAYDISTINCT(values[])\r\nPRINT LBOUND(result[])\r\nPRINT UBOUND(result[])\r\nPRINT result[1]\r\nPRINT result[2]\r\nPRINT result[3]\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])\r\nPRINT values[0]";
         Check(source, ["1", "3", "2024-02-29T12:34:56.0000002Z", "2024-02-29T12:34:56.0000001Z", "2024-02-29T12:34:56.0000003Z", "-2", "1", "2024-02-29T12:34:56.0000002Z"]);
     }
 
     [Fact]
     public void UtcDistinctHandlesEmptyAndAllEqualArrays()
     {
-        const string source = """
-DIM values(5 TO 7) AS UTCDATETIME
-DIM empty() AS UTCDATETIME
-DIM result() AS UTCDATETIME
-empty = ARRAYTAKE(values, 0)
-result = ARRAYDISTINCT(empty)
-PRINT ARRAYISALLOCATED(result)
-PRINT LBOUND(result)
-PRINT UBOUND(result)
-PRINT ARRAYLENGTH(result)
-result = ARRAYDISTINCT(values)
-PRINT ARRAYLENGTH(result)
-PRINT result(1)
-""";
+        const string source = "DIM values[5 TO 7] AS UTCDATETIME\r\nDIM empty[] AS UTCDATETIME\r\nDIM result[] AS UTCDATETIME\r\nempty[] = ARRAYTAKE(values[], 0)\r\nresult[] = ARRAYDISTINCT(empty[])\r\nPRINT ARRAYISALLOCATED(result[])\r\nPRINT LBOUND(result[])\r\nPRINT UBOUND(result[])\r\nPRINT ARRAYLENGTH(result[])\r\nresult[] = ARRAYDISTINCT(values[])\r\nPRINT ARRAYLENGTH(result[])\r\nPRINT result[1]";
         Check(source, ["TRUE", "1", "0", "0", "1", "0001-01-01T00:00:00Z"]);
     }
 
     [Fact]
     public void LargeUniqueUtcArrayRemainsComplete()
     {
-        const string source = """
-DIM values(1 TO 8000) AS UTCDATETIME
-DIM origin AS DATETIME = "2024-01-01 00:00:00"
-FOR i = 1 TO 8000
-values(i) = TOINSTANT(DATEADD("s", i, origin), "UTC")
-NEXT
-DIM result() AS UTCDATETIME
-result = ARRAYDISTINCT(values)
-PRINT ARRAYLENGTH(result)
-PRINT result(1)
-PRINT result(8000)
-""";
+        const string source = "DIM values[1 TO 8000] AS UTCDATETIME\r\nDIM origin AS DATETIME = \"2024-01-01 00:00:00\"\r\nFOR i = 1 TO 8000\r\nvalues[i] = TOINSTANT(DATEADD(\"s\", i, origin), \"UTC\")\r\nNEXT\r\nDIM result[] AS UTCDATETIME\r\nresult[] = ARRAYDISTINCT(values[])\r\nPRINT ARRAYLENGTH(result[])\r\nPRINT result[1]\r\nPRINT result[8000]";
         Check(source, ["8000", "2024-01-01T00:00:01Z", "2024-01-01T02:13:20Z"]);
     }
 

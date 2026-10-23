@@ -31,30 +31,7 @@ public sealed class RegexExtractUnicodeFormEvidenceTests
     [Fact]
     public void GroupsPreserveMalformedUnitsAndExplicitNumbers()
     {
-        var source = """
-            DIM high AS STRING = LEFT("😀", 1)
-            DIM low AS STRING = RIGHT("😀", 1)
-            DIM nul AS STRING = CHRW(0)
-            DIM values() AS STRING
-            PRINT REGEXEXTRACT("😀", "(.)", 1) = high
-            PRINT REGEXEXTRACT(high + nul + low, "(.)(.)(.)", 2, "s") = nul
-            PRINT REGEXEXTRACT(high + nul + low, "(.)(.)(.)", 3) = low
-            PRINT REGEXEXTRACT("😀", "(?<10>..)", 10, "s") = "😀"
-            PRINT REGEXEXTRACT("😀", "(?<10>..)", 1) = ""
-            values = REGEXEXTRACTALL(high + nul + low, "(.)", 1)
-            PRINT LBOUND(values)
-            PRINT UBOUND(values)
-            PRINT values(1) = high
-            PRINT values(2) = nul
-            PRINT values(3) = low
-            values = REGEXEXTRACTALL("😀😀", "(?<10>..)", 10, "s")
-            PRINT ARRAYLENGTH(values)
-            PRINT values(1) = "😀"
-            PRINT values(2) = "😀"
-            values = REGEXEXTRACTALL("é", "(é)", 1)
-            PRINT ARRAYISALLOCATED(values)
-            PRINT ARRAYLENGTH(values)
-            """;
+        var source = "DIM high AS STRING = LEFT(\"😀\", 1)\r\nDIM low AS STRING = RIGHT(\"😀\", 1)\r\nDIM nul AS STRING = CHRW(0)\r\nDIM values[] AS STRING\r\nPRINT REGEXEXTRACT(\"😀\", \"(.)\", 1) = high\r\nPRINT REGEXEXTRACT(high + nul + low, \"(.)(.)(.)\", 2, \"s\") = nul\r\nPRINT REGEXEXTRACT(high + nul + low, \"(.)(.)(.)\", 3) = low\r\nPRINT REGEXEXTRACT(\"😀\", \"(?<10>..)\", 10, \"s\") = \"😀\"\r\nPRINT REGEXEXTRACT(\"😀\", \"(?<10>..)\", 1) = \"\"\r\nvalues[] = REGEXEXTRACTALL(high + nul + low, \"(.)\", 1)\r\nPRINT LBOUND(values[])\r\nPRINT UBOUND(values[])\r\nPRINT values[1] = high\r\nPRINT values[2] = nul\r\nPRINT values[3] = low\r\nvalues[] = REGEXEXTRACTALL(\"😀😀\", \"(?<10>..)\", 10, \"s\")\r\nPRINT ARRAYLENGTH(values[])\r\nPRINT values[1] = \"😀\"\r\nPRINT values[2] = \"😀\"\r\nvalues[] = REGEXEXTRACTALL(\"é\", \"(é)\", 1)\r\nPRINT ARRAYISALLOCATED(values[])\r\nPRINT ARRAYLENGTH(values[])";
         var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);

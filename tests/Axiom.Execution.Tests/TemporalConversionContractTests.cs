@@ -49,8 +49,8 @@ public sealed class TemporalConversionContractTests
                 DIM value AS TIME = moment
                 """),
             ("array element", $"""
-                DIM values(1 TO 2) AS DATE
-                values(1) = "{DateTimeText}"
+                DIM values[1 TO 2] AS DATE
+                values[1] = "{DateTimeText}"
                 """),
             ("record field", $"""
                 TYPE Entry

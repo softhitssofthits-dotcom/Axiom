@@ -1,5 +1,5 @@
 ' Отрицательный пример: ARRAYPUSH расширяет массив за верхнюю границу INTEGER.
 ' Ожидаемая диагностика:
 ' MB3007 — Функция ARRAYPUSH: аргумент 'array' не может быть расширен дальше текущей верхней границы.
-DIM values(2147483647 TO 2147483647) AS INTEGER
-ARRAYPUSH(values, 1)
+DIM values[2147483647 TO 2147483647] AS INTEGER
+ARRAYPUSH(values[], 1)

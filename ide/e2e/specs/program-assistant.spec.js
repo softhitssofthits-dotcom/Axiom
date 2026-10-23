@@ -2,7 +2,8 @@ const path=require('path');
 const fs=require('fs');
 const {testWorkspace,writeAxm}=require('../helpers');
 const routineSource='PRINT Worker(2)\nPRINT "Doubler(999)"\n\' Worker(900)\nFUNCTION Worker(value AS INTEGER) AS INTEGER\nIF value <= 0 THEN\nRETURN 0\nEND IF\nRETURN Worker(value - 1) + Doubler(value)\nEND FUNCTION\nFUNCTION Doubler(value AS INTEGER) AS INTEGER\nRETURN value * 2\nEND FUNCTION\n';
-async function open(S,tag,source){const file=writeAxm(testWorkspace(tag),'программа.axm',source);await S.page.evaluate(p=>window.__ide.openFile(p),file);return file;}
+async function showStructure(S){await S.page.evaluate(()=>window.__ide.studio.select('outline'));await S.page.locator('#outline-list').waitFor({state:'visible'});}
+async function open(S,tag,source){const file=writeAxm(testWorkspace(tag),'программа.axm',source);await S.page.evaluate(p=>window.__ide.openFile(p),file);await showStructure(S);return file;}
 async function analyse(S){return S.page.evaluate(()=>window.__ide.documentServices.request(window.__ide.activeFile,'document.navigation'));}
 
 module.exports=[{
@@ -195,9 +196,41 @@ module.exports=[{
     await S.launch({settings:{smartIdentifierEnabled:false,sidebarWidth:320}});
     const file=path.resolve(__dirname,'../../../samples/graphics/game/maze_chase.axm');
     await S.page.evaluate(p=>window.__ide.openFile(p),file);
+    await showStructure(S);
+    await S.page.waitForFunction(()=>!window.__ide._formatBusy,null,{timeout:10000});
+    const prepared=await S.page.evaluate(async()=>{
+      const i=window.__ide;await i.check(false);i.rebuildOutline();
+      const model=i.editor.getModel(),version=model.getVersionId();
+      const graph=await i.documentServices.request(i.activeFile,'document.navigation');
+      const item=i.outlinePanel.items.find(item=>item.name==='StepWalker');
+      const routine=graph?.routines.find(r=>r.name.split('.').at(-1)==='StepWalker'&&r.line===item?.lineNo&&r.kind===item?.kind);
+      const result={version,currentVersion:model.getVersionId(),formatBusy:i._formatBusy,
+        item:item?{id:item.id,name:item.name,kind:item.kind,line:item.lineNo}:null,
+        routine:routine?{name:routine.name,kind:routine.kind,line:routine.line}:null,
+        complete:graph?.complete,diagnostics:(i._lastDiagnostics||[]).slice(0,5).map(d=>({code:d.code,line:d.line,message:d.message}))};
+      window.__mazeAssistantPrepared=result;return result;
+    });
+    C.note('Подготовка StepWalker: '+JSON.stringify(prepared));
+    if(!prepared.item||!prepared.routine||prepared.version!==prepared.currentVersion||prepared.formatBusy)
+      throw new Error('Объявление StepWalker не согласовано со снимком: '+JSON.stringify(prepared));
     const step=S.page.locator('.outline-item').filter({hasText:'StepWalker'}).locator('.outline-jump');
     await step.click({button:'right'});await S.page.locator('#outline-context-menu [data-action="incoming"]').click();
-    await S.page.waitForFunction(()=>window.__ide.assistant.graphView===window.__ide.assistant.view&&window.__ide.assistant.graph);
+    try{
+      await S.page.waitForFunction(()=>{const a=window.__ide.assistant;return a.graphView===a.view&&a.graph&&a.view?.mode==='incoming'&&a.graphRoot?.name==='StepWalker';},null,{timeout:15000});
+    }catch(error){
+      const state=await S.page.evaluate(()=>{
+        const i=window.__ide,a=i.assistant,view=a.view,item=i.outlinePanel.items.find(x=>x.name==='StepWalker');
+        return {status:a.status.textContent,file:i.activeFile,version:i.editor.getModel().getVersionId(),formatBusy:i._formatBusy,
+          view:view?{mode:view.mode,file:view.file,version:view.version,item:view.item?{id:view.item.id,name:view.item.name,line:view.item.lineNo}:null,valid:a.valid(view)}:null,
+          item:item?{id:item.id,name:item.name,kind:item.kind,line:item.lineNo}:null,
+          context:a.context?{version:a.context.version,item:a.context.item?.name}:null,
+          graphCurrent:a.graphView===view,root:a.graphRoot?.name,
+          routines:a.graph?.routines.filter(r=>r.name.split('.').at(-1)==='StepWalker').map(r=>({name:r.name,kind:r.kind,line:r.line})),
+          prepared:window.__mazeAssistantPrepared};
+      });
+      C.note('Отказ StepWalker: '+JSON.stringify(state));
+      throw new Error('Помощник не завершил входящие связи StepWalker: '+JSON.stringify(state)+'; '+error.message);
+    }
     C.contains(await S.page.locator('#assistant-body').innerText(),'UpdateGameStep','Реальный вызывающий узел StepWalker');
     const graph=await S.page.evaluate(()=>window.__ide.assistant.graph),node=graph.routines.find(r=>r.name==='StepWalker');
     C.eq(graph.calls.filter(c=>c.callee===node.id).length,2,'Два вызова: герой и призрак');
@@ -265,22 +298,29 @@ module.exports.push({
     for(const name of ['main','maze_config','maze_world','maze_calibration','maze_motion','maze_player','maze_ghost','maze_game','maze_render']) {
       const file=path.join(folder,name+'.axm');
       const text=fs.readFileSync(file,'utf8');
-      const expected=[...text.matchAll(/^(?:PUBLIC |PRIVATE )?(SUB|FUNCTION)\s+(\w+)/gm)].map(m=>m[2]).sort();
+      const expected=[...text.matchAll(/^\s*(?:(?:PUBLIC|PRIVATE)\s+)?(?:SUB|FUNCTION)\s+([A-Za-z_]\w*)/gim)].map(m=>m[1]).sort();
       const actual=await S.page.evaluate(async file=>{const i=window.__ide;await i.openFile(file);i.rebuildOutline();return {names:i.outlinePanel.items.filter(x=>['sub','function'].includes(x.kind)).map(x=>x.name).sort(),regions:i.outlinePanel.regions.length};},file);
       C.eq(actual.names.join(','),expected.join(','),'Список процедур активного файла: '+name);
       C.ok(actual.regions>0,'Русские разделы доступны: '+name);
     }
     await S.page.evaluate(async player=>{
-      const i=window.__ide;await i.openFile(player);const m=i.editor.getModel();i.editor.setPosition(m.getPositionAt(m.getValue().indexOf('StepWalker(player,')+4));await i.assistant.symbols(true);
+      const i=window.__ide;await i.openFile(player);const m=i.editor.getModel();
+      const call=/\bStepWalker\s*\(\s*player\s*,/i.exec(m.getValue());
+      if(!call)throw new Error('Не найден вызов StepWalker для героя');
+      i.editor.setPosition(m.getPositionAt(call.index+4));await i.assistant.symbols(true);
     },player);
     await S.page.waitForFunction(motion=>window.__ide.activeFile===motion,motion);
-    C.contains(await S.page.evaluate(()=>window.__ide.editor.getModel().getLineContent(window.__ide.editor.getPosition().lineNumber)),'PUBLIC SUB StepWalker','F12 открывает точное объявление общего движения');
+    const declaration=await S.page.evaluate(()=>window.__ide.editor.getModel().getLineContent(window.__ide.editor.getPosition().lineNumber));
+    C.ok(/^\s*PUBLIC\s+SUB\s+StepWalker\s*\(/i.test(declaration),'F12 открывает точное объявление общего движения');
     await S.page.evaluate(()=>{const a=window.__ide.assistant;a.travel(a.back,a.forward);});
     await S.page.waitForFunction(player=>window.__ide.activeFile===player,player);
     C.ok(true,'История вернула вызов в модуле героя');
     await S.page.evaluate(async()=>{
-      const i=window.__ide,m=i.editor.getModel();i.editor.setPosition(m.getPositionAt(m.getValue().indexOf('AS Walker')+3));await i.assistant.symbols(false);
+      const i=window.__ide,m=i.editor.getModel();const type=/\bAS\s+(Walker)\b/i.exec(m.getValue());
+      if(!type)throw new Error('Не найден тип Walker в модуле героя');
+      i.editor.setPosition(m.getPositionAt(type.index+type[0].length-type[1].length));await i.assistant.symbols(false);
     });
+    await showStructure(S);
     const references=await S.page.locator('#assistant-body').innerText();
     C.contains(references,'maze_config.axm','Ссылки Walker включают объявление');
     C.contains(references,'maze_ghost.axm','Ссылки Walker включают другой модуль');
@@ -301,12 +341,17 @@ module.exports.push({
     const main=path.join(folder,'main.axm'),player=path.join(folder,'maze_player.axm'),game=path.join(folder,'maze_game.axm');
     await S.launch({settings:{smartIdentifierEnabled:false}});
     await S.page.evaluate(async({main,player})=>{
-      const i=window.__ide;await i.openFile(main);i.assistant.selectEntry();await i.openFile(player);
+      const i=window.__ide;
+      // Сценарий обращается к document.hover напрямую; раскраска не должна
+      // аннулировать его параллельным запросом того же снимка.
+      i.editor.updateOptions({'semanticHighlighting.enabled':false,hover:{enabled:false},parameterHints:{enabled:false}});
+      await i.openFile(main);i.assistant.selectEntry();await i.openFile(player);
       i.editor.getModel().setValue("' Несохранённая строка перед объявлениями\n"+i.editor.getValue());
     },{main,player});
     const snapshot=await S.page.evaluate(()=>window.__ide.documentServices.request(window.__ide.activeFile,'document.navigation'));
     const step=snapshot.routines.find(r=>r.name==='StepPlayer');
-    const savedLine=fs.readFileSync(player,'utf8').split(/\r?\n/).findIndex(s=>s.startsWith('PUBLIC SUB StepPlayer'))+1;
+    const savedLine=fs.readFileSync(player,'utf8').split(/\r?\n/).findIndex(s=>/^\s*PUBLIC\s+SUB\s+StepPlayer\s*\(/i.test(s))+1;
+    if(!savedLine)throw new Error('Не найдено сохранённое объявление StepPlayer');
     C.eq(step.line,savedLine+1,'Общий граф анализирует несохранённую версию зависимости');
     await S.page.evaluate(async main=>{const i=window.__ide;await i.openFile(main);i.editor.getModel().setValue(i.editor.getValue()+'\nPRINT unknownForHover\n');},main);
     const hover=await S.page.evaluate(()=>window.__ide.documentServices.request(window.__ide.activeFile,'document.hover'));
@@ -315,7 +360,8 @@ module.exports.push({
     await S.page.evaluate(async({main,player,mainText,playerText})=>{
       const i=window.__ide;i.openFiles.get(main).model.setValue(mainText);i.openFiles.get(player).model.setValue(playerText);i.markDirty(main,false);i.markDirty(player,false);
       await i.closeFile(player,true);i.switchToFile(main);
-      const line=mainText.split(/\r?\n/).findIndex(s=>/^\s+UpdateGameStep\(\)/.test(s))+1;
+      const line=mainText.split(/\r?\n/).findIndex(s=>/^\s*UpdateGameStep\s*\(\s*\)/i.test(s))+1;
+      if(!line)throw new Error('Не найден вызов UpdateGameStep для точки остановки');
       i.trace.toggle(line);await i.run('debug',false);
     },{main,player,mainText,playerText});
     await S.page.waitForFunction(()=>!!window.__ide.execution.stopId);

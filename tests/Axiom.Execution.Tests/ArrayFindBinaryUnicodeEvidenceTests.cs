@@ -5,71 +5,13 @@ public sealed class ArrayFindBinaryUnicodeEvidenceTests
     [Fact]
     public void BinarySearchUsesSortedUtf16ValuesAndExactLongs()
     {
-        Check("""
-            DIM words(-3 TO 3) AS STRING
-            DIM high AS STRING = LEFT("😀", 1)
-            words(-3) = ""
-            words(-2) = CHRW(0)
-            words(-1) = "é"
-            words(0) = "é"
-            words(1) = high
-            words(2) = "😀"
-            words(3) = CHRW(57344)
-            PRINT ARRAYBINARYSEARCH(words, "")
-            PRINT ARRAYBINARYSEARCH(words, CHRW(0), 1)
-            PRINT ARRAYBINARYSEARCH(words, "é")
-            PRINT ARRAYBINARYSEARCH(words, "é", 1)
-            PRINT ARRAYBINARYSEARCH(words, high)
-            PRINT ARRAYBINARYSEARCH(words, "😀", 1)
-            PRINT ARRAYBINARYSEARCH(words, CHRW(57344))
-            PRINT ARRAYBINARYSEARCH(words, RIGHT("😀", 1))
-            DIM numbers(5 TO 8) AS LONG
-            numbers(5) = 9007199254740992
-            numbers(6) = 9007199254740993
-            numbers(7) = 9007199254740993
-            numbers(8) = 9223372036854775807
-            PRINT ARRAYBINARYSEARCH(numbers, 9007199254740993)
-            PRINT ARRAYBINARYSEARCH(numbers, 9007199254740993, 1)
-            PRINT ARRAYBINARYSEARCH(numbers, 9223372036854775806)
-            PRINT ARRAYBINARYSEARCH(numbers, 9223372036854775807, 1)
-            PRINT numbers(6)
-            """, ["-3", "-2", "-1", "0", "1", "2", "3", "-4", "6", "6", "4", "8", "9007199254740993"]);
+        Check("DIM words[-3 TO 3] AS STRING\r\nDIM high AS STRING = LEFT(\"😀\", 1)\r\nwords[-3] = \"\"\r\nwords[-2] = CHRW(0)\r\nwords[-1] = \"é\"\r\nwords[0] = \"é\"\r\nwords[1] = high\r\nwords[2] = \"😀\"\r\nwords[3] = CHRW(57344)\r\nPRINT ARRAYBINARYSEARCH(words[], \"\")\r\nPRINT ARRAYBINARYSEARCH(words[], CHRW(0), 1)\r\nPRINT ARRAYBINARYSEARCH(words[], \"é\")\r\nPRINT ARRAYBINARYSEARCH(words[], \"é\", 1)\r\nPRINT ARRAYBINARYSEARCH(words[], high)\r\nPRINT ARRAYBINARYSEARCH(words[], \"😀\", 1)\r\nPRINT ARRAYBINARYSEARCH(words[], CHRW(57344))\r\nPRINT ARRAYBINARYSEARCH(words[], RIGHT(\"😀\", 1))\r\nDIM numbers[5 TO 8] AS LONG\r\nnumbers[5] = 9007199254740992\r\nnumbers[6] = 9007199254740993\r\nnumbers[7] = 9007199254740993\r\nnumbers[8] = 9223372036854775807\r\nPRINT ARRAYBINARYSEARCH(numbers[], 9007199254740993)\r\nPRINT ARRAYBINARYSEARCH(numbers[], 9007199254740993, 1)\r\nPRINT ARRAYBINARYSEARCH(numbers[], 9223372036854775806)\r\nPRINT ARRAYBINARYSEARCH(numbers[], 9223372036854775807, 1)\r\nPRINT numbers[6]", ["-3", "-2", "-1", "0", "1", "2", "3", "-4", "6", "6", "4", "8", "9007199254740993"]);
     }
 
     [Fact]
     public void FindAllReturnsVisibleCoordinatesForWholeStrings()
     {
-        Check("""
-            DIM grid(-1 TO 1, 5 TO 7) AS STRING
-            DIM hits(,) AS INTEGER
-            DIM target AS STRING = LEFT("😀", 1) + CHRW(0)
-            grid(-1, 5) = target
-            grid(0, 6) = target
-            grid(1, 7) = target
-            grid(0, 7) = "😀"
-            hits = ARRAYFINDALL(grid(0 TO 1, 6 TO 7), target)
-            PRINT ARRAYRANK(hits)
-            PRINT LBOUND(hits, 1)
-            PRINT UBOUND(hits, 1)
-            PRINT LBOUND(hits, 2)
-            PRINT UBOUND(hits, 2)
-            PRINT hits(1, 1)
-            PRINT hits(1, 2)
-            PRINT hits(2, 1)
-            PRINT hits(2, 2)
-            hits = ARRAYFINDALL(grid, RIGHT("😀", 1))
-            PRINT ARRAYLENGTH(hits)
-            PRINT grid(-1, 5) = target
-            PRINT grid(0, 7) = "😀"
-            DIM words(-2 TO 0) AS STRING
-            DIM indices() AS INTEGER
-            words(-2) = "é"
-            words(-1) = "é"
-            words(0) = "é"
-            indices = ARRAYFINDALL(words, "é")
-            PRINT indices(1)
-            PRINT indices(2)
-            """, ["2", "1", "2", "1", "2", "0", "6", "1", "7", "0", "TRUE", "TRUE", "-2", "0"]);
+        Check("DIM grid[-1 TO 1, 5 TO 7] AS STRING\r\nDIM hits[,] AS INTEGER\r\nDIM target AS STRING = LEFT(\"😀\", 1) + CHRW(0)\r\ngrid[-1, 5] = target\r\ngrid[0, 6] = target\r\ngrid[1, 7] = target\r\ngrid[0, 7] = \"😀\"\r\nhits[] = ARRAYFINDALL(grid[0 TO 1, 6 TO 7], target)\r\nPRINT ARRAYRANK(hits[])\r\nPRINT LBOUND(hits[], 1)\r\nPRINT UBOUND(hits[], 1)\r\nPRINT LBOUND(hits[], 2)\r\nPRINT UBOUND(hits[], 2)\r\nPRINT hits[1, 1]\r\nPRINT hits[1, 2]\r\nPRINT hits[2, 1]\r\nPRINT hits[2, 2]\r\nhits[] = ARRAYFINDALL(grid[], RIGHT(\"😀\", 1))\r\nPRINT ARRAYLENGTH(hits[])\r\nPRINT grid[-1, 5] = target\r\nPRINT grid[0, 7] = \"😀\"\r\nDIM words[-2 TO 0] AS STRING\r\nDIM indices[] AS INTEGER\r\nwords[-2] = \"é\"\r\nwords[-1] = \"é\"\r\nwords[0] = \"é\"\r\nindices[] = ARRAYFINDALL(words[], \"é\")\r\nPRINT indices[1]\r\nPRINT indices[2]", ["2", "1", "2", "1", "2", "0", "6", "1", "7", "0", "TRUE", "TRUE", "-2", "0"]);
     }
 
     private static void Check(string source, string[] expected)

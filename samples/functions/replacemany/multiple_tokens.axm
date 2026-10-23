@@ -1,15 +1,15 @@
 ' Ожидаемый вывод:
 ' Y X z
 ' one two
-DIM oldItems(1 TO 3) AS STRING
-DIM newItems(1 TO 3) AS STRING
+DIM oldItems[1 TO 3] AS STRING
+DIM newItems[1 TO 3] AS STRING
 
-oldItems(1) = "ab"
-newItems(1) = "X"
-oldItems(2) = "abc"
-newItems(2) = "Y"
-oldItems(3) = "x"
-newItems(3) = "z"
+oldItems[1] = "ab"
+newItems[1] = "X"
+oldItems[2] = "abc"
+newItems[2] = "Y"
+oldItems[3] = "x"
+newItems[3] = "z"
 
-PRINT REPLACEMANY("abc ab x", oldItems, newItems)
-PRINT REPLACEMANY("one two", oldItems, newItems)
+PRINT REPLACEMANY("abc ab x", oldItems[], newItems[])
+PRINT REPLACEMANY("one two", oldItems[], newItems[])

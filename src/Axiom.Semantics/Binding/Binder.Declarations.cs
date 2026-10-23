@@ -174,6 +174,17 @@ public sealed partial class Binder
         ArgumentNullException.ThrowIfNull(fieldDeclaration);
         ArgumentNullException.ThrowIfNull(declarator);
 
+        if (!ValidateArrayDeclaratorBrackets(declarator.Identifier.Text, declarator.ArrayBounds))
+        {
+            return new TypeFieldSymbol(declarator.Identifier.Text, TypeSymbol.Error);
+        }
+
+        if (_usesSquareArraySyntax && fieldDeclaration.TypeClause.Type is ArrayTypeSyntax suffix)
+        {
+            ReportArrayTypeSuffixForbidden(suffix.OpenDelimiterToken.Location);
+            return new TypeFieldSymbol(declarator.Identifier.Text, TypeSymbol.Error);
+        }
+
         var (hasDefaultValue, defaultValue) = BindTypeFieldDefaultValue(
             fieldDeclaration,
             declarator,
@@ -522,7 +533,7 @@ public sealed partial class Binder
             {
                 ReportInvalidFixedTypeArrayBounds(
                     declarator.Identifier.Text,
-                    declarator.ArrayBounds.OpenParenToken.Location,
+                    declarator.ArrayBounds.OpenDelimiterToken.Location,
                     $"Фиксированное поле-массив в TYPE требует константные границы{detailSuffix}.");
                 return false;
             }
@@ -559,7 +570,7 @@ public sealed partial class Binder
             {
                 ReportInvalidFixedTypeArrayBounds(
                     declarator.Identifier.Text,
-                    declarator.ArrayBounds.OpenParenToken.Location,
+                    declarator.ArrayBounds.OpenDelimiterToken.Location,
                     $"У фиксированного поля-массива в TYPE верхняя граница не может быть меньше нижней{detailSuffix}, кроме формы 1 TO 0.");
                 return false;
             }
@@ -879,9 +890,7 @@ public sealed partial class Binder
         for (var index = 0; index < parameters.Count; index++)
         {
             var parameter = parameters[index];
-            var parameterType = ReportUnsupportedFixedStringType(parameter.TypeClause, parameter.Identifier.Text)
-                ? TypeSymbol.Error
-                : ResolveType(parameter.TypeClause);
+            var parameterType = ResolveParameterType(parameter);
             parameterSymbols.Add(new ParameterSymbol(
                 parameter.Identifier.Text,
                 parameterType,
@@ -904,9 +913,7 @@ public sealed partial class Binder
         for (var index = 0; index < parameters.Count; index++)
         {
             var parameter = parameters[index];
-            var parameterType = ReportUnsupportedFixedStringType(parameter.TypeClause, parameter.Identifier.Text)
-                ? TypeSymbol.Error
-                : ResolveType(parameter.TypeClause);
+            var parameterType = ResolveParameterType(parameter);
             parameterSymbols.Add(new ParameterSymbol(
                 parameter.Identifier.Text,
                 parameterType,

@@ -5,38 +5,7 @@ public sealed class ArrayConcatUnicodeViewEvidenceTests
     [Fact]
     public void ConcatenationKeepsWholeValuesAndIndependentVisibleCopies()
     {
-        var source = """
-            DIM grid(-1 TO 1, 5 TO 7) AS STRING
-            DIM flat() AS STRING
-            DIM merged(,) AS STRING
-            DIM token AS STRING = LEFT("😀", 1) + CHRW(0)
-            grid(-1, 5) = "Внешний"
-            grid(0, 6) = token
-            grid(0, 7) = "é"
-            grid(1, 6) = "😀"
-            grid(1, 7) = "é"
-            flat = ARRAYCONCAT(grid(0)(6 TO 7), grid(1)(6 TO 7))
-            PRINT LBOUND(flat)
-            PRINT UBOUND(flat)
-            PRINT flat(1) = token
-            PRINT flat(2) = "é"
-            PRINT flat(3) = "😀"
-            PRINT flat(4) = "é"
-            merged = ARRAYCONCAT(grid(0 TO 1, 6 TO 7), grid(0 TO 1, 6 TO 7), 2)
-            PRINT LBOUND(merged, 1)
-            PRINT UBOUND(merged, 1)
-            PRINT LBOUND(merged, 2)
-            PRINT UBOUND(merged, 2)
-            PRINT merged(0, 6) = token
-            PRINT merged(0, 8) = token
-            PRINT merged(1, 7) = "é"
-            PRINT merged(1, 9) = "é"
-            flat(1) = "Замена"
-            merged(0, 6) = "Другая замена"
-            PRINT grid(0, 6) = token
-            PRINT merged(0, 8) = token
-            PRINT grid(-1, 5) = "Внешний"
-            """;
+        var source = "DIM grid[-1 TO 1, 5 TO 7] AS STRING\r\nDIM flat[] AS STRING\r\nDIM merged[,] AS STRING\r\nDIM token AS STRING = LEFT(\"😀\", 1) + CHRW(0)\r\ngrid[-1, 5] = \"Внешний\"\r\ngrid[0, 6] = token\r\ngrid[0, 7] = \"é\"\r\ngrid[1, 6] = \"😀\"\r\ngrid[1, 7] = \"é\"\r\nflat[] = ARRAYCONCAT(grid[0][6 TO 7], grid[1][6 TO 7])\r\nPRINT LBOUND(flat[])\r\nPRINT UBOUND(flat[])\r\nPRINT flat[1] = token\r\nPRINT flat[2] = \"é\"\r\nPRINT flat[3] = \"😀\"\r\nPRINT flat[4] = \"é\"\r\nmerged[] = ARRAYCONCAT(grid[0 TO 1, 6 TO 7], grid[0 TO 1, 6 TO 7], 2)\r\nPRINT LBOUND(merged[], 1)\r\nPRINT UBOUND(merged[], 1)\r\nPRINT LBOUND(merged[], 2)\r\nPRINT UBOUND(merged[], 2)\r\nPRINT merged[0, 6] = token\r\nPRINT merged[0, 8] = token\r\nPRINT merged[1, 7] = \"é\"\r\nPRINT merged[1, 9] = \"é\"\r\nflat[1] = \"Замена\"\r\nmerged[0, 6] = \"Другая замена\"\r\nPRINT grid[0, 6] = token\r\nPRINT merged[0, 8] = token\r\nPRINT grid[-1, 5] = \"Внешний\"";
         var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.True(run.Succeeded, string.Join("\n", run.Diagnostics.Select(d => d.Message)));
         Assert.Empty(run.Diagnostics);

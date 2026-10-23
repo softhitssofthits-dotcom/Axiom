@@ -104,13 +104,14 @@ public sealed partial class Parser
     {
         var constKeyword = Match(SyntaxKind.ConstKeyword, "CONST");
         var identifier = MatchIdentifier();
+        var arrayBounds = Current.Kind == SyntaxKind.OpenBracketToken ? ParseParameterArrayBounds() : null;
         var typeClause = ParseTypeClause();
         var equalsToken = Match(SyntaxKind.EqualsToken, "=");
         var initializer = ParseExpression();
 
         return new ConstStatementSyntax(
             constKeyword,
-            new ConstantDeclarationSyntax(identifier, typeClause, equalsToken, initializer));
+            new ConstantDeclarationSyntax(identifier, typeClause, equalsToken, initializer, arrayBounds));
     }
 
     private StatementSyntax ParseIdentifierLeadingStatement()
@@ -163,7 +164,12 @@ public sealed partial class Parser
     private VariableDeclaratorSyntax ParseVariableDeclarator()
     {
         var identifier = MatchIdentifier();
-        var arrayBounds = Current.Kind == SyntaxKind.OpenParenToken ? ParseArrayBounds() : null;
+        var arrayBounds = Current.Kind switch
+        {
+            SyntaxKind.OpenBracketToken => ParseBracketArrayBounds(),
+            SyntaxKind.OpenParenToken => ParseArrayBounds(),
+            _ => null
+        };
         return new VariableDeclaratorSyntax(identifier, arrayBounds);
     }
 

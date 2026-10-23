@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Функция MOUSEBUTTON — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
 <body data-page="mousebutton"><a class="skip-link" href="#main-content">Перейти к статье</a>
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
@@ -7,27 +7,18 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Функция MOUSEBUTTON</span></nav>
-<p class="eyebrow">Встроенная функция</p><h1 class="page-title">Функция MOUSEBUTTON</h1><p class="lead"><code>MOUSEBUTTON</code> — встроенная функция языка Axiom, которая проверяет текущее удержание кнопки мыши. Она читает состояние и сохраняет очередь событий.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-
+<p class="eyebrow">Встроенная функция</p><h1 class="page-title">Функция MOUSEBUTTON</h1><p class="lead">Действие, продолжающееся всё время удержания кнопки, требует знать её текущее состояние, а не момент нажатия. Функцию <code>MOUSEBUTTON</code> вызывают повторно, чтобы проверить, удерживается ли указанная кнопка мыши; очередь событий при этом сохраняется.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
         <section class="article-section">
-            <h2>Применение</h2>
-            <p>Используйте её для действия, продолжающегося всё время удержания. Нажатая кнопка даёт <code>TRUE</code>, отпущенная — <code>FALSE</code>.</p>
+            <h2>Где доступно чтение</h2>
+            <p>Чтение доступно при графическом <code>SCREEN 1..10</code> или активном <code>CANVAS</code>. Без рисуемой поверхности возникает <code>MB3010</code>. Нажатая кнопка даёт <code>TRUE</code>, отпущенная — <code>FALSE</code>.</p>
+            <p>Чтобы заметить отдельное нажатие один раз, применяют <a href="mousepress.html">MOUSEPRESS</a>.</p>
         </section>
 
         <section class="article-section">
-            <h2>Контекст выполнения</h2>
-            <p>Чтение доступно при графическом <code>SCREEN 1..10</code> или активном <code>CANVAS</code>. Без рисуемой поверхности возникает <code>MB3010</code>.</p>
-            <p>Чтобы заметить отдельное нажатие один раз, используйте <a href="mousepress.html">MOUSEPRESS</a>.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Синтаксис</h2>
+            <h2>Синтаксис и аргумент</h2>
 <pre><code class="language-axiom">MOUSEBUTTON(&lt;номер кнопки&gt;)</code></pre>
-        </section>
-
-        <section class="article-section">
-            <h2>Аргументы</h2>
+            <p>Передайте <code>INTEGER</code> с номером кнопки.</p>
             <table>
                 <thead><tr><th>Аргумент</th><th>Тип</th><th>Описание</th></tr></thead>
                 <tbody>
@@ -37,25 +28,24 @@
         </section>
 
         <section class="article-section">
-            <h2>Что возвращает функция MOUSEBUTTON</h2>
+            <h2>Что возвращает функция</h2>
             <p>Результат проверки имеет тип <code>BOOLEAN</code>.</p>
             <ul>
                 <li><code>TRUE</code>, если указанная кнопка сейчас удерживается.</li>
                 <li><code>FALSE</code>, если кнопка не удерживается или передан неподдерживаемый номер кнопки.</li>
             </ul>
+            <p>Чтение удержания не извлекает события нажатия, отпускания, перемещения или колеса. Неподдерживаемый номер возвращает <code>FALSE</code> в действующей среде ввода.</p>
         </section>
 
         <section class="article-section">
-            <h2>Правила работы</h2>
+            <h2>Состояние и события</h2>
             <ul>
                 <li>Встроенная функция <code>MOUSEBUTTON</code> не сообщает нажатие как событие и не различает момент нажатия и удержание.</li>
                 <li>События нажатия доступны через <code>MOUSEPRESS</code>, а события отпускания, перемещения и колеса — через <code>ON MOUSE</code>.</li>
                 <li>Координаты мыши читаются через встроенные функции <a href="mousex.html"><code>MOUSEX</code></a> и <a href="mousey.html"><code>MOUSEY</code></a>.</li>
-                <li>Для одноразовой проверки события нажатия кнопки используется встроенная функция <a href="mousepress.html"><code>MOUSEPRESS</code></a>.</li>
+                <li>Одноразовая проверка нажатия выполняется функцией <a href="mousepress.html"><code>MOUSEPRESS</code></a>.</li>
             </ul>
         </section>
-<section class="article-section"><h2>Аргумент функции</h2><p>Передайте <code>INTEGER</code> с номером кнопки: 1 — левая, 2 — правая, 3 — средняя. Результат имеет тип <code>BOOLEAN</code>. Чтение удержания не извлекает события нажатия, отпускания, перемещения или колеса. Неподдерживаемый номер возвращает <code>FALSE</code> в действующей среде ввода.</p></section>
-
 
         <section class="article-section">
             <h2>Диагностика</h2>
@@ -71,6 +61,7 @@
 <pre><code class="language-axiom">IF MOUSEBUTTON(1) THEN
     PRINT "LEFT"
 END IF</code></pre>
+            <p>Условие истинно всё время, пока кнопка удерживается, поэтому в цикле такая проверка срабатывает на каждой итерации, а не один раз на нажатие.</p>
         </section>
 
         <section class="article-section">

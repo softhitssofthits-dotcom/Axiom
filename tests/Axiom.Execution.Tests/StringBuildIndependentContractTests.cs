@@ -28,29 +28,7 @@ PRINT REMOVE("А😀Б", 2, 0)
     [Fact]
     public void SplitKeepsEdgeAndRepeatedSeparatorsAndJoinUsesVisibleOrder()
     {
-        Check("""
-DIM parts() AS STRING
-parts = SPLIT("", "😀")
-PRINT ARRAYLENGTH(parts)
-PRINT ARRAYISALLOCATED(parts)
-PRINT LBOUND(parts)
-PRINT UBOUND(parts)
-PRINT JOIN(parts) = ""
-parts = SPLIT("😀А😀😀Б😀", "😀")
-PRINT ARRAYLENGTH(parts)
-PRINT JOIN(parts, "|")
-parts = SPLIT("ааа", "аа")
-PRINT ARRAYLENGTH(parts)
-PRINT JOIN(parts, "|")
-DIM items(-5 TO -3) AS STRING
-items(-5) = "А"
-items(-4) = ""
-items(-3) = "😀"
-PRINT JOIN(items, "|")
-PRINT JOIN(items, "")
-DIM absent() AS STRING
-PRINT JOIN(absent, "|") = ""
-""", ["0", "TRUE", "1", "0", "TRUE", "5", "|А||Б|", "2", "|а", "А||😀", "А😀", "TRUE"]);
+        Check("DIM parts[] AS STRING\r\nparts[] = SPLIT(\"\", \"😀\")\r\nPRINT ARRAYLENGTH(parts[])\r\nPRINT ARRAYISALLOCATED(parts[])\r\nPRINT LBOUND(parts[])\r\nPRINT UBOUND(parts[])\r\nPRINT JOIN(parts[]) = \"\"\r\nparts[] = SPLIT(\"😀А😀😀Б😀\", \"😀\")\r\nPRINT ARRAYLENGTH(parts[])\r\nPRINT JOIN(parts[], \"|\")\r\nparts[] = SPLIT(\"ааа\", \"аа\")\r\nPRINT ARRAYLENGTH(parts[])\r\nPRINT JOIN(parts[], \"|\")\r\nDIM items[-5 TO -3] AS STRING\r\nitems[-5] = \"А\"\r\nitems[-4] = \"\"\r\nitems[-3] = \"😀\"\r\nPRINT JOIN(items[], \"|\")\r\nPRINT JOIN(items[], \"\")\r\nDIM absent[] AS STRING\r\nPRINT JOIN(absent[], \"|\") = \"\"", ["0", "TRUE", "1", "0", "TRUE", "5", "|А||Б|", "2", "|а", "А||😀", "А😀", "TRUE"]);
     }
 
     [Fact]
@@ -70,7 +48,7 @@ PRINT JOIN(absent, "|") = ""
     [Fact]
     public void JoinRejectsWrongArrayRankBeforeExecution()
     {
-        var source = "DIM items(1 TO 1, 1 TO 1) AS STRING\nPRINT JOIN(items)";
+        var source = "DIM items[1 TO 1, 1 TO 1] AS STRING\nPRINT JOIN(items[])";
         var second = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.False(second.Succeeded);
         Assert.Contains(second.Diagnostics, d => d.Code == "MB2003");

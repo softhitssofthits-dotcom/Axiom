@@ -25,7 +25,7 @@ const summaries=[
  'Числовые типы, математические функции и случайные числа.',
  'Строковый тип, интерполяция, фрагменты, поиск и коды символов.',
  'Временные типы, календарные вычисления и часовые пояса.',
- 'Одномерные и многомерные данные, срезы и операции над элементами.',
+ 'Квадратные обращения к массивам, ранг, границы, представления и операции над элементами.',
  'SUB и FUNCTION, вызовы, параметры и функции как значения.',
  'Записи TYPE, поля, копирование, методы и конструкторы.',
  'Перехват ошибок, завершение обработки и создание ошибки.',
@@ -55,5 +55,5 @@ const searchIndex=mergeSearchDestinations(index);
 fs.writeFileSync(path.join(dir,'scripts/search-index.js'),'window.AxiomSearchIndex = '+JSON.stringify(searchIndex,null,2)+';\n');
 const alphabet=[...inventory.functions.map(fn=>({name:fn.name,href:`function-reference.html#fn-${fn.name.toLowerCase()}`,kind:'Функция'})),...inventory.statements.map(op=>({name:op.name,href:op.href,kind:'Оператор'}))].sort((a,b)=>a.name.localeCompare(b.name,'en'));
 const body=section('Операторы и встроенные функции','<table><thead><tr><th>Имя</th><th>Сущность</th></tr></thead><tbody>'+alphabet.map(e=>`<tr><td><a href="${e.href}">${escape(e.name)}</a></td><td>${e.kind}</td></tr>`).join('')+'</tbody></table>',['alphabet','alphabet-index','complete-reference'])+section('Тематические главы','<div class="link-list">'+chapters.filter(c=>c.number).map(c=>`<a href="${c.items[0].href}">${c.number}. ${escape(c.title)}</a>`).join('')+'</div>',['topics','reading-order'])+related;
-fs.writeFileSync(path.join(dir,'reference.html'),manualPage({id:'reference',title:'Алфавитный указатель',lead:'Раздел содержит имена встроенных функций и операторов Axiom. Выберите имя для перехода к формам вызова или основной справочной статье.',eyebrow:'Справочный указатель',body}));
+fs.writeFileSync(path.join(dir,'reference.html'),manualPage({id:'reference',title:'Алфавитный указатель',lead:'Указатель перечисляет имена встроенных функций и операторов Axiom по алфавиту. Имя ведёт к точным формам вызова либо к основной статье с правилами и примерами.',eyebrow:'Справочный указатель',body}));
 console.log(`Собраны 17 глав, ${searchIndex.length} уникальных целей поиска и алфавитный указатель. Объединено ${index.length-searchIndex.length} повторных записей.`);

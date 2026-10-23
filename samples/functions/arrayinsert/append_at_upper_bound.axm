@@ -1,0 +1,16 @@
+' Вставка сразу после последнего элемента сохраняет порядок и нижнюю границу.
+' Ожидаемый вывод:
+' яблоко
+' банан
+' апельсин
+' -1
+' 1
+DIM fruits[-1 TO -1] AS STRING
+fruits[-1] = "яблоко"
+ARRAYINSERT(fruits[], UBOUND(fruits[]) + 1, "банан")
+ARRAYINSERT(fruits[], UBOUND(fruits[]) + 1, "апельсин", 1)
+PRINT fruits[-1]
+PRINT fruits[0]
+PRINT fruits[1]
+PRINT LBOUND(fruits[])
+PRINT UBOUND(fruits[])

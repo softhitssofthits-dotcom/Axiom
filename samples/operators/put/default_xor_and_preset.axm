@@ -8,16 +8,16 @@
 
 SCREEN 1
 
-DIM buffer(1 TO 2, 1 TO 1) AS DOUBLE
-buffer(1, 1) = 1.9
-buffer(2, 1) = -2.2
+DIM buffer[1 TO 2, 1 TO 1] AS DOUBLE
+buffer[1, 1] = 1.9
+buffer[2, 1] = -2.2
 
-PUT (10, 10), buffer
+PUT (10, 10), buffer[]
 DIM xorLeft AS INTEGER = POINT(10, 10)
 DIM xorRight AS INTEGER = POINT(11, 10)
 
 LINE (10, 10)-(11, 10), 0, BF
-PUT (10, 10), buffer, PRESET
+PUT (10, 10), buffer[], PRESET
 DIM presetLeft AS INTEGER = POINT(10, 10)
 DIM presetRight AS INTEGER = POINT(11, 10)
 

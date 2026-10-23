@@ -5,7 +5,7 @@ CONST APP_NAME AS STRING = "Axiom sample catalog"
 DIM counter AS INTEGER = 0
 DIM name AS STRING
 DIM age AS INTEGER
-DIM values(1 TO 3) AS INTEGER
+DIM values[1 TO 3] AS INTEGER
 
 FUNCTION Add(a AS INTEGER, b AS INTEGER) AS INTEGER
     RETURN a + b
@@ -25,9 +25,9 @@ INPUT name
 PRINT "Enter your age:"
 INPUT age
 
-values(1) = age
-values(2) = Add(age, 5)
-values(3) = INT(VAL("12.9"))
+values[1] = age
+values[2] = Add(age, 5)
+values[3] = INT(VAL("12.9"))
 
 IF age >= 18 THEN
     PRINT "adult"
@@ -36,7 +36,7 @@ ELSE
 END IF
 
 FOR i = 1 TO 3
-    PRINT "value"; STR(i); ":"; values(i)
+    PRINT "value"; STR(i); ":"; values[i]
 NEXT
 
 WHILE counter < 2

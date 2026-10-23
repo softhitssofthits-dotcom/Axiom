@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Оператор PCOPY — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
 <body data-page="pcopy"><a class="skip-link" href="#main-content">Перейти к статье</a>
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
@@ -7,29 +7,22 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Оператор PCOPY</span></nav>
-<p class="eyebrow">Оператор</p><h1 class="page-title">Оператор PCOPY</h1><p class="lead"><code>PCOPY</code> — оператор языка Axiom, который переносит содержимое одной графической страницы <code>SCREEN</code> в другую. Его можно использовать для показа кадра, подготовленного на скрытой странице.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-
+<p class="eyebrow">Оператор</p><h1 class="page-title">Оператор PCOPY</h1><p class="lead">Экранные страницы позволяют отделить рисование следующего изображения от текущего показа. Когда кадр на скрытой странице готов, его переносят на видимую оператором <code>PCOPY</code>: он заменяет содержимое одной графической страницы содержимым другой.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
             <section class="article-section">
-                <h2>Когда использовать PCOPY</h2>
-                <p>Экранные страницы позволяют отделить рисование следующего изображения от текущего показа.</p>
-                <p>Например, оператор <code>SCREEN</code> выбирает страницу <code>1</code> для рисования и страницу <code>0</code> для показа. После подготовки изображения вызов <code>PCOPY 1, 0</code> копирует его на видимую страницу.</p>
-            </section>
-
-        <section class="article-section">
-                <h2>Контекст выполнения</h2>
-                <p>Оператор доступен в графических режимах <code>SCREEN 1..10</code>.</p>
-                <p>В текстовом режиме <code>SCREEN 0</code> и на холсте <code>CANVAS</code> экранные страницы оператора <code>PCOPY</code> недоступны.</p>
+                <h2>Страницы и показ кадра</h2>
+                <p>Оператор <code>SCREEN</code> выбирает страницу для рисования и страницу для показа. Если рисовать на странице <code>1</code>, а показывать страницу <code>0</code>, подготовленное изображение не появится до вызова <code>PCOPY 1, 0</code>, который копирует его на видимую страницу.</p>
+                <p>Оператор доступен в графических режимах <code>SCREEN 1..10</code>. В текстовом режиме <code>SCREEN 0</code> и на холсте <code>CANVAS</code> экранные страницы оператора <code>PCOPY</code> недоступны.</p>
             </section>
 
         <section class="article-section">
                 <h2>Синтаксис</h2>
 <pre><code class="language-axiom">PCOPY &lt;исходная страница&gt;, &lt;страница назначения&gt;</code></pre>
-                <p>Оба аргумента обязательны: сначала укажите источник, затем страницу назначения.</p>
+                <p>Оба аргумента обязательны: сначала указывается источник, затем страница назначения.</p>
             </section>
 
         <section class="article-section">
-                <h2>Параметры</h2>
+                <h2>Аргументы</h2>
                 <table>
                     <thead>
                         <tr><th>Часть</th><th>Описание</th></tr>
@@ -42,20 +35,17 @@
             </section>
 
         <section class="article-section">
-                <h2>Что делает оператор PCOPY</h2>
-                <p>Копирование заменяет кадровый буфер страницы назначения содержимым исходной страницы.</p>
-                <p>Переносятся индексный слой, полноцветный слой и палитра. Поэтому результаты <code>PSET</code>, <code>LINE</code>, <code>DRAWIMAGE</code>, <code>DRAWSPRITE</code> и <code>PALETTE</code> сохраняются вместе.</p>
+                <h2>Что переносится</h2>
+                <p>Копирование заменяет кадровый буфер страницы назначения содержимым исходной страницы. Переносятся индексный слой, полноцветный слой и палитра, поэтому результаты <code>PSET</code>, <code>LINE</code>, <code>DRAWIMAGE</code>, <code>DRAWSPRITE</code> и <code>PALETTE</code> сохраняются вместе.</p>
+                <p>Текстовый буфер <code>PRINT</code> отображается общим слоем поверх видимой страницы. Оператор <code>PCOPY</code> не копирует текстовый буфер и не переносит текст между страницами; <code>LOCATE</code> только задаёт текстовый курсор.</p>
             </section>
 
         <section class="article-section">
-                <h2>Правила работы</h2>
-                <p>Вызов без активного графического режима сообщает <code>MB3010</code>.</p>
-                <p>Допустимые номера обеих страниц — <code>0..3</code>. Выход за этот диапазон сообщает <code>MB3007</code>.</p>
-                <p>Копирование сохраняет выбор активной и видимой страниц, графическую позицию, <code>VIEW</code>, <code>WINDOW</code>, <code>VIEW PRINT</code>, текстовый курсор и очереди ввода.</p>
-                <p>Текстовый буфер <code>PRINT</code> отображается общим слоем поверх видимой страницы. Оператор <code>PCOPY</code> не копирует текстовый буфер и не переносит текст между страницами; <code>LOCATE</code> только задаёт текстовый курсор.</p>
+                <h2>Правила и границы</h2>
+                <p>Номера обеих страниц приводятся к <code>INTEGER</code> и должны лежать в <code>0..3</code>; выход за этот диапазон сообщает <code>MB3007</code>, а вызов без активного графического режима — <code>MB3010</code>. Копирование страницы в саму себя допустимо.</p>
+                <p>Если страница назначения видима, копия появляется в окне; иначе она сохраняется на скрытой странице до её показа. Оператор не меняет выбранные номера активной и видимой страниц.</p>
+                <p>Копирование сохраняет графическую позицию, <code>VIEW</code>, <code>WINDOW</code>, <code>VIEW PRINT</code>, текстовый курсор и очереди ввода.</p>
             </section>
-<section class="article-section"><h2>Типы аргументов и видимость копии</h2><p>Номера обеих страниц приводятся к <code>INTEGER</code> и должны лежать в 0..3. Копирование страницы в саму себя допустимо. Если страница назначения видима, копия появляется в окне; иначе она сохраняется на скрытой странице до её показа. Оператор не меняет выбранные номера активной и видимой страниц.</p></section>
-
 
         <section class="article-section">
                 <h2>Диагностика</h2>

@@ -5,14 +5,7 @@ namespace Axiom.Execution.Tests;
 
 public sealed class StringSearchFormEvidenceTests
 {
-    private const string Setup = """
-DIM oldItems(1 TO 2) AS STRING
-DIM newItems(1 TO 2) AS STRING
-oldItems(1) = "a"
-oldItems(2) = "b"
-newItems(1) = "x"
-newItems(2) = "y"
-""";
+    private const string Setup = "DIM oldItems[1 TO 2] AS STRING\r\nDIM newItems[1 TO 2] AS STRING\r\noldItems[1] = \"a\"\r\noldItems[2] = \"b\"\r\nnewItems[1] = \"x\"\r\nnewItems[2] = \"y\"";
 
     public static IEnumerable<object[]> Forms()
     {
@@ -24,7 +17,7 @@ newItems(2) = "y"
         yield return new object[] { "StartsWith", "STARTSWITH(\"А😀Б\", \"А😀\")", "TRUE", "BOOLEAN" };
         yield return new object[] { "EndsWith", "ENDSWITH(\"А😀Б\", \"😀Б\")", "TRUE", "BOOLEAN" };
         yield return new object[] { "Replace", "REPLACE(\"А😀Б\", \"😀\", \"я\")", "АяБ", "STRING" };
-        yield return new object[] { "ReplaceMany", "REPLACEMANY(\"ab\", oldItems, newItems)", "xy", "STRING" };
+        yield return new object[] { "ReplaceMany", "REPLACEMANY(\"ab\", oldItems[], newItems[])", "xy", "STRING" };
         yield return new object[] { "InStr", "INSTR(\"А😀Б😀\", \"😀\")", "2", "INTEGER" };
         yield return new object[] { "InStrFrom", "INSTR(3, \"А😀Б😀\", \"😀\")", "5", "INTEGER" };
         yield return new object[] { "InStrRev", "INSTRREV(\"А😀Б😀\", \"😀\")", "5", "INTEGER" };
@@ -51,9 +44,9 @@ newItems(2) = "y"
         yield return new object[] { "Replace-arg1", "REPLACE(TRUE, \"😀\", \"я\")" };
         yield return new object[] { "Replace-arg2", "REPLACE(\"А😀Б\", TRUE, \"я\")" };
         yield return new object[] { "Replace-arg3", "REPLACE(\"А😀Б\", \"😀\", TRUE)" };
-        yield return new object[] { "ReplaceMany-arg1", "REPLACEMANY(TRUE, oldItems, newItems)" };
-        yield return new object[] { "ReplaceMany-arg2", "REPLACEMANY(\"ab\", TRUE, newItems)" };
-        yield return new object[] { "ReplaceMany-arg3", "REPLACEMANY(\"ab\", oldItems, TRUE)" };
+        yield return new object[] { "ReplaceMany-arg1", "REPLACEMANY(TRUE, oldItems[], newItems[])" };
+        yield return new object[] { "ReplaceMany-arg2", "REPLACEMANY(\"ab\", TRUE, newItems[])" };
+        yield return new object[] { "ReplaceMany-arg3", "REPLACEMANY(\"ab\", oldItems[], TRUE)" };
         yield return new object[] { "InStr-arg1", "INSTR(TRUE, \"😀\")" };
         yield return new object[] { "InStr-arg2", "INSTR(\"А😀Б😀\", TRUE)" };
         yield return new object[] { "InStrFrom-arg1", "INSTR(TRUE, \"А😀Б😀\", \"😀\")" };

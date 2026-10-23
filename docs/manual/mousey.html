@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="графической области" content="width=device-width, initial-scale=1">
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Функция MOUSEY — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
 <body data-page="mousey"><a class="skip-link" href="#main-content">Перейти к статье</a>
 <header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
@@ -7,34 +7,22 @@
 <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
 <div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Функция MOUSEY</span></nav>
-<p class="eyebrow">Встроенная функция</p><h1 class="page-title">Функция MOUSEY</h1><p class="lead"><code>MOUSEY</code> — встроенная функция языка Axiom, которая возвращает текущую вертикальную координату указателя мыши. Программа выбирает момент чтения, вызывая функцию в своём цикле.</p><nav class="article-toc" aria-label="В этой статье"></nav>
-
+<p class="eyebrow">Встроенная функция</p><h1 class="page-title">Функция MOUSEY</h1><p class="lead">Положение указателя программа узнаёт в тот момент, который выбрала сама. Функция <code>MOUSEY</code> возвращает текущую вертикальную координату указателя мыши, и её вызывают в собственном цикле, когда нужно сверить позицию с рисунком или интерфейсом.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
         <section class="article-section">
-            <h2>Применение</h2>
-            <p>На экране <code>SCREEN</code> координата Y измеряется в пикселях клиентской области. На холсте <code>CANVAS</code> результат соответствует мировому положению указателя после преобразования через <code>VIEWPORT</code> и <code>CAMERA</code>.</p>
+            <h2>Что измеряется на каждой поверхности</h2>
+            <p>На экране <code>SCREEN</code> координата Y измеряется в пикселях клиентской области. На холсте <code>CANVAS</code> результат соответствует мировому положению указателя после преобразования через <code>VIEWPORT</code> и <code>CAMERA</code>. Для чтения нужен графический <code>SCREEN 1..10</code> или активный <code>CANVAS</code>; отсутствие поверхности сообщает <code>MB3010</code>.</p>
+            <p>На экране <code>VIEW</code>, <code>WINDOW</code> и <code>PMAP</code> не пересчитывают координату мыши, а на холсте учитываются текущие область и камера. Функция читает только текущее состояние и не сообщает отдельные события перемещения; для процедуры по каждому событию используется <a href="on-mouse.html">ON MOUSE</a>.</p>
         </section>
 
         <section class="article-section">
-            <h2>Контекст выполнения</h2>
-            <p>Для чтения нужен графический <code>SCREEN 1..10</code> или активный <code>CANVAS</code>. Отсутствие поверхности сообщает <code>MB3010</code>.</p>
-            <p>На экране <code>VIEW</code>, <code>WINDOW</code> и <code>PMAP</code> не пересчитывают координату мыши. На холсте учитываются текущие область и камера.</p>
-            <p>Функция читает текущее положение без извлечения события перемещения. Для процедуры по каждому событию используйте <a href="on-mouse.html">ON MOUSE</a>.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Синтаксис</h2>
+            <h2>Синтаксис и аргументы</h2>
 <pre><code class="language-axiom">MOUSEY()</code></pre>
-            <p>Поддерживается единственная форма <code>MOUSEY()</code>.</p>
+            <p>Поддерживается единственная форма <code>MOUSEY()</code>. Аргументов нет, но скобки остаются частью вызова.</p>
         </section>
 
         <section class="article-section">
-            <h2>Аргументы</h2>
-            <p>Аргументов нет; скобки остаются частью вызова.</p>
-        </section>
-
-        <section class="article-section">
-            <h2>Что возвращает функция MOUSEY</h2>
+            <h2>Что возвращает функция</h2>
             <p>Координата возвращается как значение типа <code>LONG</code>.</p>
             <ul>
                 <li>Если активен <code>SCREEN</code> и среда выполнения знает положение указателя, возвращается текущая Y-координата в клиентской области активного окна.</li>
@@ -44,18 +32,11 @@
         </section>
 
         <section class="article-section">
-            <h2>Правила работы</h2>
-            <ul>
-                <li>Встроенная функция <code>MOUSEY</code> не принимает аргументов.</li>
-                <li>Функция читает только текущее состояние и не сообщает отдельные события перемещения.</li>
-                <li>Если среда не знает текущее положение указателя, функция возвращает <code>-1</code>.</li>
-                <li>В <code>CANVAS</code> мировая координата считается как положение камеры плюс смещение указателя внутри прямоугольника <code>VIEWPORT</code>.</li>
-                <li>В <code>CANVAS</code> точка вне холста или вне активной области <code>VIEWPORT</code> не образует мировую координату: функция возвращает <code>-1</code>.</li>
-                <li>Для горизонтальной координаты используется встроенная функция <a href="mousex.html"><code>MOUSEX</code></a>.</li>
-            </ul>
+            <h2>Начало координат и отрицательные значения</h2>
+            <p>В <code>SCREEN</code> начало клиентской области находится слева сверху; Y увеличивается вниз. В <code>CANVAS</code> функция возвращает камера Y + физический Y - верхняя граница области.</p>
+            <p>В <code>CANVAS</code> мировая координата считается как положение камеры плюс смещение указателя внутри прямоугольника <code>VIEWPORT</code>. Точка вне холста или вне активной области <code>VIEWPORT</code> не образует мировую координату: функция возвращает <code>-1</code>. Отрицательное мировое значение при этом может быть допустимой координатой сцены и само по себе не доказывает отсутствие указателя.</p>
+            <p>Для горизонтальной координаты используется встроенная функция <a href="mousex.html"><code>MOUSEX</code></a>.</p>
         </section>
-<section class="article-section"><h2>Начало координат и отрицательные значения</h2><p>В <code>SCREEN</code> начало клиентской области находится слева сверху; Y увеличивается вниз. В <code>CANVAS</code> функция возвращает камера Y + физический Y - верхняя граница области. Отрицательное мировое значение может быть допустимой координатой сцены; само по себе оно не доказывает отсутствие указателя.</p></section>
-
 
         <section class="article-section">
             <h2>Диагностика</h2>

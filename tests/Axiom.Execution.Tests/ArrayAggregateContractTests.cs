@@ -10,12 +10,12 @@ public sealed class ArrayAggregateContractTests
     public void Aggregates_SupportArithmeticAndTypeInference(string type)
     {
         var source = $$"""
-            DIM numbers(1 TO 2) AS {{type}}
-            numbers(1) = 2
-            numbers(2) = 3
-            DIM total AS {{type}} = ARRAYSUM(numbers)
-            DIM inferred = ARRAYMAX(numbers)
-            DIM smallest AS {{type}} = ARRAYMIN(numbers)
+            DIM numbers[1 TO 2] AS {{type}}
+            numbers[1] = 2
+            numbers[2] = 3
+            DIM total AS {{type}} = ARRAYSUM(numbers[])
+            DIM inferred = ARRAYMAX(numbers[])
+            DIM smallest AS {{type}} = ARRAYMIN(numbers[])
             PRINT total + smallest + inferred
             PRINT inferred + 1
             """;
@@ -28,12 +28,7 @@ public sealed class ArrayAggregateContractTests
     [Fact]
     public void Sum_UncaughtOverflowReportsLanguageDiagnostic()
     {
-        var source = """
-            DIM numbers(1 TO 2) AS INTEGER
-            numbers(1) = 2147483647
-            numbers(2) = 1
-            PRINT ARRAYSUM(numbers)
-            """;
+        var source = "DIM numbers[1 TO 2] AS INTEGER\r\nnumbers[1] = 2147483647\r\nnumbers[2] = 1\r\nPRINT ARRAYSUM(numbers[])";
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.Equal(ExecutionStatus.RuntimeFailure, result.Status);
         var diagnostic = Assert.Single(result.Diagnostics);
@@ -46,24 +41,7 @@ public sealed class ArrayAggregateContractTests
     [Fact]
     public void Aggregates_ReturnAssignableScalars()
     {
-        var source = """
-            DIM numbers(1 TO 2) AS INTEGER
-            numbers(1) = 2
-            numbers(2) = 3
-            DIM total AS INTEGER = ARRAYSUM(numbers)
-            DIM smallest AS INTEGER = ARRAYMIN(numbers)
-            DIM largest AS INTEGER = ARRAYMAX(numbers)
-            PRINT total
-            PRINT smallest
-            PRINT largest
-            DIM words(1 TO 2) AS STRING
-            words(1) = "б"
-            words(2) = "а"
-            DIM first AS STRING = ARRAYMIN(words)
-            DIM last AS STRING = ARRAYMAX(words)
-            PRINT first
-            PRINT last
-            """;
+        var source = "DIM numbers[1 TO 2] AS INTEGER\r\nnumbers[1] = 2\r\nnumbers[2] = 3\r\nDIM total AS INTEGER = ARRAYSUM(numbers[])\r\nDIM smallest AS INTEGER = ARRAYMIN(numbers[])\r\nDIM largest AS INTEGER = ARRAYMAX(numbers[])\r\nPRINT total\r\nPRINT smallest\r\nPRINT largest\r\nDIM words[1 TO 2] AS STRING\r\nwords[1] = \"б\"\r\nwords[2] = \"а\"\r\nDIM first AS STRING = ARRAYMIN(words[])\r\nDIM last AS STRING = ARRAYMAX(words[])\r\nPRINT first\r\nPRINT last";
         var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
         Assert.Equal(ExecutionStatus.Success, result.Status);
         Assert.Empty(result.Diagnostics);
@@ -80,11 +58,11 @@ public sealed class ArrayAggregateContractTests
     public void Sum_OverflowIsCaughtAndFinallyRuns(string type, string first, string second)
     {
         var source = $$"""
-            DIM numbers(1 TO 2) AS {{type}}
-            numbers(1) = {{first}}
-            numbers(2) = {{second}}
+            DIM numbers[1 TO 2] AS {{type}}
+            numbers[1] = {{first}}
+            numbers[2] = {{second}}
             TRY
-                PRINT ARRAYSUM(numbers)
+                PRINT ARRAYSUM(numbers[])
             CATCH err
                 PRINT err.Code
             FINALLY

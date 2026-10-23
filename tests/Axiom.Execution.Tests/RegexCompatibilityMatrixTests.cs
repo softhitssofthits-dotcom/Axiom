@@ -39,8 +39,8 @@ foreach (var modes in new[] {"", "i", "ms", "x"}) {
             "REGEXSPLIT" => c.text.Length==0 ? [] : reference.Split(c.text), _=>null};
         string source;
         if (array is not null) {
-            source=$"DIM v() AS STRING\nv = {call}\nPRINT ARRAYLENGTH(v) = {array.Length}\n";
-            for (int j=0;j<array.Length;j++) source += $"PRINT v({j+1}) = {Q(array[j])}\n";
+            source=$"DIM v[] AS STRING\nv[] = {call}\nPRINT ARRAYLENGTH(v[]) = {array.Length}\n";
+            for (int j=0;j<array.Length;j++) source += $"PRINT v[{j+1}] = {Q(array[j])}\n";
         } else {
             string expectation = name switch {
                 "REGEXISMATCH"=>reference.IsMatch(c.text)?"TRUE":"FALSE",

@@ -7,15 +7,15 @@
 ' 2
 ' 10
 ' 20
-DIM values(5 TO 7) AS INTEGER
+DIM values[5 TO 7] AS INTEGER
 
-values(5) = 10
-values(6) = 20
-values(7) = 30
+values[5] = 10
+values[6] = 20
+values[7] = 30
 
-PRINT ARRAYPOP(values)
-PRINT LBOUND(values)
-PRINT UBOUND(values)
-PRINT ARRAYLENGTH(values)
-PRINT values(5)
-PRINT values(6)
+PRINT ARRAYPOP(values[])
+PRINT LBOUND(values[])
+PRINT UBOUND(values[])
+PRINT ARRAYLENGTH(values[])
+PRINT values[5]
+PRINT values[6]

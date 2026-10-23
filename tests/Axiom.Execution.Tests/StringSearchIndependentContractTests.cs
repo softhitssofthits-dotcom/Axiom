@@ -54,23 +54,7 @@ PRINT REPLACE("abc", "a", "")
     [Fact]
     public void ReplaceManyUsesLongestFirstAndDoesNotRescanReplacement()
     {
-        Check("""
-DIM oldItems(5 TO 8) AS STRING
-DIM newItems(-2 TO 1) AS STRING
-oldItems(5) = "a"
-oldItems(6) = "ab"
-oldItems(7) = "ab"
-oldItems(8) = "😀"
-newItems(-2) = "ab"
-newItems(-1) = "Первое"
-newItems(0) = "Второе"
-newItems(1) = "я"
-PRINT REPLACEMANY("aba😀", oldItems, newItems)
-PRINT REPLACEMANY("", oldItems, newItems) = ""
-DIM absentOld() AS STRING
-DIM absentNew() AS STRING
-PRINT REPLACEMANY("А😀Б", absentOld, absentNew)
-""", ["Первоеabя", "TRUE", "А😀Б"]);
+        Check("DIM oldItems[5 TO 8] AS STRING\r\nDIM newItems[-2 TO 1] AS STRING\r\noldItems[5] = \"a\"\r\noldItems[6] = \"ab\"\r\noldItems[7] = \"ab\"\r\noldItems[8] = \"😀\"\r\nnewItems[-2] = \"ab\"\r\nnewItems[-1] = \"Первое\"\r\nnewItems[0] = \"Второе\"\r\nnewItems[1] = \"я\"\r\nPRINT REPLACEMANY(\"aba😀\", oldItems[], newItems[])\r\nPRINT REPLACEMANY(\"\", oldItems[], newItems[]) = \"\"\r\nDIM absentOld[] AS STRING\r\nDIM absentNew[] AS STRING\r\nPRINT REPLACEMANY(\"А😀Б\", absentOld[], absentNew[])", ["Первоеabя", "TRUE", "А😀Б"]);
     }
 
     [Fact]
@@ -91,19 +75,19 @@ PRINT REPLACEMANY("А😀Б", absentOld, absentNew)
     public void ReplaceManyRejectsUnequalLengthsEmptyRulesAndWrongRank()
     {
         foreach (var setup in new[] {
-            "DIM oldItems(1 TO 2) AS STRING\nDIM newItems(1 TO 1) AS STRING\noldItems(1) = \"a\"\noldItems(2) = \"b\"",
-            "DIM oldItems(1 TO 1) AS STRING\nDIM newItems(1 TO 1) AS STRING",
-            "DIM oldItems(1 TO 1, 1 TO 1) AS STRING\nDIM newItems(1 TO 1) AS STRING",
-            "DIM oldItems(1 TO 1) AS STRING\noldItems(1) = \"a\"\nDIM newItems(1 TO 1, 1 TO 1) AS STRING" })
+            "DIM oldItems[1 TO 2] AS STRING\nDIM newItems[1 TO 1] AS STRING\noldItems[1] = \"a\"\noldItems[2] = \"b\"",
+            "DIM oldItems[1 TO 1] AS STRING\nDIM newItems[1 TO 1] AS STRING",
+            "DIM oldItems[1 TO 1, 1 TO 1] AS STRING\nDIM newItems[1 TO 1] AS STRING",
+            "DIM oldItems[1 TO 1] AS STRING\noldItems[1] = \"a\"\nDIM newItems[1 TO 1, 1 TO 1] AS STRING" })
         {
             if (setup.Contains("1 TO 1, 1 TO 1", StringComparison.Ordinal))
             {
-                var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(setup + "\nPRINT REPLACEMANY(\"\", oldItems, newItems)"));
+                var result = new AxiomExecutionPipeline().Run(new ExecutionRequest(setup + "\nPRINT REPLACEMANY(\"\", oldItems[], newItems[])"));
                 Assert.False(result.Succeeded);
                 Assert.Contains(result.Diagnostics, d => d.Code == "MB2003");
             }
             else
-                Check(setup + "\nTRY\nPRINT REPLACEMANY(\"\", oldItems, newItems)\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
+                Check(setup + "\nTRY\nPRINT REPLACEMANY(\"\", oldItems[], newItems[])\nCATCH err\nPRINT err.Code\nEND TRY", ["MB3007"]);
         }
     }
 

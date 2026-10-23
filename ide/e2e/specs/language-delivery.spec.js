@@ -4,7 +4,9 @@ async function open(S, tag, source) {
   await S.launch();
   await S.page.evaluate(async file => {
     const i = window.__ide; i.settings.smartIdentifierEnabled = false;
-    await i.openFile(file); i.editor.updateOptions({ hover: { enabled: false }, parameterHints: { enabled: false } });
+    // Здесь запросом управляет сценарий, а не фоновая семантическая раскраска.
+    i.editor.updateOptions({ hover: { enabled: false }, parameterHints: { enabled: false }, 'semanticHighlighting.enabled': false });
+    await i.openFile(file);
     clearTimeout(i._liveCheckTimer);
   }, file);
   return file;
@@ -23,6 +25,10 @@ module.exports = [{
         if (state.open) return result;
         return new Promise(resolve => state.releases.push(() => resolve(result)));
       } };
+      // Новая редакция гарантирует запрос через установленный выше перехват,
+      // даже если открытие документа уже успело заполнить общий кеш.
+      i.editor.getModel().setValue(i.editor.getValue() + "' Проверка владельца запроса\n");
+      clearTimeout(i._liveCheckTimer);
       state.hover = () => window.LangFeatures._hoverProvider.provideHover(i.editor.getModel(), { lineNumber: 2, column: 7 });
       state.old = state.hover();
     });
@@ -61,6 +67,8 @@ module.exports = [{
         if (args[0] === 'document.hover') throw null;
         return original.documentCommand(...args);
       } };
+      i.editor.getModel().setValue(i.editor.getValue() + "' Проверка отказа доставки\n");
+      clearTimeout(i._liveCheckTimer);
       let first = null, error = null;
       try { first = await window.LangFeatures._hoverProvider.provideHover(i.editor.getModel(), { lineNumber: 4, column: 7 }); }
       catch (e) { error = e?.message || String(e); }
@@ -94,6 +102,8 @@ module.exports = [{
           if (args[0] !== 'document.hover') return result;
           return new Promise(resolve => { s.release = () => resolve(result); s.ready = true; });
         } };
+        i.editor.getModel().setValue(i.editor.getValue() + "' Проверка отмены доставки\n");
+        clearTimeout(i._liveCheckTimer);
         s.hover = window.LangFeatures._hoverProvider.provideHover(i.editor.getModel(), { lineNumber: 4, column: 7 }, s.token);
         s.signature = window.LangFeatures._sigProvider.provideSignatureHelp(i.editor.getModel(), { lineNumber: 4, column: 14 }, s.token);
       });

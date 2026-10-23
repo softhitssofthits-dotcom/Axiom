@@ -4,42 +4,7 @@ public sealed class RegexContextContractTests
     [Fact]
     public void RegexWorksInControlFlowRoutinesRecordsArraysAndInterpolation()
     {
-AssertProgram("""
-FUNCTION FindNumber(t AS STRING) AS STRING
-RETURN REGEXMATCH(t, "\d+")
-END FUNCTION
-SUB ReplaceNumber(BYREF t AS STRING)
-t = REGEXREPLACE(t, "\d+", "x")
-END SUB
-TYPE Row
-value AS STRING
-END TYPE
-DIM rowValue AS Row
-rowValue.value = FindNumber("a12")
-DIM arrayValue(1 TO 2) AS STRING
-arrayValue(1) = REGEXEXTRACT("A34", "([A-Z])(\d+)", 2)
-PRINT rowValue.value
-PRINT arrayValue(1)
-DIM text AS STRING = "A12"
-ReplaceNumber(text)
-PRINT text
-FOR i = 1 TO 2
-IF REGEXISMATCH("a", "a") THEN PRINT REGEXCOUNT("aa", "a")
-SELECT CASE REGEXMATCH("A1", "\d")
-CASE "1"
-PRINT "select"
-END SELECT
-NEXT
-DIM n AS INTEGER = 0
-WHILE REGEXISMATCH("a", "a") AND n < 1
-PRINT "while"
-n = n + 1
-END WHILE
-DO
-PRINT "do"
-LOOP UNTIL REGEXISMATCH("x", "x")
-PRINT $"count={REGEXCOUNT("aa", "a")}"
-""", ["12","34","Ax","2","select","2","select","while","do","count=2"]);
+AssertProgram("FUNCTION FindNumber(t AS STRING) AS STRING\nRETURN REGEXMATCH(t, \"\\d+\")\nEND FUNCTION\nSUB ReplaceNumber(BYREF t AS STRING)\nt = REGEXREPLACE(t, \"\\d+\", \"x\")\nEND SUB\nTYPE Row\nvalue AS STRING\nEND TYPE\nDIM rowValue AS Row\nrowValue.value = FindNumber(\"a12\")\nDIM arrayValue[1 TO 2] AS STRING\narrayValue[1] = REGEXEXTRACT(\"A34\", \"([A-Z])(\\d+)\", 2)\nPRINT rowValue.value\nPRINT arrayValue[1]\nDIM text AS STRING = \"A12\"\nReplaceNumber(text)\nPRINT text\nFOR i = 1 TO 2\nIF REGEXISMATCH(\"a\", \"a\") THEN PRINT REGEXCOUNT(\"aa\", \"a\")\nSELECT CASE REGEXMATCH(\"A1\", \"\\d\")\nCASE \"1\"\nPRINT \"select\"\nEND SELECT\nNEXT\nDIM n AS INTEGER = 0\nWHILE REGEXISMATCH(\"a\", \"a\") AND n < 1\nPRINT \"while\"\nn = n + 1\nEND WHILE\nDO\nPRINT \"do\"\nLOOP UNTIL REGEXISMATCH(\"x\", \"x\")\nPRINT $\"count={REGEXCOUNT(\"aa\", \"a\")}\"", ["12","34","Ax","2","select","2","select","while","do","count=2"]);
     }
     private static void AssertProgram(string source, string[] expected)
     {
