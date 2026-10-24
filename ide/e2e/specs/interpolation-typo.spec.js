@@ -26,15 +26,14 @@ module.exports = [{
   await S.page.evaluate(() => { const i = window.__ide; i.editor.setPosition({ lineNumber: 9, column: 5 }); i.editor.focus(); });
   await S.page.keyboard.type('T');
   await S.page.keyboard.press('ArrowRight');
-  C.eq(await S.page.locator('.marker-widget:visible').count(), 1, 'Карточка остаётся при исправлении текста');
+  await S.page.locator('.marker-widget').waitFor({ state: 'hidden' });
+  C.eq(await S.page.locator('.marker-widget:visible').count(), 0, 'Исправление закрывает устаревшую карточку');
   await S.page.waitForFunction(() => {
    const i = window.__ide;
    return i._lastDiagnostics.length === 0 && i.monaco.editor.getModelMarkers({ owner: 'axiom', resource: i.editor.getModel().uri }).length === 0;
   });
   C.eq((await S.markers()).filter(m => m.severity === 8).length, 0, 'После исправления PRINT ошибок нет');
-  C.eq(await S.page.locator('.marker-widget:visible').count(), 1, 'Автоматическая проверка не закрывает карточку');
-  await S.page.locator('.peekview-widget .action-label.codicon-close').click();
-  C.eq(await S.page.locator('.marker-widget:visible').count(), 0, 'Пользователь закрывает карточку крестиком');
+  C.eq(await S.page.locator('.marker-widget:visible').count(), 0, 'После автоматической проверки карточка устранённой ошибки не возвращается');
   await S.screenshot('diagnostic-peek-dismissed');
  }
 }];

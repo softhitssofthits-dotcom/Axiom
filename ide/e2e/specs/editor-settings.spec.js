@@ -6,14 +6,15 @@ module.exports=[
 {id:'editor-settings-apply-persistence',name:'Диалог: отмена, применение, модели и сохранение после перезапуска',async fn({S,C}){
  await S.launch();
  C.eq(await S.page.locator('[data-menu="settings"]').count(),0,'Настройки не входят в выпадающие меню');
- for(const width of ['','300px']){
-  await S.page.evaluate(width=>document.getElementById('menubar').style.width=width,width);
-  await S.page.waitForTimeout(150);
-  const layout=await S.page.evaluate(()=>{const bar=document.getElementById('menubar').getBoundingClientRect(),button=document.getElementById('menu-settings').getBoundingClientRect();return {gap:bar.right-button.right,left:button.left,barLeft:bar.left,parent:document.getElementById('menu-settings').parentElement.id};});
-  C.ok(layout.gap>=0&&layout.gap<=10&&layout.left>=layout.barLeft&&layout.parent==='menubar','Настройки закреплены справа: '+(width||'обычная ширина'),JSON.stringify(layout));
+ const window=await S.electronApp.browserWindow(S.page),bounds=await window.evaluate(w=>w.getBounds());
+ for(const width of [bounds.width,800]){
+  await window.evaluate((w,width)=>w.setSize(width,w.getBounds().height),width);
+  await S.page.waitForFunction(()=>{const button=document.getElementById('menu-settings'),group=button.closest('.studio-placement');return group&&button.getBoundingClientRect().width>0;});
+  const layout=await S.page.evaluate(()=>{const button=document.getElementById('menu-settings'),group=button.closest('.studio-placement'),bar=document.getElementById('toolbar').getBoundingClientRect(),b=button.getBoundingClientRect(),g=group.getBoundingClientRect();return {placement:!!group,parentToolbar:group.parentElement.id,gap:g.right-b.right,inside:b.left>=bar.left&&b.right<=bar.right};});
+  C.ok(layout.placement&&layout.parentToolbar==='toolbar'&&layout.gap>=0&&layout.gap<=10&&layout.inside,'Настройки доступны в правой группе панели: '+width+'px',JSON.stringify(layout));
   await open(S);await S.page.click('[data-settings-action="cancel"]');
  }
- await S.page.evaluate(()=>document.getElementById('menubar').style.width='');
+ await window.evaluate((w,bounds)=>w.setBounds(bounds),bounds);
  await S.page.locator('#menu-settings').focus();await S.page.keyboard.press('Enter');
  await S.page.locator('.editor-settings-dialog').waitFor();
  C.eq(await S.page.locator('.editor-settings-dialog').count(),1,'Enter сразу открывает диалог');

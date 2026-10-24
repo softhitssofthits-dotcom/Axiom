@@ -123,7 +123,7 @@ module.exports.push({ id: 'document-borland-theme-persistence', name: 'Borland P
   C.eq(colors.checked, 'true', 'Пункт темы отмечен в меню');
   C.ok(colors.tokens.some(t => t.text.trim() === 'DIM' && t.color === 'rgb(255, 255, 255)'), 'Операторы светлые');
   C.ok(colors.tokens.some(t => t.text.trim() === 'INTEGER' && t.color === 'rgb(255, 255, 85)'), 'Типы используют жёлтый обычный текст');
-  C.ok(colors.tokens.some(t => t.text.trim() === 'LEN' && t.color === 'rgb(255, 255, 85)'), 'Встроенные функции жёлтые');
+  C.ok(colors.tokens.some(t => t.text.trim() === 'LEN' && t.color === 'rgb(85, 255, 255)'), 'Встроенные функции голубые, как пользовательские функции');
   C.ok(colors.tokens.some(t => t.text.includes('Строка') && t.color === 'rgb(255, 255, 85)'), 'Строки жёлтые');
   const menu = await S.page.evaluate(() => [...document.querySelectorAll('[data-action^="theme-"]')].map(item => item.querySelector('.menu-text').textContent));
   C.ok(menu.some(text => text.includes('Borland Pascal')) && menu.length === 4, 'Тема есть среди четырёх пунктов меню');
@@ -202,23 +202,31 @@ module.exports.push({ id: 'document-structural-delivery-retry', name: 'Теку�
 module.exports.push({id:'document-visibility-block-endings',name:'PUBLIC и PRIVATE: закрытие всех допустимых блоков и готовые шаблоны',async fn({S,C}){
  await document(S,'','visibility-endings');
  await S.page.evaluate(()=>{window.__ide.settings.smartIdentifierEnabled=false;});
+ // Подготовка идёт машинной скоростью: проверяю, что замена текста завершилась и каретка
+ // стоит в начале документа, иначе первая же буква может попасть в прежнюю строку.
+ const prepare=async source=>{
+  await S.page.evaluate(source=>{const i=window.__ide;i.editor.getModel().setValue(source);i.editor.focus();i.editor.setPosition({lineNumber:1,column:1});},source);
+  await S.page.waitForFunction(source=>{const i=window.__ide,p=i.editor.getPosition();return i.editor.getValue()===source&&p.lineNumber===1&&p.column===1;},source,{timeout:5000});
+  await S.page.waitForTimeout(120);
+ };
  for(const style of ['Classic','Modern'])for(const modifier of ['PUBLIC','PRIVATE'])for(const [block,header] of [['SUB','Work()'],['FUNCTION','Work() AS INTEGER'],['TYPE','Box']]){
   const opening=modifier+' '+block+' '+header;
-  await S.page.evaluate(({style})=>{const i=window.__ide;i.settings.formattingStyle=style;i.editor.getModel().setValue('');i.editor.setPosition({lineNumber:1,column:1});i.editor.focus();},{style});
+  await S.page.evaluate(({style})=>{const i=window.__ide;i.settings.formattingStyle=style;},{style});
+  await prepare('');
   await S.page.keyboard.type(opening);await S.page.keyboard.press('Escape');await S.page.keyboard.press('Enter');
   await S.page.waitForFunction(block=>window.__ide.editor.getValue().toUpperCase().includes('END '+block),block,{timeout:3000});
   C.eq(await S.page.evaluate(block=>(window.__ide.editor.getValue().toUpperCase().match(new RegExp('END '+block,'g'))||[]).length,block),1,'Один END '+modifier+' '+block+' '+style);
   C.eq(await S.page.evaluate(()=>window.__ide.editor.getPosition().column),5,'Каретка внутри блока');
  }
  for(const modifier of ['PUBLIC','PRIVATE'])for(const [block,header] of [['SUB','Work()'],['FUNCTION','Work() AS INTEGER'],['TYPE','Box']]){
-  await S.page.evaluate(block=>{const i=window.__ide;i.editor.getModel().setValue('\n\nEND '+block);i.editor.setPosition({lineNumber:1,column:1});i.editor.focus();},block);
+  await prepare('\n\nEND '+block);
   await S.page.keyboard.type(modifier.toLowerCase()+' '+block.toLowerCase()+' '+header+" ' комментарий");
   await S.page.keyboard.press('Escape');await S.page.keyboard.press('Enter');
-  await S.page.waitForFunction(()=>window.__ide.editor.getPosition().column===5);
+  await S.page.waitForFunction(()=>window.__ide.editor.getPosition().column===5,null,{timeout:8000});
   C.eq((await S.editorValue()).toUpperCase().split('END '+block).length-1,1,'Готовое завершение не дублируется: '+modifier+' '+block);
  }
  for(const modifier of ['PUBLIC','PRIVATE'])for(const block of ['SUB','FUNCTION','TYPE']){
-  await S.page.evaluate(()=>{const i=window.__ide;i.editor.getModel().setValue('');i.editor.setPosition({lineNumber:1,column:1});i.editor.focus();});
+  await prepare('');
   await S.page.keyboard.type(modifier+' '+block.slice(0,2));
   await S.page.keyboard.press('Control+Space');
   const row=S.page.locator('.suggest-widget.visible .monaco-list-row').filter({hasText:modifier+' '+block+' —'}).first();

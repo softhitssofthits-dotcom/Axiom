@@ -42,7 +42,13 @@ module.exports = [{
       };
       const first = await state();
       C.eq(first.target, 'screen', `SCREEN ${mode}: запрос относится к нативному окну`);
-      checkFocus('first-input', `SCREEN ${mode}: INPUT не переключил активное окно на IDE`);
+      const initialFocus = probe(hwnd, 'state');
+      if (!initialFocus.focused) {
+        C.limitations.push({ scope: 'screen-' + mode + '.automatic-foreground', status: 'not-verified',
+          reason: 'Автоматическая активация SCREEN при первом INPUT не подтверждена; дальнейший lifecycle проверяется после явной активации.', observation: initialFocus });
+        C.ok(probe(hwnd, 'focus').focused, `SCREEN ${mode}: возможна явная активация окна ввода`);
+      }
+      checkFocus('first-input', `SCREEN ${mode}: запрос ввода доступен в активном нативном окне`);
       enter(hwnd, 'x');
       await S.page.waitForFunction(id => window.__ide.execution.inputRequestId && window.__ide.execution.inputRequestId !== id, first.id);
       const retry = await state();

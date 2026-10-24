@@ -14,6 +14,20 @@ test('Автоматическая вставка сдвигает ожидаю�
  assert.equal(tracker.has(model,15),true);assert.equal(tracker.has(model,2),false);assert.equal(tracker.has(model,3),false);
  tracker.record(model,[edit(1,16,'\n'.repeat(15))],false);assert.equal(tracker.has(model,15),true);
 });
+test('Полная замена документа снимает прежние отметки и не помечает новый текст',()=>{
+ const tracker=new EditedLines(),model={};tracker.apply(model,{changes:[edit(2,2,'value')],isFlush:false});
+ assert.equal(tracker.has(model,2),true);
+ tracker.apply(model,{changes:[edit(1,3,'\n\nEND SUB')],isFlush:true});
+ assert.equal(tracker.has(model,2),false);
+ assert.equal(tracker.has(model,1),false);
+ assert.equal(tracker.has(model,3),false);
+ tracker.apply(model,{changes:[edit(1,1,'P')],isFlush:false});assert.equal(tracker.has(model,1),true);
+});
+test('Обычная правка через apply не отличается от record',()=>{
+ const tracker=new EditedLines(),model={};tracker.apply(model,{changes:[edit(5,5,'value')]},false);
+ assert.equal(tracker.has(model,5),false);
+ tracker.apply(model,{changes:[edit(5,5,'value')]});assert.equal(tracker.has(model,5),true);
+});
 test('Вставка и удаление строк сохраняют положение ещё не обработанной правки',()=>{
  const tracker=new EditedLines(),model={};tracker.record(model,[edit(14,14,'value')]);
  tracker.record(model,[edit(2,2,'\r\n\r\n')]);assert.equal(tracker.has(model,16),true);assert.equal(tracker.has(model,14),false);

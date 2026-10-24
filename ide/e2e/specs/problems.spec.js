@@ -241,7 +241,10 @@ for(const descriptor of [false,true])module.exports.push({id:'project-advice-maz
  const userData=S.userData;await S.close();await S.launch({userData});
  await S.page.evaluate(p=>window.__ide.switchToFile(p),config);
  await S.page.evaluate(()=>{const i=window.__ide,api=i.documentServices.api;window.__adviceRequests=[];i.documentServices.api={documentCommand:(method,snapshot)=>{window.__adviceRequests.push({method,snapshot});return api.documentCommand(method,snapshot);}};});
- await S.page.evaluate(()=>window.__ide.runLiveCheck());
+ // Отложенная проверка после переключения файла способна обогнать явный вызов и сделать его
+ // устаревшим, поэтому ожидание ставится до анализа, а результат проверяется по факту применения.
+ await S.page.evaluate(async()=>{const i=window.__ide;clearTimeout(i._liveCheckTimer);i._liveCheckSeq++;await i.runLiveCheck();});
+ await S.page.waitForFunction(()=>{const d=window.__ide._lastDiagnostics;return Array.isArray(d)&&window.__adviceRequests.some(r=>r.method==='document.analyse');},null,{timeout:15000});
  const state=await S.page.evaluate(()=>({projectDir:window.__ide.projectDir,entry:window.__ide.projectSession.entry,selected:document.getElementById('project-entry').value,diagnostics:window.__ide._lastDiagnostics,requests:window.__adviceRequests}));
  C.eq(state.projectDir,folder,'Восстановлена папка');C.eq(state.entry,entry,'Восстановлена точка входа');C.eq(state.selected,entry,'Панель показывает выбранный main');
  const evidence=path.join(require('../helpers').ROOT,'.artifacts/stability-project-advice-20261021');fs.mkdirSync(evidence,{recursive:true});fs.writeFileSync(path.join(evidence,'restored-'+(descriptor?'axproj':'folder')+'.json'),JSON.stringify(state,null,2));

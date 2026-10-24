@@ -36,6 +36,7 @@ class Checks {
     this.testId = testId;
     this.failures = [];
     this.notes = [];
+    this.limitations = [];
     this.passed = 0;
   }
   ok(cond, msg, detail) {

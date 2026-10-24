@@ -16,7 +16,10 @@ module.exports=[{
   const old=await S.page.evaluate(()=>window.__ide.activeFile);
   if(!await begin(S,C))return;
   await S.page.locator('#project-create-name').fill('Мой проект');await location(S,parent);
-  await S.page.locator('#project-create-submit').click();await S.page.waitForFunction(p=>window.__ide.projectDir===p,target);
+  await S.page.locator('#project-create-submit').click();
+  await S.page.waitForFunction(({target,main})=>{const i=window.__ide;return i.projectDir===target&&!i.projectSession.loading&&i.projectSession.entry===main&&i.activeFile===main&&document.getElementById('project-entry').value===main;},{target,main:path.join(target,'main.axm')});
+  await S.page.locator('#project-create-dialog').waitFor({state:'detached'});
+  C.eq(await S.page.evaluate(()=>window.__ide.projectSession.target()),path.join(target,'main.axm'),'Завершённый сеанс запускает main.axm');
   C.eq(fs.readFileSync(path.join(target,'main.axm'),'utf8'),'','Создан пустой main.axm');
   C.eq(await S.page.locator('#project-entry').inputValue(),path.join(target,'main.axm'),'main выбран запускным');
   C.eq(await S.page.locator('#project-title').textContent(),'Мой проект','Заголовок показывает имя новой папки');

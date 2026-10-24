@@ -18,6 +18,7 @@ function setup() {
   const other = { path: 'b.axm', documentId: 'b-id', model: { getValue: () => 'PRINT 42' } };
   const markers = new Map([[other.model, ['existing']]]), jumps = [];
   Object.assign(ide, { activeFile: 'b.axm', openFiles: new Map([['a.axm', first], ['b.axm', other]]), settings: { language: 'ru' },
+    projectSession: { loading: false },
     closeDiagnosticPeek() {}, log() {}, focusState() {}, updateDiagnosticFilters() {}, showPanel() {}, switchPanel() {},
     setStatus() {}, jumpTo(...args) { jumps.push(args); }, findMarkerAt: () => null,
     monaco: { MarkerSeverity: { Error: 8, Warning: 4, Hint: 1 }, editor: { setModelMarkers(model, owner, value) { markers.set(model, value); } } } });

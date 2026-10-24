@@ -8,6 +8,12 @@
     has(model,line){return this.models.get(model)?.has(line) || false;}
     consume(model,line){this.models.get(model)?.delete(line);}
     clear(model){this.models.delete(model);}
+    // Замена документа целиком (setValue, восстановление, откат) не является правкой строки:
+    // прежние отметки относятся к другому тексту и структурный переход по ним недопустим.
+    apply(model,event,mark=true){
+      if(event?.isFlush){this.clear(model);return;}
+      this.record(model,event?.changes||[],mark);
+    }
     record(model,changes,mark=true){
       let lines=this.models.get(model)||new Set();
       for(const change of [...changes].sort((a,b)=>b.range.startLineNumber-a.range.startLineNumber || b.range.startColumn-a.range.startColumn)){

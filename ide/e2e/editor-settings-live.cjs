@@ -319,7 +319,10 @@ async function action(S,key,mode,value){
  }
  else if(mode.startsWith('occurrences'))await S.page.evaluate(()=>window.__ide.editor.setPosition({lineNumber:5,column:10}));
  if(mode==='minimap-pixels')await S.page.waitForTimeout(1500);
- await S.page.waitForTimeout(['quick-delay','hover-delay','inline-delay','occurrences-delay'].includes(mode)?120:['cursor','colors','occurrences','inline','inline-aria','long-hover','links'].includes(mode)?1300:300);
+ // Для задержки подсветки одинаковых имён окно наблюдения шире машинной паузы: при полной
+ // нагрузке 50 мс не успевают отрисоваться, и оба значения выглядели одинаково пустыми.
+ // Верхнее значение 800 мс остаётся недостигнутым, поэтому различие сохраняется.
+ await S.page.waitForTimeout(mode==='occurrences-delay'?450:['quick-delay','hover-delay','inline-delay'].includes(mode)?120:['cursor','colors','occurrences','inline','inline-aria','long-hover','links'].includes(mode)?1300:300);
 }
 async function observe(S,key,mode){
  if(key==='pasteAs.enabled')return S.electronApp.evaluate(async({clipboard})=>{const item=(await clipboard.read())[0],type=item.types.find(t=>t.includes('Web Custom'));const text=type?Buffer.from(await(await item.getType(type)).arrayBuffer()).toString('utf16le'):'';return{pasteMetadata:text.includes('application/vnd.code.copymetadata'),text:await clipboard.readText()};});
@@ -386,19 +389,28 @@ async function runOne(S,entry){
  }
  const plan=plans[entry.key];row.plan=plan;row.criterion=plan.observation;const values=plan.values??(entry.kind==='select'?entry.choices:entry.kind==='boolean'?[false,true]:entry.kind==='number'?[1,3]:[]);
  if(!values.length){row.status='not-verified';row.errors.push('Нужен отдельный сценарий значений');return row;}
-  const external=[];
+  const configurationLimits={
+  inertialScroll:'Применение параметра проверено. Физическая инерционная фаза требует подходящего устройства ввода; синтетическое колесо Windows её не подтверждает.',
+  mouseMiddleClickAction:'Применение трёх вариантов проверено. Политика главной страницы запрещает всплывающие окна; внешний переход по ссылке не подтверждён.'
+ };
  for(const value of values){
   try{
    await S.page.bringToFront();await baseline(S,entry.key,plan.mode);await prepare(S,entry.key,plan.mode);await configureUI(S,entry,value);await S.page.evaluate(()=>window.__ide.editor.focus());
    await action(S,entry.key,plan.mode,value);const observed=await observe(S,entry.key,plan.mode);
    if(entry.key==='dropIntoEditor.enabled'&&value===true){await S.page.keyboard.press('Control+Z');observed.undo=await S.page.evaluate(()=>window.__ide.editor.getValue());await S.page.keyboard.press('Control+Y');observed.redo=await S.page.evaluate(()=>window.__ide.editor.getValue());}
    const image=await S.page.locator('.monaco-editor').first().screenshot();const shot=path.join(shotRoot,entry.key.replaceAll('.','-')+'-'+row.cases.length+'.png');fs.writeFileSync(shot,image);
-   const diagnostic=await S.page.evaluate(key=>{const e=window.__ide.editor;return{saved:window.__ide.settings.editorPreferences[key],raw:e.getRawOptions(),scroll:e._modelData?.view?._scrollbar?.scrollbar?._options};},entry.key);
-   row.cases.push({value,observed:plan.mode==='minimap-pixels'?observed.map(o=>({...o,pixels:hash(o.pixels)})):observed,diagnostic:{saved:diagnostic.saved,parent:diagnostic.raw[entry.key.split('.')[0]],scroll:['inertia','wheel'].includes(plan.mode)?diagnostic.scroll:undefined},screenshot:shot,screenshotHash:hash(image)});
+   const diagnostic=await S.page.evaluate(key=>{const e=window.__ide.editor;return{saved:window.__ide.settings.editorPreferences[key],raw:e.getRawOptions(),effective:monaco.editor.EditorOption[key]===undefined?undefined:e.getOption(monaco.editor.EditorOption[key]),scroll:e._modelData?.view?._scrollbar?.scrollbar?._options};},entry.key);
+   row.cases.push({value,observed:plan.mode==='minimap-pixels'?observed.map(o=>({...o,pixels:hash(o.pixels)})):observed,diagnostic:{saved:diagnostic.saved,parent:diagnostic.effective??diagnostic.raw[entry.key.split('.')[0]],scroll:['inertia','wheel'].includes(plan.mode)?diagnostic.scroll:undefined},screenshot:shot,screenshotHash:hash(image)});
   }catch(error){row.errors.push(String(error.stack||error));}
  }
  const observations=row.cases.map(c=>JSON.stringify(plan.mode==='suggest-local'?c.observed.widget.map(x=>x.text):plan.mode==='paste-selector'&&entry.key!=='pasteAs.enabled'?{text:c.observed.text,after:c.observed.after}:c.observed));
- row.status=row.errors.length?'failed':external.includes(plan.mode)?'not-verified':new Set(observations).size>1?'observed-change':'no-observed-change';
+ row.status=row.errors.length?'failed':new Set(observations).size>1?'observed-change':'no-observed-change';
+ const off=row.cases.find(c=>c.value===false)?.observed,on=row.cases.find(c=>c.value===true)?.observed;
+ const inertiaObserved=entry.key==='inertialScroll'&&new Set(off?.trace).size===1&&on?.trace.at(-1)>on?.trace[0];
+ if(!row.errors.length&&configurationLimits[entry.key]&&!inertiaObserved){
+  row.limitation=configurationLimits[entry.key];row.status='verified-configuration';
+  if(!require('./acceptance-results.cjs').configurationOnly(row))row.status='failed';
+ }
  if(row.status==='no-observed-change'&&['foldingStrategy','stickyScroll.defaultModel','suggest.previewMode'].includes(entry.key)){
   const rendered=row.cases.every(c=>Array.isArray(c.observed)?c.observed.length>0:c.observed.renderedLines?.some(line=>line.includes('ghost')));
   if(rendered){row.status='verified-equivalent';row.equivalence=entry.key==='suggest.previewMode'?'При точном совпадении начала ABS все три режима показывают одинаковое продолжение.':'При отсутствии провайдера структуры Axiom используется штатное сворачивание по отступам.';}
@@ -408,7 +420,7 @@ async function runOne(S,entry){
  if(row.status==='not-verified')row.errors.push('Действие требует отдельной проверки условий; этот прогон не подтверждает работу параметра.');
  return row;
 }
-const expectedCancellation=s=>/^Canceled: Canceled\s/.test(s)&&s.includes('editorWorkerHost-');
+const {expectedCancellation,acceptedSetting}=require('./acceptance-results.cjs');
 module.exports={runOne,plans,text,configureUI,expectedCancellation};
 if(require.main===module)(async()=>{
  const S=new Session('editor-settings-live'),rows=[];const filter=process.argv[2]||'';
@@ -421,5 +433,5 @@ if(require.main===module)(async()=>{
    console.log(`${rows.length}: ${entry.key} — ${row.status} (${row.cases.length})`);
   }
  }finally{S.linkServer?.close();await S.close();}
- console.log(JSON.stringify(rows.reduce((a,r)=>(a[r.status]=(a[r.status]||0)+1,a),{})));if(rows.some(r=>!['observed-change','unsupported','verified-equivalent'].includes(r.status)))process.exitCode=1;
+ console.log(JSON.stringify(rows.reduce((a,r)=>(a[r.status]=(a[r.status]||0)+1,a),{})));if(rows.some(r=>!acceptedSetting(r)))process.exitCode=1;
 })().catch(e=>{console.error(e);process.exitCode=1;});

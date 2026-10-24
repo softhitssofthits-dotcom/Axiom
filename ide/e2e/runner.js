@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const { Checks, Session, EVIDENCE, killStrayAxiom, TMP, resolveGuardAxiom } = require('./helpers');
+const { expectedCancellation, summarize } = require('./acceptance-results.cjs');
 
 const rawArgs = process.argv.slice(2);
 let FILTER = '';
@@ -117,17 +118,19 @@ if (FILTER === '--groups') {
       passed: C.passed,
       failures: C.failures,
       notes: C.notes,
+      limitations: C.limitations,
       crashed,
       consoleTail: S.consoleLines.slice(-25),
-      pageErrors: S.pageErrors,
+      pageErrors: S.pageErrors.filter(error => !expectedCancellation(error)),
+      expectedCancellations: S.pageErrors.filter(expectedCancellation),
       mainStderrTail: S.mainStderr.slice(-8).join(''),
       rendererDialogs: S.rendererDialogs,
     };
     results.push(res);
     // Сохраняю после каждого сценария, чтобы длинный прогон не терял результат при прерывании.
     try { fs.mkdirSync(path.dirname(OUT), { recursive: true }); fs.writeFileSync(OUT, JSON.stringify(results, null, 2), 'utf-8'); } catch {}
-    if (C.failures.length) {
-      console.log(`FAIL (${C.failures.length})`);
+    if (C.failures.length || res.pageErrors.length) {
+      console.log(`FAIL (${C.failures.length} assertions, ${res.pageErrors.length} page errors)`);
       for (const f of C.failures) console.log(`    ✗ ${f.msg}${f.detail ? `\n      ${String(f.detail).slice(0, 300)}` : ''}`);
     } else {
       console.log(`ok (${C.passed} checks, ${res.ms}ms)`);
@@ -135,8 +138,11 @@ if (FILTER === '--groups') {
   }
 
   fs.writeFileSync(OUT, JSON.stringify(results, null, 2), 'utf-8');
-  const failed = results.filter((r) => r.failures.length);
-  console.log(`\n==== ${results.length} executed, ${failed.length} failed ====${failed.length ? '' : ' 🎉'}`);
+  const summary = summarize(results);
+  const failed = results.filter((r) => r.failures.length || r.crashed || r.pageErrors.length);
+  fs.writeFileSync(OUT + '.summary.json', JSON.stringify({ ...summary,
+    expectedCancellations: results.reduce((count, row) => count + row.expectedCancellations.length, 0) }, null, 2), 'utf-8');
+  console.log(`\n==== ${results.length} executed, ${failed.length} failed, ${summary.limitations.length} explicit limitations ====${failed.length ? '' : ' 🎉'}`);
   for (const f of failed) console.log(`  FAIL ${f.spec} :: ${f.id}`);
   process.exit(failed.length ? 1 : 0);
 })().catch((e) => {

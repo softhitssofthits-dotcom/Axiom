@@ -55,6 +55,7 @@ function app() {
   let reject;
   const calls = [];
   Object.assign(ide, { activeFile: 'a.axm', openFiles: new Map([['a.axm', {}], ['b.axm', {}]]),
+    projectSession: { loading: false },
     documentServices: { request: () => new Promise((_, fail) => reject = fail) },
     showIdeProblem: (...args) => calls.push(['problem', ...args]), setStatus: text => calls.push(['status', text]),
     switchPanel: value => calls.push(['panel', value]), focusEditor: () => calls.push(['focus']) });

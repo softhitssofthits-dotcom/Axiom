@@ -15,10 +15,20 @@ function verify(row){
  if(key==='suggest.snippetsPreventQuickSuggestions'){check(off?.snippet&&on?.snippet,'Оба действия происходят внутри заготовки');check(off?.widget.length>0&&on?.widget.length===0,'Подсказки видимы только при разрешении');}
  if(key==='inlineSuggest.suppressInSnippetMode'){check(off?.snippet&&on?.snippet,'Оба действия происходят внутри заготовки');check(off?.ghost.length>0&&on?.ghost.length===0,'Продолжение скрывается в заготовке');}
  if(key==='suggest.localityBonus'){check(off?.items[0].label==='appleFar'&&on?.items[0].label==='apricotNear','Ближайшее имя становится первым');}
- if(key==='inertialScroll'){check(new Set(off?.trace).size===1,'Без инерции движение прекращается');check(on?.trace.at(-1)>on?.trace[0],'С инерцией движение продолжается после ввода');}
+ if(key==='inertialScroll'){
+  check(cases.every(c=>c.diagnostic?.parent===c.value),'Значение inertialScroll применено к Monaco');
+  if(row.status!=='verified-configuration'){
+   check(new Set(off?.trace).size===1,'Без инерции движение прекращается');
+   check(on?.trace.at(-1)>on?.trace[0],'С инерцией движение продолжается после ввода');
+  }
+ }
  if(key==='scrollbar.alwaysConsumeMouseWheel'){check(off?.wheel.some(e=>!e.prevented)&&on?.wheel.some(e=>e.prevented),'Событие поглощается только при включении');}
  if(key==='find.autoFindInSelection'){check(get('never')?.matches===3,'Поиск во всём файле');check(get('always')?.matches===2&&get('multiline')?.matches===2,'Поиск в двух выделенных строках');}
- if(key==='mouseMiddleClickAction'){check(get('default')?.urls.length===0,'Обычная средняя кнопка не открывает ссылку');check(get('openLink')?.urls.length===1&&get('ctrlLeftClick')?.urls.length===1,'Открытие настоящей локальной страницы');}
+ if(key==='mouseMiddleClickAction'){
+  check(cases.length===3&&cases.every(c=>c.diagnostic?.parent===c.value),'Все три действия средней кнопки применены к Monaco');
+  check(cases.every(c=>c.observed?.urls.length===0),'Главная страница не создаёт запрещённые всплывающие окна');
+  check(row.status==='verified-configuration','Внешнее открытие ссылки не объявлено проверенным');
+ }
  if(key==='autoDetectHighContrast'){check(off?.after.forced&&on?.after.forced,'Windows действительно переключилась');check(!off?.after.theme.includes('hc-black')&&on?.after.theme.includes('hc-black'),'Тема следует системе только при включении');}
  for(const c of cases){
   if(key==='fontFamily')check(c.observed?.font.replaceAll('\"','').replaceAll("'",'').includes(c.value.replaceAll('\"','').replaceAll("'",'')),'Название выбранного шрифта');

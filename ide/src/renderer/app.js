@@ -395,7 +395,9 @@ class AxiomIDE {
     this.editor.onDidChangeModelContent((event) => {
       this.clearUsageAdvice();
       this.refreshExecutionDiagnostics(this.editor.getModel());
-      this.editedLines.record(this.editor.getModel(),event.changes,!this._autoFormatting);
+      // Замена документа целиком (setValue, восстановление, откат) не является правкой строки:
+      // отметки прежнего текста не должны запускать структурное завершение блока.
+      this.editedLines.apply(this.editor.getModel(),event,!this._autoFormatting);
       if (this.activeFile) this.markDirty(this.activeFile, true);
       if (this.activeFile && !this.openFiles.isDirty(this.activeFile)) this.editedLines.clear(this.editor.getModel());
       this.scheduleLiveCheck();

@@ -36,6 +36,8 @@ TOOLS.md
 /docs/archive/
 /docs/reports/
 /docs/audit/
+# Снимки прогонов Electron создаются локально и не публикуются
+ide/e2e/evidence/shots/
 # Electron IDE local dependencies and copied Monaco runtime
 ide/node_modules/
 ide/src/renderer/vs/

@@ -97,7 +97,7 @@ add('scrollBeyondLastColumn',[0,30],'scroll-right','Горизонтальный
 add('revealHorizontalRightPadding',[0,40],'reveal-right','Запас справа при переходе к далёкому курсору');
 add('scrollOnMiddleClick',[false,true],'middle-scroll','Автопрокрутка после средней кнопки мыши');
 add('scrollPredominantAxis',[false,true],'wheel-diagonal','Направление настоящего диагонального события колеса');
-add('inertialScroll',[false,true],'inertia','Инерционная фаза после колеса');
+add('inertialScroll',[false,true],'inertia','Применение параметра; инерционная фаза отдельно зависит от устройства ввода');
 add('mouseWheelScrollSensitivity',[1,3],'wheel','Расстояние после одинакового колеса');
 add('fastScrollSensitivity',[2,8],'fast-wheel','Расстояние после Alt и колеса');
 add('mouseWheelZoom',[false,true],'zoom','Размер отображаемого текста после Ctrl и колеса');
@@ -135,7 +135,7 @@ add('smartSelect.selectLeadingAndTrailingWhitespace smartSelect.selectSubwords',
 add('wordSeparators',[' .,;',' .,;_'],'word-select','Границы слова при двойном щелчке');
 add('wordSegmenterLocales',[[],['ja']],'word-select','Границы слова в японском тексте');
 add('mouseStyle',null,'mouse-css','Форма указателя над текстом');
-add('mouseMiddleClickAction',null,'middle','Результат средней кнопки над текстом');
+add('mouseMiddleClickAction',null,'middle','Применение действия средней кнопки и запрет всплывающих окон; внешний переход отдельно не подтверждается');
 add('folding',[false,true],'fold','Результат штатной команды сворачивания');
 add('foldingStrategy',null,'fold','Сворачивание штатных блоков Axiom');
 add('foldingHighlight',[false,true],'fold','Фон свёрнутого блока');
