@@ -194,6 +194,7 @@ const definitions={
  FALSE:['Логический литерал ложного значения BOOLEAN.','boolean.html#values'],TRUE:['Логический литерал истинного значения BOOLEAN.','boolean.html#values'],
  IS:['Сравнение в условии CASE IS.','select-case.html'],KEY:['Обозначение клавиатурного события в ON KEY.','on-key.html'],MOUSE:['Обозначение события мыши в ON MOUSE.','on-mouse.html'],
  LOOP:['Завершает блок DO; может содержать WHILE или UNTIL.','do-loop.html'],NEXT:['Завершает тело FOR и переходит к следующей итерации.','for.html'],
+ EACH:['Вводит обход массива в заголовке FOR EACH. Зарезервировано: как имя не используется.','for-each.html'],IN:['Отделяет переменную цикла от массива-источника в заголовке FOR EACH. Зарезервировано: как имя не используется.','for-each.html'],
  OFF:['Отключает регистрацию обработчика ON KEY или ON MOUSE; в SMOOTH OFF отключает сглаживание готового кадра.','keyboard-mouse-events.html'],
  ON:['Начинает регистрацию событий ON KEY/ON MOUSE, после запятой возобновляет зарегистрированный обработчик; в SMOOTH ON включает сглаживание готового кадра.','keyboard-mouse-events.html'],
  PRESERVE:['Сохранение пересечения прежних и новых границ при REDIM.','redim.html'],SELECT:['Начинает оператор SELECT CASE.','select-case.html'],

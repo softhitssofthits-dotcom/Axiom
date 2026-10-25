@@ -1,12 +1,5 @@
 {
-  "language": "0.6.0",
-  "compiler": "0.7.1",
-  "ide": "0.11.1",
-  "compilerOnlyChange": {
-    "version": "0.7.1",
-    "reason": "BlockLineClassifier распознаёт заголовок FOR EACH как открытие блока для отступов и автозакрытия NEXT в редакторе; грамматика, связывание и выполнение программы не меняются",
-    "paths": [
-      "src/Axiom.Core/BlockLineClassifier.cs"
-    ]
-  }
+  "language": "0.7.0",
+  "compiler": "0.8.0",
+  "ide": "0.12.0"
 }

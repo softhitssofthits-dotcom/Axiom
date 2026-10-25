@@ -47,21 +47,17 @@ test('Скобки в тексте обычной и интерполирова�
   }
 });
 
-test('EACH и IN выделяются как ключевые слова только в заголовке FOR EACH', () => {
+test('EACH и IN входят в общий словарь ключевых слов', () => {
   const {definition} = language();
-  // Monarch проверяет правила с текущей позиции, поэтому контекст задаётся
-  // состоянием afterFor/afterEach, а не lookbehind.
-  assert.ok(definition.tokenizer.afterFor, 'состояние afterFor объявлено');
-  assert.ok(definition.tokenizer.afterEach, 'состояние afterEach объявлено');
-  const eachRule = definition.tokenizer.afterFor.find(item => String(item[0].source).includes('EACH'));
-  assert.ok(eachRule, 'EACH распознаётся после FOR');
-  assert.equal(typeof eachRule[1] === 'string' ? eachRule[1] : eachRule[1].token, 'keyword');
-  const inRule = definition.tokenizer.afterEach.find(item => String(item[0].source).includes('IN'));
-  assert.ok(inRule, 'IN распознаётся в заголовке');
-  assert.equal(typeof inRule[1] === 'string' ? inRule[1] : inRule[1].token, 'keyword');
-  // В общем словаре EACH и IN не значатся ключевыми: вне заголовка это имена.
-  const rootEach = definition.tokenizer.root.find(item => String(item[0].source).includes('EACH'));
-  assert.equal(rootEach, undefined);
+  // EACH и IN — зарезервированные слова языка, поэтому они в общем словаре,
+  // а не в отдельном контекстном состоянии.
+  assert.ok(definition.keywords.includes('EACH'), 'EACH в словаре ключевых слов');
+  assert.ok(definition.keywords.includes('IN'), 'IN в словаре ключевых слов');
+  assert.equal(definition.tokenizer.afterFor, undefined);
+  assert.equal(definition.tokenizer.afterEach, undefined);
+  const rule = definition.tokenizer.root.find(item => item[1] === undefined || (item[1] && item[1].cases));
+  assert.ok(rule, 'правило с категориями слов на месте');
+  for (const word of ['EACH', 'IN', 'FOR']) assert.ok(definition.keywords.includes(word), word + ' зарезервировано');
 });
 
 test('Литерал массива раскрашивается теми же скобками, что и обращение', () => {

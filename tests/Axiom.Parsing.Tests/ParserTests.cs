@@ -2329,6 +2329,16 @@ IF TRUE THEN
         ParseProgram("DIM AS INTEGER", out var diagnostics);
 
         var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB1002");
+        // Ключевое слово не может быть именем, и сообщение называет причину.
+        Assert.Equal("Ключевое слово 'AS' нельзя использовать как имя.", diagnostic.Message);
+    }
+
+    [Fact]
+    public void Parse_ReportsExpectedIdentifierForNonKeywordToken()
+    {
+        ParseProgram("DIM 5 AS INTEGER", out var diagnostics);
+
+        var diagnostic = Assert.Single(diagnostics, static d => d.Code == "MB1002");
         Assert.Equal("Ожидался идентификатор.", diagnostic.Message);
     }
 

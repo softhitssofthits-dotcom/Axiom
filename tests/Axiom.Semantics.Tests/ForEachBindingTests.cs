@@ -73,10 +73,45 @@ public sealed class ForEachBindingTests
         Assert.Contains(diagnostics, diagnostic => diagnostic.Code == DiagnosticCodes.UnknownName);
     }
 
-    [Fact]
-    public void EachAndInRemainOrdinaryNamesOutsideHeader()
+    [Theory]
+    [InlineData("DIM each AS INTEGER = 3")]
+    [InlineData("DIM in AS INTEGER = 3")]
+    [InlineData("CONST each AS INTEGER = 3")]
+    [InlineData("SUB each()\nEND SUB")]
+    [InlineData("FUNCTION in() AS INTEGER\nRETURN 1\nEND FUNCTION")]
+    [InlineData("TYPE each\nValue AS INTEGER\nEND TYPE")]
+    public void ReservedWordsCannotBeUsedAsNames(string source)
     {
-        var program = Bind("DIM each AS INTEGER = 3\nDIM in2 AS INTEGER = each\nPRINT in2", out var diagnostics);
+        var diagnostics = AllDiagnostics(source);
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == DiagnosticCodes.ExpectedIdentifier);
+    }
+
+    [Fact]
+    public void ReservedWordInExpressionPositionIsRejected()
+    {
+        // В позиции выражения ключевое слово не является ни именем, ни значением.
+        var diagnostics = AllDiagnostics("DIM values[1 TO 2] AS INTEGER\nvalues[each] = 1");
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == DiagnosticCodes.ExpectedExpression);
+    }
+
+    [Fact]
+    public void ReservedWordReportsSinglePreciseDiagnostic()
+    {
+        var diagnostics = AllDiagnostics("DIM each AS INTEGER = 3");
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal(DiagnosticCodes.ExpectedIdentifier, diagnostic.Code);
+        Assert.Contains("'each'", diagnostic.Message);
+        Assert.Contains("нельзя использовать как имя", diagnostic.Message);
+    }
+
+    [Fact]
+    public void OrdinaryNamesContainingReservedWordsStillWork()
+    {
+        // Зарезервированы ровно слова EACH и IN, а не любые имена с этими буквами.
+        var program = Bind("DIM in2 AS INTEGER = 3\nDIM eachItem AS INTEGER = in2\nPRINT eachItem", out var diagnostics);
 
         Assert.Empty(diagnostics);
     }
@@ -150,6 +185,21 @@ public sealed class ForEachBindingTests
     {
         _ = Binder.Bind(Parse(source), out var diagnostics, checkGraphicsModes: false);
         return diagnostics.ToList();
+    }
+
+    // Для случаев с ожидаемой ошибкой: хелпер Parse требует чистого разбора,
+    // поэтому здесь возвращаются ошибки разбора, а связывание выполняется только
+    // на непротиворечивом дереве — так же поступает конвейер компиляции.
+    private static IReadOnlyList<Diagnostic> AllDiagnostics(string source)
+    {
+        var syntax = Parser.Parse(source, out var parsing, document: null);
+        if (parsing.Count > 0)
+        {
+            return parsing.ToList();
+        }
+
+        _ = Binder.Bind(syntax, out var binding, checkGraphicsModes: false);
+        return binding.ToList();
     }
 
     private static ProgramSyntax Parse(string source)

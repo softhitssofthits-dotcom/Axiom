@@ -26,7 +26,7 @@
     "src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.cs",
     "src/Axiom.Syntax/SyntaxKind.cs"
   ],
-  "sourceFingerprint": "4d5131997eb032b5143feae7dc6f7b78ef530f5f300871ec60c22493fb9dd155",
+  "sourceFingerprint": "c2ba98cf77349d2e226397160701834a1d1d0a18c44fc7c4d8f797aca2f66276",
   "functions": [
     {
       "name": "ABS",
@@ -8514,6 +8514,7 @@
     "DRAWTILE",
     "DRAWTILELAYER",
     "DRAWTILEMAP",
+    "EACH",
     "ELSE",
     "ELSEIF",
     "END",
@@ -8531,6 +8532,7 @@
     "IF",
     "IMP",
     "IMPORT",
+    "IN",
     "INPUT",
     "IS",
     "KEY",

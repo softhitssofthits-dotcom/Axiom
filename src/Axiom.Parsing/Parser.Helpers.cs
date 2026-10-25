@@ -39,12 +39,33 @@ public sealed partial class Parser
             return NextToken();
         }
 
+        // Ключевое слово не может быть именем: сообщение называет причину,
+        // иначе читатель ищет опечатку там, где её нет.
+        if (IsKeywordKind(Current.Kind))
+        {
+            Diagnostics.Report(
+                DiagnosticCodes.ExpectedIdentifier,
+                $"Ключевое слово '{Current.Text}' нельзя использовать как имя.",
+                CreateDiagnosticLocation(Current.Location));
+            // Токен забирается: иначе разбор объявления спотыкался бы об то же
+            // слово и выдавал каскад лишних диагностик.
+            NextToken();
+            return CreateMissingToken(SyntaxKind.IdentifierToken);
+        }
+
         Diagnostics.Report(
             DiagnosticCodes.ExpectedIdentifier,
             "Ожидался идентификатор.",
             CreateDiagnosticLocation(Current.Location));
 
         return CreateMissingToken(SyntaxKind.IdentifierToken);
+    }
+
+    // Ключевые слова языка лежат в общем диапазоне SyntaxKind между AndKeyword
+    // и последним именованным ключевым словом.
+    private static bool IsKeywordKind(SyntaxKind kind)
+    {
+        return kind >= SyntaxKind.AndKeyword && kind <= SyntaxKind.XorKeyword;
     }
 
     private SyntaxToken MatchFieldIdentifier()
@@ -338,6 +359,7 @@ public sealed partial class Parser
             TokenKind.DrawTileLayerKeyword => SyntaxKind.DrawTileLayerKeyword,
             TokenKind.DrawTilemapKeyword => SyntaxKind.DrawTilemapKeyword,
             TokenKind.DrawTextKeyword => SyntaxKind.DrawTextKeyword,
+            TokenKind.EachKeyword => SyntaxKind.EachKeyword,
             TokenKind.ElseKeyword => SyntaxKind.ElseKeyword,
             TokenKind.ElseIfKeyword => SyntaxKind.ElseIfKeyword,
             TokenKind.EndKeyword => SyntaxKind.EndKeyword,
@@ -355,6 +377,7 @@ public sealed partial class Parser
             TokenKind.IfKeyword => SyntaxKind.IfKeyword,
             TokenKind.ImageKeyword => SyntaxKind.ImageKeyword,
             TokenKind.ImpKeyword => SyntaxKind.ImpKeyword,
+            TokenKind.InKeyword => SyntaxKind.InKeyword,
             TokenKind.InputKeyword => SyntaxKind.InputKeyword,
             TokenKind.IntegerKeyword => SyntaxKind.IntegerKeyword,
             TokenKind.IsKeyword => SyntaxKind.IsKeyword,

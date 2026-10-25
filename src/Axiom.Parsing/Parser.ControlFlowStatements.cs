@@ -108,9 +108,9 @@ public sealed partial class Parser
     {
         var forKeyword = Match(SyntaxKind.ForKeyword, "FOR");
 
-        // EACH — контекстное слово: только сразу после FOR оно открывает обход
-        // массива. Вне заголовка EACH остаётся обычным именем.
-        if (IsContextualKeyword("EACH"))
+        // EACH — зарезервированное слово языка. После FOR оно открывает обход
+        // массива, а в любом другом месте это ошибка использования ключевого слова.
+        if (Current.Kind == SyntaxKind.EachKeyword)
         {
             return ParseForEachStatement(forKeyword);
         }
@@ -187,10 +187,9 @@ public sealed partial class Parser
             typeClause = ParseTypeClause();
         }
 
-        // IN — тоже контекстное слово заголовка. Отдельное сообщение точнее
-        // общего «ожидался идентификатор»: пропуск IN ломает весь заголовок.
+        // IN — зарезервированное слово языка; в заголовке оно обязательно.
         SyntaxToken inKeyword;
-        if (IsContextualKeyword("IN"))
+        if (Current.Kind == SyntaxKind.InKeyword)
         {
             inKeyword = NextToken();
         }
@@ -200,7 +199,7 @@ public sealed partial class Parser
                 DiagnosticCodes.ExpectedIdentifier,
                 "Ожидалось слово IN после переменной цикла.",
                 CreateDiagnosticLocation(Current.Location));
-            inKeyword = CreateMissingToken(SyntaxKind.IdentifierToken);
+            inKeyword = CreateMissingToken(SyntaxKind.InKeyword);
         }
 
         var sourceExpression = ParseExpression();
@@ -238,12 +237,6 @@ public sealed partial class Parser
             statements,
             nextKeyword,
             nextCounterIdentifier);
-    }
-
-    private bool IsContextualKeyword(string word)
-    {
-        return Current.Kind == SyntaxKind.IdentifierToken
-            && string.Equals(Current.Text, word, StringComparison.OrdinalIgnoreCase);
     }
 
     private SelectCaseStatementSyntax ParseSelectCaseStatement()

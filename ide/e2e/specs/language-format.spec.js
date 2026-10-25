@@ -106,10 +106,21 @@ module.exports = [
     await open(S, source, 'for-each-editor');
     await S.page.evaluate(() => window.__ide.setLanguage('ru'));
 
-    // 1. EACH и IN окрашены той же категорией, что FOR, а не как переменная.
+    // 1. EACH и IN зарезервированы и окрашены той же категорией, что FOR.
     const tokens = await S.page.evaluate(() => window.__ide.monaco.editor.tokenize('FOR EACH score IN scores[]', 'axiom'));
     const kinds = tokens[0].filter(t => /keyword/.test(t.type)).map(t => t.type);
     C.ok(kinds.length >= 3, 'FOR, EACH и IN получают категорию ключевого слова');
+
+    // Ключевое слово нельзя объявить как переменную.
+    const keywordAsName = await S.page.evaluate(async () => {
+      const i = window.__ide;
+      i.editor.getModel().setValue('DIM each AS INTEGER = 3');
+      await i.check(false);
+      return (i._lastDiagnostics || []).map(d => d.code + ' ' + (d.message || ''));
+    });
+    C.ok(keywordAsName.some(item => /MB1002/.test(item) && /нельзя использовать как имя/.test(item)),
+      'DIM each отклоняется как ключевое слово');
+    await S.page.evaluate(value => window.__ide.editor.getModel().setValue(value), source);
 
     // 2. Enter после заголовка достраивает NEXT и ставит отступ в теле.
     await S.page.evaluate(() => { const e = window.__ide.editor; e.setPosition({lineNumber:4, column:21}); e.focus(); });

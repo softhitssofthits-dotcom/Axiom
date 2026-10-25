@@ -7350,6 +7350,19 @@ window.AxiomSearchIndex = [
     ]
   },
   {
+    "title": "EACH",
+    "href": "keyword-reference.html#kw-each",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка EACH.",
+    "keywords": [
+      "EACH"
+    ],
+    "aliases": [
+      "EACH"
+    ]
+  },
+  {
     "title": "ELSE",
     "href": "keyword-reference.html#kw-else",
     "kind": "Ключевое слово",
@@ -7451,6 +7464,19 @@ window.AxiomSearchIndex = [
     ],
     "aliases": [
       "IMP"
+    ]
+  },
+  {
+    "title": "IN",
+    "href": "keyword-reference.html#kw-in",
+    "kind": "Ключевое слово",
+    "category": "Ключевые слова",
+    "description": "Часть конструкции языка IN.",
+    "keywords": [
+      "IN"
+    ],
+    "aliases": [
+      "IN"
     ]
   },
   {

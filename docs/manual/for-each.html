@@ -18,9 +18,9 @@ NEXT fruit</code></pre><p>Программа выводит:</p><pre><code>яб�
 банан
 апельсин</code></pre></section>
 
-<section class="article-section" id="contextual"><h2>Слова EACH и IN</h2><p>`EACH` и `IN` действуют как части заголовка только сразу после `FOR`. Вне заголовка это обычные имена, поэтому переменные с такими названиями остаются допустимыми:</p><pre><code class="language-axiom">DIM each AS INTEGER = 3
-DIM other AS INTEGER = each
-PRINT other</code></pre><p>Числовой `FOR` с `=` и `TO` продолжает работать без изменений: наличие `EACH` в языке не меняет его разбор.</p></section>
+<section class="article-section" id="reserved"><h2>Слова EACH и IN зарезервированы</h2><p>`EACH` и `IN` — полноправные ключевые слова языка, как `FOR` и `NEXT`. Их нельзя использовать как имена переменных, констант, процедур, функций, типов или полей: такая попытка отклоняется при разборе с сообщением, что ключевое слово нельзя использовать как имя.</p><pre><code class="language-axiom">DIM each AS INTEGER = 3</code></pre><p>Эта программа не выполняется: `each` занято языком. Правило распространяется на любое место, где ожидается имя, включая позицию выражения.</p><p>Зарезервированы ровно эти два слова, а не любые имена, содержащие те же буквы. Имена вида `in2`, `eachItem` или `inside` остаются допустимыми, потому что совпадают с ключевым словом не целиком:</p><pre><code class="language-axiom">DIM in2 AS INTEGER = 3
+DIM eachItem AS INTEGER = in2
+PRINT eachItem</code></pre><p>Программа выводит <code>3</code>. Числовой `FOR` с `=` и `TO` продолжает работать без изменений.</p></section>
 
 <section class="article-section" id="variable"><h2>Переменная цикла и тип</h2><p>Переменная цикла создаётся самим циклом и доступна только внутри тела. Если тип не указан, он берётся из типа элементов массива:</p><pre><code class="language-axiom">DIM values[1 TO 3] AS INTEGER
 values[1] = 10
@@ -68,7 +68,7 @@ FOR EACH value IN values[]
     PRINT value
 NEXT</code></pre><p>Программа выводит <code>1</code>, <code>2</code> и <code>4</code>: тройка пропущена, пятёрка завершила обход.</p></section>
 
-<section class="article-section" id="diagnostics"><h2>Диагностика</h2><p>MB2062 сообщает, что источник не является массивом. MB2063 сообщает о недопустимом типе элемента или о сужающем преобразовании в `AS`. MB2048 сообщает, что имя после `NEXT` не совпадает с именем переменной цикла. MB3005 возникает при обходе невыделенного массива. Повторное использование занятого имени даёт MB2016, как и у числового `FOR`.</p></section>
+<section class="article-section" id="diagnostics"><h2>Диагностика</h2><p>MB1002 сообщает, что ключевое слово использовано как имя. MB2062 сообщает, что источник не является массивом. MB2063 сообщает о недопустимом типе элемента или о сужающем преобразовании в `AS`. MB2048 сообщает, что имя после `NEXT` не совпадает с именем переменной цикла. MB3005 возникает при обходе невыделенного массива. Повторное использование занятого имени даёт MB2016, как и у числового `FOR`.</p></section>
 
 <section class="article-section" id="examples"><h2>Запускаемые примеры</h2><p><a href="../../samples/control-flow/for-each/each_byval.axm">each_byval.axm</a> — обход значений и копирование. <a href="../../samples/control-flow/for-each/each_multidimensional.axm">each_multidimensional.axm</a> — многомерный порядок и отрицательные границы. <a href="../../samples/control-flow/for-each/each_exit_continue.axm">each_exit_continue.axm</a> — `EXIT FOR` и `CONTINUE FOR`. <a href="../../samples/control-flow/for-each/each_unallocated_error.axm">each_unallocated_error.axm</a> — MB3005 для невыделенного массива.</p></section>
 
