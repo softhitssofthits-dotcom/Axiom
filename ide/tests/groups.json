@@ -7,6 +7,7 @@
     "desktop-host.test.cjs",
     "diagnostic-infrastructure.test.cjs",
     "diagnostic-language.test.cjs",
+    "keyword-hints.test.cjs",
     "document-delivery.test.cjs",
     "document-save.test.cjs",
     "document-services.test.cjs",
@@ -75,6 +76,7 @@
   "ide-unit-renderer": [
     "studio-menus.test.cjs",
     "diagnostic-language.test.cjs",
+    "keyword-hints.test.cjs",
     "editor-preferences.test.cjs",
     "event-log-dialog.test.cjs",
     "hex-tokenization.test.cjs",

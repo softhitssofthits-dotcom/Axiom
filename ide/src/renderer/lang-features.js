@@ -504,12 +504,20 @@ const LangFeatures = (() => {
           return { range, contents: [{ value: '**' + name + '** — ' + I18N.t('hover.userType') + '\n\n' + I18N.t('hover.fields') + ': ' + fields }] };
         }
 
-        // 6. Registry type names and keywords.
+        // 6. Registry type names and keywords. У ключевого слова подсказка
+        // объясняет, что оно делает в языке; EACH и IN описаны отдельно,
+        // потому что они контекстные и в реестр ключевых слов не входят.
         if (meta && Array.isArray(meta.typeNames) && meta.typeNames.some((t) => t.toUpperCase() === name.toUpperCase())) {
           return { range, contents: [{ value: '`' + name + '` — ' + I18N.t('hover.type') }] };
         }
-        if (meta && Array.isArray(meta.keywords) && meta.keywords.some((k) => k.toUpperCase() === name.toUpperCase())) {
-          return { range, contents: [{ value: '`' + name + '` — ' + I18N.t('hover.keyword') }] };
+        const isRegistryKeyword = meta && Array.isArray(meta.keywords)
+          && meta.keywords.some((k) => k.toUpperCase() === name.toUpperCase());
+        const keywordHint = window.AxiomKeywordHints?.hint?.(name, I18N.current || 'ru');
+        if (isRegistryKeyword || keywordHint) {
+          const value = keywordHint
+            ? '`' + name + '` — ' + I18N.t('hover.keyword') + '\n\n' + keywordHint
+            : '`' + name + '` — ' + I18N.t('hover.keyword');
+          return { range, contents: [{ value }] };
         }
 
         return null;

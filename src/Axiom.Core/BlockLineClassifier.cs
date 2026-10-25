@@ -65,7 +65,10 @@ public static class BlockLineClassifier
             return new BlockLineInfo(indentation, OpeningKind: BlockOpeningKind.If, IncreasesIndentNextLine: true);
         }
 
-        if (StartsWithWord(upper, "FOR") && ContainsWord(upper, "TO"))
+        // Числовой FOR опознаётся по TO, обход массива — по паре EACH … IN.
+        // Оба открывают блок FOR и закрываются словом NEXT.
+        if (StartsWithWord(upper, "FOR")
+            && (ContainsWord(upper, "TO") || (ContainsWord(upper, "EACH") && ContainsWord(upper, "IN"))))
         {
             return new BlockLineInfo(indentation, OpeningKind: BlockOpeningKind.For, IncreasesIndentNextLine: true);
         }

@@ -101,6 +101,41 @@ module.exports = [
       C.eq(await S.page.evaluate(() => window.__ide.execution.outputText.replace(/\r/g, '').trim()), 'банан\n2', 'Литерал выполняется и нумеруется с 1, ' + style);
     }
   } },
+  { id: 'language-for-each-editor', name: 'FOR EACH: цвет EACH как у FOR, автозакрытие NEXT и подсказка при наведении', async fn({ S, C }) {
+    const source = 'DIM scores[1 TO 2] AS INTEGER\nscores[1] = 10\nscores[2] = 20\nFOR EACH score IN scores[]\n';
+    await open(S, source, 'for-each-editor');
+    await S.page.evaluate(() => window.__ide.setLanguage('ru'));
+
+    // 1. EACH и IN окрашены той же категорией, что FOR, а не как переменная.
+    const tokens = await S.page.evaluate(() => window.__ide.monaco.editor.tokenize('FOR EACH score IN scores[]', 'axiom'));
+    const kinds = tokens[0].filter(t => /keyword/.test(t.type)).map(t => t.type);
+    C.ok(kinds.length >= 3, 'FOR, EACH и IN получают категорию ключевого слова');
+
+    // 2. Enter после заголовка достраивает NEXT и ставит отступ в теле.
+    await S.page.evaluate(() => { const e = window.__ide.editor; e.setPosition({lineNumber:4, column:21}); e.focus(); });
+    await S.page.keyboard.press('Enter');
+    await S.page.waitForFunction(() => /^\s*NEXT/.test(window.__ide.editor.getModel().getLineContent(6) || ''));
+    const line6 = await S.page.evaluate(() => window.__ide.editor.getModel().getLineContent(6));
+    C.ok(/^\s*NEXT/.test(line6), 'Цикл закрыт словом NEXT');
+    const bodyIndent = await S.page.evaluate(() => /^[ \t]*/.exec(window.__ide.editor.getModel().getLineContent(5))[0].length);
+    C.ok(bodyIndent > 0, 'Тело цикла получило отступ');
+
+    // 3. Подсказка при наведении на EACH объясняет слово в языке.
+    const hintRu = await S.page.evaluate(async () => {
+      const result = await window.LangFeatures._hoverProvider.provideHover(
+        window.__ide.editor.getModel(), { lineNumber: 4, column: 6 });
+      return result?.contents.map(item => item.value).join('\n') || '';
+    });
+    C.ok(hintRu.includes('FOR EACH'), 'Русская подсказка EACH объясняет роль слова');
+    await S.page.evaluate(() => window.__ide.setLanguage('en'));
+    const hintEn = await S.page.evaluate(async () => {
+      const result = await window.LangFeatures._hoverProvider.provideHover(
+        window.__ide.editor.getModel(), { lineNumber: 4, column: 6 });
+      return result?.contents.map(item => item.value).join('\n') || '';
+    });
+    C.ok(hintEn.includes('FOR EACH') && !/[А-Яа-я]/.test(hintEn), 'Английская подсказка EACH без русского текста');
+    await S.page.evaluate(() => window.__ide.setLanguage('ru'));
+  } },
   { id: 'format-smooth-two-styles', name: 'SMOOTH форматируется через меню и Enter в Classic и Modern', async fn({ S, C }) {
     const source = 'smooth on\nsMoOtH oFf\nprint "smooth on"\n\' smooth off\n';
     await open(S, source, 'format-smooth');

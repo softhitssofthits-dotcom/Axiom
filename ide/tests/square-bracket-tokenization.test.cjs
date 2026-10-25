@@ -47,17 +47,21 @@ test('Скобки в тексте обычной и интерполирова�
   }
 });
 
-test('EACH и IN выделяются только в заголовке FOR EACH', () => {
+test('EACH и IN выделяются как ключевые слова только в заголовке FOR EACH', () => {
   const {definition} = language();
-  const rules = definition.tokenizer.root.filter(item => item[0] && String(item[0].source).includes('EACH'));
-  assert.equal(rules.length, 2);
-  const [eachRule, inRule] = rules;
-  assert.ok(new RegExp(eachRule[0].source, 'i').test('FOR EACH fruit IN fruits[]'));
-  assert.ok(new RegExp(inRule[0].source, 'i').test('FOR EACH fruit IN fruits[]'));
-  // Вне заголовка это обычные имена, поэтому правила не срабатывают.
-  assert.ok(!new RegExp(eachRule[0].source, 'i').test('DIM each AS INTEGER'));
-  assert.ok(!new RegExp(inRule[0].source, 'i').test('DIM each AS INTEGER'));
-  assert.ok(!new RegExp(eachRule[0].source, 'i').test('FOR i = 1 TO 3'));
+  // Monarch проверяет правила с текущей позиции, поэтому контекст задаётся
+  // состоянием afterFor/afterEach, а не lookbehind.
+  assert.ok(definition.tokenizer.afterFor, 'состояние afterFor объявлено');
+  assert.ok(definition.tokenizer.afterEach, 'состояние afterEach объявлено');
+  const eachRule = definition.tokenizer.afterFor.find(item => String(item[0].source).includes('EACH'));
+  assert.ok(eachRule, 'EACH распознаётся после FOR');
+  assert.equal(typeof eachRule[1] === 'string' ? eachRule[1] : eachRule[1].token, 'keyword');
+  const inRule = definition.tokenizer.afterEach.find(item => String(item[0].source).includes('IN'));
+  assert.ok(inRule, 'IN распознаётся в заголовке');
+  assert.equal(typeof inRule[1] === 'string' ? inRule[1] : inRule[1].token, 'keyword');
+  // В общем словаре EACH и IN не значатся ключевыми: вне заголовка это имена.
+  const rootEach = definition.tokenizer.root.find(item => String(item[0].source).includes('EACH'));
+  assert.equal(rootEach, undefined);
 });
 
 test('Литерал массива раскрашивается теми же скобками, что и обращение', () => {

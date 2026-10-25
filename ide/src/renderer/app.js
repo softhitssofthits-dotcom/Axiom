@@ -232,11 +232,11 @@ class AxiomIDE {
     );
 
     const codeTokens = [
-      // EACH и IN — контекстные слова: они выделяются как ключевые только
-      // сразу после FOR. Вне заголовка это обычные имена, поэтому в общий
-      // список keywords они не входят.
-      [/(?<=\bFOR\s+)EACH\b/i, 'keyword'],
-      [/(?<=\bFOR\s+EACH\b.*?)\bIN\b/i, 'keyword'],
+      // EACH и IN — контекстные слова заголовка FOR EACH, а не ключевые слова
+      // языка: вне заголовка это обычные имена. Monarch проверяет правила с
+      // текущей позиции, поэтому lookbehind здесь не работает — состояние
+      // переключается явно, как только встречено слово FOR.
+      [/\bFOR\b/i, { token: 'keyword', next: '@afterFor' }],
       [/&H[0-9a-fA-F]+(?![a-zA-Z0-9_])/, 'number.hex'],
       [/&B[01]+(?![a-zA-Z0-9_])/, 'number.binary'],
       [/&[HB][a-zA-Z0-9_]*/, 'invalid'],
@@ -276,6 +276,25 @@ class AxiomIDE {
           [/"(?:""|[^"])*$/, 'string'],
           [/"/, { token: 'string.quote', bracket: '@open', next: '@string' }],
           ...codeTokens,
+        ],
+        // Состояние сразу после FOR: EACH здесь — ключевое слово заголовка.
+        // Любой другой токен возвращает в root, поэтому вне заголовка EACH и IN
+        // остаются обычными именами.
+        afterFor: [
+          [/\s+/, 'white'],
+          [/\bEACH\b/i, { token: 'keyword', next: '@afterEach' }],
+          [/./, { token: '@rematch', next: '@pop' }],
+        ],
+        // Между EACH и IN: модификатор, имя переменной и необязательный тип.
+        afterEach: [
+          [/\s+/, 'white'],
+          [/\b(?:BYVAL|BYREF)\b/i, 'keyword'],
+          [/\bAS\b/i, 'keyword'],
+          [/\bIN\b/i, { token: 'keyword', next: '@pop' }],
+          [/[A-Za-z_]\w*/, 'identifier'],
+          [/[.,[\]]/, 'delimiter'],
+          [/\s+/, 'white'],
+          [/./, { token: '@rematch', next: '@pop' }],
         ],
         string: [
           [/""/, 'string.escape'],

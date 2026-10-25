@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 566,
+  "count": 567,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -2146,6 +2146,11 @@
       "id": "language-array-literals",
       "spec": "language-format.spec.js",
       "name": "Литерал массива: форматирование, подсветка, проверка и запуск в двух стилях"
+    },
+    {
+      "id": "language-for-each-editor",
+      "spec": "language-format.spec.js",
+      "name": "FOR EACH: цвет EACH как у FOR, автозакрытие NEXT и подсказка при наведении"
     },
     {
       "id": "format-smooth-two-styles",
