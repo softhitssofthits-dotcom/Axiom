@@ -23,7 +23,7 @@
 
 Исходники хранятся в файлах `.axm`. Компилятор переводит программу в байт-код, который исполняет виртуальная машина Axiom.
 
-[![Axiom IDE: записи TYPE, сортировка массива и результат программы](docs/assets/readme/axiom-ide.png)](docs/assets/readme/axiom-ide.png)
+[![Axiom IDE: записи TYPE, сортировка массива и результат программы](assets/readme/axiom-ide.png)](assets/readme/axiom-ide.png)
 
 *Настоящий снимок Axiom IDE: программа сортирует корзину фруктов по цене. [Открыть этот пример](samples/smoke/readme/fruit_basket.axm).*
 
@@ -80,7 +80,7 @@ PRINT $"Всего фруктов: {ARRAYLENGTH(fruits[])}"
 
 Остановитесь на нужной строке и проследите выполнение программы по шагам. Можно зайти внутрь функции, выполнить вызов целиком, вернуться к вызывающему коду или сделать шаг назад. Текущая строка выделяется в редакторе; при обходе массива строка состояния показывает текущий элемент.
 
-[![Отладка Axiom: точка останова, текущая строка и элемент массива](docs/assets/readme/axiom-debugger.png)](docs/assets/readme/axiom-debugger.png)
+[![Отладка Axiom: точка останова, текущая строка и элемент массива](assets/readme/axiom-debugger.png)](assets/readme/axiom-debugger.png)
 
 *Остановка перед выводом очередного фрукта: видны точка останова, текущая инструкция и команды пошагового выполнения.*
 
@@ -100,7 +100,7 @@ PRINT $"Всего фруктов: {ARRAYLENGTH(fruits[])}"
 <details>
 <summary><strong>Посмотреть ту же программу в стиле Modern</strong></summary>
 
-![Axiom IDE: та же программа с Modern-оформлением](docs/assets/readme/axiom-modern.png)
+![Axiom IDE: та же программа с Modern-оформлением](assets/readme/axiom-modern.png)
 
 </details>
 
@@ -131,7 +131,6 @@ cd Axiom
 
 В IDE откройте [пример корзины](samples/smoke/readme/fruit_basket.axm) или другой `.axm`, нажмите **«Проверить»**, затем **«Запустить»**. Многофайловые программы открываются через `.axproj`.
 
-Подробные команды сборки и проверок, требования к окружению и устройство поставки — в [руководстве разработчика](docs/DEVELOPMENT.md).
 
 ## Почему появился Axiom
 
@@ -145,9 +144,6 @@ cd Axiom
 
 - **[Справочник языка онлайн](https://softhitssofthits-dotcom.github.io/Axiom/)** — синтаксис, правила, примеры и поиск по темам.
 - [Локальная версия справочника](docs/manual/index.html).
-- [Работа с проектами `.axproj`](docs/PROJECTS.md).
-- [Сборка и разработка](docs/DEVELOPMENT.md).
-- [История версий](docs/CHANGELOG.md).
 
 | Каталог | Содержимое |
 |---|---|

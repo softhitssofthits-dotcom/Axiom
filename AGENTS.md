@@ -22,6 +22,13 @@ Do not translate them unless explicitly asked.
 
 ## Mandatory startup workflow
 
+По решению автора от 25 октября 2026 года из `docs/` публикуется только
+`docs/manual/`. Остальные документы и подпапки сохраняются локально и исключены
+из Git. В свежем клоне отсутствие внутренних документов ожидаемо: не создавайте
+их заново в режиме Bootstrap только из-за этой политики. Если для задачи нужен
+отсутствующий внутренний договор, запросите его у автора. Снимки для README
+публикуются отдельно в `assets/readme/`.
+
 At the beginning of every session, do this in order:
 
 1. Read `AGENTS.md`

@@ -70,8 +70,10 @@ function check() {
   }
   if (json('ide/package.json').version !== v.ide || json('ide/package-lock.json').version !== v.ide || json('ide/package-lock.json').packages[''].version !== v.ide)
     fail('Версия пакета IDE не соответствует versions.json. Выполните sync.');
-  const headings = [...read('docs/CHANGELOG.md').matchAll(/^Язык \*\*[^\n]+$/gm)];
-  if (headings.at(-1)?.[0].trim() !== row(v)) fail('Последняя запись docs/CHANGELOG.md не соответствует текущим версиям.');
+  if (exists('docs/CHANGELOG.md')) {
+    const headings = [...read('docs/CHANGELOG.md').matchAll(/^Язык \*\*[^\n]+$/gm)];
+    if (headings.at(-1)?.[0].trim() !== row(v)) fail('Последняя запись docs/CHANGELOG.md не соответствует текущим версиям.');
+  }
   const readme = exists('README.md') ? read('README.md') : null;
   if (readme !== null && readmeSynced(readme, v, true) !== readme) fail('README.md рассинхронизирован с versions.json. Выполните node scripts/versioning.mjs sync.');
   const baseIndex = args.indexOf('--base');
@@ -100,7 +102,9 @@ function check() {
         if (compare(v[c], old[c]) < 0) fail(`Версия ${c} уменьшилась.`);
         if (required.has(c) && compare(v[c], old[c]) <= 0) fail(`Изменён ${c}, но версия ${old[c]} не повышена. Используйте bump.`);
       }
-      if (components.some(c => v[c] !== old[c]) && git('show', base + ':docs/CHANGELOG.md') === read('docs/CHANGELOG.md').trim()) fail('Повышение версии требует записи в docs/CHANGELOG.md.');
+      if (components.some(c => v[c] !== old[c]) && exists('docs/CHANGELOG.md') &&
+          git('ls-tree', '--name-only', base, '--', 'docs/CHANGELOG.md') &&
+          git('show', base + ':docs/CHANGELOG.md') === read('docs/CHANGELOG.md').trim()) fail('Повышение версии требует записи в docs/CHANGELOG.md.');
     }
   }
   console.log('Версии согласованы: ' + row(v).replaceAll('**', ''));
