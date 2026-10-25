@@ -58,6 +58,28 @@ public sealed class ForEachBindingTests
     }
 
     [Fact]
+    public void ExplicitByRefKeywordIsRejectedInsteadOfSilentlyTreatedAsByVal()
+    {
+        // Молчаливое выполнение BYREF как BYVAL создавало бы ложное впечатление
+        // записи в исходный массив, поэтому режим отклоняется при проверке.
+        var diagnostics = BindWithDiagnostics(
+            "DIM values[] AS INTEGER = [1, 2]\nFOR EACH BYREF item IN values[]\nitem = 99\nNEXT");
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == DiagnosticCodes.UnsupportedForEachByRef);
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Code == DiagnosticCodes.UnknownName);
+    }
+
+    [Fact]
+    public void ByRefRejectionStillBindsLoopBody()
+    {
+        var diagnostics = BindWithDiagnostics(
+            "DIM values[] AS INTEGER = [1, 2]\nFOR EACH BYREF item IN values[]\nPRINT item\nNEXT");
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal(DiagnosticCodes.UnsupportedForEachByRef, diagnostic.Code);
+    }
+
+    [Fact]
     public void MismatchedNextNameReportsNextCounterCode()
     {
         var diagnostics = BindWithDiagnostics("DIM values[1 TO 2] AS INTEGER\nFOR EACH item IN values[]\nPRINT item\nNEXT other");

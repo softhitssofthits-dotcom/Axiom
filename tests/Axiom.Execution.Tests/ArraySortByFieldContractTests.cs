@@ -170,6 +170,40 @@ public sealed class ArraySortByFieldContractTests
         CheckBoth(source, new[] { "чай", "кофе" });
     }
 
+    [Fact]
+    public void StringConstantFieldNameSorts()
+    {
+        // Договор говорит о строковой константе, известной при проверке:
+        // CONST fieldName AS STRING = "Price" допустим наравне с литералом.
+        const string source = Declaration + Basket +
+            "CONST fieldName AS STRING = \"Price\"\r\n" +
+            "ARRAYSORT(basket[], fieldName)\r\n" +
+            "PRINT basket[1].Price, basket[2].Price, basket[3].Price";
+
+        CheckBoth(source, new[] { "20 30 40" });
+    }
+
+    [Fact]
+    public void ParenthesizedFieldNameSorts()
+    {
+        const string source = Declaration + Basket +
+            "ARRAYSORT(basket[], (\"Name\"))\r\n" +
+            "PRINT basket[1].Name";
+
+        CheckBoth(source, new[] { "апельсин" });
+    }
+
+    [Fact]
+    public void ChainedStringConstantFieldNameSorts()
+    {
+        CheckBoth(Declaration + Basket +
+            "CONST originalField AS STRING = \"Price\"\n" +
+            "CONST aliasField AS STRING = (originalField)\n" +
+            "CONST finalField AS STRING = aliasField\n" +
+            "ARRAYSORT(basket[], finalField)\n" +
+            "PRINT basket[1].Price, basket[2].Price, basket[3].Price", new[] { "20 30 40" });
+    }
+
     private static void CheckBoth(string source, string[] expected)
     {
         var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));

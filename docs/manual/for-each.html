@@ -11,7 +11,10 @@
 
 <section class="article-section" id="form"><h2>Форма записи</h2><p>Заголовок состоит из слов `FOR EACH`, необязательного модификатора, имени переменной цикла, необязательного типа после `AS`, слова `IN` и выражения-источника. Тело завершается `NEXT`, после которого можно повторить имя переменной.</p><pre><code class="language-axiom">FOR EACH ⟦BYVAL | BYREF⟧ &lt;переменная&gt; ⟦AS &lt;тип&gt;⟧ IN &lt;массив&gt;[]
     ⟦&lt;инструкции&gt;⟧
-NEXT ⟦&lt;имя переменной&gt;⟧</code></pre><p>На этом шаге реализован режим `BYVAL`; он же действует, когда модификатор не указан. Ключевое слово `BYREF` разбирается, но пока отклоняется при проверке программы.</p><pre><code class="language-axiom">DIM fruits[] AS STRING = ["яблоко", "банан", "апельсин"]
+NEXT ⟦&lt;имя переменной&gt;⟧</code></pre><p>Действует режим `BYVAL`; он же подразумевается, когда модификатор не указан: переменная цикла получает копию элемента, и запись в неё исходный массив не меняет. Ключевое слово `BYREF` разбирается, но отклоняется при проверке программы с MB2064. Отказ явный, а не молчаливое выполнение в режиме `BYVAL`, потому что иначе запись в переменную цикла выглядела бы изменением исходного массива:</p><pre><code class="language-axiom">DIM values[] AS INTEGER = [1, 2]
+FOR EACH BYREF item IN values[]
+    item = 99
+NEXT</code></pre><p>Эта программа не выполняется: проверка сообщает, что режим `FOR EACH BYREF` пока не поддерживается, и предлагает `BYVAL` или обход без модификатора.</p><pre><code class="language-axiom">DIM fruits[] AS STRING = ["яблоко", "банан", "апельсин"]
 FOR EACH fruit IN fruits[]
     PRINT fruit
 NEXT fruit</code></pre><p>Программа выводит:</p><pre><code>яблоко
@@ -52,7 +55,11 @@ END FUNCTION
 FOR EACH item IN Make()
     PRINT item
 NEXT
-PRINT calls</code></pre><p>Программа выводит числа 1, 2, 3 и затем <code>1</code>: функция вызвана один раз.</p><p>Обход учитывает фактические границы, включая отрицательные и нулевые. Многомерный массив обходится целиком, причём последнее измерение изменяется быстрее остальных: для массива `[1 TO 2, 1 TO 3]` порядок такой — `11, 12, 13, 21, 22, 23`.</p><p>Выделенный пустой массив даёт ноль проходов, то есть тело не выполняется ни разу. Невыделенный массив, объявленный без границ и без значения, сообщает MB3005: обходить нечего.</p></section>
+PRINT calls</code></pre><p>Программа выводит числа 1, 2, 3 и затем <code>1</code>: функция вызвана один раз.</p><p>Обход учитывает фактические границы, включая отрицательные и нулевые. Многомерный массив обходится целиком, причём последнее измерение изменяется быстрее остальных: для массива `[1 TO 2, 1 TO 3]` порядок такой — `11, 12, 13, 21, 22, 23`.</p><p>Выделенный пустой массив даёт ноль проходов, то есть тело не выполняется ни разу. Невыделенный массив, объявленный без границ и без значения, сообщает MB3005: обходить нечего.</p><p>Обход заканчивается корректно и на самой верхней границе допустимых индексов. Массив с единственным элементом на индексе 2147483647 проходит один раз и завершается без переполнения счётчика:</p><pre><code class="language-axiom">DIM values[2147483647 TO 2147483647] AS INTEGER
+values[2147483647] = 7
+FOR EACH item IN values[]
+    PRINT item
+NEXT</code></pre><p>Программа выводит <code>7</code>. Продвижение счётчика выполняется только тогда, когда он ещё не достиг верхней границы, поэтому значение за пределы диапазона INTEGER не выходит.</p></section>
 
 <section class="article-section" id="control"><h2>EXIT FOR и CONTINUE FOR</h2><p>Внутри обхода действуют те же операторы управления, что и в числовом цикле: `CONTINUE FOR` переходит к следующему элементу, `EXIT FOR` завершает обход целиком.</p><pre><code class="language-axiom">DIM values[1 TO 5] AS INTEGER
 FOR index = 1 TO 5
@@ -68,9 +75,9 @@ FOR EACH value IN values[]
     PRINT value
 NEXT</code></pre><p>Программа выводит <code>1</code>, <code>2</code> и <code>4</code>: тройка пропущена, пятёрка завершила обход.</p></section>
 
-<section class="article-section" id="diagnostics"><h2>Диагностика</h2><p>MB1002 сообщает, что ключевое слово использовано как имя. MB2062 сообщает, что источник не является массивом. MB2063 сообщает о недопустимом типе элемента или о сужающем преобразовании в `AS`. MB2048 сообщает, что имя после `NEXT` не совпадает с именем переменной цикла. MB3005 возникает при обходе невыделенного массива. Повторное использование занятого имени даёт MB2016, как и у числового `FOR`.</p></section>
+<section class="article-section" id="diagnostics"><h2>Диагностика</h2><p>MB1002 сообщает, что ключевое слово использовано как имя. MB2062 сообщает, что источник не является массивом. MB2063 сообщает о недопустимом типе элемента или о сужающем преобразовании в `AS`. MB2064 сообщает, что указан режим `BYREF`, который пока не поддерживается. MB2048 сообщает, что имя после `NEXT` не совпадает с именем переменной цикла. MB3005 возникает при обходе невыделенного массива. Повторное использование занятого имени даёт MB2016, как и у числового `FOR`.</p></section>
 
-<section class="article-section" id="examples"><h2>Запускаемые примеры</h2><p><a href="../../samples/control-flow/for-each/each_byval.axm">each_byval.axm</a> — обход значений и копирование. <a href="../../samples/control-flow/for-each/each_multidimensional.axm">each_multidimensional.axm</a> — многомерный порядок и отрицательные границы. <a href="../../samples/control-flow/for-each/each_exit_continue.axm">each_exit_continue.axm</a> — `EXIT FOR` и `CONTINUE FOR`. <a href="../../samples/control-flow/for-each/each_unallocated_error.axm">each_unallocated_error.axm</a> — MB3005 для невыделенного массива.</p></section>
+<section class="article-section" id="examples"><h2>Запускаемые примеры</h2><p><a href="../../samples/control-flow/for-each/each_byval.axm">each_byval.axm</a> — обход значений и копирование. <a href="../../samples/control-flow/for-each/each_multidimensional.axm">each_multidimensional.axm</a> — многомерный порядок и отрицательные границы. <a href="../../samples/control-flow/for-each/each_exit_continue.axm">each_exit_continue.axm</a> — `EXIT FOR` и `CONTINUE FOR`. <a href="../../samples/control-flow/for-each/each_integer_max_bound.axm">each_integer_max_bound.axm</a> — единственный элемент на верхней границе INTEGER. <a href="../../samples/control-flow/for-each/each_unallocated_error.axm">each_unallocated_error.axm</a> — MB3005 для невыделенного массива. <a href="../../samples/control-flow/for-each/each_byref_error.axm">each_byref_error.axm</a> — отказ режима `BYREF`.</p></section>
 
 <section class="article-section"><h2>См. также</h2><p><a href="for.html">FOR … NEXT</a> · <a href="continue.html">CONTINUE</a> · <a href="exit.html">EXIT FOR и EXIT DO</a> · <a href="arrays-1d.html">Одномерные массивы</a> · <a href="arrays-multidimensional.html">Многомерные массивы</a></p></section>
 <div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>

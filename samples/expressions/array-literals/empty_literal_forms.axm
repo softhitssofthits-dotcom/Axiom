@@ -1,0 +1,17 @@
+' Пустой литерал получает тип элементов из объявления,
+' в том числе в CONST и внутри круглых скобок.
+' Ожидаемый вывод:
+' 0 TRUE
+' 0 TRUE
+' 0 TRUE
+DIM plain[] AS INTEGER = []
+
+' Скобки вокруг литерала не прерывают ожидаемый тип объявления.
+DIM grouped[] AS INTEGER = ([])
+
+' CONST связывает инициализатор сразу с объявленным типом.
+CONST fixed[] AS INTEGER = []
+
+PRINT ARRAYLENGTH(plain[]); " "; ARRAYISALLOCATED(plain[])
+PRINT ARRAYLENGTH(grouped[]); " "; ARRAYISALLOCATED(grouped[])
+PRINT ARRAYLENGTH(fixed[]); " "; ARRAYISALLOCATED(fixed[])

@@ -128,5 +128,6 @@ public enum Opcode
     RaiseError,
     EndFinally,
     Smooth,
-    SnapshotValue
+    SnapshotValue,
+    NewArray
 }

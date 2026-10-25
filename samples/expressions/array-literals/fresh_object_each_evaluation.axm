@@ -1,0 +1,26 @@
+' Каждое вычисление литерала создаёт независимый массив.
+' Ожидаемый вывод:
+' 1
+' 3
+' 7 8
+DIM first[] AS INTEGER
+DIM current[] AS INTEGER
+
+' Одно и то же место с литералом выполняется трижды.
+FOR i = 1 TO 3
+    current[] = [i]
+    ' Сохраняется только первый результат; следующие вычисления его не меняют.
+    IF i = 1 THEN first[] = current[]
+NEXT i
+
+PRINT first[1]
+PRINT current[1]
+
+' Представление на прежний результат остаётся действительным
+' после того, как то же место получило новый массив.
+DIM saved[] AS INTEGER
+DIM slice[] AS INTEGER
+saved[] = [7, 8]
+slice[] = saved[1 TO 2]
+saved[] = [1, 2]
+PRINT slice[1]; " "; slice[2]

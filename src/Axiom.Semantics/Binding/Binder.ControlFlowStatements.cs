@@ -286,6 +286,8 @@ public sealed partial class Binder
 
     // Обход массива по значениям. На этом этапе реализован только режим BYVAL:
     // переменная цикла получает копию элемента и не связана с источником.
+    // Явный BYREF отклоняется, а не выполняется молча как BYVAL: иначе запись
+    // в переменную цикла выглядела бы изменением исходного массива.
     private BoundStatement BindForEachStatement(ForEachStatementSyntax statement)
     {
         if (statement.NextCounterIdentifier is { } nextCounter
@@ -302,6 +304,15 @@ public sealed partial class Binder
 
         if (source.Type == TypeSymbol.Error)
         {
+            return BindRejectedForEach(statement, source, source, TypeSymbol.Error);
+        }
+
+        if (statement.ByRefKeyword is { } byRefKeyword)
+        {
+            _diagnostics.Report(
+                DiagnosticCodes.UnsupportedForEachByRef,
+                "Режим FOR EACH BYREF пока не поддерживается: используйте BYVAL или обход без модификатора. Запись в переменную цикла не изменяет исходный массив.",
+                byRefKeyword.Location);
             return BindRejectedForEach(statement, source, source, TypeSymbol.Error);
         }
 

@@ -59,6 +59,30 @@ public sealed partial class BytecodeVm
         }
     }
 
+    /// <summary>
+    /// Создаёт новый массив времени выполнения по образцу значения на стеке.
+    /// Новый объект независим от образца: повторное вычисление литерала не
+    /// изменяет прежний результат и не инвалидирует представления на него.
+    /// </summary>
+    private void ExecuteNewArray(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    {
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        var displayName = ReadDebugName(instruction.GetOperand(0));
+        var templateValue = PopValue(frame, instructionIndex);
+
+        if (templateValue.Type is not ArrayTypeSymbol arrayType)
+        {
+            ReportInvalidRuntimeState(
+                $"Значение '{displayName}' не содержит массива времени выполнения.",
+                location);
+            throw new RuntimeFailureException();
+        }
+
+        var template = templateValue.AsArray();
+        var created = new RuntimeArrayValue(template.ElementType, template.FixedStringLength, arrayType.Rank);
+        frame.EvaluationStack.PushUnchecked(RuntimeValue.FromArray(arrayType, created));
+    }
+
     private void ExecuteEraseArray(BytecodeCallFrame frame, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);

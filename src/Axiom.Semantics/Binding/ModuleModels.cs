@@ -40,7 +40,8 @@ public sealed class ModuleSymbol
         IReadOnlyDictionary<string, UserDefinedTypeSymbol> publicTypes,
         IReadOnlyDictionary<string, VariableSymbol> publicVariables,
         IReadOnlySet<string> privateNames,
-        IReadOnlyDictionary<string, long>? publicIntegralConstants = null)
+        IReadOnlyDictionary<string, long>? publicIntegralConstants = null,
+        IReadOnlyDictionary<string, string>? publicStringConstants = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentNullException.ThrowIfNull(publicFunctions);
@@ -54,6 +55,7 @@ public sealed class ModuleSymbol
         PublicVariables = publicVariables;
         PrivateNames = privateNames;
         PublicIntegralConstants = publicIntegralConstants ?? new Dictionary<string, long>();
+        PublicStringConstants = publicStringConstants ?? new Dictionary<string, string>();
     }
 
     public string Name { get; }
@@ -67,6 +69,13 @@ public sealed class ModuleSymbol
     public IReadOnlySet<string> PrivateNames { get; }
 
     public IReadOnlyDictionary<string, long> PublicIntegralConstants { get; }
+
+    /// <summary>
+    /// Строковые константы, значение которых известно при проверке программы.
+    /// Нужны там, где значение требуется до запуска, например для имени поля
+    /// сортировки в ARRAYSORT и ARRAYTOSORTED.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> PublicStringConstants { get; }
 
     public bool IsPrivateName(string name) => PrivateNames.Contains(name);
 }

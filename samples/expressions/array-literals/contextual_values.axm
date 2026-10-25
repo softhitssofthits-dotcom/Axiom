@@ -1,0 +1,8 @@
+' Тип элементов известен из объявления или параметра функции.
+' Ожидаемый вывод: 0.1 -0.2 1, затем 0, затем 1 7.
+DIM amounts[] AS DECIMAL = [0.1, -0.2, 1]
+PRINT amounts[1], amounts[2], amounts[3]
+PRINT LEN(JOIN(([]), "-"))
+DIM initial[] AS INTEGER = [7]
+DIM joined[] AS INTEGER = ARRAYCONCAT(initial[], ([]))
+PRINT ARRAYLENGTH(joined[]), joined[1]

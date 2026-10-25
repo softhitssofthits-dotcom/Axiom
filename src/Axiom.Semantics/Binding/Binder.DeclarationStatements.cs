@@ -87,7 +87,8 @@ public sealed partial class Binder
                 // Литерал массива связывается сразу с объявленным типом: иначе
                 // пустой набор не получил бы тип элементов, а нечисловые элементы
                 // проверялись бы по выведенному, а не по заявленному типу.
-                var expectedType = declaration.Initializer is ArrayLiteralExpressionSyntax
+                // Скобки вокруг литерала контекст не прерывают.
+                var expectedType = FindArrayLiteral(declaration.Initializer) is not null
                     && declaration.Declarators[0].ArrayBounds is { } bounds
                     && explicitType != TypeSymbol.Error
                         ? BindArrayVariableType(explicitType, bounds.Rank)
@@ -146,8 +147,15 @@ public sealed partial class Binder
             }
         }
 
-        var initializer = BindExpression(declaration.Initializer);
-        if (type != TypeSymbol.Error)
+        // Ожидаемый тип передаётся при первом связывании литерала: пустой набор
+        // не получает тип элементов задним числом, а повторное связывание уже
+        // выданную ошибку не снимает. Остальные выражения связываются как прежде,
+        // иначе проверка типа выполнилась бы дважды.
+        var isArrayLiteralInitializer = FindArrayLiteral(declaration.Initializer) is not null;
+        var initializer = isArrayLiteralInitializer && type != TypeSymbol.Error
+            ? BindExpression(declaration.Initializer, type)
+            : BindExpression(declaration.Initializer);
+        if (type != TypeSymbol.Error && !isArrayLiteralInitializer)
         {
             initializer = ApplyExpectedType(declaration.Initializer, initializer, type);
         }
@@ -169,6 +177,14 @@ public sealed partial class Binder
             && TryEvaluateBoundIntegralConstant(initializer, out var integralValue))
         {
             _boundIntegralConstants[constant] = integralValue;
+        }
+        else if (type == TypeSymbol.String
+            && TryResolveConstantStringName(initializer) is { } text)
+        {
+            // Строковая константа известна при проверке программы: этого требует
+            // имя поля сортировки, которое иначе обнаруживало бы опечатку только
+            // во время выполнения.
+            _boundStringConstants[constant] = text;
         }
 
         return new BoundVariableDeclarationStatement(GetLocation(statement), constant, initializer, arrayBounds: [], identifierLocation: declaration.Identifier.Location);
@@ -198,8 +214,9 @@ public sealed partial class Binder
     private BoundExpression BindAssignmentExpression(ExpressionSyntax expressionSyntax, BoundExpression target, TypeSymbol targetType)
     {
         // Цель присваивания уже задаёт тип, поэтому литерал массива связывается
-        // сразу с ним: пустой набор иначе не получил бы тип элементов.
-        var expression = expressionSyntax is ArrayLiteralExpressionSyntax
+        // сразу с ним: пустой набор иначе не получил бы тип элементов. Скобки
+        // вокруг литерала этот контекст не прерывают.
+        var expression = FindArrayLiteral(expressionSyntax) is not null
             ? BindExpression(expressionSyntax, targetType)
             : BindExpression(expressionSyntax);
         var targetName = GetArrayTargetDisplayName(target);

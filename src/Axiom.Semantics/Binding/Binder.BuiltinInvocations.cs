@@ -251,7 +251,7 @@ public sealed partial class Binder
 
                 // Пустой литерал массива не выводит тип элементов из себя, поэтому
                 // получает объявленный тип параметра сразу при связывании.
-                var boundArgument = argument is ArrayLiteralExpressionSyntax { IsEmpty: true }
+                var boundArgument = FindArrayLiteral(argument) is not null
                     ? BindExpression(argument, parameterType)
                     : BindExpression(argument);
 
@@ -460,7 +460,9 @@ public sealed partial class Binder
 
             if (descriptor.Id == BuiltinFunctionId.ArrayConcat && index == 1)
             {
-                var rightArgument = BindExpression(expression.Arguments[index]);
+                var rightArgument = FindArrayLiteral(expression.Arguments[index]) is not null
+                    ? BindExpression(expression.Arguments[index], parameterType)
+                    : BindExpression(expression.Arguments[index]);
 
                 if (rightArgument.Type is ArrayTypeSymbol rightArrayType
                     && rightArrayType.Rank != arrayType.Rank)
@@ -527,11 +529,12 @@ public sealed partial class Binder
         }
 
         // Имя поля должно быть известно при проверке программы: иначе опечатка
-        // обнаружится только после запуска, когда массив уже заполнен.
-        var fieldName = expression.Arguments[1] is LiteralExpressionSyntax { LiteralToken.Value: string text }
-            ? text
-            : null;
-        arguments.Add(BindExpression(expression.Arguments[1]));
+        // обнаружится только после запуска, когда массив уже заполнен. Кроме
+        // непосредственного литерала принимается строковая константа, значение
+        // которой известно заранее: CONST fieldName AS STRING = "Price".
+        var boundFieldArgument = BindExpression(expression.Arguments[1]);
+        var fieldName = TryResolveConstantStringName(boundFieldArgument);
+        arguments.Add(boundFieldArgument);
         parameterTypes.Add(TypeSymbol.String);
 
         if (fieldName is null)

@@ -143,6 +143,15 @@ public sealed partial class BoundProgramLowerer
             instructions);
 
         instructions.Add(LoweredInstruction.LabelMarker(location, continueLabels[level]));
+
+        // Продвижение выполняется только когда счётчик ещё не на верхней границе.
+        // Иначе последний элемент с границей INTEGER_MAX увеличивался бы до
+        // переполнения ещё до проверки исчерпания диапазона.
+        instructions.Add(LoweredInstruction.LoadVariable(location, indices[level]));
+        instructions.Add(LoweredInstruction.LoadVariable(location, upperBounds[level]));
+        instructions.Add(LoweredInstruction.BinaryOperation(location, SyntaxKind.GreaterOrEqualsToken));
+        instructions.Add(LoweredInstruction.JumpIfTrue(location, endLabels[level]));
+
         instructions.Add(LoweredInstruction.LoadVariable(location, indices[level]));
         instructions.Add(LoweredInstruction.LoadLiteral(location, 1, TypeSymbol.Integer));
         instructions.Add(LoweredInstruction.BinaryOperation(location, SyntaxKind.PlusToken));

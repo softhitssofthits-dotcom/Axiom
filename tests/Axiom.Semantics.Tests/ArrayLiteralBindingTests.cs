@@ -122,6 +122,68 @@ public sealed class ArrayLiteralBindingTests
         Assert.IsType<BoundArrayLiteralExpression>(statement.Expression);
     }
 
+    [Fact]
+    public void EmptyLiteralInParenthesesBindsWithDeclaredElementType()
+    {
+        var program = Bind("DIM values[] AS INTEGER = ([])", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var declaration = Assert.IsType<BoundVariableDeclarationStatement>(program.GlobalStatements[0]);
+        var literal = Assert.IsType<BoundArrayLiteralExpression>(declaration.Initializer);
+        Assert.Equal("INTEGER[]", literal.ArrayType.Name);
+    }
+
+    [Fact]
+    public void EmptyLiteralInConstBindsWithDeclaredElementType()
+    {
+        var program = Bind("CONST values[] AS INTEGER = []", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var declaration = Assert.IsType<BoundVariableDeclarationStatement>(program.GlobalStatements[0]);
+        var literal = Assert.IsType<BoundArrayLiteralExpression>(declaration.Initializer);
+        Assert.Equal("INTEGER[]", literal.ArrayType.Name);
+    }
+
+    [Fact]
+    public void DeclaredElementTypeRejectsNarrowingElementInsteadOfWideningArray()
+    {
+        // Раньше литерал расширялся до DOUBLE[] и ошибка всплывала только
+        // в валидаторе байт-кода как BC4116.
+        var diagnostics = BindWithDiagnostics("DIM values[] AS INTEGER = [1, 2.5]");
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal(DiagnosticCodes.InvalidArrayLiteralElement, diagnostic.Code);
+        Assert.Contains("DOUBLE", diagnostic.Message);
+        Assert.Contains("INTEGER", diagnostic.Message);
+    }
+
+    [Fact]
+    public void DeclaredElementTypeAcceptsWideningElement()
+    {
+        var program = Bind("DIM values[] AS DOUBLE = [1, 2.5]", out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var declaration = Assert.IsType<BoundVariableDeclarationStatement>(program.GlobalStatements[0]);
+        Assert.Equal("DOUBLE[]", Assert.IsType<BoundArrayLiteralExpression>(declaration.Initializer).ArrayType.Name);
+    }
+
+    [Fact]
+    public void LiteralReturnedFromScalarFunctionIsRejectedDuringBinding()
+    {
+        var diagnostics = BindWithDiagnostics(
+            "FUNCTION F() AS INTEGER\nRETURN [1, 2]\nEND FUNCTION\nPRINT F()");
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == DiagnosticCodes.TypeMismatch);
+    }
+
+    [Fact]
+    public void LiteralAssignedToScalarVariableIsRejectedDuringBinding()
+    {
+        var diagnostics = BindWithDiagnostics("DIM total AS INTEGER\ntotal = [1, 2]");
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == DiagnosticCodes.TypeMismatch);
+    }
+
     private static BoundProgram Bind(string source, out DiagnosticBag diagnostics) =>
         Binder.Bind(Parse(source), out diagnostics, checkGraphicsModes: false);
 

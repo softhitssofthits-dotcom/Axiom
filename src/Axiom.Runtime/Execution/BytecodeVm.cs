@@ -828,6 +828,10 @@ public sealed partial class BytecodeVm
                 ExecuteRedimArray(frame, instruction, instructionIndex);
                 break;
 
+            case Opcode.NewArray:
+                ExecuteNewArray(frame, instruction, instructionIndex);
+                break;
+
             case Opcode.EraseArray:
                 ExecuteEraseArray(frame, instructionIndex);
                 break;

@@ -321,6 +321,7 @@ public sealed class BytecodeStackEffectTests
         yield return ["Smooth.Off", new BytecodeInstruction(Opcode.Smooth, [0]), 0, 0];
         yield return ["Smooth.On", new BytecodeInstruction(Opcode.Smooth, [1]), 0, 0];
         yield return ["SnapshotValue", new BytecodeInstruction(Opcode.SnapshotValue), 1, 1];
+        yield return ["NewArray", new BytecodeInstruction(Opcode.NewArray, [0, 1]), 1, 1];
     }
 
     private static BytecodeRoutine CreateRoutine(int id, TypeSymbol resultType, int parameterCount)

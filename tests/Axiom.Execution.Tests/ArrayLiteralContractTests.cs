@@ -148,6 +148,95 @@ public sealed class ArrayLiteralContractTests
         CheckBoth(source, new[] { "10 20 30", "10", "30", "2" });
     }
 
+    [Fact]
+    public void RepeatedEvaluationCreatesIndependentArray()
+    {
+        // Повторное выполнение того же места с литералом не должно изменять
+        // прежний сохранённый результат.
+        const string source =
+            "DIM first[] AS INTEGER\r\n" +
+            "DIM current[] AS INTEGER\r\n" +
+            "FOR i = 1 TO 2\r\n" +
+            "    current[] = [i]\r\n" +
+            "    IF i = 1 THEN first[] = current[]\r\n" +
+            "NEXT i\r\n" +
+            "PRINT first[1]\r\n" +
+            "PRINT current[1]";
+
+        CheckBoth(source, new[] { "1", "2" });
+    }
+
+    [Fact]
+    public void LiteralKeepsSavedViewAlive()
+    {
+        // Представление на прежний результат не должно становиться просроченным
+        // из-за повторного вычисления литерала.
+        const string source =
+            "DIM saved[] AS INTEGER\r\n" +
+            "DIM slice[] AS INTEGER\r\n" +
+            "saved[] = [7, 8]\r\n" +
+            "slice[] = saved[1 TO 2]\r\n" +
+            "saved[] = [1, 2]\r\n" +
+            "PRINT slice[1], slice[2]";
+
+        CheckBoth(source, new[] { "7 8" });
+    }
+
+    [Fact]
+    public void EmptyLiteralInParenthesesKeepsCanonicalEmptyBounds()
+    {
+        const string source =
+            "DIM values[] AS INTEGER = ([])\r\n" +
+            "PRINT ARRAYLENGTH(values[])\r\n" +
+            "PRINT ARRAYISALLOCATED(values[])";
+
+        CheckBoth(source, new[] { "0", "TRUE" });
+    }
+
+    [Fact]
+    public void EmptyConstLiteralKeepsCanonicalEmptyBounds()
+    {
+        const string source =
+            "CONST values[] AS INTEGER = []\r\n" +
+            "PRINT ARRAYLENGTH(values[])\r\n" +
+            "PRINT ARRAYISALLOCATED(values[])";
+
+        CheckBoth(source, new[] { "0", "TRUE" });
+    }
+
+    [Fact]
+    public void DecimalLiteralElementsUseDeclaredContext()
+    {
+        CheckBoth("DIM values[] AS DECIMAL = [0.1, -0.2, 1]\nPRINT values[1], values[2], values[3]",
+            new[] { "0.1 -0.2 1" });
+    }
+
+    [Fact]
+    public void GroupedDecimalLiteralElementsUseDeclaredContext()
+    {
+        CheckBoth("DIM values[] AS DECIMAL = [(0.1), -(0.2), ((1))]\nPRINT values[1], values[2], values[3]",
+            new[] { "0.1 -0.2 1" });
+    }
+
+    [Theory]
+    [InlineData("[]")]
+    [InlineData("([])")]
+    [InlineData("(([]))")]
+    public void JoinEmptyLiteralUsesStringArrayParameter(string literal)
+    {
+        CheckBoth($"PRINT LEN(JOIN({literal}, \"-\"))", new[] { "0" });
+    }
+
+    [Theory]
+    [InlineData("[]", "1", "7")]
+    [InlineData("([])", "1", "7")]
+    [InlineData("[8]", "2", "15")]
+    public void ConcatLiteralUsesFirstArrayType(string literal, string length, string values)
+    {
+        CheckBoth($"DIM left[] AS INTEGER = [7]\nDIM joined[] AS INTEGER = ARRAYCONCAT(left[], {literal})\n" +
+            "PRINT ARRAYLENGTH(joined[])\nPRINT ARRAYSUM(joined[])", new[] { length, values });
+    }
+
     private static void CheckBoth(string source, string[] expected)
     {
         var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));

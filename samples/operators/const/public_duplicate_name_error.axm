@@ -1,0 +1,6 @@
+' Ожидается MB2016: имя константы уже занято.
+' Проверка программы должна выдать диагностику без аварийного завершения.
+PUBLIC CONST priceField AS STRING = "Price"
+SUB Show()
+    CONST priceField AS STRING = "Name"
+END SUB

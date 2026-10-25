@@ -66,6 +66,14 @@ public sealed partial class Binder
             {
                 _globalIntegralConstants.TryAdd(name, value);
             }
+
+            foreach (var (name, value) in import.PublicStringConstants)
+            {
+                if (import.PublicVariables.TryGetValue(name, out var constant))
+                {
+                    _boundStringConstants.TryAdd(constant, value);
+                }
+            }
         }
     }
 
@@ -143,9 +151,13 @@ public sealed partial class Binder
             }
         }
 
-        var constants = _boundIntegralConstants.Where(pair => publicVariables.ContainsKey(pair.Key.Name))
-            .ToDictionary(pair => pair.Key.Name, pair => pair.Value, StringComparer.OrdinalIgnoreCase);
-        return new ModuleSymbol(module.Name, publicFunctions, publicTypes, publicVariables, privateNames, constants);
+        // Экспорт определяется символом, а не совпадением имени: отвергнутое
+        // локальное объявление не должно подменять публичную константу.
+        var constants = publicVariables.Values.Where(_boundIntegralConstants.ContainsKey)
+            .ToDictionary(variable => variable.Name, variable => _boundIntegralConstants[variable], StringComparer.OrdinalIgnoreCase);
+        var stringConstants = publicVariables.Values.Where(_boundStringConstants.ContainsKey)
+            .ToDictionary(variable => variable.Name, variable => _boundStringConstants[variable], StringComparer.OrdinalIgnoreCase);
+        return new ModuleSymbol(module.Name, publicFunctions, publicTypes, publicVariables, privateNames, constants, stringConstants);
 
         void RegisterFunction(SyntaxToken? visibilityKeyword, FunctionSymbol function)
         {

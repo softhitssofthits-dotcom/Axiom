@@ -36,6 +36,30 @@ public sealed class ArrayLiteralLoweringTests
     }
 
     [Fact]
+    public void LiteralCreatesNewArrayObjectOnEachEvaluation()
+    {
+        // Новый объект на каждое вычисление: без этого повторное выполнение
+        // того же места изменяло бы прежний сохранённый результат.
+        var instructions = Lower("DIM values[] AS INTEGER = [1, 2]");
+
+        var newArray = Assert.Single(instructions, i => i.Kind == LoweredInstructionKind.NewArray);
+        Assert.Equal(1, newArray.ValueCount);
+        Assert.StartsWith("__array_literal_", newArray.DisplayName, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void NewArrayIsLoweredBeforeBoundsAndRedim()
+    {
+        var instructions = Lower("DIM values[] AS INTEGER = [1, 2]");
+
+        var newArrayIndex = instructions.ToList().FindIndex(i => i.Kind == LoweredInstructionKind.NewArray);
+        var redimIndex = instructions.ToList().FindIndex(i => i.Kind == LoweredInstructionKind.RedimArray);
+
+        Assert.True(newArrayIndex >= 0);
+        Assert.True(newArrayIndex < redimIndex, "Новый объект создаётся до REDIM границ.");
+    }
+
+    [Fact]
     public void ElementsAreLoweredInSourceOrder()
     {
         var instructions = Lower(

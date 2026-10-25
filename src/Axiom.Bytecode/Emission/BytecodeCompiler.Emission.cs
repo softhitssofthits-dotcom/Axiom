@@ -104,6 +104,7 @@ public sealed partial class BytecodeCompiler
             LoweredInstructionKind.Pop => new BytecodeInstruction(Opcode.Pop),
             LoweredInstructionKind.Return => new BytecodeInstruction(Opcode.Return),
             LoweredInstructionKind.SnapshotValue => new BytecodeInstruction(Opcode.SnapshotValue),
+            LoweredInstructionKind.NewArray => EmitNewArray(instruction),
             LoweredInstructionKind.Label => null,
             _ => ReportUnsupportedInstruction(routine, instruction)
         };
@@ -622,6 +623,16 @@ public sealed partial class BytecodeCompiler
             Opcode.RedimArray,
             [
                 instruction.Preserve ? 1 : 0,
+                RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName),
+                instruction.ValueCount
+            ]);
+    }
+
+    private BytecodeInstruction EmitNewArray(LoweredInstruction instruction)
+    {
+        return new BytecodeInstruction(
+            Opcode.NewArray,
+            [
                 RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName),
                 instruction.ValueCount
             ]);

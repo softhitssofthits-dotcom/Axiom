@@ -39,6 +39,42 @@ public sealed partial class BytecodeModuleValidator
         }
     }
 
+    private void ApplyNewArrayStackTypeEffect(
+        BytecodeModule module,
+        BytecodeRoutine routine,
+        int instructionIndex,
+        BytecodeInstruction instruction,
+        List<TypeSymbol?> workingStack)
+    {
+        var dimensionCount = instruction.GetOperand(1);
+        var templateType = PopStackType(workingStack);
+
+        if (templateType is ArrayTypeSymbol templateArray && templateArray.Rank != dimensionCount)
+        {
+            Report(
+                "BC4111",
+                $"Инструкция NewArray в процедуре '{routine.Name}' создаёт массив ранга {dimensionCount}, а образец имеет ранг {templateArray.Rank}.",
+                module,
+                routine.Id,
+                instructionIndex);
+            workingStack.Add(null);
+            return;
+        }
+
+        if (templateType is null || templateType is ArrayTypeSymbol)
+        {
+            workingStack.Add(templateType);
+            return;
+        }
+
+        Report(
+            "BC4111",
+            $"Инструкция NewArray в процедуре '{routine.Name}' ожидает образец массива, но получила {templateType.Name}.",
+            module,
+            routine.Id,
+            instructionIndex);
+        workingStack.Add(null);
+    }
     private void ApplyLoadElementStackTypeEffect(
         BytecodeModule module,
         BytecodeRoutine routine,

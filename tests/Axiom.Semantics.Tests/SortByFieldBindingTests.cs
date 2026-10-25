@@ -58,6 +58,47 @@ public sealed class SortByFieldBindingTests
     }
 
     [Fact]
+    public void StringConstantFieldNameBinds()
+    {
+        // Сообщение и договор говорят о строковой константе, известной до
+        // выполнения, поэтому CONST с литеральным значением допустим.
+        var program = Bind(
+            Records +
+            "CONST fieldName AS STRING = \"Price\"\n" +
+            "DIM basket[1 TO 2] AS Product\n" +
+            "ARRAYSORT(basket[], fieldName)",
+            out var diagnostics);
+
+        Assert.Empty(diagnostics);
+        var sort = Assert.IsType<BoundExpressionStatement>(program.GlobalStatements[2]);
+        Assert.IsType<BoundVariableExpression>(Assert.IsType<BoundCallExpression>(sort.Expression).Arguments[1]);
+    }
+
+    [Fact]
+    public void ParenthesizedLiteralFieldNameBinds()
+    {
+        var program = Bind(
+            Records +
+            "DIM basket[1 TO 2] AS Product\n" +
+            "ARRAYSORT(basket[], (\"Price\"))",
+            out var diagnostics);
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public void StringConstantWithUnknownFieldIsStillRejected()
+    {
+        var diagnostics = BindWithDiagnostics(
+            Records +
+            "CONST fieldName AS STRING = \"Prise\"\n" +
+            "DIM basket[1 TO 2] AS Product\n" +
+            "ARRAYSORT(basket[], fieldName)");
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == DiagnosticCodes.InvalidSortKeyField);
+    }
+
+    [Fact]
     public void ScalarArrayWithFieldNameIsRejected()
     {
         var diagnostics = BindWithDiagnostics("DIM values[1 TO 3] AS INTEGER\nARRAYSORT(values[], \"Price\")");
@@ -80,6 +121,24 @@ public sealed class SortByFieldBindingTests
     public void StepOutsideSortIsRejected()
     {
         var diagnostics = BindWithDiagnostics("PRINT LEN(\"abc\", STEP 1)");
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == DiagnosticCodes.InvalidSortDirection);
+    }
+
+    [Fact]
+    public void StepAsArrayMapArgumentReportsDiagnosticInsteadOfCrashing()
+    {
+        // ARRAYMAP запрашивает координаты аргумента до предметной диагностики,
+        // поэтому узел STEP обязан иметь местоположение.
+        var diagnostics = BindWithDiagnostics("DIM a[1 TO 2] AS INTEGER\nPRINT ARRAYMAP(a[], STEP 1)");
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == DiagnosticCodes.InvalidSortDirection);
+    }
+
+    [Fact]
+    public void StepAsByRefArgumentReportsDiagnosticInsteadOfCrashing()
+    {
+        var diagnostics = BindWithDiagnostics("SUB F(BYREF x AS INTEGER)\nEND SUB\nF(STEP 1)");
 
         Assert.Contains(diagnostics, diagnostic => diagnostic.Code == DiagnosticCodes.InvalidSortDirection);
     }

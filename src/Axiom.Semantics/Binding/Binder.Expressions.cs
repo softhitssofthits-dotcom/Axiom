@@ -16,8 +16,8 @@ public sealed partial class Binder
             BinaryExpressionSyntax binaryExpression => BindBinaryExpression(binaryExpression),
             RangeExpressionSyntax rangeExpression => BindRangeExpression(rangeExpression, reportInvalidStandaloneUse: true),
             StepDirectionArgumentExpressionSyntax stepDirection => BindStepDirectionArgumentExpression(stepDirection),
-            ParenthesizedExpressionSyntax parenthesizedExpression => BindExpression(parenthesizedExpression.Expression),
-            NamedArgumentExpressionSyntax namedArgumentExpression => BindExpression(namedArgumentExpression.Expression),
+            ParenthesizedExpressionSyntax parenthesizedExpression => BindExpression(parenthesizedExpression.Expression, expectedType),
+            NamedArgumentExpressionSyntax namedArgumentExpression => BindExpression(namedArgumentExpression.Expression, expectedType),
             CallExpressionSyntax callExpression => BindCallExpression(callExpression),
             ArrayAccessExpressionSyntax arrayAccessExpression => BindSquareArrayAccessExpression(arrayAccessExpression),
             ArrayLiteralExpressionSyntax arrayLiteralExpression => BindArrayLiteralExpression(arrayLiteralExpression, expectedType),
@@ -29,9 +29,20 @@ public sealed partial class Binder
 
         // Литерал массива получает ожидаемый тип внутри собственного связывания:
         // приведение массива к массиву общей проверкой типов не выполняется.
+        // Скалярный ожидаемый тип этой ветке не подчиняется: массив не может быть
+        // его значением, и пропуск проверки переносил бы ошибку в валидатор.
         if (expression is ArrayLiteralExpressionSyntax)
         {
-            return boundExpression;
+            if (expectedType is null
+                || expectedType == TypeSymbol.Error
+                || expectedType is ArrayTypeSymbol
+                || boundExpression.Type == TypeSymbol.Error)
+            {
+                return boundExpression;
+            }
+
+            ReportTypeMismatch(boundExpression.Type, expectedType, GetLocation(expression));
+            return new BoundErrorExpression(GetLocation(expression));
         }
 
         if (expectedType is null || expectedType == TypeSymbol.Error)
@@ -97,6 +108,48 @@ public sealed partial class Binder
         return new BoundLiteralExpression(expression.LiteralToken.Location, expression.LiteralToken.Value, type);
     }
 
+    /// <summary>
+    /// Литерал массива, возможно заключённый в скобки. Ожидаемый тип нужно
+    /// передавать до первого связывания: пустой набор не получает тип задним
+    /// числом, а повторное связывание не удаляет уже выданную ошибку.
+    /// </summary>
+    private static ArrayLiteralExpressionSyntax? FindArrayLiteral(ExpressionSyntax expression)
+    {
+        while (true)
+        {
+            switch (expression)
+            {
+                case ArrayLiteralExpressionSyntax literal:
+                    return literal;
+                case ParenthesizedExpressionSyntax parenthesized:
+                    expression = parenthesized.Expression;
+                    continue;
+                default:
+                    return null;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Строковое значение, известное при проверке программы. Принимается
+    /// непосредственный литерал и строковая константа; вычисляемое выражение
+    /// здесь не подходит, потому что проверка идёт до запуска.
+    /// </summary>
+    private string? TryResolveConstantStringName(BoundExpression expression)
+    {
+        switch (expression)
+        {
+            case BoundLiteralExpression literal when literal.Type == TypeSymbol.String:
+                return literal.Value as string;
+
+            case BoundVariableExpression variable when variable.Variable.IsReadOnly:
+                return _boundStringConstants.TryGetValue(variable.Variable, out var text) ? text : null;
+
+            default:
+                return null;
+        }
+    }
+
     // Литерал массива: [значение, значение, ...]. Тип элементов выводится общим
     // правилом числового расширения; пустой набор требует тип из контекста,
     // потому что выводить элемент не из чего.
@@ -129,7 +182,7 @@ public sealed partial class Binder
         }
 
         var itemExpressions = expression.Items.Select(item => BindExpression(item)).ToList();
-        var elementType = ResolveArrayLiteralElementType(itemExpressions, expectedArrayType?.ElementType, location);
+        var elementType = ResolveArrayLiteralElementType(itemExpressions, expression.Items, expectedArrayType?.ElementType, location);
         if (elementType == TypeSymbol.Error)
         {
             return new BoundErrorExpression(location);
@@ -152,9 +205,40 @@ public sealed partial class Binder
 
     private TypeSymbol ResolveArrayLiteralElementType(
         IReadOnlyList<BoundExpression> items,
+        IReadOnlyList<ExpressionSyntax> itemSyntaxes,
         TypeSymbol? expectedElementType,
         TextLocation location)
     {
+        // Заранее заданный тип элементов не расширяется: иначе переменная
+        // INTEGER[] получала бы DOUBLE[] и несовместимость всплывала бы только
+        // в валидаторе байт-кода.
+        if (expectedElementType is not null && expectedElementType is not ArrayTypeSymbol)
+        {
+            for (var index = 0; index < items.Count; index++)
+            {
+                var item = items[index];
+                if (item.Type == TypeSymbol.Error)
+                {
+                    return TypeSymbol.Error;
+                }
+
+                if (item.Type == expectedElementType
+                    || CanConvert(item.Type, expectedElementType)
+                    || TryParseLiteralTextAsType(itemSyntaxes[index], expectedElementType, out _))
+                {
+                    continue;
+                }
+
+                _diagnostics.Report(
+                    DiagnosticCodes.InvalidArrayLiteralElement,
+                    $"Элемент литерала массива имеет тип {item.Type.Name}, несовместимый с типом элементов {expectedElementType.Name}.",
+                    GetLocation(itemSyntaxes[index]));
+                return TypeSymbol.Error;
+            }
+
+            return expectedElementType;
+        }
+
         var elementType = expectedElementType;
 
         foreach (var item in items)

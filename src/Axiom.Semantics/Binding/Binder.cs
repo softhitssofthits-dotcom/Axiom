@@ -30,6 +30,7 @@ public sealed partial class Binder
     private readonly Dictionary<string, ConstStatementSyntax> _globalIntegralConstantDeclarations = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, long> _globalIntegralConstants = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<VariableSymbol, long> _boundIntegralConstants = [];
+    private readonly Dictionary<VariableSymbol, string> _boundStringConstants = [];
     private readonly HashSet<VariableSymbol> _implicitForVariables = [];
     private readonly Dictionary<UserDefinedTypeSymbol, bool> _structuralEqualityCache = [];
     private readonly List<BoundStatement> _globalStatements = [];

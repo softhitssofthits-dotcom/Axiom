@@ -167,6 +167,36 @@ public sealed class ForEachContractTests
     }
 
     [Fact]
+    public void LastElementAtIntegerMaxDoesNotOverflowCounter()
+    {
+        // Единственный элемент с верхней границей INTEGER_MAX раньше увеличивался
+        // до переполнения ещё до проверки исчерпания диапазона.
+        const string source =
+            "DIM values[2147483647 TO 2147483647] AS INTEGER\r\n" +
+            "values[2147483647] = 7\r\n" +
+            "FOR EACH item IN values[]\r\n" +
+            "    PRINT item\r\n" +
+            "NEXT\r\n" +
+            "PRINT \"готово\"";
+
+        CheckBoth(source, new[] { "7", "готово" });
+    }
+
+    [Fact]
+    public void ByRefModifierIsRejectedAtCheck()
+    {
+        const string source =
+            "DIM values[] AS INTEGER = [1, 2]\r\n" +
+            "FOR EACH BYREF item IN values[]\r\n" +
+            "    item = 99\r\n" +
+            "NEXT";
+
+        var run = new AxiomExecutionPipeline().Run(new ExecutionRequest(source));
+        Assert.False(run.Succeeded);
+        Assert.Contains(run.Diagnostics, diagnostic => diagnostic.Code == "MB2064");
+    }
+
+    [Fact]
     public void UnallocatedSourceFailsAtRuntime()
     {
         const string source =

@@ -789,4 +789,21 @@ public sealed class LoweredInstruction
     {
         return new LoweredInstruction(LoweredInstructionKind.SnapshotValue, location);
     }
+
+    /// <summary>
+    /// Создаёт новый массив времени выполнения по образцу значения того же типа.
+    /// Образец задаёт тип элемента и длину фиксированной строки, границы берутся
+    /// из стека. Повторное вычисление литерала должно давать независимый объект,
+    /// иначе изменение прежнего результата затронуло бы новый.
+    /// </summary>
+    public static LoweredInstruction NewArray(TextLocation location, string displayName, int dimensionCount)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(dimensionCount);
+        return new LoweredInstruction(
+            LoweredInstructionKind.NewArray,
+            location,
+            displayName: displayName,
+            valueCount: dimensionCount);
+    }
 }

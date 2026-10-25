@@ -41,6 +41,12 @@ public sealed partial class BoundProgramLowerer
 
                 // Массив создаётся с нижней границей 1, как и результат функций,
                 // возвращающих массив. Пустой набор получает каноническую форму 1 TO 0.
+                // Образец-переменная задаёт только тип и длину фиксированной строки:
+                // новый объект создаётся на каждое вычисление, иначе повторное
+                // выполнение того же места изменило бы прежний результат.
+                instructions.Add(LoweredInstruction.LoadVariable(arrayLiteral.Location, arrayLiteralTemporary));
+                instructions.Add(LoweredInstruction.NewArray(arrayLiteral.Location, arrayLiteralName, dimensionCount: 1));
+                instructions.Add(LoweredInstruction.StoreVariable(arrayLiteral.Location, arrayLiteralTemporary));
                 instructions.Add(LoweredInstruction.LoadVariable(arrayLiteral.Location, arrayLiteralTemporary));
                 instructions.Add(LoweredInstruction.LoadLiteral(arrayLiteral.Location, 1, TypeSymbol.Integer));
                 instructions.Add(LoweredInstruction.LoadLiteral(arrayLiteral.Location, arrayLiteral.Items.Count, TypeSymbol.Integer));

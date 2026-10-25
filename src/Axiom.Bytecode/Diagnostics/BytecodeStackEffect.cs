@@ -115,6 +115,12 @@ internal static class BytecodeStackEffect
                 popCount = (instruction.GetOperand(2) * 2) + 1;
                 return true;
 
+            case Opcode.NewArray:
+                // Образец массива заменяется независимым массивом того же типа.
+                popCount = 1;
+                pushCount = 1;
+                return true;
+
             case Opcode.StoreElement:
                 popCount = instruction.GetOperand(1) + 2;
                 return true;

@@ -680,6 +680,12 @@ public sealed partial class BytecodeModuleValidator
                     ValidateRedimArrayInstruction(module, routine, instructionIndex, instruction);
                     break;
 
+                case Opcode.NewArray:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
+                    ValidateStringConstantIndex(module, routine, instructionIndex, instruction, operandIndex: 0, "имя массива");
+                    ValidatePositiveCountOperand(module, routine, instructionIndex, instruction, operandIndex: 1, code: "BC4109", label: "число измерений");
+                    break;
+
                 case Opcode.LoadElement:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 3);
                     ValidateElementInstruction(module, routine, instructionIndex, instruction);
@@ -2081,6 +2087,10 @@ public sealed partial class BytecodeModuleValidator
 
             case Opcode.RedimArray:
                 ApplyRedimArrayStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
+                break;
+
+            case Opcode.NewArray:
+                ApplyNewArrayStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
 
             case Opcode.LoadElement:

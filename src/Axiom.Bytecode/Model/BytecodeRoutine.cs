@@ -150,6 +150,8 @@ public sealed class BytecodeRoutine
             Opcode.CallValue => 0,
             Opcode.Return => 0,
             Opcode.RedimArray => -1,
+            // Образец массива заменяется независимым массивом того же типа.
+            Opcode.NewArray => 0,
             Opcode.EraseArray => -1,
             Opcode.LoadElement => 0,
             Opcode.StoreElement => -2,

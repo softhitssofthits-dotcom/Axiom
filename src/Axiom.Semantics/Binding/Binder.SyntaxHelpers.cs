@@ -47,6 +47,7 @@ public sealed partial class Binder
             LiteralExpressionSyntax literalExpression => literalExpression.LiteralToken.Location,
             InterpolatedStringExpressionSyntax interpolatedExpression => interpolatedExpression.StartToken.Location,
             RangeExpressionSyntax rangeExpression => rangeExpression.ToKeyword.Location,
+            StepDirectionArgumentExpressionSyntax stepDirectionArgument => stepDirectionArgument.StepKeyword.Location,
             NamedArgumentExpressionSyntax namedArgumentExpression => namedArgumentExpression.IdentifierToken.Location,
             NameExpressionSyntax nameExpression => nameExpression.IdentifierToken.Location,
             UnaryExpressionSyntax unaryExpression => unaryExpression.OperatorToken.Location,
@@ -229,15 +230,17 @@ public sealed partial class Binder
     {
         switch (expression)
         {
+            case ParenthesizedExpressionSyntax parenthesized:
+                return TryGetNumericLiteralText(parenthesized.Expression, out literalText);
+
             case LiteralExpressionSyntax literalExpression when literalExpression.LiteralToken.Kind is SyntaxKind.IntegerLiteralToken or SyntaxKind.LongLiteralToken or SyntaxKind.DoubleLiteralToken:
                 literalText = literalExpression.LiteralToken.Text;
                 return true;
 
             case UnaryExpressionSyntax unaryExpression
                 when unaryExpression.OperatorToken.Kind == SyntaxKind.MinusToken
-                && unaryExpression.Operand is LiteralExpressionSyntax operandLiteral
-                && operandLiteral.LiteralToken.Kind is SyntaxKind.IntegerLiteralToken or SyntaxKind.LongLiteralToken or SyntaxKind.DoubleLiteralToken:
-                literalText = "-" + operandLiteral.LiteralToken.Text;
+                && TryGetNumericLiteralText(unaryExpression.Operand, out var operandText):
+                literalText = operandText.StartsWith('-') ? operandText[1..] : "-" + operandText;
                 return true;
 
             default:

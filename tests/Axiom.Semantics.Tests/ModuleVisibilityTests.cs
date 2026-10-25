@@ -162,6 +162,49 @@ END FUNCTION
         Assert.Single(program.GlobalStatements);
     }
 
+    [Fact]
+    public void PublicStringConstantNamesSortFieldAcrossModules()
+    {
+        // Имя поля сортировки должно быть известно при проверке программы,
+        // поэтому PUBLIC CONST со строковым значением обязан доехать до
+        // импортирующего модуля вместе с типом записи.
+        var (_, diagnostics) = Bind(
+            ("main", """
+IMPORT catalog
+DIM basket[1 TO 2] AS Product
+ARRAYSORT(basket[], priceField)
+"""),
+            ("catalog", """
+PUBLIC TYPE Product
+    Name AS STRING
+    Price AS INTEGER
+END TYPE
+PUBLIC CONST priceField AS STRING = "Price"
+"""));
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Theory]
+    [InlineData("STRING", "\"Price\"", "\"Name\"")]
+    [InlineData("INTEGER", "1", "2")]
+    public void RejectedLocalConstantDoesNotBreakPublicExports(string type, string first, string second)
+    {
+        var (_, diagnostics) = Bind(("main", $"PUBLIC CONST exported AS {type} = {first}\n" +
+            $"SUB F()\nCONST exported AS {type} = {second}\nEND SUB"));
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "MB2016");
+    }
+
+    [Fact]
+    public void PublicChainedStringConstantNamesSortFieldAcrossModules()
+    {
+        var (_, diagnostics) = Bind(
+            ("main", "IMPORT catalog\nDIM basket[1 TO 2] AS Product\nARRAYSORT(basket[], priceField)"),
+            ("catalog", "PUBLIC TYPE Product\nPrice AS INTEGER\nEND TYPE\n" +
+                "CONST originalField AS STRING = \"Price\"\nPUBLIC CONST priceField AS STRING = originalField"));
+        Assert.Empty(diagnostics);
+    }
+
     private static (BoundProgram Program, DiagnosticBag Diagnostics) Bind(
         params (string Name, string Source)[] modules)
     {
