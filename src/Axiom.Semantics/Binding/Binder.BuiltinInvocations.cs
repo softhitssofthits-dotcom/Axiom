@@ -248,7 +248,12 @@ public sealed partial class Binder
             if (index < descriptor.Parameters.Count)
             {
                 var parameterType = descriptor.Parameters[index].Type;
-                var boundArgument = BindExpression(argument);
+
+                // Пустой литерал массива не выводит тип элементов из себя, поэтому
+                // получает объявленный тип параметра сразу при связывании.
+                var boundArgument = argument is ArrayLiteralExpressionSyntax { IsEmpty: true }
+                    ? BindExpression(argument, parameterType)
+                    : BindExpression(argument);
 
                 arguments.Add(TemporalConversionRules.IsPartExtractionBuiltin(descriptor.Id)
                         && (parameterType == TypeSymbol.Date || parameterType == TypeSymbol.Time)

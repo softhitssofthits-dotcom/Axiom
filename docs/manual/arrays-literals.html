@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Литерал массива — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="arrays-literals"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Литерал массива</span></nav>
+<p class="eyebrow">10 · Массивы</p><h1 class="page-title">Литерал массива</h1><p class="lead">Когда все элементы массива известны заранее, их не нужно объявлять с границами и заполнять по одному. Литерал массива перечисляет значения в квадратных скобках и сразу создаёт готовый одномерный массив с этими значениями.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+
+<section class="article-section" id="form"><h2>Форма записи</h2><p>Литерал начинается с открывающей квадратной скобки, затем идут значения через запятую и закрывающая скобка:</p><pre><code class="language-axiom">[&lt;значение&gt;, &lt;значение&gt;, …]</code></pre><p>Квадратная скобка в начале выражения означает перечисление значений. Квадратная скобка после имени или вызова означает обращение к массиву: <code>fruits[2]</code> выбирает элемент, <code>fruits[]</code> обозначает массив целиком. Эти две записи различаются наличием цели слева от скобки.</p><pre><code class="language-axiom">DIM fruits[] AS STRING = ["яблоко", "банан", "апельсин"]</code></pre><p>Литерал является значением, поэтому его можно присвоить существующему массиву, передать аргументом и вернуть из функции. У литерала нет собственного имени, но к его элементу можно обратиться сразу:</p><pre><code class="language-axiom">PRINT [10, 20, 30][2]</code></pre><p>Эта программа выводит <code>20</code>.</p></section>
+
+<section class="article-section" id="bounds"><h2>Границы и нумерация</h2><p>Литерал создаёт массив с нижней границей 1 и верхней границей, равной числу перечисленных значений. Так же начинаются массивы, которые возвращают <code>SPLIT</code>, <code>ARRAYSLICE</code> и другие функции, создающие результат. Первое значение имеет индекс 1, второе — 2, последнее — номер, совпадающий с длиной массива.</p><pre><code class="language-axiom">DIM fruits[] AS STRING = ["яблоко", "банан", "апельсин"]
+PRINT fruits[2]
+PRINT ARRAYLENGTH(fruits[])
+PRINT LBOUND(fruits[]); " "; UBOUND(fruits[])</code></pre><p>Программа выводит:</p><pre><code>банан
+3
+1 3</code></pre><p>Пустой литерал создаёт выделенный массив без элементов. Его границы имеют каноническую пустую форму: нижняя 1, верхняя 0, а <code>ARRAYLENGTH</code> равно 0.</p></section>
+
+<section class="article-section" id="type"><h2>Тип элементов</h2><p>Тип элементов определяется по контексту. Если у объявления есть тип, он и задаёт тип элементов, а каждое значение проверяется на совместимость с ним:</p><pre><code class="language-axiom">DIM fruits[] AS STRING = ["яблоко", "банан"]</code></pre><p>Если тип не указан, он выводится из самих значений. Числовые значения разного вида получают общий тип по действующим правилам расширения: <code>[1, 2]</code> даёт INTEGER, <code>[1, 2.5]</code> — DOUBLE, <code>[1, 3000000000]</code> — LONG. Дробная часть при этом не теряется, потому что расширение идёт в сторону более широкого типа, а не сужения.</p><pre><code class="language-axiom">DIM mixed[] = [1, 2.5]
+PRINT mixed[1] + mixed[2]</code></pre><p>Программа выводит <code>3.5</code>.</p><p>Значение, несовместимое с остальными, отклоняется при проверке программы. Массив не может быть элементом литерала: вложенные массивы языком не поддерживаются.</p></section>
+
+<section class="article-section" id="empty"><h2>Пустой набор</h2><p>Пустой литерал не содержит ни одного значения, поэтому тип элементов из него вывести нельзя. Он допустим только там, где тип известен заранее: в объявлении с типом, в присваивании массиву известного типа или в аргументе, для которого объявлен тип массивного параметра.</p><pre><code class="language-axiom">DIM empty[] AS INTEGER = []
+PRINT ARRAYLENGTH(empty[])</code></pre><p>Программа выводит <code>0</code>.</p><p>Запись <code>PRINT []</code> без такого контекста отклоняется: тип элементов не определён. Указать тип можно через объявление или через функцию с известным типом параметра.</p></section>
+
+<section class="article-section" id="evaluation"><h2>Вычисление значений</h2><p>Значения вычисляются ровно один раз каждое, слева направо, до создания массива. Побочные действия вроде вызова функции выполняются столько раз, сколько раз значение указано в литерале.</p><pre><code class="language-axiom">DIM counter AS INTEGER
+FUNCTION Bump() AS INTEGER
+    counter = counter + 1
+    RETURN counter
+END FUNCTION
+DIM values[] AS INTEGER = [Bump(), Bump(), Bump()]
+PRINT counter</code></pre><p>Программа выводит <code>3</code>: функция вызвана три раза, по одному на каждое значение.</p></section>
+
+<section class="article-section" id="uses"><h2>Где допустим литерал</h2><p>Литерал используется в объявлении, в присваивании массиву целиком, в аргументе функции и в <code>RETURN</code>:</p><pre><code class="language-axiom">FUNCTION Total(items[] AS INTEGER) AS INTEGER
+    RETURN ARRAYSUM(items[])
+END FUNCTION
+
+FUNCTION MakeFruits() AS STRING[]
+    RETURN ["груша", "слива"]
+END FUNCTION
+
+PRINT Total([4, 5, 6])
+PRINT MakeFruits()[2]</code></pre><p>Программа выводит <code>15</code> и <code>слива</code>.</p><p>Созданный литералом массив участвует в массивных функциях на общих основаниях: <code>ARRAYSUM([1, 2, 3])</code> возвращает 6, а <code>ARRAYDISTINCT([1, 1, 2])</code> — массив из двух элементов.</p></section>
+
+<section class="article-section" id="diagnostics"><h2>Диагностика</h2><p>MB2059 сообщает, что пустой литерал не получил тип элементов: рядом нет объявления или параметра с известным типом массива. MB2060 сообщает о значении, несовместимом с типом элементов, и о попытке вложить массив в литерал. MB2061 сообщает, что литерал использован там, где ожидается массив ранга 2 и выше: литерал создаёт только одномерный массив. Подробности о массивных диагностиках собраны в статье <a href="arrays-diagnostics.html">Ошибки массивов</a>.</p></section>
+
+<section class="article-section" id="examples"><h2>Запускаемые примеры</h2><p><a href="../../samples/expressions/array-literals/fruit_values.axm">fruit_values.axm</a> — значения, длина и границы литерала. <a href="../../samples/expressions/array-literals/empty_typed_array.axm">empty_typed_array.axm</a> — пустой набор с типом из объявления. <a href="../../samples/expressions/array-literals/mixed_numeric_values.axm">mixed_numeric_values.axm</a> — общий числовой тип. <a href="../../samples/expressions/array-literals/literal_as_value.axm">literal_as_value.axm</a> — литерал в аргументе, в RETURN и при обращении по индексу. <a href="../../samples/expressions/array-literals/evaluated_once.axm">evaluated_once.axm</a> — однократное вычисление слева направо. <a href="../../samples/expressions/array-literals/records_in_literal.axm">records_in_literal.axm</a> — записи в литерале.</p></section>
+
+<section class="article-section"><h2>См. также</h2><p><a href="arrays-1d.html">Одномерные массивы</a> · <a href="dim.html">Объявление DIM</a> · <a href="arrays-indexing.html">Индексирование</a> · <a href="arrays-and-builtins.html">Преобразования, поиск и вычисления</a></p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

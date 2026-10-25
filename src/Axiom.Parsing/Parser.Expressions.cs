@@ -42,6 +42,7 @@ public sealed partial class Parser
         ExpressionSyntax atom = Current.Kind switch
         {
             SyntaxKind.OpenParenToken => ParseParenthesizedExpression(),
+            SyntaxKind.OpenBracketToken => ParseArrayLiteralExpression(),
             SyntaxKind.IntegerLiteralToken or SyntaxKind.LongLiteralToken or SyntaxKind.DoubleLiteralToken or SyntaxKind.StringLiteralToken or SyntaxKind.BooleanLiteralToken => new LiteralExpressionSyntax(NextToken()),
             SyntaxKind.InterpolatedStringStartToken => ParseInterpolatedStringExpression(),
             SyntaxKind.IdentifierToken
@@ -69,6 +70,30 @@ public sealed partial class Parser
         var expression = ParseExpression();
         var closeParenToken = Match(SyntaxKind.CloseParenToken, ")");
         return new ParenthesizedExpressionSyntax(openParenToken, expression, closeParenToken);
+    }
+
+    private ArrayLiteralExpressionSyntax ParseArrayLiteralExpression()
+    {
+        var openBracketToken = Match(SyntaxKind.OpenBracketToken, "[");
+        var items = new List<ExpressionSyntax>();
+        var commaTokens = new List<SyntaxToken>();
+
+        // Элементы литерала — обычные значения. STEP и именованные аргументы
+        // здесь не разбираются: это формы списка аргументов вызова, а не набора.
+        while (Current.Kind is not (SyntaxKind.CloseBracketToken or SyntaxKind.EndOfFileToken))
+        {
+            items.Add(ParseExpression());
+
+            if (Current.Kind != SyntaxKind.CommaToken)
+            {
+                break;
+            }
+
+            commaTokens.Add(NextToken());
+        }
+
+        var closeBracketToken = Match(SyntaxKind.CloseBracketToken, "]");
+        return new ArrayLiteralExpressionSyntax(openBracketToken, items, commaTokens, closeBracketToken);
     }
 
     private InterpolatedStringExpressionSyntax ParseInterpolatedStringExpression()

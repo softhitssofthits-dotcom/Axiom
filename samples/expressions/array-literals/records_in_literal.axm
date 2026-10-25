@@ -1,0 +1,18 @@
+' Литерал принимает записи наравне с простыми значениями.
+' Ожидаемый вывод:
+' яблоко 30
+' банан 20
+' 2
+TYPE Product
+    Name AS STRING
+    Price AS INTEGER
+END TYPE
+
+DIM basket[] AS Product = [Product("яблоко", 30), Product("банан", 20)]
+
+' Запись переносится в массив целиком, со всеми полями.
+PRINT basket[1].Name; " "; basket[1].Price
+PRINT basket[2].Name; " "; basket[2].Price
+
+' Число записей совпадает с числом перечисленных значений.
+PRINT ARRAYLENGTH(basket[])

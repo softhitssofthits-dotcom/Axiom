@@ -35,6 +35,18 @@ public sealed partial class BoundProgramLowerer
         return variable;
     }
 
+    private VariableSymbol CreateArrayLiteralTemporary(BoundArrayLiteralExpression arrayLiteral)
+    {
+        var variable = new VariableSymbol(
+            FormattableString.Invariant($"__array_literal_{_currentRoutineLocals.Count}_{arrayLiteral.ArrayType.ElementType.Name}"),
+            arrayLiteral.ArrayType,
+            isReadOnly: false,
+            isGlobal: false);
+
+        _currentRoutineLocals.Add(variable);
+        return variable;
+    }
+
     private VariableSymbol CreateRecordLiteralTemporary(BoundRecordLiteralExpression recordLiteral)
     {
         var variable = new VariableSymbol(

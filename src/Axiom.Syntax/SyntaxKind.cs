@@ -255,6 +255,7 @@ public enum SyntaxKind
     NamedArgumentExpression,
     CallExpression,
     ArrayAccessExpression,
+    ArrayLiteralExpression,
     FieldAccessExpression,
     ErrorExpression,
     InterpolatedStringExpression,

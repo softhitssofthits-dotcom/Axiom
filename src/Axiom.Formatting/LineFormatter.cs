@@ -142,10 +142,16 @@ internal static class LineFormatter
             return true;
         }
 
-        // Суффикс массива примыкает и к имени/типу, и к результату вызова.
+        // Квадратная скобка примыкает к имени, типу, результату вызова и
+        // закрывающей скобке — так записывается суффикс массива и обращение.
+        // В начале выражения она открывает литерал и отделяется как операнд.
         if (current.Kind == FormattedTokenKind.OpenBracket)
         {
-            return false;
+            return previous.Kind is not FormattedTokenKind.PlainWord
+                and not FormattedTokenKind.BuiltInWord
+                and not FormattedTokenKind.CloseParen
+                and not FormattedTokenKind.CloseBracket
+                && !IsTypeName(previous);
         }
 
         if (current.Kind == FormattedTokenKind.OpenParen)
@@ -166,12 +172,17 @@ internal static class LineFormatter
             || current.Kind == FormattedTokenKind.ReservedWord;
     }
 
-    private static bool IsWordLike(FormattedTokenKind kind) =>
-        kind is FormattedTokenKind.PlainWord
+    private static bool IsWordLike(FormattedTokenKind kind) =>        kind is FormattedTokenKind.PlainWord
             or FormattedTokenKind.BuiltInWord
             or FormattedTokenKind.ReservedWord
             or FormattedTokenKind.Number
             or FormattedTokenKind.String;
+
+    // Тип перед суффиксом ранга — часть типа результата (STRING[]), а не
+    // отдельный операнд, поэтому скобка примыкает к нему.
+    private static bool IsTypeName(FormattedToken previous) =>
+        previous.Kind == FormattedTokenKind.ReservedWord
+        && AxiomFormattingVocabulary.TypeNames.Contains(previous.Text.ToUpperInvariant());
 
     private static string NormalizeCommentPart(string commentPart, CodeFormattingStyle style)
     {

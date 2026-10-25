@@ -54,6 +54,7 @@ public sealed partial class Binder
             ParenthesizedExpressionSyntax parenthesizedExpression => parenthesizedExpression.OpenParenToken.Location,
             CallExpressionSyntax callExpression => GetLocation(callExpression.Target),
             ArrayAccessExpressionSyntax arrayAccessExpression => GetLocation(arrayAccessExpression.Target),
+            ArrayLiteralExpressionSyntax arrayLiteralExpression => arrayLiteralExpression.OpenBracketToken.Location,
             FieldAccessExpressionSyntax fieldAccessExpression => fieldAccessExpression.Identifier.Location,
             ErrorExpressionSyntax errorExpression => errorExpression.Token.Location,
             _ => throw new ArgumentOutOfRangeException(nameof(expression), expression, "Unsupported expression.")

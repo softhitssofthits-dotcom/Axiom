@@ -1,0 +1,26 @@
+' Литерал массива — обычное значение: его можно передать аргументом,
+' вернуть из функции и сразу прочитать по индексу.
+' Ожидаемый вывод:
+' 20
+' 15
+' слива
+' 2
+FUNCTION Total(items[] AS INTEGER) AS INTEGER
+    RETURN ARRAYSUM(items[])
+END FUNCTION
+
+FUNCTION MakeFruits() AS STRING[]
+    RETURN ["груша", "слива"]
+END FUNCTION
+
+' Обращение к элементу прямо у литерала.
+PRINT [10, 20, 30][2]
+
+' Литерал в аргументе пользовательской функции.
+PRINT Total([4, 5, 6])
+
+' Литерал в RETURN и обращение к результату вызова.
+PRINT MakeFruits()[2]
+
+' Длина массива, созданного литералом.
+PRINT ARRAYLENGTH(MakeFruits())

@@ -11,6 +11,7 @@ internal static class BoundExpressionTraversal
             BoundFunctionExpression node => [],
             BoundVariableExpression node => [],
             BoundArrayAccessExpression node => [node.Target, ..node.Indices],
+            BoundArrayLiteralExpression node => [..node.Items],
             BoundArrayRangeExpression node => [node.LowerBound, node.UpperBound],
             BoundFieldAccessExpression node => [node.Target],
             BoundRecordLiteralExpression node => [..node.Initializers.Select(static item => item.Expression)],

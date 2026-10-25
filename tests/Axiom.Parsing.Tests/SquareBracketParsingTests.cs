@@ -26,6 +26,9 @@ public sealed class SquareBracketParsingTests
     [InlineData("REDIM PRESERVE fruits[1 TO 5]")]
     [InlineData("REDIM bags[ChooseBag()].fruits[1 TO 5]")]
     [InlineData("ERASE bag.fruits[]")]
+    [InlineData("PRINT []")]
+    [InlineData("DIM fruits[] AS STRING = [\"яблоко\", \"банан\"]")]
+    [InlineData("PRINT [10, 20, 30][2]")]
     public void Parse_AcceptsSquareBracketForms(string source)
     {
         Parser.ParseSquareBracketSyntax(source, out var diagnostics);
@@ -37,7 +40,6 @@ public sealed class SquareBracketParsingTests
     [InlineData("PRINT fruits[2,]")]
     [InlineData("PRINT fruits[,2]")]
     [InlineData("PRINT fruits[2]]")]
-    [InlineData("PRINT []")]
     [InlineData("PRINT fruits[index := 2]")]
     [InlineData("REDIM fruits[]")]
     [InlineData("SUB Show(values[1 TO 2] AS STRING)\nEND SUB")]
@@ -147,6 +149,42 @@ public sealed class SquareBracketParsingTests
         var resultType = Assert.IsType<ArrayTypeSyntax>(function.ReturnType.Type);
         Assert.Equal(1, resultType.Rank);
         Assert.Equal("[", resultType.OpenDelimiterToken.Text);
+    }
+
+    [Fact]
+    public void Parse_ReadsArrayLiteralFromLeadingBrackets()
+    {
+        var literal = Assert.IsType<ArrayLiteralExpressionSyntax>(PrintExpression("[\"яблоко\", \"банан\"]"));
+        Assert.Equal(2, literal.Items.Count);
+        Assert.Single(literal.CommaTokens);
+        Assert.False(literal.IsEmpty);
+        Assert.Equal("яблоко", Assert.IsType<LiteralExpressionSyntax>(literal.Items[0]).LiteralToken.Value);
+        Assert.Equal("банан", Assert.IsType<LiteralExpressionSyntax>(literal.Items[1]).LiteralToken.Value);
+    }
+
+    [Fact]
+    public void Parse_ReadsEmptyArrayLiteral()
+    {
+        var literal = Assert.IsType<ArrayLiteralExpressionSyntax>(PrintExpression("[]"));
+        Assert.True(literal.IsEmpty);
+        Assert.Empty(literal.Items);
+        Assert.Empty(literal.CommaTokens);
+    }
+
+    [Fact]
+    public void Parse_IndexesArrayLiteral()
+    {
+        var access = Assert.IsType<ArrayAccessExpressionSyntax>(PrintExpression("[10, 20, 30][2]"));
+        Assert.IsType<ArrayLiteralExpressionSyntax>(access.Target);
+        Assert.Equal(2, Assert.IsType<LiteralExpressionSyntax>(Assert.Single(access.Indices)).LiteralToken.Value);
+    }
+
+    [Fact]
+    public void Parse_KeepsNestedAccessInsideArrayLiteral()
+    {
+        var literal = Assert.IsType<ArrayLiteralExpressionSyntax>(PrintExpression("[fruits[1], fruits[2]]"));
+        Assert.Equal(2, literal.Items.Count);
+        Assert.All(literal.Items, item => Assert.IsType<ArrayAccessExpressionSyntax>(item));
     }
 
     private static ExpressionSyntax PrintExpression(string expression)

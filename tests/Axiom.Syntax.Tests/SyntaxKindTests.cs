@@ -59,6 +59,7 @@ public sealed class SyntaxKindTests
             SyntaxKind.NamedArgumentExpression,
             SyntaxKind.CallExpression,
             SyntaxKind.ArrayAccessExpression,
+            SyntaxKind.ArrayLiteralExpression,
             SyntaxKind.FieldAccessExpression,
             SyntaxKind.ErrorExpression,
         };

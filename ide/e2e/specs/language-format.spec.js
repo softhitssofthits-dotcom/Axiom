@@ -74,6 +74,33 @@ module.exports = [
       C.eq(await S.page.evaluate(() => window.__ide.execution.outputText.replace(/\r/g, '').trim()), 'банан\nапельсин', 'Запуск и общий массив, ' + style);
     }
   } },
+  { id: 'language-array-literals', name: 'Литерал массива: форматирование, подсветка, проверка и запуск в двух стилях', async fn({ S, C }) {
+    const source = 'DIM fruits[] AS STRING = [ "яблоко" , "банан" ]\nPRINT fruits[2]\nPRINT ARRAYLENGTH( [ "яблоко" , "банан" ] )\n';
+    await open(S, source, 'array-literals');
+    await S.page.evaluate(() => window.__ide.setLanguage('ru'));
+    for (const style of ['Classic', 'Modern']) {
+      await S.page.evaluate(async ({ source, style }) => {
+        const i = window.__ide;
+        i.editor.getModel().setValue(source);
+        i.settings.formattingStyle = style;
+        await i.formatWholeDocument('array-literals');
+        await i.check(false);
+      }, { source, style });
+      C.eq(await S.page.evaluate(() => window.__ide.editor.getModel().getLineContent(1)),
+        style === 'Classic' ? 'DIM fruits[] AS STRING = ["яблоко", "банан"]' : 'Dim fruits[] As String = ["яблоко", "банан"]',
+        'Литерал форматируется с пробелом после =, ' + style);
+      C.ok(await S.page.evaluate(() => !window.__ide._lastDiagnostics.some(d => d.severity === 'error')), 'Литерал проверяется без ошибок, ' + style);
+      const tokens = await S.page.evaluate(() => {
+        const i = window.__ide;
+        return i.monaco.editor.tokenize(i.editor.getValue(), 'axiom');
+      });
+      C.ok(tokens[0].some(t => /^string/.test(t.type)), 'Значения литерала остаются строками, ' + style);
+      C.ok(tokens[0].some(t => /^delimiter/.test(t.type)) || tokens[0].some(t => /bracket/.test(t.type)), 'Скобки литерала имеют свою категорию, ' + style);
+      await S.page.evaluate(() => window.__ide.run());
+      await S.waitIdle();
+      C.eq(await S.page.evaluate(() => window.__ide.execution.outputText.replace(/\r/g, '').trim()), 'банан\n2', 'Литерал выполняется и нумеруется с 1, ' + style);
+    }
+  } },
   { id: 'format-smooth-two-styles', name: 'SMOOTH форматируется через меню и Enter в Classic и Modern', async fn({ S, C }) {
     const source = 'smooth on\nsMoOtH oFf\nprint "smooth on"\n\' smooth off\n';
     await open(S, source, 'format-smooth');

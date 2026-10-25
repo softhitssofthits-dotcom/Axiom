@@ -20,6 +20,9 @@ public sealed class SquareBracketFormattingContractTests
     [InlineData("print $\"[ текст ] {grid[ 1 , 2 ]:F2}\"", "PRINT $\"[ текст ] {grid[1, 2]:F2}\"", "Print $\"[ текст ] {grid[1, 2]:F2}\"")]
     [InlineData("print $\"{$\"{values[ 2 ]}\"}\"", "PRINT $\"{$\"{values[2]}\"}\"", "Print $\"{$\"{values[2]}\"}\"")]
     [InlineData("print legacy( 2 )+MakeFruits( )", "PRINT legacy(2) + MakeFruits()", "Print legacy(2) + MakeFruits()")]
+    [InlineData("dim fruits[] as string=[ \"яблоко\" , \"банан\" ]", "DIM fruits[] AS STRING = [\"яблоко\", \"банан\"]", "Dim fruits[] As String = [\"яблоко\", \"банан\"]")]
+    [InlineData("dim empty[] as integer=[ ]", "DIM empty[] AS INTEGER = []", "Dim empty[] As Integer = []")]
+    [InlineData("print [ 10 , 20 , 30 ][ 2 ]", "PRINT [10, 20, 30][2]", "Print [10, 20, 30][2]")]
     public void FormatsArrayFormsAndPreservesCalls(string source, string classic, string modern)
     {
         var formatter = new AxiomCodeFormattingService();

@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 565,
+  "count": 566,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -2141,6 +2141,11 @@
       "id": "language-array-initializers",
       "spec": "language-format.spec.js",
       "name": "Массивные инициализаторы: явный и выведенный тип, форматирование, подсветка и запуск"
+    },
+    {
+      "id": "language-array-literals",
+      "spec": "language-format.spec.js",
+      "name": "Литерал массива: форматирование, подсветка, проверка и запуск в двух стилях"
     },
     {
       "id": "format-smooth-two-styles",

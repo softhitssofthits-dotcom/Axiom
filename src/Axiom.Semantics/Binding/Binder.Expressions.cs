@@ -20,11 +20,19 @@ public sealed partial class Binder
             NamedArgumentExpressionSyntax namedArgumentExpression => BindExpression(namedArgumentExpression.Expression),
             CallExpressionSyntax callExpression => BindCallExpression(callExpression),
             ArrayAccessExpressionSyntax arrayAccessExpression => BindSquareArrayAccessExpression(arrayAccessExpression),
+            ArrayLiteralExpressionSyntax arrayLiteralExpression => BindArrayLiteralExpression(arrayLiteralExpression, expectedType),
             FieldAccessExpressionSyntax fieldAccessExpression => BindFieldAccessExpression(fieldAccessExpression),
             InterpolatedStringExpressionSyntax interpolatedExpression => BindInterpolatedStringExpression(interpolatedExpression),
             ErrorExpressionSyntax errorExpression => new BoundErrorExpression(errorExpression.Token.Location),
             _ => throw new ArgumentOutOfRangeException(nameof(expression), expression, "Unsupported expression.")
         };
+
+        // Литерал массива получает ожидаемый тип внутри собственного связывания:
+        // приведение массива к массиву общей проверкой типов не выполняется.
+        if (expression is ArrayLiteralExpressionSyntax)
+        {
+            return boundExpression;
+        }
 
         if (expectedType is null || expectedType == TypeSymbol.Error)
         {
@@ -42,6 +50,11 @@ public sealed partial class Binder
         if (boundExpression.Type == TypeSymbol.Error || boundExpression.Type == expectedType)
         {
             return boundExpression;
+        }
+
+        if (syntax is ArrayLiteralExpressionSyntax arrayLiteral && expectedType is ArrayTypeSymbol expectedArrayType)
+        {
+            return BindArrayLiteralExpression(arrayLiteral, expectedArrayType);
         }
 
         if (TryReportLossyTemporalConversion(syntax, boundExpression, expectedType))
@@ -82,6 +95,109 @@ public sealed partial class Binder
         };
 
         return new BoundLiteralExpression(expression.LiteralToken.Location, expression.LiteralToken.Value, type);
+    }
+
+    // Литерал массива: [значение, значение, ...]. Тип элементов выводится общим
+    // правилом числового расширения; пустой набор требует тип из контекста,
+    // потому что выводить элемент не из чего.
+    private BoundExpression BindArrayLiteralExpression(ArrayLiteralExpressionSyntax expression, TypeSymbol? expectedType)
+    {
+        var location = expression.OpenBracketToken.Location;
+        var expectedArrayType = expectedType as ArrayTypeSymbol;
+
+        if (expectedArrayType is { Rank: > 1 })
+        {
+            _diagnostics.Report(
+                DiagnosticCodes.ArrayLiteralRankMismatch,
+                $"Литерал массива создаёт только одномерный массив, а ожидается ранг {expectedArrayType.Rank}.",
+                location);
+            return new BoundErrorExpression(location);
+        }
+
+        if (expression.IsEmpty)
+        {
+            if (expectedArrayType is null)
+            {
+                _diagnostics.Report(
+                    DiagnosticCodes.ArrayLiteralTypeUnknown,
+                    "Пустой литерал массива требует известного типа элементов: укажите тип объявления или другой ожидаемый тип массива.",
+                    location);
+                return new BoundErrorExpression(location);
+            }
+
+            return new BoundArrayLiteralExpression(location, expectedArrayType, []);
+        }
+
+        var itemExpressions = expression.Items.Select(item => BindExpression(item)).ToList();
+        var elementType = ResolveArrayLiteralElementType(itemExpressions, expectedArrayType?.ElementType, location);
+        if (elementType == TypeSymbol.Error)
+        {
+            return new BoundErrorExpression(location);
+        }
+
+        var arrayType = ArrayTypeSymbol.Create(elementType);
+        if (arrayType == TypeSymbol.Error)
+        {
+            return new BoundErrorExpression(location);
+        }
+
+        var items = new List<BoundExpression>(itemExpressions.Count);
+        foreach (var item in itemExpressions)
+        {
+            items.Add(ApplyExpectedType(expression.Items[items.Count], item, elementType));
+        }
+
+        return new BoundArrayLiteralExpression(location, (ArrayTypeSymbol)arrayType, items);
+    }
+
+    private TypeSymbol ResolveArrayLiteralElementType(
+        IReadOnlyList<BoundExpression> items,
+        TypeSymbol? expectedElementType,
+        TextLocation location)
+    {
+        var elementType = expectedElementType;
+
+        foreach (var item in items)
+        {
+            if (item.Type == TypeSymbol.Error)
+            {
+                return TypeSymbol.Error;
+            }
+
+            if (elementType is null)
+            {
+                elementType = item.Type;
+                continue;
+            }
+
+            if (item.Type == elementType)
+            {
+                continue;
+            }
+
+            if (IsNumeric(elementType) && IsNumeric(item.Type))
+            {
+                elementType = PromoteNumericType(elementType, item.Type);
+                continue;
+            }
+
+            _diagnostics.Report(
+                DiagnosticCodes.InvalidArrayLiteralElement,
+                $"Элемент литерала массива имеет тип {item.Type.Name}, несовместимый с типом элементов {elementType.Name}.",
+                location);
+            return TypeSymbol.Error;
+        }
+
+        if (elementType is null || elementType is ArrayTypeSymbol)
+        {
+            _diagnostics.Report(
+                DiagnosticCodes.InvalidArrayLiteralElement,
+                "Элементом литерала массива не может быть массив. Вложенные массивы не поддерживаются.",
+                location);
+            return TypeSymbol.Error;
+        }
+
+        return elementType;
     }
 
     private BoundExpression BindInterpolatedStringExpression(InterpolatedStringExpressionSyntax expression)

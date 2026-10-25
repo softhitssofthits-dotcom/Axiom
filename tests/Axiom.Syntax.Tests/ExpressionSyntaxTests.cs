@@ -112,6 +112,36 @@ public sealed class ExpressionSyntaxTests
     }
 
     [Fact]
+    public void ArrayLiteralExpression_HasCorrectKindAndTracksEmptySet()
+    {
+        var open = Token(SyntaxKind.OpenBracketToken, "[");
+        var close = Token(SyntaxKind.CloseBracketToken, "]");
+        var expr = new ArrayLiteralExpressionSyntax(open, [], [], close);
+
+        Assert.Equal(SyntaxKind.ArrayLiteralExpression, expr.Kind);
+        Assert.Same(open, expr.OpenBracketToken);
+        Assert.Same(close, expr.CloseBracketToken);
+        Assert.Empty(expr.Items);
+        Assert.Empty(expr.CommaTokens);
+        Assert.True(expr.IsEmpty);
+    }
+
+    [Fact]
+    public void ArrayLiteralExpression_KeepsItemsAndCommas()
+    {
+        var open = Token(SyntaxKind.OpenBracketToken, "[");
+        var first = new LiteralExpressionSyntax(Token(SyntaxKind.StringLiteralToken, "\"яблоко\""));
+        var comma = Token(SyntaxKind.CommaToken, ",");
+        var second = new LiteralExpressionSyntax(Token(SyntaxKind.StringLiteralToken, "\"банан\""));
+        var close = Token(SyntaxKind.CloseBracketToken, "]");
+        var expr = new ArrayLiteralExpressionSyntax(open, [first, second], [comma], close);
+
+        Assert.Equal(2, expr.Items.Count);
+        Assert.Single(expr.CommaTokens);
+        Assert.False(expr.IsEmpty);
+    }
+
+    [Fact]
     public void FieldAccessExpression_HasCorrectKind()
     {
         var target = new NameExpressionSyntax(Token(SyntaxKind.IdentifierToken, "obj"));

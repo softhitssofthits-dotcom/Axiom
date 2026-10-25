@@ -1,0 +1,22 @@
+' Каждый элемент литерала вычисляется ровно один раз, слева направо.
+' Ожидаемый вывод:
+' 1
+' 2
+' 3
+' 3
+DIM counter AS INTEGER
+
+FUNCTION Bump() AS INTEGER
+    counter = counter + 1
+    RETURN counter
+END FUNCTION
+
+' Три вызова в литерале дают три последовательных значения.
+DIM values[] AS INTEGER = [Bump(), Bump(), Bump()]
+
+PRINT values[1]
+PRINT values[2]
+PRINT values[3]
+
+' Счётчик вырос ровно на число элементов, повторов вычисления нет.
+PRINT counter

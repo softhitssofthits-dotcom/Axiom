@@ -71,6 +71,7 @@ public enum BoundNodeKind
     FunctionExpression,
     VariableExpression,
     ArrayAccessExpression,
+    ArrayLiteralExpression,
     ArrayRangeExpression,
     FieldAccessExpression,
     RecordLiteralExpression,

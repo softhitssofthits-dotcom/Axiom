@@ -35,6 +35,29 @@ public sealed partial class BoundProgramLowerer
                     GetArrayIndexRangeMask(arrayAccess.Indices)));
                 break;
 
+            case BoundArrayLiteralExpression arrayLiteral:
+                var arrayLiteralTemporary = CreateArrayLiteralTemporary(arrayLiteral);
+                var arrayLiteralName = arrayLiteralTemporary.Name;
+
+                // Массив создаётся с нижней границей 1, как и результат функций,
+                // возвращающих массив. Пустой набор получает каноническую форму 1 TO 0.
+                instructions.Add(LoweredInstruction.LoadVariable(arrayLiteral.Location, arrayLiteralTemporary));
+                instructions.Add(LoweredInstruction.LoadLiteral(arrayLiteral.Location, 1, TypeSymbol.Integer));
+                instructions.Add(LoweredInstruction.LoadLiteral(arrayLiteral.Location, arrayLiteral.Items.Count, TypeSymbol.Integer));
+                instructions.Add(LoweredInstruction.RedimArray(arrayLiteral.Location, arrayLiteralName, preserve: false, dimensionCount: 1));
+
+                for (var index = 0; index < arrayLiteral.Items.Count; index++)
+                {
+                    // Каждый элемент вычисляется ровно один раз и слева направо.
+                    LowerExpression(arrayLiteral.Items[index], instructions);
+                    instructions.Add(LoweredInstruction.LoadVariable(arrayLiteral.Location, arrayLiteralTemporary));
+                    instructions.Add(LoweredInstruction.LoadLiteral(arrayLiteral.Location, index + 1, TypeSymbol.Integer));
+                    instructions.Add(LoweredInstruction.StoreElement(arrayLiteral.Location, arrayLiteralName, dimensionCount: 1));
+                }
+
+                instructions.Add(LoweredInstruction.LoadVariable(arrayLiteral.Location, arrayLiteralTemporary));
+                break;
+
             case BoundFieldAccessExpression fieldAccess:
                 LowerExpression(fieldAccess.Target, instructions);
                 instructions.Add(LoweredInstruction.LoadField(fieldAccess.Location, fieldAccess.Field.Name));

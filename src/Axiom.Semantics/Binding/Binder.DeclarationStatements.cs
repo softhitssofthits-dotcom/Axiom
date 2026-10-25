@@ -84,7 +84,15 @@ public sealed partial class Binder
             BoundExpression? explicitInitializer = null;
             if (declaration.Initializer is not null)
             {
-                explicitInitializer = BindExpression(declaration.Initializer);
+                // Литерал массива связывается сразу с объявленным типом: иначе
+                // пустой набор не получил бы тип элементов, а нечисловые элементы
+                // проверялись бы по выведенному, а не по заявленному типу.
+                var expectedType = declaration.Initializer is ArrayLiteralExpressionSyntax
+                    && declaration.Declarators[0].ArrayBounds is { } bounds
+                    && explicitType != TypeSymbol.Error
+                        ? BindArrayVariableType(explicitType, bounds.Rank)
+                        : null;
+                explicitInitializer = BindExpression(declaration.Initializer, expectedType);
             }
 
             return (explicitType, explicitInitializer, fixedStringLength);
@@ -189,7 +197,11 @@ public sealed partial class Binder
 
     private BoundExpression BindAssignmentExpression(ExpressionSyntax expressionSyntax, BoundExpression target, TypeSymbol targetType)
     {
-        var expression = BindExpression(expressionSyntax);
+        // Цель присваивания уже задаёт тип, поэтому литерал массива связывается
+        // сразу с ним: пустой набор иначе не получил бы тип элементов.
+        var expression = expressionSyntax is ArrayLiteralExpressionSyntax
+            ? BindExpression(expressionSyntax, targetType)
+            : BindExpression(expressionSyntax);
         var targetName = GetArrayTargetDisplayName(target);
 
         if (targetType == TypeSymbol.Error || expression.Type == TypeSymbol.Error)

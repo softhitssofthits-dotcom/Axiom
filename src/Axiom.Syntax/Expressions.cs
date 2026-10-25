@@ -227,6 +227,40 @@ public sealed class ArrayAccessExpressionSyntax : ExpressionSyntax
     public bool IsWholeArray => Indices.Count == 0;
 }
 
+// Квадратные скобки в начале выражения перечисляют значения будущего массива.
+// Это не обращение к массиву: цели слева от скобок нет.
+public sealed class ArrayLiteralExpressionSyntax : ExpressionSyntax
+{
+    public ArrayLiteralExpressionSyntax(
+        SyntaxToken openBracketToken,
+        IReadOnlyList<ExpressionSyntax> items,
+        IReadOnlyList<SyntaxToken> commaTokens,
+        SyntaxToken closeBracketToken)
+    {
+        ArgumentNullException.ThrowIfNull(openBracketToken);
+        ArgumentNullException.ThrowIfNull(items);
+        ArgumentNullException.ThrowIfNull(commaTokens);
+        ArgumentNullException.ThrowIfNull(closeBracketToken);
+
+        OpenBracketToken = openBracketToken;
+        Items = items;
+        CommaTokens = commaTokens;
+        CloseBracketToken = closeBracketToken;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.ArrayLiteralExpression;
+
+    public SyntaxToken OpenBracketToken { get; }
+
+    public IReadOnlyList<ExpressionSyntax> Items { get; }
+
+    public IReadOnlyList<SyntaxToken> CommaTokens { get; }
+
+    public SyntaxToken CloseBracketToken { get; }
+
+    public bool IsEmpty => Items.Count == 0;
+}
+
 public sealed class FieldAccessExpressionSyntax : ExpressionSyntax
 {
     public FieldAccessExpressionSyntax(ExpressionSyntax target, SyntaxToken dotToken, SyntaxToken identifier)

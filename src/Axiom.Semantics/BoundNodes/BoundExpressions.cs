@@ -75,6 +75,28 @@ public sealed class BoundArrayAccessExpression : BoundExpression
     public string DisplayName { get; }
 }
 
+public sealed class BoundArrayLiteralExpression : BoundExpression
+{
+    public BoundArrayLiteralExpression(
+        TextLocation location,
+        ArrayTypeSymbol arrayType,
+        IReadOnlyList<BoundExpression> items)
+        : base(location, arrayType)
+    {
+        ArgumentNullException.ThrowIfNull(arrayType);
+        ArgumentNullException.ThrowIfNull(items);
+
+        ArrayType = arrayType;
+        Items = items;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.ArrayLiteralExpression;
+
+    public ArrayTypeSymbol ArrayType { get; }
+
+    public IReadOnlyList<BoundExpression> Items { get; }
+}
+
 public sealed class BoundArrayRangeExpression : BoundExpression
 {
     public BoundArrayRangeExpression(TextLocation location, BoundExpression lowerBound, BoundExpression upperBound)

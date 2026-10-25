@@ -47,6 +47,20 @@ test('Скобки в тексте обычной и интерполирова�
   }
 });
 
+test('Литерал массива раскрашивается теми же скобками, что и обращение', () => {
+  const {definition} = language();
+  const brackets = definition.tokenizer.root.find(item => item[1] === '@brackets');
+  assert.ok(brackets);
+  for (const ch of ['[', ']']) assert.equal(new RegExp('^(?:' + brackets[0].source + ')').exec(ch)?.[0], ch);
+  // Значения внутри литерала остаются обычными строками и числами.
+  const stringRule = definition.tokenizer.root.find(item => new RegExp('^(?:' + item[0].source + ')').test('"яблоко"'));
+  assert.ok(stringRule);
+  assert.match(typeof stringRule[1] === 'string' ? stringRule[1] : stringRule[1].token, /^string/);
+  const numberRule = definition.tokenizer.root.find(item => new RegExp('^(?:' + item[0].source + ')').test('30'));
+  assert.ok(numberRule);
+  assert.match(typeof numberRule[1] === 'string' ? numberRule[1] : numberRule[1].token, /^number/);
+});
+
 for (const reason of ['edit', 'cancel', 'dispose']) {
   test('Квадратная семантическая раскраска отклоняет устаревший ответ: ' + reason, async () => {
     const {runtime, semantic} = language();

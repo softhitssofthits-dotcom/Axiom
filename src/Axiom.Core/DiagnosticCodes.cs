@@ -71,6 +71,9 @@ public static class DiagnosticCodes
     public const string InvalidVisibilityContext = "MB2056";
     public const string InvalidSortKeyField = "MB2057";
     public const string InvalidSortDirection = "MB2058";
+    public const string ArrayLiteralTypeUnknown = "MB2059";
+    public const string InvalidArrayLiteralElement = "MB2060";
+    public const string ArrayLiteralRankMismatch = "MB2061";
 
     // Время выполнения (MB3xxx)
     public const string DivisionByZero = "MB3001";
