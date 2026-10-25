@@ -89,6 +89,8 @@ function check() {
       const required = new Set();
       const compilerOnlyPaths = new Set(v.compilerOnlyChange?.version === v.compiler ? v.compilerOnlyChange.paths : []);
       for (const p of paths) {
+        // Внутренние средства проверки не входят в компилятор и публичную поставку.
+        if (p.startsWith('src/Axiom.ManualChecks/')) continue;
         if (/^src\/Axiom\.(Core|Lexing|Syntax|Parsing|Semantics|Bytecode|Runtime|Execution|Formatting)\//.test(p) && !p.endsWith('/AxiomVersionInfo.cs')) {
           if (!compilerOnlyPaths.has(p)) required.add('language');
           required.add('compiler');
