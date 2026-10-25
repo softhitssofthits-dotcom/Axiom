@@ -33,23 +33,30 @@ const readmeBadges = v => [
   ['version', `![version](https://img.shields.io/badge/version-${v.language}-blue)`],
   ['IDE', `![IDE](https://img.shields.io/badge/IDE-${v.ide}-green)`],
 ];
-const readmeSynced = (text, v, strict) => {
+const readmeStatusPatterns = {
+  'README.md': /(Текущие версии: язык `)[^`]*(`, компилятор `)[^`]*(`, IDE `)[^`]*(`)/,
+  'README.en.md': /(Current versions: language `)[^`]*(`, compiler `)[^`]*(`, IDE `)[^`]*(`)/,
+};
+const readmeSynced = (text, v, file, strict) => {
   let out = text;
   for (const [name, line] of readmeBadges(v)) {
     const pattern = new RegExp(`!\\[${name}\\]\\(https://img\\.shields\\.io/badge/${name}-[^)]*\\)`);
-    if (strict && !pattern.test(out)) fail(`README.md: не найден бейдж ${name}.`);
+    if (strict && !pattern.test(out)) fail(`${file}: не найден бейдж ${name}.`);
     out = out.replace(pattern, line);
   }
-  const status = /(язык `)[^`]*(`, компилятор `)[^`]*(`, IDE `)[^`]*(`)/;
-  if (strict && !status.test(out)) fail('README.md: не найдена строка текущих версий.');
+  const status = readmeStatusPatterns[file];
+  if (!status) fail(`Неизвестный формат версий для ${file}.`);
+  if (strict && !status.test(out)) fail(`${file}: не найдена строка текущих версий.`);
   return out.replace(status, `$1${v.language}$2${v.compiler}$3${v.ide}$4`);
 };
-function syncReadme(v) {
-  const file = path.join(root, 'README.md');
-  if (!fs.existsSync(file)) return;
-  const text = fs.readFileSync(file, 'utf8');
-  const synced = readmeSynced(text, v);
-  if (synced !== text) write('README.md', synced);
+function syncReadmes(v) {
+  for (const file of Object.keys(readmeStatusPatterns)) {
+    const target = path.join(root, file);
+    if (!fs.existsSync(target)) continue;
+    const text = fs.readFileSync(target, 'utf8');
+    const synced = readmeSynced(text, v, file);
+    if (synced !== text) write(file, synced);
+  }
 }
 function sync(v) {
   validate(v);
@@ -61,7 +68,7 @@ function sync(v) {
     if (data.packages?.['']) data.packages[''].version = v.ide;
     write(file, JSON.stringify(data, null, 2) + '\n');
   }
-  syncReadme(v);
+  syncReadmes(v);
 }
 function check() {
   const v = json('versions.json'); validate(v);
@@ -74,8 +81,12 @@ function check() {
     const headings = [...read('docs/CHANGELOG.md').matchAll(/^Язык \*\*[^\n]+$/gm)];
     if (headings.at(-1)?.[0].trim() !== row(v)) fail('Последняя запись docs/CHANGELOG.md не соответствует текущим версиям.');
   }
-  const readme = exists('README.md') ? read('README.md') : null;
-  if (readme !== null && readmeSynced(readme, v, true) !== readme) fail('README.md рассинхронизирован с versions.json. Выполните node scripts/versioning.mjs sync.');
+  for (const file of Object.keys(readmeStatusPatterns)) {
+    const content = exists(file) ? read(file) : null;
+    if (content === null) fail(`Не найден обязательный ${file}.`);
+    if (readmeSynced(content, v, file, true) !== content)
+      fail(`${file} рассинхронизирован с versions.json. Выполните node scripts/versioning.mjs sync.`);
+  }
   const baseIndex = args.indexOf('--base');
   const base = baseIndex >= 0 ? args[baseIndex + 1] : staged ? 'HEAD' : null;
   if (base) {

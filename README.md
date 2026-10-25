@@ -1,5 +1,7 @@
 # Axiom
 
+[Русский](README.md) · [English](README.en.md)
+
 <p align="center">
   <img src="ide/src/renderer/assets/logo-light.png" width="72" alt="Логотип Axiom">
 </p>
