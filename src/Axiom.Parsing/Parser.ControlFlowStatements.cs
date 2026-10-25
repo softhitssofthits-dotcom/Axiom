@@ -104,9 +104,17 @@ public sealed partial class Parser
         }
     }
 
-    private ForStatementSyntax ParseForStatement()
+    private StatementSyntax ParseForStatement()
     {
         var forKeyword = Match(SyntaxKind.ForKeyword, "FOR");
+
+        // EACH — контекстное слово: только сразу после FOR оно открывает обход
+        // массива. Вне заголовка EACH остаётся обычным именем.
+        if (IsContextualKeyword("EACH"))
+        {
+            return ParseForEachStatement(forKeyword);
+        }
+
         var identifier = MatchIdentifier();
         var equalsToken = Match(SyntaxKind.EqualsToken, "=");
         var startExpression = ParseExpression();
@@ -153,6 +161,89 @@ public sealed partial class Parser
             statements,
             nextKeyword,
             nextCounterIdentifier);
+    }
+
+    private ForEachStatementSyntax ParseForEachStatement(SyntaxToken forKeyword)
+    {
+        var eachKeyword = NextToken();
+
+        SyntaxToken? byRefKeyword = null;
+        SyntaxToken? byValKeyword = null;
+
+        if (Current.Kind == SyntaxKind.ByRefKeyword)
+        {
+            byRefKeyword = NextToken();
+        }
+        else if (Current.Kind == SyntaxKind.ByValKeyword)
+        {
+            byValKeyword = NextToken();
+        }
+
+        var identifier = MatchIdentifier();
+
+        TypeClauseSyntax? typeClause = null;
+        if (Current.Kind == SyntaxKind.AsKeyword)
+        {
+            typeClause = ParseTypeClause();
+        }
+
+        // IN — тоже контекстное слово заголовка. Отдельное сообщение точнее
+        // общего «ожидался идентификатор»: пропуск IN ломает весь заголовок.
+        SyntaxToken inKeyword;
+        if (IsContextualKeyword("IN"))
+        {
+            inKeyword = NextToken();
+        }
+        else
+        {
+            Diagnostics.Report(
+                DiagnosticCodes.ExpectedIdentifier,
+                "Ожидалось слово IN после переменной цикла.",
+                CreateDiagnosticLocation(Current.Location));
+            inKeyword = CreateMissingToken(SyntaxKind.IdentifierToken);
+        }
+
+        var sourceExpression = ParseExpression();
+
+        SkipNewLines();
+        var statements = ParseStatementsUntil(static parser => parser.Current.Kind == SyntaxKind.NextKeyword);
+        var nextKeyword = Match(SyntaxKind.NextKeyword, "NEXT");
+
+        // Имя после NEXT необязательно; указанное обязано совпадать с именем
+        // переменной цикла, как и у числового FOR.
+        SyntaxToken? nextCounterIdentifier = Current.Kind is SyntaxKind.IdentifierToken or SyntaxKind.LineKeyword ? NextToken() : null;
+
+        if (Current.Kind is not (SyntaxKind.NewLineToken or SyntaxKind.EndOfFileToken))
+        {
+            Diagnostics.Report(
+                DiagnosticCodes.UnexpectedToken,
+                "После NEXT и необязательного имени переменной цикла ожидается конец строки.",
+                Current.Location);
+
+            while (Current.Kind is not (SyntaxKind.NewLineToken or SyntaxKind.EndOfFileToken))
+            {
+                NextToken();
+            }
+        }
+
+        return new ForEachStatementSyntax(
+            forKeyword,
+            eachKeyword,
+            byRefKeyword,
+            byValKeyword,
+            identifier,
+            typeClause,
+            inKeyword,
+            sourceExpression,
+            statements,
+            nextKeyword,
+            nextCounterIdentifier);
+    }
+
+    private bool IsContextualKeyword(string word)
+    {
+        return Current.Kind == SyntaxKind.IdentifierToken
+            && string.Equals(Current.Text, word, StringComparison.OrdinalIgnoreCase);
     }
 
     private SelectCaseStatementSyntax ParseSelectCaseStatement()

@@ -1,0 +1,25 @@
+' В теле FOR EACH работают EXIT FOR и CONTINUE FOR:
+' CONTINUE FOR переходит к следующему элементу, EXIT FOR завершает обход.
+' Ожидаемый вывод:
+' 1
+' 2
+' 4
+' после обхода
+DIM values[1 TO 5] AS INTEGER
+FOR index = 1 TO 5
+    values[index] = index
+NEXT index
+
+FOR EACH value IN values[]
+    ' Тройка пропускается: переход к следующему элементу.
+    IF value = 3 THEN
+        CONTINUE FOR
+    END IF
+    ' Пятёрка завершает обход целиком.
+    IF value = 5 THEN
+        EXIT FOR
+    END IF
+    PRINT value
+NEXT
+
+PRINT "после обхода"

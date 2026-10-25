@@ -1,0 +1,32 @@
+' FOR EACH обходит массив по значениям: переменная цикла получает
+' копию элемента, поэтому её изменение не записывается в массив.
+' Ожидаемый вывод:
+' яблоко
+' банан
+' апельсин
+' 60
+' 10 20 30
+DIM fruits[] AS STRING = ["яблоко", "банан", "апельсин"]
+
+' Каждый проход получает очередное значение по порядку.
+FOR EACH fruit IN fruits[]
+    PRINT fruit
+NEXT fruit
+
+DIM scores[1 TO 3] AS INTEGER
+scores[1] = 10
+scores[2] = 20
+scores[3] = 30
+
+' Накопление суммы не требует индексов и границ.
+DIM total AS INTEGER
+FOR EACH score IN scores[]
+    total = total + score
+NEXT
+PRINT total
+
+' BYVAL: присваивание переменной цикла не меняет источник.
+FOR EACH score IN scores[]
+    score = 99
+NEXT
+PRINT scores[1]; " "; scores[2]; " "; scores[3]

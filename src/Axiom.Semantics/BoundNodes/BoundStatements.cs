@@ -1595,6 +1595,42 @@ public sealed class BoundForStatement : BoundStatement
     public IReadOnlyList<BoundStatement> Statements { get; }
 }
 
+public sealed class BoundForEachStatement : BoundStatement
+{
+    public BoundForEachStatement(
+        TextLocation location,
+        VariableSymbol variable,
+        bool byRef,
+        BoundExpression source,
+        ArrayTypeSymbol sourceArrayType,
+        IReadOnlyList<BoundStatement> statements)
+        : base(location)
+    {
+        ArgumentNullException.ThrowIfNull(variable);
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(sourceArrayType);
+        ArgumentNullException.ThrowIfNull(statements);
+
+        Variable = variable;
+        ByRef = byRef;
+        Source = source;
+        SourceArrayType = sourceArrayType;
+        Statements = statements;
+    }
+
+    public override BoundNodeKind Kind => BoundNodeKind.ForEachStatement;
+
+    public VariableSymbol Variable { get; }
+
+    public bool ByRef { get; }
+
+    public BoundExpression Source { get; }
+
+    public ArrayTypeSymbol SourceArrayType { get; }
+
+    public IReadOnlyList<BoundStatement> Statements { get; }
+}
+
 public sealed class BoundExitForStatement : BoundStatement
 {
     public BoundExitForStatement(TextLocation location)

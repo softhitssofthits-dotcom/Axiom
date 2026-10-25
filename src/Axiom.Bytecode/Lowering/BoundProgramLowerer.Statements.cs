@@ -338,7 +338,7 @@ public sealed partial class BoundProgramLowerer
         LowerExpression(whileStatement.Condition, instructions);
         instructions.Add(LoweredInstruction.JumpIfFalse(whileStatement.Condition.Location, endLabel));
 
-        _loopContinueLabels.Push(new LoopExitContext(startLabel, _activeFinallyContexts.Count));
+        _whileContinueLabels.Push(new LoopExitContext(startLabel, _activeFinallyContexts.Count));
         try
         {
             foreach (var statement in whileStatement.Statements)
@@ -348,7 +348,7 @@ public sealed partial class BoundProgramLowerer
         }
         finally
         {
-            _loopContinueLabels.Pop();
+            _whileContinueLabels.Pop();
         }
 
         instructions.Add(LoweredInstruction.Jump(whileStatement.Location, startLabel));
@@ -399,7 +399,7 @@ public sealed partial class BoundProgramLowerer
         instructions.Add(LoweredInstruction.LabelMarker(forStatement.Location, bodyLabel));
 
         _forExitLabels.Push(new LoopExitContext(endLabel, _activeFinallyContexts.Count));
-        _loopContinueLabels.Push(new LoopExitContext(continueLabel, _activeFinallyContexts.Count));
+        _forContinueLabels.Push(new LoopExitContext(continueLabel, _activeFinallyContexts.Count));
         try
         {
             foreach (var statement in forStatement.Statements)
@@ -409,7 +409,7 @@ public sealed partial class BoundProgramLowerer
         }
         finally
         {
-            _loopContinueLabels.Pop();
+            _forContinueLabels.Pop();
             _forExitLabels.Pop();
         }
 
@@ -472,7 +472,7 @@ public sealed partial class BoundProgramLowerer
             : LoweredInstruction.JumpIfTrue(condition.Location, endLabel));
 
         _doLoopExitLabels.Push(new LoopExitContext(endLabel, _activeFinallyContexts.Count));
-        _loopContinueLabels.Push(new LoopExitContext(startLabel, _activeFinallyContexts.Count));
+        _doContinueLabels.Push(new LoopExitContext(startLabel, _activeFinallyContexts.Count));
         try
         {
             foreach (var statement in doLoopStatement.Statements)
@@ -482,7 +482,7 @@ public sealed partial class BoundProgramLowerer
         }
         finally
         {
-            _loopContinueLabels.Pop();
+            _doContinueLabels.Pop();
             _doLoopExitLabels.Pop();
         }
 
@@ -499,7 +499,7 @@ public sealed partial class BoundProgramLowerer
         EmitLoopIterationBoundary(doLoopStatement.Location, instructions);
 
         _doLoopExitLabels.Push(new LoopExitContext(endLabel, _activeFinallyContexts.Count));
-        _loopContinueLabels.Push(new LoopExitContext(startLabel, _activeFinallyContexts.Count));
+        _doContinueLabels.Push(new LoopExitContext(startLabel, _activeFinallyContexts.Count));
         try
         {
             foreach (var statement in doLoopStatement.Statements)
@@ -509,7 +509,7 @@ public sealed partial class BoundProgramLowerer
         }
         finally
         {
-            _loopContinueLabels.Pop();
+            _doContinueLabels.Pop();
             _doLoopExitLabels.Pop();
         }
 
@@ -534,7 +534,7 @@ public sealed partial class BoundProgramLowerer
         EmitLoopIterationBoundary(doLoopStatement.Location, instructions);
 
         _doLoopExitLabels.Push(new LoopExitContext(endLabel, _activeFinallyContexts.Count));
-        _loopContinueLabels.Push(new LoopExitContext(continueLabel, _activeFinallyContexts.Count));
+        _doContinueLabels.Push(new LoopExitContext(continueLabel, _activeFinallyContexts.Count));
         try
         {
             foreach (var statement in doLoopStatement.Statements)
@@ -544,7 +544,7 @@ public sealed partial class BoundProgramLowerer
         }
         finally
         {
-            _loopContinueLabels.Pop();
+            _doContinueLabels.Pop();
             _doLoopExitLabels.Pop();
         }
 
@@ -601,15 +601,21 @@ public sealed partial class BoundProgramLowerer
         instructions.Add(LoweredInstruction.Jump(location, exitContext.Label));
     }
 
-    private void LowerContinue(Axiom.Core.TextLocation location, string constructName, List<LoweredInstruction> instructions)
+    private void LowerContinue(
+        Axiom.Core.TextLocation location,
+        string constructName,
+        Stack<LoopExitContext> continueLabels,
+        List<LoweredInstruction> instructions)
     {
-        if (_loopContinueLabels.Count == 0)
+        // Каждая форма CONTINUE смотрит только на циклы своего вида: при
+        // смешанном вложении CONTINUE FOR обязан вернуться к ближайшему FOR.
+        if (continueLabels.Count == 0)
         {
             ReportUnsupported(location, constructName);
             return;
         }
 
-        var continueContext = _loopContinueLabels.Peek();
+        var continueContext = continueLabels.Peek();
 
         for (var index = _activeFinallyContexts.Count - 1; index >= continueContext.FinallyDepth; index--)
         {

@@ -232,6 +232,11 @@ class AxiomIDE {
     );
 
     const codeTokens = [
+      // EACH и IN — контекстные слова: они выделяются как ключевые только
+      // сразу после FOR. Вне заголовка это обычные имена, поэтому в общий
+      // список keywords они не входят.
+      [/(?<=\bFOR\s+)EACH\b/i, 'keyword'],
+      [/(?<=\bFOR\s+EACH\b.*?)\bIN\b/i, 'keyword'],
       [/&H[0-9a-fA-F]+(?![a-zA-Z0-9_])/, 'number.hex'],
       [/&B[01]+(?![a-zA-Z0-9_])/, 'number.binary'],
       [/&[HB][a-zA-Z0-9_]*/, 'invalid'],

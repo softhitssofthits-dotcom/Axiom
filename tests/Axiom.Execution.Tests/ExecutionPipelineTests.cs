@@ -758,6 +758,95 @@ END WHILE
     }
 
     [Fact]
+    public void Run_ContinueForInsideWhileSkipsToEnclosingFor()
+    {
+        const string text = """
+DIM guard AS INTEGER
+FOR i = 1 TO 3
+    WHILE guard < 10
+        guard = guard + 1
+        CONTINUE FOR
+    END WHILE
+    PRINT "после WHILE"
+NEXT i
+PRINT STR(guard)
+""";
+
+        var result = Run(text);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        // CONTINUE FOR возвращается к объемлющему FOR, поэтому тело WHILE не
+        // доходит до конца и строка «после WHILE» не печатается ни разу.
+        Assert.Equal(["3"], result.Output);
+    }
+
+    [Fact]
+    public void Run_ContinueWhileInsideForSkipsToEnclosingWhile()
+    {
+        const string text = """
+DIM n AS INTEGER
+WHILE n < 2
+    n = n + 1
+    FOR i = 1 TO 3
+        CONTINUE WHILE
+    NEXT i
+    PRINT "после FOR"
+END WHILE
+PRINT STR(n)
+""";
+
+        var result = Run(text);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(["2"], result.Output);
+    }
+
+    [Fact]
+    public void Run_ContinueForInsideDoSkipsToEnclosingFor()
+    {
+        const string text = """
+DIM total AS INTEGER
+FOR i = 1 TO 2
+    DO
+        total = total + 1
+        CONTINUE FOR
+    LOOP WHILE FALSE
+    total = total + 100
+NEXT i
+PRINT STR(total)
+""";
+
+        var result = Run(text);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(["2"], result.Output);
+    }
+
+    [Fact]
+    public void Run_ContinueForRunsFinallyOfNestedTryBeforeLeaving()
+    {
+        const string text = """
+DIM total AS INTEGER
+FOR i = 1 TO 2
+    WHILE TRUE
+        TRY
+            total = total + 1
+            CONTINUE FOR
+        FINALLY
+            total = total + 10
+        END TRY
+    END WHILE
+NEXT i
+PRINT STR(total)
+""";
+
+        var result = Run(text);
+
+        Assert.Equal(ExecutionStatus.Success, result.Status);
+        Assert.Equal(["22"], result.Output);
+    }
+
+    [Fact]
     public void Run_SupportsContinueDo()
     {
         const string text = """

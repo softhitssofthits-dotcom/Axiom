@@ -76,6 +76,7 @@ public sealed partial class Binder
             DoLoopStatementSyntax doLoopStatement => BindDoLoopStatement(doLoopStatement),
             WhileStatementSyntax whileStatement => BindWhileStatement(whileStatement),
             ForStatementSyntax forStatement => BindForStatement(forStatement),
+            ForEachStatementSyntax forEachStatement => BindForEachStatement(forEachStatement),
             ExitForStatementSyntax exitForStatement => BindExitForStatement(exitForStatement),
             ExitDoStatementSyntax exitDoStatement => BindExitDoStatement(exitDoStatement),
             ContinueForStatementSyntax continueForStatement => BindContinueForStatement(continueForStatement),

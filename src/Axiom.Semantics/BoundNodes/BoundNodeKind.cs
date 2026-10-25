@@ -60,6 +60,7 @@ public enum BoundNodeKind
     DoLoopStatement,
     WhileStatement,
     ForStatement,
+    ForEachStatement,
     ExitForStatement,
     ExitDoStatement,
     ContinueForStatement,

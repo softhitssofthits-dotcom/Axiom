@@ -74,6 +74,8 @@ public static class DiagnosticCodes
     public const string ArrayLiteralTypeUnknown = "MB2059";
     public const string InvalidArrayLiteralElement = "MB2060";
     public const string ArrayLiteralRankMismatch = "MB2061";
+    public const string InvalidForEachSource = "MB2062";
+    public const string InvalidForEachElementType = "MB2063";
 
     // Время выполнения (MB3xxx)
     public const string DivisionByZero = "MB3001";

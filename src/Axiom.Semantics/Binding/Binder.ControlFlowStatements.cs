@@ -284,6 +284,131 @@ public sealed partial class Binder
         }
     }
 
+    // Обход массива по значениям. На этом этапе реализован только режим BYVAL:
+    // переменная цикла получает копию элемента и не связана с источником.
+    private BoundStatement BindForEachStatement(ForEachStatementSyntax statement)
+    {
+        if (statement.NextCounterIdentifier is { } nextCounter
+            && !string.Equals(nextCounter.Text, statement.Identifier.Text, StringComparison.OrdinalIgnoreCase))
+        {
+            _diagnostics.Report(
+                DiagnosticCodes.InvalidNextCounter,
+                $"Имя после NEXT '{nextCounter.Text}' должно совпадать с именем переменной цикла FOR EACH '{statement.Identifier.Text}'.",
+                nextCounter.Location);
+        }
+
+        var source = BindExpression(statement.SourceExpression);
+        var location = statement.Identifier.Location;
+
+        if (source.Type == TypeSymbol.Error)
+        {
+            return BindRejectedForEach(statement, source, source, TypeSymbol.Error);
+        }
+
+        if (source.Type is not ArrayTypeSymbol arrayType)
+        {
+            _diagnostics.Report(
+                DiagnosticCodes.InvalidForEachSource,
+                $"Источник FOR EACH должен быть массивом, а получен {source.Type.Name}. Обход допустим только по массиву.",
+                GetLocation(statement.SourceExpression));
+            return BindRejectedForEach(statement, source, source, TypeSymbol.Error);
+        }
+
+        var elementType = arrayType.ElementType;
+
+        if (elementType is ArrayTypeSymbol)
+        {
+            _diagnostics.Report(
+                DiagnosticCodes.InvalidForEachElementType,
+                "Элементом источника FOR EACH не может быть массив. Вложенные массивы не поддерживаются.",
+                location);
+            return BindRejectedForEach(statement, source, source, TypeSymbol.Error);
+        }
+
+        if (statement.TypeClause is not null)
+        {
+            var declaredType = ResolveType(statement.TypeClause);
+
+            if (declaredType != TypeSymbol.Error && declaredType != elementType)
+            {
+                if (!CanConvert(elementType, declaredType))
+                {
+                    _diagnostics.Report(
+                        DiagnosticCodes.InvalidForEachElementType,
+                        $"Переменная цикла FOR EACH объявлена как {declaredType.Name}, а элементы массива имеют тип {elementType.Name}. Преобразование невозможно.",
+                        location);
+                    return BindRejectedForEach(statement, source, source, TypeSymbol.Error);
+                }
+
+                elementType = declaredType;
+            }
+        }
+
+        EnterScope(DeclarationContexts.ForLoop);
+
+        try
+        {
+            var variable = new VariableSymbol(statement.Identifier.Text, elementType, isReadOnly: false, isGlobal: false);
+            if (!TryDeclareScopedVariable(variable, location))
+            {
+                variable = new VariableSymbol(statement.Identifier.Text, TypeSymbol.Error, isReadOnly: false, isGlobal: false);
+            }
+
+            var statements = BindForEachBody(statement);
+
+            return new BoundForEachStatement(
+                GetLocation(statement),
+                variable,
+                byRef: false,
+                source,
+                arrayType,
+                statements);
+        }
+        finally
+        {
+            LeaveScope();
+        }
+    }
+
+    // Отклонённый заголовок всё равно объявляет переменную цикла и связывает
+    // тело: иначе каждое обращение к ней давало бы лишнюю диагностику MB2001.
+    private BoundStatement BindRejectedForEach(
+        ForEachStatementSyntax statement,
+        BoundExpression source,
+        BoundExpression errorSource,
+        TypeSymbol variableType)
+    {
+        EnterScope(DeclarationContexts.ForLoop);
+
+        try
+        {
+            var variable = new VariableSymbol(statement.Identifier.Text, variableType, isReadOnly: false, isGlobal: false);
+            TryDeclareScopedVariable(variable, statement.Identifier.Location);
+            BindForEachBody(statement);
+        }
+        finally
+        {
+            LeaveScope();
+        }
+
+        _ = source;
+        return new BoundExpressionStatement(GetLocation(statement), errorSource);
+    }
+
+    private IReadOnlyList<BoundStatement> BindForEachBody(ForEachStatementSyntax statement)
+    {
+        _forDepth++;
+
+        try
+        {
+            return BindStatements(statement.Statements);
+        }
+        finally
+        {
+            _forDepth--;
+        }
+    }
+
     private BoundStatement BindExitForStatement(ExitForStatementSyntax statement)
     {
         if (_forDepth <= 0)

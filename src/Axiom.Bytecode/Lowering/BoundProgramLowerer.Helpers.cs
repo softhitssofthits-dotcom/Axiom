@@ -236,6 +236,11 @@ public sealed partial class BoundProgramLowerer
                 CollectDeclaredVariables(forStatement.Statements, variables);
                 break;
 
+            case BoundForEachStatement forEachStatement:
+                variables.Add(forEachStatement.Variable);
+                CollectDeclaredVariables(forEachStatement.Statements, variables);
+                break;
+
             case BoundSelectCaseStatement selectCaseStatement:
                 foreach (var clause in selectCaseStatement.Clauses)
                 {

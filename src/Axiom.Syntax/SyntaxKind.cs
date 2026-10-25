@@ -233,6 +233,7 @@ public enum SyntaxKind
     IfStatement,
     SelectCaseStatement,
     ForStatement,
+    ForEachStatement,
     DoLoopStatement,
     WhileStatement,
     TryStatement,

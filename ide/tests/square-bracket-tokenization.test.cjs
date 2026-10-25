@@ -47,6 +47,19 @@ test('Скобки в тексте обычной и интерполирова�
   }
 });
 
+test('EACH и IN выделяются только в заголовке FOR EACH', () => {
+  const {definition} = language();
+  const rules = definition.tokenizer.root.filter(item => item[0] && String(item[0].source).includes('EACH'));
+  assert.equal(rules.length, 2);
+  const [eachRule, inRule] = rules;
+  assert.ok(new RegExp(eachRule[0].source, 'i').test('FOR EACH fruit IN fruits[]'));
+  assert.ok(new RegExp(inRule[0].source, 'i').test('FOR EACH fruit IN fruits[]'));
+  // Вне заголовка это обычные имена, поэтому правила не срабатывают.
+  assert.ok(!new RegExp(eachRule[0].source, 'i').test('DIM each AS INTEGER'));
+  assert.ok(!new RegExp(inRule[0].source, 'i').test('DIM each AS INTEGER'));
+  assert.ok(!new RegExp(eachRule[0].source, 'i').test('FOR i = 1 TO 3'));
+});
+
 test('Литерал массива раскрашивается теми же скобками, что и обращение', () => {
   const {definition} = language();
   const brackets = definition.tokenizer.root.find(item => item[1] === '@brackets');

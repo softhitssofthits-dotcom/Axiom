@@ -34,6 +34,7 @@ internal static class LineFormatter
         }
 
         var normalizedTokens = NormalizeCompoundShiftOperators(rawTokens);
+        normalizedTokens = NormalizeContextualForEachKeywords(normalizedTokens, style);
         var formattedCode = AssembleTokens(normalizedTokens, style);
 
         if (formattedCode is null)
@@ -300,6 +301,61 @@ internal static class LineFormatter
         }
 
         return normalizedTokens;
+    }
+
+    // EACH и IN — контекстные слова заголовка FOR EACH, а не ключевые слова
+    // языка. Форматтер приводит их к стилю только внутри заголовка; вне его
+    // они остаются обычными именами и не меняют регистр.
+    private static List<RawToken> NormalizeContextualForEachKeywords(
+        IReadOnlyList<RawToken> rawTokens,
+        CodeFormattingStyle style)
+    {
+        if (rawTokens.Count < 2
+            || rawTokens[0].Kind != RawTokenKind.Word
+            || !rawTokens[0].Text.Equals("FOR", StringComparison.OrdinalIgnoreCase))
+        {
+            return rawTokens.ToList();
+        }
+
+        var eachIndex = -1;
+        for (var index = 1; index < rawTokens.Count; index++)
+        {
+            if (rawTokens[index].Kind != RawTokenKind.Word)
+            {
+                continue;
+            }
+
+            if (rawTokens[index].Text.Equals("EACH", StringComparison.OrdinalIgnoreCase))
+            {
+                eachIndex = index;
+            }
+
+            break;
+        }
+
+        if (eachIndex < 0)
+        {
+            return rawTokens.ToList();
+        }
+
+        var tokens = rawTokens.ToList();
+        tokens[eachIndex] = new RawToken(
+            TokenClassifier.ApplyStyle("EACH", style),
+            RawTokenKind.Word);
+
+        for (var index = eachIndex + 1; index < tokens.Count; index++)
+        {
+            if (tokens[index].Kind == RawTokenKind.Word
+                && tokens[index].Text.Equals("IN", StringComparison.OrdinalIgnoreCase))
+            {
+                tokens[index] = new RawToken(
+                    TokenClassifier.ApplyStyle("IN", style),
+                    RawTokenKind.Word);
+                break;
+            }
+        }
+
+        return tokens;
     }
 
     private static bool TryMergeShiftOperator(RawToken first, RawToken second, out RawToken mergedOperator)

@@ -78,6 +78,7 @@ internal static class BoundExpressionTraversal
             BoundWhileStatement node => [node.Condition],
             BoundDoLoopStatement node => [node.Condition],
             BoundForStatement node => [node.StartExpression, node.EndExpression, node.StepExpression],
+            BoundForEachStatement node => [node.Source],
             BoundExitForStatement node => [],
             BoundExitDoStatement node => [],
             BoundContinueForStatement node => [],
@@ -96,6 +97,7 @@ internal static class BoundExpressionTraversal
         BoundSelectCaseStatement node => node.Clauses.SelectMany(static clause => clause.Statements).Concat(node.ElseStatements),
         BoundTryStatement node => node.Statements.Concat(node.CatchStatements).Concat(node.FinallyStatements),
         BoundForStatement node => node.Statements,
+        BoundForEachStatement node => node.Statements,
         BoundWhileStatement node => node.Statements,
         BoundDoLoopStatement node => node.Statements,
         _ => []

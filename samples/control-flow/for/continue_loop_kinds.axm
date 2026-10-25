@@ -1,0 +1,40 @@
+' Пример показывает, что вид цикла в CONTINUE выбирает цель перехода
+' при смешанном вложении: CONTINUE FOR покидает внутренний WHILE
+' и возвращается к внешнему FOR.
+' Ожидаемый вывод:
+' 3      — счётчик проходов внешнего FOR
+' 3      — столько раз выполнилось тело WHILE
+' после FOR
+' 2      — счётчик внешнего WHILE
+DIM guard AS INTEGER
+DIM passes AS INTEGER
+
+' Внешний счётный цикл из трёх проходов.
+FOR i = 1 TO 3
+    passes = passes + 1
+    ' Внутренний WHILE продолжается, пока guard меньше 10.
+    WHILE guard < 10
+        guard = guard + 1
+        ' Переход относится к FOR, а не к ближайшему WHILE:
+        ' остаток тела WHILE не выполняется.
+        CONTINUE FOR
+    END WHILE
+    ' Эта строка недостижима, потому что управление уже ушло к NEXT.
+    PRINT "внутри WHILE"
+NEXT i
+
+PRINT passes
+PRINT guard
+PRINT "после FOR"
+
+' Обратное направление: CONTINUE WHILE внутри FOR возвращает
+' к условию внешнего WHILE.
+DIM n AS INTEGER
+WHILE n < 2
+    n = n + 1
+    FOR j = 1 TO 3
+        CONTINUE WHILE
+    NEXT j
+    PRINT "внутри FOR"
+END WHILE
+PRINT n

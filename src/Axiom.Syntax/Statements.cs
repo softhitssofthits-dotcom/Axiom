@@ -623,6 +623,69 @@ public sealed class ForStatementSyntax : StatementSyntax
     public SyntaxToken? NextCounterIdentifier { get; }
 }
 
+// Обход массива по значениям. EACH и IN — контекстные слова заголовка, а не
+// зарезервированные ключевые слова: вне FOR они остаются обычными именами.
+public sealed class ForEachStatementSyntax : StatementSyntax
+{
+    public ForEachStatementSyntax(
+        SyntaxToken forKeyword,
+        SyntaxToken eachKeyword,
+        SyntaxToken? byRefKeyword,
+        SyntaxToken? byValKeyword,
+        SyntaxToken identifier,
+        TypeClauseSyntax? typeClause,
+        SyntaxToken inKeyword,
+        ExpressionSyntax sourceExpression,
+        IReadOnlyList<StatementSyntax> statements,
+        SyntaxToken nextKeyword,
+        SyntaxToken? nextCounterIdentifier)
+    {
+        ArgumentNullException.ThrowIfNull(forKeyword);
+        ArgumentNullException.ThrowIfNull(eachKeyword);
+        ArgumentNullException.ThrowIfNull(identifier);
+        ArgumentNullException.ThrowIfNull(inKeyword);
+        ArgumentNullException.ThrowIfNull(sourceExpression);
+        ArgumentNullException.ThrowIfNull(statements);
+        ArgumentNullException.ThrowIfNull(nextKeyword);
+
+        ForKeyword = forKeyword;
+        EachKeyword = eachKeyword;
+        ByRefKeyword = byRefKeyword;
+        ByValKeyword = byValKeyword;
+        Identifier = identifier;
+        TypeClause = typeClause;
+        InKeyword = inKeyword;
+        SourceExpression = sourceExpression;
+        Statements = statements;
+        NextKeyword = nextKeyword;
+        NextCounterIdentifier = nextCounterIdentifier;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.ForEachStatement;
+
+    public SyntaxToken ForKeyword { get; }
+
+    public SyntaxToken EachKeyword { get; }
+
+    public SyntaxToken? ByRefKeyword { get; }
+
+    public SyntaxToken? ByValKeyword { get; }
+
+    public SyntaxToken Identifier { get; }
+
+    public TypeClauseSyntax? TypeClause { get; }
+
+    public SyntaxToken InKeyword { get; }
+
+    public ExpressionSyntax SourceExpression { get; }
+
+    public IReadOnlyList<StatementSyntax> Statements { get; }
+
+    public SyntaxToken NextKeyword { get; }
+
+    public SyntaxToken? NextCounterIdentifier { get; }
+}
+
 public sealed class WhileStatementSyntax : StatementSyntax
 {
     public WhileStatementSyntax(

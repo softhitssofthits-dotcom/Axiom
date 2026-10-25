@@ -23,6 +23,8 @@ public sealed class SquareBracketFormattingContractTests
     [InlineData("dim fruits[] as string=[ \"яблоко\" , \"банан\" ]", "DIM fruits[] AS STRING = [\"яблоко\", \"банан\"]", "Dim fruits[] As String = [\"яблоко\", \"банан\"]")]
     [InlineData("dim empty[] as integer=[ ]", "DIM empty[] AS INTEGER = []", "Dim empty[] As Integer = []")]
     [InlineData("print [ 10 , 20 , 30 ][ 2 ]", "PRINT [10, 20, 30][2]", "Print [10, 20, 30][2]")]
+    [InlineData("for each fruit in fruits[]", "FOR EACH fruit IN fruits[]", "For Each fruit In fruits[]")]
+    [InlineData("for each byval item as double in values[]", "FOR EACH BYVAL item AS DOUBLE IN values[]", "For Each Byval item As Double In values[]")]
     public void FormatsArrayFormsAndPreservesCalls(string source, string classic, string modern)
     {
         var formatter = new AxiomCodeFormattingService();

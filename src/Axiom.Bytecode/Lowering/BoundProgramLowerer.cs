@@ -8,7 +8,12 @@ public sealed partial class BoundProgramLowerer
     private readonly List<BytecodeDiagnostic> _diagnostics = [];
     private readonly Stack<LoopExitContext> _doLoopExitLabels = [];
     private readonly Stack<LoopExitContext> _forExitLabels = [];
-    private readonly Stack<LoopExitContext> _loopContinueLabels = [];
+
+    // Продолжение привязано к виду цикла: CONTINUE FOR внутри WHILE должен
+    // возвращаться к ближайшему FOR, а не к объемлющему WHILE.
+    private readonly Stack<LoopExitContext> _forContinueLabels = [];
+    private readonly Stack<LoopExitContext> _whileContinueLabels = [];
+    private readonly Stack<LoopExitContext> _doContinueLabels = [];
     private readonly List<FinallyContext> _activeFinallyContexts = [];
     private HashSet<VariableSymbol> _currentRoutineLocals = [];
     private bool _emitStatementBoundaries;
@@ -146,6 +151,9 @@ public sealed partial class BoundProgramLowerer
         _diagnostics.Clear();
         _doLoopExitLabels.Clear();
         _forExitLabels.Clear();
+        _forContinueLabels.Clear();
+        _whileContinueLabels.Clear();
+        _doContinueLabels.Clear();
         _activeFinallyContexts.Clear();
         _emitStatementBoundaries = ContainsInputHandlerStatement(program);
         _nextLabelId = 0;
@@ -688,6 +696,10 @@ public sealed partial class BoundProgramLowerer
                 LowerFor(forStatement, instructions);
                 break;
 
+            case BoundForEachStatement forEachStatement:
+                LowerForEach(forEachStatement, instructions);
+                break;
+
             case BoundDoLoopStatement doLoopStatement:
                 LowerDoLoop(doLoopStatement, instructions);
                 break;
@@ -701,15 +713,15 @@ public sealed partial class BoundProgramLowerer
                 break;
 
             case BoundContinueForStatement continueForStatement:
-                LowerContinue(continueForStatement.Location, "CONTINUE FOR", instructions);
+                LowerContinue(continueForStatement.Location, "CONTINUE FOR", _forContinueLabels, instructions);
                 break;
 
             case BoundContinueWhileStatement continueWhileStatement:
-                LowerContinue(continueWhileStatement.Location, "CONTINUE WHILE", instructions);
+                LowerContinue(continueWhileStatement.Location, "CONTINUE WHILE", _whileContinueLabels, instructions);
                 break;
 
             case BoundContinueDoStatement continueDoStatement:
-                LowerContinue(continueDoStatement.Location, "CONTINUE DO", instructions);
+                LowerContinue(continueDoStatement.Location, "CONTINUE DO", _doContinueLabels, instructions);
                 break;
 
             case BoundReturnStatement returnStatement:

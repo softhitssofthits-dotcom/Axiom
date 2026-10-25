@@ -121,6 +121,7 @@ public sealed partial class Binder
             TryStatementSyntax tryStatement => tryStatement.TryKeyword.Location,
             SelectCaseStatementSyntax selectCaseStatement => selectCaseStatement.SelectKeyword.Location,
             ForStatementSyntax forStatement => forStatement.ForKeyword.Location,
+            ForEachStatementSyntax forEachStatement => forEachStatement.ForKeyword.Location,
             DoLoopStatementSyntax doLoopStatement => doLoopStatement.DoKeyword.Location,
             WhileStatementSyntax whileStatement => whileStatement.WhileKeyword.Location,
             ExitForStatementSyntax exitForStatement => exitForStatement.ExitKeyword.Location,

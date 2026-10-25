@@ -7,7 +7,6 @@ public sealed class PlannedSyntaxEvidenceTests
         var forms = new (string Name, string Source)[]
         {
             ("array-literal", "DIM values[] AS INTEGER = {1, 2}\nPRINT values[1]"),
-            ("for-each", "DIM values[1 TO 2] AS INTEGER\nFOR EACH value IN values[]\nPRINT value\nNEXT value"),
             ("multiline-string", "DIM text AS STRING = \"\"\"первая\nвторая\"\"\"\nPRINT text"),
             ("dictionary-literal", "DIM ages[] = {\"Алиса\": 25}\nPRINT ages[\"Алиса\"]"),
             ("default-parameter", "FUNCTION Plus(value AS INTEGER, extra AS INTEGER = 1) AS INTEGER\nRETURN value + extra\nEND FUNCTION\nPRINT Plus(2)"),
