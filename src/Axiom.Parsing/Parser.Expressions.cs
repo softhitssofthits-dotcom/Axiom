@@ -224,6 +224,16 @@ public sealed partial class Parser
             return new NamedArgumentExpressionSyntax(identifierToken, colonEqualsToken, ParseArgumentValueExpression());
         }
 
+        // STEP в списке аргументов — направление сортировки. Форма разбирается
+        // для любого вызова, а разрешает её связыватель только там, где она
+        // осмысленна: как и диапазон TO, STEP вне FOR и графики не является
+        // частью общего выражения.
+        if (Current.Kind == SyntaxKind.StepKeyword)
+        {
+            var stepKeyword = NextToken();
+            return new StepDirectionArgumentExpressionSyntax(stepKeyword, ParseExpression());
+        }
+
         return ParseArgumentValueExpression();
     }
 

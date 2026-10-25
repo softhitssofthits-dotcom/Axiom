@@ -69,6 +69,8 @@ public static class DiagnosticCodes
     public const string AmbiguousModuleMember = "MB2054";
     public const string ImportedNameConflict = "MB2055";
     public const string InvalidVisibilityContext = "MB2056";
+    public const string InvalidSortKeyField = "MB2057";
+    public const string InvalidSortDirection = "MB2058";
 
     // Время выполнения (MB3xxx)
     public const string DivisionByZero = "MB3001";

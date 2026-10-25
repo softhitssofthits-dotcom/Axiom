@@ -43,6 +43,14 @@ public sealed partial class Binder
         var matchedDescriptor = arityMatches.FirstOrDefault(descriptor => ArgumentsMatchExactly(rawArguments, descriptor));
         if (matchedDescriptor is not null)
         {
+            // Массивные формы выводят тип результата из первого аргумента, поэтому
+            // объявленный тип дескриптора здесь не подходит: нужен общий путь
+            // BindArrayBuiltInCall, который знает про элементы массива.
+            if (matchedDescriptor.BindingKind == BuiltinBindingKind.Array)
+            {
+                return BindResolvedBuiltInInvocation(expression, matchedDescriptor, location, callableName);
+            }
+
             return BindResolvedBuiltInInvocationFromRawArguments(
                 expression,
                 matchedDescriptor,
@@ -56,10 +64,19 @@ public sealed partial class Binder
         }
 
         matchedDescriptor = arityMatches.FirstOrDefault(descriptor => CanBindBuiltInArguments(rawArguments, descriptor));
+        var selectedDescriptor = matchedDescriptor ?? arityMatches[0];
+
+        // Массивные формы выводят типы из фактического массива: объявленный
+        // параметр INTEGER[] — только образец. Поэтому они всегда идут через
+        // BindArrayBuiltInCall, а не через путь объявленных типов.
+        if (selectedDescriptor.BindingKind == BuiltinBindingKind.Array)
+        {
+            return BindResolvedBuiltInInvocation(expression, selectedDescriptor, location, callableName);
+        }
 
         return BindResolvedBuiltInInvocationFromRawArguments(
             expression,
-            matchedDescriptor ?? arityMatches[0],
+            selectedDescriptor,
             location,
             rawArguments);
     }
@@ -357,6 +374,15 @@ public sealed partial class Binder
             return new BoundCallExpression(location, invalidTarget, arguments, invalidReturnType);
         }
 
+        // Сортировка по полю записи: второй аргумент — имя поля, третий —
+        // необязательное направление STEP 1 / STEP -1. Форма проверяется
+        // здесь, до общей проверки упорядочиваемости элементов, потому что
+        // записи упорядочиваются не целиком, а по выбранному полю.
+        if (IsSortByFieldInvocation(descriptor.Id, descriptor))
+        {
+            return BindArraySortByFieldCall(expression, descriptor, location, arrayType, firstArgument);
+        }
+
         if ((descriptor.Id == BuiltinFunctionId.ArrayBinarySearch
             || descriptor.Id == BuiltinFunctionId.ArrayToSorted
             || descriptor.Id == BuiltinFunctionId.ArraySort)
@@ -457,6 +483,126 @@ public sealed partial class Binder
         var resolvedSymbol = descriptor.CreateResolvedSymbol(parameterTypes, resolvedReturnType);
         var resolvedTarget = new BoundFunctionExpression(location, resolvedSymbol);
         return new BoundCallExpression(location, resolvedTarget, arguments, resolvedSymbol.ReturnType);
+    }
+
+    /// <summary>
+    /// Форма «сортировать по полю» отличается от формы с номером измерения
+    /// типом второго параметра: имя поля — строка. Выбор между двумя формами
+    /// уже выполнен по типам аргументов, поэтому достаточно проверить дескриптор.
+    /// </summary>
+    private static bool IsSortByFieldInvocation(BuiltinFunctionId id, BuiltinFunctionDescriptor descriptor)
+    {
+        return id is (BuiltinFunctionId.ArraySort or BuiltinFunctionId.ArrayToSorted)
+            && descriptor.Parameters.Count >= 2
+            && descriptor.Parameters[1].Type == TypeSymbol.String;
+    }
+
+    private BoundExpression BindArraySortByFieldCall(
+        CallExpressionSyntax expression,
+        BuiltinFunctionDescriptor descriptor,
+        TextLocation location,
+        ArrayTypeSymbol arrayType,
+        BoundExpression firstArgument)
+    {
+        var arguments = new List<BoundExpression>(expression.Arguments.Count) { firstArgument };
+        var parameterTypes = new List<TypeSymbol>(descriptor.Parameters.Count) { arrayType };
+        var failed = false;
+
+        var recordType = arrayType.ElementType as UserDefinedTypeSymbol;
+
+        if (recordType is null)
+        {
+            ReportSortFieldRequiresRecordArray(descriptor.Name, arrayType.ElementType, GetLocation(expression.Arguments[0]));
+            failed = true;
+        }
+        else if (arrayType.Rank != 1)
+        {
+            ReportSortFieldRequiresOneDimensional(descriptor.Name, arrayType.Rank, GetLocation(expression.Arguments[0]));
+            failed = true;
+        }
+
+        // Имя поля должно быть известно при проверке программы: иначе опечатка
+        // обнаружится только после запуска, когда массив уже заполнен.
+        var fieldName = expression.Arguments[1] is LiteralExpressionSyntax { LiteralToken.Value: string text }
+            ? text
+            : null;
+        arguments.Add(BindExpression(expression.Arguments[1]));
+        parameterTypes.Add(TypeSymbol.String);
+
+        if (fieldName is null)
+        {
+            ReportSortFieldRequiresConstantName(descriptor.Name, GetLocation(expression.Arguments[1]));
+            failed = true;
+        }
+        else if (!failed && recordType is not null)
+        {
+            if (!recordType.TryGetField(fieldName, out var field) || field is null)
+            {
+                ReportUnknownSortField(descriptor.Name, recordType.Name, fieldName, GetLocation(expression.Arguments[1]));
+                failed = true;
+            }
+            else if (field.IsArray || !SupportsOrderedComparison(field.Type))
+            {
+                ReportSortFieldNotOrderable(descriptor.Name, fieldName, field.Type, GetLocation(expression.Arguments[1]));
+                failed = true;
+            }
+        }
+
+        if (expression.Arguments.Count == 3)
+        {
+            if (expression.Arguments[2] is StepDirectionArgumentExpressionSyntax stepDirection
+                && TryResolveSortDirection(stepDirection, out var direction))
+            {
+                arguments.Add(new BoundLiteralExpression(stepDirection.StepKeyword.Location, direction, TypeSymbol.Integer));
+                parameterTypes.Add(TypeSymbol.Integer);
+            }
+            else
+            {
+                var directionLocation = expression.Arguments[2] is StepDirectionArgumentExpressionSyntax stepSyntax
+                    ? stepSyntax.StepKeyword.Location
+                    : GetLocation(expression.Arguments[2]);
+
+                ReportInvalidSortDirection(directionLocation);
+                arguments.Add(new BoundErrorExpression(directionLocation));
+                parameterTypes.Add(TypeSymbol.Integer);
+                failed = true;
+            }
+        }
+
+        var resolvedReturnType = ResolveArrayBuiltInReturnType(descriptor, arrayType);
+        var resolvedSymbol = descriptor.CreateResolvedSymbol(parameterTypes, resolvedReturnType);
+        var resolvedTarget = new BoundFunctionExpression(location, resolvedSymbol);
+        return new BoundCallExpression(location, resolvedTarget, arguments, resolvedReturnType);
+    }
+
+    /// <summary>
+    /// Направление сортировки — только константа 1 или -1: шага у сортировки
+    /// нет, есть знак. Всё остальное отклоняется при проверке программы.
+    /// </summary>
+    private static bool TryResolveSortDirection(
+        StepDirectionArgumentExpressionSyntax stepDirection,
+        out int direction)
+    {
+        direction = 1;
+
+        var value = stepDirection.Value switch
+        {
+            LiteralExpressionSyntax { LiteralToken.Value: int integer } => (int?)integer,
+            UnaryExpressionSyntax
+            {
+                OperatorToken.Kind: SyntaxKind.MinusToken,
+                Operand: LiteralExpressionSyntax { LiteralToken.Value: int integer }
+            } => -integer,
+            _ => null
+        };
+
+        if (value is not (1 or -1))
+        {
+            return false;
+        }
+
+        direction = value.Value;
+        return true;
     }
 
     private static TypeSymbol ResolveArrayBuiltInReturnType(BuiltinFunctionDescriptor descriptor, ArrayTypeSymbol arrayType)

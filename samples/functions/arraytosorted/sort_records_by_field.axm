@@ -1,0 +1,44 @@
+' Сортировка массива записей по выбранному полю.
+' Копия сортируется по возрастанию цены, корзина остаётся в прежнем порядке.
+' Затем копия сортируется по убыванию через STEP -1.
+' Последним шагом сортируется сама корзина по названию с явным STEP 1.
+' Ожидаемый вывод:
+' банан 20
+' яблоко 30
+' апельсин 40
+' апельсин 40
+' яблоко 30
+' банан 20
+' апельсин
+' банан
+' яблоко
+TYPE Product
+    Name AS STRING
+    Price AS INTEGER
+END TYPE
+
+' Корзина заполняется в произвольном порядке.
+DIM basket[1 TO 3] AS Product
+basket[1] = Product("яблоко", 30)
+basket[2] = Product("апельсин", 40)
+basket[3] = Product("банан", 20)
+
+' Копия по возрастанию цены: исходная корзина не меняется.
+DIM cheap[] AS Product
+cheap[] = ARRAYTOSORTED(basket[], "Price")
+PRINT cheap[1].Name; " "; cheap[1].Price
+PRINT cheap[2].Name; " "; cheap[2].Price
+PRINT cheap[3].Name; " "; cheap[3].Price
+
+' Копия по убыванию цены: STEP -1 задаёт обратное направление.
+DIM rich[] AS Product
+rich[] = ARRAYTOSORTED(basket[], "Price", STEP -1)
+PRINT rich[1].Name; " "; rich[1].Price
+PRINT rich[2].Name; " "; rich[2].Price
+PRINT rich[3].Name; " "; rich[3].Price
+
+' Сортировка самой корзины по названию; STEP 1 можно было не писать.
+ARRAYSORT(basket[], "Name", STEP 1)
+PRINT basket[1].Name
+PRINT basket[2].Name
+PRINT basket[3].Name

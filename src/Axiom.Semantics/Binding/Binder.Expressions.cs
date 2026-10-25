@@ -15,6 +15,7 @@ public sealed partial class Binder
             UnaryExpressionSyntax unaryExpression => BindUnaryExpression(unaryExpression),
             BinaryExpressionSyntax binaryExpression => BindBinaryExpression(binaryExpression),
             RangeExpressionSyntax rangeExpression => BindRangeExpression(rangeExpression, reportInvalidStandaloneUse: true),
+            StepDirectionArgumentExpressionSyntax stepDirection => BindStepDirectionArgumentExpression(stepDirection),
             ParenthesizedExpressionSyntax parenthesizedExpression => BindExpression(parenthesizedExpression.Expression),
             NamedArgumentExpressionSyntax namedArgumentExpression => BindExpression(namedArgumentExpression.Expression),
             CallExpressionSyntax callExpression => BindCallExpression(callExpression),
@@ -228,6 +229,18 @@ public sealed partial class Binder
         }
 
         return new BoundArrayRangeExpression(expression.ToKeyword.Location, lowerBound, upperBound);
+    }
+
+    /// <summary>
+    /// STEP как аргумент вызова разбирается парсером для любого вызова, но
+    /// осмыслен только у сортировки массива записей. Здесь форма вне этого
+    /// места получает диагностику, а связывание самой сортировки обрабатывает
+    /// направление отдельно, не вызывая этот метод.
+    /// </summary>
+    private BoundExpression BindStepDirectionArgumentExpression(StepDirectionArgumentExpressionSyntax expression)
+    {
+        ReportInvalidSortDirection(expression.StepKeyword.Location, usedOutsideSort: true);
+        return new BoundErrorExpression(expression.StepKeyword.Location);
     }
 
     private BoundExpression BindCondition(ExpressionSyntax expression)

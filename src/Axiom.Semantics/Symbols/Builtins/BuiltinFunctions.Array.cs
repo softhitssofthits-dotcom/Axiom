@@ -48,6 +48,19 @@ public static partial class BuiltinFunctions
                 [
                     Parameter("dimension", TypeSymbol.Integer)
                 ]),
+            CreateArraySameType(
+                BuiltinFunctionId.ArrayToSorted,
+                "ARRAYTOSORTED",
+                [
+                    Parameter("field", TypeSymbol.String)
+                ]),
+            CreateArraySameType(
+                BuiltinFunctionId.ArrayToSorted,
+                "ARRAYTOSORTED",
+                [
+                    Parameter("field", TypeSymbol.String),
+                    Parameter("direction", TypeSymbol.Integer)
+                ]),
             CreateArraySameType(BuiltinFunctionId.ArrayToReversed, "ARRAYTOREVERSED"),
             CreateArraySameType(
                 BuiltinFunctionId.ArrayToReversed,
@@ -176,6 +189,19 @@ public static partial class BuiltinFunctions
                 "ARRAYSORT",
                 [
                     Parameter("dimension", TypeSymbol.Integer)
+                ]),
+            CreateArrayVoid(
+                BuiltinFunctionId.ArraySort,
+                "ARRAYSORT",
+                [
+                    Parameter("field", TypeSymbol.String)
+                ]),
+            CreateArrayVoid(
+                BuiltinFunctionId.ArraySort,
+                "ARRAYSORT",
+                [
+                    Parameter("field", TypeSymbol.String),
+                    Parameter("direction", TypeSymbol.Integer)
                 ]),
             CreateArrayVoid(
                 BuiltinFunctionId.ArrayPush,

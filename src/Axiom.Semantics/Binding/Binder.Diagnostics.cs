@@ -254,6 +254,56 @@ public sealed partial class Binder
             location);
     }
 
+    private void ReportSortFieldRequiresRecordArray(string functionName, TypeSymbol elementType, TextLocation location)
+    {
+        _diagnostics.Report(
+            DiagnosticCodes.InvalidSortKeyField,
+            $"Сортировка по полю в '{functionName}' принимает массив записей TYPE; элементы имеют тип {elementType.Name}.",
+            location);
+    }
+
+    private void ReportSortFieldRequiresOneDimensional(string functionName, int rank, TextLocation location)
+    {
+        _diagnostics.Report(
+            DiagnosticCodes.InvalidSortKeyField,
+            $"Сортировка по полю в '{functionName}' поддерживает только одномерный массив; ранг равен {rank}.",
+            location);
+    }
+
+    private void ReportUnknownSortField(string functionName, string typeName, string fieldName, TextLocation location)
+    {
+        _diagnostics.Report(
+            DiagnosticCodes.InvalidSortKeyField,
+            $"Тип '{typeName}' не имеет поля '{fieldName}' для сортировки в '{functionName}'.",
+            location);
+    }
+
+    private void ReportSortFieldNotOrderable(string functionName, string fieldName, TypeSymbol fieldType, TextLocation location)
+    {
+        _diagnostics.Report(
+            DiagnosticCodes.InvalidSortKeyField,
+            $"Поле '{fieldName}' в '{functionName}' должно быть числовым, строковым или временным, получен {fieldType.Name}.",
+            location);
+    }
+
+    private void ReportSortFieldRequiresConstantName(string functionName, TextLocation location)
+    {
+        _diagnostics.Report(
+            DiagnosticCodes.InvalidSortKeyField,
+            $"Имя поля для '{functionName}' задаётся строковой константой, известной при проверке программы.",
+            location);
+    }
+
+    private void ReportInvalidSortDirection(TextLocation location, bool usedOutsideSort = false)
+    {
+        _diagnostics.Report(
+            DiagnosticCodes.InvalidSortDirection,
+            usedOutsideSort
+                ? "STEP допустим только как направление сортировки в ARRAYSORT и ARRAYTOSORTED."
+                : "Направление сортировки задаётся как STEP 1 или STEP -1.",
+            location);
+    }
+
     private void ReportArrayAggregateRequiresSupportedArray(string functionName, TypeSymbol actualType, TextLocation location)
     {
         _diagnostics.Report(

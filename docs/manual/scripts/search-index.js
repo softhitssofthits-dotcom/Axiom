@@ -2815,7 +2815,12 @@ window.AxiomSearchIndex = [
       "arrays-and-builtins",
       "array",
       "array",
-      "dimension"
+      "dimension",
+      "array",
+      "field",
+      "array",
+      "field",
+      "direction"
     ],
     "aliases": [
       "ARRAYSORT"
@@ -2883,7 +2888,12 @@ window.AxiomSearchIndex = [
       "arrays-and-builtins",
       "array",
       "array",
-      "dimension"
+      "dimension",
+      "array",
+      "field",
+      "array",
+      "field",
+      "direction"
     ],
     "aliases": [
       "ARRAYTOSORTED"

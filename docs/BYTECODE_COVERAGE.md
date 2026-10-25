@@ -125,6 +125,22 @@ IDE 0.6.1 согласует завершение запроса с Electron и 
 
 Производительность: `ARRAYPUSH`/`ARRAYPOP` используют ёмкость и амортизированный рост, `ARRAYDISTINCT` — хеш-множество для числовых, строковых, логических и временных типов с сохранением порядка первого вхождения. Добавлены сценарии `samples/smoke/engine-compare/array_push_pop_growth.axm` и `array_distinct_unique.axm`.
 
+## Структурный хеш записей в ARRAYDISTINCT — 24 октября 2026 года
+
+Хеш-множество `ARRAYDISTINCT` расширено на записи `TYPE`, чей граф полей поддерживает структурное равенство (скалярные и вложенные записные поля без массивных полей). Структурный хеш вычисляется по полям в порядке объявления и согласован со структурным равенством; хеш не кешируется в изменяемой записи. Записи с массивными полями остаются вне хешируемого пути и не сворачиваются ни с какими другими записями. Договор равенства, порядок первых вхождений, компактные границы и диагностики не изменились — изменилась только стоимость.
+
+Проверки: `tests/Axiom.Runtime.Tests/RuntimeRecordHashContractTests.cs` — 6 новых проверок согласованности хеша и равенства (полный Runtime 1289/1289); `tests/Axiom.Execution.Tests/ArrayDistinctRecordContractTests.cs` — 6 новых проверок на массивах записей: порядок первых вхождений, различие по цене, вложенные записи, временные поля, выделенный пустой результат и срез-представление (полный Execution 3920/3920). Пример: `samples/functions/arraydistinct/records_keep_first.axm`. Измерение 256/512/1024 уникальных записей с двумя полями: медианы 5,99/20,85/79,12 мс на квадратичном пути против 0,76/1,58/3,25 мс на хеш-пути при одинаковом выводе; выделения сократились с 22,2 МБ до 1,4 МБ на 1024 записях.
+
+## Сортировка записей по выбранному полю — 24 октября 2026 года
+
+`ARRAYSORT` и `ARRAYTOSORTED` получили формы сортировки записей `TYPE` по выбранному полю: второй аргумент — строковая константа с именем поля, третий необязательный — направление `STEP 1` или `STEP -1`. Форма принимает только одномерный массив записей; имя поля и его упорядочиваемость проверяются при разборе программы. Сортировка устойчивая в обоих направлениях: записи с равным ключом сохраняют прежний порядок. Формы с номером измерения и сортировка простых значений не изменились.
+
+Диагностики: MB2057 — форма с полем применена к неподходящему массиву, имя поля не является константой, поле отсутствует или не упорядочивается; MB2058 — недопустимое направление сортировки или `STEP` вне `ARRAYSORT`/`ARRAYTOSORTED`.
+
+Проверки: `tests/Axiom.Semantics.Tests/SortByFieldBindingTests.cs` — 8 проверок связывания (обе формы, оба направления, непостоянное имя поля, скалярный массив, массивное поле, `STEP` вне сортировки, сохранение формы с измерением); `tests/Axiom.Execution.Tests/ArraySortByFieldContractTests.cs` — 9 программных проверок: копия и исходник, убывание, равенство `STEP 1` и отсутствия направления, сортировка на месте по строке, устойчивость при обоих направлениях, временное поле, пустой и единичный массив, вложенная запись. Группы: Semantics 641/641, Execution 3930/3930, Parser 220/220, Syntax 70/70, Bytecode 617/617. Пример: `samples/functions/arraytosorted/sort_records_by_field.axm`. Справочник: `arrays-and-builtins.html` (обе функции), `arrays-diagnostics.html` (MB2057, MB2058); снимок реестра обновлён, 355 форм вызова.
+
+
+
 Проверки: `tests/Axiom.Runtime.Tests/LanguageContractTests.ArrayRegression.cs` — 24 новых теста; полный набор Runtime 1154/1154. Примеры: `samples/functions/arrayclone/clone_record_array.axm`, `samples/functions/arraypush/growing_array.axm`, `samples/functions/arraydistinct/first_occurrence_order.axm`, `samples/operators/redim/view_after_resize.axm`, `samples/acceptance/negative/array_allocation_limit.axm`, `samples/functions/arrayslice/empty_window_bounds.axm`, `samples/acceptance/negative/array_fractional_index.axm`, `samples/acceptance/negative/array_descending_range.axm`, `samples/acceptance/negative/array_min_boolean.axm`. Справочник: `arrays-dynamic.html`, `arrays-slices.html`, `arrays-diagnostics.html`, `arrays-indexing.html`, `arrays-and-builtins.html`. Закреплён контракт P2: пустой массив всегда 1 TO 0, обратный диапазон — MB3002, дробный индекс и граница — MB3007, ранняя диагностика инициализатора массива и типов агрегатов.
 
 ## Регрессии графических границ — 17 октября 2026 года

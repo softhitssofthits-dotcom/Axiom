@@ -136,10 +136,19 @@ public sealed partial class BytecodeVm
     private RuntimeValue EvaluateArrayToSortedBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
         var array = RequireAllocatedArrayArgument(arguments[0], "ARRAYTOSORTED", "array", location);
+        var arrayType = (ArrayTypeSymbol)arguments[0].Type;
+
+        // Второй аргумент-строка означает сортировку записей по полю.
+        if (IsSortByFieldArguments(arguments))
+        {
+            var clone = CloneArrayValue(arrayType, array).AsArray();
+            SortRecordsByField(clone, arguments, "ARRAYTOSORTED", location);
+            return RuntimeValue.FromArray(arrayType, clone);
+        }
+
         var explicitDimension = arguments.Count > 1
             ? ResolveTransformDimension("ARRAYTOSORTED", array, arguments, dimensionArgumentIndex: 1, location)
             : (int?)null;
-        var arrayType = (ArrayTypeSymbol)arguments[0].Type;
 
         if (array.Length == 0)
         {
@@ -468,6 +477,70 @@ public sealed partial class BytecodeVm
         return CreateCompactArrayValue(arrayType, values);
     }
 
+    private static bool IsSortByFieldArguments(IReadOnlyList<RuntimeValue> arguments)
+    {
+        return arguments.Count is 2 or 3
+            && arguments[1].Type == TypeSymbol.String;
+    }
+
+    /// <summary>
+    /// Сортирует массив записей по выбранному полю с сохранением порядка
+    /// равных ключей. Направление берётся из необязательного третьего
+    /// аргумента: 1 — возрастание, -1 — убывание. Связыватель уже проверил
+    /// имя поля и допустимость сравнения, поэтому здесь остаются только
+    /// согласованные случаи.
+    /// </summary>
+    private void SortRecordsByField(
+        RuntimeArrayValue array,
+        IReadOnlyList<RuntimeValue> arguments,
+        string functionName,
+        TextLocation location)
+    {
+        var fieldName = arguments[1].AsString();
+        var descending = arguments.Count > 2 && arguments[2].AsInteger() < 0;
+
+        if (array.Length <= 1)
+        {
+            return;
+        }
+
+        if (array.ElementType is not UserDefinedTypeSymbol recordType
+            || !recordType.TryGetField(fieldName, out var field)
+            || field is null)
+        {
+            ReportBuiltInArgumentError(
+                functionName,
+                "field",
+                $"не задаёт поле типа '{array.ElementType.Name}'.",
+                location);
+            return;
+        }
+
+        var values = new List<(RuntimeValue Value, RuntimeValue Key, int OriginalOrder)>(array.Length);
+        var originalOrder = 0;
+
+        BuiltinArrayHelpers.ForEachArrayIndexAscending(array, index =>
+        {
+            var value = array.GetValue(index);
+            values.Add((value, value.AsRecord().GetField(field), originalOrder));
+            originalOrder++;
+        });
+
+        values.Sort((left, right) =>
+        {
+            var comparison = Compare(left.Key, right.Key, location);
+
+            if (comparison == 0)
+            {
+                return left.OriginalOrder.CompareTo(right.OriginalOrder);
+            }
+
+            return descending ? -comparison : comparison;
+        });
+
+        BuiltinArrayHelpers.ForEachArrayIndexAscending(array, index => array.SetValue(index, values[index - array.LowerBound].Value));
+    }
+
     private RuntimeValue EvaluateArrayFillBuiltin(RuntimeValue argument, RuntimeValue value, TextLocation location)
     {
         var array = RequireAllocatedArrayArgument(argument, "ARRAYFILL", "array", location);
@@ -498,6 +571,14 @@ public sealed partial class BytecodeVm
     private RuntimeValue EvaluateArraySortBuiltin(IReadOnlyList<RuntimeValue> arguments, TextLocation location)
     {
         var array = RequireAllocatedArrayArgument(arguments[0], "ARRAYSORT", "array", location);
+
+        // Второй аргумент-строка означает сортировку записей по полю.
+        if (IsSortByFieldArguments(arguments))
+        {
+            SortRecordsByField(array, arguments, "ARRAYSORT", location);
+            return RuntimeValue.Void;
+        }
+
         var explicitDimension = arguments.Count > 1
             ? ResolveTransformDimension("ARRAYSORT", array, arguments, dimensionArgumentIndex: 1, location)
             : (int?)null;

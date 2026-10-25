@@ -1,0 +1,31 @@
+' ARRAYDISTINCT оставляет первые появления записей TYPE
+' в порядке их появления в корзине.
+' Повторная запись «яблоко, 30» убирается,
+' а яблоко с другой ценой остаётся отдельным товаром.
+' Ожидаемый вывод:
+' 3
+' яблоко 30
+' банан 20
+' груша 25
+TYPE Product
+    Name AS STRING
+    Price AS INTEGER
+END TYPE
+
+' Заполняем корзину четырьмя записями, из них две одинаковые.
+DIM basket[1 TO 4] AS Product
+basket[1] = Product("яблоко", 30)
+basket[2] = Product("банан", 20)
+basket[3] = Product("яблоко", 30)
+basket[4] = Product("груша", 25)
+
+' ARRAYDISTINCT возвращает новый массив записей, корзина не меняется.
+DIM unique[] AS Product
+unique[] = ARRAYDISTINCT(basket[])
+
+PRINT ARRAYLENGTH(unique[])
+PRINT unique[1].Name; " "; unique[1].Price
+PRINT unique[2].Name; " "; unique[2].Price
+Print unique[3].Name; " "; unique[3].Price
+Print "----------"
+Print $"{unique[1].Name} {unique[1].Price}"

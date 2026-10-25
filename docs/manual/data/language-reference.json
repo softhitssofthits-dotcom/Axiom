@@ -26,7 +26,7 @@
     "src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.cs",
     "src/Axiom.Syntax/SyntaxKind.cs"
   ],
-  "sourceFingerprint": "58fc941d9b5d43e783cb93de6145449317be5839d27da3bfcc077eb1ee9ca3b8",
+  "sourceFingerprint": "e069578b9fb54a27c6fbbd1a2a3c628571b2614a54e3ce52834235a38fe3280c",
   "functions": [
     {
       "name": "ABS",
@@ -1111,6 +1111,46 @@
           "binding": "Array",
           "operandPolicy": "Declared",
           "resultPolicy": "Declared"
+        },
+        {
+          "key": "ARRAYSORT/2",
+          "id": "ArraySort",
+          "parameters": [
+            {
+              "name": "array",
+              "type": "INTEGER[]"
+            },
+            {
+              "name": "field",
+              "type": "STRING"
+            }
+          ],
+          "returnType": "VOID",
+          "binding": "Array",
+          "operandPolicy": "Declared",
+          "resultPolicy": "Declared"
+        },
+        {
+          "key": "ARRAYSORT/3",
+          "id": "ArraySort",
+          "parameters": [
+            {
+              "name": "array",
+              "type": "INTEGER[]"
+            },
+            {
+              "name": "field",
+              "type": "STRING"
+            },
+            {
+              "name": "direction",
+              "type": "INTEGER"
+            }
+          ],
+          "returnType": "VOID",
+          "binding": "Array",
+          "operandPolicy": "Declared",
+          "resultPolicy": "Declared"
         }
       ]
     },
@@ -1250,6 +1290,46 @@
             },
             {
               "name": "dimension",
+              "type": "INTEGER"
+            }
+          ],
+          "returnType": "INTEGER[]",
+          "binding": "Array",
+          "operandPolicy": "Declared",
+          "resultPolicy": "SameAsFirstArgument"
+        },
+        {
+          "key": "ARRAYTOSORTED/2",
+          "id": "ArrayToSorted",
+          "parameters": [
+            {
+              "name": "array",
+              "type": "INTEGER[]"
+            },
+            {
+              "name": "field",
+              "type": "STRING"
+            }
+          ],
+          "returnType": "INTEGER[]",
+          "binding": "Array",
+          "operandPolicy": "Declared",
+          "resultPolicy": "SameAsFirstArgument"
+        },
+        {
+          "key": "ARRAYTOSORTED/3",
+          "id": "ArrayToSorted",
+          "parameters": [
+            {
+              "name": "array",
+              "type": "INTEGER[]"
+            },
+            {
+              "name": "field",
+              "type": "STRING"
+            },
+            {
+              "name": "direction",
               "type": "INTEGER"
             }
           ],

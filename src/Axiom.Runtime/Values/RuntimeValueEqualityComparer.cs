@@ -6,6 +6,8 @@ namespace Axiom.Runtime;
 /// Сравнение значений массива для хеш-множества. Элементы одного массива
 /// имеют объявленный тип элемента, поэтому хеш строится по фактическому типу
 /// значения и согласован с <see cref="RuntimeValueHelpers.ValuesEqual"/>.
+/// Записи TYPE допускаются, только когда весь граф полей поддерживает
+/// структурное равенство; тогда тот же обход полей служит основой хеша.
 /// </summary>
 internal sealed class RuntimeValueEqualityComparer : IEqualityComparer<RuntimeValue>
 {
@@ -13,6 +15,11 @@ internal sealed class RuntimeValueEqualityComparer : IEqualityComparer<RuntimeVa
 
     public static bool SupportsElementType(TypeSymbol elementType)
     {
+        if (elementType is UserDefinedTypeSymbol userDefined)
+        {
+            return StructuralEqualitySupport.IsSupported(userDefined);
+        }
+
         return elementType == TypeSymbol.Integer
             || elementType == TypeSymbol.Long
             || elementType == TypeSymbol.Double
@@ -42,57 +49,6 @@ internal sealed class RuntimeValueEqualityComparer : IEqualityComparer<RuntimeVa
 
     public int GetHashCode(RuntimeValue value)
     {
-        if (value.Type == TypeSymbol.Integer)
-        {
-            return value.AsInteger();
-        }
-
-        if (value.Type == TypeSymbol.Long)
-        {
-            return value.AsLong().GetHashCode();
-        }
-
-        if (value.Type == TypeSymbol.Double)
-        {
-            var number = value.AsDouble();
-            return number == 0 ? 0 : number.GetHashCode();
-        }
-
-        if (value.Type == TypeSymbol.Decimal)
-        {
-            return value.AsDecimal().GetHashCode();
-        }
-
-        if (value.Type == TypeSymbol.String)
-        {
-            return StringComparer.Ordinal.GetHashCode(value.AsString());
-        }
-
-        if (value.Type == TypeSymbol.Boolean)
-        {
-            return value.AsBoolean().GetHashCode();
-        }
-
-        if (value.Type == TypeSymbol.Date)
-        {
-            return value.AsDate().GetHashCode();
-        }
-
-        if (value.Type == TypeSymbol.Time)
-        {
-            return value.AsTime().GetHashCode();
-        }
-
-        if (value.Type == TypeSymbol.DateTime)
-        {
-            return value.AsDateTime().GetHashCode();
-        }
-
-        if (value.Type == TypeSymbol.UtcDateTime)
-        {
-            return value.AsUtcDateTime().GetHashCode();
-        }
-
-        return 0;
+        return RuntimeValueHashing.ComputeHash(value);
     }
 }

@@ -88,6 +88,29 @@ public sealed class RangeExpressionSyntax : ExpressionSyntax
     public ExpressionSyntax UpperBound { get; }
 }
 
+/// <summary>
+/// Аргумент вида <c>STEP 1</c> или <c>STEP -1</c> в списке аргументов вызова.
+/// Разбирается для любого вызова, а допустимость формы решает связыватель:
+/// так же устроен разбор диапазона <c>TO</c> внутри аргументов.
+/// </summary>
+public sealed class StepDirectionArgumentExpressionSyntax : ExpressionSyntax
+{
+    public StepDirectionArgumentExpressionSyntax(SyntaxToken stepKeyword, ExpressionSyntax value)
+    {
+        ArgumentNullException.ThrowIfNull(stepKeyword);
+        ArgumentNullException.ThrowIfNull(value);
+
+        StepKeyword = stepKeyword;
+        Value = value;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.StepDirectionArgumentExpression;
+
+    public SyntaxToken StepKeyword { get; }
+
+    public ExpressionSyntax Value { get; }
+}
+
 public sealed class ParenthesizedExpressionSyntax : ExpressionSyntax
 {
     public ParenthesizedExpressionSyntax(SyntaxToken openParenToken, ExpressionSyntax expression, SyntaxToken closeParenToken)

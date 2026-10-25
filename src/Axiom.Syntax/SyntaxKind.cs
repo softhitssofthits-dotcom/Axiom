@@ -250,6 +250,7 @@ public enum SyntaxKind
     UnaryExpression,
     BinaryExpression,
     RangeExpression,
+    StepDirectionArgumentExpression,
     ParenthesizedExpression,
     NamedArgumentExpression,
     CallExpression,
