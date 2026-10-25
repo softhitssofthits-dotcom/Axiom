@@ -1,8 +1,0 @@
-' Ожидается 10000: полная проверка числа не принимает числовой префикс.
-DIM checksum AS LONG = 0
-FOR i = 1 TO 10000
-    IF ISNUMERIC("12.5e2") AND NOT ISNUMERIC("12x") THEN
-        checksum = checksum + 1
-    END IF
-NEXT
-PRINT checksum

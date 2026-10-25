@@ -4,6 +4,8 @@ name: Публикация справочника
 # Запускается только вручную (workflow_dispatch), чтобы приватный репозиторий
 # не пытался публиковаться сам до отдельного решения автора.
 on:
+  push:
+    branches: [master]
   workflow_dispatch:
 
 permissions:

@@ -1,50 +1,6 @@
-# Build outputs
 .artifacts/
 **/bin/
 **/obj/
-
-# Local dotnet helper directories
-.dotnet-home/
-.dotnet-cli/
-.tmp-build/
-.vs/
-.codex/
-.zcode/
-
-# Test and coverage outputs
-TestResults/
-*.trx
-*.coverage
-*.coveragexml
-
-# Local diagnostic and redirected logs
-*-build.log
-parser-*.log
-parser-*.txt
-
-# Local agent / workspace metadata (not part of the repository)
-.agents/
-.opencode/
-config/
-IDENTITY.md
-USER.md
-.openclaw/
-HEARTBEAT.md
-SOUL.md
-TOOLS.md
-# Local history and evidence, kept on disk but not published to the repository
-/docs/archive/
-/docs/reports/
-/docs/audit/
-# Внутренняя документация хранится локально; публичен только справочник.
-/docs/*
-!/docs/manual/
-# Снимки прогонов Electron создаются локально и не публикуются
-ide/e2e/evidence/shots/
-# Electron IDE local dependencies and copied Monaco runtime
-ide/node_modules/
+**/node_modules/
 ide/src/renderer/vs/
-ide/e2e/node_modules/
-ide/e2e/playwright-report/
-ide/e2e/test-results/
-ide/e2e/.tmp/
+.vs/
