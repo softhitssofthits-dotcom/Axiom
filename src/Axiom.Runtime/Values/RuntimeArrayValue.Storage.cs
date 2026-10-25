@@ -63,7 +63,8 @@ public sealed partial class RuntimeArrayValue
         InvalidateStorageLifetime();
         _elements = elements;
         _capacity = elements.Length;
-        _storageLifetime = new StorageLifetime();
+        _shapeRevision = unchecked(_shapeRevision + 1);
+        _storageLifetime = new StorageLifetime(_shapeRevision);
     }
 
     private void InvalidateStorageLifetime()
@@ -77,7 +78,8 @@ public sealed partial class RuntimeArrayValue
     private void RenewStorageLifetime()
     {
         InvalidateStorageLifetime();
-        _storageLifetime = new StorageLifetime();
+        _shapeRevision = unchecked(_shapeRevision + 1);
+        _storageLifetime = new StorageLifetime(_shapeRevision);
     }
 
     private void EnsureAllocated()
@@ -99,7 +101,14 @@ public sealed partial class RuntimeArrayValue
     /// </summary>
     private sealed class StorageLifetime
     {
+        public StorageLifetime(long revision = 0)
+        {
+            Revision = revision;
+        }
+
         public bool Invalidated;
+
+        public long Revision;
     }
 
     private void EnsureResizableRoot()

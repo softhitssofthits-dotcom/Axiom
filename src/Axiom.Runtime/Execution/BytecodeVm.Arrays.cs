@@ -9,6 +9,44 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
+    private void ExecuteGetArrayStructuralVersion(BytecodeCallFrame frame, int instructionIndex)
+    {
+        var arrayValue = PopValue(frame, instructionIndex);
+        if (arrayValue.Type is not ArrayTypeSymbol)
+        {
+            throw new InvalidOperationException($"Ожидался массив, получено значение типа {arrayValue.Type.Name}.");
+        }
+
+        frame.EvaluationStack.PushUnchecked(RuntimeValue.FromLong(arrayValue.AsArray().StructuralVersion));
+    }
+
+    private static void ExecuteBindArrayElement(BytecodeCallFrame frame, BytecodeInstruction instruction)
+    {
+        var targetSlot = instruction.GetOperand(0);
+        var sourceSlot = instruction.GetOperand(1);
+        var expectedVersionSlot = instruction.GetOperand(2);
+        var rank = instruction.GetOperand(3);
+        var sourceValue = frame.LoadLocalValue(sourceSlot);
+
+        if (sourceValue.Type is not ArrayTypeSymbol arrayType || arrayType.Rank != rank)
+        {
+            throw new InvalidOperationException("Некорректный тип источника FOR EACH BYREF.");
+        }
+
+        var array = sourceValue.AsArray();
+        var expectedVersion = frame.LoadLocalValue(expectedVersionSlot).AsLong();
+        var indices = new int[rank];
+        for (var dimension = 0; dimension < rank; dimension++)
+        {
+            indices[dimension] = frame.LoadLocalValue(instruction.GetOperand(dimension + 4)).AsInteger();
+        }
+
+        _ = array.GetValue(indices);
+        frame.ReplaceLocalSlot(
+            targetSlot,
+            new BytecodeArrayElementVariableSlot(arrayType, array, indices, expectedVersion));
+    }
+
     private void ExecuteRedimArray(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);

@@ -9,29 +9,47 @@ internal class BytecodeVariableSlot
     private readonly Func<RuntimeValue>? _getter;
     private readonly Action<RuntimeValue>? _setter;
 
-    public BytecodeVariableSlot(RuntimeValue value, int? fixedStringLength = null)
+    public BytecodeVariableSlot(
+        RuntimeValue value,
+        int? fixedStringLength = null,
+        bool isForEachItem = false,
+        bool isForEachItemPending = false)
     {
         ArgumentNullException.ThrowIfNull(value);
         FixedStringLength = fixedStringLength;
+        IsForEachItem = isForEachItem;
+        IsForEachItemPending = isForEachItemPending;
         _value = fixedStringLength is null && value.Type is not UserDefinedTypeSymbol && !value.RequiresCopyForStorage
             ? value
             : NormalizeForStorage(value, fixedStringLength);
     }
 
-    public BytecodeVariableSlot(Func<RuntimeValue> getter, Action<RuntimeValue> setter, int? fixedStringLength = null)
+    public BytecodeVariableSlot(
+        Func<RuntimeValue> getter,
+        Action<RuntimeValue> setter,
+        int? fixedStringLength = null,
+        bool isForEachItem = false)
     {
         ArgumentNullException.ThrowIfNull(getter);
         ArgumentNullException.ThrowIfNull(setter);
         FixedStringLength = fixedStringLength;
+        IsForEachItem = isForEachItem;
         _getter = getter;
         _setter = setter;
         _value = RuntimeValue.Void;
     }
 
-    private BytecodeVariableSlot(RuntimeValue value, int? fixedStringLength, bool adoptValue)
+    private BytecodeVariableSlot(
+        RuntimeValue value,
+        int? fixedStringLength,
+        bool isForEachItem,
+        bool isForEachItemPending,
+        bool adoptValue)
     {
         ArgumentNullException.ThrowIfNull(value);
         FixedStringLength = fixedStringLength;
+        IsForEachItem = isForEachItem;
+        IsForEachItemPending = isForEachItemPending;
         _value = value;
         _ = adoptValue;
     }
@@ -41,12 +59,20 @@ internal class BytecodeVariableSlot
     /// Нужен для видимых переменных и восстановления снимков: копия записи здесь
     /// разорвала бы связь со значением, которое видят другие участники состояния.
     /// </summary>
-    public static BytecodeVariableSlot Adopt(RuntimeValue value, int? fixedStringLength = null)
+    public static BytecodeVariableSlot Adopt(
+        RuntimeValue value,
+        int? fixedStringLength = null,
+        bool isForEachItem = false,
+        bool isForEachItemPending = false)
     {
-        return new BytecodeVariableSlot(value, fixedStringLength, adoptValue: true);
+        return new BytecodeVariableSlot(value, fixedStringLength, isForEachItem, isForEachItemPending, adoptValue: true);
     }
 
     public int? FixedStringLength { get; }
+
+    public bool IsForEachItem { get; internal set; }
+
+    public bool IsForEachItemPending { get; internal set; }
 
     public virtual RuntimeValue Value
     {

@@ -1,0 +1,43 @@
+' Каждое замыкание сохраняет ячейку или адрес своей итерации.
+DIM values[] AS INTEGER = [1, 2]
+DIM firstValue AS FUNCTION() AS INTEGER
+DIM secondValue AS FUNCTION() AS INTEGER
+
+FOR EACH BYVAL item IN values[]
+    IF item = 1 THEN
+        firstValue = Capture(item)
+    ELSE
+        secondValue = Capture(item)
+    END IF
+NEXT item
+
+PRINT firstValue()
+PRINT secondValue()
+
+DIM grades[] AS INTEGER = [3, 4]
+DIM firstGrade AS FUNCTION() AS INTEGER
+DIM secondGrade AS FUNCTION() AS INTEGER
+
+FOR EACH BYREF grade IN grades[]
+    IF grade = 3 THEN
+        firstGrade = Capture(grade)
+    ELSE
+        secondGrade = Capture(grade)
+    END IF
+NEXT grade
+
+PRINT firstGrade()
+PRINT secondGrade()
+
+FUNCTION Capture(BYREF value AS INTEGER) AS FUNCTION() AS INTEGER
+    FUNCTION ReadValue() AS INTEGER
+        RETURN value
+    END FUNCTION
+    RETURN ReadValue
+END FUNCTION
+
+' Ожидаемый вывод:
+' 1
+' 2
+' 3
+' 4

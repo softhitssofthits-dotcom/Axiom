@@ -9,12 +9,11 @@
 <main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Обход массива FOR EACH</span></nav>
 <p class="eyebrow">6 · Циклы</p><h1 class="page-title">Обход массива FOR EACH</h1><p class="lead">Когда нужно выполнить действие с каждым элементом массива, индексы и границы не нужны: достаточно назвать массив и переменную, которая получит очередное значение. Форма `FOR EACH` выполняет тело один раз на элемент и сама следит за порядком и границами.</p><nav class="article-toc" aria-label="В этой статье"></nav>
 
-<section class="article-section" id="form"><h2>Форма записи</h2><p>Заголовок состоит из слов `FOR EACH`, необязательного модификатора, имени переменной цикла, необязательного типа после `AS`, слова `IN` и выражения-источника. Тело завершается `NEXT`, после которого можно повторить имя переменной.</p><pre><code class="language-axiom">FOR EACH ⟦BYVAL | BYREF⟧ &lt;переменная&gt; ⟦AS &lt;тип&gt;⟧ IN &lt;массив&gt;[]
+<section class="article-section" id="form"><h2>Форма записи</h2><p>`FOR EACH` выполняет тело для элементов массива в порядке индексов. Источник указывается выражением после `IN`; массив вычисляется один раз перед первым проходом. Имя после `NEXT` необязательно, а если оно указано, должно совпадать с именем переменной цикла.</p><p>Форма с копированием элемента:</p><pre><code class="language-axiom">FOR EACH ⟦BYVAL⟧ &lt;переменная&gt; ⟦AS &lt;тип&gt;⟧ IN &lt;массив&gt;[]
     ⟦&lt;инструкции&gt;⟧
-NEXT ⟦&lt;имя переменной&gt;⟧</code></pre><p>Действует режим `BYVAL`; он же подразумевается, когда модификатор не указан: переменная цикла получает копию элемента, и запись в неё исходный массив не меняет. Ключевое слово `BYREF` разбирается, но отклоняется при проверке программы с MB2064. Отказ явный, а не молчаливое выполнение в режиме `BYVAL`, потому что иначе запись в переменную цикла выглядела бы изменением исходного массива:</p><pre><code class="language-axiom">DIM values[] AS INTEGER = [1, 2]
-FOR EACH BYREF item IN values[]
-    item = 99
-NEXT</code></pre><p>Эта программа не выполняется: проверка сообщает, что режим `FOR EACH BYREF` пока не поддерживается, и предлагает `BYVAL` или обход без модификатора.</p><pre><code class="language-axiom">DIM fruits[] AS STRING = ["яблоко", "банан", "апельсин"]
+NEXT ⟦&lt;имя переменной&gt;⟧</code></pre><p>Форма с адресацией элемента:</p><pre><code class="language-axiom">FOR EACH BYREF &lt;переменная&gt; ⟦AS &lt;тип&gt;⟧ IN &lt;массив&gt;[]
+    ⟦&lt;инструкции&gt;⟧
+NEXT ⟦&lt;имя переменной&gt;⟧</code></pre><p>Если модификатор пропущен, действует `BYVAL`. `EACH` и `IN` зарезервированы: их нельзя использовать как имена переменных, констант, процедур, функций, типов и полей; попытка даёт MB1002.</p><pre><code class="language-axiom">DIM fruits[] AS STRING = ["яблоко", "банан", "апельсин"]
 FOR EACH fruit IN fruits[]
     PRINT fruit
 NEXT fruit</code></pre><p>Программа выводит:</p><pre><code>яблоко
@@ -25,26 +24,28 @@ NEXT fruit</code></pre><p>Программа выводит:</p><pre><code>яб�
 DIM eachItem AS INTEGER = in2
 PRINT eachItem</code></pre><p>Программа выводит <code>3</code>. Числовой `FOR` с `=` и `TO` продолжает работать без изменений.</p></section>
 
-<section class="article-section" id="variable"><h2>Переменная цикла и тип</h2><p>Переменная цикла создаётся самим циклом и доступна только внутри тела. Если тип не указан, он берётся из типа элементов массива:</p><pre><code class="language-axiom">DIM values[1 TO 3] AS INTEGER
-values[1] = 10
-values[2] = 20
-values[3] = 30
+<section class="article-section" id="variable"><h2>Переменная цикла и тип</h2><p>Цикл объявляет переменную элемента только для своего тела. После `NEXT` это имя недоступно. Если `AS` пропущено, тип переменной совпадает с типом элементов источника.</p><pre><code class="language-axiom">DIM values[] AS INTEGER = [10, 20, 30]
 DIM total AS INTEGER
 FOR EACH value IN values[]
     total = total + value
 NEXT
-PRINT total</code></pre><p>Программа выводит <code>60</code>.</p><p>Тип после `AS` допускает только расширяющее преобразование каждого значения: например, `INTEGER` в `DOUBLE`. Сужение отклоняется при проверке программы, потому что оно потеряло бы данные.</p><pre><code class="language-axiom">FOR EACH value AS DOUBLE IN values[]
+PRINT total</code></pre><p>Программа выводит <code>60</code>. В форме `BYVAL` тип после `AS` может принимать расширяющее преобразование каждого элемента, например `INTEGER` в `DOUBLE`. Сужающее преобразование отклоняется с MB2063.</p><pre><code class="language-axiom">FOR EACH value AS DOUBLE IN values[]
     PRINT value / 2
-NEXT</code></pre></section>
+NEXT</code></pre><p>В форме `BYREF` тип после `AS`, если он указан, должен точно совпадать с типом элементов; преобразование не выполняется:</p><pre><code class="language-axiom">FOR EACH BYREF value AS INTEGER IN values[]
+    value = value + 1
+NEXT value</code></pre><p>Указание `DOUBLE` для массива `INTEGER[]` в этой форме даёт MB2063.</p></section>
 
-<section class="article-section" id="byval"><h2>Копия значения в режиме BYVAL</h2><p>Переменная цикла получает копию элемента. Присваивание ей меняет только эту копию и не записывается в массив:</p><pre><code class="language-axiom">DIM values[1 TO 3] AS INTEGER
-values[1] = 1
-values[2] = 2
-values[3] = 3
-FOR EACH value IN values[]
+<section class="article-section" id="byval"><h2>Копия значения в режиме BYVAL</h2><p>В режиме `BYVAL` цикл создаёт новую ячейку для каждой итерации и помещает в неё копию элемента. Присваивание переменной цикла не меняет массив:</p><pre><code class="language-axiom">DIM values[] AS INTEGER = [1, 2, 3]
+FOR EACH BYVAL value IN values[]
     value = 99
 NEXT
-PRINT values[1], values[2], values[3]</code></pre><p>Программа выводит <code>1 2 3</code>. Если элемент является записью `TYPE`, копируется сама запись, но изменяемые значения внутри неё подчиняются общим правилам ссылок: глубокой неизменяемости `BYVAL` не создаёт.</p></section>
+PRINT values[1], values[2], values[3]</code></pre><p>Программа выводит <code>1 2 3</code>. Новая ячейка сохраняет отдельное значение и при захвате замыканием, созданным вызванной процедурой с параметром `BYREF`. Поэтому несколько сохранённых замыканий удерживают значения своих итераций, а не значение последнего прохода. Элемент `TYPE` копируется по обычным правилам Axiom: изменяемые вложенные ссылки не становятся глубоко независимыми.</p></section>
+
+<section class="article-section" id="byref"><h2>Адрес элемента в режиме BYREF</h2><p>`BYREF` связывает переменную цикла с текущим элементом массива. Присваивание, вызов метода `TYPE` и передача переменной в существующий параметр `BYREF` записывают в этот элемент. Адрес привязан к массиву и координатам итерации, поэтому замыкание, полученное через вызванную функцию с параметром `BYREF`, сохраняет адрес своего элемента.</p><pre><code class="language-axiom">DIM grades[] AS INTEGER = [3, 4]
+FOR EACH BYREF grade IN grades[]
+    grade = grade + 1
+NEXT grade
+PRINT grades[1], grades[2]</code></pre><p>Программа выводит <code>4 5</code>. `BYREF AS` требует точного совпадения типа элементов с указанным типом; несоответствие даёт MB2063. Для элемента фиксированной строки сохраняется её объявленная длина: присваиваемая строка нормализуется по тем же правилам, что и обычная запись в элемент массива.</p><p>Источником может быть действительное диапазонное представление массива. Запись через переменную цикла меняет соответствующие элементы корневого массива. Изменять размеры представления нельзя; изменение формы исходного массива делает адреса итераций недействительными.</p></section>
 
 <section class="article-section" id="order"><h2>Источник, порядок и границы</h2><p>Источник вычисляется ровно один раз, до первого прохода. Поэтому вызов функции в заголовке выполняется однократно, даже если массив большой:</p><pre><code class="language-axiom">DIM calls AS INTEGER
 FUNCTION Make() AS INTEGER[]
@@ -61,10 +62,7 @@ FOR EACH item IN values[]
     PRINT item
 NEXT</code></pre><p>Программа выводит <code>7</code>. Продвижение счётчика выполняется только тогда, когда он ещё не достиг верхней границы, поэтому значение за пределы диапазона INTEGER не выходит.</p></section>
 
-<section class="article-section" id="control"><h2>EXIT FOR и CONTINUE FOR</h2><p>Внутри обхода действуют те же операторы управления, что и в числовом цикле: `CONTINUE FOR` переходит к следующему элементу, `EXIT FOR` завершает обход целиком.</p><pre><code class="language-axiom">DIM values[1 TO 5] AS INTEGER
-FOR index = 1 TO 5
-    values[index] = index
-NEXT index
+<section class="article-section" id="control"><h2>EXIT FOR и CONTINUE FOR</h2><p>`CONTINUE FOR` проходит проверку продвижения и переходит к следующему элементу. `EXIT FOR` завершает обход без дальнейшего продвижения. `RETURN` также покидает процедуру без продолжения цикла.</p><pre><code class="language-axiom">DIM values[] AS INTEGER = [1, 2, 3, 4, 5]
 FOR EACH value IN values[]
     IF value = 3 THEN
         CONTINUE FOR
@@ -73,11 +71,11 @@ FOR EACH value IN values[]
         EXIT FOR
     END IF
     PRINT value
-NEXT</code></pre><p>Программа выводит <code>1</code>, <code>2</code> и <code>4</code>: тройка пропущена, пятёрка завершила обход.</p></section>
+NEXT</code></pre><p>Программа выводит <code>1</code>, <code>2</code> и <code>4</code>: третий элемент пропущен, а пятый завершил обход.</p><p>Изменение значений элементов разрешено. `REDIM`, `ERASE` и операции изменения размера массива, например `ARRAYPUSH`, `ARRAYPOP`, `ARRAYINSERT` и `ARRAYREMOVE`, меняют его структурную версию. На следующем продвижении цикл выдаёт MB3014, в том числе после последнего элемента. Если программа читает или записывает переменную `BYREF` после такого изменения, возникает тот же MB3014. `EXIT FOR` и `RETURN` сами по себе не выполняют эту проверку продвижения.</p></section>
 
-<section class="article-section" id="diagnostics"><h2>Диагностика</h2><p>MB1002 сообщает, что ключевое слово использовано как имя. MB2062 сообщает, что источник не является массивом. MB2063 сообщает о недопустимом типе элемента или о сужающем преобразовании в `AS`. MB2064 сообщает, что указан режим `BYREF`, который пока не поддерживается. MB2048 сообщает, что имя после `NEXT` не совпадает с именем переменной цикла. MB3005 возникает при обходе невыделенного массива. Повторное использование занятого имени даёт MB2016, как и у числового `FOR`.</p></section>
+<section class="article-section" id="diagnostics"><h2>Диагностика</h2><p>MB1002 сообщает, что `EACH` или `IN` использовано как имя. MB2016 сообщает о конфликте имени переменной цикла с переменной в той же области. MB2048 возникает, когда имя после `NEXT` не совпадает с именем переменной цикла. MB2062 сообщает, что источник не является массивом. MB2063 сообщает о недопустимом типе элемента, сужающем преобразовании в `BYVAL AS` или несовпадении точного типа в `BYREF AS`. MB3005 возникает, когда источник не выделен. MB3014 сообщает, что источник изменил форму во время обхода либо адрес `BYREF` устарел.</p></section>
 
-<section class="article-section" id="examples"><h2>Запускаемые примеры</h2><p><a href="../../samples/control-flow/for-each/each_byval.axm">each_byval.axm</a> — обход значений и копирование. <a href="../../samples/control-flow/for-each/each_multidimensional.axm">each_multidimensional.axm</a> — многомерный порядок и отрицательные границы. <a href="../../samples/control-flow/for-each/each_exit_continue.axm">each_exit_continue.axm</a> — `EXIT FOR` и `CONTINUE FOR`. <a href="../../samples/control-flow/for-each/each_integer_max_bound.axm">each_integer_max_bound.axm</a> — единственный элемент на верхней границе INTEGER. <a href="../../samples/control-flow/for-each/each_unallocated_error.axm">each_unallocated_error.axm</a> — MB3005 для невыделенного массива. <a href="../../samples/control-flow/for-each/each_byref_error.axm">each_byref_error.axm</a> — отказ режима `BYREF`.</p></section>
+<section class="article-section" id="examples"><h2>Запускаемые примеры</h2><p><a href="../../samples/control-flow/for-each/each_byval.axm">each_byval.axm</a> показывает копирование значения. <a href="../../samples/control-flow/for-each/each_byref.axm">each_byref.axm</a> показывает запись через `BYREF`. <a href="../../samples/control-flow/for-each/each_iteration_captures.axm">each_iteration_captures.axm</a> проверяет отдельные ячейки и адреса в сохранённых замыканиях. <a href="../../samples/control-flow/for-each/each_shape_change_error.axm">each_shape_change_error.axm</a> получает MB3014 после изменения формы. <a href="../../samples/control-flow/for-each/each_multidimensional.axm">each_multidimensional.axm</a> показывает многомерный порядок и отрицательные границы. <a href="../../samples/control-flow/for-each/each_exit_continue.axm">each_exit_continue.axm</a> проверяет `EXIT FOR` и `CONTINUE FOR`. <a href="../../samples/control-flow/for-each/each_integer_max_bound.axm">each_integer_max_bound.axm</a> проверяет верхнюю границу INTEGER. <a href="../../samples/control-flow/for-each/each_unallocated_error.axm">each_unallocated_error.axm</a> показывает MB3005.</p></section>
 
 <section class="article-section"><h2>См. также</h2><p><a href="for.html">FOR … NEXT</a> · <a href="continue.html">CONTINUE</a> · <a href="exit.html">EXIT FOR и EXIT DO</a> · <a href="arrays-1d.html">Одномерные массивы</a> · <a href="arrays-multidimensional.html">Многомерные массивы</a></p></section>
 <div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>

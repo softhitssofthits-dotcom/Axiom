@@ -1,0 +1,20 @@
+' Массив записей, сортировка и обход в Axiom.
+TYPE Product
+    Name AS STRING
+    Price AS INTEGER
+END TYPE
+
+DIM basket[1 TO 3] AS Product
+basket[1] = Product("яблоко", 30)
+basket[2] = Product("апельсин", 40)
+basket[3] = Product("банан", 20)
+
+' Сортируем копию: исходная корзина сохраняет порядок.
+DIM ordered[] AS Product = ARRAYTOSORTED(basket[], "Price")
+
+PRINT "Корзина фруктов — по возрастанию цены"
+FOR EACH fruit IN ordered[]
+    PRINT $"  {fruit.Name}: {fruit.Price} руб."
+NEXT fruit
+
+PRINT $"Всего позиций: {ARRAYLENGTH(ordered[])}"

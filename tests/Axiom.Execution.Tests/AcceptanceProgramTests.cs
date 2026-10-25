@@ -81,7 +81,6 @@ public sealed class AcceptanceProgramTests
     [InlineData("samples/acceptance/negative/temporal_truncation_in_call_and_return.axm", ExecutionStatus.SemanticFailure, "MB2003")]
     [InlineData("samples/expressions/array-literals/narrowing_element_error.axm", ExecutionStatus.SemanticFailure, "MB2060")]
     [InlineData("samples/expressions/array-literals/scalar_return_error.axm", ExecutionStatus.SemanticFailure, "MB2003")]
-    [InlineData("samples/control-flow/for-each/each_byref_error.axm", ExecutionStatus.SemanticFailure, "MB2064")]
     [InlineData("samples/functions/arraymap/step_argument_error.axm", ExecutionStatus.SemanticFailure, "MB2058")]
     [InlineData("samples/operators/const/public_duplicate_name_error.axm", ExecutionStatus.SemanticFailure, "MB2016")]
     public void NegativeAcceptanceProgram_ReturnsExpectedDiagnostic(string relativePath, ExecutionStatus expectedStatus, string expectedCode)

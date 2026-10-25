@@ -21,4 +21,4 @@ internal sealed record BytecodeCallFrameSnapshot(
     IReadOnlyList<RuntimeValue> EvaluationStackBottomToTop,
     int InstructionPointer);
 
-internal sealed record BytecodeVariableSlotSnapshot(RuntimeValue Value, int? FixedStringLength);
+internal sealed record BytecodeVariableSlotSnapshot(BytecodeVariableSlot Slot);

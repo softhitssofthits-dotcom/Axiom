@@ -333,6 +333,7 @@ internal sealed class DesktopHost : IDisposable
             Event("execution.state", new { state = "Paused" });
             Event("debug.paused", new { stopId = _stopId, debugger.StopInfo.Line, debugger.StopInfo.Column,
                 sourceFilePath = debugger.StopInfo.SourceLocation?.Document,
+                forEachItem = debugger.StopInfo.ForEachItem,
                 sourceDocuments,
                 debugger.StopInfo.Opcode, debugger.StopInfo.CallDepth, debugger.StopInfo.CanStepBack, outputText = _console.OutputText, outputLineCount = _console.OutputCheckpoint });
             return;

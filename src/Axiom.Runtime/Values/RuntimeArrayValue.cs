@@ -13,6 +13,7 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
 
     private RuntimeValue[]? _elements;
     private StorageLifetime? _storageLifetime;
+    private long _shapeRevision;
     private int _capacity;
     private readonly int[] _unallocatedLowerBounds;
     private readonly int[] _unallocatedUpperBounds;
@@ -207,6 +208,28 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
     public int? FixedStringLength { get; }
 
     public int Rank { get; }
+
+    /// <summary>
+    /// Revision of the allocated shape and backing storage. Element writes do
+    /// not change it; allocation, reallocation and deallocation do.
+    /// </summary>
+    internal long StructuralVersion
+    {
+        get
+        {
+            if (_storageLifetime is { Invalidated: true })
+            {
+                throw new ExpiredArrayViewException();
+            }
+
+            return _storageLifetime?.Revision ?? _shapeRevision;
+        }
+    }
+
+    internal bool IsStructuralVersionCurrent(long expectedVersion) =>
+        IsAllocated
+        && _storageLifetime is { Invalidated: false } lifetime
+        && lifetime.Revision == expectedVersion;
 
     public IReadOnlyList<int> LowerBounds => IsAllocated ? _lowerBounds! : _unallocatedLowerBounds;
 
@@ -721,6 +744,7 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
     {
         EnsureResizableRoot();
         InvalidateStorageLifetime();
+        _shapeRevision = unchecked(_shapeRevision + 1);
         _lowerBounds = null;
         _upperBounds = null;
         _storageLowerBounds = null;

@@ -1,6 +1,6 @@
 {
   "suite": "Axiom Electron IDE",
-  "count": 567,
+  "count": 568,
   "scenarios": [
     {
       "id": "backend-maze-chase-controls",
@@ -2150,7 +2150,7 @@
     {
       "id": "language-for-each-editor",
       "spec": "language-format.spec.js",
-      "name": "FOR EACH: цвет EACH как у FOR, автозакрытие NEXT и подсказка при наведении"
+      "name": "FOR EACH: BYREF форматируется, тип виден в подсказке, NEXT закрывает блок"
     },
     {
       "id": "format-smooth-two-styles",
@@ -2836,6 +2836,11 @@
       "id": "trace-temporal-clock-boundary",
       "spec": "trace.spec.js",
       "name": "Последовательные откаты не пересекают чтение часов"
+    },
+    {
+      "id": "trace-for-each-current-element",
+      "spec": "trace.spec.js",
+      "name": "Отладчик показывает элемент FOR EACH BYREF и очищает строку после завершения"
     }
   ]
 }

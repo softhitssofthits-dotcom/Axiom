@@ -284,10 +284,8 @@ public sealed partial class Binder
         }
     }
 
-    // Обход массива по значениям. На этом этапе реализован только режим BYVAL:
-    // переменная цикла получает копию элемента и не связана с источником.
-    // Явный BYREF отклоняется, а не выполняется молча как BYVAL: иначе запись
-    // в переменную цикла выглядела бы изменением исходного массива.
+    // Обход массива поддерживает BYVAL и BYREF: первый создаёт независимую
+    // ячейку со значением элемента, второй связывает ячейку с его адресом.
     private BoundStatement BindForEachStatement(ForEachStatementSyntax statement)
     {
         if (statement.NextCounterIdentifier is { } nextCounter
@@ -307,14 +305,7 @@ public sealed partial class Binder
             return BindRejectedForEach(statement, source, source, TypeSymbol.Error);
         }
 
-        if (statement.ByRefKeyword is { } byRefKeyword)
-        {
-            _diagnostics.Report(
-                DiagnosticCodes.UnsupportedForEachByRef,
-                "Режим FOR EACH BYREF пока не поддерживается: используйте BYVAL или обход без модификатора. Запись в переменную цикла не изменяет исходный массив.",
-                byRefKeyword.Location);
-            return BindRejectedForEach(statement, source, source, TypeSymbol.Error);
-        }
+        var byRef = statement.ByRefKeyword is not null;
 
         if (source.Type is not ArrayTypeSymbol arrayType)
         {
@@ -342,11 +333,13 @@ public sealed partial class Binder
 
             if (declaredType != TypeSymbol.Error && declaredType != elementType)
             {
-                if (!CanConvert(elementType, declaredType))
+                if (byRef || !CanConvert(elementType, declaredType))
                 {
                     _diagnostics.Report(
                         DiagnosticCodes.InvalidForEachElementType,
-                        $"Переменная цикла FOR EACH объявлена как {declaredType.Name}, а элементы массива имеют тип {elementType.Name}. Преобразование невозможно.",
+                        byRef
+                            ? $"Переменная цикла FOR EACH BYREF должна иметь тот же тип {elementType.Name}, что и элементы массива; указан тип {declaredType.Name}."
+                            : $"Переменная цикла FOR EACH объявлена как {declaredType.Name}, а элементы массива имеют тип {elementType.Name}. Преобразование невозможно.",
                         location);
                     return BindRejectedForEach(statement, source, source, TypeSymbol.Error);
                 }
@@ -370,7 +363,7 @@ public sealed partial class Binder
             return new BoundForEachStatement(
                 GetLocation(statement),
                 variable,
-                byRef: false,
+                byRef,
                 source,
                 arrayType,
                 statements);

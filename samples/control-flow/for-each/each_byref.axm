@@ -1,0 +1,18 @@
+' FOR EACH BYREF связывает переменную цикла с текущим элементом массива.
+' Процедура изменяет переданный элемент через существующий параметр BYREF.
+DIM grades[] AS INTEGER = [3, 4]
+
+FOR EACH BYREF grade IN grades[]
+    Increase(grade)
+NEXT grade
+
+PRINT grades[1]
+PRINT grades[2]
+
+SUB Increase(BYREF value AS INTEGER)
+    value = value + 1
+END SUB
+
+' Ожидаемый вывод:
+' 4
+' 5

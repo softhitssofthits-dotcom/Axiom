@@ -584,6 +584,20 @@ public sealed partial class BytecodeModuleValidator
                     ValidateLocalSlot(module, routine, instructionIndex, instruction);
                     break;
 
+                case Opcode.FreshLocal:
+                case Opcode.ClearForEachItem:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    ValidateLocalSlot(module, routine, instructionIndex, instruction);
+                    break;
+
+                case Opcode.BindArrayElement:
+                    ValidateBindArrayElementInstruction(module, routine, instructionIndex, instruction);
+                    break;
+
+                case Opcode.GetArrayStructuralVersion:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 0);
+                    break;
+
                 case Opcode.AppendStringLocal:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
                     ValidateLocalSlot(module, routine, instructionIndex, instruction);
@@ -2092,6 +2106,24 @@ public sealed partial class BytecodeModuleValidator
             case Opcode.NewArray:
                 ApplyNewArrayStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
+
+            case Opcode.GetArrayStructuralVersion:
+            {
+                var arrayType = Pop();
+                if (arrayType is not null and not ArrayTypeSymbol)
+                {
+                    ReportIncompatibleOperationStackType(
+                        module,
+                        routine,
+                        instructionIndex,
+                        instruction.Opcode,
+                        arrayType,
+                        "источник FOR EACH");
+                }
+
+                Push(TypeSymbol.Long);
+                break;
+            }
 
             case Opcode.LoadElement:
                 ApplyLoadElementStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
@@ -3757,6 +3789,49 @@ public sealed partial class BytecodeModuleValidator
 
         ValidateStringConstantIndex(module, routine, instructionIndex, instruction, operandIndex: 1, "имя массива");
         ValidatePositiveCountOperand(module, routine, instructionIndex, instruction, operandIndex: 2, code: "BC4109", label: "число измерений");
+    }
+
+    private void ValidateBindArrayElementInstruction(
+        BytecodeModule module,
+        BytecodeRoutine routine,
+        int instructionIndex,
+        BytecodeInstruction instruction)
+    {
+        if (instruction.OperandCount < 4)
+        {
+            Report("BC4122", $"Инструкция BindArrayElement в процедуре '{routine.Name}' содержит недостаточно операндов.", module, routine.Id, instructionIndex);
+            return;
+        }
+
+        var rank = instruction.GetOperand(3);
+        if (rank <= 0 || instruction.OperandCount != rank + 4)
+        {
+            Report("BC4122", $"Инструкция BindArrayElement в процедуре '{routine.Name}' содержит некорректный ранг или число операндов.", module, routine.Id, instructionIndex);
+            return;
+        }
+
+        ValidateLocalSlot(module, routine, instructionIndex, instruction, operandIndex: 0);
+        ValidateLocalSlot(module, routine, instructionIndex, instruction, operandIndex: 1);
+        ValidateLocalSlot(module, routine, instructionIndex, instruction, operandIndex: 2);
+        for (var dimension = 0; dimension < rank; dimension++)
+        {
+            ValidateLocalSlot(module, routine, instructionIndex, instruction, operandIndex: dimension + 4);
+        }
+
+        var targetType = GetRoutineLocalType(routine, instruction.GetOperand(0));
+        var sourceType = GetRoutineLocalType(routine, instruction.GetOperand(1));
+        var revisionType = GetRoutineLocalType(routine, instruction.GetOperand(2));
+        var indicesAreIntegers = Enumerable.Range(0, rank)
+            .All(dimension => GetRoutineLocalType(routine, instruction.GetOperand(dimension + 4)) == TypeSymbol.Integer);
+
+        if (sourceType is not ArrayTypeSymbol arrayType
+            || arrayType.Rank != rank
+            || arrayType.ElementType != targetType
+            || revisionType != TypeSymbol.Long
+            || !indicesAreIntegers)
+        {
+            Report("BC4122", $"Инструкция BindArrayElement в процедуре '{routine.Name}' несовместима с типами её слотов.", module, routine.Id, instructionIndex);
+        }
     }
 
     private void ValidateElementInstruction(

@@ -58,25 +58,26 @@ public sealed class ForEachBindingTests
     }
 
     [Fact]
-    public void ExplicitByRefKeywordIsRejectedInsteadOfSilentlyTreatedAsByVal()
+    public void ExplicitByRefKeywordBindsAnElementReference()
     {
-        // Молчаливое выполнение BYREF как BYVAL создавало бы ложное впечатление
-        // записи в исходный массив, поэтому режим отклоняется при проверке.
-        var diagnostics = BindWithDiagnostics(
-            "DIM values[] AS INTEGER = [1, 2]\nFOR EACH BYREF item IN values[]\nitem = 99\nNEXT");
+        var program = Bind(
+            "DIM values[] AS INTEGER = [1, 2]\nFOR EACH BYREF item IN values[]\nitem = 99\nNEXT",
+            out var diagnostics);
 
-        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == DiagnosticCodes.UnsupportedForEachByRef);
-        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Code == DiagnosticCodes.UnknownName);
+        Assert.Empty(diagnostics);
+        var loop = Assert.IsType<BoundForEachStatement>(program.GlobalStatements[1]);
+        Assert.True(loop.ByRef);
+        Assert.Equal(TypeSymbol.Integer, loop.Variable.Type);
     }
 
     [Fact]
-    public void ByRefRejectionStillBindsLoopBody()
+    public void ByRefAsClauseRequiresExactType()
     {
         var diagnostics = BindWithDiagnostics(
-            "DIM values[] AS INTEGER = [1, 2]\nFOR EACH BYREF item IN values[]\nPRINT item\nNEXT");
+            "DIM values[] AS INTEGER = [1, 2]\nFOR EACH BYREF item AS DOUBLE IN values[]\nPRINT item\nNEXT");
 
         var diagnostic = Assert.Single(diagnostics);
-        Assert.Equal(DiagnosticCodes.UnsupportedForEachByRef, diagnostic.Code);
+        Assert.Equal(DiagnosticCodes.InvalidForEachElementType, diagnostic.Code);
     }
 
     [Fact]

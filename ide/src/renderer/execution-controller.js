@@ -10,7 +10,7 @@ class ExecutionController {
     this.inputSubmission = null;
     const ide = this.ide;
     const request = this.startRequest = {};
-    ide.running = true; this.starting = true; this.pendingStop = false; this.pendingEvents = []; this.clearedEmptyHistory = false; this.outputLineCount = 0; this.clearedOutputLineCount = 0; this.outputText = ''; this.streamedOutputText = ''; this.clearedOutputPrefix = ''; this.inputPrompt = ''; this.inputText = ''; this.inputRequestId = null; this.inputTarget = null; this.stopId = null;
+    ide.running = true; this.starting = true; this.pendingStop = false; this.pendingEvents = []; this.clearedEmptyHistory = false; this.outputLineCount = 0; this.clearedOutputLineCount = 0; this.outputText = ''; this.streamedOutputText = ''; this.clearedOutputPrefix = ''; this.inputPrompt = ''; this.inputText = ''; this.inputRequestId = null; this.inputTarget = null; this.stopId = null; this.currentForEachItem = null; ide.setDebugCurrentElement?.(null);
     this.canStepBack=false;this.callDepth=0;this.line=null;this.sourceFilePath=null;this.debugBusy=false;this.debugRequest=null;this.stopRequest=null;this.debugError=null;ide.trace?.clearMarker();ide.trace?.update();
     ide._stopRequested = false; ide.clearDiagnostics(); ide.showPanel(); ide.switchPanel('console');
     ide.setStatus(I18N.t('trace.preparing'));
@@ -88,6 +88,7 @@ class ExecutionController {
         // Защита открытия закрытой зависимости сравнивает именно новую остановку.
         // Публикуем её до mark: иначе корректное чтение отменяется как устаревшее.
         this.stopId = payload.stopId; this.canStepBack = payload.canStepBack;
+        this.currentForEachItem = payload.forEachItem || null; this.ide.setDebugCurrentElement?.(this.currentForEachItem);
         this.callDepth=payload.callDepth;this.line=payload.line;this.sourceFilePath=payload.sourceFilePath;this.ide.trace?.mark(payload);
         this.outputText = payload.outputText; this.outputLineCount = payload.outputLineCount ?? (payload.outputText ? payload.outputText.split(/\r?\n/).length : 0); this.renderOutput();
         this.ide.setStatus(I18N.t('trace.paused',payload.line ?? '—'));
@@ -102,6 +103,7 @@ class ExecutionController {
         this.inputSubmission = null;
         this.debugRequest=null;this.debugBusy=false;this.debugError=null;
         this.inputRequestId = null; this.inputTarget = null; this.inputPrompt = ''; this.inputText = '';
+        this.currentForEachItem = null; this.ide.setDebugCurrentElement?.(null);
         this.outputText = payload.outputText; this.outputLineCount = payload.outputLineCount ?? (payload.outputText ? payload.outputText.split(/\r?\n/).length : 0); this.renderOutput();
         this.ide.running = false; this.inputRequestId = null; this.stopId = null; this.sessionId = null;
         this.ide.setStatus(I18N.t(({Succeeded:'status.finished',Cancelled:'status.stopped',CompilationFailed:'trace.compileFailed',RuntimeFailed:'trace.runtimeFailed'})[payload.status] || 'trace.failed'));
@@ -224,9 +226,11 @@ class ExecutionController {
   async debug(command) {
     if (!this.stopId || !this.sessionId) return;
     const stopId = this.stopId, line = this.line;
+    const currentForEachItem = this.currentForEachItem;
     const sessionId = this.sessionId, request = {};
     this.debugRequest = request;this.debugError=null;
     this.stopId = null;
+    this.currentForEachItem = null; this.ide.setDebugCurrentElement?.(null);
     this.debugBusy=true;this.ide.trace?.clearMarker();this.ide.trace?.update();
     this.ide.setStatus(I18N.t('trace.running'));
     let result;
@@ -236,6 +240,7 @@ class ExecutionController {
     this.debugRequest=null;
     if (!result.ok) {
       this.stopId = stopId;this.debugError=result.error.message;
+      this.currentForEachItem = currentForEachItem; this.ide.setDebugCurrentElement?.(currentForEachItem);
       this.ide.trace?.mark({line,sourceFilePath:this.sourceFilePath});
       this.ide.setStatus(this.debugError);
     }
@@ -246,6 +251,7 @@ class ExecutionController {
     this.debugRequest=null;this.stopRequest=null;this.debugBusy=false;this.debugError=null;
     this.startRequest = null; this.starting = false; this.pendingStop = false; this.pendingEvents = [];
     this.ide.running = false; this.sessionId = null; this.stopId = null; this.inputRequestId = null;
+    this.currentForEachItem = null; this.ide.setDebugCurrentElement?.(null);
     this.ide.showIdeProblem('status.runFailed', message); this.ide.setStatus(I18N.t('trace.failed'));
     this.ide.trace?.finished();
   }

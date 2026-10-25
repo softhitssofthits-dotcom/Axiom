@@ -1,5 +1,7 @@
 namespace Axiom.Runtime;
 
+public sealed record BytecodeVmForEachItem(string Name, string Type, string Value);
+
 public sealed class BytecodeVmStopState
 {
     private readonly BytecodeVm? _vm;
@@ -15,9 +17,12 @@ public sealed class BytecodeVmStopState
         Snapshot = snapshot;
         _vm = vm;
         PreviousStateSnapshot = previousStateSnapshot;
+        CurrentForEachItem = vm?.GetCurrentForEachItem(snapshot.RoutineId);
     }
 
     public BytecodeVmExecutionSnapshot Snapshot { get; }
+
+    public BytecodeVmForEachItem? CurrentForEachItem { get; }
 
     public bool CanResume => _vm is not null && !_resumed;
 

@@ -1,0 +1,14 @@
+' Изменение формы массива инвалидирует активный обход.
+' MB3014 возникает при продвижении после последней итерации.
+DIM values[] AS INTEGER = [1]
+
+TRY
+    FOR EACH item IN values[]
+        REDIM PRESERVE values[1 TO 2]
+    NEXT item
+    PRINT "цикл завершён"
+CATCH problem
+    PRINT problem.Code
+END TRY
+
+' Ожидаемый вывод: MB3014

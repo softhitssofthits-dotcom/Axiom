@@ -636,6 +636,18 @@ public sealed partial class BytecodeVm
                 frame.StoreLocalValue(instruction.GetOperand(0), PopValue(frame, instructionIndex));
                 break;
 
+            case Opcode.FreshLocal:
+                frame.FreshLocal(instruction.GetOperand(0));
+                break;
+
+            case Opcode.ClearForEachItem:
+                frame.ClearForEachItem(instruction.GetOperand(0));
+                break;
+
+            case Opcode.BindArrayElement:
+                ExecuteBindArrayElement(frame, instruction);
+                break;
+
             case Opcode.AppendStringLocal:
                 ExecuteAppendStringLocal(frame, instruction, instructionIndex);
                 break;
@@ -830,6 +842,10 @@ public sealed partial class BytecodeVm
 
             case Opcode.NewArray:
                 ExecuteNewArray(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.GetArrayStructuralVersion:
+                ExecuteGetArrayStructuralVersion(frame, instructionIndex);
                 break;
 
             case Opcode.EraseArray:

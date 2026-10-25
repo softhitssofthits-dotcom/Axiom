@@ -80,6 +80,16 @@ public static class BytecodeModuleSerializer
         var variableSymbols = new Dictionary<string, VariableSymbol>(StringComparer.Ordinal);
         var userDefinedTypes = CreateUserDefinedTypes(artifact.TypeDefinitions, artifact.ArtifactSchemaVersion is null or <= LegacyArtifactSchemaVersion);
 
+        // Регистрируем параметры процедур до таблиц захваченных переменных:
+        // один и тот же SymbolId может сначала встретиться в замыкании вложенной процедуры.
+        foreach (var routine in artifact.Routines)
+        {
+            if (routine.Symbol is not null)
+            {
+                GetOrCreateFunctionSymbol(routine.Symbol, functionSymbols, variableSymbols, userDefinedTypes);
+            }
+        }
+
         return new BytecodeModule(
             FromArtifact(artifact.Header),
             new ConstantPool(artifact.ConstantPool.OrderBy(static entry => entry.Index).Select(FromArtifact).ToArray()),
@@ -158,7 +168,9 @@ public static class BytecodeModuleSerializer
             routine.Instructions.OrderBy(static instruction => instruction.Index).Select(FromArtifact).ToArray(),
             routine.IsEntryPoint,
             routine.Symbol is null ? null : GetOrCreateFunctionSymbol(routine.Symbol, functionSymbols, variableSymbols, userDefinedTypes),
-            routine.ParameterVariables.Select(variable => GetOrCreateVariableSymbol(variable, variableSymbols, userDefinedTypes)).ToArray(),
+            routine.ParameterVariables
+                .Select((variable, index) => GetOrCreateParameterSymbol(variable, index, variableSymbols, userDefinedTypes))
+                .ToArray(),
             routine.LocalVariables.Select(variable => GetOrCreateVariableSymbol(variable, variableSymbols, userDefinedTypes)).ToArray(),
             routine.CapturedVariables.Select(variable => GetOrCreateVariableSymbol(variable, variableSymbols, userDefinedTypes)).ToArray());
     }

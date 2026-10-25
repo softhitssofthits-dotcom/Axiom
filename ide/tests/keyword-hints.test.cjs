@@ -33,6 +33,14 @@ test('Подсказка зависит от языка интерфейса и 
   assert.doesNotMatch(en, /[А-Яа-я]/);
 });
 
+test('Подсказка BYREF описывает действующий режим FOR EACH', () => {
+  const ru = hint('BYREF', 'ru');
+  const en = hint('BYREF', 'en');
+  assert.match(ru, /FOR EACH задаёт адресацию текущего элемента массива/);
+  assert.match(en, /FOR EACH it selects the current array element/);
+  assert.doesNotMatch(ru + en, /пока не реализован|not implemented yet/i);
+});
+
 test('Неизвестное слово не даёт подсказки', () => {
   assert.equal(hint('НЕСЛОВО', 'ru'), null);
   assert.equal(hint('', 'ru'), null);

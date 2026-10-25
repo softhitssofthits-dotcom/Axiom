@@ -132,6 +132,46 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.StoreVariable, location, variable: variable);
     }
 
+    public static LoweredInstruction FreshLocal(TextLocation location, VariableSymbol variable)
+    {
+        ArgumentNullException.ThrowIfNull(variable);
+        return new LoweredInstruction(LoweredInstructionKind.FreshLocal, location, variable: variable);
+    }
+
+    public static LoweredInstruction ClearForEachItem(TextLocation location, VariableSymbol variable)
+    {
+        ArgumentNullException.ThrowIfNull(variable);
+        return new LoweredInstruction(LoweredInstructionKind.ClearForEachItem, location, variable: variable);
+    }
+
+    public static LoweredInstruction BindArrayElement(
+        TextLocation location,
+        VariableSymbol targetVariable,
+        VariableSymbol sourceArrayVariable,
+        VariableSymbol structuralVersionVariable,
+        IReadOnlyList<VariableSymbol> indices)
+    {
+        ArgumentNullException.ThrowIfNull(targetVariable);
+        ArgumentNullException.ThrowIfNull(sourceArrayVariable);
+        ArgumentNullException.ThrowIfNull(structuralVersionVariable);
+        ArgumentNullException.ThrowIfNull(indices);
+        if (indices.Count == 0)
+        {
+            throw new ArgumentException("At least one array index is required.", nameof(indices));
+        }
+
+        return new LoweredInstruction(
+            LoweredInstructionKind.BindArrayElement,
+            location,
+            variables: new[] { targetVariable, sourceArrayVariable, structuralVersionVariable }.Concat(indices).ToArray(),
+            valueCount: indices.Count);
+    }
+
+    public static LoweredInstruction GetArrayStructuralVersion(TextLocation location)
+    {
+        return new LoweredInstruction(LoweredInstructionKind.GetArrayStructuralVersion, location);
+    }
+
     public static LoweredInstruction AppendStringVariable(TextLocation location, VariableSymbol variable, bool useDisplayString)
     {
         ArgumentNullException.ThrowIfNull(variable);

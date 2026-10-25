@@ -78,6 +78,11 @@ public sealed partial class Binder
                         if (loopSyntax.NextCounterIdentifier is { } next && next.Text.Equals(loop.Variable.Name, StringComparison.OrdinalIgnoreCase))
                             Variable(next.Span, loop.Variable);
                         break;
+                    case (BoundForEachStatement loop, ForEachStatementSyntax loopSyntax):
+                        Variable(loopSyntax.Identifier.Span, loop.Variable);
+                        if (loopSyntax.NextCounterIdentifier is { } nextIdentifier && nextIdentifier.Text.Equals(loop.Variable.Name, StringComparison.OrdinalIgnoreCase))
+                            Variable(nextIdentifier.Span, loop.Variable);
+                        break;
                     case (BoundInputStatement input, InputStatementSyntax inputSyntax):
                         foreach (var token in inputSyntax.Identifiers)
                         {

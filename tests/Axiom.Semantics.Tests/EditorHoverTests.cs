@@ -16,6 +16,18 @@ public sealed class EditorHoverTests
         Assert.Contains(items, h => h.Name == "bag" && h.ArrayRank is null && h.ElementType is null);
     }
 
+    [Fact]
+    public void ForEachHeaderBodyAndNextExposeTheScopedElementType()
+    {
+        const string source = "DIM values[] AS INTEGER = [1]\nFOR EACH BYREF item IN values[]\nPRINT item\nNEXT item";
+
+        var items = Hovers(source).Where(h => h.Name == "item").ToArray();
+
+        Assert.Equal(3, items.Length);
+        Assert.All(items, item => Assert.Equal("INTEGER", item.Type));
+        Assert.All(items, item => Assert.Equal("variable", item.Kind));
+    }
+
     private static IReadOnlyList<EditorHoverInfo> Hovers(string source)
     {
         var syntax = Parser.Parse(source, out var errors);

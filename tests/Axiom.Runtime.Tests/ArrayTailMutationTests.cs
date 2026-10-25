@@ -162,7 +162,7 @@ END SUB
         });
         Assert.True(stopped.Stopped);
         var previous = Assert.IsType<BytecodeVmStateSnapshot>(stopped.StopState!.PreviousStateSnapshot);
-        var values = previous.Globals.Values.Concat(previous.CallFramesBottomToTop.SelectMany(frame => frame.Locals).Select(slot => slot.Value));
+        var values = previous.Globals.Values.Concat(previous.CallFramesBottomToTop.SelectMany(frame => frame.Locals).Select(slot => slot.Slot.Value));
         var array = Assert.Single(values, value => value.Type is ArrayTypeSymbol).AsArray();
         Assert.Equal(2, array.Length);
         var resumed = stopped.StopState.Resume();

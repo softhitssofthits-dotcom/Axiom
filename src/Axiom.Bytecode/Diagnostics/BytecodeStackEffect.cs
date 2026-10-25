@@ -121,6 +121,16 @@ internal static class BytecodeStackEffect
                 pushCount = 1;
                 return true;
 
+            case Opcode.GetArrayStructuralVersion:
+                popCount = 1;
+                pushCount = 1;
+                return true;
+
+            case Opcode.FreshLocal:
+            case Opcode.BindArrayElement:
+            case Opcode.ClearForEachItem:
+                return true;
+
             case Opcode.StoreElement:
                 popCount = instruction.GetOperand(1) + 2;
                 return true;

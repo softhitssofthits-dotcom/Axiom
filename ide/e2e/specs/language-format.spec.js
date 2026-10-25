@@ -146,6 +146,31 @@ module.exports = [
     });
     C.ok(hintEn.includes('FOR EACH') && !/[А-Яа-я]/.test(hintEn), 'Английская подсказка EACH без русского текста');
     await S.page.evaluate(() => window.__ide.setLanguage('ru'));
+
+    const byRefSource = 'DIM scores[] AS INTEGER = [10]\nFOR EACH BYREF score AS INTEGER IN scores[]\n    score = score + 1\nNEXT score\n';
+    await S.page.evaluate(async value => { window.__ide.editor.getModel().setValue(value); await window.__ide.check(false); }, byRefSource);
+    const byRefHover = await S.page.evaluate(async () => {
+      const result = await window.LangFeatures._hoverProvider.provideHover(window.__ide.editor.getModel(), {lineNumber:2,column:16});
+      return result?.contents.map(item => item.value).join('\n') || '';
+    });
+    C.contains(byRefHover, 'Тип: `INTEGER`', 'Переменная BYREF получает выведенный точный тип элемента');
+    C.eq(await S.page.evaluate(() => window.__ide._lastDiagnostics?.length || 0), 0, 'Объявление BYREF принято связывателем');
+    for (const style of ['Classic', 'Modern']) {
+      await S.page.evaluate(async ({value, style}) => {
+        const i = window.__ide;
+        i.editor.getModel().setValue(value);
+        i.settings.formattingStyle = style;
+        await i.formatWholeDocument('for-each-byref-editor');
+        await i.check(false);
+      }, {value:byRefSource.toLowerCase(), style});
+      const header = await S.page.evaluate(() => window.__ide.editor.getModel().getLineContent(2));
+      C.eq(header, style === 'Classic'
+        ? 'FOR EACH BYREF score AS INTEGER IN scores[]'
+        : 'For Each Byref score As Integer In scores[]',
+        'Заголовок BYREF форматируется в стиле ' + style);
+      C.eq(await S.page.evaluate(() => window.__ide._lastDiagnostics?.length || 0), 0,
+        'Форматированный BYREF принимается в стиле ' + style);
+    }
   } },
   { id: 'format-smooth-two-styles', name: 'SMOOTH форматируется через меню и Enter в Classic и Modern', async fn({ S, C }) {
     const source = 'smooth on\nsMoOtH oFf\nprint "smooth on"\n\' smooth off\n';

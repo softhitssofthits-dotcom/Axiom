@@ -322,6 +322,10 @@ public sealed class BytecodeStackEffectTests
         yield return ["Smooth.On", new BytecodeInstruction(Opcode.Smooth, [1]), 0, 0];
         yield return ["SnapshotValue", new BytecodeInstruction(Opcode.SnapshotValue), 1, 1];
         yield return ["NewArray", new BytecodeInstruction(Opcode.NewArray, [0, 1]), 1, 1];
+        yield return ["GetArrayStructuralVersion", new BytecodeInstruction(Opcode.GetArrayStructuralVersion), 1, 1];
+        yield return ["FreshLocal", new BytecodeInstruction(Opcode.FreshLocal, [0]), 0, 0];
+        yield return ["BindArrayElement", new BytecodeInstruction(Opcode.BindArrayElement, [0, 0, 0, 1]), 0, 0];
+        yield return ["ClearForEachItem", new BytecodeInstruction(Opcode.ClearForEachItem, [0]), 0, 0];
     }
 
     private static BytecodeRoutine CreateRoutine(int id, TypeSymbol resultType, int parameterCount)

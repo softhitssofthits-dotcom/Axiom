@@ -36,6 +36,7 @@ function setup() {
     execution: { stopId: 'one', snapshotForFile: file => ({
       'main.axm': { documentId: 'main-id', sourceText: 'PRINT 1' },
       'helper.axm': { documentId: 'helper-id', sourceText: 'PRINT 1' } })[file] },
+    setDebugCurrentElement() {},
     createTab() {},
     switchToFile(p) { const entry = this.openFiles.get(p); if (!entry) return;
       current = entry.model; this.activeFile = p; activated.push(p); },

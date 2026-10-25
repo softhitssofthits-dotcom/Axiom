@@ -11,6 +11,89 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
+    internal BytecodeVmForEachItem? GetCurrentForEachItem(int activeRoutineId)
+    {
+        var activeFrameFound = false;
+        foreach (var frame in _callStack)
+        {
+            if (!activeFrameFound)
+            {
+                if (frame.Routine.Id != activeRoutineId)
+                {
+                    continue;
+                }
+
+                activeFrameFound = true;
+            }
+
+            BytecodeVmForEachItem? current = null;
+            var localVariables = frame.Routine.LocalVariables;
+            for (var localIndex = 0; localIndex < localVariables.Count && localIndex < frame.LocalCount; localIndex++)
+            {
+                var slot = frame.GetExistingLocalSlot(localIndex);
+                if (slot is not { IsForEachItem: true }
+                    || !IsForEachItemInstructionScopeActive(frame, localIndex))
+                {
+                    continue;
+                }
+
+                string value;
+                try
+                {
+                    value = slot.Value.ToDisplayString();
+                }
+                catch (Exception exception) when (exception is ExpiredArrayViewException or InvalidOperationException)
+                {
+                    value = "‹недоступно›";
+                }
+
+                var variable = localVariables[localIndex];
+                current = new BytecodeVmForEachItem(variable.Name, variable.Type.Name, value);
+            }
+
+            if (current is not null)
+            {
+                return current;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool IsForEachItemInstructionScopeActive(BytecodeCallFrame frame, int localSlot)
+    {
+        var instructions = frame.Routine.InstructionArray;
+        var instructionPointer = frame.InstructionPointer;
+
+        for (var start = 0; start < instructions.Length; start++)
+        {
+            var instruction = instructions[start];
+            if (instruction.Opcode is not (Opcode.FreshLocal or Opcode.BindArrayElement)
+                || instruction.GetOperand(0) != localSlot)
+            {
+                continue;
+            }
+
+            for (var end = start + 1; end < instructions.Length; end++)
+            {
+                var clear = instructions[end];
+                if (clear.Opcode != Opcode.ClearForEachItem || clear.GetOperand(0) != localSlot)
+                {
+                    continue;
+                }
+
+                if (instructionPointer >= start && instructionPointer <= end)
+                {
+                    return true;
+                }
+
+                break;
+            }
+        }
+
+        return false;
+    }
+
     private BytecodeVmExecutionSnapshot CreateExecutionSnapshot(
         BytecodeCallFrame frame,
         int instructionIndex,
@@ -168,24 +251,30 @@ public sealed partial class BytecodeVm
         }
 
         _callStack.Clear();
-        var visibleVariables = new Dictionary<VariableSymbol, BytecodeVariableSlot>();
 
         foreach (var frameSnapshot in snapshot.CallFramesBottomToTop)
         {
             var arguments = CreateSlotsFromSnapshots(frameSnapshot.Arguments, sharedValues);
-            var (locals, localFixedStringLengths) = CreateLocalStateFromSnapshots(frameSnapshot.Locals, sharedValues);
-            var captures = RestoreCapturedSlots(frameSnapshot, visibleVariables, sharedValues);
+            var (locals, localFixedStringLengths, localSlots) = CreateLocalStateFromSnapshots(frameSnapshot.Locals, sharedValues);
             var frame = new BytecodeCallFrame(
                 frameSnapshot.Routine,
                 arguments,
                 locals,
                 localFixedStringLengths,
-                captures,
+                [],
                 frameSnapshot.CallSiteLocation,
                 frameSnapshot.Routine.MaxEvaluationStackDepth)
             {
                 InstructionPointer = frameSnapshot.InstructionPointer
             };
+
+            for (var index = 0; index < localSlots.Length; index++)
+            {
+                frame.ReplaceLocalSlot(index, localSlots[index]);
+            }
+
+            var captures = RestoreCapturedSlots(frameSnapshot, sharedValues);
+            frame.SetCapturedSlots(captures);
 
             foreach (var value in frameSnapshot.EvaluationStackBottomToTop)
             {
@@ -193,9 +282,6 @@ public sealed partial class BytecodeVm
             }
 
             _callStack.Push(frame);
-            AddVisibleVariables(frame.Routine.ParameterVariables, arguments, visibleVariables);
-            AddVisibleLocalVariables(frame, visibleVariables);
-            AddVisibleVariables(frame.Routine.CapturedVariables, captures, visibleVariables);
         }
 
         _pendingOutput.Clear();
@@ -217,10 +303,7 @@ public sealed partial class BytecodeVm
 
         for (var index = 0; index < snapshots.Count; index++)
         {
-            var snapshot = snapshots[index];
-            slots[index] = BytecodeVariableSlot.Adopt(
-                CloneSnapshotValue(snapshot.Value, snapshot.FixedStringLength, sharedValues),
-                snapshot.FixedStringLength);
+            slots[index] = CloneSnapshotSlot(snapshots[index].Slot, sharedValues);
         }
 
         return slots;
@@ -228,46 +311,49 @@ public sealed partial class BytecodeVm
 
     private static BytecodeVariableSlot[] RestoreCapturedSlots(
         BytecodeCallFrameSnapshot frameSnapshot,
-        IReadOnlyDictionary<VariableSymbol, BytecodeVariableSlot> visibleVariables,
         Dictionary<object, object> sharedValues)
     {
         var captures = new BytecodeVariableSlot[frameSnapshot.Captures.Count];
 
         for (var index = 0; index < captures.Length; index++)
         {
-            var variable = index < frameSnapshot.Routine.CapturedVariables.Count
-                ? frameSnapshot.Routine.CapturedVariables[index]
-                : null;
-            if (variable is not null && visibleVariables.TryGetValue(variable, out var visibleSlot))
-            {
-                captures[index] = visibleSlot;
-                continue;
-            }
-
-            var snapshot = frameSnapshot.Captures[index];
-            captures[index] = BytecodeVariableSlot.Adopt(
-                CloneSnapshotValue(snapshot.Value, snapshot.FixedStringLength, sharedValues),
-                snapshot.FixedStringLength);
+            // A symbol identifies a declaration, not a particular invocation's
+            // storage cell. Restore the captured slot identity carried by the
+            // snapshot instead of rebinding by VariableSymbol.
+            captures[index] = CloneSnapshotSlot(frameSnapshot.Captures[index].Slot, sharedValues);
         }
 
         return captures;
     }
 
-    private static (RuntimeValue[] Values, int?[] FixedStringLengths) CreateLocalStateFromSnapshots(
+    private static (RuntimeValue[] Values, int?[] FixedStringLengths, BytecodeVariableSlot[] Slots) CreateLocalStateFromSnapshots(
         IReadOnlyList<BytecodeVariableSlotSnapshot> snapshots,
         Dictionary<object, object> sharedValues)
     {
         var values = new RuntimeValue[snapshots.Count];
         var fixedStringLengths = new int?[snapshots.Count];
+        var slots = new BytecodeVariableSlot[snapshots.Count];
 
         for (var index = 0; index < snapshots.Count; index++)
         {
-            var snapshot = snapshots[index];
-            values[index] = CloneSnapshotValue(snapshot.Value, snapshot.FixedStringLength, sharedValues);
-            fixedStringLengths[index] = snapshot.FixedStringLength;
+            slots[index] = CloneSnapshotSlot(snapshots[index].Slot, sharedValues);
+            values[index] = RuntimeValue.Void;
+            fixedStringLengths[index] = snapshots[index].Slot.FixedStringLength;
         }
 
-        return (values, fixedStringLengths);
+        return (values, fixedStringLengths, slots);
+    }
+
+    private static BytecodeVariableSlot CloneSnapshotSlot(
+        BytecodeVariableSlot snapshotSlot,
+        Dictionary<object, object> sharedValues)
+    {
+        if (!RuntimeSnapshotFactory.TryCreateSlotSnapshot(snapshotSlot, sharedValues, out var restoredSlot))
+        {
+            throw new InvalidOperationException("Снимок содержит слот, который нельзя восстановить.");
+        }
+
+        return restoredSlot;
     }
 
     private static RuntimeValue CloneSnapshotValue(
@@ -278,29 +364,12 @@ public sealed partial class BytecodeVm
         ArgumentNullException.ThrowIfNull(value);
         ArgumentNullException.ThrowIfNull(sharedValues);
 
-        return RuntimeSnapshotFactory.CreateValueSnapshot(value, fixedStringLength, sharedValues);
-    }
-
-    private static void AddVisibleVariables(
-        IReadOnlyList<VariableSymbol> variables,
-        IReadOnlyList<BytecodeVariableSlot> slots,
-        Dictionary<VariableSymbol, BytecodeVariableSlot> visibleVariables)
-    {
-        for (var index = 0; index < variables.Count && index < slots.Count; index++)
+        if (!RuntimeSnapshotFactory.TryCreateValueSnapshot(value, fixedStringLength, sharedValues, out var snapshot))
         {
-            visibleVariables[variables[index]] = slots[index];
+            throw new InvalidOperationException("Снимок содержит значение, которое нельзя восстановить.");
         }
-    }
 
-    private static void AddVisibleLocalVariables(
-        BytecodeCallFrame frame,
-        Dictionary<VariableSymbol, BytecodeVariableSlot> visibleVariables)
-    {
-        var variables = frame.Routine.LocalVariables;
-        for (var index = 0; index < variables.Count && index < frame.LocalCount; index++)
-        {
-            visibleVariables[variables[index]] = frame.GetOrCreateLocalSlot(index);
-        }
+        return snapshot;
     }
 
     private bool TryCreateGlobalSnapshots(
@@ -357,14 +426,13 @@ public sealed partial class BytecodeVm
 
         for (var index = 0; index < slots.Count; index++)
         {
-            var slot = slots[index];
-            if (!TryCreateValueSnapshot(slot.Value, slot.FixedStringLength, sharedValues, out var valueSnapshot))
+            if (!TryCreateSlotForSnapshot(slots[index], sharedValues, out var snapshotSlot))
             {
                 snapshots = result;
                 return false;
             }
 
-            result[index] = new BytecodeVariableSlotSnapshot(valueSnapshot, slot.FixedStringLength);
+            result[index] = new BytecodeVariableSlotSnapshot(snapshotSlot);
         }
 
         snapshots = result;
@@ -380,20 +448,41 @@ public sealed partial class BytecodeVm
 
         for (var index = 0; index < frame.LocalCount; index++)
         {
-            var value = frame.PeekLocalValue(index);
-            var fixedStringLength = frame.GetLocalFixedStringLength(index);
-            if (!TryCreateValueSnapshot(value, fixedStringLength, sharedValues, out var valueSnapshot))
+            var existingSlot = frame.GetExistingLocalSlot(index);
+            BytecodeVariableSlot snapshotSlot;
+            if (existingSlot is not null)
             {
-                snapshots = result;
-                return false;
+                if (!TryCreateSlotForSnapshot(existingSlot, sharedValues, out snapshotSlot))
+                {
+                    snapshots = result;
+                    return false;
+                }
+            }
+            else
+            {
+                var value = frame.PeekLocalValue(index);
+                var fixedStringLength = frame.GetLocalFixedStringLength(index);
+                if (!TryCreateValueSnapshot(value, fixedStringLength, sharedValues, out var valueSnapshot))
+                {
+                    snapshots = result;
+                    return false;
+                }
+
+                snapshotSlot = BytecodeVariableSlot.Adopt(valueSnapshot, fixedStringLength);
             }
 
-            result[index] = new BytecodeVariableSlotSnapshot(valueSnapshot, fixedStringLength);
+            result[index] = new BytecodeVariableSlotSnapshot(snapshotSlot);
         }
 
         snapshots = result;
         return true;
     }
+
+    private static bool TryCreateSlotForSnapshot(
+        BytecodeVariableSlot sourceSlot,
+        Dictionary<object, object> sharedValues,
+        out BytecodeVariableSlot snapshotSlot) =>
+        RuntimeSnapshotFactory.TryCreateSlotSnapshot(sourceSlot, sharedValues, out snapshotSlot);
 
     private static bool TryCreateEvaluationStackSnapshot(
         BytecodeEvaluationStack evaluationStack,
@@ -422,76 +511,8 @@ public sealed partial class BytecodeVm
         RuntimeValue value,
         int? fixedStringLength,
         Dictionary<object, object> sharedValues,
-        out RuntimeValue snapshot)
-    {
-        if (value.Type == TypeSymbol.Integer
-            || value.Type == TypeSymbol.Long
-            || value.Type == TypeSymbol.Double
-            || value.Type == TypeSymbol.Decimal
-            || value.Type == TypeSymbol.String
-            || value.Type == TypeSymbol.Boolean
-            || value.Type == TypeSymbol.Date
-            || value.Type == TypeSymbol.Time
-            || value.Type == TypeSymbol.DateTime
-            || value.Type == TypeSymbol.UtcDateTime
-            || value.Type == TypeSymbol.Void)
-        {
-            snapshot = value.CopyForStorage(fixedStringLength);
-            return true;
-        }
-
-        if (value.Type is ArrayTypeSymbol arrayType)
-        {
-            var array = value.AsArray();
-            if (!sharedValues.TryGetValue(array, out var clonedArray))
-            {
-                // Снимок должен быть независимым от исполняемого графа состояний:
-                // Clone выполняет правила присваивания, а не копирование состояния.
-                var snapshotArray = array.CreateEmptyForSnapshot();
-                sharedValues[array] = snapshotArray;
-                array.FillSnapshotInto(
-                    snapshotArray,
-                    element => RuntimeSnapshotFactory.CreateValueSnapshot(element, array.FixedStringLength, sharedValues));
-                clonedArray = snapshotArray;
-            }
-
-            snapshot = RuntimeValue.FromArray(arrayType, (RuntimeArrayValue)clonedArray);
-            return true;
-        }
-
-        if (value.Type is UserDefinedTypeSymbol recordType)
-        {
-            snapshot = RuntimeSnapshotFactory.CreateValueSnapshot(value, fixedStringLength, sharedValues);
-            return true;
-        }
-
-        if (value.Type is FunctionTypeSymbol functionType)
-        {
-            var functionValue = value.AsFunction();
-            if (functionValue is null)
-            {
-                snapshot = RuntimeValue.FromFunction(functionType, value: null);
-                return true;
-            }
-
-            if (functionValue.Function.IsBuiltIn)
-            {
-                snapshot = functionValue.BytecodeBuiltinBindingId is { } builtinBindingId
-                    ? RuntimeValue.FromBytecodeBuiltinFunction(functionValue.Function, builtinBindingId)
-                    : RuntimeValue.FromBytecodeFunction(functionValue.Function, []);
-                return true;
-            }
-
-            if (functionValue.BytecodeCapturedSlots is { Count: 0 })
-            {
-                snapshot = RuntimeValue.FromBytecodeFunction(functionValue.Function, []);
-                return true;
-            }
-        }
-
-        snapshot = RuntimeValue.Void;
-        return false;
-    }
+        out RuntimeValue snapshot) =>
+        RuntimeSnapshotFactory.TryCreateValueSnapshot(value, fixedStringLength, sharedValues, out snapshot);
 
     private void InvalidateReverseExecutionHistory()
     {

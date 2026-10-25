@@ -106,6 +106,9 @@ public sealed class BytecodeRoutine
             Opcode.StoreGlobal => -1,
             Opcode.LoadLocal => 1,
             Opcode.StoreLocal => -1,
+            Opcode.FreshLocal => 0,
+            Opcode.BindArrayElement => 0,
+            Opcode.ClearForEachItem => 0,
             Opcode.LoadArgument => 1,
             Opcode.StoreArgument => -1,
             Opcode.LoadCapture => 1,
@@ -152,6 +155,7 @@ public sealed class BytecodeRoutine
             Opcode.RedimArray => -1,
             // Образец массива заменяется независимым массивом того же типа.
             Opcode.NewArray => 0,
+            Opcode.GetArrayStructuralVersion => 0,
             Opcode.EraseArray => -1,
             Opcode.LoadElement => 0,
             Opcode.StoreElement => -2,

@@ -1,4 +1,5 @@
 using Axiom.Ide.Models;
+using Axiom.Runtime;
 
 namespace Axiom.Ide.Services.Execution;
 
@@ -11,7 +12,8 @@ public sealed record DebuggerStopInfo(
     string? Opcode,
     int CallDepth,
     bool CanStepBack,
-    Axiom.Core.TextLocation? SourceLocation = null);
+    Axiom.Core.TextLocation? SourceLocation = null,
+    BytecodeVmForEachItem? ForEachItem = null);
 
 /// <summary>
 /// Абстракция состояния отладчика, скрывающая внутренности runtime от IDE.

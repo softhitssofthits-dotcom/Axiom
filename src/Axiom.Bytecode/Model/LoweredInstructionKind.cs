@@ -7,6 +7,9 @@ public enum LoweredInstructionKind
     LoadFunction,
     LoadVariable,
     StoreVariable,
+    FreshLocal,
+    BindArrayElement,
+    GetArrayStructuralVersion,
     AppendStringVariable,
     UnaryOperation,
     BinaryOperation,
@@ -87,5 +90,6 @@ public enum LoweredInstructionKind
     Pop,
     Return,
     SnapshotValue,
-    NewArray
+    NewArray,
+    ClearForEachItem
 }

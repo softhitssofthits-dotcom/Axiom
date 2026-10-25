@@ -47,6 +47,15 @@ internal sealed class BytecodeCallFrame
 
     public BytecodeVariableSlot[] Captures { get; private set; }
 
+    public void SetCapturedSlots(BytecodeVariableSlot[] captures)
+    {
+        ArgumentNullException.ThrowIfNull(captures);
+        Captures = captures;
+        _cachedCapturedSlotsByRoutineId?.Clear();
+        _cachedFunctionValuesByRoutineId?.Clear();
+        _visibleVariables = null;
+    }
+
     public TextLocation CallSiteLocation { get; private set; }
 
     public BytecodeEvaluationStack EvaluationStack { get; }
@@ -263,6 +272,13 @@ internal sealed class BytecodeCallFrame
         if (sharedSlot is not null)
         {
             sharedSlot.Store(value);
+            if (sharedSlot.IsForEachItemPending)
+            {
+                sharedSlot.IsForEachItem = true;
+                sharedSlot.IsForEachItemPending = false;
+                InvalidateLocalVariableBindings();
+            }
+
             return;
         }
 
@@ -270,6 +286,42 @@ internal sealed class BytecodeCallFrame
         _locals[slot] = localFixedStringLength is null && value.Type is not UserDefinedTypeSymbol && !value.RequiresCopyForStorage
             ? value
             : BytecodeVariableSlot.NormalizeForStorage(value, localFixedStringLength);
+    }
+
+    public void FreshLocal(int slot)
+    {
+        var value = RuntimeValue.Default(Routine.LocalVariables[slot].Type, _localFixedStringLengths[slot]);
+        ReplaceLocalSlot(slot, BytecodeVariableSlot.Adopt(value, _localFixedStringLengths[slot], isForEachItemPending: true));
+    }
+
+    public void ClearForEachItem(int slot)
+    {
+        var localSlot = _sharedLocals?[slot];
+        if (localSlot is not null)
+        {
+            localSlot.IsForEachItem = false;
+            localSlot.IsForEachItemPending = false;
+            InvalidateLocalVariableBindings();
+        }
+    }
+
+    public void ReplaceLocalSlot(int slot, BytecodeVariableSlot replacement)
+    {
+        ArgumentNullException.ThrowIfNull(replacement);
+        _sharedLocals ??= new BytecodeVariableSlot?[_locals.Length];
+        _sharedLocals[slot] = replacement;
+        _locals[slot] = RuntimeValue.Void;
+        _hasSharedLocals = true;
+        InvalidateLocalVariableBindings();
+    }
+
+    public BytecodeVariableSlot? GetExistingLocalSlot(int slot) => _sharedLocals?[slot];
+
+    private void InvalidateLocalVariableBindings()
+    {
+        _visibleVariables = null;
+        _cachedFunctionValuesByRoutineId?.Clear();
+        _cachedCapturedSlotsByRoutineId?.Clear();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

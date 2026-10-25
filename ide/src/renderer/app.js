@@ -2348,6 +2348,21 @@ class AxiomIDE {
 
   setStatus(t) { document.getElementById('status-text').textContent = t; }
 
+  setDebugCurrentElement(item) {
+    const element = document.getElementById('status-current-element');
+    if (!element) return;
+    if (!item) {
+      element.textContent = '';
+      element.title = '';
+      element.hidden = true;
+      return;
+    }
+    const summary = I18N.t('trace.currentElement', item.name, item.type, item.value);
+    element.textContent = summary;
+    element.title = summary;
+    element.hidden = false;
+  }
+
   focusEditor() {
     this.editor?.focus();
   }

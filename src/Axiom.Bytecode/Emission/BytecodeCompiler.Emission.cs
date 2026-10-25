@@ -20,6 +20,10 @@ public sealed partial class BytecodeCompiler
             LoweredInstructionKind.LoadFunction => EmitLoadFunction(routine, instruction),
             LoweredInstructionKind.LoadVariable => EmitLoadVariable(routine, instruction, parameterSlots, localSlots, captureSlots),
             LoweredInstructionKind.StoreVariable => EmitStoreVariable(routine, instruction, parameterSlots, localSlots, captureSlots),
+            LoweredInstructionKind.FreshLocal => new BytecodeInstruction(Opcode.FreshLocal, [localSlots[instruction.Variable!]]),
+            LoweredInstructionKind.ClearForEachItem => new BytecodeInstruction(Opcode.ClearForEachItem, [localSlots[instruction.Variable!]]),
+            LoweredInstructionKind.BindArrayElement => EmitBindArrayElement(instruction, localSlots),
+            LoweredInstructionKind.GetArrayStructuralVersion => new BytecodeInstruction(Opcode.GetArrayStructuralVersion),
             LoweredInstructionKind.AppendStringVariable => EmitAppendStringVariable(routine, instruction, parameterSlots, localSlots, captureSlots),
             LoweredInstructionKind.UnaryOperation => EmitUnaryOperation(routine, instruction),
             LoweredInstructionKind.BinaryOperation => EmitBinaryOperation(routine, instruction),
@@ -636,6 +640,24 @@ public sealed partial class BytecodeCompiler
                 RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName),
                 instruction.ValueCount
             ]);
+    }
+
+    private static BytecodeInstruction EmitBindArrayElement(
+        LoweredInstruction instruction,
+        IReadOnlyDictionary<VariableSymbol, int> localSlots)
+    {
+        var operands = new int[4 + instruction.ValueCount];
+        operands[0] = localSlots[instruction.Variables[0]];
+        operands[1] = localSlots[instruction.Variables[1]];
+        operands[2] = localSlots[instruction.Variables[2]];
+        operands[3] = instruction.ValueCount;
+
+        for (var index = 0; index < instruction.ValueCount; index++)
+        {
+            operands[index + 4] = localSlots[instruction.Variables[index + 3]];
+        }
+
+        return new BytecodeInstruction(Opcode.BindArrayElement, operands);
     }
 
     private BytecodeInstruction EmitArrayElementInstruction(LoweredInstruction instruction, Opcode opcode)

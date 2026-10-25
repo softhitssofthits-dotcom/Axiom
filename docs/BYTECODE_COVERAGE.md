@@ -565,3 +565,13 @@ BytecodeVm принимает `DIM fruits() AS STRING = SPLIT(...)`, `DIM basket
 ## 25 октября 2026 года — контекстные литералы и цепочки констант
 
 BytecodeVm исполняет DECIMAL-литералы с известным типом элементов, в том числе с группировкой и знаком, JOIN с пустым литералом в скобках, ARRAYCONCAT с типизированным по первому массиву пустым аргументом, сортировку по цепочке строковых CONST. Исправление находится в связывателе; новых опкодов нет. Независимые ожидания добавлены в ArrayLiteralContractTests, ArraySortByFieldContractTests и ModuleVisibilityTests; отвергнутые перекрытия публичных констант проверены для STRING и INTEGER. Положительные программы `samples/expressions/array-literals/contextual_values.axm` и `samples/functions/arraysort/sort_by_constant_field.axm` исполнены свежим CLI с точным ожидаемым выводом. Отрицательная `samples/operators/const/public_duplicate_name_error.axm` даёт единственную MB2016. Договор отражён на arrays-literals.html, arrays-and-builtins.html и const.html. Это функциональное покрытие; новые измерения скорости и семьи engine-compare не добавлялись.
+
+## 25 октября 2026 года — завершение покрытия `FOR EACH BYREF`
+
+Статус режима `BYREF`: выполняется `BytecodeVm`; изменяются элементы массивов и действительных представлений. `AS` требует точного типа. Проверены прямая запись, метод `TYPE`, параметр `BYREF`, фиксированная строка, захват итерационной ячейки и устаревший адрес. `BYVAL` по-прежнему копирует элемент, но теперь также получает независимые ячейки и проверку структурной версии.
+
+Независимые ожидания: `tests/Axiom.Semantics.Tests/ForEachBindingTests.cs`, `EditorHoverTests.cs`, `tests/Axiom.Execution.Tests/ForEachContractTests.cs` и `AcceptanceProgramTests.cs`; адресные проверки сохранения/загрузки и обратного шага включены в контракт исполнения. Приёмочные программы: `samples/control-flow/for-each/each_byref.axm`, `each_iteration_captures.axm`, `each_shape_change_error.axm`. Справочник: `docs/manual/for-each.html`, диагностики — `docs/manual/arrays-diagnostics.html`; подсветка и подсказки — словарь Monaco и семантический hover Electron. Полной отдельной семьи измерений скорости не добавляли, поэтому `docs/BYTECODE_PERF_MATRIX.md` не меняется.
+
+## 25 октября 2026 года — публичный пример для README
+
+Добавлен `samples/smoke/readme/fruit_basket.axm`: записи TYPE, сортировка копии по полю, BYVAL-обход FOR EACH и строковая интерполяция. Программа выполнена в CLI и в настоящем Electron; вывод независимо сопоставлен с ожидаемыми ценами 20, 30, 40 и количеством 3. Снимок отладки показывает остановку на строке 17 и текущий элемент Product. Это иллюстрация уже реализованных форм, а не новое языковое покрытие или новая производительная нагрузка; версии и BYTECODE_PERF_MATRIX не меняются.

@@ -121,3 +121,17 @@ module.exports.push({id:'trace-temporal-clock-boundary',name:'Последова
  C.eq(await S.page.evaluate(()=>window.__ide.execution.canStepBack),false,'Чтение часов ограничивает историю');
  await S.page.evaluate(()=>window.__ide.execution.debug('continue'));await S.waitIdle();C.contains(await S.consoleText(),'2','После отката программа продолжилась');C.eq(S.pageErrors.length,0,'Нет ошибок страницы');
 }});
+module.exports.push({id:'trace-for-each-current-element',name:'Отладчик показывает элемент FOR EACH BYREF и очищает строку после завершения',async fn({S,C}){
+ const source='DIM values[] AS INTEGER = [7]\nFOR EACH BYREF item IN values[]\nitem = item + 1\nPRINT item\nNEXT item\nPRINT values[1]';
+ const file=writeAxm(testWorkspace('trace-for-each-current-element'),'foreach.axm',source);
+ await S.launch();await S.page.evaluate(p=>window.__ide.openFile(p),file);
+ await S.page.evaluate(()=>window.__ide.editor.setPosition({lineNumber:3,column:1}));
+ await S.page.keyboard.press('F9');await S.page.keyboard.press('F5');
+ await paused(S,3);
+ const current=S.page.locator('#status-current-element');
+ C.ok(await current.isVisible(),'Строка текущего элемента показана во время остановки');
+ C.contains(await current.textContent(),'item AS INTEGER = 7','Отладчик показывает имя, тип и значение BYREF-элемента');
+ await S.page.evaluate(()=>window.__ide.execution.debug('continue'));await S.waitIdle();await S.waitConsole('8');
+ C.eq(await current.isVisible(),false,'Строка текущего элемента очищена после завершения');
+ C.eq(S.pageErrors.length,0,'Нет ошибок страницы');
+}});

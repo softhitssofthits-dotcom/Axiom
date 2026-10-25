@@ -6,13 +6,13 @@ namespace Axiom.Bytecode;
 
 public sealed partial class BoundProgramLowerer
 {
-    // Обход массива по значениям в режиме BYVAL. Источник вычисляется один раз
-    // и сохраняется в скрытую переменную; переменная цикла получает копию
-    // элемента. Многомерность раскладывается вложенными счётчиками, поэтому
-    // последнее измерение изменяется быстрее остальных.
+    // Источник вычисляется один раз и сохраняется вместе с его структурной
+    // версией. BYVAL копирует значение в новую ячейку, BYREF связывает свежую
+    // ячейку-адрес с текущим элементом. Последнее измерение меняется быстрее.
     private void LowerForEach(BoundForEachStatement forEachStatement, List<LoweredInstruction> instructions)
     {
         var sourceVariable = CreateInternalTemporary(forEachStatement.SourceArrayType, "__foreach_source");
+        var structuralVersionVariable = CreateInternalTemporary(TypeSymbol.Long, "__foreach_revision");
         var rank = forEachStatement.SourceArrayType.Rank;
         var lowerBounds = new VariableSymbol[rank];
         var upperBounds = new VariableSymbol[rank];
@@ -24,6 +24,10 @@ public sealed partial class BoundProgramLowerer
         // Своя проверка выделенности вместо внутреннего LBOUND: сообщение должно
         // говорить про FOR EACH, а не про границы массива.
         EmitForEachAllocationCheck(sourceVariable, forEachStatement.SourceArrayType, forEachStatement.Location, instructions);
+
+        instructions.Add(LoweredInstruction.LoadVariable(forEachStatement.Location, sourceVariable));
+        instructions.Add(LoweredInstruction.GetArrayStructuralVersion(forEachStatement.Location));
+        instructions.Add(LoweredInstruction.StoreVariable(forEachStatement.Location, structuralVersionVariable));
 
         for (var dimension = 0; dimension < rank; dimension++)
         {
@@ -71,6 +75,7 @@ public sealed partial class BoundProgramLowerer
                 level: 0,
                 rank,
                 sourceVariable,
+                structuralVersionVariable,
                 lowerBounds,
                 upperBounds,
                 indices,
@@ -85,6 +90,7 @@ public sealed partial class BoundProgramLowerer
         }
 
         instructions.Add(LoweredInstruction.LabelMarker(forEachStatement.Location, exitLabel));
+        instructions.Add(LoweredInstruction.ClearForEachItem(forEachStatement.Location, forEachStatement.Variable));
     }
 
     private void EmitForEachLevel(
@@ -92,6 +98,7 @@ public sealed partial class BoundProgramLowerer
         int level,
         int rank,
         VariableSymbol sourceVariable,
+        VariableSymbol structuralVersionVariable,
         VariableSymbol[] lowerBounds,
         VariableSymbol[] upperBounds,
         VariableSymbol[] indices,
@@ -106,6 +113,7 @@ public sealed partial class BoundProgramLowerer
             LowerForEachIteration(
                 forEachStatement,
                 sourceVariable,
+                structuralVersionVariable,
                 indices,
                 rank,
                 instructions);
@@ -135,6 +143,7 @@ public sealed partial class BoundProgramLowerer
             level + 1,
             rank,
             sourceVariable,
+            structuralVersionVariable,
             lowerBounds,
             upperBounds,
             indices,
@@ -143,6 +152,15 @@ public sealed partial class BoundProgramLowerer
             instructions);
 
         instructions.Add(LoweredInstruction.LabelMarker(location, continueLabels[level]));
+
+        if (level == rank - 1)
+        {
+            EmitForEachStructuralCheck(
+                sourceVariable,
+                structuralVersionVariable,
+                location,
+                instructions);
+        }
 
         // Продвижение выполняется только когда счётчик ещё не на верхней границе.
         // Иначе последний элемент с границей INTEGER_MAX увеличивался бы до
@@ -163,34 +181,68 @@ public sealed partial class BoundProgramLowerer
     private void LowerForEachIteration(
         BoundForEachStatement forEachStatement,
         VariableSymbol sourceVariable,
+        VariableSymbol structuralVersionVariable,
         VariableSymbol[] indices,
         int rank,
         List<LoweredInstruction> instructions)
     {
         var location = forEachStatement.Location;
 
-        instructions.Add(LoweredInstruction.LoadVariable(location, sourceVariable));
-        foreach (var index in indices)
+        if (forEachStatement.ByRef)
         {
-            instructions.Add(LoweredInstruction.LoadVariable(location, index));
+            instructions.Add(LoweredInstruction.BindArrayElement(
+                location,
+                forEachStatement.Variable,
+                sourceVariable,
+                structuralVersionVariable,
+                indices));
         }
-
-        instructions.Add(LoweredInstruction.LoadElement(location, sourceVariable.Name, rank));
-
-        // BYVAL: переменная цикла получает копию значения, поэтому присваивание
-        // ей не изменяет элемент источника.
-        if (forEachStatement.Variable.Type != forEachStatement.SourceArrayType.ElementType
-            && forEachStatement.Variable.Type != TypeSymbol.Error)
+        else
         {
-            instructions.Add(LoweredInstruction.Convert(location, forEachStatement.Variable.Type));
-        }
+            instructions.Add(LoweredInstruction.FreshLocal(location, forEachStatement.Variable));
+            instructions.Add(LoweredInstruction.LoadVariable(location, sourceVariable));
+            foreach (var index in indices)
+            {
+                instructions.Add(LoweredInstruction.LoadVariable(location, index));
+            }
 
-        instructions.Add(LoweredInstruction.StoreVariable(location, forEachStatement.Variable));
+            instructions.Add(LoweredInstruction.LoadElement(location, sourceVariable.Name, rank));
+
+            if (forEachStatement.Variable.Type != forEachStatement.SourceArrayType.ElementType
+                && forEachStatement.Variable.Type != TypeSymbol.Error)
+            {
+                instructions.Add(LoweredInstruction.Convert(location, forEachStatement.Variable.Type));
+            }
+
+            instructions.Add(LoweredInstruction.StoreVariable(location, forEachStatement.Variable));
+        }
 
         foreach (var statement in forEachStatement.Statements)
         {
             LowerStatement(statement, instructions);
         }
+    }
+
+    private void EmitForEachStructuralCheck(
+        VariableSymbol sourceVariable,
+        VariableSymbol structuralVersionVariable,
+        TextLocation location,
+        List<LoweredInstruction> instructions)
+    {
+        var validLabel = CreateLabel();
+
+        instructions.Add(LoweredInstruction.LoadVariable(location, sourceVariable));
+        instructions.Add(LoweredInstruction.GetArrayStructuralVersion(location));
+        instructions.Add(LoweredInstruction.LoadVariable(location, structuralVersionVariable));
+        instructions.Add(LoweredInstruction.BinaryOperation(location, SyntaxKind.EqualsToken));
+        instructions.Add(LoweredInstruction.JumpIfTrue(location, validLabel));
+        instructions.Add(LoweredInstruction.LoadLiteral(location, "MB3014", TypeSymbol.String));
+        instructions.Add(LoweredInstruction.LoadLiteral(
+            location,
+            "Массив был переразмерен или освобождён во время обхода FOR EACH.",
+            TypeSymbol.String));
+        instructions.Add(LoweredInstruction.RaiseError(location, hasMessage: true));
+        instructions.Add(LoweredInstruction.LabelMarker(location, validLabel));
     }
 
     // Проверка выделенности: обход невыделенного массива даёт MB3005 с

@@ -4,6 +4,83 @@ namespace Axiom.Runtime;
 
 public sealed partial class RuntimeArrayValue
 {
+    // A root can retain its physical buffer after a length change while older
+    // views still point at that buffer with an invalidated lifetime. Snapshot
+    // identity follows the lifetime generation, not only the array buffer.
+    internal object SnapshotStorageIdentity => (object?)_storageLifetime ?? (object?)_elements ?? this;
+
+    /// <summary>
+    /// Создаёт корневое хранилище снимка для массива или его представления.
+    /// Представления одного массива используют общую физическую область.
+    /// </summary>
+    internal RuntimeArrayValue CreateEmptyStorageForSnapshot()
+    {
+        if (!IsAllocated)
+        {
+            return CreateEmptyForSnapshot();
+        }
+
+        var lowerBounds = _storageLowerBounds!.ToArray();
+        var upperBounds = _storageUpperBounds!.ToArray();
+        var clone = new RuntimeArrayValue(ElementType, FixedStringLength, lowerBounds.Length)
+        {
+            _lowerBounds = lowerBounds,
+            _upperBounds = upperBounds,
+            _storageLowerBounds = lowerBounds,
+            _storageUpperBounds = upperBounds,
+            _fixedStorageIndices = CreateEmptyFixedStorageIndices(lowerBounds.Length),
+            _visibleStorageDimensions = CreateIdentityStorageDimensions(lowerBounds.Length),
+            _elements = CreateDefaultElements(lowerBounds, upperBounds),
+            _capacity = CalculateLength(lowerBounds, upperBounds),
+            _isView = false,
+            _shapeRevision = _storageLifetime?.Revision ?? _shapeRevision,
+            _storageLifetime = new StorageLifetime(_storageLifetime?.Revision ?? _shapeRevision)
+        };
+        clone._storageLifetime!.Invalidated = _storageLifetime is { Invalidated: true };
+        clone.RefreshShapeMetadata();
+        return clone;
+    }
+
+    internal RuntimeArrayValue CreateViewForSnapshot(RuntimeArrayValue snapshotStorage)
+    {
+        ArgumentNullException.ThrowIfNull(snapshotStorage);
+        if (!IsAllocated || !_isView || !snapshotStorage.IsAllocated)
+        {
+            throw new InvalidOperationException("A valid array view and allocated snapshot storage are required.");
+        }
+
+        return new RuntimeArrayValue(
+            ElementType,
+            FixedStringLength,
+            _lowerBounds!,
+            _upperBounds!,
+            snapshotStorage._elements!,
+            snapshotStorage._storageLowerBounds!,
+            snapshotStorage._storageUpperBounds!,
+            _fixedStorageIndices!,
+            _visibleStorageDimensions!,
+            snapshotStorage._storageLifetime!);
+    }
+
+    internal void FillStorageSnapshotInto(RuntimeArrayValue target, Func<RuntimeValue, RuntimeValue> snapshotElement)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        ArgumentNullException.ThrowIfNull(snapshotElement);
+        if (_elements is null || target._elements is null)
+        {
+            return;
+        }
+
+        // Copy the physical backing storage directly. A stale view deliberately
+        // fails normal reads and iteration, but its bytes still need to be copied
+        // into an invalidated snapshot so a debugger can preserve the same error.
+        var length = Math.Min(_elements.Length, target._elements.Length);
+        for (var index = 0; index < length; index++)
+        {
+            target._elements[index] = snapshotElement(_elements[index]);
+        }
+    }
+
     public RuntimeArrayValue Clone(int? fixedStringLengthOverride = null)
     {
         var clone = new RuntimeArrayValue(ElementType, fixedStringLengthOverride ?? FixedStringLength, Rank);
@@ -38,6 +115,7 @@ public sealed partial class RuntimeArrayValue
     internal RuntimeArrayValue CreateEmptyForSnapshot()
     {
         var clone = new RuntimeArrayValue(ElementType, FixedStringLength, Rank);
+        clone._shapeRevision = _storageLifetime?.Revision ?? _shapeRevision;
 
         if (!IsAllocated)
         {
@@ -52,6 +130,9 @@ public sealed partial class RuntimeArrayValue
         clone._visibleStorageDimensions = CreateIdentityStorageDimensions(clone.Rank);
         clone.AttachStorage(clone.CreateDefaultElements(clone._storageLowerBounds, clone._storageUpperBounds));
         clone.RefreshShapeMetadata();
+        clone._shapeRevision = _storageLifetime?.Revision ?? _shapeRevision;
+        clone._storageLifetime!.Revision = clone._shapeRevision;
+        clone._storageLifetime.Invalidated = _storageLifetime is { Invalidated: true };
         return clone;
     }
 
@@ -64,7 +145,10 @@ public sealed partial class RuntimeArrayValue
         ArgumentNullException.ThrowIfNull(target);
         ArgumentNullException.ThrowIfNull(snapshotElement);
 
-        if (!IsAllocated || !target.IsAllocated || target.Length != Length)
+        if (!IsAllocated
+            || _storageLifetime is { Invalidated: true }
+            || !target.IsAllocated
+            || target.Length != Length)
         {
             return;
         }

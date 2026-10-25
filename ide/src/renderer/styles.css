@@ -536,6 +536,15 @@ body.splitter-y { cursor: row-resize; }
   margin-right: 16px;
 }
 
+#status-current-element:not([hidden]) {
+  max-width: min(38vw, 420px);
+  margin-right: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 #status-file-path {
   flex: 1;
   overflow: hidden;

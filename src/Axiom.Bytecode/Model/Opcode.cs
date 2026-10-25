@@ -129,5 +129,9 @@ public enum Opcode
     EndFinally,
     Smooth,
     SnapshotValue,
-    NewArray
+    NewArray,
+    GetArrayStructuralVersion,
+    FreshLocal,
+    BindArrayElement,
+    ClearForEachItem
 }
