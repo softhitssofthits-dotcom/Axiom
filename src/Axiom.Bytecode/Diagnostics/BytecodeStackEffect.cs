@@ -168,6 +168,36 @@ internal static class BytecodeStackEffect
                 popCount = 2;
                 pushCount = 1;
                 return true;
+
+            case Opcode.CreateSet:
+                pushCount = 1;
+                return true;
+
+            case Opcode.SetAdd:
+            case Opcode.SetContains:
+            case Opcode.SetRemove:
+                // Множество и элемент заменяются признаком BOOLEAN.
+                popCount = 2;
+                pushCount = 1;
+                return true;
+
+            case Opcode.SetCount:
+                popCount = 1;
+                pushCount = 1;
+                return true;
+
+            case Opcode.SetToArray:
+                // Множество заменяется независимым массивом элементов.
+                popCount = 1;
+                pushCount = 1;
+                return true;
+
+            case Opcode.SetUnionWith:
+            case Opcode.SetIntersectWith:
+                // Получатель и второе множество уходят со стека: результат
+                // записывается в получателя, значение не возвращается.
+                popCount = 2;
+                return true;
             case Opcode.StoreElement:
                 popCount = instruction.GetOperand(1) + 2;
                 return true;

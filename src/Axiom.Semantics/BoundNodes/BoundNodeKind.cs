@@ -86,5 +86,7 @@ public enum BoundNodeKind
     DictionaryAccessExpression,
     DictionaryCountExpression,
     DictionaryMethodCallExpression,
-    DictionaryTryGetValueExpression
+    DictionaryTryGetValueExpression,
+    SetCountExpression,
+    SetMethodCallExpression
 }

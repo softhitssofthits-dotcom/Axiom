@@ -71,6 +71,7 @@ public sealed partial class Binder
             FunctionTypeSyntax functionType => functionType.FunctionKeyword.Location,
             ArrayTypeSyntax arrayType => GetLocation(arrayType.ElementType),
             DictionaryTypeSyntax dictionaryType => dictionaryType.DictionaryKeyword.Location,
+            SetTypeSyntax setType => setType.SetKeyword.Location,
             _ => DefaultLocation
         };
     }

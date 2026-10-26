@@ -291,17 +291,127 @@ const LangFeatures = (() => {
       { label: 'Count', kind: 'Field', insertText: 'Count', snippet: false, detail: 'Count AS INTEGER' },
     ];
 
-    // Имя словаря перед точкой: берётся объявленный тип из документа. Незнакомое
-    // имя не даёт подсказок, чтобы не выдавать чужие члены за существующие.
-    function dictionaryReceiver(model, position) {
+    // Члены множества. Add, Contains, Remove, ToArray, UnionWith и IntersectWith
+    // вызываются со скобками; Count — свойство и вставляется без скобок.
+    // UnionWith и IntersectWith — процедуры: результата у них нет.
+    const setMembers = (type) => {
+      const element = type?.elementType || (I18N.current === 'en' ? 'element' : 'элемент');
+      const other = I18N.current === 'en' ? 'other set' : 'другое множество';
+      return [
+        { label: 'Add', kind: 'Method', insertText: 'Add($0)', snippet: true, detail: 'Add(' + element + ') AS BOOLEAN' },
+        { label: 'Contains', kind: 'Method', insertText: 'Contains($0)', snippet: true, detail: 'Contains(' + element + ') AS BOOLEAN' },
+        { label: 'Remove', kind: 'Method', insertText: 'Remove($0)', snippet: true, detail: 'Remove(' + element + ') AS BOOLEAN' },
+        { label: 'ToArray', kind: 'Method', insertText: 'ToArray()', snippet: false, detail: 'ToArray() AS ' + element + '[]' },
+        { label: 'UnionWith', kind: 'Method', insertText: 'UnionWith($0)', snippet: true, detail: 'UnionWith(' + other + ')' },
+        { label: 'IntersectWith', kind: 'Method', insertText: 'IntersectWith($0)', snippet: true, detail: 'IntersectWith(' + other + ')' },
+        { label: 'Count', kind: 'Field', insertText: 'Count', snippet: false, detail: 'Count AS INTEGER' },
+      ];
+    };
+
+    // Выражение непосредственно перед точкой: имя с цепочкой полей, индексов
+    // и вызовов. Разбор идёт по маскированному коду, поэтому точки в строках и
+    // комментариях не считаются обращением к члену.
+    function receiverExpression(code) {
+      const text = code.replace(/\s+$/, '');
+      const dot = text.lastIndexOf('.');
+      if (dot < 0) return null;
+      const head = text.slice(0, dot).replace(/\s+$/, '');
+      const match = /([A-Za-z_]\w*(?:\s*(?:\[[^\[\]]*\]|\([^()]*\)|\.[A-Za-z_]\w*))*)$/.exec(head);
+      return match ? match[1] : null;
+    }
+
+    // Ближайшее объявление, содержащее строку: его параметры и поля задают тип
+    // имени, которое не является переменной модуля.
+    function enclosingDeclaration(doc, lineNumber) {
+      const routines = [
+        ...doc.subs.map((item) => ({...item, kind: 'SUB'})),
+        ...doc.functions.map((item) => ({...item, kind: 'FUNCTION'})),
+        ...doc.types.map((item) => ({...item, kind: 'TYPE'})),
+      ].filter((item) => item.lineNo <= lineNumber && (item.endLineNo || Infinity) >= lineNumber);
+      return routines.sort((a, b) => b.lineNo - a.lineNo)[0] || null;
+    }
+
+    // Переменная модуля с учётом порядка объявлений: последнее объявление до
+    // строки использования перекрывает прежнее.
+    function declaredVariable(doc, upperName, lineNumber) {
+      const matches = doc.vars.filter((item) => item.name.toUpperCase() === upperName);
+      const before = matches.filter((item) => (item.lineNo || 0) <= lineNumber);
+      return (before.length ? before : matches).at(-1) || null;
+    }
+
+    // Тип выражения-получателя по тем же правилам объявления, что и scanDoc:
+    // параметр подпрограммы, поле записи, переменная, результат функции; далее
+    // цепочка полей, индексов и вызова. Незнакомое выражение не получает тип,
+    // поэтому ложные члены не появляются.
+    function receiverType(doc, receiver, lineNumber) {
+      const base = /^[A-Za-z_]\w*/.exec(receiver);
+      if (!base) return null;
+      const name = base[0], upper = name.toUpperCase();
+      const owner = enclosingDeclaration(doc, lineNumber);
+      let type = null, callable = false;
+
+      if (upper === 'SELF') {
+        // SELF относится к записи, внутри которой записан метод, а не к самой
+        // подпрограмме метода: её объявление вложено в TYPE.
+        const record = doc.types.filter((item) => item.lineNo <= lineNumber && (item.endLineNo || Infinity) >= lineNumber).at(-1);
+        if (record) type = record.name;
+      }
+      if (!type && owner && owner.kind !== 'TYPE') {
+        const parameter = owner.params?.find((item) => item.name.toUpperCase() === upper);
+        if (parameter?.type) type = parameter.type;
+      }
+      if (!type && owner?.kind === 'TYPE') {
+        const field = owner.fields?.find((item) => item.name.toUpperCase() === upper);
+        if (field?.type) type = field.type;
+      }
+      if (!type) {
+        const variable = declaredVariable(doc, upper, lineNumber);
+        if (variable?.type) type = variable.type;
+      }
+      if (!type) {
+        const routine = doc.functions.find((item) => item.name.toUpperCase() === upper);
+        if (routine?.returnType) { type = routine.returnType; callable = true; }
+      }
+      if (!type) return null;
+
+      const segment = /\s*(?:\.\s*([A-Za-z_]\w*)|(\[[^\[\]]*\])|(\([^()]*\)))/y;
+      segment.lastIndex = base[0].length;
+      for (let match = segment.exec(receiver); match; match = segment.exec(receiver)) {
+        if (match[1]) {
+          const record = doc.types.find((item) => item.name.toUpperCase() === String(type).toUpperCase());
+          const field = record?.fields.find((item) => item.name.toUpperCase() === match[1].toUpperCase());
+          if (!field?.type) return null;
+          type = field.type;
+        } else if (match[2]) {
+          const element = window.AxiomSemanticColors?.arrayType(type);
+          if (!element) return null;
+          type = element.elementType;
+        } else {
+          if (!callable) return null;
+          callable = false;
+        }
+      }
+      // Функция без скобок не даёт значения, поэтому членов у неё нет.
+      return callable ? null : type;
+    }
+
+    // Общий получатель для словаря и множества: один разбор выражения перед
+    // точкой, дальше тип сравнивается с DICTIONARY(...) или HASHSET(...).
+    function memberReceiver(model, position) {
       const lineText = model.getLineContent(position.lineNumber).slice(0, position.column - 1);
-      const match = /([A-Za-z_]\w*)\s*\.\s*[A-Za-z_]\w*$/.exec(lineText)
-        || /([A-Za-z_]\w*)\s*\.\s*$/.exec(lineText);
-      if (!match) return null;
-      const name = match[1];
-      const doc = scanDoc(model);
-      const declared = [...doc.vars].reverse().find((item) => item.name.toUpperCase() === name.toUpperCase());
-      return dictionaryType(declared?.type) ? { name, ...dictionaryType(declared.type) } : null;
+      const receiver = receiverExpression(lexicalCode(lineText).mask);
+      if (!receiver) return null;
+      const type = receiverType(scanDoc(model), receiver, position.lineNumber);
+      return type ? { name: receiver, type } : null;
+    }
+
+    // Члены получателя по его объявленному типу: словарь и множество
+    // различаются здесь, а не отдельными путями поиска получателя.
+    function receiverMembers(type) {
+      const set = setType(type);
+      if (set) return setMembers(set);
+      const dictionary = dictionaryType(type);
+      return dictionary ? dictionaryMembers(dictionary) : null;
     }
 
     // DICTIONARY(ключ, значение) → типы ключа и значения. Разбор повторяет
@@ -310,6 +420,14 @@ const LangFeatures = (() => {
       if (typeof type !== 'string') return null;
       const match = /^DICTIONARY\s*\(([^,]+),\s*(.+)\)$/i.exec(type.trim());
       return match ? { keyType: match[1].trim(), valueType: match[2].trim() } : null;
+    }
+
+    // HASHSET(элемент) → тип элемента. Регистр слова и элемента не значим,
+    // поэтому разбор не зависит от того, как тип записан в объявлении.
+    function setType(type) {
+      if (typeof type !== 'string') return null;
+      const match = /^HASHSET\s*\(\s*([^(),]+?)\s*\)$/i.exec(type.trim());
+      return match ? { elementType: match[1].trim() } : null;
     }
 
     const completionProvider = {
@@ -340,11 +458,15 @@ const LangFeatures = (() => {
           });
         };
 
-        // После точки у имени словаря подсказываются только его члены: методы
-        // со скобками и свойство Count без скобок.
-        const receiver = dictionaryReceiver(model, position);
-        if (receiver) {
-          for (const member of dictionaryMembers(receiver)) {
+        // После точки подсказываются только члены объявленного типа получателя:
+        // у словаря — методы и Count, у множества — методы, ToArray() и Count.
+        // Тип получателя определяется общим разбором выражения перед точкой,
+        // поэтому параметры, поля, элементы массивов и результаты функций
+        // обрабатываются тем же путём, что и переменная модуля.
+        const receiver = memberReceiver(model, position);
+        const members = receiver && receiverMembers(receiver.type);
+        if (members) {
+          for (const member of members) {
             add(member.label, member.kind, member.insertText, member.snippet, member.detail, '0');
           }
 
@@ -519,26 +641,36 @@ const LangFeatures = (() => {
           const array = callable ? null : symbol.arrayRank ? {elementType: symbol.elementType, rank: symbol.arrayRank}
             : window.AxiomSemanticColors?.arrayType(symbol.type);
           const dictionary = callable ? null : dictionaryType(symbol.type);
+          const set = callable ? null : setType(symbol.type);
           if (symbol.type) details = I18N.t('hover.typeLabel') + ': `' + symbol.type + '`';
           if (dictionary) {
             details += '\n\n' + I18N.t('hover.dictionaryKeyType') + ': `' + dictionary.keyType + '`'
               + '\n\n' + I18N.t('hover.dictionaryValueType') + ': `' + dictionary.valueType + '`';
           }
+          if (set) details += '\n\n' + I18N.t('hover.setElementType') + ': `' + set.elementType + '`';
           if (array) details += '\n\n' + I18N.t('hover.elementType') + ': `' + array.elementType + '`\n\n' + I18N.t('hover.dimensions') + ': ' + array.rank;
           if (symbol.signature) details = '`' + symbol.signature + '`';
           if (symbol.fields) details = I18N.t('hover.fields') + ': ' + (symbol.fields.join(', ') || I18N.t('hover.noFields'));
-          const role = dictionary ? 'dictionary' : array ? 'array' : symbol.kind;
+          const role = dictionary ? 'dictionary' : set ? 'set' : array ? 'array' : symbol.kind;
           return { range, contents: [{ value: '**' + name + '** — ' + I18N.t('hover.' + role) + '\n\n' + details }] };
         }
 
-        // Член словаря после точки: метод вызывается со скобками, Count — свойство.
-        const memberReceiver = dictionaryReceiver(model, position);
-        if (memberReceiver) {
-          const member = dictionaryMembers(memberReceiver).find((item) => item.label.toUpperCase() === name.toUpperCase());
+        // Член коллекции после точки. Категория и подсказка зависят от типа
+        // получателя: у словаря Add не возвращает значения, а у множества Add
+        // и Remove возвращают BOOLEAN, а UnionWith и IntersectWith результата
+        // не имеют. Получатель определяется общим разбором выражения.
+        const owner = memberReceiver(model, position);
+        const ownerMembers = owner && receiverMembers(owner.type);
+        if (ownerMembers) {
+          const member = ownerMembers.find((item) => item.label.toUpperCase() === name.toUpperCase());
           if (member) {
-            const hint = window.AxiomKeywordHints?.memberHint?.(name, I18N.current || 'ru');
+            const isSet = !!setType(owner.type);
+            const hint = isSet
+              ? window.AxiomKeywordHints?.setMemberHint?.(name, I18N.current || 'ru')
+              : window.AxiomKeywordHints?.memberHint?.(name, I18N.current || 'ru');
+            const role = I18N.t(isSet ? 'hover.setMember' : 'hover.dictionaryMember');
             const value = '`' + member.detail + '`' + (hint ? '\n\n' + hint : '');
-            return { range, contents: [{ value: '**' + name + '** — ' + I18N.t('hover.dictionaryMember') + '\n\n' + value }] };
+            return { range, contents: [{ value: '**' + name + '** — ' + role + '\n\n' + value }] };
           }
         }
 

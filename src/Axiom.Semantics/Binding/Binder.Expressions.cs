@@ -6,7 +6,16 @@ namespace Axiom.Semantics;
 
 public sealed partial class Binder
 {
-    private BoundExpression BindExpression(ExpressionSyntax expression, TypeSymbol? expectedType = null)
+    /// <summary>
+    /// Связывает выражение. <paramref name="requireValue"/> отделяет позицию
+    /// значения от позиции оператора: вызов процедуры допустим отдельным
+    /// оператором, но не является значением в присваивании, аргументе,
+    /// инициализаторе, условии, RETURN или PRINT.
+    /// </summary>
+    private BoundExpression BindExpression(
+        ExpressionSyntax expression,
+        TypeSymbol? expectedType = null,
+        bool requireValue = true)
     {
         var boundExpression = expression switch
         {
@@ -16,8 +25,10 @@ public sealed partial class Binder
             BinaryExpressionSyntax binaryExpression => BindBinaryExpression(binaryExpression),
             RangeExpressionSyntax rangeExpression => BindRangeExpression(rangeExpression, reportInvalidStandaloneUse: true),
             StepDirectionArgumentExpressionSyntax stepDirection => BindStepDirectionArgumentExpression(stepDirection),
-            ParenthesizedExpressionSyntax parenthesizedExpression => BindExpression(parenthesizedExpression.Expression, expectedType),
-            NamedArgumentExpressionSyntax namedArgumentExpression => BindExpression(namedArgumentExpression.Expression, expectedType),
+            // Скобки и именованный аргумент — оболочка: требование значения
+            // относится ко всему выражению и проверяется один раз снаружи.
+            ParenthesizedExpressionSyntax parenthesizedExpression => BindExpression(parenthesizedExpression.Expression, expectedType, requireValue: false),
+            NamedArgumentExpressionSyntax namedArgumentExpression => BindExpression(namedArgumentExpression.Expression, expectedType, requireValue: false),
             CallExpressionSyntax callExpression => BindCallExpression(callExpression),
             ArrayAccessExpressionSyntax arrayAccessExpression => BindSquareArrayAccessExpression(arrayAccessExpression),
             ArrayLiteralExpressionSyntax arrayLiteralExpression => BindArrayLiteralExpression(arrayLiteralExpression, expectedType),
@@ -26,6 +37,15 @@ public sealed partial class Binder
             ErrorExpressionSyntax errorExpression => new BoundErrorExpression(errorExpression.Token.Location),
             _ => throw new ArgumentOutOfRangeException(nameof(expression), expression, "Unsupported expression.")
         };
+
+        // Вызов, не возвращающий значения, не может стоять в позиции значения.
+        // Проверка идёт до согласования с ожидаемым типом, иначе тот же случай
+        // давал бы ещё и несовместимость типов вместо одной причины отказа.
+        if (requireValue && boundExpression.Type == TypeSymbol.Void)
+        {
+            ReportValueExpected(GetLocation(expression));
+            return new BoundErrorExpression(GetLocation(expression));
+        }
 
         // Литерал массива получает ожидаемый тип внутри собственного связывания:
         // приведение массива к массиву общей проверкой типов не выполняется.

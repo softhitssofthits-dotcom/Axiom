@@ -118,6 +118,14 @@ public sealed partial class BytecodeCompiler
             LoweredInstructionKind.DictionaryKeys => EmitDictionaryInstruction(instruction, Opcode.DictionaryKeys),
             LoweredInstructionKind.DictionaryCount => EmitDictionaryInstruction(instruction, Opcode.DictionaryCount),
             LoweredInstructionKind.DictionaryTryGetValue => EmitDictionaryTryGetValue(instruction, parameterSlots, localSlots, captureSlots),
+            LoweredInstructionKind.CreateSet => EmitCreateSet(instruction),
+            LoweredInstructionKind.SetAdd => EmitSetInstruction(instruction, Opcode.SetAdd),
+            LoweredInstructionKind.SetContains => EmitSetInstruction(instruction, Opcode.SetContains),
+            LoweredInstructionKind.SetRemove => EmitSetInstruction(instruction, Opcode.SetRemove),
+            LoweredInstructionKind.SetCount => EmitSetInstruction(instruction, Opcode.SetCount),
+            LoweredInstructionKind.SetToArray => EmitSetInstruction(instruction, Opcode.SetToArray),
+            LoweredInstructionKind.SetUnionWith => EmitSetInstruction(instruction, Opcode.SetUnionWith),
+            LoweredInstructionKind.SetIntersectWith => EmitSetInstruction(instruction, Opcode.SetIntersectWith),
             LoweredInstructionKind.Label => null,
             _ => ReportUnsupportedInstruction(routine, instruction)
         };
@@ -685,6 +693,31 @@ public sealed partial class BytecodeCompiler
         return new BytecodeInstruction(
             opcode,
             [RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName)]);
+    }
+
+    /// <summary>
+    /// Тип множества записывается текстовой ссылкой HASHSET(элемент). Ссылка
+    /// однозначно задаёт тип элемента и восстанавливается на стороне VM.
+    /// </summary>
+    private BytecodeInstruction EmitCreateSet(LoweredInstruction instruction)
+    {
+        var type = (SetTypeSymbol)instruction.ValueType!;
+        return new BytecodeInstruction(
+            Opcode.CreateSet,
+            [RegisterConstant(BytecodeConstantKind.String, SetTypeReference(type))]);
+    }
+
+    private BytecodeInstruction EmitSetInstruction(LoweredInstruction instruction, Opcode opcode)
+    {
+        return new BytecodeInstruction(
+            opcode,
+            [RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName)]);
+    }
+
+    private static string SetTypeReference(SetTypeSymbol type)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        return type.Name;
     }
 
     /// <summary>

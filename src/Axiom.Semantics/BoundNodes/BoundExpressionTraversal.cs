@@ -29,6 +29,8 @@ internal static class BoundExpressionTraversal
             // обход она не входит: иначе анализ чтения считал бы её прочитанной
             // и устранял ложное предупреждение о неиспользуемой переменной.
             BoundDictionaryTryGetValueExpression node => [node.Target, node.Key],
+            BoundSetCountExpression node => [node.Target],
+            BoundSetMethodCallExpression node => [node.Target, node.Value],
             BoundSelectCaseStatement node => [node.TestExpression],
             BoundVariableDeclarationStatement node => [node.Initializer, ..node.ArrayBounds.SelectMany(static item => new[] { item.LowerBound, item.UpperBound })],
             BoundVariableDeclarationsStatement node => [..node.Declarations.SelectMany(Immediate)],

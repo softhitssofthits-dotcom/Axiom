@@ -201,6 +201,10 @@ public sealed partial class Parser
         {
             typeSyntax = ParseDictionaryTypeSyntax();
         }
+        else if (Current.Kind == SyntaxKind.SetKeyword)
+        {
+            typeSyntax = ParseSetTypeSyntax();
+        }
         else if (Current.Kind == SyntaxKind.StringKeyword && Peek(1).Kind == SyntaxKind.StarToken)
         {
             var stringKeyword = Match(SyntaxKind.StringKeyword, "STRING");
@@ -284,6 +288,85 @@ public sealed partial class Parser
             commaToken,
             valueType,
             closeParenToken);
+    }
+
+    private SetTypeSyntax ParseSetTypeSyntax()
+    {
+        var setKeyword = Match(SyntaxKind.SetKeyword, "HASHSET");
+
+        // HASHSET — имя типа с одним аргументом. Без скобок форма неполна, а
+        // запятая означала бы второй аргумент: одно сообщение точнее каскада
+        // из ожиданий скобки, типа и закрывающей скобки.
+        if (Current.Kind != SyntaxKind.OpenParenToken)
+        {
+            Diagnostics.Report(
+                Axiom.Core.DiagnosticCodes.ExpectedToken,
+                "Тип HASHSET записывается с одним аргументом: HASHSET(тип элемента).",
+                CreateDiagnosticLocation(setKeyword.Location));
+            return new SetTypeSyntax(
+                setKeyword,
+                CreateMissingToken(SyntaxKind.OpenParenToken),
+                new NamedTypeSyntax(CreateMissingToken(SyntaxKind.IdentifierToken)),
+                CreateMissingToken(SyntaxKind.CloseParenToken));
+        }
+
+        var openParenToken = Match(SyntaxKind.OpenParenToken, "(");
+        var elementType = ParseTypeSyntax();
+
+        if (Current.Kind == SyntaxKind.CommaToken)
+        {
+            Diagnostics.Report(
+                Axiom.Core.DiagnosticCodes.ExpectedToken,
+                "Тип HASHSET записывается с одним аргументом: HASHSET(тип элемента).",
+                CreateDiagnosticLocation(Current.Location));
+
+            // Лишние аргументы пропускаются до закрывающей скобки типа, чтобы
+            // одна причина отказа не превращалась в каскад чужих диагностик.
+            SkipExtraSetTypeArguments();
+
+            return new SetTypeSyntax(
+                setKeyword,
+                openParenToken,
+                elementType,
+                Match(SyntaxKind.CloseParenToken, ")"));
+        }
+
+        var closeParenToken = Match(SyntaxKind.CloseParenToken, ")");
+
+        return new SetTypeSyntax(
+            setKeyword,
+            openParenToken,
+            elementType,
+            closeParenToken);
+    }
+
+    private void SkipExtraSetTypeArguments()
+    {
+        var depth = 0;
+
+        while (true)
+        {
+            if (Current.Kind is SyntaxKind.EndOfFileToken or SyntaxKind.NewLineToken)
+            {
+                return;
+            }
+
+            if (Current.Kind == SyntaxKind.OpenParenToken)
+            {
+                depth++;
+            }
+            else if (Current.Kind == SyntaxKind.CloseParenToken)
+            {
+                if (depth == 0)
+                {
+                    return;
+                }
+
+                depth--;
+            }
+
+            NextToken();
+        }
     }
 
     private ArrayBoundsSyntax ParseArrayBounds()

@@ -3,6 +3,6 @@ namespace Axiom.Core;
 
 public static class AxiomVersionInfo
 {
-    public const string LanguageVersion = "0.9.0";
-    public const string CompilerVersion = "0.10.0";
+    public const string LanguageVersion = "0.10.0";
+    public const string CompilerVersion = "0.11.0";
 }

@@ -196,6 +196,11 @@ public sealed partial class BoundProgramLowerer
                 LowerDictionaryExpression(expression, instructions);
                 break;
 
+            case BoundSetCountExpression:
+            case BoundSetMethodCallExpression:
+                LowerSetExpression(expression, instructions);
+                break;
+
             default:
                 ReportUnsupported(expression, "выражение");
                 break;

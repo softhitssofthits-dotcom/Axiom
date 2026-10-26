@@ -61,6 +61,7 @@ public sealed partial class Parser
             // DICTIONARY — имя типа, а не пользовательское имя. В позиции имени
             // сообщается причина отказа, чтобы читатель не искал опечатку.
             SyntaxKind.DictionaryKeyword => ReportKeywordNameInExpression(),
+            SyntaxKind.SetKeyword => ReportKeywordNameInExpression(),
             _ => ParseMissingExpression()
         };
 

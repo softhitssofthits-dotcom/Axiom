@@ -30,6 +30,7 @@ public sealed partial class BytecodeVm
     private readonly Dictionary<(int RoutineId, int InstructionIndex), TypeFieldSymbol> _recordFieldCache = [];
     private readonly Dictionary<string, UserDefinedTypeSymbol> _recordTypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, DictionaryTypeSymbol> _dictionaryTypeCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, SetTypeSymbol> _setTypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<TileTransformCacheKey, RuntimeImageValue> _tileTransformCache = [];
     private readonly Dictionary<(int CallerRoutineId, int TargetRoutineId), CaptureBinding[]> _captureBindingCache = [];
     private readonly RuntimeValue?[] _constantValues;
@@ -287,6 +288,16 @@ public sealed partial class BytecodeVm
             return false;
         }
 
+        CancelRun();
+        return true;
+    }
+
+    /// <summary>
+    /// Прекращает выполнение по запросу отмены. Тем же путём завершается
+    /// длительная операция коллекции, прерванная внутри собственного обхода.
+    /// </summary>
+    private void CancelRun()
+    {
         _cancelled = true;
         _stopState = null;
         foreach (var frame in _callStack)
@@ -295,17 +306,34 @@ public sealed partial class BytecodeVm
         }
 
         _callStack.Clear();
-        return true;
     }
 
     private static BytecodeVmStateSnapshot? FindStepBackTargetSnapshot(
         BytecodeVmExecutionSnapshot currentSnapshot,
         BytecodeVmStateSnapshot? candidate)
     {
+        // Сначала уходим с текущей исходной строки: цель отката — предыдущая
+        // строка, а не та же самая.
         while (candidate is not null
             && candidate.ExecutionSnapshot.SourceLocation.Line == currentSnapshot.SourceLocation.Line)
         {
             candidate = candidate.PreviousStateSnapshot;
+        }
+
+        if (candidate is null)
+        {
+            return null;
+        }
+
+        // Затем возвращаемся к первому снимку найденной строки, то есть к
+        // состоянию перед её первой инструкцией. Иначе откат останавливался на
+        // служебной инструкции в конце строки (например, Pop после операции) и
+        // уже содержал её результат: строка выглядела выполненной до отката.
+        var targetLine = candidate.ExecutionSnapshot.SourceLocation.Line;
+        while (candidate.PreviousStateSnapshot is { } earlier
+            && earlier.ExecutionSnapshot.SourceLocation.Line == targetLine)
+        {
+            candidate = earlier;
         }
 
         return candidate;
@@ -511,6 +539,17 @@ public sealed partial class BytecodeVm
             {
                 HandleArrayRuntimeFailure(ex, frame, instructionIndex, runtimeFailureBoundaryDepth);
             }
+            catch (SetEntryLimitException ex)
+            {
+                HandleSetRuntimeFailure(ex, frame, instructionIndex, runtimeFailureBoundaryDepth);
+            }
+            catch (SetOperationCancelledException)
+            {
+                // Операция прервана внутри собственного обхода: получатель не
+                // изменён, выполнение прекращается как при обычной отмене.
+                CancelRun();
+                return;
+            }
             catch (StringResourceLimitException ex)
             {
                 HandleStringResourceFailure(ex.Message, frame, instructionIndex, runtimeFailureBoundaryDepth);
@@ -566,6 +605,15 @@ public sealed partial class BytecodeVm
         catch (ArrayAllocationFailureException ex)
         {
             HandleArrayRuntimeFailure(ex, frame, instructionIndex, runtimeFailureBoundaryDepth);
+        }
+        catch (SetEntryLimitException ex)
+        {
+            HandleSetRuntimeFailure(ex, frame, instructionIndex, runtimeFailureBoundaryDepth);
+        }
+        catch (SetOperationCancelledException)
+        {
+            CancelRun();
+            return;
         }
         catch (StringResourceLimitException ex)
         {
@@ -911,6 +959,38 @@ public sealed partial class BytecodeVm
 
             case Opcode.DictionaryTryGetValue:
                 ExecuteDictionaryTryGetValue(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.CreateSet:
+                ExecuteCreateSet(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.SetAdd:
+                ExecuteSetAdd(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.SetContains:
+                ExecuteSetContains(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.SetRemove:
+                ExecuteSetRemove(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.SetCount:
+                ExecuteSetCount(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.SetToArray:
+                ExecuteSetToArray(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.SetUnionWith:
+                ExecuteSetUnionWith(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.SetIntersectWith:
+                ExecuteSetIntersectWith(frame, instruction, instructionIndex);
                 break;
 
             case Opcode.ValidateForStep:

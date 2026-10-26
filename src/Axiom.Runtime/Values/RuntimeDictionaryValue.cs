@@ -16,7 +16,7 @@ public sealed class RuntimeDictionaryValue
     internal const int MaxEntryCount = RuntimeArrayValue.MaxElementCount;
 
     private readonly List<Entry?> _entries = [];
-    private readonly Dictionary<DictionaryKey, int> _indexByKey = [];
+    private readonly Dictionary<RuntimeCollectionKey, int> _indexByKey = [];
     private int _liveCount;
     private int _removedCount;
 
@@ -194,7 +194,7 @@ public sealed class RuntimeDictionaryValue
         return value.CopyForStorage();
     }
 
-    private void Append(DictionaryKey key, RuntimeValue value, bool prepareValue = true)
+    private void Append(RuntimeCollectionKey key, RuntimeValue value, bool prepareValue = true)
     {
         if (_liveCount >= MaxEntryCount)
         {
@@ -226,106 +226,22 @@ public sealed class RuntimeDictionaryValue
         _removedCount = 0;
     }
 
-    private DictionaryKey NormalizeKey(RuntimeValue key)
+    private RuntimeCollectionKey NormalizeKey(RuntimeValue key)
     {
-        return DictionaryKey.Create(key, Type.KeyType);
+        return RuntimeCollectionKey.Create(key, Type.KeyType);
     }
 
     private sealed class Entry
     {
-        public Entry(DictionaryKey key, RuntimeValue value)
+        public Entry(RuntimeCollectionKey key, RuntimeValue value)
         {
             Key = key;
             Value = value;
         }
 
-        public DictionaryKey Key { get; }
+        public RuntimeCollectionKey Key { get; }
 
         public RuntimeValue Value { get; }
-    }
-
-    /// <summary>
-    /// Ключ словаря в приведённом виде. Строки сравниваются точно, с учётом
-    /// регистра, без удаления пробелов и нормализации.
-    /// </summary>
-    private readonly struct DictionaryKey : IEquatable<DictionaryKey>
-    {
-        private DictionaryKey(string? text, int integer, long @long, TypeSymbol keyType)
-        {
-            Text = text;
-            Integer = integer;
-            Long = @long;
-            KeyType = keyType;
-        }
-
-        public string? Text { get; }
-
-        public int Integer { get; }
-
-        public long Long { get; }
-
-        public TypeSymbol KeyType { get; }
-
-        public static DictionaryKey Create(RuntimeValue value, TypeSymbol keyType)
-        {
-            ArgumentNullException.ThrowIfNull(value);
-            ArgumentNullException.ThrowIfNull(keyType);
-
-            if (keyType == TypeSymbol.String)
-            {
-                return new DictionaryKey(value.AsString(), 0, 0L, keyType);
-            }
-
-            if (keyType == TypeSymbol.Integer)
-            {
-                return new DictionaryKey(null, value.AsInteger(), 0L, keyType);
-            }
-
-            return new DictionaryKey(null, 0, value.AsLong(), keyType);
-        }
-
-        public RuntimeValue ToRuntimeValue(TypeSymbol keyType)
-        {
-            if (keyType == TypeSymbol.String)
-            {
-                return RuntimeValue.FromString(Text ?? string.Empty);
-            }
-
-            return keyType == TypeSymbol.Integer
-                ? RuntimeValue.FromInteger(Integer)
-                : RuntimeValue.FromLong(Long);
-        }
-
-        public bool Equals(DictionaryKey other)
-        {
-            if (!ReferenceEquals(KeyType, other.KeyType))
-            {
-                return false;
-            }
-
-            if (KeyType == TypeSymbol.String)
-            {
-                return string.Equals(Text, other.Text, StringComparison.Ordinal);
-            }
-
-            return KeyType == TypeSymbol.Integer
-                ? Integer == other.Integer
-                : Long == other.Long;
-        }
-
-        public override bool Equals(object? obj) => obj is DictionaryKey other && Equals(other);
-
-        public override int GetHashCode()
-        {
-            if (KeyType == TypeSymbol.String)
-            {
-                return StringComparer.Ordinal.GetHashCode(Text ?? string.Empty);
-            }
-
-            return KeyType == TypeSymbol.Integer
-                ? Integer
-                : Long.GetHashCode();
-        }
     }
 }
 

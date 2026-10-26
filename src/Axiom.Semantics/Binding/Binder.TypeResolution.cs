@@ -25,6 +25,7 @@ public sealed partial class Binder
                 functionType.ParameterPassingKeywords.Select(ParameterPassingModes.FromKeyword).ToArray()),
             ArrayTypeSyntax arrayType => ResolveArrayType(arrayType),
             DictionaryTypeSyntax dictionaryType => ResolveDictionaryType(dictionaryType),
+            SetTypeSyntax setType => ResolveSetType(setType),
             _ => TypeSymbol.Error
         };
     }
@@ -47,13 +48,34 @@ public sealed partial class Binder
             return TypeSymbol.Error;
         }
 
-        if (DictionaryTypeSymbol.IsResourceType(valueType) || valueType is FunctionTypeSymbol)
+        if (DictionaryTypeSymbol.IsResourceType(valueType)
+            || valueType is SetTypeSymbol
+            || valueType is FunctionTypeSymbol)
         {
             ReportDictionaryValueType(valueType, GetLocation(dictionaryType.ValueType));
             return TypeSymbol.Error;
         }
 
         return DictionaryTypeSymbol.Create(keyType, valueType);
+    }
+
+    private TypeSymbol ResolveSetType(SetTypeSyntax setType)
+    {
+        ArgumentNullException.ThrowIfNull(setType);
+
+        var elementType = ResolveType(setType.ElementType);
+        if (elementType == TypeSymbol.Error)
+        {
+            return TypeSymbol.Error;
+        }
+
+        if (!CollectionKeyTypeSupport.IsSupportedKeyType(elementType))
+        {
+            ReportSetElementType(elementType, GetLocation(setType.ElementType));
+            return TypeSymbol.Error;
+        }
+
+        return SetTypeSymbol.Create(elementType);
     }
 
     private TypeSymbol ResolveArrayType(ArrayTypeSyntax arrayType)

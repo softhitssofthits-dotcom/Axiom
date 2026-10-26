@@ -736,6 +736,18 @@ public sealed partial class BytecodeModuleValidator
                     ValidateVariableSourceOperand(module, routine, instructionIndex, instruction, operandIndex: 1, role: "переменная результата");
                     break;
 
+                case Opcode.CreateSet:
+                case Opcode.SetAdd:
+                case Opcode.SetContains:
+                case Opcode.SetRemove:
+                case Opcode.SetCount:
+                case Opcode.SetToArray:
+                case Opcode.SetUnionWith:
+                case Opcode.SetIntersectWith:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    ValidateStringConstantIndex(module, routine, instructionIndex, instruction, operandIndex: 0, "имя множества");
+                    break;
+
                 case Opcode.PrintSeparator:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
                     ValidatePrintSeparatorInstruction(module, routine, instructionIndex, instruction);
@@ -2186,6 +2198,29 @@ public sealed partial class BytecodeModuleValidator
 
             case Opcode.DictionaryTryGetValue:
                 ApplyDictionaryTryGetValueStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
+                break;
+
+            case Opcode.CreateSet:
+                ApplyCreateSetStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
+                break;
+
+            case Opcode.SetAdd:
+            case Opcode.SetContains:
+            case Opcode.SetRemove:
+                ApplySetElementOperationStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
+                break;
+
+            case Opcode.SetCount:
+                ApplySetCountStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
+                break;
+
+            case Opcode.SetToArray:
+                ApplySetToArrayStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
+                break;
+
+            case Opcode.SetUnionWith:
+            case Opcode.SetIntersectWith:
+                ApplySetSetOperationStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
 
             case Opcode.LoadField:

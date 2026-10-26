@@ -121,8 +121,29 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private bool TryHandleRuntimeFailure(int minimumCallStackDepth)
+    // Логическое превышение предела множества сообщается как ресурсный отказ:
+    // получатель при этом не изменён, поэтому TRY/CATCH продолжает работу с
+    // прежним составом.
+    private void HandleSetRuntimeFailure(
+        SetEntryLimitException failure,
+        BytecodeCallFrame frame,
+        int instructionIndex,
+        int minimumCallStackDepth)
     {
+        ArgumentNullException.ThrowIfNull(failure);
+
+        ReportRuntimeDiagnostic(
+            DiagnosticCodes.SetEntryLimit,
+            failure.Message,
+            ResolveLocation(frame.Routine.Id, instructionIndex));
+
+        if (!TryHandleRuntimeFailure(minimumCallStackDepth))
+        {
+            throw new RuntimeFailureException();
+        }
+    }
+
+    private bool TryHandleRuntimeFailure(int minimumCallStackDepth)    {
         while (_callStack.Count > minimumCallStackDepth)
         {
             var frame = CurrentFrame;

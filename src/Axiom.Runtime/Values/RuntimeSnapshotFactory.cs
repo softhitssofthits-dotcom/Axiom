@@ -125,6 +125,36 @@ internal static class RuntimeSnapshotFactory
             return succeeded;
         }
 
+        if (value.Type is SetTypeSymbol setType)
+        {
+            var set = value.AsSet();
+            if (visited.TryGetValue(set, out var existingSet))
+            {
+                snapshot = RuntimeValue.FromSet(setType, (RuntimeSetValue)existingSet);
+                return true;
+            }
+
+            // Объект регистрируется в общем графе до обхода элементов: два имени
+            // одного множества после восстановления обозначают один экземпляр.
+            var target = set.CreateEmptyForSnapshot();
+            visited[set] = target;
+
+            var succeeded = true;
+            foreach (var element in set.Entries())
+            {
+                if (!TryCreateValueSnapshot(element, fixedStringLength: null, visited, out var elementSnapshot))
+                {
+                    succeeded = false;
+                    break;
+                }
+
+                target.AppendForSnapshot(elementSnapshot);
+            }
+
+            snapshot = RuntimeValue.FromSet(setType, target);
+            return succeeded;
+        }
+
         if (value.Type is FunctionTypeSymbol functionType)
         {
             var functionValue = value.AsFunction();

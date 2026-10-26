@@ -1,0 +1,41 @@
+' Объединение и пересечение двух множеств.
+' Объединение собирается в пустом получателе: UnionWith добавляет только
+' отсутствующие элементы и сохраняет порядок источника. Пересечение
+' оставляет общие элементы в прежнем порядке получателя.
+' Исходные множества при обеих операциях не меняются.
+' Ожидаемый вывод:
+' ключ
+' монета
+' карта
+' 2 2
+' монета
+' карта
+
+DIM first AS HASHSET(STRING)
+first.Add("ключ")
+first.Add("монета")
+
+DIM second AS HASHSET(STRING)
+second.Add("монета")
+second.Add("карта")
+
+' Пустой получатель объединения: источники остаются нетронутыми.
+DIM combined AS HASHSET(STRING)
+combined.UnionWith(first)
+
+' Монета уже есть в получателе, поэтому из второго множества добавится карта.
+combined.UnionWith(second)
+
+' Порядок: сначала элементы первого источника, затем новые из второго.
+FOR EACH item IN combined.ToArray()
+    PRINT item
+NEXT item
+
+' Обе исходные коллекции сохранили по два элемента.
+PRINT first.Count, second.Count
+
+' Пересечение оставляет только общее, в порядке получателя.
+combined.IntersectWith(second)
+FOR EACH item IN combined.ToArray()
+    PRINT item
+NEXT item

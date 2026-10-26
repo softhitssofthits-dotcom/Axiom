@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Множество HASHSET — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="hashset"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Множество HASHSET</span></nav>
+<p class="eyebrow">10 · Массивы</p><h1 class="page-title">Множество HASHSET</h1><p class="lead">Множество хранит набор уникальных значений одного объявленного типа и отвечает на вопрос, есть ли значение в наборе. В отличие от словаря, у элемента множества нет связанного значения: хранится только сам элемент, а повторное добавление не создаёт второй записи. Страница описывает тип <code>HASHSET</code>, его методы <code>Add</code>, <code>Contains</code>, <code>Remove</code>, <code>ToArray</code>, <code>UnionWith</code>, <code>IntersectWith</code> и свойство <code>Count</code>.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+
+<section class="article-section" id="declaration"><h2>Объявление типа</h2><p>Тип множества записывается словом <code>HASHSET</code> с одним аргументом в круглых скобках. Аргумент задаёт тип элемента и тем самым определяет, какие значения множество принимает:</p><pre><code class="language-axiom">DIM &lt;имя&gt; AS HASHSET(&lt;тип элемента&gt;)</code></pre><p>Объявление сразу создаёт пустое готовое множество. Отдельного выделения памяти и <code>REDIM</code> не требуется: элементами управляют методы множества с первой строки программы.</p><pre><code class="language-axiom">DIM found AS HASHSET(STRING)
+PRINT found.Count
+PRINT found.Add("ключ")
+PRINT found.Add("ключ")
+PRINT found.Count
+PRINT found.Contains("ключ")
+PRINT found.Remove("карта")
+PRINT found.Remove("ключ")
+PRINT found.Count</code></pre><p>Программа выводит <code>0</code>, <code>TRUE</code>, <code>FALSE</code>, <code>1</code>, <code>TRUE</code>, <code>FALSE</code>, <code>TRUE</code> и <code>0</code>. Пустое множество сообщает нулевое количество и не содержит ни одного элемента. Первое добавление ключа возвращает <code>TRUE</code>, повторное — <code>FALSE</code>, но состав остаётся прежним. Удаление отсутствующей карты даёт <code>FALSE</code>, удаление имеющегося ключа — <code>TRUE</code>, после чего множество снова пусто.</p><p>Тип множества допустим в любом месте, где вообще допустим тип данных: в локальной и глобальной переменной, в параметре подпрограммы, в поле записи, в результате функции и в объявлении массива. Подробности размещения приведены ниже, в разделе <a href="#placement">Размещение типа в программе</a>.</p></section>
+
+<section class="article-section" id="reserved"><h2>Зарезервированное слово</h2><p>Слово <code>HASHSET</code> зарезервировано. Оно обозначает тип и не может быть именем, задаваемым программистом: переменной, константы, параметра, процедуры, функции, пользовательского типа, поля или метода. Запрет регистронезависим: <code>HashSet</code>, <code>hashset</code> и смешанная запись равнозначны <code>HASHSET</code>.</p><pre><code class="language-axiom">DIM HashSet AS INTEGER = 1</code></pre><p>Программа отклоняется при разборе с MB1002: «Ключевое слово 'HashSet' нельзя использовать как имя». То же сообщение выдаётся для параметра, поля, метода и имени после точки. Имена, содержащие слово внутри, остаются допустимыми: <code>found</code>, <code>myHashSet</code> и <code>hashSetCount</code> не зарезервированы, поскольку не совпадают со словом целиком.</p><p>Синтаксис типа требует ровно одного аргумента. Запись без аргументов, например <code>DIM x AS HASHSET</code>, сообщает MB1001: «Тип HASHSET записывается с одним аргументом: HASHSET(тип элемента)». Полные правила имён приведены в статье <a href="variables-scope.html#names">Имена и области видимости</a>.</p></section>
+
+<section class="article-section" id="element-types"><h2>Типы элементов и совместимость</h2><p>Элементом множества в текущей версии языка может быть значение типа <code>STRING</code>, <code>INTEGER</code> или <code>LONG</code>. Другие типы не принимаются: числа с дробной частью, <code>BOOLEAN</code>, временные значения, записи <a href="type.html">TYPE</a>, массивы, файлы, графические ресурсы, функциональные значения и вложенные коллекции элементом не являются. Неподдержанный тип сообщает MB2068:</p><pre><code class="language-axiom">DIM bad AS HASHSET(BOOLEAN)</code></pre><p>Программа отклоняется при проверке с MB2068: «Тип элемента множества должен быть STRING, INTEGER или LONG, а указан BOOLEAN».</p><p>Тип элемента входит в идентичность коллекции. <code>HASHSET(STRING)</code>, <code>HASHSET(INTEGER)</code> и <code>HASHSET(LONG)</code> — три разных типа, и совместимыми считаются только множества с полностью совпадающим типом элемента. Попытка объединить <code>HASHSET(INTEGER)</code> с <code>HASHSET(LONG)</code> отклоняется при проверке с MB2003: «Несовместимые типы: ожидался HASHSET(INTEGER), получен HASHSET(LONG). Тип коллекции должен совпадать точно, включая тип элемента».</p><p>Значение элемента приводится к объявленному типу по действующим правилам связывания ключей словаря; новых неявных преобразований множество не вводит. Передача числа в множество строк сообщает MB2003, передача лишнего аргумента в метод — MB2004.</p><p>Границы типа соблюдаются и в обе стороны. Множество не становится значением словаря: <code>DICTIONARY(STRING, HASHSET(STRING))</code> отклоняется с MB2066, поскольку перечень значений словаря не расширяется. Множество не становится и элементом другого множества: <code>HASHSET(HASHSET(STRING))</code> отклоняется с MB2068.</p></section>
+
+<section class="article-section" id="comparison"><h2>Сравнение элементов</h2><p>Элементы сравниваются точно. Для строк это означает, что регистр, начальные и конечные пробелы и Unicode-представление значимы, а нормализация не выполняется. Записи <code>"яблоко"</code>, <code>"Яблоко"</code>, <code>" яблоко"</code> и <code>"яблоко "</code> — четыре разных элемента, а не один.</p><pre><code class="language-axiom">DIM words AS HASHSET(STRING)
+words.Add("яблоко")
+words.Add("Яблоко")
+words.Add(" яблоко")
+words.Add("")
+PRINT words.Count
+PRINT words.Contains("Яблоко")
+PRINT words.Contains("яблоко ")</code></pre><p>Программа выводит <code>4</code>, <code>TRUE</code> и <code>FALSE</code>. Четыре записи остались четырьмя разными элементами, а запись с завершающим пробелом отсутствует, потому что такого элемента не добавляли.</p><p>Пустая строка — обычный допустимый элемент и отличается от отсутствия элемента: она увеличивает <code>Count</code> и находится через <code>Contains("")</code>. Разные Unicode-представления одной и той же буквы тоже остаются разными элементами: составная форма и форма с отдельным комбинирующим знаком не сливаются.</p><pre><code class="language-axiom">DIM letters AS HASHSET(STRING)
+letters.Add("й")
+letters.Add("и" + CHR(774))
+PRINT letters.Count</code></pre><p>Программа выводит <code>2</code>. Код 774 — это комбинирующая краткая, которая зрительно соединяется с предыдущей буквой. Вторая запись содержит букву «и» и отдельный комбинирующий знак, поэтому она не совпадает с заранее составленной буквой «й», хотя обе записи выглядят одинаково.</p><p>Числовые элементы сравниваются по значению с учётом объявленного типа. Совпадение внутреннего хеша не делает значения одним элементом: <code>1</code> и <code>4294967296</code> в множестве <code>LONG</code> остаются двумя разными элементами.</p></section>
+
+<section class="article-section" id="add"><h2>Метод Add</h2><pre><code class="language-axiom">&lt;множество&gt;.Add(&lt;элемент&gt;) AS BOOLEAN</code></pre><p><code>Add</code> добавляет элемент и сообщает результат добавления. Метод вызывается со скобками и принимает ровно один аргумент объявленного типа элемента. Возвращается <code>TRUE</code>, если элемента раньше не было, и <code>FALSE</code>, если он уже присутствовал. Повторное добавление не является ошибкой, не создаёт второй записи и не меняет порядок элементов.</p><pre><code class="language-axiom">DIM found AS HASHSET(STRING)
+PRINT found.Add("ключ")
+PRINT found.Add("монета")
+PRINT found.Add("ключ")
+PRINT found.Count</code></pre><p>Программа выводит <code>TRUE</code>, <code>TRUE</code>, <code>FALSE</code> и <code>2</code>. Третий вызов ничего не добавил, поэтому количество осталось равным двум.</p><p>Метод <code>Add</code> записывается со скобками. Запись <code>found.Add</code> без скобок отклоняется при проверке программы с MB2069, поскольку скобки отличают вызов метода от чтения свойства.</p></section>
+
+<section class="article-section" id="contains"><h2>Метод Contains</h2><pre><code class="language-axiom">&lt;множество&gt;.Contains(&lt;элемент&gt;) AS BOOLEAN</code></pre><p><code>Contains</code> проверяет наличие элемента и возвращает <code>TRUE</code> или <code>FALSE</code>. Метод не изменяет множество, не добавляет отсутствующий элемент и не сообщает ошибку на отсутствующем значении, поэтому проверку можно выполнять многократно и в любом порядке.</p><pre><code class="language-axiom">DIM found AS HASHSET(STRING)
+found.Add("ключ")
+PRINT found.Contains("ключ")
+PRINT found.Contains("карта")
+PRINT found.Count</code></pre><p>Программа выводит <code>TRUE</code>, <code>FALSE</code> и <code>1</code>. Проверка карты не добавила её в множество, поэтому количество осталось прежним.</p></section>
+
+<section class="article-section" id="remove"><h2>Метод Remove</h2><pre><code class="language-axiom">&lt;множество&gt;.Remove(&lt;элемент&gt;) AS BOOLEAN</code></pre><p><code>Remove</code> удаляет элемент и возвращает <code>TRUE</code> при успешном удалении. Если элемента нет, метод возвращает <code>FALSE</code> и не сообщает ошибку, поэтому повторное удаление безопасно. Удаление освобождает место, и добавленный позже элемент встаёт в конец, а не на прежнее место.</p><pre><code class="language-axiom">DIM found AS HASHSET(STRING)
+found.Add("ключ")
+PRINT found.Remove("ключ")
+PRINT found.Remove("ключ")
+PRINT found.Count</code></pre><p>Программа выводит <code>TRUE</code>, <code>FALSE</code> и <code>0</code>.</p></section>
+
+<section class="article-section" id="count"><h2>Свойство Count</h2><pre><code class="language-axiom">&lt;множество&gt;.Count AS INTEGER</code></pre><p><code>Count</code> — свойство, а не метод: оно записывается без скобок и возвращает число элементов множества как <code>INTEGER</code>. Запись <code>found.Count()</code> отклоняется при проверке программы с MB2069 и напоминает правильную форму: «Count — свойство множества 'found' и записывается без скобок: found.Count».</p><pre><code class="language-axiom">DIM found AS HASHSET(STRING)
+found.Add("ключ")
+found.Add("монета")
+PRINT found.Count</code></pre><p>Программа выводит <code>2</code>.</p></section>
+
+<section class="article-section" id="toarray"><h2>Метод ToArray и порядок элементов</h2><pre><code class="language-axiom">&lt;множество&gt;.ToArray() AS &lt;тип элемента&gt;[]</code></pre><p><code>ToArray()</code> возвращает элементы множества как самостоятельный одномерный массив объявленного типа элемента. Метод вызывается со скобками и не принимает аргументов. Массив имеет нижнюю границу <code>1</code> и верхнюю границу <code>Count</code>; для пустого множества действует каноническая пустая форма <code>1 TO 0</code>.</p><pre><code class="language-axiom">DIM found AS HASHSET(STRING)
+DIM empty[] AS STRING = found.ToArray()
+PRINT LBOUND(empty[]), UBOUND(empty[])
+PRINT ARRAYLENGTH(empty[])</code></pre><p>Программа выводит <code>1 0</code> и <code>0</code>. Верхняя граница меньше нижней, а длина равна нулю, поэтому обход пустого массива не выполняется ни разу.</p><p>Порядок элементов задаётся первым добавлением. Новый элемент встаёт в конец. Повторное добавление уже имеющегося элемента сохраняет его место. Удаление и последующее повторное добавление переносят элемент в конец.</p><pre><code class="language-axiom">DIM found AS HASHSET(STRING)
+found.Add("а")
+found.Add("б")
+found.Add("в")
+PRINT found.Add("б")
+found.Remove("б")
+found.Add("б")
+FOR EACH item IN found.ToArray()
+    PRINT item
+NEXT item</code></pre><p>Программа выводит <code>FALSE</code>, затем <code>а</code>, <code>в</code> и <code>б</code>. Повторное добавление «б» не переставило элемент, а удаление с последующим добавлением перенесло его в конец.</p><p>Полученный массив независим от множества. Добавление, удаление и объединение после вызова <code>ToArray()</code> этот массив не меняют, поэтому начатый обход не получает внезапно новые элементы.</p><pre><code class="language-axiom">DIM found AS HASHSET(STRING)
+found.Add("ключ")
+found.Add("монета")
+DIM saved[] AS STRING = found.ToArray()
+found.Remove("ключ")
+found.Add("карта")
+PRINT saved[1], saved[2]
+PRINT found.Count
+FOR EACH item IN found.ToArray()
+    PRINT item
+NEXT item</code></pre><p>Программа выводит <code>ключ монета</code>, затем <code>2</code>, затем <code>монета</code> и <code>карта</code>. Снимок сохранил прежний состав и порядок, а множество продолжило меняться независимо от него.</p><p>Прямой обход множества не вводится: <code>FOR EACH</code> по самому множеству отклоняется с MB2062, поэтому источником всегда указывается <code>ToArray()</code>. Правила обхода элемента описаны в статье <a href="for-each.html">FOR EACH</a>.</p></section>
+
+<section class="article-section" id="union"><h2>Метод UnionWith</h2><pre><code class="language-axiom">&lt;множество&gt;.UnionWith(&lt;другое множество&gt;)</code></pre><p><code>UnionWith</code> — процедура: она изменяет получателя и не возвращает значения. Метод принимает множество точно того же типа, добавляет в получателя отсутствующие элементы аргумента и сохраняет порядок их обхода. Уже имеющиеся элементы не дублируются и не переставляются. Второй операнд не изменяется.</p><pre><code class="language-axiom">DIM first AS HASHSET(STRING)
+first.Add("а")
+first.Add("б")
+DIM second AS HASHSET(STRING)
+second.Add("б")
+second.Add("в")
+DIM combined AS HASHSET(STRING)
+combined.UnionWith(first)
+combined.UnionWith(second)
+FOR EACH item IN combined.ToArray()
+    PRINT item
+NEXT item
+PRINT first.Count, second.Count</code></pre><p>Программа выводит <code>а</code>, <code>б</code>, <code>в</code>, затем <code>2 2</code>. Получатель собрал объединение, а оба источника сохранили по два элемента.</p><p>Поскольку метод изменяет получателя, объединение без изменения источников выполняется через пустое множество: создаётся отдельный пустой получатель, и в него по очереди вызывается <code>UnionWith</code> для каждого источника. Именно так построен пример выше.</p><p>Операция с тем же экземпляром, в том числе через псевдоним, не изменяет ни состав, ни порядок. Объединение с пустым множеством тоже ничего не меняет. Метод не возвращает значение, поэтому его вызов записывается отдельным оператором; использование внутри <code>PRINT</code> отклоняется с MB2070.</p></section>
+
+<section class="article-section" id="intersect"><h2>Метод IntersectWith</h2><pre><code class="language-axiom">&lt;множество&gt;.IntersectWith(&lt;другое множество&gt;)</code></pre><p><code>IntersectWith</code> — процедура: она изменяет получателя и не возвращает значения. Метод принимает множество точно того же типа и оставляет в получателе только те элементы, которые есть в аргументе, сохраняя прежний порядок получателя. Второй операнд не изменяется.</p><pre><code class="language-axiom">DIM combined AS HASHSET(STRING)
+combined.Add("а")
+combined.Add("б")
+combined.Add("в")
+DIM second AS HASHSET(STRING)
+second.Add("б")
+second.Add("в")
+combined.IntersectWith(second)
+FOR EACH item IN combined.ToArray()
+    PRINT item
+NEXT item
+PRINT second.Count</code></pre><p>Программа выводит <code>б</code>, <code>в</code>, затем <code>2</code>. Элемент «а» удалён как отсутствующий в аргументе, а порядок оставшихся сохранился.</p><p>Пустое множество в аргументе очищает получателя: общих элементов нет, поэтому <code>Count</code> становится равным нулю. Пересечение с самим собой, в том числе через псевдоним, сохраняет весь состав в прежнем порядке.</p><pre><code class="language-axiom">DIM found AS HASHSET(STRING)
+found.Add("а")
+found.Add("б")
+found.UnionWith(found)
+PRINT found.Count
+DIM nothing AS HASHSET(STRING)
+found.IntersectWith(nothing)
+PRINT found.Count
+DIM empty[] AS STRING = found.ToArray()
+PRINT LBOUND(empty[]), UBOUND(empty[])</code></pre><p>Программа выводит <code>2</code>, затем <code>0</code>, затем <code>1 0</code>. Самообъединение ничего не изменило, а пересечение с пустым множеством очистило получателя до канонического пустого состояния.</p></section>
+
+<section class="article-section" id="references"><h2>Общая ссылка и независимые объявления</h2><p>Обычное присваивание не копирует множество: оба имени указывают на один экземпляр, поэтому изменение через псевдоним видно исходной переменной. Правило совпадает с присваиванием массива и словаря.</p><pre><code class="language-axiom">DIM found AS HASHSET(STRING)
+found.Add("ключ")
+DIM alias AS HASHSET(STRING)
+alias = found
+alias.Add("монета")
+PRINT found.Count
+PRINT found.Contains("монета")</code></pre><p>Программа выводит <code>2</code> и <code>TRUE</code>. Элемент, добавленный через второе имя, появился в общем экземпляре.</p><p>Два отдельных объявления, напротив, создают два разных пустых множества и не разделяют состояние:</p><pre><code class="language-axiom">DIM first AS HASHSET(STRING)
+DIM second AS HASHSET(STRING)
+first.Add("ключ")
+PRINT first.Count, second.Count</code></pre><p>Программа выводит <code>1 0</code>: заполнение первого множества не затронуло второе. Независимыми остаются и элементы массива множеств, и поля записей, объявленные отдельно. Общие правила присваивания собраны в статье <a href="assignment.html">Присваивание</a>.</p></section>
+
+<section class="article-section" id="placement"><h2>Размещение типа в программе</h2><p><code>HASHSET</code> — полноценный тип данных, а не только форма объявления. Он допустим в локальной и глобальной переменной, в параметре <code>BYVAL</code> и <code>BYREF</code>, в результате функции, в захваченной переменной вложенной подпрограммы, в поле записи и в элементе одномерного или многомерного массива.</p><pre><code class="language-axiom">TYPE Bag
+    found AS HASHSET(STRING)
+END TYPE
+
+DIM bag AS Bag
+bag.found.Add("ключ")
+PRINT bag.found.Count
+
+DIM grid[1 TO 2] AS HASHSET(INTEGER)
+grid[2].Add(7)
+PRINT grid[2].Contains(7)
+
+SUB Fill(items AS HASHSET(STRING), BYREF target AS HASHSET(STRING))
+    items.Add("монета")
+    target.Add("карта")
+END SUB
+
+DIM shared AS HASHSET(STRING)
+shared.Add("ключ")
+DIM second AS HASHSET(STRING)
+Fill(shared, second)
+PRINT shared.Count
+PRINT second.Count</code></pre><p>Программа выводит <code>1</code>, <code>TRUE</code>, <code>2</code> и <code>1</code>. Поле записи хранит собственное множество. Элемент массива принимает значение своего типа, а второй элемент того же массива остаётся независимым и пустым. Параметр <code>BYVAL</code> видит тот же экземпляр и добавляет в него монету, поэтому <code>shared</code> содержит два элемента; параметр <code>BYREF</code> позволяет изменить и саму переменную вызывающего кода, поэтому <code>second</code> получает карту.</p><p>Захваченная переменная и локальная переменная подпрограммы подчиняются тем же правилам. Глобальное множество изменяется из вложенной подпрограммы, а локальное создаётся заново при каждом входе и не разделяется между вызовами.</p><pre><code class="language-axiom">DIM shared AS HASHSET(STRING)
+Fill()
+PRINT shared.Count
+
+SUB Fill()
+    shared.Add("ключ")
+END SUB
+
+SUB ShowLocal()
+    DIM local AS HASHSET(STRING)
+    local.Add("монета")
+    PRINT local.Count
+END SUB
+
+ShowLocal()</code></pre><p>Программа выводит <code>1</code>, затем <code>1</code>: подпрограмма <code>Fill</code> изменила захваченное глобальное множество, а <code>ShowLocal</code> наполнила собственную локальную переменную.</p><p>Результат функции передаётся как обычное значение типа:</p><pre><code class="language-axiom">DIM made AS HASHSET(INTEGER) = MakeSet()
+PRINT made.Count
+
+FUNCTION MakeSet() AS HASHSET(INTEGER)
+    DIM result AS HASHSET(INTEGER)
+    result.Add(5)
+    RETURN result
+END FUNCTION</code></pre><p>Программа выводит <code>1</code>.</p><p>Многомерный массив хранит множества так же, как одномерный. Каждый элемент получает отдельное пустое множество, а не общий шаблон:</p><pre><code class="language-axiom">DIM grid[1 TO 2, 1 TO 1] AS HASHSET(INTEGER)
+grid[2, 1].Add(5)
+PRINT grid[2, 1].Contains(5)
+PRINT grid[1, 1].Count</code></pre><p>Программа выводит <code>TRUE</code> и <code>0</code>: заполненный элемент содержит значение, а соседний остался пустым.</p></section>
+
+<section class="article-section" id="limits"><h2>Предел числа элементов</h2><p>Число элементов множества не превышает общего предела элементов коллекции <code>RuntimeArrayValue.MaxElementCount</code>. Предел защищает программу от необратимого отказа при бесконтрольном росте набора.</p><p>Если добавление уже имеющегося элемента выполняется на предельном размере, <code>Add</code> возвращает <code>FALSE</code> и не сообщает ошибку: состав не меняется, потому что новой записи не требуется. Если же требуется добавить новый элемент сверх предела, <code>Add</code> сообщает ресурсную ошибку MB3017, а состав получателя остаётся прежним. Для <code>UnionWith</code> вместимость проверяется до первого изменения, поэтому при логическом превышении предела получатель не остаётся частично объединённым.</p><p>Гарантия относится к предсказуемому логическому превышению предела. Исчерпание памяти процесса сверх этого отказа не обещает восстановления состояния и не перехватывается как обычная ошибка множества.</p></section>
+
+<section class="article-section" id="diagnostics"><h2>Диагностика</h2><p>Проверка программы сообщает об ошибках типа и формы обращения, а исполнение — о ресурсном отказе.</p>
+<ul>
+<li><code>MB1001</code> — тип <code>HASHSET</code> записан без аргумента типа элемента.</li>
+<li><code>MB1002</code> — попытка использовать <code>HASHSET</code> как имя переменной, константы, параметра, процедуры, функции, пользовательского типа, поля или метода; запрет регистронезависим.</li>
+<li><code>MB2068</code> — тип элемента не <code>STRING</code>, <code>INTEGER</code> или <code>LONG</code>, в том числе вложенное множество.</li>
+<li><code>MB2069</code> — неверная форма обращения к множеству: индексирование <code>found[&lt;ключ&gt;]</code> и <code>found[]</code>, скобки у свойства <code>Count</code>, отсутствие скобок у метода, неизвестный член множества.</li>
+<li><code>MB2070</code> — вызов <code>UnionWith</code> или <code>IntersectWith</code> внутри выражения, где требуется значение, например в <code>PRINT</code>: эти методы ничего не возвращают.</li>
+<li><code>MB3017</code> — ресурсный отказ при добавлении или объединении сверх предела числа элементов; состав получателя при этом не меняется.</li>
+</ul>
+<p>К этим кодам примыкают общие диагностики типов: <code>MB2003</code> сообщает о несовместимых типах коллекции или элемента, <code>MB2004</code> — о неверном числе аргументов метода, <code>MB2062</code> — о недопустимом источнике <code>FOR EACH</code>, <code>MB2066</code> — о недопустимом значении словаря. Индексирование множества не является операцией множества: позиционного доступа и присваивания по индексу нет, элементами управляют только методы. Общие сведения об ошибках коллекций собраны в статье <a href="arrays-diagnostics.html">Ошибки массивов</a>.</p></section>
+
+<section class="article-section" id="examples"><h2>Запускаемые примеры</h2><p><a href="../../samples/collections/set/found_items.axm">found_items.axm</a> — найденные предметы: повторное добавление и проверка наличия. <a href="../../samples/collections/set/union_intersection.axm">union_intersection.axm</a> — объединение через пустого получателя и пересечение. <a href="../../samples/collections/set/snapshot_order.axm">snapshot_order.axm</a> — независимый снимок и порядок элементов. <a href="../../samples/collections/set/shared_instance.axm">shared_instance.axm</a> — общий экземпляр при присваивании и независимые объявления. <a href="../../samples/collections/set/self_operations.axm">self_operations.axm</a> — операции с самим собой и с пустым аргументом. <a href="../../samples/collections/set/step_back.axm">step_back.axm</a> — пошаговая отладка и обратный шаг. <a href="../../samples/collections/set/unsupported_element_error.axm">unsupported_element_error.axm</a> — отказ неподдержанного типа элемента. <a href="../../samples/collections/set/reserved_name_error.axm">reserved_name_error.axm</a> — отказ использовать зарезервированное слово как имя.</p></section>
+
+<section class="article-section"><h2>См. также</h2><p><a href="dictionary.html">Словарь DICTIONARY</a> · <a href="arrays.html">Массивы</a> · <a href="type.html">Пользовательские типы</a> · <a href="variables-scope.html#names">Имена и области видимости</a> · <a href="arrays-diagnostics.html">Ошибки массивов</a> · <a href="dim.html">Объявление DIM</a> · <a href="for-each.html">FOR EACH</a></p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

@@ -248,6 +248,10 @@ public sealed partial class BytecodeModuleValidator
                     Add(dictionaryType.ValueType);
                     break;
 
+                case SetTypeSymbol setType:
+                    Add(setType.ElementType);
+                    break;
+
                 case FunctionTypeSymbol functionType:
                     Add(functionType.ReturnType);
                     foreach (var parameterType in functionType.ParameterTypes)

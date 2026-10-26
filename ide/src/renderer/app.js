@@ -208,7 +208,7 @@ class AxiomIDE {
   // Embedded lists below are only a fallback when axiom.exe is missing or broken.
   static FALLBACK_DICTS = {
     keywords: ['AND','APPEND','AS','BEGINFRAME','BYREF','BYVAL','CAMERA','CANVAS','CASE','CATCH','CIRCLE','CLOSE','CLS','COLOR','CONST','CONTINUE','DIM','DO','DRAW','DRAWCIRCLE','DRAWIMAGE','DRAWLINE','DRAWRECT','DRAWSPRITE','DRAWTILE','DRAWTILELAYER','DRAWTILEMAP','DRAWTEXT','EACH','ELSE','ELSEIF','END','ERROR','EQV','ERASE','EXIT','FALSE','TRUE','FILLCIRCLE','FILLRECT','FINALLY','FOR','FUNCTION','GET','IF','IMP','IMPORT','IN','INPUT','IS','KEY','LINE','LOCATE','LOOP','MOD','MOUSE','NEXT','NOT','OFF','ON','OPEN','OR','OUTPUT','PAINT','PALETTE','PCOPY','PRESERVE','PRESENT','PRESET','PRINT','PRIVATE','PUBLIC','PSET','PUT','REDIM','RESETCAMERA','RETURN','SCREEN','SELECT','SELF','SETMAPTILE','SMOOTH','SLEEP','STEP','STOP','SUB','THEN','TO','TRANSPARENT','TRY','TYPE','UNTIL','USING','VIEW','VIEWPORT','WHILE','WINDOW','XOR'],
-    typeNames: ['BOOLEAN','DATE','DATETIME','DECIMAL','DICTIONARY','DOUBLE','FILE','IMAGE','INTEGER','LONG','SPRITE','STRING','TILEMAP','TILESET','TIME','UTCDATETIME'],
+    typeNames: ['BOOLEAN','DATE','DATETIME','DECIMAL','DICTIONARY','DOUBLE','FILE','HASHSET','IMAGE','INTEGER','LONG','SPRITE','STRING','TILEMAP','TILESET','TIME','UTCDATETIME'],
     builtins: ['ABS','ASC','CHR','DATE','DATEADD','DATEDIFF','DAY','EOF','EXP','FILEEXISTS','FLOOR','INSTR','INT','JOIN','LCASE','LEFT','LEN','LOG','LTRIM','MID','MIN','MAX','MONTH','NOW','POW','READFILE','REPLACE','RGB','RIGHT','RND','ROUND','SGN','SIN','SQR','STR','SUBSTRCOUNT','TAN','TIME','TIMER','TRIM','TYPE','UCASE','VAL','WEEKDAY','WRITEFILE','YEAR'],
   };
 
@@ -243,6 +243,9 @@ class AxiomIDE {
       [/<>|<=|>=|<<|>>|=|<|>/, 'operator'],
       [/\+|-|\*|\/|\\|\^|&/, 'operator'],
       [/[()[\]]/, '@brackets'],
+      // После точки стоит имя члена: совпадение с именем самостоятельной
+      // встроенной функции не меняет его категорию (например, Contains).
+      [/(\.)(\s*)([a-zA-Z_][a-zA-Z0-9_]*)/, ['delimiter', 'white', 'identifier']],
       [/[,;:.]/, 'delimiter'],
       [/[#%$]/, 'invalid'],
       [/[^\x00-\x7F\s]+/, 'invalid'],

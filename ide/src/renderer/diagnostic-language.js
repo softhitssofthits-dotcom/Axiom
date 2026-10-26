@@ -21,10 +21,12 @@
     MB2059:'An empty array literal requires a known element type.', MB2060:'Array literal element is not compatible with the element type.', MB2061:'An array literal creates a one-dimensional array only.',
     MB2062:'FOR EACH source must be an array.', MB2063:'FOR EACH loop variable type is not compatible with the element type.',
     MB2065:'Dictionary key type must be STRING, INTEGER or LONG.', MB2066:'Dictionary value type is not supported.', MB2067:'Invalid dictionary member or call form.',
+    MB2068:'Set element type must be STRING, INTEGER or LONG.', MB2069:'Invalid set member or call form.', MB2070:'A value is required; a call that returns nothing must be a separate statement.',
     MB3001:'Division by zero.', MB3002:'Array index is out of bounds.', MB3003:'Input cannot be converted to the required type.', MB3004:'FOR STEP cannot be zero.', MB3005:'Invalid runtime state.',
     MB3006:'Function completed without returning a value.', MB3007:'Invalid built-in argument.', MB3008:'Numeric overflow.', MB3009:'Function value is empty.', MB3010:'Required graphics mode is not active.', MB3011:'Call stack overflow.', MB3012:'Argument is outside the numeric domain.',
     MB3013:'Failed to allocate array: the element count exceeds the supported limit.', MB3014:'Array view refers to released storage.',
     MB3015:'Dictionary does not contain this key.', MB3016:'Dictionary already contains this key.',
+    MB3017:'Set entry count exceeds the supported limit.',
     MB4001:'Bytecode does not support this construct.', MB4002:'Cannot capture the value in bytecode.', MB4003:'Cannot create a bytecode JSON snapshot.',
     MB4004:'Cannot read an imported dependency file.',
   };
@@ -39,6 +41,18 @@
     [/^Несовместимые типы: ожидался (.+), получен (.+)\.$/, (_m,expected,actual) => 'Type mismatch: expected '+expected+', received '+actual+'.'],
     [/^Для переменной '(.+)' в DIM нужно указать тип через AS или инициализатор для вывода типа\.$/, (_m,n) => "Variable '"+n+"' in DIM requires an AS type or an initializer for type inference."],
     [/^Константное числовое значение выходит за диапазон (.+)\.$/, (_m,type) => 'Constant numeric value is outside the range of '+type+'.'],
+    // Множество: сообщения содержат имена и перечень членов, поэтому
+    // переводятся отдельными образцами, а не одной общей строкой кода.
+    // Перечень членов приходит по-русски с союзом «и», который заменяется.
+    [/^Тип элемента множества должен быть STRING, INTEGER или LONG, а указан (.+)\.$/, (_m,type) => 'Set element type must be STRING, INTEGER or LONG, but '+type+' was specified.'],
+    [/^Множество (.+) не содержит член '(.+)'\. Доступны (.+)\.$/, (_m,type,member,available) => "Set "+type+" does not contain member '"+member+"'. Available: "+available.replace(/\s+и\s+/, ', and ')+'.'],
+    [/^Count — свойство множества '(.+)' и записывается без скобок: (.+)\.$/, (_m,name,form) => "Count is a property of set '"+name+"' and is written without parentheses: "+form+'.'],
+    [/^'(.+)' — метод множества (.+) и вызывается со скобками: (.+)\. Свойство Count записывается без скобок\.$/, (_m,member,type,call) => "'"+member+"' is a method of set "+type+' and is called with parentheses: '+call+'. The Count property is written without parentheses.'],
+    [/^Множество '(.+)' не индексируется: элементами управляют (.+), а Count читается без скобок\.$/, (_m,name,members) => "Set '"+name+"' is not indexed: elements are managed by "+members.replace(/\s+и\s+/, ' and ')+', and Count is read without parentheses.'],
+    [/^Ожидалось значение\. Вызов, который ничего не возвращает, записывается отдельным оператором, а не внутри PRINT\.$/, () => 'Expected a value. A call that returns nothing is written as a separate statement, not inside PRINT.'],
+    [/^Несовместимые типы: ожидался (.+), получен (.+)\. Тип коллекции должен совпадать точно, включая тип элемента\.$/, (_m,expected,actual) => 'Type mismatch: expected '+expected+', received '+actual+'. The collection type must match exactly, including the element type.'],
+    [/^Не удалось добавить элемент в множество: число элементов превышает предел (.+)\.$/, (_m,limit) => 'Failed to add a set element: the element count exceeds the limit of '+limit+'.'],
+    [/^Не удалось объединить множества: число элементов превышает предел (.+)\.$/, (_m,limit) => 'Failed to union the sets: the element count exceeds the limit of '+limit+'.'],
   ];
   function text(d, locale) {
     if (d.code === 'IDE0001') {

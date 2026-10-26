@@ -42,6 +42,23 @@ public sealed partial class Binder
             return new BoundErrorExpression(expression.Identifier.Location);
         }
 
+        if (target.Type is SetTypeSymbol setType)
+        {
+            if (string.Equals(expression.Identifier.Text, "Count", StringComparison.OrdinalIgnoreCase))
+            {
+                return BindSetCountProperty(target, setType, expression);
+            }
+
+            if (IsSetMethodName(expression.Identifier.Text))
+            {
+                ReportSetMemberRequiresParentheses(expression.Identifier.Text, setType, expression.Identifier.Location);
+                return new BoundErrorExpression(expression.Identifier.Location);
+            }
+
+            ReportInvalidSetMember(expression.Identifier.Text, setType, expression.Identifier.Location);
+            return new BoundErrorExpression(expression.Identifier.Location);
+        }
+
         if (target.Type is not UserDefinedTypeSymbol userType)
         {
             ReportInvalidFieldAccess(target.Type, expression.DotToken.Location);
@@ -86,6 +103,12 @@ public sealed partial class Binder
         if (receiver.Type is DictionaryTypeSymbol)
         {
             result = BindDictionaryMemberCall(receiver, methodAccess, expression);
+            return true;
+        }
+
+        if (receiver.Type is SetTypeSymbol)
+        {
+            result = BindSetMemberCall(receiver, methodAccess, expression);
             return true;
         }
 

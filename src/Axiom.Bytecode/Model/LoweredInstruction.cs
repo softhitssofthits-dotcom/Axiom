@@ -920,4 +920,58 @@ public sealed class LoweredInstruction
             displayName: displayName,
             variable: destination);
     }
+
+    // Множество создаётся пустым и готовым к заполнению: объявление задаёт тип
+    // элемента, а элементы добавляются операциями множества.
+    public static LoweredInstruction CreateSet(TextLocation location, SetTypeSymbol type)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        return new LoweredInstruction(
+            LoweredInstructionKind.CreateSet,
+            location,
+            valueType: type,
+            displayName: type.Name);
+    }
+
+    public static LoweredInstruction SetAdd(TextLocation location, string displayName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        return new LoweredInstruction(LoweredInstructionKind.SetAdd, location, displayName: displayName);
+    }
+
+    public static LoweredInstruction SetContains(TextLocation location, string displayName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        return new LoweredInstruction(LoweredInstructionKind.SetContains, location, displayName: displayName);
+    }
+
+    public static LoweredInstruction SetRemove(TextLocation location, string displayName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        return new LoweredInstruction(LoweredInstructionKind.SetRemove, location, displayName: displayName);
+    }
+
+    public static LoweredInstruction SetCount(TextLocation location, string displayName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        return new LoweredInstruction(LoweredInstructionKind.SetCount, location, displayName: displayName);
+    }
+
+    public static LoweredInstruction SetToArray(TextLocation location, string displayName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        return new LoweredInstruction(LoweredInstructionKind.SetToArray, location, displayName: displayName);
+    }
+
+    public static LoweredInstruction SetUnionWith(TextLocation location, string displayName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        return new LoweredInstruction(LoweredInstructionKind.SetUnionWith, location, displayName: displayName);
+    }
+
+    public static LoweredInstruction SetIntersectWith(TextLocation location, string displayName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        return new LoweredInstruction(LoweredInstructionKind.SetIntersectWith, location, displayName: displayName);
+    }
 }

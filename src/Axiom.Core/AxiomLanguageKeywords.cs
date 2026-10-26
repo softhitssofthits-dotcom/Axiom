@@ -43,7 +43,7 @@ public static class AxiomLanguageKeywords
     /// </summary>
     public static readonly IReadOnlySet<string> TypeNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "BOOLEAN", "DATE", "DATETIME", "DECIMAL", "DICTIONARY", "DOUBLE", "FILE", "IMAGE", "INTEGER", "LONG", "SPRITE", "STRING", "TILEMAP", "TILESET", "TIME", "UTCDATETIME"
+        "BOOLEAN", "DATE", "DATETIME", "DECIMAL", "DICTIONARY", "DOUBLE", "FILE", "HASHSET", "IMAGE", "INTEGER", "LONG", "SPRITE", "STRING", "TILEMAP", "TILESET", "TIME", "UTCDATETIME"
     };
 
     /// <summary>

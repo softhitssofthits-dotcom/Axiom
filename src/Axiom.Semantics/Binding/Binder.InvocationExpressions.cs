@@ -35,6 +35,20 @@ public sealed partial class Binder
                     return new BoundErrorExpression(nameExpression.IdentifierToken.Location);
                 }
 
+                // Множество не вызывается как функция: его методы вызываются
+                // после точки, а Count читается как свойство.
+                if (variable.Type is SetTypeSymbol)
+                {
+                    _editorReferences?.Add(new(variable, nameExpression.IdentifierToken.Location, false));
+                    ReportSetRequiresMethodCall(variable.Name, nameExpression.IdentifierToken.Location);
+                    foreach (var argument in expression.Arguments)
+                    {
+                        BindExpression(argument);
+                    }
+
+                    return new BoundErrorExpression(nameExpression.IdentifierToken.Location);
+                }
+
                 if (variable.IsArray)
                 {
                     _editorReferences?.Add(new(variable, nameExpression.IdentifierToken.Location, false));

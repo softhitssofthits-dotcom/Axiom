@@ -92,7 +92,9 @@ public sealed partial class Binder
 
     private BoundStatement BindExpressionStatement(ExpressionStatementSyntax statement)
     {
-        var expression = BindExpression(statement.Expression);
+        // Отдельный оператор — позиция вызова, а не значения: процедура и метод
+        // коллекции допустимы здесь без результата.
+        var expression = BindExpression(statement.Expression, requireValue: false);
 
         // Смысл оператора-выражения — побочный эффект вызова. Одиночное имя,
         // литерал, индекс или чтение поля ничего не изменяют и молча терялись:
@@ -100,7 +102,8 @@ public sealed partial class Binder
         // Методы словаря изменяют сам словарь или переменную результата, поэтому
         // их вызов остаётся допустимым оператором и без использования результата.
         if (expression is not (BoundCallExpression or BoundErrorExpression
-            or BoundDictionaryMethodCallExpression or BoundDictionaryTryGetValueExpression))
+            or BoundDictionaryMethodCallExpression or BoundDictionaryTryGetValueExpression
+            or BoundSetMethodCallExpression))
         {
             ReportExpressionStatementHasNoEffect(GetLocation(statement));
         }

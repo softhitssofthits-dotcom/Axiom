@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Axiom.Runtime.Tests" />
+    <InternalsVisibleTo Include="Axiom.Execution.Tests" />
   </ItemGroup>
 
 </Project>

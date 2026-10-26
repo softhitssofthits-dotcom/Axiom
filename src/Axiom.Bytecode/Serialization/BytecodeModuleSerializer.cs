@@ -295,6 +295,7 @@ public static class BytecodeModuleSerializer
         {
             UserDefinedTypeSymbol userDefinedType => userDefinedType.TypeIdentity,
             DictionaryTypeSymbol dictionaryType => CreateDictionaryTypeReference(dictionaryType),
+            SetTypeSymbol setType => CreateSetTypeReference(setType),
             ArrayTypeSymbol { ElementType: FunctionTypeSymbol } arrayType => $"({TypeReference(arrayType.ElementType)})({new string(',', arrayType.Rank - 1)})",
             ArrayTypeSymbol arrayType => $"{TypeReference(arrayType.ElementType)}({new string(',', arrayType.Rank - 1)})",
             FunctionTypeSymbol functionType => CreateFunctionTypeReference(functionType),
@@ -310,6 +311,15 @@ public static class BytecodeModuleSerializer
     private static string CreateDictionaryTypeReference(DictionaryTypeSymbol dictionaryType)
     {
         return $"DICTIONARY({TypeReference(dictionaryType.KeyType)}, {TypeReference(dictionaryType.ValueType)})";
+    }
+
+    /// <summary>
+    /// Ссылка на множество: HASHSET(элемент). Тип элемента записывается той же
+    /// ссылкой, поэтому вложенные записи и массивы остаются однозначными.
+    /// </summary>
+    private static string CreateSetTypeReference(SetTypeSymbol setType)
+    {
+        return $"HASHSET({TypeReference(setType.ElementType)})";
     }
 
     private static string CreateFunctionTypeReference(FunctionTypeSymbol functionType)
@@ -670,6 +680,13 @@ public static class BytecodeModuleSerializer
                     RegisterType(dictionaryType.ValueType);
                     break;
 
+                // Множество ссылается на тип элемента: без его регистрации
+                // определение TYPE, используемого только внутри HASHSET,
+                // отсутствовало бы в снимке.
+                case SetTypeSymbol setType:
+                    RegisterType(setType.ElementType);
+                    break;
+
                 case FunctionTypeSymbol functionType:
                     RegisterType(functionType.ReturnType);
                     foreach (var parameterType in functionType.ParameterTypes)
@@ -763,29 +780,28 @@ public static class BytecodeModuleSerializer
             return ResolveFunctionType(name, userDefinedTypes);
         }
 
-        if (name.StartsWith("DICTIONARY(", StringComparison.Ordinal))
+        // Словарь и множество разбираются одним помощником: внешний суффикс
+        // массива отделяется в одном месте, поэтому DICTIONARY(STRING, INTEGER)()
+        // и HASHSET(STRING)[,] не путают закрывающую скобку коллекции со
+        // скобкой суффикса.
+        if (TryResolveCollectionType(
+                name,
+                "DICTIONARY(",
+                inner => ResolveDictionaryType(name, inner, userDefinedTypes),
+                "тип словаря",
+                out var dictionaryType))
         {
-            const string prefix = "DICTIONARY(";
-            var closing = FindClosingParen(name, prefix.Length - 1);
-            if (closing < 0)
-            {
-                throw new InvalidOperationException($"Неверная ссылка на тип словаря '{name}'.");
-            }
+            return dictionaryType;
+        }
 
-            var dictionaryType = ResolveDictionaryType(name[..(closing + 1)], userDefinedTypes);
-            var tail = name[(closing + 1)..];
-
-            if (tail.Length == 0)
-            {
-                return dictionaryType;
-            }
-
-            if (!TryParseArraySuffix(tail, out var dictionaryRank))
-            {
-                throw new InvalidOperationException($"Неверная ссылка на тип словаря '{name}'.");
-            }
-
-            return ArrayTypeSymbol.Create(dictionaryType, dictionaryRank);
+        if (TryResolveCollectionType(
+                name,
+                "HASHSET(",
+                inner => ResolveSetType(name, inner, userDefinedTypes),
+                "тип множества",
+                out var setType))
+        {
+            return setType;
         }
 
         if (TryPeelArraySuffix(name, out var elementName, out var rank))
@@ -796,6 +812,50 @@ public static class BytecodeModuleSerializer
         }
 
         return ResolveScalarType(name, userDefinedTypes);
+    }
+
+    /// <summary>
+    /// Разбирает ссылку коллекции с внешним суффиксом массива. Внутреннее
+    /// содержимое передаётся помощнику конкретной коллекции. Разбор суффикса
+    /// остаётся единственным для всех коллекций.
+    /// </summary>
+    private static bool TryResolveCollectionType(
+        string name,
+        string prefix,
+        Func<string, TypeSymbol> resolveInner,
+        string typeDescription,
+        out TypeSymbol resolved)
+    {
+        resolved = TypeSymbol.Error;
+
+        if (!name.StartsWith(prefix, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var closing = FindClosingParen(name, prefix.Length - 1);
+        if (closing < 0)
+        {
+            throw new InvalidOperationException($"Неверная ссылка на {typeDescription} '{name}'.");
+        }
+
+        var inner = name[prefix.Length..closing];
+        var collectionType = resolveInner(inner);
+        var tail = name[(closing + 1)..];
+
+        if (tail.Length == 0)
+        {
+            resolved = collectionType;
+            return true;
+        }
+
+        if (!TryParseArraySuffix(tail, out var rank))
+        {
+            throw new InvalidOperationException($"Неверная ссылка на {typeDescription} '{name}'.");
+        }
+
+        resolved = ArrayTypeSymbol.Create(collectionType, rank);
+        return true;
     }
 
     /// <summary>
@@ -1011,24 +1071,15 @@ public static class BytecodeModuleSerializer
     }
 
     /// <summary>
-    /// Восстанавливает тип словаря из ссылки DICTIONARY(ключ, значение).
-    /// Закрывающая скобка ищется по глубине, а разделитель — на верхнем уровне,
-    /// поэтому вложенные массивы и функциональные типы не путаются с концом
-    /// ссылки и разделителем аргументов.
+    /// Восстанавливает тип словаря из содержимого ссылки: тип ключа и тип
+    /// значения. Разделитель ищется на верхнем уровне, поэтому вложенные
+    /// массивы и функциональные типы не путаются с разделителем аргументов.
     /// </summary>
     private static TypeSymbol ResolveDictionaryType(
         string name,
+        string inner,
         IReadOnlyDictionary<string, UserDefinedTypeSymbol> userDefinedTypes)
     {
-        const string prefix = "DICTIONARY(";
-
-        var closing = FindClosingParen(name, prefix.Length - 1);
-        if (closing < 0)
-        {
-            throw new InvalidOperationException($"Неверная ссылка на тип словаря '{name}'.");
-        }
-
-        var inner = name[prefix.Length..closing];
         var separator = FindTopLevelComma(inner);
         if (separator < 0)
         {
@@ -1045,6 +1096,30 @@ public static class BytecodeModuleSerializer
         }
 
         return dictionaryType;
+    }
+
+    /// <summary>
+    /// Восстанавливает тип множества из содержимого ссылки: единственный тип
+    /// элемента. Второй аргумент недопустим так же, как неподдержанный элемент.
+    /// </summary>
+    private static TypeSymbol ResolveSetType(
+        string name,
+        string inner,
+        IReadOnlyDictionary<string, UserDefinedTypeSymbol> userDefinedTypes)
+    {
+        if (FindTopLevelComma(inner) >= 0)
+        {
+            throw new InvalidOperationException($"Неверная ссылка на тип множества '{name}': ожидается один тип элемента.");
+        }
+
+        var elementType = ResolveStructuredType(inner.Trim(), userDefinedTypes);
+        var setType = SetTypeSymbol.Create(elementType);
+        if (setType == TypeSymbol.Error)
+        {
+            throw new InvalidOperationException($"Недопустимый тип множества '{name}'.");
+        }
+
+        return setType;
     }
 
     private static int FindClosingParen(string text, int openIndex)

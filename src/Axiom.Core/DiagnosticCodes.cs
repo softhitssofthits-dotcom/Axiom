@@ -79,6 +79,9 @@ public static class DiagnosticCodes
     public const string InvalidDictionaryKeyType = "MB2065";
     public const string InvalidDictionaryValueType = "MB2066";
     public const string InvalidDictionaryMember = "MB2067";
+    public const string InvalidSetElementType = "MB2068";
+    public const string InvalidSetMember = "MB2069";
+    public const string ValueExpected = "MB2070";
 
     // Время выполнения (MB3xxx)
     public const string DivisionByZero = "MB3001";
@@ -97,6 +100,7 @@ public static class DiagnosticCodes
     public const string ExpiredArrayView = "MB3014";
     public const string MissingDictionaryKey = "MB3015";
     public const string DuplicateDictionaryKey = "MB3016";
+    public const string SetEntryLimit = "MB3017";
 
     // Конвейер выполнения (MB4xxx)
     public const string BytecodeCoverage = "MB4001";

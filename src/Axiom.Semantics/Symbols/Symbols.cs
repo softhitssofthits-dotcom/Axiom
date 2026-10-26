@@ -91,6 +91,7 @@ public class TypeSymbol : Symbol
             DictionaryTypeSyntax dictionaryType => DictionaryTypeSymbol.Create(
                 FromTypeSyntax(dictionaryType.KeyType),
                 FromTypeSyntax(dictionaryType.ValueType)),
+            SetTypeSyntax setType => SetTypeSymbol.Create(FromTypeSyntax(setType.ElementType)),
             _ => Error
         };
     }
@@ -256,6 +257,7 @@ public sealed class DictionaryTypeSymbol : TypeSymbol
             || valueType == TypeSymbol.Error
             || valueType == TypeSymbol.Void
             || valueType is DictionaryTypeSymbol
+            || valueType is SetTypeSymbol
             || valueType is FunctionTypeSymbol
             || IsResourceType(valueType))
         {
@@ -267,8 +269,7 @@ public sealed class DictionaryTypeSymbol : TypeSymbol
 
     public static bool IsSupportedKeyType(TypeSymbol keyType)
     {
-        ArgumentNullException.ThrowIfNull(keyType);
-        return keyType == TypeSymbol.String || keyType == TypeSymbol.Integer || keyType == TypeSymbol.Long;
+        return CollectionKeyTypeSupport.IsSupportedKeyType(keyType);
     }
 
     /// <summary>
@@ -277,12 +278,7 @@ public sealed class DictionaryTypeSymbol : TypeSymbol
     /// </summary>
     public static bool IsResourceType(TypeSymbol type)
     {
-        ArgumentNullException.ThrowIfNull(type);
-        return type == TypeSymbol.File
-            || type == TypeSymbol.Image
-            || type == TypeSymbol.Sprite
-            || type == TypeSymbol.Tilemap
-            || type == TypeSymbol.Tileset;
+        return CollectionKeyTypeSupport.IsResourceType(type);
     }
 
     public override bool Equals(object? obj)

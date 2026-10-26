@@ -111,6 +111,7 @@ window.AxiomCodeDictionary = {
     "DICTIONARY",
     "DOUBLE",
     "FILE",
+    "HASHSET",
     "IMAGE",
     "INTEGER",
     "LONG",

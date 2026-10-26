@@ -756,6 +756,16 @@ public sealed partial class Binder
             location);
     }
 
+    private void ReportSetElementType(TypeSymbol elementType, TextLocation location)
+    {
+        ArgumentNullException.ThrowIfNull(elementType);
+
+        _diagnostics.Report(
+            DiagnosticCodes.InvalidSetElementType,
+            $"Тип элемента множества должен быть STRING, INTEGER или LONG, а указан {elementType.Name}.",
+            location);
+    }
+
     private void ReportInvalidDictionaryMember(string memberName, TypeSymbol dictionaryType, TextLocation location)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(memberName);
@@ -764,6 +774,38 @@ public sealed partial class Binder
         _diagnostics.Report(
             DiagnosticCodes.InvalidDictionaryMember,
             $"Словарь {dictionaryType.Name} не содержит член '{memberName}'. Доступны Add, Exists, Remove, Keys, TryGetValue и Count.",
+            location);
+    }
+
+    private void ReportInvalidSetMember(string memberName, TypeSymbol setType, TextLocation location)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(memberName);
+        ArgumentNullException.ThrowIfNull(setType);
+
+        _diagnostics.Report(
+            DiagnosticCodes.InvalidSetMember,
+            $"Множество {setType.Name} не содержит член '{memberName}'. Доступны Add, Contains, Remove, ToArray, UnionWith, IntersectWith и Count.",
+            location);
+    }
+
+    // Коллекции сравниваются по полной идентичности: HASHSET(INTEGER) и
+    // HASHSET(LONG) — разные типы, поэтому сообщение называет оба типа.
+    private void ReportSetTypeMismatch(TypeSymbol actualType, TypeSymbol expectedType, TextLocation location)
+    {
+        ArgumentNullException.ThrowIfNull(actualType);
+        ArgumentNullException.ThrowIfNull(expectedType);
+
+        _diagnostics.Report(
+            DiagnosticCodes.TypeMismatch,
+            $"Несовместимые типы: ожидался {expectedType.Name}, получен {actualType.Name}. Тип коллекции должен совпадать точно, включая тип элемента.",
+            location);
+    }
+
+    private void ReportValueExpected(TextLocation location)
+    {
+        _diagnostics.Report(
+            DiagnosticCodes.ValueExpected,
+            "Ожидалось значение. Вызов, который ничего не возвращает, записывается отдельным оператором, а не внутри PRINT.",
             location);
     }
 

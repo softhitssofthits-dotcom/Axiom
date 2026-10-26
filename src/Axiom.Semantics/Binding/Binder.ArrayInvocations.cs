@@ -29,6 +29,19 @@ public sealed partial class Binder
             return BindDictionaryAccessExpression(expression, target, dictionaryType, forAssignment);
         }
 
+        // Множество не индексируется: found[1] и found[] не являются его
+        // операциями, элементами управляют методы.
+        if (target.Type is SetTypeSymbol)
+        {
+            ReportSetRequiresMethodCall(displayName, location);
+            foreach (var index in expression.Indices)
+            {
+                BindArrayIndexExpression(index);
+            }
+
+            return new BoundErrorExpression(location);
+        }
+
         if (target.Type is not ArrayTypeSymbol arrayType)
         {
             if (target.Type != TypeSymbol.Error)

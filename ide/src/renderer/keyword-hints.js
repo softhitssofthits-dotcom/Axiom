@@ -27,7 +27,8 @@
     COLOR: ['Задаёт цвет текста и фона для последующего вывода.', 'Sets the text foreground and background color for later output.'],
     CONST: ['Объявляет константу: значение задаётся один раз и не может быть изменено.', 'Declares a constant: the value is set once and cannot be changed.'],
     CONTINUE: ['Переходит к следующему проходу цикла, пропуская остаток тела: CONTINUE FOR, CONTINUE WHILE или CONTINUE DO.', 'Jumps to the next loop iteration, skipping the rest of the body: CONTINUE FOR, CONTINUE WHILE or CONTINUE DO.'],
-    DICTIONARY: ['Тип типизированного словаря: DICTIONARY(тип ключа, тип значения) задаёт ключ и значение всех записей. Ключом служит STRING, INTEGER или LONG. Слово зарезервировано: как имя не используется.', 'Typed dictionary type: DICTIONARY(key type, value type) sets the key and value of every entry. The key is STRING, INTEGER or LONG. The word is reserved and cannot be used as a name.'],
+    DICTIONARY: ['Тип типизированного словаря: DICTIONARY(тип ключа, тип значения) задаёт ключ и значение всех записей. Ключом служит STRING, INTEGER или LONG.', 'Typed dictionary type: DICTIONARY(key type, value type) sets the key and value of every entry. The key is STRING, INTEGER or LONG.'],
+    HASHSET: ['Тип типизированного множества уникальных значений: HASHSET(тип элемента) задаёт тип всех элементов. Элементом служит STRING, INTEGER или LONG. Повторное добавление не создаёт второй записи.', 'Typed set of unique values: HASHSET(element type) sets the type of every element. The element is STRING, INTEGER or LONG. Adding the same value twice does not create a second entry.'],
     DIM: ['Объявляет переменную, массив или их группу с типом и необязательным начальным значением.', 'Declares a variable, an array or a group of them with a type and an optional initial value.'],
     DO: ['Открывает цикл DO … LOOP с проверкой условия до или после тела.', 'Opens a DO … LOOP cycle with the condition checked before or after the body.'],
     DRAW: ['Выполняет графическую команду, записанную строкой, как в языке управления пером.', 'Runs a graphics command written as a string, in pen-control style.'],
@@ -40,7 +41,7 @@
     DRAWTILELAYER: ['Выводит один слой тайловой карты.', 'Draws one layer of a tilemap.'],
     DRAWTILEMAP: ['Выводит тайловую карту целиком.', 'Draws a whole tilemap.'],
     DRAWTEXT: ['Выводит строку текста в графическом режиме с заданным цветом.', 'Draws a text string in graphics mode with a given color.'],
-    EACH: ['Ключевое слово, вводящее обход массива в заголовке FOR EACH. Зарезервировано: как имя не используется.', 'Keyword that introduces array iteration in a FOR EACH header. Reserved: it cannot be used as a name.'],
+    EACH: ['Ключевое слово, вводящее обход массива в заголовке FOR EACH.', 'Keyword that introduces array iteration in a FOR EACH header.'],
     ELSE: ['Ветвь IF, которая выполняется, когда условие ложно.', 'The IF branch that runs when the condition is false.'],
     ELSEIF: ['Дополнительное условие в IF, проверяемое после ложного предыдущего.', 'An additional IF condition checked after a previous false one.'],
     END: ['Закрывает составную конструкцию: END IF, END WHILE, END SUB, END FUNCTION, END TYPE, END SELECT, END TRY.', 'Closes a compound construct: END IF, END WHILE, END SUB, END FUNCTION, END TYPE, END SELECT, END TRY.'],
@@ -59,7 +60,7 @@
     IF: ['Открывает условную конструкцию; в одной строке допускает короткую форму.', 'Opens a conditional construct and allows a single-line short form.'],
     IMP: ['Логическая импликация: результат ложен только когда первый операнд истинен, а второй ложен.', 'Logical implication: false only when the first operand is true and the second is false.'],
     IMPORT: ['Подключает другой модуль проекта и его открытые имена.', 'Imports another project module and its public names.'],
-    IN: ['Ключевое слово заголовка FOR EACH: отделяет переменную цикла от массива-источника. Зарезервировано: как имя не используется.', 'Keyword of the FOR EACH header that separates the loop variable from the source array. Reserved: it cannot be used as a name.'],
+    IN: ['Ключевое слово заголовка FOR EACH: отделяет переменную цикла от массива-источника.', 'Keyword of the FOR EACH header that separates the loop variable from the source array.'],
     INPUT: ["Читает значения с консоли; LINE INPUT читает строку целиком. FOR INPUT в OPEN открывает текстовый файл для чтения.","Reads console values; LINE INPUT reads a whole line. FOR INPUT in OPEN opens a text file for reading."],
     IS: ['Сравнение с образцом в SELECT CASE, например IS > 10.', 'A pattern comparison in SELECT CASE, for example IS > 10.'],
     KEY: ['Указывает клавишу в обработчике ON KEY и связанных конструкциях.', 'Names a key in an ON KEY handler and related constructs.'],
@@ -199,6 +200,7 @@
   "CONST": "CONST <name> = <value>",
   "AS": "DIM <name> AS <type>",
   "DICTIONARY": "DIM <name> AS DICTIONARY(<keyType>, <valueType>)",
+  "HASHSET": "DIM <name> AS HASHSET(<elementType>)",
   "FOR": "FOR <i> = <start> TO <end> STEP <step>\n    ...\nNEXT\n\nFOR EACH <item> IN <array>[]\n    ...\nNEXT",
   "EACH": "FOR EACH <item> IN <array>[]\n    ...\nNEXT",
   "IN": "FOR EACH <item> IN <array>[]",
@@ -305,6 +307,7 @@
     TILESET: ['Набор тайлов из LOADTILESET. Размеры тайла задаются в пикселях.', 'Tile grid loaded by LOADTILESET. Tile dimensions are in pixels.'],
     TILEMAP: ['Карта Tiled из LOADTILEMAP: слои, клетки, объекты и свойства.', 'Tiled map loaded by LOADTILEMAP: layers, cells, objects and properties.'],
     DICTIONARY: HINTS.DICTIONARY,
+    HASHSET: HINTS.HASHSET,
   };
   function typeHint(name, locale) {
     const entry = TYPE_HINTS[String(name || '').toUpperCase()];
@@ -328,5 +331,25 @@
     return locale === 'en' ? entry[1] : entry[0];
   }
 
-  return { hints: HINTS, hint, typeHints: TYPE_HINTS, typeHint, memberHints: MEMBER_HINTS, memberHint };
+  // Члены множества описываются отдельно: у словаря Add не возвращает значения,
+  // а у множества Add и Remove возвращают BOOLEAN, поэтому общий текст нельзя
+  // выдавать за описание обоих типов.
+  const SET_MEMBER_HINTS = {
+    ADD: ['Метод множества: добавляет элемент и возвращает BOOLEAN. TRUE означает новое значение, FALSE — элемент уже был; повторное добавление не ошибка и не меняет порядок.', 'Set method: adds an element and returns BOOLEAN. TRUE means a new value, FALSE means the element was already present; a repeated addition is not an error and keeps the order.'],
+    CONTAINS: ['Метод множества: проверяет наличие элемента и возвращает BOOLEAN, не изменяя состав.', 'Set method: checks whether an element is present and returns BOOLEAN without changing the contents.'],
+    REMOVE: ['Метод множества: удаляет элемент и возвращает BOOLEAN. Отсутствующий элемент даёт FALSE без ошибки.', 'Set method: removes an element and returns BOOLEAN. A missing element gives FALSE without an error.'],
+    TOARRAY: ['Метод множества: возвращает самостоятельный одномерный массив элементов в порядке первого добавления. Границы 1..Count, для пустого множества 1 TO 0.', 'Set method: returns an independent one-dimensional array of the elements in first-addition order. Bounds are 1..Count and 1 TO 0 for an empty set.'],
+    UNIONWITH: ['Процедура множества: добавляет отсутствующие элементы другого множества того же типа и не возвращает значения. Порядок источника сохраняется.', 'Set procedure: adds the missing elements of another set of the same type and returns no value. The source order is preserved.'],
+    INTERSECTWITH: ['Процедура множества: оставляет только общие элементы в прежнем порядке получателя и не возвращает значения.', 'Set procedure: keeps only the common elements in the previous receiver order and returns no value.'],
+    COUNT: ['Свойство множества: число элементов. Записывается без скобок.', 'Set property: the number of elements. Written without parentheses.'],
+  };
+
+  function setMemberHint(name, locale) {
+    const entry = SET_MEMBER_HINTS[String(name || '').toUpperCase()];
+    if (!entry) return null;
+    return locale === 'en' ? entry[1] : entry[0];
+  }
+
+  return { hints: HINTS, hint, typeHints: TYPE_HINTS, typeHint, memberHints: MEMBER_HINTS, memberHint,
+    setMemberHints: SET_MEMBER_HINTS, setMemberHint };
 });

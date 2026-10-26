@@ -586,4 +586,41 @@ public sealed partial class BytecodeVm
         }
     }
 
+    /// <summary>
+    /// Значение переменной в текущем остановленном состоянии. Нужно проверкам
+    /// обратного шага: состав коллекции читается сразу после отката, до
+    /// повторного выполнения строки, а не по выводу следующего запуска.
+    /// </summary>
+    internal RuntimeValue? PeekVariableValue(string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        if (_callStack.Count == 0)
+        {
+            return null;
+        }
+
+        foreach (var frame in _callStack)
+        {
+            foreach (var (variable, slot) in frame.VisibleVariables)
+            {
+                if (string.Equals(variable.Name, name, StringComparison.OrdinalIgnoreCase))
+                {
+                    return slot.Value;
+                }
+            }
+        }
+
+        var global = _module.Globals.FirstOrDefault(
+            candidate => string.Equals(candidate.Name, name, StringComparison.OrdinalIgnoreCase));
+
+        if (global is not null
+            && (uint)global.Slot < (uint)_globalsBySlot.Length
+            && _globalsBySlot[global.Slot] is { } globalValue)
+        {
+            return globalValue;
+        }
+
+        return null;
+    }
 }

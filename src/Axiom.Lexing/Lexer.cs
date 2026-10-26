@@ -58,6 +58,7 @@ public sealed partial class Lexer
         ["FOR"] = TokenKind.ForKeyword,
         ["FUNCTION"] = TokenKind.FunctionKeyword,
         ["GET"] = TokenKind.GetKeyword,
+        ["HASHSET"] = TokenKind.SetKeyword,
         ["IF"] = TokenKind.IfKeyword,
         ["IMAGE"] = TokenKind.ImageKeyword,
         ["IMP"] = TokenKind.ImpKeyword,

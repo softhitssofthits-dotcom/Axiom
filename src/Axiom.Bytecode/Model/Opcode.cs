@@ -142,5 +142,13 @@ public enum Opcode
     DictionaryRemove,
     DictionaryKeys,
     DictionaryCount,
-    DictionaryTryGetValue
+    DictionaryTryGetValue,
+    CreateSet,
+    SetAdd,
+    SetContains,
+    SetRemove,
+    SetCount,
+    SetToArray,
+    SetUnionWith,
+    SetIntersectWith
 }

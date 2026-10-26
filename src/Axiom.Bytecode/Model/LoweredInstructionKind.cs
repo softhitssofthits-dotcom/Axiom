@@ -100,5 +100,13 @@ public enum LoweredInstructionKind
     DictionaryRemove,
     DictionaryKeys,
     DictionaryCount,
-    DictionaryTryGetValue
+    DictionaryTryGetValue,
+    CreateSet,
+    SetAdd,
+    SetContains,
+    SetRemove,
+    SetCount,
+    SetToArray,
+    SetUnionWith,
+    SetIntersectWith
 }

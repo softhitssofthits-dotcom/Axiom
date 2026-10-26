@@ -120,6 +120,11 @@ public sealed class RuntimeValue : IRuntimeStoredValue
             return FromDictionary(dictionaryType, new RuntimeDictionaryValue(dictionaryType));
         }
 
+        if (type is SetTypeSymbol setType)
+        {
+            return FromSet(setType, new RuntimeSetValue(setType));
+        }
+
         return new RuntimeValue(type, value: null);
     }
 
@@ -192,6 +197,13 @@ public sealed class RuntimeValue : IRuntimeStoredValue
     }
 
     public static RuntimeValue FromDictionary(DictionaryTypeSymbol type, RuntimeDictionaryValue value)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        ArgumentNullException.ThrowIfNull(value);
+        return new RuntimeValue(type, value);
+    }
+
+    public static RuntimeValue FromSet(SetTypeSymbol type, RuntimeSetValue value)
     {
         ArgumentNullException.ThrowIfNull(type);
         ArgumentNullException.ThrowIfNull(value);
@@ -480,6 +492,16 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         return (RuntimeDictionaryValue)Value!;
     }
 
+    public RuntimeSetValue AsSet()
+    {
+        if (Type is not SetTypeSymbol)
+        {
+            throw new InvalidOperationException($"Value of type {Type.Name} is not HASHSET.");
+        }
+
+        return (RuntimeSetValue)Value!;
+    }
+
     public RuntimeValue CopyForStorage(int? fixedStringLength = null)
     {
         if (Type == TypeSymbol.String)
@@ -642,6 +664,11 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         if (Type is DictionaryTypeSymbol)
         {
             return $"<{Type.Name} записей: {AsDictionary().Count}>";
+        }
+
+        if (Type is SetTypeSymbol)
+        {
+            return $"<{Type.Name} элементов: {AsSet().Count}>";
         }
 
         if (Type == TypeSymbol.RuntimeError)

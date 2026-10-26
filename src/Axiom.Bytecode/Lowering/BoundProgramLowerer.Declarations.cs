@@ -37,6 +37,15 @@ public sealed partial class BoundProgramLowerer
                 return;
             }
 
+            // Объявление множества создаёт пустое готовое множество: тип
+            // элемента уже задан в объявлении.
+            if (declaration.Variable.Type is SetTypeSymbol setType)
+            {
+                instructions.Add(LoweredInstruction.CreateSet(declaration.Location, setType));
+                instructions.Add(LoweredInstruction.StoreVariable(declaration.Location, declaration.Variable));
+                return;
+            }
+
             if (declaration.Variable.Type == TypeSymbol.Date
                 || declaration.Variable.Type == TypeSymbol.Time
                 || declaration.Variable.Type == TypeSymbol.DateTime

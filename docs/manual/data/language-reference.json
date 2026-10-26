@@ -26,7 +26,7 @@
     "src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.cs",
     "src/Axiom.Syntax/SyntaxKind.cs"
   ],
-  "sourceFingerprint": "38083f8d3ec9dc3873e7e15c38fd49130a438a919d3b532d517f9de742ba94f1",
+  "sourceFingerprint": "f202a57812bae171dca88479e228f0b618d6a4c6466dc8777cd8f295a4fd8da2",
   "functions": [
     {
       "name": "ABS",
@@ -8080,6 +8080,12 @@
       "href": "error.html"
     },
     {
+      "id": "foreach-for-each",
+      "name": "FOR EACH",
+      "syntax": "ForEach",
+      "href": "for-each.html"
+    },
+    {
       "id": "redim-redim",
       "name": "REDIM",
       "syntax": "Redim",
@@ -8595,6 +8601,7 @@
     "DICTIONARY",
     "DOUBLE",
     "FILE",
+    "HASHSET",
     "IMAGE",
     "INTEGER",
     "LONG",

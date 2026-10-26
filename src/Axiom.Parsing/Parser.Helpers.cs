@@ -430,6 +430,7 @@ public sealed partial class Parser
             TokenKind.ReturnKeyword => SyntaxKind.ReturnKeyword,
             TokenKind.SelfKeyword => SyntaxKind.SelfKeyword,
             TokenKind.SelectKeyword => SyntaxKind.SelectKeyword,
+            TokenKind.SetKeyword => SyntaxKind.SetKeyword,
             TokenKind.SetMapTileKeyword => SyntaxKind.SetMapTileKeyword,
             TokenKind.ScreenKeyword => SyntaxKind.ScreenKeyword,
             TokenKind.SmoothKeyword => SyntaxKind.SmoothKeyword,

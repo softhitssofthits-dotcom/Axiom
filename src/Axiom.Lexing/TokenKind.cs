@@ -124,6 +124,7 @@ public enum TokenKind
     ReturnKeyword,
     SelfKeyword,
     SelectKeyword,
+    SetKeyword,
     SetMapTileKeyword,
     ScreenKeyword,
     SmoothKeyword,

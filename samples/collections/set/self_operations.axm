@@ -1,0 +1,51 @@
+' Операции множества с самим собой и с пустым аргументом.
+' UnionWith и IntersectWith, вызванные для того же экземпляра, в том числе
+' через псевдоним, не меняют ни состав, ни порядок. Пересечение с пустым
+' множеством очищает получателя, объединение с пустым ничего не меняет.
+' Ожидаемый вывод:
+' после UnionWith через псевдоним: ключ монета всего 2
+' после IntersectWith через псевдоним: ключ монета всего 2
+' прямой UnionWith с собой: ключ монета всего 2
+' прямой IntersectWith с собой: ключ монета всего 2
+' после объединения с пустым: 2
+' после пересечения с пустым: 0
+' границы пустого снимка: 1..0
+
+DIM found AS HASHSET(STRING)
+found.Add("ключ")
+found.Add("монета")
+
+' Псевдоним указывает на тот же экземпляр, поэтому аргумент совпадает с получателем.
+DIM alias AS HASHSET(STRING)
+alias = found
+
+' Объединение с самим собой не добавляет новых элементов и не переставляет старые.
+found.UnionWith(alias)
+DIM afterUnion[] AS STRING = found.ToArray()
+PRINT "после UnionWith через псевдоним: "; afterUnion[1]; " "; afterUnion[2]; " всего "; found.Count
+
+' Пересечение с самим собой оставляет весь состав в прежнем порядке.
+found.IntersectWith(alias)
+DIM afterIntersect[] AS STRING = found.ToArray()
+PRINT "после IntersectWith через псевдоним: "; afterIntersect[1]; " "; afterIntersect[2]; " всего "; found.Count
+
+' То же самое при прямой передаче получателя в собственный метод.
+found.UnionWith(found)
+DIM afterDirectUnion[] AS STRING = found.ToArray()
+PRINT "прямой UnionWith с собой: "; afterDirectUnion[1]; " "; afterDirectUnion[2]; " всего "; found.Count
+found.IntersectWith(found)
+DIM afterDirectIntersect[] AS STRING = found.ToArray()
+PRINT "прямой IntersectWith с собой: "; afterDirectIntersect[1]; " "; afterDirectIntersect[2]; " всего "; found.Count
+
+' Пустое множество как правый аргумент объединения ничего не добавляет.
+DIM nothing AS HASHSET(STRING)
+found.UnionWith(nothing)
+PRINT "после объединения с пустым: "; found.Count
+
+' Пустое множество как правый аргумент пересечения очищает получателя.
+found.IntersectWith(nothing)
+PRINT "после пересечения с пустым: "; found.Count
+
+' Снимок пустого множества имеет границы 1 TO 0, то есть верхняя меньше нижней.
+DIM emptySnapshot[] AS STRING = found.ToArray()
+PRINT "границы пустого снимка: "; LBOUND(emptySnapshot[]); ".."; UBOUND(emptySnapshot[])
