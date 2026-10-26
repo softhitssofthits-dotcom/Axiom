@@ -363,9 +363,9 @@ class AxiomIDE {
       fontSize: 14,
       fontFamily: "'Cascadia Code', Consolas, 'Courier New', monospace",
       minimap: { enabled: false },
-      // Tooltip below the hovered line: with the default (above) the tooltip extends
-      // above the editor's top edge when the code is at the top and gets hidden behind
-      // the tab strip/toolbar.
+      // Monaco выбирает место по границам окна. Фиксированное позиционирование
+      // выводит подсказки за overflow:hidden редактора, в том числе поверх консоли.
+      fixedOverflowWidgets: true,
       hover: { above: false },
       scrollBeyondLastLine: false,
       renderLineHighlight: 'none',

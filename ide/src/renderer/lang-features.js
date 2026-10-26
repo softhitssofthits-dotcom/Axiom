@@ -205,12 +205,23 @@ const LangFeatures = (() => {
 
   // Registry builtins come one entry per overload: {name, params:[{name,type}], returnType}.
   // Signature string in the BASIC style: NAME(arg AS TYPE, ...) AS RET.
+  function displayType(type) {
+    if (typeof I18N === 'undefined' || I18N.current !== 'en') return type;
+    return ({
+      'элемент или массив T': 'element or T array',
+      'INTEGER или INTEGER[]': 'INTEGER or INTEGER[]',
+      'INTEGER[] или INTEGER[,]': 'INTEGER[] or INTEGER[,]',
+      'массив результатов selector': 'array of selector results',
+      'тип начального значения': 'initial value type',
+      'общий числовой тип': 'common numeric type',
+    })[type] || type;
+  }
   function builtinSignature(b) {
     const args = (b.params || []).map((p) => {
-      const type = p.displayType || p.type;
+      const type = displayType(p.displayType || p.type);
       return p.name + (type ? ' AS ' + type : '');
     }).join(', ');
-    const returnType = b.displayReturnType || b.returnType;
+    const returnType = displayType(b.displayReturnType || b.returnType);
     const ret = returnType && returnType !== 'VOID' ? ' AS ' + returnType : '';
     return (b.name || '') + '(' + args + ')' + ret;
   }
@@ -272,11 +283,11 @@ const LangFeatures = (() => {
     // Члены словаря. Add, Exists, Remove, Keys и TryGetValue вызываются со
     // скобками; Count — свойство и вставляется без скобок.
     const dictionaryMembers = (type) => [
-      { label: 'Add', kind: 'Method', insertText: 'Add($0)', snippet: true, detail: 'Add(ключ, значение)' },
-      { label: 'Exists', kind: 'Method', insertText: 'Exists($0)', snippet: true, detail: 'Exists(ключ) AS BOOLEAN' },
-      { label: 'Remove', kind: 'Method', insertText: 'Remove($0)', snippet: true, detail: 'Remove(ключ) AS BOOLEAN' },
-      { label: 'Keys', kind: 'Method', insertText: 'Keys()', snippet: false, detail: 'Keys() AS ' + (type?.keyType || 'ключ') + '[]' },
-      { label: 'TryGetValue', kind: 'Method', insertText: 'TryGetValue($0)', snippet: true, detail: 'TryGetValue(ключ, переменная) AS BOOLEAN' },
+      { label: 'Add', kind: 'Method', insertText: 'Add($0)', snippet: true, detail: I18N.current === 'en' ? 'Add(key, value)' : 'Add(ключ, значение)' },
+      { label: 'Exists', kind: 'Method', insertText: 'Exists($0)', snippet: true, detail: I18N.current === 'en' ? 'Exists(key) AS BOOLEAN' : 'Exists(ключ) AS BOOLEAN' },
+      { label: 'Remove', kind: 'Method', insertText: 'Remove($0)', snippet: true, detail: I18N.current === 'en' ? 'Remove(key) AS BOOLEAN' : 'Remove(ключ) AS BOOLEAN' },
+      { label: 'Keys', kind: 'Method', insertText: 'Keys()', snippet: false, detail: 'Keys() AS ' + (type?.keyType || (I18N.current === 'en' ? 'key' : 'ключ')) + '[]' },
+      { label: 'TryGetValue', kind: 'Method', insertText: 'TryGetValue($0)', snippet: true, detail: I18N.current === 'en' ? 'TryGetValue(key, variable) AS BOOLEAN' : 'TryGetValue(ключ, переменная) AS BOOLEAN' },
       { label: 'Count', kind: 'Field', insertText: 'Count', snippet: false, detail: 'Count AS INTEGER' },
     ];
 
@@ -399,8 +410,8 @@ const LangFeatures = (() => {
         if (family.length) {
           const signatures = family.map((b) => {
             const sig = builtinSignature(b);
-            const params = (b.params || []).map((p) => ({ label: p.name + ((p.displayType || p.type) ? ' AS ' + (p.displayType || p.type) : '') }));
-            return { label: sig, parameters: params };
+            const params = (b.params || []).map((p) => ({ label: p.name + ((p.displayType || p.type) ? ' AS ' + displayType(p.displayType || p.type) : '') }));
+            return { label: sig, parameters: params, documentation: window.AxiomBuiltinHints?.hint?.(b.name, I18N.current || 'ru') || undefined };
           });
           const matching = family.findIndex(b => (b.params || []).length > active);
           const activeSignature = matching >= 0 ? matching : family.length - 1;
@@ -474,7 +485,13 @@ const LangFeatures = (() => {
     const hoverProvider = {
       async provideHover(model, position, cancellation) {
         if (!isCodePosition(model, position)) return null;
-        const word = model.getWordAtPosition(position);
+        let word = model.getWordAtPosition(position);
+        if (!word?.word) {
+          const line = lexicalCode(model.getLineContent(position.lineNumber)).mask;
+          const operator = [...line.matchAll(/<>|<=|>=|<<|>>|[+*/\\^&=<>-]/g)]
+            .find(item => position.column - 1 >= item.index && position.column - 1 < item.index + item[0].length);
+          if (operator) word = {word: operator[0], startColumn: operator.index + 1, endColumn: operator.index + operator[0].length + 1};
+        }
         if (!word || !word.word) return null;
         const name = word.word;
         const range = {
@@ -531,7 +548,13 @@ const LangFeatures = (() => {
           : [];
         if (family.length) {
           const lines = family.map((b) => '`' + builtinSignature(b) + '`');
-          return { range, contents: [{ value: '**' + name + '** — ' + I18N.t('hover.builtin') + '\n\n' + lines.join('\n\n') }] };
+          const hint = window.AxiomBuiltinHints?.hint?.(name, I18N.current || 'ru');
+          const typeHint = window.AxiomKeywordHints?.typeHint?.(name, I18N.current || 'ru');
+          const after = model.getLineContent(position.lineNumber).slice(word.endColumn - 1);
+          if (typeHint && !/^\s*\(/.test(after)) {
+            return { range, contents: [{ value: '`' + name + '` — ' + I18N.t('hover.type') + '\n\n' + typeHint }] };
+          }
+          return { range, contents: [{ value: '**' + name + '** — ' + I18N.t('hover.builtin') + (hint ? '\n\n' + hint : '') + '\n\n' + lines.join('\n\n') }] };
         }
 
         // Offline fallback is limited to explicit declarations; never invent a type.
@@ -568,7 +591,8 @@ const LangFeatures = (() => {
         // объясняет, что оно делает в языке; EACH и IN описаны отдельно,
         // потому что они контекстные и в реестр ключевых слов не входят.
         if (meta && Array.isArray(meta.typeNames) && meta.typeNames.some((t) => t.toUpperCase() === name.toUpperCase())) {
-          return { range, contents: [{ value: '`' + name + '` — ' + I18N.t('hover.type') }] };
+          const hint = window.AxiomKeywordHints?.typeHint?.(name, I18N.current || 'ru');
+          return { range, contents: [{ value: '`' + name + '` — ' + I18N.t('hover.type') + (hint ? '\n\n' + hint : '') }] };
         }
         const isRegistryKeyword = meta && Array.isArray(meta.keywords)
           && meta.keywords.some((k) => k.toUpperCase() === name.toUpperCase());
