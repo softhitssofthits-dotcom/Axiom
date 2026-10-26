@@ -3,4 +3,5 @@
 **/obj/
 **/node_modules/
 ide/src/renderer/vs/
+ide/src/renderer/monaco/
 .vs/

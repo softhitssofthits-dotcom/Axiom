@@ -446,7 +446,8 @@ function setupIpc(logger, options = {}) {
       // the fallback is only for packaged builds, where it is the app version.
       ide = pkg.version;
     } catch { ide = null; }
-    const base = { electron: process.versions.electron, node: process.versions.node, ide: ide || app.getVersion(), language: null, compiler: null };
+    const monaco = require(path.join(__dirname, '..', '..', 'node_modules', 'monaco-editor', 'package.json')).version;
+    const base = { electron: process.versions.electron, monaco, node: process.versions.node, ide: ide || app.getVersion(), language: null, compiler: null };
     if (!axiom) return base;
     return new Promise((resolve) => {
       const child = spawn(axiom, ['metadata'], { windowsHide: true, env: buildEnv() });

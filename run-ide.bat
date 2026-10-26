@@ -53,7 +53,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-rem --- 4. Copy Monaco runtime next to index.html (idempotent) ---
+rem --- 4. Build Monaco ESM runtime next to index.html ---
 call npm run prepare
 if errorlevel 1 (
     echo.

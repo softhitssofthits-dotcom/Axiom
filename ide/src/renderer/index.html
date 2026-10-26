@@ -7,6 +7,7 @@
   <title>Axiom IDE</title>
   <link rel="stylesheet" href="../../node_modules/@xterm/xterm/css/xterm.css">
   <link rel="stylesheet" href="../../node_modules/@vscode/codicons/dist/codicon.css">
+  <link rel="stylesheet" href="monaco/monaco.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="design-system.css">
   <link rel="stylesheet" href="shell.css">
@@ -209,12 +210,8 @@
     </div>
   </div>
 
-  <!-- xterm must load BEFORE Monaco's loader.js: loader defines a global AMD
-       `define`, which would send the xterm UMD build into the AMD registry instead of
-       window.Terminal. -->
   <script src="../../node_modules/@xterm/xterm/lib/xterm.js"></script>
   <script src="../../node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
-  <script src="vs/loader.js"></script>
   <script src="ui-controls.js"></script>
   <script src="locale.js"></script>
   <script src="keyword-hints.js"></script>

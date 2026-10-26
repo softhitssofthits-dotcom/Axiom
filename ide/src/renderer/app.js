@@ -194,8 +194,11 @@ class AxiomIDE {
       const timer = setTimeout(() => done(false), 15000);
       // Monaco's own UI strings intentionally stay English in both locales:
       // only compiler diagnostics and the IDE's own UI are localized.
-      require.config({ paths: { vs: 'vs' } });
-      require(['vs/editor/editor.main'], (monaco) => { clearTimeout(timer); this.monaco = monaco; done(true); }, () => done(false));
+      import('./monaco/monaco.js').then(({ monaco }) => {
+        clearTimeout(timer); window.monaco = this.monaco = monaco; done(true);
+      }, (error) => {
+        clearTimeout(timer); this.log('monaco.load.failed', { message: String(error) }, 'error'); done(false);
+      });
     });
   }
 
@@ -2430,6 +2433,8 @@ class AxiomIDE {
         <div class="about-row"><span>${I18N.t('about.lang')}</span><code>${info.language || I18N.t('about.notFound')}</code></div>
         <div class="about-row"><span>${I18N.t('about.cli')}</span><code>${info.compiler || I18N.t('about.notFound')}</code></div>
         <div class="about-row"><span>${I18N.t('about.vm')}</span><code>BytecodeVm</code></div>
+        <div class="about-row"><span>${I18N.t('about.monaco')}</span><code>${info.monaco || I18N.t('about.notFound')}</code></div>
+        <div class="about-row"><span>${I18N.t('about.electron')}</span><code>${info.electron || I18N.t('about.notFound')}</code></div>
         <button id="about-close">${I18N.t('about.ok')}</button>
       </div>`;
     document.body.appendChild(overlay);
