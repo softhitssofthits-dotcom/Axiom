@@ -96,7 +96,8 @@ const LangFeatures = (() => {
     const typeRank = typeSuffix ? ((typeSuffix[1] ?? typeSuffix[2]).match(/,/g) || []).length + 1 : 0;
     return {name: match[2], type, arrayRank: arrayRank || typeRank,
       squareArray: suffix.startsWith('[') || (!suffix && typeSuffix?.[1] !== undefined),
-      label: text.trim()};
+      arraySuffix: suffix,
+      label: text.trim(), initializer: splitTopLevel(rest, '=')[1]?.trim() || null};
   }
 
   function scanDoc(model) {
@@ -136,6 +137,16 @@ const LangFeatures = (() => {
           if (item) res.vars.push({...item, type: item.type || null, lineNo: lineIndex + 1});
         }
       }
+    }
+    // Простое выведение результата именованной функции и копии переменной.
+    for (const variable of res.vars) {
+      if (variable.type || !variable.initializer) continue;
+      const call = variable.initializer.match(/^([A-Za-z_]\w*)\s*\(/);
+      const name = variable.initializer.match(/^([A-Za-z_]\w*)$/);
+      const routine = call && res.functions.find(f => f.name.toUpperCase() === call[1].toUpperCase());
+      const original = name && res.vars.find(v => v !== variable && v.lineNo <= variable.lineNo && v.name.toUpperCase() === name[1].toUpperCase());
+      const inferred = routine?.returnType || original?.type || null;
+      if (tupleFields(inferred)) variable.type = inferred;
     }
     const declarations = [...res.subs.map(item => ({item, kind:'SUB'})), ...res.functions.map(item => ({item, kind:'FUNCTION'})), ...res.types.map(item => ({item, kind:'TYPE'}))].sort((a,b) => a.item.lineNo-b.item.lineNo);
     const codeLines=lines.map(raw=>codeOf(raw).trim().replace(/^(?:PUBLIC|PRIVATE)\s+/i, ''));
@@ -200,7 +211,37 @@ const LangFeatures = (() => {
       if (!t) continue;
       params.push(declaration(t) || { name: t, type: '', label: t });
     }
+    let inherited = null;
+    for (let i = params.length - 1; i >= 0; i--) {
+      if (params[i].type) inherited = params[i].arraySuffix
+        ? params[i].type.slice(0, -params[i].arraySuffix.length) : params[i].type;
+      else if (inherited) params[i].type = inherited + (params[i].arraySuffix || '');
+    }
     return params;
+  }
+
+  // Тип кортежа сохраняет порядок и общий AS у группы имён.
+  function tupleFields(type) {
+    if (typeof type !== 'string') return null;
+    type = type.trim();
+    if (type[0] !== '(' || closingDelimiter(type, 0) !== type.length - 1) return null;
+    const parts = splitTopLevel(type.slice(1, -1)).map(p => p.trim());
+    if (parts.length < 2 || parts.some(p => !p)) return null;
+    const named = parts.some(p => /^[A-Za-z_]\w*\s+AS\s+/i.test(p));
+    const fields = [], pending = [];
+    for (const part of parts) {
+      const match = /^([A-Za-z_]\w*)\s+AS\s+(.+)$/i.exec(part);
+      if (named && match) {
+        pending.push(match[1]);
+        for (const name of pending.splice(0)) fields.push({name, type: match[2].trim()});
+      } else if (named && /^[A-Za-z_]\w*$/.test(part)) pending.push(part);
+      else if (!named) fields.push({name: 'Item' + (fields.length + 1), type: part});
+      else return null;
+    }
+    if (pending.length || fields.length < 2) return null;
+    if (named) for (const [index, field] of [...fields].entries())
+      fields.push({name: 'Item' + (index + 1), type: field.type});
+    return fields;
   }
 
   // Registry builtins come one entry per overload: {name, params:[{name,type}], returnType}.
@@ -379,7 +420,8 @@ const LangFeatures = (() => {
       for (let match = segment.exec(receiver); match; match = segment.exec(receiver)) {
         if (match[1]) {
           const record = doc.types.find((item) => item.name.toUpperCase() === String(type).toUpperCase());
-          const field = record?.fields.find((item) => item.name.toUpperCase() === match[1].toUpperCase());
+          const field = tupleFields(type)?.find(item => item.name.toUpperCase() === match[1].toUpperCase()) ||
+            record?.fields.find((item) => item.name.toUpperCase() === match[1].toUpperCase());
           if (!field?.type) return null;
           type = field.type;
         } else if (match[2]) {
@@ -408,6 +450,9 @@ const LangFeatures = (() => {
     // Члены получателя по его объявленному типу: словарь и множество
     // различаются здесь, а не отдельными путями поиска получателя.
     function receiverMembers(type) {
+      const fields = tupleFields(type);
+      if (fields) return fields.map(field => ({ label: field.name, kind: 'Field',
+        insertText: field.name, snippet: false, detail: field.name + ' AS ' + field.type }));
       const set = setType(type);
       if (set) return setMembers(set);
       const dictionary = dictionaryType(type);

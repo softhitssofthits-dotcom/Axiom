@@ -4,6 +4,19 @@ namespace Axiom.Runtime;
 
 public sealed partial class RuntimeArrayValue
 {
+    // Представление при копировании материализуется в независимый корень
+    // с теми же видимыми границами; служебный снимок сохраняет представления.
+    internal RuntimeArrayValue CreateEmptyForValueCopy(int? fixedStringLength)
+    {
+        var copy = new RuntimeArrayValue(ElementType, fixedStringLength ?? FixedStringLength, Rank);
+        if (IsAllocated)
+        {
+            EnsureAllocated();
+            copy.Allocate(_lowerBounds!, _upperBounds!);
+        }
+        return copy;
+    }
+
     // A root can retain its physical buffer after a length change while older
     // views still point at that buffer with an invalidated lifetime. Snapshot
     // identity follows the lifetime generation, not only the array buffer.
@@ -83,6 +96,12 @@ public sealed partial class RuntimeArrayValue
 
     public RuntimeArrayValue Clone(int? fixedStringLengthOverride = null)
     {
+        if (ElementType is UserDefinedTypeSymbol or ArrayTypeSymbol or DictionaryTypeSymbol or SetTypeSymbol)
+        {
+            var type = (ArrayTypeSymbol)ArrayTypeSymbol.Create(ElementType, Rank);
+            return RuntimeValueCopier.Copy(RuntimeValue.FromArray(type, this), fixedStringLengthOverride).AsArray();
+        }
+
         var clone = new RuntimeArrayValue(ElementType, fixedStringLengthOverride ?? FixedStringLength, Rank);
 
         if (!IsAllocated)
@@ -161,7 +180,7 @@ public sealed partial class RuntimeArrayValue
 
     private bool RequiresElementCopy(int? fixedStringLength)
     {
-        return fixedStringLength is not null || ElementType is UserDefinedTypeSymbol;
+        return fixedStringLength is not null || ElementType is UserDefinedTypeSymbol or ArrayTypeSymbol or DictionaryTypeSymbol or SetTypeSymbol;
     }
 
     private void CopyVisibleValuesFrom(RuntimeArrayValue source)

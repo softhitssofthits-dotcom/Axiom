@@ -37,7 +37,7 @@ PRINT fruits[2]
 PRINT ARRAYLENGTH(fruits[])</code></pre>
 <p>Результат:</p><pre><code>банан
 2</code></pre>
-<p>CONST не создаёт независимую копию и не вводит особый неизменяемый контейнер. Передача и присваивание сохраняют обычные правила общей памяти массивов. Защита константного имени от записи и передачи BYREF остаётся прежней; независимый массив создаёт <a href="arrays-and-builtins.html#arrayclone">ARRAYCLONE</a>.</p></section>
+<p>CONST защищает имя от записи и передачи BYREF. Обычное присваивание массива из константы создаёт независимую копию по общим правилам; изменение копии не меняет константу. Явная функция <a href="arrays-and-builtins.html#arrayclone">ARRAYCLONE</a> также копирует данные.</p></section>
 <section class="article-section" id="predefined"><h2>Предопределённые имена</h2>
 <p>Три имени уже доступны без объявления:</p>
 <table><thead><tr><th>Имя</th><th>Значение и назначение</th><th>Тип</th></tr></thead><tbody>

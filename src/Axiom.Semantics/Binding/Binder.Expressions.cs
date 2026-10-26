@@ -1,4 +1,4 @@
-﻿using Axiom.Core;
+using Axiom.Core;
 using System.Globalization;
 using Axiom.Syntax;
 
@@ -19,6 +19,7 @@ public sealed partial class Binder
     {
         var boundExpression = expression switch
         {
+            TupleExpressionSyntax tuple => BindTupleExpression(tuple, expectedType),
             LiteralExpressionSyntax literalExpression => BindLiteralExpression(literalExpression),
             NameExpressionSyntax nameExpression => BindNameExpression(nameExpression),
             UnaryExpressionSyntax unaryExpression => BindUnaryExpression(unaryExpression),
@@ -322,6 +323,8 @@ public sealed partial class Binder
 
                 case InterpolatedStringExpressionPartSyntax exprPart:
                     var boundExpr = BindExpression(exprPart.Expression);
+                    if (boundExpr.Type is TupleTypeSymbol)
+                        ReportTuple("Вставляйте в строку отдельные компоненты кортежа.", GetLocation(exprPart.Expression));
 
                     int? alignment = null;
                     if (exprPart.AlignmentToken is not null)

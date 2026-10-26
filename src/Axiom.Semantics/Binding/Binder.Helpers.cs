@@ -5,6 +5,12 @@ public sealed partial class Binder
 {
     private static bool CanConvert(TypeSymbol fromType, TypeSymbol toType)
     {
+        if (fromType is TupleTypeSymbol source && toType is TupleTypeSymbol target)
+        {
+            return source.Fields.Count == target.Fields.Count &&
+                source.Fields.Zip(target.Fields).All(pair => pair.First.Type == pair.Second.Type ||
+                    CanConvert(pair.First.Type, pair.Second.Type));
+        }
         // Временные переходы, теряющие календарную дату или время суток, здесь
         // отсутствуют намеренно: их выполняет только явное извлечение части.
         return (fromType == TypeSymbol.Integer && toType == TypeSymbol.Long)

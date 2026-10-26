@@ -93,7 +93,7 @@ public sealed partial class Binder
                     && explicitType != TypeSymbol.Error
                         ? BindArrayVariableType(explicitType, bounds.Rank)
                         : null;
-                explicitInitializer = BindExpression(declaration.Initializer, expectedType);
+                explicitInitializer = BindExpression(declaration.Initializer, explicitType is TupleTypeSymbol ? explicitType : expectedType);
             }
 
             return (explicitType, explicitInitializer, fixedStringLength);
@@ -216,7 +216,7 @@ public sealed partial class Binder
         // Цель присваивания уже задаёт тип, поэтому литерал массива связывается
         // сразу с ним: пустой набор иначе не получил бы тип элементов. Скобки
         // вокруг литерала этот контекст не прерывают.
-        var expression = FindArrayLiteral(expressionSyntax) is not null
+        var expression = targetType is TupleTypeSymbol || FindArrayLiteral(expressionSyntax) is not null
             ? BindExpression(expressionSyntax, targetType)
             : BindExpression(expressionSyntax);
         var targetName = GetArrayTargetDisplayName(target);

@@ -24,14 +24,14 @@
 <tr><td><code>ERASE values</code></td><td><code>ERASE values[]</code></td><td>Освобождение целого массива.</td></tr>
 <tr><td><code>bag.items</code> или <code>bag.items()</code></td><td><code>bag.items[]</code></td><td>Массивное поле целиком.</td></tr>
 </tbody></table></section>
-<section class="article-section" id="whole"><h2>Целый массив и элемент</h2><p>Квадратный суффикс [] обязателен у объявленного массивного имени или поля, когда выражение обозначает массив целиком. Суффикс не создаёт копию и не означает пустое хранилище. Общее хранилище сохраняется:</p><pre><code class="language-axiom">DIM fruits[] AS STRING = SPLIT("яблоко,банан", ",")
+<section class="article-section" id="whole"><h2>Целый массив и элемент</h2><p>Квадратный суффикс [] обязателен у объявленного массивного имени или поля, когда выражение обозначает массив целиком. Сам суффикс обозначает весь массив и не означает пустое хранилище. Присваивание создаёт независимую копию:</p><pre><code class="language-axiom">DIM fruits[] AS STRING = SPLIT("яблоко,банан", ",")
 DIM basket[] = fruits[]
 basket[2] = "груша"
 PRINT fruits[2]
 DIM copy[] = ARRAYCLONE(fruits[])
 copy[1] = "слива"
-PRINT fruits[1]</code></pre><p>Вывод:</p><pre><code>груша
-яблоко</code></pre><p>Первая запись меняет общий массив, а <code>ARRAYCLONE(fruits[])</code> создаёт независимую копию. Для массива любого ранга целая форма остаётся <code>name[]</code>; ранг определяется его типом.</p></section>
+PRINT fruits[1]</code></pre><p>Вывод:</p><pre><code>банан
+яблоко</code></pre><p>Первая запись изменяет только basket: обычное присваивание уже создаёт независимую копию. <code>ARRAYCLONE(fruits[])</code> остаётся явной функцией копирования. Для массива любого ранга целая форма остаётся <code>name[]</code>; ранг определяется его типом.</p></section>
 <section class="article-section" id="calls"><h2>Вызов функции не становится индексированием</h2><p>Круглые скобки сохраняются у функций и процедур. Функция, возвращающая массив, вызывается обычной записью <code>MakeFruits()</code>. Элемент результата выбирается после вызова: <code>MakeFruits()[2]</code>. Дополнительный суффикс <code>[]</code> после вызова для обозначения результата не нужен.</p><pre><code class="language-axiom">FUNCTION MakeFruits() AS STRING[]
     DIM result[] AS STRING = SPLIT("яблоко,банан", ",")
     RETURN result[]
@@ -53,7 +53,7 @@ END TYPE
 DIM bag AS Basket
 REDIM bag.Items[1 TO 2]
 bag.Items[1] = "яблоко"
-ERASE bag.Items[]</code></pre><p>Размер, границы, общая память, представления, BYREF и правила копирования не меняются. Меняется только запись синтаксических узлов.</p></section>
+ERASE bag.Items[]</code></pre><p>Квадратная запись определяет синтаксис доступа. Действующий договор копирования требует независимых значений при присваивании и BYVAL; явный BYREF сохраняет связь с исходной переменной.</p></section>
 <section class="article-section" id="errors"><h2>Формы, которые нужно исправить</h2><ul><li><code>values(2)</code> заменяется на <code>values[2]</code>; круглая запись массива не является действующей формой.</li><li><code>values</code> в месте, где требуется массив целиком, заменяется на <code>values[]</code>; имя без суффикса не угадывает массивный тип.</li><li><code>DIM values AS STRING () = ...</code> заменяется на <code>DIM values[] AS STRING = ...</code>; суффикс после типа запрещён.</li><li><code>DIM values = SPLIT(...)</code> заменяется на <code>DIM values[] = SPLIT(...)</code>; выведенное объявление массива без суффикса запрещено.</li><li>Круглые скобки у <code>FUNCTION</code>, <code>SUB</code>, встроенных функций и математических выражений не заменяются.</li></ul><p>Новые литералы массивов, новые коллекции и новые имена встроенных функций этим переходом не вводятся.</p></section>
 <section class="article-section" id="related"><h2>См. также</h2><p><a href="arrays.html">Массивы</a> · <a href="arrays-indexing.html">Индексирование</a> · <a href="dim.html">DIM</a> · <a href="redim.html">REDIM</a> · <a href="erase.html">ERASE</a> · <a href="calls.html">Вызовы</a> · <a href="type.html">TYPE</a></p></section>
 <div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>

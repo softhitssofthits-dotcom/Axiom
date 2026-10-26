@@ -81,7 +81,7 @@ public sealed partial class BytecodeVm
             return cachedType;
         }
 
-        var visited = new HashSet<TypeSymbol>();
+        var visited = new HashSet<TypeSymbol>(ReferenceEqualityComparer.Instance);
 
         foreach (var global in _module.Globals)
         {
@@ -180,7 +180,7 @@ public sealed partial class BytecodeVm
     {
         ArgumentNullException.ThrowIfNull(module);
 
-        var visited = new HashSet<TypeSymbol>();
+        var visited = new HashSet<TypeSymbol>(ReferenceEqualityComparer.Instance);
 
         foreach (var global in module.Globals)
         {

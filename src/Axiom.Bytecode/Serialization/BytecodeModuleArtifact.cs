@@ -82,7 +82,8 @@ public sealed record BytecodeVariableSymbolArtifact(
 public sealed record BytecodeTypeDefinitionArtifact(
     string Name,
     IReadOnlyList<BytecodeTypeFieldArtifact> Fields,
-    string? Identity = null);
+    string? Identity = null,
+    IReadOnlyList<string?>? TupleElementNames = null);
 
 public sealed record BytecodeTypeFieldArtifact(
     string Name,

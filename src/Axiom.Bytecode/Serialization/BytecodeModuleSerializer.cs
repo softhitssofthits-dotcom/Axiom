@@ -267,7 +267,8 @@ public static class BytecodeModuleSerializer
         return new BytecodeTypeDefinitionArtifact(
             type.Name,
             type.Fields.Select(ToArtifact).ToArray(),
-            identity);
+            identity,
+            (type as TupleTypeSymbol)?.ElementNames);
     }
 
     private static BytecodeTypeFieldArtifact ToArtifact(TypeFieldSymbol field)
@@ -616,7 +617,7 @@ public static class BytecodeModuleSerializer
     {
         private readonly Dictionary<FunctionSymbol, int> _functionIds = [];
         private readonly Dictionary<VariableSymbol, int> _variableIds = [];
-        private readonly Dictionary<string, UserDefinedTypeSymbol> _userDefinedTypes = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, UserDefinedTypeSymbol> _userDefinedTypes = new(StringComparer.OrdinalIgnoreCase);
 
         public IReadOnlyList<UserDefinedTypeSymbol> UserDefinedTypes => _userDefinedTypes.Values.ToArray();
 
@@ -714,7 +715,21 @@ public static class BytecodeModuleSerializer
         {
             var identity = GetTypeIdentity(definition);
             TypeIdentityFormat.TrySplit(identity, out var name, out var containingModule);
-            if (!types.TryAdd(identity, new UserDefinedTypeSymbol(name, containingModule)))
+            if (definition.TupleElementNames is { } tupleNames)
+            {
+                var allNamed = tupleNames.All(static n => !string.IsNullOrWhiteSpace(n));
+                var allUnnamed = tupleNames.All(static n => n is null);
+                var unique = tupleNames.Where(static n => n is not null).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+                var fieldsValid = definition.Fields.Select((field, index) =>
+                    string.Equals(field.Name, "Item" + (index + 1), StringComparison.Ordinal)).All(static valid => valid);
+                if (tupleNames.Count < 2 || tupleNames.Count != definition.Fields.Count ||
+                    (!allNamed && !allUnnamed) || (allNamed && unique != tupleNames.Count) || !fieldsValid)
+                    throw new InvalidOperationException($"Неверное определение кортежа '{definition.Name}'.");
+            }
+            UserDefinedTypeSymbol restored = definition.TupleElementNames is { } names
+                ? new TupleTypeSymbol(definition.Name, names)
+                : new UserDefinedTypeSymbol(name, containingModule);
+            if (!types.TryAdd(identity, restored))
             {
                 throw new InvalidOperationException($"Идентичность TYPE '{identity}' объявлена несколько раз.");
             }
@@ -738,6 +753,25 @@ public static class BytecodeModuleSerializer
                     field.HasDefaultValue,
                     RestoreTypeFieldDefaultValue(field, types)))
                 .ToArray());
+        }
+
+        // Снимок недоверенный: циклическое определение кортежа нельзя
+        // передавать структурному сравнению или созданию начального значения.
+        var active = new HashSet<UserDefinedTypeSymbol>(ReferenceEqualityComparer.Instance);
+        var complete = new HashSet<UserDefinedTypeSymbol>(ReferenceEqualityComparer.Instance);
+        foreach (var type in types.Values) ValidateValueTypeGraph(type);
+
+        void ValidateValueTypeGraph(UserDefinedTypeSymbol type)
+        {
+            if (complete.Contains(type)) return;
+            if (!active.Add(type)) throw new InvalidOperationException($"Циклическое определение типа '{type.Name}'.");
+            foreach (var field in type.Fields)
+            {
+                var nested = field.Type is ArrayTypeSymbol array ? array.ElementType : field.Type;
+                if (nested is UserDefinedTypeSymbol record) ValidateValueTypeGraph(record);
+            }
+            active.Remove(type);
+            complete.Add(type);
         }
 
         return types;
@@ -807,7 +841,9 @@ public static class BytecodeModuleSerializer
         if (TryPeelArraySuffix(name, out var elementName, out var rank))
         {
             // Массив функционального типа записывается в скобках: (FUNCTION(...) AS T)().
-            var element = IsWrappedWholeExpression(elementName) ? elementName[1..^1] : elementName;
+            var element = IsWrappedWholeExpression(elementName)
+                && elementName.AsSpan(1).StartsWith("FUNCTION(", StringComparison.Ordinal)
+                    ? elementName[1..^1] : elementName;
             return ArrayTypeSymbol.Create(ResolveStructuredType(element, userDefinedTypes), rank);
         }
 

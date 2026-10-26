@@ -1,0 +1,17 @@
+' BYVAL получает копию, BYREF изменяет переданную переменную.
+' Ожидаемый вывод:
+' 10
+' 30
+DIM prices[] AS INTEGER = [10]
+ChangeCopy(prices[])
+PRINT prices[1]
+ChangeOriginal(prices[])
+PRINT prices[1]
+
+SUB ChangeCopy(BYVAL values[] AS INTEGER)
+    values[1] = 20
+END SUB
+
+SUB ChangeOriginal(BYREF values[] AS INTEGER)
+    values[1] = 30
+END SUB

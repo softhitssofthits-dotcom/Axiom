@@ -1,0 +1,12 @@
+' Функция возвращает среднюю оценку и число оценок одним кортежем.
+' Ожидаемый вывод:
+' 4 2
+' 4 2
+FUNCTION Summary(first, second AS INTEGER) AS (Mean AS DOUBLE, Count AS INTEGER)
+    RETURN ((first + second) / 2, 2)
+END FUNCTION
+
+DIM result = Summary(3, 5)
+PRINT result.Mean, result.Count
+DIM (mean, count) = Summary(3, 5)
+PRINT mean, count

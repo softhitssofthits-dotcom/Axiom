@@ -24,7 +24,7 @@ count = count + 1
 count = count * 2
 PRINT count</code></pre>
 <pre><code>6</code></pre></section>
-<section class="article-section" id="elements-and-fields"><h2>Элементы и поля</h2><p>Присваивание целого массива записывается с суффиксом [] у обеих массивных переменных: <code>basket[] = fruits[]</code>. Обе переменные получают общее хранилище. Для независимой копии используют <code>basket[] = ARRAYCLONE(fruits[])</code>. Если справа стоит вызов функции с массивным результатом, достаточно самого вызова: <code>basket[] = MakeFruits()</code>.</p>
+<section class="article-section" id="elements-and-fields"><h2>Элементы и поля</h2><p>Присваивание целого массива записывается с суффиксом [] у обеих массивных переменных: <code>basket[] = fruits[]</code>. Вторая переменная получает независимую копию, включая вложенные изменяемые данные. Явная функция <code>ARRAYCLONE(fruits[])</code> также создаёт независимую копию. Если справа стоит вызов функции с массивным результатом, достаточно самого вызова: <code>basket[] = MakeFruits()</code>.</p>
 <p>Запись в отдельный элемент массива требует индекса после имени, запись в поле — имени поля после точки:</p>
 <pre><code class="language-axiom">TYPE Position
     X AS INTEGER
@@ -48,5 +48,5 @@ PRINT items[1], point.X</code></pre>
 <li><code>MB3002</code>: индекс выходит за границы массива.</li></ul>
 <p>Ошибки вычисления правой части описаны в статьях соответствующих операций и функций.</p></section>
 <section class="article-section" id="related"><h2>См. также</h2>
-<p>Тип переменной задаёт <a href="dim.html">DIM</a>, а защищает имя от записи <a href="const.html">CONST</a>. Какие значения можно записать в цель другого типа, определяют <a href="data-types-conversions.html">преобразования типов</a>.</p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<p>Тип переменной задаёт <a href="dim.html">DIM</a>, а защищает имя от записи <a href="const.html">CONST</a>. Какие значения можно записать в цель другого типа, определяют <a href="data-types-conversions.html">преобразования типов</a>.</p></section><section class="article-section"><h2>Кортежи</h2><p>Связанные значения разных типов можно хранить в кортеже, объявлять с полным или общим типом группы, передавать функции и распаковывать. Все формы и примеры приведены на <a href="tuples.html">странице кортежей</a>.</p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
 <script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

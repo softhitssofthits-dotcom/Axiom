@@ -1,0 +1,11 @@
+' Копия сначала содержит все исходные товары.
+' Ожидаемый вывод:
+' яблоки груши
+' яблоки груши
+' яблоки сливы
+DIM original[] AS STRING = ["яблоки", "груши"]
+DIM copy[] AS STRING = original[]
+PRINT copy[1], copy[2]
+copy[2] = "сливы"
+PRINT original[1], original[2]
+Print copy[1], copy[2]

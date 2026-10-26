@@ -68,10 +68,19 @@ public sealed partial class Parser
         return ParsePostfixExpression(atom);
     }
 
-    private ParenthesizedExpressionSyntax ParseParenthesizedExpression()
+    private ExpressionSyntax ParseParenthesizedExpression()
     {
         var openParenToken = Match(SyntaxKind.OpenParenToken, "(");
         var expression = ParseExpression();
+        if (Current.Kind == SyntaxKind.CommaToken)
+        {
+            var elements = new List<ExpressionSyntax> { expression };
+            while (Current.Kind == SyntaxKind.CommaToken)
+            {
+                NextToken(); elements.Add(ParseExpression());
+            }
+            return new TupleExpressionSyntax(openParenToken, elements, Match(SyntaxKind.CloseParenToken, ")"));
+        }
         var closeParenToken = Match(SyntaxKind.CloseParenToken, ")");
         return new ParenthesizedExpressionSyntax(openParenToken, expression, closeParenToken);
     }

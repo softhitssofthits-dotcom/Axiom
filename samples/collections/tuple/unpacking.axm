@@ -1,0 +1,9 @@
+' Две части кортежа помещаются в отдельные переменные.
+' Ожидаемый вывод:
+' 60 40
+' 40 60
+DIM purchase AS (Cost, Change AS INTEGER) = (60, 40)
+DIM (cost, change) = purchase
+PRINT cost, change
+(cost, change) = (change, cost)
+PRINT cost, change

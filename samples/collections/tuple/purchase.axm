@@ -1,0 +1,14 @@
+' Покупка: функция возвращает стоимость и сдачу одним значением.
+' Ожидаемый вывод:
+' 60 40
+' 60 99
+FUNCTION BuyApples(quantity, price, paid AS INTEGER) AS (Cost, Change AS INTEGER)
+    DIM total AS INTEGER = quantity * price
+    RETURN (total, paid - total)
+END FUNCTION
+
+DIM purchase = BuyApples(3, 20, 100)
+PRINT purchase.Cost, purchase.Change
+DIM copy = purchase
+copy.Cost = 99
+PRINT purchase.Cost, copy.Cost

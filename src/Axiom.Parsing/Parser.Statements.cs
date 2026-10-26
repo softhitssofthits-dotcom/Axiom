@@ -24,6 +24,8 @@ public sealed partial class Parser
     {
         return Current.Kind switch
         {
+            SyntaxKind.DimKeyword when Peek(1).Kind == SyntaxKind.OpenParenToken => ParseTupleDimStatement(),
+            SyntaxKind.OpenParenToken when LooksLikeTupleUnpacking() => ParseTupleLeadingStatement(),
             SyntaxKind.DimKeyword => ParseDimStatement(),
             SyntaxKind.ConstKeyword => ParseConstStatement(),
             SyntaxKind.PrintKeyword => ParsePrintStatement(),
@@ -83,6 +85,12 @@ public sealed partial class Parser
             SyntaxKind.IdentifierToken or SyntaxKind.SelfKeyword => ParseIdentifierLeadingStatement(),
             _ => new ExpressionStatementSyntax(ParseExpression())
         };
+    }
+
+    private StatementSyntax ParseTupleDimStatement()
+    {
+        var dim = NextToken();
+        return ParseTupleLeadingStatement(dim);
     }
 
     private DimStatementSyntax ParseDimStatement()

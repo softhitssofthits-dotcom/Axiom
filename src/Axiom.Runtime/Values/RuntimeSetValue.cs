@@ -294,6 +294,8 @@ public sealed class RuntimeSetValue
         return new RuntimeSetValue(Type);
     }
 
+    internal RuntimeSetValue CreateEmptyForValueCopy() => new(Type, _maxEntryCount);
+
     /// <summary>
     /// Добавляет элемент при восстановлении снимка без проверки повтора:
     /// снимок уже содержит согласованный набор элементов.

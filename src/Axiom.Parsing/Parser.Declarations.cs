@@ -71,6 +71,7 @@ public sealed partial class Parser
                 continue;
             }
 
+            var start = _position;
             switch (Current.Kind)
             {
                 case SyntaxKind.SubKeyword:
@@ -84,6 +85,14 @@ public sealed partial class Parser
                 default:
                     fields.Add(ParseTypeField());
                     break;
+            }
+
+            // Ошибочная форма поля может вернуть синтетические токены, не
+            // потребив вход. Пропускаем один токен, чтобы TYPE не зациклился.
+            if (_position == start)
+            {
+                ReportUnexpectedToken(Current, "Неожиданный токен в TYPE");
+                NextToken();
             }
 
             SkipNewLines();
@@ -193,7 +202,11 @@ public sealed partial class Parser
     {
         TypeSyntax typeSyntax;
 
-        if (Current.Kind == SyntaxKind.FunctionKeyword)
+        if (Current.Kind == SyntaxKind.OpenParenToken)
+        {
+            typeSyntax = ParseTupleType();
+        }
+        else if (Current.Kind == SyntaxKind.FunctionKeyword)
         {
             typeSyntax = ParseFunctionTypeSyntax();
         }
@@ -437,7 +450,7 @@ public sealed partial class Parser
         {
             while (true)
             {
-                parameterList.Add(ParseParameter());
+                parameterList.AddRange(ParseParameterGroup(commas));
 
                 if (Current.Kind != SyntaxKind.CommaToken)
                 {

@@ -192,7 +192,7 @@ public static class RuntimeValueHelpers
         ArgumentNullException.ThrowIfNull(left);
         ArgumentNullException.ThrowIfNull(right);
 
-        if (!ReferenceEquals(left.Type, right.Type))
+        if (left.Type != right.Type)
         {
             return false;
         }

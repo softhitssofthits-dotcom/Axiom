@@ -44,6 +44,7 @@ public sealed partial class Binder
     {
         return expression switch
         {
+            TupleExpressionSyntax tuple => tuple.OpenParenToken.Location,
             LiteralExpressionSyntax literalExpression => literalExpression.LiteralToken.Location,
             InterpolatedStringExpressionSyntax interpolatedExpression => interpolatedExpression.StartToken.Location,
             RangeExpressionSyntax rangeExpression => rangeExpression.ToKeyword.Location,
@@ -66,6 +67,7 @@ public sealed partial class Binder
     {
         return typeSyntax switch
         {
+            TupleTypeSyntax tuple => tuple.OpenParenToken.Location,
             NamedTypeSyntax namedType => namedType.TypeToken.Location,
             FixedLengthStringTypeSyntax fixedStringType => fixedStringType.StringKeyword.Location,
             FunctionTypeSyntax functionType => functionType.FunctionKeyword.Location,
@@ -80,6 +82,7 @@ public sealed partial class Binder
     {
         return statement switch
         {
+            TupleUnpackingStatementSyntax unpack => unpack.EqualsToken.Location,
             LocalSubDeclarationStatementSyntax localSubDeclaration => localSubDeclaration.Declaration.Identifier.Location,
             LocalFunctionDeclarationStatementSyntax localFunctionDeclaration => localFunctionDeclaration.Declaration.Identifier.Location,
             PrintStatementSyntax printStatement => printStatement.PrintKeyword.Location,

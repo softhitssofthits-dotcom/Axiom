@@ -113,9 +113,7 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
         var elements = new RuntimeValue[values.Count];
         for (var index = 0; index < values.Count; index++)
         {
-            elements[index] = fixedStringLength is null && elementType is not UserDefinedTypeSymbol
-                ? values[index]
-                : values[index].CopyForStorage(fixedStringLength);
+            elements[index] = values[index].CopyForStorage(fixedStringLength);
         }
 
         array._elements = elements;
@@ -155,9 +153,7 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
             for (var secondIndex = 1; secondIndex <= secondLength; secondIndex++)
             {
                 var value = valueFactory(firstIndex, secondIndex);
-                elements[elementIndex++] = fixedStringLength is null && elementType is not UserDefinedTypeSymbol
-                    ? value
-                    : value.CopyForStorage(fixedStringLength);
+                elements[elementIndex++] = value.CopyForStorage(fixedStringLength);
             }
         }
 

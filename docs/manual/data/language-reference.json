@@ -26,7 +26,7 @@
     "src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.cs",
     "src/Axiom.Syntax/SyntaxKind.cs"
   ],
-  "sourceFingerprint": "f202a57812bae171dca88479e228f0b618d6a4c6466dc8777cd8f295a4fd8da2",
+  "sourceFingerprint": "37b4315251d8eaa563d12596eba6364f4663a0a151b72bd1e118d5fafc28bfca",
   "functions": [
     {
       "name": "ABS",
@@ -8336,6 +8336,12 @@
       "name": "Присваивание",
       "syntax": "Assignment",
       "href": "assignment.html"
+    },
+    {
+      "id": "tupleunpacking-распаковка-кортежа",
+      "name": "Распаковка кортежа",
+      "syntax": "TupleUnpacking",
+      "href": "tuples.html"
     },
     {
       "id": "expression-вызов-как-инструкция",

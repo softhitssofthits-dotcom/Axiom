@@ -76,7 +76,9 @@ internal static class RuntimeValueHashing
     {
         // Имя типа разделяет одинаковые по полям значения разных TYPE,
         // которые структурное равенство считает разными записями.
-        var hash = record.Type.Name.GetHashCode(StringComparison.Ordinal);
+        var hash = record.Type is TupleTypeSymbol
+            ? record.Type.GetHashCode()
+            : record.Type.Name.GetHashCode(StringComparison.Ordinal);
 
         foreach (var field in record.Type.Fields)
         {

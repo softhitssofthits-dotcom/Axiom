@@ -104,7 +104,7 @@ SUB ReadInto(items AS DICTIONARY(STRING, INTEGER), BYREF result AS INTEGER)
     PRINT items.TryGetValue("яблоко", result)
 END SUB</code></pre><p>Программа выводит <code>TRUE</code>, затем <code>42</code>: значение записано в переменную <code>fromParameter</code> через параметр <code>BYREF</code>.</p></section>
 
-<section class="article-section" id="values"><h2>Хранимые значения и присваивание словаря</h2><p>Значения подчиняются действующим правилам Axiom. Запись <code>TYPE</code> копируется при добавлении: последующее изменение исходной переменной не меняет содержимое словаря. Массив сохраняет обычную общую ссылку, поэтому изменение элемента через словарь видно и в другом имени того же массива.</p><pre><code class="language-axiom">TYPE Item
+<section class="article-section" id="values"><h2>Хранимые значения и присваивание словаря</h2><p>Значения копируются при добавлении или замене: последующее изменение исходной переменной не меняет содержимое словаря. Массив и вложенные данные TYPE получают независимое хранилище. Чтение записи с сохранением в отдельную переменную также создаёт копию; непосредственное изменение выбранной записи словаря меняет сам словарь.</p><pre><code class="language-axiom">TYPE Item
     Price AS INTEGER
 END TYPE
 DIM items AS DICTIONARY(INTEGER, Item)
@@ -112,12 +112,12 @@ DIM apple AS Item
 apple.Price = 30
 items.Add(1, apple)
 apple.Price = 99
-PRINT items[1].Price</code></pre><p>Программа выводит <code>30</code>: запись скопирована при добавлении.</p><p>Обычное присваивание словаря разделяет один экземпляр, как и присваивание массива. Два имени видят одни и те же записи:</p><pre><code class="language-axiom">DIM prices AS DICTIONARY(STRING, INTEGER)
+PRINT items[1].Price</code></pre><p>Программа выводит <code>30</code>: запись скопирована при добавлении.</p><p>Обычное присваивание словаря создаёт независимую копию, включая вложенные данные. Порядок записей сохраняется. Изменение копии не меняет оригинал:</p><pre><code class="language-axiom">DIM prices AS DICTIONARY(STRING, INTEGER)
 prices.Add("яблоко", 30)
 DIM alias AS DICTIONARY(STRING, INTEGER)
 alias = prices
 alias["яблоко"] = 99
-PRINT prices["яблоко"]</code></pre><p>Программа выводит <code>99</code>.</p><p>Метод <code>TYPE</code> у значения словаря получает живой получатель. Изменения <code>SELF</code> записываются в саму запись словаря, а не во временную копию, и сохраняются даже если метод завершился ошибкой:</p><pre><code class="language-axiom">TYPE Item
+PRINT prices["яблоко"]</code></pre><p>Программа выводит <code>30</code>: изменение копии сохранило исходную цену.</p><p>Метод <code>TYPE</code> у значения словаря получает живой получатель. Изменения <code>SELF</code> записываются в саму запись словаря, а не во временную копию, и сохраняются даже если метод завершился ошибкой:</p><pre><code class="language-axiom">TYPE Item
     Price AS INTEGER
 
     SUB RaisePrice()

@@ -78,6 +78,7 @@ public sealed partial class BoundProgramLowerer
         }
 
         LowerExpression(declaration.Initializer, instructions);
+        LowerCollectionCopy(declaration.Initializer, instructions);
         instructions.Add(LoweredInstruction.StoreVariable(declaration.Location, declaration.Variable));
     }
 
@@ -91,6 +92,7 @@ public sealed partial class BoundProgramLowerer
             }
 
             LowerExpression(assignment.Expression, instructions);
+            LowerCollectionCopy(assignment.Expression, instructions);
             instructions.Add(LoweredInstruction.StoreVariable(assignment.Location, directVariable.Variable));
             return;
         }
@@ -138,6 +140,7 @@ public sealed partial class BoundProgramLowerer
         if (declaration.Initializer is not null)
         {
             LowerExpression(declaration.Initializer, instructions);
+            LowerCollectionCopy(declaration.Initializer, instructions);
             instructions.Add(LoweredInstruction.StoreVariable(declaration.Location, declaration.Variable));
             return;
         }

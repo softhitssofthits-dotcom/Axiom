@@ -8,8 +8,8 @@
 
 <p align="center"><strong>Синтаксис BASIC, строгие типы и собственная среда разработки.</strong></p>
 
-![version](https://img.shields.io/badge/version-0.10.0-blue)
-![IDE](https://img.shields.io/badge/IDE-0.15.1-green)
+![version](https://img.shields.io/badge/version-0.12.0-blue)
+![IDE](https://img.shields.io/badge/IDE-0.15.3-green)
 ![platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![status](https://img.shields.io/badge/status-early%20preview-orange)
 ![license](https://img.shields.io/badge/license-MIT-blue)
@@ -156,7 +156,7 @@ cd Axiom
 
 ## Состояние проекта
 
-Axiom находится в ранней разработке. Текущие версии: язык `0.10.0`, компилятор `0.11.0`, IDE `0.15.1`. Основная платформа — Windows. Язык и IDE продолжают меняться; готовая переносимая поставка и поддержка других платформ пока не заявлены.
+Axiom находится в ранней разработке. Текущие версии: язык `0.12.0`, компилятор `0.13.0`, IDE `0.15.3`. Основная платформа — Windows. Язык и IDE продолжают меняться; готовая переносимая поставка и поддержка других платформ пока не заявлены.
 
 ## Лицензия
 

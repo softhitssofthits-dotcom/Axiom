@@ -1,0 +1,16 @@
+' Вложенные товары и множество пометок также копируются независимо.
+' Ожидаемый вывод:
+' груши 1
+' сливы 2
+TYPE Purchase
+    Goods[] AS STRING
+    Labels AS HASHSET(STRING)
+END TYPE
+DIM original AS Purchase
+original.Goods[] = ["яблоки", "груши"]
+original.Labels.Add("куплено")
+DIM copy AS Purchase = original
+copy.Goods[2] = "сливы"
+copy.Labels.Add("изменено")
+PRINT original.Goods[2], original.Labels.Count
+PRINT copy.Goods[2], copy.Labels.Count

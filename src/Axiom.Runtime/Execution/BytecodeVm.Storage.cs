@@ -82,7 +82,7 @@ public sealed partial class BytecodeVm
             // Запись создаётся инструкцией объявления в момент исполнения: заранее
             // подготовленный шаблон кадра не должен выделять поля-массивы даже
             // для процедур, которые так и не будут вызваны.
-            defaultLocals[index] = variable is null || variable.Type is UserDefinedTypeSymbol
+            defaultLocals[index] = variable is null || variable.Type is UserDefinedTypeSymbol or ArrayTypeSymbol or DictionaryTypeSymbol or SetTypeSymbol
                 ? RuntimeValue.Void
                 : RuntimeValue.Default(variable.Type, variable.FixedStringLength);
             localFixedStringLengths[index] = variable?.FixedStringLength;

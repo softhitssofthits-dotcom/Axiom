@@ -162,6 +162,7 @@ public sealed partial class BytecodeVm
 
     private void ExecuteModule()
     {
+        using var copyCancellation = RuntimeValueCopier.WithCancellation(_host);
         if (!_routines.TryGetValue(_module.EntryPointRoutineId, out var entryPoint))
         {
             ReportInvalidRuntimeState(
@@ -243,6 +244,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeResult ResumeFrom(BytecodeVmStopState stopState, DebugStepMode stepMode)
     {
+        using var copyCancellation = RuntimeValueCopier.WithCancellation(_host);
         ArgumentNullException.ThrowIfNull(stopState);
 
         if (!ReferenceEquals(_stopState, stopState))
@@ -505,7 +507,7 @@ public sealed partial class BytecodeVm
             var value = byValIndex < arguments.Length ? arguments[byValIndex] : RuntimeValue.Void;
             argumentSlots[index] = byValValuesAreSnapshots
                 ? BytecodeVariableSlot.Adopt(value)
-                : new BytecodeVariableSlot(value);
+                : BytecodeVariableSlot.Adopt(value.CopyForStorage());
             byValIndex++;
         }
 
@@ -543,7 +545,7 @@ public sealed partial class BytecodeVm
             {
                 HandleSetRuntimeFailure(ex, frame, instructionIndex, runtimeFailureBoundaryDepth);
             }
-            catch (SetOperationCancelledException)
+            catch (Exception ex) when (ex is SetOperationCancelledException or ValueCopyCancelledException)
             {
                 // Операция прервана внутри собственного обхода: получатель не
                 // изменён, выполнение прекращается как при обычной отмене.
@@ -610,7 +612,7 @@ public sealed partial class BytecodeVm
         {
             HandleSetRuntimeFailure(ex, frame, instructionIndex, runtimeFailureBoundaryDepth);
         }
-        catch (SetOperationCancelledException)
+        catch (Exception ex) when (ex is SetOperationCancelledException or ValueCopyCancelledException)
         {
             CancelRun();
             return;

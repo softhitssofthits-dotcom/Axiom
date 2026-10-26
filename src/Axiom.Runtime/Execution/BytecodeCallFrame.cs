@@ -236,12 +236,12 @@ internal sealed class BytecodeCallFrame
     private RuntimeValue EnsureDefaultLocalValue(int slot)
     {
         var variables = Routine.LocalVariables;
-        if (slot >= variables.Count || variables[slot].Type is not UserDefinedTypeSymbol recordType)
+        if (slot >= variables.Count || variables[slot].Type is not (UserDefinedTypeSymbol or ArrayTypeSymbol or DictionaryTypeSymbol or SetTypeSymbol))
         {
             return RuntimeValue.Void;
         }
 
-        var created = RuntimeValue.Default(recordType, _localFixedStringLengths[slot]);
+        var created = RuntimeValue.Default(variables[slot].Type, _localFixedStringLengths[slot]);
 
         if (_hasSharedLocals && _sharedLocals![slot] is { } sharedSlot)
         {

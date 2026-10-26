@@ -545,8 +545,10 @@ public sealed partial class Binder
         if (type is UserDefinedTypeSymbol userDefinedType)
         {
             // NIT-003: подсказываем ближайшее похожее поле — типичная опечатка.
-            var closest = userDefinedType.Fields
-                .Select(static field => field.Name)
+            var candidateNames = userDefinedType is TupleTypeSymbol tuple
+                ? tuple.ElementNames.OfType<string>().Concat(userDefinedType.Fields.Select(static field => field.Name))
+                : userDefinedType.Fields.Select(static field => field.Name);
+            var closest = candidateNames
                 .Where(candidate => !string.Equals(candidate, fieldName, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(candidate => LevenshteinDistance(candidate, fieldName))
                 .ThenBy(candidate => candidate, StringComparer.OrdinalIgnoreCase)

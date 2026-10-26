@@ -226,7 +226,7 @@ public sealed partial class BytecodeModuleValidator
         }
 
         var index = new Dictionary<string, TypeSymbol>(StringComparer.OrdinalIgnoreCase);
-        var visited = new HashSet<TypeSymbol>();
+        var visited = new HashSet<TypeSymbol>(ReferenceEqualityComparer.Instance);
 
         void Add(TypeSymbol type)
         {

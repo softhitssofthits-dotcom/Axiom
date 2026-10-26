@@ -400,7 +400,7 @@ public sealed class TypeFieldSymbol : Symbol
     }
 }
 
-public sealed class UserDefinedTypeSymbol : TypeSymbol
+public class UserDefinedTypeSymbol : TypeSymbol
 {
     private readonly Dictionary<string, TypeFieldSymbol> _fieldsByName = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, List<FunctionSymbol>> _methodsByName = new(StringComparer.OrdinalIgnoreCase);
@@ -502,7 +502,7 @@ public sealed class UserDefinedTypeSymbol : TypeSymbol
         MethodsCompleted = true;
     }
 
-    public bool TryGetField(string name, out TypeFieldSymbol? field)
+    public virtual bool TryGetField(string name, out TypeFieldSymbol? field)
     {
         return _fieldsByName.TryGetValue(name, out field);
     }

@@ -56,7 +56,8 @@ public sealed partial class Binder
                     Variable(variable.Location.Span, variable.Variable);
                     break;
                 case BoundFieldAccessExpression field:
-                    Add(field.Location.Span, field.Field.Name, "field", field.Type.Name, valueType: field.Type);
+                    var sourceName = identifiers.FirstOrDefault(item => item.Span == field.Location.Span)?.Name ?? field.Field.Name;
+                    Add(field.Location.Span, sourceName, "field", field.Type.Name, valueType: field.Type);
                     break;
                 case BoundFunctionExpression function:
                     Function(function.Location.Span, function.Function);

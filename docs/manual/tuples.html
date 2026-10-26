@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Кортежи и распаковка — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="tuples"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Кортежи и распаковка</span></nav>
+<p class="eyebrow">12 · Составные значения</p><h1 class="page-title">Кортежи и распаковка</h1><p class="lead">Кортеж объединяет несколько значений разных типов и позволяет обращаться к нужной части по имени или позиции.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+
+<section class="article-section"><h2>Объявление и начальные значения</h2>
+<p>Кортеж хранит несколько связанных значений под одним именем. Его компоненты имеют фиксированный порядок; каждый компонент обладает собственным типом. При объявлении имена и типы компонентов записываются в круглых скобках после <code>AS</code>:</p>
+<pre><code class="language-axiom">DIM purchase AS (Cost AS INTEGER, Change AS INTEGER)</code></pre>
+<p>Если соседние компоненты имеют одинаковый тип, его можно записать один раз после группы имён. Следующее объявление равнозначно предыдущему:</p>
+<pre><code class="language-axiom">DIM purchase AS (Cost, Change AS INTEGER)</code></pre>
+<p>В одном кортеже могут быть компоненты разных типов. Группа имён заканчивается своей частью <code>AS тип</code>:</p>
+<pre><code class="language-axiom">DIM result AS (Name AS STRING, Cost, Change AS INTEGER, Paid AS BOOLEAN)</code></pre>
+<p>В кортеже должно быть не менее двух компонентов. Имена задаются либо всем компонентам, либо ни одному. Имена не различают регистр и не должны повторяться или иметь вид <code>Item1</code>, <code>Item2</code> и так далее: эти обозначения предназначены для доступа по позиции.</p>
+<p>Без начального выражения компоненты получают обычные начальные значения своего типа: числа равны 0, строки пусты, <code>BOOLEAN</code> равен <code>FALSE</code>. Вложенные записи и коллекции получают свои обычные начальные значения.</p>
+<pre><code class="language-axiom">DIM purchase AS (Cost, Change AS INTEGER)
+PRINT purchase.Cost, purchase.Change</code></pre><p>Вывод: <code>0 0</code>.</p></section>
+<section class="article-section"><h2>Значение и доступ к компоненту</h2>
+<p>Значение кортежа состоит из выражений в круглых скобках. Выражения вычисляются слева направо; первое значение соответствует первому компоненту, второе — второму. Число значений должно совпадать с числом компонентов, а тип каждого значения должен совпадать с ожидаемым типом или допускать преобразование.</p>
+<p>Начальное значение может находиться непосредственно в объявлении:</p>
+<pre><code class="language-axiom">DIM purchase AS (Cost, Change AS INTEGER) = (60, 40)</code></pre>
+<p>Можно объявить переменную и присвоить ей значение позже:</p>
+<pre><code class="language-axiom">DIM purchase AS (Cost, Change AS INTEGER)
+purchase = (60, 40)</code></pre>
+<p>Отдельный компонент читается или изменяется через точку. Каждому компоненту соответствует также позиционное имя: <code>Item1</code> обозначает первый, <code>Item2</code> — второй и так далее.</p>
+<pre><code class="language-axiom">purchase.Cost = 70
+PRINT purchase.Item1, purchase.Change</code></pre><p>Вывод: <code>70 40</code>. Доступ по имени и по позиции обращается к одному компоненту.</p>
+<p>Имена можно не задавать:</p><pre><code class="language-axiom">DIM pair AS (INTEGER, STRING) = (2, "яблоки")
+PRINT pair.Item1, pair.Item2</code></pre><p>Вывод: <code>2 яблоки</code>. Если тип выводится из позиционного значения, компоненты также получают имена <code>Item1</code>, <code>Item2</code>:</p><pre><code class="language-axiom">DIM pair = (2, "яблоки")</code></pre>
+<p>Компонентами могут быть числа, строки, логические и временные значения, записи TYPE, массивы, DICTIONARY, HASHSET и другие кортежи. Непосредственные функции и внешние ресурсы в компоненте не допускаются; <code>STRING * N</code> как тип компонента не поддерживается. Массивы и поля TYPE сохраняют собственные правила объявления и доступа. Целый кортеж нельзя вывести через PRINT или вставить в интерполированную строку: выводятся его компоненты.</p></section>
+<section class="article-section"><h2>Результат функции и параметры</h2>
+<p>Функция может вернуть одним кортежем несколько результатов. Тип после последнего <code>AS</code> описывает возвращаемые части; <code>RETURN</code> передаёт их в том же порядке.</p>
+<pre><code class="language-axiom">FUNCTION BuyApples(quantity, price, paid AS INTEGER) AS (Cost, Change AS INTEGER)
+    DIM total AS INTEGER = quantity * price
+    RETURN (total, paid - total)
+END FUNCTION
+
+DIM purchase = BuyApples(3, 20, 100)
+PRINT purchase.Cost, purchase.Change</code></pre><p>Вывод: <code>60 40</code>. В объявлении <code>purchase</code> тип и имена компонентов определяются по результату функции. При необходимости тип можно указать явно:</p><pre><code class="language-axiom">DIM purchase AS (Cost AS INTEGER, Change AS INTEGER) = BuyApples(3, 20, 100)</code></pre>
+<p>Полная запись функции перечисляет тип каждого параметра и каждого компонента результата:</p><pre><code class="language-axiom">FUNCTION BuyApples(quantity AS INTEGER, price AS INTEGER, paid AS INTEGER) AS (Cost AS INTEGER, Change AS INTEGER)</code></pre><p>Сокращённая запись той же сигнатуры:</p><pre><code class="language-axiom">FUNCTION BuyApples(quantity, price, paid AS INTEGER) AS (Cost, Change AS INTEGER)</code></pre><p>В параметрах <code>SUB</code> также допускаются полная и сокращённая записи:</p><pre><code class="language-axiom">SUB Show(first AS INTEGER, second AS INTEGER)</code></pre><pre><code class="language-axiom">SUB Show(first, second AS INTEGER)</code></pre><p>Обе формы объявляют два параметра INTEGER. Явный <code>BYREF</code> или <code>BYVAL</code> перед первой переменной относится к группе: <code>BYREF first, second AS INTEGER</code>. Для другого режима сначала заканчивают текущую группу, например <code>BYREF first AS INTEGER, BYVAL second AS INTEGER</code>.</p></section>
+<section class="article-section"><h2>Распаковка</h2><p>Распаковка помещает компоненты кортежа в отдельные переменные того же порядка. Объявление создаёт новые имена и определяет их типы по источнику:</p><pre><code class="language-axiom">DIM purchase AS (Cost, Change AS INTEGER) = (60, 40)
+DIM (cost, change) = purchase
+PRINT cost, change</code></pre><p>Вывод: <code>60 40</code>.</p><p>Присваивание использует уже объявленные изменяемые переменные:</p><pre><code class="language-axiom">(cost, change) = (change, cost)
+PRINT cost, change</code></pre><p>Вывод: <code>40 60</code>. Источник вычисляется один раз; значения и необходимые преобразования подготавливаются до изменения любой из целевых переменных. Это позволяет обменять значения без дополнительной переменной. Каждая цель указывается один раз; число целей равно числу компонентов. Непосредственная распаковка во вложенный список, поле или индекс элемента не поддерживается.</p></section>
+<section class="article-section"><h2>Копирование, передача и сравнение</h2><p>Присваивание, инициализация, возврат из функции и пользовательский параметр <code>BYVAL</code> создают независимое значение, включая вложенные массивы, записи, словари и множества. Изменение компонента копии не меняет исходный кортеж. Явный <code>BYREF</code> связывает параметр с переданной переменной; изменить эту переменную можно через её компоненты. Для непосредственного аргумента BYREF действуют обычные ограничения на адресуемую переменную.</p>
+<pre><code class="language-axiom">DIM first AS (Cost, Change AS INTEGER) = (60, 40)
+DIM second = first
+second.Cost = 99
+PRINT first.Cost, second.Cost</code></pre><p>Вывод: <code>60 99</code>.</p><p>Совместимость определяется числом, порядком и типами компонентов. Имена служат для доступа и не меняют совместимость. Для каждой позиции применяются разрешённые преобразования типа. Кортеж и именованный TYPE не являются взаимозаменяемыми. Кортежи одинакового структурного типа можно сравнивать операторами <code>=</code> и <code>&lt;&gt;</code>, если все компоненты поддерживают структурное равенство. Упорядоченное сравнение целого кортежа не предусмотрено.</p></section>
+<section class="article-section"><h2>Диагностика и примеры</h2><p>MB2003 сообщает о несовпадении числа компонентов и значений, несовместимом типе, повторном имени компонента или цели распаковки, а также о недопустимом типе компонента. MB2023 сообщает о неизвестном имени компонента. MB2010 возникает при присваивании константе, включая цель распаковки. MB2022 сообщает о циклическом объявлении TYPE через кортеж, MB2026 — о недопустимой строке фиксированной длины в компоненте, MB2028 — о недопустимом аргументе BYREF.</p><p>При незавершённой или ошибочной записи разбор может сообщить MB1001, если отсутствует ожидаемый токен, MB1002 для недопустимого имени, MB1003 при отсутствии выражения или MB1004 при неожиданном токене.</p><p><a href="../../samples/collections/tuple/purchase.axm">Покупка и независимая копия</a> · <a href="../../samples/collections/tuple/unpacking.axm">Распаковка и обмен</a> · <a href="../../samples/collections/tuple/nested_copy.axm">Вложенные товары</a> · <a href="../../samples/collections/tuple/wrong_count_error.axm">Ошибка числа значений</a>.</p><p><a href="dim.html">DIM</a> · <a href="assignment.html">Присваивание</a> · <a href="calls.html">Вызовы и параметры</a> · <a href="type.html">TYPE</a></p></section><div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

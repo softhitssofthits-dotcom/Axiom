@@ -1,0 +1,12 @@
+' Копия включает независимую запись с массивом товаров.
+' Ожидаемый вывод:
+' груши сливы
+TYPE Basket
+    Goods[] AS STRING
+END TYPE
+DIM basket AS Basket
+basket.Goods[] = ["яблоки", "груши"]
+DIM purchase AS (Items AS Basket, Price AS INTEGER) = (basket, 60)
+DIM copy = purchase
+copy.Items.Goods[2] = "сливы"
+PRINT purchase.Items.Goods[2], copy.Items.Goods[2]

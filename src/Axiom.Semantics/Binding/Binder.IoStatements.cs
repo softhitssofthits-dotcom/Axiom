@@ -10,7 +10,10 @@ public sealed partial class Binder
 
         foreach (var item in statement.Items)
         {
-            items.Add(new BoundPrintItem(BindExpression(item.Expression), MapPrintSeparator(item.SeparatorToken)));
+            var value = BindExpression(item.Expression);
+            if (value.Type is TupleTypeSymbol)
+                ReportTuple("Выводите отдельные компоненты кортежа, а не кортеж целиком.", GetLocation(item.Expression));
+            items.Add(new BoundPrintItem(value, MapPrintSeparator(item.SeparatorToken)));
         }
 
         return new BoundPrintStatement(GetLocation(statement), items);
@@ -23,7 +26,10 @@ public sealed partial class Binder
 
         foreach (var item in statement.Items)
         {
-            items.Add(new BoundPrintItem(BindExpression(item.Expression), MapPrintSeparator(item.SeparatorToken)));
+            var value = BindExpression(item.Expression);
+            if (value.Type is TupleTypeSymbol)
+                ReportTuple("Выводите отдельные компоненты кортежа, а не кортеж целиком.", GetLocation(item.Expression));
+            items.Add(new BoundPrintItem(value, MapPrintSeparator(item.SeparatorToken)));
         }
 
         return new BoundPrintUsingStatement(GetLocation(statement), formatExpression, items);

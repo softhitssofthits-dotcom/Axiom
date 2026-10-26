@@ -1,4 +1,4 @@
-﻿using Axiom.Syntax;
+using Axiom.Syntax;
 
 namespace Axiom.Semantics;
 
@@ -20,6 +20,7 @@ public sealed partial class Binder
     {
         var bound = statement switch
         {
+            TupleUnpackingStatementSyntax unpack => BindTupleUnpacking(unpack),
             DimStatementSyntax dimStatement => BindDimStatement(dimStatement),
             ConstStatementSyntax constStatement => BindConstStatement(constStatement),
             AssignmentStatementSyntax assignmentStatement => BindAssignmentStatement(assignmentStatement),

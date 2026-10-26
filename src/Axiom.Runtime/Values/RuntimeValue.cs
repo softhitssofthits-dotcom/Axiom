@@ -518,14 +518,9 @@ public sealed class RuntimeValue : IRuntimeStoredValue
                 : text);
         }
 
-        if (Type is ArrayTypeSymbol arrayType && fixedStringLength is not null)
+        if (Type is UserDefinedTypeSymbol or ArrayTypeSymbol or DictionaryTypeSymbol or SetTypeSymbol)
         {
-            return FromArray(arrayType, AsArray().Clone(fixedStringLength));
-        }
-
-        if (Type is UserDefinedTypeSymbol userType)
-        {
-            return FromRecord(userType, AsRecord().Clone());
+            return RuntimeValueCopier.Copy(this, fixedStringLength);
         }
 
         if (Type == TypeSymbol.RuntimeError)
@@ -654,6 +649,14 @@ public sealed class RuntimeValue : IRuntimeStoredValue
             return array.IsAllocated
                 ? $"<{arrayType.Name} {array.LowerBound} TO {array.UpperBound}>"
                 : $"<UNALLOCATED {arrayType.Name}>";
+        }
+
+        if (Type is TupleTypeSymbol tupleType)
+        {
+            var record = AsRecord();
+            var elements = tupleType.Fields.Select((field, index) =>
+                (tupleType.ElementNames[index] ?? field.Name) + " = " + record.GetField(field).ToDisplayString());
+            return "(" + string.Join(", ", elements) + ")";
         }
 
         if (Type is UserDefinedTypeSymbol userType)

@@ -3405,7 +3405,7 @@ public sealed partial class BytecodeModuleValidator
         ArgumentNullException.ThrowIfNull(module);
         ArgumentException.ThrowIfNullOrWhiteSpace(typeIdentity);
 
-        var visited = new HashSet<TypeSymbol>();
+        var visited = new HashSet<TypeSymbol>(ReferenceEqualityComparer.Instance);
 
         foreach (var global in module.Globals)
         {

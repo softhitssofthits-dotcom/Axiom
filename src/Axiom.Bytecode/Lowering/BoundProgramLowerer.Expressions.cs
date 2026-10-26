@@ -168,7 +168,12 @@ public sealed partial class BoundProgramLowerer
                 break;
 
             case BoundConversionExpression conversion:
-                if (conversion.Expression is BoundLiteralExpression convLiteral
+                if (conversion.Expression.Type is TupleTypeSymbol sourceTuple && conversion.Type is TupleTypeSymbol targetTuple)
+                {
+                    LowerExpression(conversion.Expression, instructions);
+                    LowerTupleConversion(sourceTuple, targetTuple, conversion.Location, instructions);
+                }
+                else if (conversion.Expression is BoundLiteralExpression convLiteral
                     && TryFoldConversion(convLiteral.Value, convLiteral.Type, conversion.Type, out var foldedConvValue))
                 {
                     instructions.Add(LoweredInstruction.LoadLiteral(conversion.Location, foldedConvValue, conversion.Type));
@@ -303,7 +308,7 @@ public sealed partial class BoundProgramLowerer
                 }
 
                 LowerExpression(argument, instructions);
-                LowerByValSnapshot(argument, instructions);
+                LowerByValSnapshot(argument, instructions, copyCollections: !function.Function.IsBuiltIn);
                 byValArgumentCount++;
             }
 
@@ -340,12 +345,22 @@ public sealed partial class BoundProgramLowerer
     /// следующих аргументов. Иначе побочный эффект соседнего аргумента попал бы
     /// в уже вычисленное значение.
     /// </summary>
-    private static void LowerByValSnapshot(BoundExpression argument, List<LoweredInstruction> instructions)
+    private static void LowerByValSnapshot(BoundExpression argument, List<LoweredInstruction> instructions, bool copyCollections = true)
     {
         if (argument.Type is UserDefinedTypeSymbol)
         {
             instructions.Add(LoweredInstruction.SnapshotValue(argument.Location));
         }
+        else if (copyCollections)
+        {
+            LowerCollectionCopy(argument, instructions);
+        }
+    }
+
+    private static void LowerCollectionCopy(BoundExpression expression, List<LoweredInstruction> instructions)
+    {
+        if (expression.Type is ArrayTypeSymbol or DictionaryTypeSymbol or SetTypeSymbol)
+            instructions.Add(LoweredInstruction.SnapshotValue(expression.Location));
     }
 
     private void LowerModernGraphicsIntegralExpression(BoundExpression expression, List<LoweredInstruction> instructions)

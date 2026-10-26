@@ -71,14 +71,7 @@ public sealed class RuntimeRecordValue : IRuntimeStoredValue
 
     public RuntimeRecordValue Clone()
     {
-        var clone = new RuntimeRecordValue(Type);
-
-        foreach (var field in Type.Fields)
-        {
-            clone._fields[field.Ordinal] = CloneFieldValue(field, _fields[field.Ordinal]);
-        }
-
-        return clone;
+        return RuntimeValueCopier.Copy(RuntimeValue.FromRecord(Type, this)).AsRecord();
     }
 
     private static RuntimeValue CreateDefaultFieldValue(TypeFieldSymbol field, HashSet<UserDefinedTypeSymbol> activeTypes)

@@ -17,6 +17,7 @@ public sealed partial class Binder
 
         return typeSyntax switch
         {
+            TupleTypeSyntax tuple => ResolveTupleType(tuple),
             NamedTypeSyntax namedType => ResolveNamedType(namedType),
             FixedLengthStringTypeSyntax => TypeSymbol.String,
             FunctionTypeSyntax functionType => FunctionTypeSymbol.Create(
@@ -49,6 +50,7 @@ public sealed partial class Binder
         }
 
         if (DictionaryTypeSymbol.IsResourceType(valueType)
+            || valueType is TupleTypeSymbol
             || valueType is SetTypeSymbol
             || valueType is FunctionTypeSymbol)
         {
@@ -198,6 +200,12 @@ public sealed partial class Binder
 
         switch (typeSyntax)
         {
+            case TupleTypeSyntax tuple:
+                foreach (var elementType in tuple.ElementTypes)
+                    if (TryFindFixedStringType(elementType, out fixedStringType)) return true;
+                fixedStringType = null!;
+                return false;
+
             case FixedLengthStringTypeSyntax directFixedStringType:
                 fixedStringType = directFixedStringType;
                 return true;
