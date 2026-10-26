@@ -1,0 +1,33 @@
+' Замена SELF должна менять запись словаря и после обратного шага.
+' Для проверки поставьте точку останова на PRINT SELF.Price внутри метода.
+' После остановки выполните шаг назад, затем шаг вперёд и продолжите запуск.
+' Ожидаемый вывод в обычном и повторном выполнении: 99, ЗАМЕНЕНО, 99.
+
+TYPE Item
+    Price AS INTEGER
+
+    SUB Replace()
+        DIM fresh AS Item
+        fresh.Price = 99
+        ' Заменяется вся запись словаря, а не только поле прежнего объекта.
+        SELF = fresh
+        PRINT SELF.Price
+        ERROR "ЗАМЕНЕНО", "запись словаря заменена"
+    END SUB
+END TYPE
+
+DIM prices AS DICTIONARY(STRING, Item)
+DIM apple AS Item
+apple.Price = 30
+prices.Add("яблоко", apple)
+
+' Обработчик сохраняется при восстановлении остановленного исполнения.
+TRY
+    prices["яблоко"].Replace()
+CATCH problem
+    PRINT problem.Code
+END TRY
+
+' После выхода из метода видна замена всей записи.
+PRINT prices["яблоко"].Price
+SLEEP 2000

@@ -23,6 +23,18 @@ public sealed partial class Binder
                     return new BoundErrorExpression(nameExpression.IdentifierToken.Location);
                 }
 
+                if (variable.Type is DictionaryTypeSymbol)
+                {
+                    _editorReferences?.Add(new(variable, nameExpression.IdentifierToken.Location, false));
+                    ReportDictionaryRequiresKey(variable.Name, nameExpression.IdentifierToken.Location);
+                    foreach (var argument in expression.Arguments)
+                    {
+                        BindExpression(argument);
+                    }
+
+                    return new BoundErrorExpression(nameExpression.IdentifierToken.Location);
+                }
+
                 if (variable.IsArray)
                 {
                     _editorReferences?.Add(new(variable, nameExpression.IdentifierToken.Location, false));
@@ -142,7 +154,7 @@ public sealed partial class Binder
 
         // BYREF сохраняет собственную диагностику. Присваивание не должно
         // попадать в понижатель с безмолвной ошибкой или временным значением.
-        if (reportInvalidTarget && boundTarget is not (BoundVariableExpression or BoundFieldAccessExpression or BoundArrayAccessExpression))
+        if (reportInvalidTarget && boundTarget is not (BoundVariableExpression or BoundFieldAccessExpression or BoundArrayAccessExpression or BoundDictionaryAccessExpression))
         {
             if (_diagnostics.Count == diagnosticCount)
             {

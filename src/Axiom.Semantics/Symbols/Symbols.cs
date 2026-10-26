@@ -88,6 +88,9 @@ public class TypeSymbol : Symbol
                 FromTypeSyntax(functionType.ReturnType),
                 functionType.ParameterPassingKeywords.Select(ParameterPassingModes.FromKeyword).ToArray()),
             ArrayTypeSyntax arrayType => ArrayTypeSymbol.Create(FromTypeSyntax(arrayType.ElementType), arrayType.Rank),
+            DictionaryTypeSyntax dictionaryType => DictionaryTypeSymbol.Create(
+                FromTypeSyntax(dictionaryType.KeyType),
+                FromTypeSyntax(dictionaryType.ValueType)),
             _ => Error
         };
     }
@@ -224,6 +227,79 @@ public sealed class ArrayTypeSymbol : TypeSymbol
     private static string CreateName(TypeSymbol elementType, int rank)
     {
         return $"{elementType.Name}[{new string(',', rank - 1)}]";
+    }
+}
+
+public sealed class DictionaryTypeSymbol : TypeSymbol
+{
+    private DictionaryTypeSymbol(TypeSymbol keyType, TypeSymbol valueType)
+        : base(CreateName(keyType, valueType))
+    {
+        KeyType = keyType;
+        ValueType = valueType;
+    }
+
+    /// <summary>
+    /// Тип ключа: STRING, INTEGER или LONG. Числовые ключи разных типов не
+    /// смешиваются в одном словаре, поэтому тип входит в идентичность словаря.
+    /// </summary>
+    public TypeSymbol KeyType { get; }
+
+    public TypeSymbol ValueType { get; }
+
+    public static TypeSymbol Create(TypeSymbol keyType, TypeSymbol valueType)
+    {
+        ArgumentNullException.ThrowIfNull(keyType);
+        ArgumentNullException.ThrowIfNull(valueType);
+
+        if (!IsSupportedKeyType(keyType)
+            || valueType == TypeSymbol.Error
+            || valueType == TypeSymbol.Void
+            || valueType is DictionaryTypeSymbol
+            || valueType is FunctionTypeSymbol
+            || IsResourceType(valueType))
+        {
+            return TypeSymbol.Error;
+        }
+
+        return new DictionaryTypeSymbol(keyType, valueType);
+    }
+
+    public static bool IsSupportedKeyType(TypeSymbol keyType)
+    {
+        ArgumentNullException.ThrowIfNull(keyType);
+        return keyType == TypeSymbol.String || keyType == TypeSymbol.Integer || keyType == TypeSymbol.Long;
+    }
+
+    /// <summary>
+    /// Графические и файловые ресурсы в первом выпуске словаря не хранятся:
+    /// их копирование и владение не описаны договором коллекции.
+    /// </summary>
+    public static bool IsResourceType(TypeSymbol type)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        return type == TypeSymbol.File
+            || type == TypeSymbol.Image
+            || type == TypeSymbol.Sprite
+            || type == TypeSymbol.Tilemap
+            || type == TypeSymbol.Tileset;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is DictionaryTypeSymbol other
+            && KeyType == other.KeyType
+            && ValueType == other.ValueType;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(typeof(DictionaryTypeSymbol), KeyType, ValueType);
+    }
+
+    private static string CreateName(TypeSymbol keyType, TypeSymbol valueType)
+    {
+        return $"DICTIONARY({keyType.Name}, {valueType.Name})";
     }
 }
 

@@ -1,0 +1,27 @@
+' Метод TYPE у значения словаря видит живой получатель: изменение идёт
+' в запись словаря, а исходная переменная сохраняет свою цену.
+' Ожидаемый вывод:
+' 31
+' 30
+
+TYPE Item
+    Price AS INTEGER
+
+    SUB RaisePrice()
+        SELF.Price = SELF.Price + 1
+    END SUB
+END TYPE
+
+DIM prices AS DICTIONARY(STRING, Item)
+DIM apple AS Item
+apple.Price = 30
+
+' Запись копируется в словарь при добавлении.
+prices.Add("яблоко", apple)
+
+' Метод меняет именно запись словаря.
+prices["яблоко"].RaisePrice()
+PRINT prices["яблоко"].Price
+PRINT apple.Price
+
+SLEEP 2000

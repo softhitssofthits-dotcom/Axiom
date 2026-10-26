@@ -197,6 +197,10 @@ public sealed partial class Parser
         {
             typeSyntax = ParseFunctionTypeSyntax();
         }
+        else if (Current.Kind == SyntaxKind.DictionaryKeyword)
+        {
+            typeSyntax = ParseDictionaryTypeSyntax();
+        }
         else if (Current.Kind == SyntaxKind.StringKeyword && Peek(1).Kind == SyntaxKind.StarToken)
         {
             var stringKeyword = Match(SyntaxKind.StringKeyword, "STRING");
@@ -244,6 +248,42 @@ public sealed partial class Parser
             closeParenToken,
             asKeyword,
             returnType);
+    }
+
+    private DictionaryTypeSyntax ParseDictionaryTypeSyntax()
+    {
+        var dictionaryKeyword = Match(SyntaxKind.DictionaryKeyword, "DICTIONARY");
+
+        // DICTIONARY — имя типа с двумя аргументами. Без скобок форма неполна;
+        // одно сообщение точнее каскада из ожиданий скобки, типа и запятой.
+        if (Current.Kind != SyntaxKind.OpenParenToken)
+        {
+            Diagnostics.Report(
+                Axiom.Core.DiagnosticCodes.ExpectedToken,
+                "Тип DICTIONARY записывается с двумя аргументами: DICTIONARY(тип ключа, тип значения).",
+                CreateDiagnosticLocation(dictionaryKeyword.Location));
+            return new DictionaryTypeSyntax(
+                dictionaryKeyword,
+                CreateMissingToken(SyntaxKind.OpenParenToken),
+                new NamedTypeSyntax(CreateMissingToken(SyntaxKind.IdentifierToken)),
+                CreateMissingToken(SyntaxKind.CommaToken),
+                new NamedTypeSyntax(CreateMissingToken(SyntaxKind.IdentifierToken)),
+                CreateMissingToken(SyntaxKind.CloseParenToken));
+        }
+
+        var openParenToken = Match(SyntaxKind.OpenParenToken, "(");
+        var keyType = ParseTypeSyntax();
+        var commaToken = Match(SyntaxKind.CommaToken, ",");
+        var valueType = ParseTypeSyntax();
+        var closeParenToken = Match(SyntaxKind.CloseParenToken, ")");
+
+        return new DictionaryTypeSyntax(
+            dictionaryKeyword,
+            openParenToken,
+            keyType,
+            commaToken,
+            valueType,
+            closeParenToken);
     }
 
     private ArrayBoundsSyntax ParseArrayBounds()

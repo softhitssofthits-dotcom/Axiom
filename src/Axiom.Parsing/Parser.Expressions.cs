@@ -58,6 +58,9 @@ public sealed partial class Parser
                 or SyntaxKind.TimeKeyword
                 or SyntaxKind.DateTimeKeyword
                 or SyntaxKind.UtcDateTimeKeyword => new NameExpressionSyntax(NextToken()),
+            // DICTIONARY — имя типа, а не пользовательское имя. В позиции имени
+            // сообщается причина отказа, чтобы читатель не искал опечатку.
+            SyntaxKind.DictionaryKeyword => ReportKeywordNameInExpression(),
             _ => ParseMissingExpression()
         };
 
@@ -194,6 +197,12 @@ public sealed partial class Parser
         }
 
         return expression;
+    }
+
+    private ErrorExpressionSyntax ReportKeywordNameInExpression()
+    {
+        ReportKeywordAsName(Current);
+        return new ErrorExpressionSyntax(NextToken());
     }
 
     private ErrorExpressionSyntax ParseMissingExpression()

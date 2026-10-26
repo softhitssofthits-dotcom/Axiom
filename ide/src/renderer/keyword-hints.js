@@ -24,6 +24,7 @@
     COLOR: ['Задаёт цвет текста и фона для последующего вывода.', 'Sets the text foreground and background color for later output.'],
     CONST: ['Объявляет константу: значение задаётся один раз и не может быть изменено.', 'Declares a constant: the value is set once and cannot be changed.'],
     CONTINUE: ['Переходит к следующему проходу цикла, пропуская остаток тела: CONTINUE FOR, CONTINUE WHILE или CONTINUE DO.', 'Jumps to the next loop iteration, skipping the rest of the body: CONTINUE FOR, CONTINUE WHILE or CONTINUE DO.'],
+    DICTIONARY: ['Тип типизированного словаря: DICTIONARY(тип ключа, тип значения) задаёт ключ и значение всех записей. Ключом служит STRING, INTEGER или LONG. Слово зарезервировано: как имя не используется.', 'Typed dictionary type: DICTIONARY(key type, value type) sets the key and value of every entry. The key is STRING, INTEGER or LONG. The word is reserved and cannot be used as a name.'],
     DIM: ['Объявляет переменную, массив или их группу с типом и необязательным начальным значением.', 'Declares a variable, an array or a group of them with a type and an optional initial value.'],
     DO: ['Открывает цикл DO … LOOP с проверкой условия до или после тела.', 'Opens a DO … LOOP cycle with the condition checked before or after the body.'],
     DRAW: ['Выполняет графическую команду, записанную строкой, как в языке управления пером.', 'Runs a graphics command written as a string, in pen-control style.'],
@@ -114,5 +115,22 @@
     return locale === 'en' ? entry[1] : entry[0];
   }
 
-  return { hints: HINTS, hint };
+  // Члены словаря объясняются отдельно от ключевых слов: Add, Exists, Remove,
+  // Keys и TryGetValue вызываются со скобками, Count — свойство без скобок.
+  const MEMBER_HINTS = {
+    ADD: ['Метод словаря: добавляет новую запись. Повторный ключ сообщает ошибку MB3016.', 'Dictionary method: adds a new entry. A repeated key reports error MB3016.'],
+    EXISTS: ['Метод словаря: проверяет наличие ключа и возвращает BOOLEAN.', 'Dictionary method: checks whether a key exists and returns BOOLEAN.'],
+    REMOVE: ['Метод словаря: удаляет запись и возвращает BOOLEAN. Отсутствующий ключ даёт FALSE без ошибки.', 'Dictionary method: removes an entry and returns BOOLEAN. A missing key gives FALSE without an error.'],
+    KEYS: ['Метод словаря: возвращает самостоятельный одномерный массив ключей в порядке добавления.', 'Dictionary method: returns an independent one-dimensional array of keys in insertion order.'],
+    TRYGETVALUE: ['Метод словаря: ищет ключ без исключения. Результат BOOLEAN, второй аргумент получает значение или значение по умолчанию.', 'Dictionary method: looks up a key without an exception. The result is BOOLEAN and the second argument receives the value or its default.'],
+    COUNT: ['Свойство словаря: число записей. Записывается без скобок.', 'Dictionary property: the number of entries. Written without parentheses.'],
+  };
+
+  function memberHint(name, locale) {
+    const entry = MEMBER_HINTS[String(name || '').toUpperCase()];
+    if (!entry) return null;
+    return locale === 'en' ? entry[1] : entry[0];
+  }
+
+  return { hints: HINTS, hint, memberHints: MEMBER_HINTS, memberHint };
 });

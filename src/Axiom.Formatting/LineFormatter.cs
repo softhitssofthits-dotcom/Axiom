@@ -157,10 +157,13 @@ internal static class LineFormatter
 
         if (current.Kind == FormattedTokenKind.OpenParen)
         {
+            // DICTIONARY(ключ, значение) — тип с аргументами: скобка примыкает
+            // к имени типа, как и у FUNCTION(...) AS тип.
             return previous.Kind is not FormattedTokenKind.PlainWord
                 and not FormattedTokenKind.BuiltInWord
                 and not FormattedTokenKind.CloseParen
-                and not FormattedTokenKind.CloseBracket;
+                and not FormattedTokenKind.CloseBracket
+                && !IsTypeName(previous);
         }
 
         if (current.Kind == FormattedTokenKind.BinaryOperator || previous.Kind == FormattedTokenKind.BinaryOperator)

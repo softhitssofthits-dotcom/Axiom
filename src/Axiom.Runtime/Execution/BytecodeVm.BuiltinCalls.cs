@@ -33,6 +33,14 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
+        // Внешняя операция может изменить состояние до отказа. Граница истории
+        // устанавливается до вызова, поэтому обработанная ошибка не разрешает
+        // повторить уже выполненную часть операции при обратном шаге.
+        if (!executionInfo.IsReverseExecutionSafe)
+        {
+            InvalidateReverseExecutionHistory();
+        }
+
         if (TryExecuteFastGraphicsBuiltin(frame, executionInfo, instructionIndex, out var fastResult))
         {
             if (executionInfo.ReturnsValue)

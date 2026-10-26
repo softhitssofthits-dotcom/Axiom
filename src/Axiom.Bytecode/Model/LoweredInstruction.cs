@@ -846,4 +846,78 @@ public sealed class LoweredInstruction
             displayName: displayName,
             valueCount: dimensionCount);
     }
+
+    // Словарь создаётся пустым и готовым к заполнению: объявление задаёт типы
+    // ключа и значения, а записи добавляются операциями словаря.
+    public static LoweredInstruction CreateDictionary(TextLocation location, DictionaryTypeSymbol type)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        return new LoweredInstruction(
+            LoweredInstructionKind.CreateDictionary,
+            location,
+            valueType: type,
+            displayName: type.Name);
+    }
+
+    public static LoweredInstruction LoadDictionaryValue(TextLocation location, string displayName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        return new LoweredInstruction(LoweredInstructionKind.LoadDictionaryValue, location, displayName: displayName);
+    }
+
+    public static LoweredInstruction StoreDictionaryValue(TextLocation location, string displayName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        return new LoweredInstruction(LoweredInstructionKind.StoreDictionaryValue, location, displayName: displayName);
+    }
+
+    public static LoweredInstruction DictionaryAdd(TextLocation location, string displayName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        return new LoweredInstruction(LoweredInstructionKind.DictionaryAdd, location, displayName: displayName);
+    }
+
+    public static LoweredInstruction DictionaryExists(TextLocation location, string displayName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        return new LoweredInstruction(LoweredInstructionKind.DictionaryExists, location, displayName: displayName);
+    }
+
+    public static LoweredInstruction DictionaryRemove(TextLocation location, string displayName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        return new LoweredInstruction(LoweredInstructionKind.DictionaryRemove, location, displayName: displayName);
+    }
+
+    public static LoweredInstruction DictionaryKeys(TextLocation location, string displayName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        return new LoweredInstruction(LoweredInstructionKind.DictionaryKeys, location, displayName: displayName);
+    }
+
+    public static LoweredInstruction DictionaryCount(TextLocation location, string displayName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        return new LoweredInstruction(LoweredInstructionKind.DictionaryCount, location, displayName: displayName);
+    }
+
+    /// <summary>
+    /// Поиск без исключения. На стеке: словарь, ключ, адресуемая переменная
+    /// результата. Инструкция записывает найденное значение в переменную и
+    /// оставляет на стеке BOOLEAN; при отсутствии ключа переменная получает
+    /// значение по умолчанию своего типа.
+    /// </summary>
+    public static LoweredInstruction DictionaryTryGetValue(
+        TextLocation location,
+        string displayName,
+        VariableSymbol destination)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        ArgumentNullException.ThrowIfNull(destination);
+        return new LoweredInstruction(
+            LoweredInstructionKind.DictionaryTryGetValue,
+            location,
+            displayName: displayName,
+            variable: destination);
+    }
 }

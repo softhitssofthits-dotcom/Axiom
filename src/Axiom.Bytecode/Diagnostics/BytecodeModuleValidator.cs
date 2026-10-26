@@ -718,6 +718,24 @@ public sealed partial class BytecodeModuleValidator
                     ValidateStringConstantIndex(module, routine, instructionIndex, instruction, operandIndex: 0, "имя поля");
                     break;
 
+                case Opcode.CreateDictionary:
+                case Opcode.LoadDictionaryValue:
+                case Opcode.StoreDictionaryValue:
+                case Opcode.DictionaryAdd:
+                case Opcode.DictionaryExists:
+                case Opcode.DictionaryRemove:
+                case Opcode.DictionaryKeys:
+                case Opcode.DictionaryCount:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
+                    ValidateStringConstantIndex(module, routine, instructionIndex, instruction, operandIndex: 0, "имя словаря");
+                    break;
+
+                case Opcode.DictionaryTryGetValue:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 3);
+                    ValidateStringConstantIndex(module, routine, instructionIndex, instruction, operandIndex: 0, "имя словаря");
+                    ValidateVariableSourceOperand(module, routine, instructionIndex, instruction, operandIndex: 1, role: "переменная результата");
+                    break;
+
                 case Opcode.PrintSeparator:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
                     ValidatePrintSeparatorInstruction(module, routine, instructionIndex, instruction);
@@ -2135,6 +2153,39 @@ public sealed partial class BytecodeModuleValidator
 
             case Opcode.CreateRecord:
                 ApplyCreateRecordStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
+                break;
+
+            case Opcode.CreateDictionary:
+                ApplyCreateDictionaryStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
+                break;
+
+            case Opcode.LoadDictionaryValue:
+                ApplyLoadDictionaryValueStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
+                break;
+
+            case Opcode.StoreDictionaryValue:
+                ApplyStoreDictionaryValueStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
+                break;
+
+            case Opcode.DictionaryAdd:
+                ApplyDictionaryAddStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
+                break;
+
+            case Opcode.DictionaryExists:
+            case Opcode.DictionaryRemove:
+                ApplyDictionaryKeyLookupStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
+                break;
+
+            case Opcode.DictionaryKeys:
+                ApplyDictionaryKeysStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
+                break;
+
+            case Opcode.DictionaryCount:
+                ApplyDictionaryCountStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
+                break;
+
+            case Opcode.DictionaryTryGetValue:
+                ApplyDictionaryTryGetValueStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
 
             case Opcode.LoadField:
@@ -4394,6 +4445,64 @@ public sealed partial class BytecodeModuleValidator
         }
     }
 
+    /// <summary>
+    /// Проверяет пару операндов «вид источника, слот» для инструкций, которые
+    /// пишут в переменную по тем же видам, что и BYREF-аргумент.
+    /// </summary>
+    private void ValidateVariableSourceOperand(
+        BytecodeModule module,
+        BytecodeRoutine routine,
+        int instructionIndex,
+        BytecodeInstruction instruction,
+        int operandIndex,
+        string role)
+    {
+        if (instruction.OperandCount <= operandIndex + 1)
+        {
+            return;
+        }
+
+        var sourceKind = instruction.GetOperand(operandIndex);
+        var sourceSlot = instruction.GetOperand(operandIndex + 1);
+
+        switch (sourceKind)
+        {
+            case ByRefArgumentSourceKind.Global:
+                if (sourceSlot < 0 || !module.Globals.Any(global => global.Slot == sourceSlot))
+                {
+                    Report(
+                        "BC4136",
+                        $"Инструкция '{instruction.Opcode}' в процедуре '{routine.Name}' ссылается на несуществующий глобальный слот {sourceSlot} для {role}.",
+                        module,
+                        routine.Id,
+                        instructionIndex);
+                }
+
+                return;
+
+            case ByRefArgumentSourceKind.Argument:
+                ValidateArgumentSlot(module, routine, instructionIndex, instruction, operandIndex + 1);
+                return;
+
+            case ByRefArgumentSourceKind.Local:
+                ValidateLocalSlot(module, routine, instructionIndex, instruction, operandIndex + 1);
+                return;
+
+            case ByRefArgumentSourceKind.Capture:
+                ValidateCaptureSlot(module, routine, instructionIndex, instruction, operandIndex + 1);
+                return;
+
+            default:
+                Report(
+                    "BC4122",
+                    $"Инструкция '{instruction.Opcode}' в процедуре '{routine.Name}' содержит неизвестный вид источника {sourceKind} для {role}.",
+                    module,
+                    routine.Id,
+                    instructionIndex);
+                return;
+        }
+    }
+
     private void ValidateJumpTarget(BytecodeModule module, BytecodeRoutine routine, int instructionIndex, BytecodeInstruction instruction, int operandIndex = 0)
     {
         if (instruction.OperandCount <= operandIndex)
@@ -4567,6 +4676,27 @@ public sealed partial class BytecodeModuleValidator
             if (stepKind == 0)
             {
                 _ = instruction.GetOperand(operandIndex++);
+                continue;
+            }
+
+            if (stepKind == 2)
+            {
+                // Шаг словаря: вид источника ключа и его слот.
+                if (operandIndex + 2 > instruction.OperandCount)
+                {
+                    error = "не хватает операндов ключа шага словаря.";
+                    return false;
+                }
+
+                var keyKind = instruction.GetOperand(operandIndex++);
+                _ = instruction.GetOperand(operandIndex++);
+
+                if (keyKind is < 0 or > 3)
+                {
+                    error = $"неизвестный вид источника ключа словаря {keyKind}.";
+                    return false;
+                }
+
                 continue;
             }
 

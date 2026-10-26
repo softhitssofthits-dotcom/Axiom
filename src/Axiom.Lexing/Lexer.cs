@@ -29,6 +29,7 @@ public sealed partial class Lexer
         ["DATETIME"] = TokenKind.DateTimeKeyword,
         ["UTCDATETIME"] = TokenKind.UtcDateTimeKeyword,
         ["DECIMAL"] = TokenKind.DecimalKeyword,
+        ["DICTIONARY"] = TokenKind.DictionaryKeyword,
         ["DIM"] = TokenKind.DimKeyword,
         ["DO"] = TokenKind.DoKeyword,
         ["DOUBLE"] = TokenKind.DoubleKeyword,

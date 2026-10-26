@@ -115,6 +115,11 @@ public sealed class RuntimeValue : IRuntimeStoredValue
             return FromRecord(userType, RuntimeRecordValue.CreateDefault(userType));
         }
 
+        if (type is DictionaryTypeSymbol dictionaryType)
+        {
+            return FromDictionary(dictionaryType, new RuntimeDictionaryValue(dictionaryType));
+        }
+
         return new RuntimeValue(type, value: null);
     }
 
@@ -180,6 +185,13 @@ public sealed class RuntimeValue : IRuntimeStoredValue
     }
 
     public static RuntimeValue FromRecord(UserDefinedTypeSymbol type, RuntimeRecordValue value)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        ArgumentNullException.ThrowIfNull(value);
+        return new RuntimeValue(type, value);
+    }
+
+    public static RuntimeValue FromDictionary(DictionaryTypeSymbol type, RuntimeDictionaryValue value)
     {
         ArgumentNullException.ThrowIfNull(type);
         ArgumentNullException.ThrowIfNull(value);
@@ -458,6 +470,16 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         return (RuntimeRecordValue)Value!;
     }
 
+    public RuntimeDictionaryValue AsDictionary()
+    {
+        if (Type is not DictionaryTypeSymbol)
+        {
+            throw new InvalidOperationException($"Value of type {Type.Name} is not DICTIONARY.");
+        }
+
+        return (RuntimeDictionaryValue)Value!;
+    }
+
     public RuntimeValue CopyForStorage(int? fixedStringLength = null)
     {
         if (Type == TypeSymbol.String)
@@ -615,6 +637,11 @@ public sealed class RuntimeValue : IRuntimeStoredValue
         if (Type is UserDefinedTypeSymbol userType)
         {
             return $"<TYPE {userType.Name}>";
+        }
+
+        if (Type is DictionaryTypeSymbol)
+        {
+            return $"<{Type.Name} записей: {AsDictionary().Count}>";
         }
 
         if (Type == TypeSymbol.RuntimeError)

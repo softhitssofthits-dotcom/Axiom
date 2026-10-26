@@ -61,6 +61,11 @@ public sealed partial class Binder
                 case BoundFunctionExpression function:
                     Function(function.Location.Span, function.Function);
                     break;
+                case BoundDictionaryTryGetValueExpression tryGetValue:
+                    // Переменная результата записывается инструкцией, но остаётся
+                    // настоящим именем в исходнике и получает свою карточку.
+                    Expression(tryGetValue.Destination);
+                    break;
             }
         }
         void Statement(BoundStatement statement)

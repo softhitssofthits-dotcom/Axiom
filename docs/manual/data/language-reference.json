@@ -26,7 +26,7 @@
     "src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.cs",
     "src/Axiom.Syntax/SyntaxKind.cs"
   ],
-  "sourceFingerprint": "c2ba98cf77349d2e226397160701834a1d1d0a18c44fc7c4d8f797aca2f66276",
+  "sourceFingerprint": "38083f8d3ec9dc3873e7e15c38fd49130a438a919d3b532d517f9de742ba94f1",
   "functions": [
     {
       "name": "ABS",
@@ -8592,6 +8592,7 @@
     "DATE",
     "DATETIME",
     "DECIMAL",
+    "DICTIONARY",
     "DOUBLE",
     "FILE",
     "IMAGE",

@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Словарь DICTIONARY — Справочник Axiom</title><link rel="stylesheet" href="styles/manual.css"><link rel="stylesheet" href="styles/code-colors.css"></head>
+<body data-page="dictionary"><a class="skip-link" href="#main-content">Перейти к статье</a>
+<header class="topbar"><div class="topbar__inner"><a class="brand" href="index.html">Axiom <span>Справочник языка</span></a>
+<form class="header-search" role="search" action="search.html" method="get"><label class="visually-hidden" for="manual-search-input">Поиск по справочнику</label><input id="manual-search-input" name="q" type="search" placeholder="Найти тему, оператор или функцию" autocomplete="off" aria-keyshortcuts="Alt+/"><button type="submit">Найти</button></form>
+<button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="manual-sidebar">Оглавление</button></div></header>
+<div class="layout"><aside class="sidebar" id="manual-sidebar" aria-label="Оглавление справочника"><div class="sidebar__inner"><nav id="manual-nav"></nav></div></aside>
+<main class="content" id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="Путь темы"><a href="index.html">Справочник</a><span>/</span><span>Словарь DICTIONARY</span></nav>
+<p class="eyebrow">10 · Массивы</p><h1 class="page-title">Словарь DICTIONARY</h1><p class="lead">Словарь хранит записи, в которых ключ однозначно определяет значение. В отличие от массива, где элемент выбирается номером, здесь элемент выбирается ключом: названием товара, номером ящика или другим значением ключевого типа. Страница описывает тип <code>DICTIONARY</code>, обращение по ключу и его члены: <code>Add</code>, <code>Exists</code>, <code>Remove</code>, <code>Keys</code>, <code>TryGetValue</code> и <code>Count</code>.</p><nav class="article-toc" aria-label="В этой статье"></nav>
+
+<section class="article-section" id="declaration"><h2>Объявление типа</h2><p>Тип словаря записывается словом <code>DICTIONARY</code> с двумя аргументами в круглых скобках. Первым указывается тип ключа, вторым — тип значения:</p><pre><code class="language-axiom">DIM &lt;имя&gt; AS DICTIONARY(&lt;тип ключа&gt;, &lt;тип значения&gt;)</code></pre><p>Типы едины для всех записей одного словаря: неоднородный словарь не создаётся. Объявление сразу создаёт пустой готовый словарь, поэтому заполнять его можно с первой строки, без <code>REDIM</code> и без выделения элементов.</p><pre><code class="language-axiom">DIM prices AS DICTIONARY(STRING, INTEGER)
+PRINT prices.Count</code></pre><p>Программа выводит <code>0</code>: словарь объявлен, но ещё не содержит записей.</p><p>Ключом может быть <code>STRING</code>, <code>INTEGER</code> или <code>LONG</code>. Числовые ключи разных типов не смешиваются: словарь с ключом <code>INTEGER</code> и словарь с ключом <code>LONG</code> — разные типы. Значением может быть число, строка, <code>BOOLEAN</code>, временное значение, запись <a href="type.html">TYPE</a> или массив. Файлы, изображения, спрайты, тайлсеты, тайловые карты и функциональные значения в словаре не хранятся.</p><p>Тип словаря можно указать и в других местах, где допустим тип: в параметре подпрограммы, в поле записи и в результате функции.</p><pre><code class="language-axiom">SUB ShowCount(prices AS DICTIONARY(STRING, INTEGER))
+    PRINT prices.Count
+END SUB</code></pre></section>
+
+<section class="article-section" id="reserved"><h2>Зарезервированное слово</h2><p>Слово <code>DICTIONARY</code> зарезервировано. Оно обозначает тип и не может быть именем, задаваемым программистом: переменной, константы, параметра, процедуры, функции, пользовательского типа, поля или метода. Запрет регистронезависим: <code>Dictionary</code>, <code>dictionary</code> и смешанная запись равнозначны <code>DICTIONARY</code>.</p><pre><code class="language-axiom">DIM Dictionary AS INTEGER</code></pre><p>Эта программа отклоняется при разборе с MB1002: «Ключевое слово 'Dictionary' нельзя использовать как имя». То же сообщение выдаётся для поля, метода и имени после точки. Имена, содержащие слово целиком внутри, остаются допустимыми: <code>dict</code>, <code>myDictionary</code> и <code>dictionaryCount</code> не зарезервированы.</p><p>Синтаксис типа сохраняется: <code>AS DICTIONARY(STRING, INTEGER)</code> пишется с двумя аргументами. Запись без аргументов, например <code>DIM x AS Dictionary</code>, сообщает MB1001 и напоминает полную форму.</p><p>Имя типа в объявлении, параметре, поле и результате функции записывается одинаково. Полные правила имён приведены в статье <a href="variables-scope.html#names">Имена и области видимости</a>.</p></section>
+
+<section class="article-section" id="key-comparison"><h2>Ключи и сравнение</h2><p>Строковые ключи сравниваются точно, с учётом регистра, без удаления пробелов и без нормализации. Записи <code>"яблоко"</code>, <code>"Яблоко"</code> и <code>" яблоко"</code> — три разных ключа, а не один.</p><pre><code class="language-axiom">DIM exact AS DICTIONARY(STRING, INTEGER)
+exact.Add("яблоко", 1)
+exact.Add("Яблоко", 2)
+exact.Add(" яблоко", 3)
+PRINT exact.Count</code></pre><p>Программа выводит <code>3</code>. Пустая строка тоже допустима как обычный ключ и отличается от отсутствующей записи:</p><pre><code class="language-axiom">DIM titles AS DICTIONARY(STRING, STRING)
+titles.Add("", "без названия")
+PRINT titles[""]</code></pre><p>Программа выводит <code>без названия</code>.</p><p>Ключ в обращении приводится к объявленному типу ключа. В словарь с ключом <code>LONG</code> можно передать целое значение, а несовместимый тип отклоняется при проверке программы.</p></section>
+
+<section class="article-section" id="access"><h2>Чтение и запись по ключу</h2><p>Значение читается обращением по ключу в квадратных скобках:</p><pre><code class="language-axiom">&lt;словарь&gt;[&lt;ключ&gt;]</code></pre><p>Результат имеет объявленный тип значения. Отсутствующий ключ сообщает ошибку времени выполнения MB3015 и не подменяется нулём или пустой строкой: отсутствие записи нельзя спутать с нулевой ценой.</p><pre><code class="language-axiom">DIM prices AS DICTIONARY(STRING, INTEGER)
+prices.Add("яблоко", 30)
+PRINT prices["яблоко"]
+TRY
+    PRINT prices["слива"]
+CATCH problem
+    PRINT problem.Code
+END TRY</code></pre><p>Программа выводит <code>30</code>, затем <code>MB3015</code>.</p><p>Присваивание по ключу заменяет существующую запись либо добавляет отсутствующую:</p><pre><code class="language-axiom">&lt;словарь&gt;[&lt;ключ&gt;] = &lt;значение&gt;</code></pre><pre><code class="language-axiom">DIM prices AS DICTIONARY(STRING, INTEGER)
+prices["яблоко"] = 30
+prices["яблоко"] = 35
+PRINT prices["яблоко"]
+PRINT prices.Count</code></pre><p>Программа выводит <code>35</code> и <code>1</code>: второе присваивание заменило значение, а не создало вторую запись.</p></section>
+
+<section class="article-section" id="add"><h2>Метод Add</h2><pre><code class="language-axiom">&lt;словарь&gt;.Add(&lt;ключ&gt;, &lt;значение&gt;)</code></pre><p><code>Add</code> добавляет новую запись. Метод вызывается со скобками и не возвращает значения. Повторный ключ сообщает ошибку времени выполнения MB3016: вторая запись не создаётся и прежнее значение не меняется. Для замены используется присваивание по ключу.</p><pre><code class="language-axiom">DIM prices AS DICTIONARY(STRING, INTEGER)
+prices.Add("яблоко", 30)
+TRY
+    prices.Add("яблоко", 40)
+CATCH problem
+    PRINT problem.Code
+END TRY
+PRINT prices["яблоко"]</code></pre><p>Программа выводит <code>MB3016</code>, затем <code>30</code>.</p></section>
+
+<section class="article-section" id="exists"><h2>Метод Exists</h2><pre><code class="language-axiom">&lt;словарь&gt;.Exists(&lt;ключ&gt;) AS BOOLEAN</code></pre><p><code>Exists</code> проверяет наличие ключа и возвращает <code>TRUE</code> или <code>FALSE</code>. Метод не изменяет словарь и не сообщает ошибку на отсутствующем ключе.</p><pre><code class="language-axiom">DIM prices AS DICTIONARY(STRING, INTEGER)
+prices.Add("яблоко", 30)
+PRINT prices.Exists("яблоко"), prices.Exists("слива")</code></pre><p>Программа выводит <code>TRUE FALSE</code>.</p></section>
+
+<section class="article-section" id="remove"><h2>Метод Remove</h2><pre><code class="language-axiom">&lt;словарь&gt;.Remove(&lt;ключ&gt;) AS BOOLEAN</code></pre><p><code>Remove</code> удаляет запись и возвращает <code>TRUE</code> при успешном удалении. Если ключа нет, метод возвращает <code>FALSE</code> и не сообщает ошибку, поэтому повторное удаление безопасно.</p><pre><code class="language-axiom">DIM prices AS DICTIONARY(STRING, INTEGER)
+prices.Add("груша", 45)
+PRINT prices.Remove("груша")
+PRINT prices.Remove("груша")
+PRINT prices.Count</code></pre><p>Программа выводит <code>TRUE</code>, <code>FALSE</code> и <code>0</code>.</p></section>
+
+<section class="article-section" id="count"><h2>Свойство Count</h2><pre><code class="language-axiom">&lt;словарь&gt;.Count AS INTEGER</code></pre><p><code>Count</code> — свойство, а не метод: оно записывается без скобок и возвращает число записей. Запись <code>prices.Count()</code> отклоняется при проверке программы: скобки отличают вызов метода от чтения свойства.</p><pre><code class="language-axiom">DIM prices AS DICTIONARY(STRING, INTEGER)
+prices.Add("яблоко", 30)
+prices.Add("груша", 45)
+PRINT prices.Count</code></pre><p>Программа выводит <code>2</code>.</p></section>
+
+<section class="article-section" id="keys"><h2>Метод Keys и порядок обхода</h2><pre><code class="language-axiom">&lt;словарь&gt;.Keys() AS &lt;тип ключа&gt;[]</code></pre><p><code>Keys()</code> возвращает самостоятельный одномерный массив ключей в порядке добавления записей. Массив имеет границы <code>1 … Count</code>; для пустого словаря действует каноническая пустая форма <code>1 TO 0</code>. Метод вызывается со скобками.</p><pre><code class="language-axiom">DIM items AS DICTIONARY(STRING, INTEGER)
+items.Add("а", 1)
+items.Add("б", 2)
+DIM keys[] AS STRING = items.Keys()
+PRINT keys[1], keys[2]
+PRINT LBOUND(keys[]), UBOUND(keys[])</code></pre><p>Программа выводит <code>а б</code>, затем <code>1 2</code>.</p><p>Порядок подчиняется трём правилам. Новая запись добавляется в конец. Замена значения по существующему ключу сохраняет место записи. Удаление и повторное добавление помещают ключ в конец.</p><pre><code class="language-axiom">DIM items AS DICTIONARY(STRING, INTEGER)
+items.Add("а", 1)
+items.Add("б", 2)
+items.Add("в", 3)
+items["б"] = 20
+items.Remove("б")
+items.Add("б", 200)
+FOR EACH key IN items.Keys()
+    PRINT key
+NEXT key</code></pre><p>Программа выводит <code>а</code>, <code>в</code>, <code>б</code>: замена сохранила место, а повторное добавление перенесло ключ в конец.</p><p>Полученный массив независим от состава словаря. Добавление, замена и удаление записей после вызова <code>Keys()</code> этот массив не меняют, поэтому начатый обход не получает внезапно новые ключи.</p><pre><code class="language-axiom">DIM items AS DICTIONARY(STRING, INTEGER)
+items.Add("яблоко", 30)
+DIM keys[] AS STRING = items.Keys()
+items.Add("груша", 45)
+PRINT items.Count
+PRINT keys[1]</code></pre><p>Программа выводит <code>2</code> и <code>яблоко</code>: словарь вырос, а снимок ключей остался прежним.</p><p>Прямой обход словаря не вводится: <code>FOR EACH</code> проходит по массиву, поэтому источником указывается <code>items.Keys()</code>. Правила обхода элемента описаны в статье <a href="for-each.html">FOR EACH</a>.</p></section>
+
+<section class="article-section" id="trygetvalue"><h2>Метод TryGetValue</h2><pre><code class="language-axiom">&lt;словарь&gt;.TryGetValue(&lt;ключ&gt;, &lt;переменная&gt;) AS BOOLEAN</code></pre><p><code>TryGetValue</code> ищет ключ без исключения. Первый аргумент — ключ, второй — изменяемая переменная точного типа значения. При успехе переменная получает найденное значение, а метод возвращает <code>TRUE</code>. При отсутствии ключа переменная получает значение по умолчанию своего типа (например, 0 для <code>INTEGER</code>), метод возвращает <code>FALSE</code>, а запись не добавляется.</p><pre><code class="language-axiom">DIM prices AS DICTIONARY(STRING, INTEGER)
+prices.Add("бесплатный", 0)
+DIM price AS INTEGER
+IF prices.TryGetValue("бесплатный", price) THEN
+    PRINT "найдено: "; price
+ELSE
+    PRINT "нет товара"
+END IF
+IF prices.TryGetValue("слива", price) THEN
+    PRINT "найдено: "; price
+ELSE
+    PRINT "нет товара, значение: "; price
+END IF</code></pre><p>Программа выводит <code>найдено: 0</code>, затем <code>нет товара, значение: 0</code>. Наличие определяется возвращённым <code>BOOLEAN</code>, поэтому найденная нулевая цена не смешивается с отсутствием товара.</p><p>Второй аргумент должен быть изменяемой переменной точного типа значения: временное значение и несовместимый тип отклоняются при проверке программы. Допустимы локальная переменная, параметр <code>BYREF</code>, глобальная переменная и переменная, захваченная вложенной подпрограммой; запись идёт в фактическую переменную вызывающего кода.</p><pre><code class="language-axiom">DIM prices AS DICTIONARY(STRING, INTEGER)
+prices.Add("яблоко", 42)
+DIM fromParameter AS INTEGER
+ReadInto(prices, fromParameter)
+PRINT fromParameter
+
+SUB ReadInto(items AS DICTIONARY(STRING, INTEGER), BYREF result AS INTEGER)
+    PRINT items.TryGetValue("яблоко", result)
+END SUB</code></pre><p>Программа выводит <code>TRUE</code>, затем <code>42</code>: значение записано в переменную <code>fromParameter</code> через параметр <code>BYREF</code>.</p></section>
+
+<section class="article-section" id="values"><h2>Хранимые значения и присваивание словаря</h2><p>Значения подчиняются действующим правилам Axiom. Запись <code>TYPE</code> копируется при добавлении: последующее изменение исходной переменной не меняет содержимое словаря. Массив сохраняет обычную общую ссылку, поэтому изменение элемента через словарь видно и в другом имени того же массива.</p><pre><code class="language-axiom">TYPE Item
+    Price AS INTEGER
+END TYPE
+DIM items AS DICTIONARY(INTEGER, Item)
+DIM apple AS Item
+apple.Price = 30
+items.Add(1, apple)
+apple.Price = 99
+PRINT items[1].Price</code></pre><p>Программа выводит <code>30</code>: запись скопирована при добавлении.</p><p>Обычное присваивание словаря разделяет один экземпляр, как и присваивание массива. Два имени видят одни и те же записи:</p><pre><code class="language-axiom">DIM prices AS DICTIONARY(STRING, INTEGER)
+prices.Add("яблоко", 30)
+DIM alias AS DICTIONARY(STRING, INTEGER)
+alias = prices
+alias["яблоко"] = 99
+PRINT prices["яблоко"]</code></pre><p>Программа выводит <code>99</code>.</p><p>Метод <code>TYPE</code> у значения словаря получает живой получатель. Изменения <code>SELF</code> записываются в саму запись словаря, а не во временную копию, и сохраняются даже если метод завершился ошибкой:</p><pre><code class="language-axiom">TYPE Item
+    Price AS INTEGER
+
+    SUB RaisePrice()
+        SELF.Price = SELF.Price + 1
+    END SUB
+END TYPE
+
+DIM prices AS DICTIONARY(STRING, Item)
+DIM apple AS Item
+apple.Price = 30
+prices.Add("яблоко", apple)
+prices["яблоко"].RaisePrice()
+PRINT prices["яблоко"].Price
+PRINT apple.Price</code></pre><p>Программа выводит <code>31</code>, затем <code>30</code>: запись в словаре изменилась, а исходная переменная сохранила свою цену.</p><p>Словарь сохраняется в снимке состояния отладчика и восстанавливается при обратном шаге вместе с порядком записей. Если обратный шаг выполняется внутри метода записи, <code>SELF</code> сохраняет связь с записью словаря: повторное присваивание <code>SELF</code> заменяет саму запись. Активные обработчики <code>TRY/CATCH/FINALLY</code> также восстанавливаются, поэтому ошибка после повторного выполнения метода обрабатывается тем же <code>CATCH</code>. В отладочном отображении переменная словаря показывается как <code>&lt;DICTIONARY(STRING, INTEGER) записей: 2&gt;</code>.</p></section>
+
+<section class="article-section" id="diagnostics"><h2>Диагностика</h2><p>Проверка программы сообщает об ошибках типа и формы обращения, а исполнение — об ошибках словаря.</p>
+<ul>
+<li><code>MB2065</code> — тип ключа не <code>STRING</code>, <code>INTEGER</code> или <code>LONG</code>.</li>
+<li><code>MB2066</code> — тип значения не поддерживается словарём: файл, графический ресурс или функциональное значение.</li>
+<li><code>MB1002</code> — попытка использовать <code>DICTIONARY</code> как имя переменной, константы, параметра, процедуры, функции, типа, поля или метода.</li>
+<li><code>MB1001</code> — тип <code>DICTIONARY</code> записан без двух аргументов.</li>
+<li><code>MB2067</code> — неизвестный член словаря, скобки у свойства <code>Count</code>, отсутствие скобок у метода, пустые скобки у имени словаря и неверное число аргументов метода.</li>
+<li><code>MB3015</code> — чтение отсутствующего ключа. Запись не подменяется значением по умолчанию.</li>
+<li><code>MB3016</code> — повторный ключ в <code>Add</code>.</li>
+</ul>
+<p>Для поиска без ошибки используется <a href="#trygetvalue">TryGetValue</a>. Общие сведения о диагностике массивов и коллекций собраны в статье <a href="arrays-diagnostics.html">Ошибки массивов</a>.</p></section>
+
+<section class="article-section" id="examples"><h2>Запускаемые примеры</h2><p><a href="../../samples/collections/dictionary/store_price_list.axm">store_price_list.axm</a> — ценник магазина: добавление, чтение, замена, удаление и обход. <a href="../../samples/collections/dictionary/word_count.axm">word_count.axm</a> — подсчёт слов текста. <a href="../../samples/collections/dictionary/keys_snapshot_order.axm">keys_snapshot_order.axm</a> — порядок ключей и независимый снимок. <a href="../../samples/collections/dictionary/try_get_value.axm">try_get_value.axm</a> — поиск без исключения и нулевая цена. <a href="../../samples/collections/dictionary/missing_key_error.axm">missing_key_error.axm</a> — ошибка чтения отсутствующего ключа. <a href="../../samples/collections/dictionary/duplicate_key_error.axm">duplicate_key_error.axm</a> — ошибка повторного добавления. <a href="../../samples/collections/dictionary/try_get_value_byref.axm">try_get_value_byref.axm</a> — запись результата в параметр BYREF и глобальную переменную. <a href="../../samples/collections/dictionary/type_method_receiver.axm">type_method_receiver.axm</a> — живой получатель метода TYPE. <a href="../../samples/collections/dictionary/array_of_dictionaries.axm">array_of_dictionaries.axm</a> — массив словарей. <a href="../../samples/collections/dictionary/reserved_name_error.axm">reserved_name_error.axm</a> — отказ использовать зарезервированное слово как имя. <a href="../../samples/collections/dictionary/self_step_back.axm">self_step_back.axm</a> — замена всей записи через SELF и обработка ошибки после обратного шага.</p></section>
+
+<section class="article-section"><h2>См. также</h2><p><a href="dim.html">Объявление DIM</a> · <a href="arrays.html">Массивы</a> · <a href="for-each.html">FOR EACH</a> · <a href="type.html">Пользовательские типы</a> · <a href="assignment.html">Присваивание</a></p></section>
+<div id="page-pager" class="pager" aria-label="Последовательность чтения"></div></main></div>
+<script src="scripts/chapters.js"></script><script src="scripts/search-index.js"></script><script src="scripts/manual.js"></script><script src="scripts/search.js"></script><script src="scripts/code-dictionary.js"></script><script src="scripts/semantic-colors.js"></script><script src="scripts/highlight.js"></script></body></html>

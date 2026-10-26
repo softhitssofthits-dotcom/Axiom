@@ -269,6 +269,38 @@ const LangFeatures = (() => {
     const KIND = { Function: K.Function, Method: K.Method, Field: K.Field, Variable: K.Variable, Keyword: K.Keyword, Constant: K.Constant, Struct: K.Struct, Type: K.Class, Snippet: K.Snippet };
     const Snippet = monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet;
 
+    // Члены словаря. Add, Exists, Remove, Keys и TryGetValue вызываются со
+    // скобками; Count — свойство и вставляется без скобок.
+    const dictionaryMembers = (type) => [
+      { label: 'Add', kind: 'Method', insertText: 'Add($0)', snippet: true, detail: 'Add(ключ, значение)' },
+      { label: 'Exists', kind: 'Method', insertText: 'Exists($0)', snippet: true, detail: 'Exists(ключ) AS BOOLEAN' },
+      { label: 'Remove', kind: 'Method', insertText: 'Remove($0)', snippet: true, detail: 'Remove(ключ) AS BOOLEAN' },
+      { label: 'Keys', kind: 'Method', insertText: 'Keys()', snippet: false, detail: 'Keys() AS ' + (type?.keyType || 'ключ') + '[]' },
+      { label: 'TryGetValue', kind: 'Method', insertText: 'TryGetValue($0)', snippet: true, detail: 'TryGetValue(ключ, переменная) AS BOOLEAN' },
+      { label: 'Count', kind: 'Field', insertText: 'Count', snippet: false, detail: 'Count AS INTEGER' },
+    ];
+
+    // Имя словаря перед точкой: берётся объявленный тип из документа. Незнакомое
+    // имя не даёт подсказок, чтобы не выдавать чужие члены за существующие.
+    function dictionaryReceiver(model, position) {
+      const lineText = model.getLineContent(position.lineNumber).slice(0, position.column - 1);
+      const match = /([A-Za-z_]\w*)\s*\.\s*[A-Za-z_]\w*$/.exec(lineText)
+        || /([A-Za-z_]\w*)\s*\.\s*$/.exec(lineText);
+      if (!match) return null;
+      const name = match[1];
+      const doc = scanDoc(model);
+      const declared = [...doc.vars].reverse().find((item) => item.name.toUpperCase() === name.toUpperCase());
+      return dictionaryType(declared?.type) ? { name, ...dictionaryType(declared.type) } : null;
+    }
+
+    // DICTIONARY(ключ, значение) → типы ключа и значения. Разбор повторяет
+    // текстовую форму типа и не угадывает её по имени переменной.
+    function dictionaryType(type) {
+      if (typeof type !== 'string') return null;
+      const match = /^DICTIONARY\s*\(([^,]+),\s*(.+)\)$/i.exec(type.trim());
+      return match ? { keyType: match[1].trim(), valueType: match[2].trim() } : null;
+    }
+
     const completionProvider = {
       provideCompletionItems(model, position) {
         if(model.getLanguageId()!=='axiom')return {suggestions:[]};
@@ -296,6 +328,17 @@ const LangFeatures = (() => {
             insertTextRules: snippet ? Snippet : undefined, sortText: sort + label.toLowerCase(),
           });
         };
+
+        // После точки у имени словаря подсказываются только его члены: методы
+        // со скобками и свойство Count без скобок.
+        const receiver = dictionaryReceiver(model, position);
+        if (receiver) {
+          for (const member of dictionaryMembers(receiver)) {
+            add(member.label, member.kind, member.insertText, member.snippet, member.detail, '0');
+          }
+
+          return { suggestions: items.map((i) => ({ ...i, range })) };
+        }
 
         // General context: registry builtins (one suggestion per family, first overload
         // signature in the detail), document symbols, keywords and types.
@@ -458,11 +501,28 @@ const LangFeatures = (() => {
           const callable = ['function', 'sub'].includes(symbol.kind);
           const array = callable ? null : symbol.arrayRank ? {elementType: symbol.elementType, rank: symbol.arrayRank}
             : window.AxiomSemanticColors?.arrayType(symbol.type);
+          const dictionary = callable ? null : dictionaryType(symbol.type);
           if (symbol.type) details = I18N.t('hover.typeLabel') + ': `' + symbol.type + '`';
+          if (dictionary) {
+            details += '\n\n' + I18N.t('hover.dictionaryKeyType') + ': `' + dictionary.keyType + '`'
+              + '\n\n' + I18N.t('hover.dictionaryValueType') + ': `' + dictionary.valueType + '`';
+          }
           if (array) details += '\n\n' + I18N.t('hover.elementType') + ': `' + array.elementType + '`\n\n' + I18N.t('hover.dimensions') + ': ' + array.rank;
           if (symbol.signature) details = '`' + symbol.signature + '`';
           if (symbol.fields) details = I18N.t('hover.fields') + ': ' + (symbol.fields.join(', ') || I18N.t('hover.noFields'));
-          return { range, contents: [{ value: '**' + name + '** — ' + I18N.t('hover.' + (array ? 'array' : symbol.kind)) + '\n\n' + details }] };
+          const role = dictionary ? 'dictionary' : array ? 'array' : symbol.kind;
+          return { range, contents: [{ value: '**' + name + '** — ' + I18N.t('hover.' + role) + '\n\n' + details }] };
+        }
+
+        // Член словаря после точки: метод вызывается со скобками, Count — свойство.
+        const memberReceiver = dictionaryReceiver(model, position);
+        if (memberReceiver) {
+          const member = dictionaryMembers(memberReceiver).find((item) => item.label.toUpperCase() === name.toUpperCase());
+          if (member) {
+            const hint = window.AxiomKeywordHints?.memberHint?.(name, I18N.current || 'ru');
+            const value = '`' + member.detail + '`' + (hint ? '\n\n' + hint : '');
+            return { range, contents: [{ value: '**' + name + '** — ' + I18N.t('hover.dictionaryMember') + '\n\n' + value }] };
+          }
         }
 
         // 1. Builtin family: all overloads, one signature per line.

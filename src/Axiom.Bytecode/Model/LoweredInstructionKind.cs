@@ -91,5 +91,14 @@ public enum LoweredInstructionKind
     Return,
     SnapshotValue,
     NewArray,
-    ClearForEachItem
+    ClearForEachItem,
+    CreateDictionary,
+    LoadDictionaryValue,
+    StoreDictionaryValue,
+    DictionaryAdd,
+    DictionaryExists,
+    DictionaryRemove,
+    DictionaryKeys,
+    DictionaryCount,
+    DictionaryTryGetValue
 }

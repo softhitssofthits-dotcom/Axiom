@@ -28,6 +28,15 @@ public sealed partial class BoundProgramLowerer
                 return;
             }
 
+            // Объявление словаря создаёт пустой готовый словарь: тип ключа и
+            // значения уже заданы в объявлении.
+            if (declaration.Variable.Type is DictionaryTypeSymbol dictionaryType)
+            {
+                instructions.Add(LoweredInstruction.CreateDictionary(declaration.Location, dictionaryType));
+                instructions.Add(LoweredInstruction.StoreVariable(declaration.Location, declaration.Variable));
+                return;
+            }
+
             if (declaration.Variable.Type == TypeSymbol.Date
                 || declaration.Variable.Type == TypeSymbol.Time
                 || declaration.Variable.Type == TypeSymbol.DateTime
@@ -87,6 +96,12 @@ public sealed partial class BoundProgramLowerer
             }
 
             instructions.Add(LoweredInstruction.StoreElement(assignment.Location, arrayAccess.DisplayName, arrayAccess.Indices.Count));
+            return;
+        }
+
+        if (assignment.Target is BoundDictionaryAccessExpression dictionaryAccess)
+        {
+            LowerDictionaryAssignment(assignment, dictionaryAccess, instructions);
             return;
         }
 

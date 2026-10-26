@@ -108,6 +108,7 @@ window.AxiomCodeDictionary = {
     "DATE",
     "DATETIME",
     "DECIMAL",
+    "DICTIONARY",
     "DOUBLE",
     "FILE",
     "IMAGE",

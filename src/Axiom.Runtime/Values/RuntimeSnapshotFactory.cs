@@ -97,6 +97,34 @@ internal static class RuntimeSnapshotFactory
             return succeeded;
         }
 
+        if (value.Type is DictionaryTypeSymbol dictionaryType)
+        {
+            var dictionary = value.AsDictionary();
+            if (visited.TryGetValue(dictionary, out var existingDictionary))
+            {
+                snapshot = RuntimeValue.FromDictionary(dictionaryType, (RuntimeDictionaryValue)existingDictionary);
+                return true;
+            }
+
+            var target = dictionary.CreateEmptyForSnapshot();
+            visited[dictionary] = target;
+
+            var succeeded = true;
+            foreach (var (key, entryValue) in dictionary.Entries())
+            {
+                if (!TryCreateValueSnapshot(entryValue, fixedStringLength: null, visited, out var valueSnapshot))
+                {
+                    succeeded = false;
+                    break;
+                }
+
+                target.AppendForSnapshot(key, valueSnapshot);
+            }
+
+            snapshot = RuntimeValue.FromDictionary(dictionaryType, target);
+            return succeeded;
+        }
+
         if (value.Type is FunctionTypeSymbol functionType)
         {
             var functionValue = value.AsFunction();
@@ -162,6 +190,7 @@ internal static class RuntimeSnapshotFactory
             || value.Type == TypeSymbol.Time
             || value.Type == TypeSymbol.DateTime
             || value.Type == TypeSymbol.UtcDateTime
+            || value.Type == TypeSymbol.RuntimeError
             || value.Type == TypeSymbol.Void)
         {
             snapshot = value.CopyForStorage(fixedStringLength);
@@ -183,6 +212,36 @@ internal static class RuntimeSnapshotFactory
         if (visited.TryGetValue(sourceSlot, out var existing) && existing is BytecodeVariableSlot existingSlot)
         {
             snapshotSlot = existingSlot;
+            return true;
+        }
+
+        if (sourceSlot is BytecodeAddressVariableSlot addressSlot)
+        {
+            if (!TryCreateSlotSnapshot(addressSlot.BaseSlot, visited, out var baseSnapshot))
+            {
+                snapshotSlot = BytecodeVariableSlot.Adopt(RuntimeValue.Void);
+                return false;
+            }
+
+            var steps = new BytecodeAddressStep[addressSlot.Steps.Count];
+            for (var stepIndex = 0; stepIndex < steps.Length; stepIndex++)
+            {
+                var step = addressSlot.Steps[stepIndex];
+                var indices = new BytecodeVariableSlot[step.IndexSlots.Length];
+                for (var index = 0; index < indices.Length; index++)
+                {
+                    if (!TryCreateSlotSnapshot(step.IndexSlots[index], visited, out indices[index]))
+                    {
+                        snapshotSlot = BytecodeVariableSlot.Adopt(RuntimeValue.Void);
+                        return false;
+                    }
+                }
+
+                steps[stepIndex] = step with { IndexSlots = indices };
+            }
+
+            snapshotSlot = addressSlot.Rebind(baseSnapshot, steps);
+            visited[sourceSlot] = snapshotSlot;
             return true;
         }
 

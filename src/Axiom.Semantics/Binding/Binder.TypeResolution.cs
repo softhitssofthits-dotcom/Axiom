@@ -24,8 +24,36 @@ public sealed partial class Binder
                 ResolveType(functionType.ReturnType),
                 functionType.ParameterPassingKeywords.Select(ParameterPassingModes.FromKeyword).ToArray()),
             ArrayTypeSyntax arrayType => ResolveArrayType(arrayType),
+            DictionaryTypeSyntax dictionaryType => ResolveDictionaryType(dictionaryType),
             _ => TypeSymbol.Error
         };
+    }
+
+    private TypeSymbol ResolveDictionaryType(DictionaryTypeSyntax dictionaryType)
+    {
+        ArgumentNullException.ThrowIfNull(dictionaryType);
+
+        var keyType = ResolveType(dictionaryType.KeyType);
+        var valueType = ResolveType(dictionaryType.ValueType);
+
+        if (keyType == TypeSymbol.Error || valueType == TypeSymbol.Error)
+        {
+            return TypeSymbol.Error;
+        }
+
+        if (!DictionaryTypeSymbol.IsSupportedKeyType(keyType))
+        {
+            ReportDictionaryKeyType(keyType, GetLocation(dictionaryType.KeyType));
+            return TypeSymbol.Error;
+        }
+
+        if (DictionaryTypeSymbol.IsResourceType(valueType) || valueType is FunctionTypeSymbol)
+        {
+            ReportDictionaryValueType(valueType, GetLocation(dictionaryType.ValueType));
+            return TypeSymbol.Error;
+        }
+
+        return DictionaryTypeSymbol.Create(keyType, valueType);
     }
 
     private TypeSymbol ResolveArrayType(ArrayTypeSyntax arrayType)

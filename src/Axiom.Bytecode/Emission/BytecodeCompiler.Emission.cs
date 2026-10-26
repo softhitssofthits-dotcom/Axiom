@@ -109,6 +109,15 @@ public sealed partial class BytecodeCompiler
             LoweredInstructionKind.Return => new BytecodeInstruction(Opcode.Return),
             LoweredInstructionKind.SnapshotValue => new BytecodeInstruction(Opcode.SnapshotValue),
             LoweredInstructionKind.NewArray => EmitNewArray(instruction),
+            LoweredInstructionKind.CreateDictionary => EmitCreateDictionary(instruction),
+            LoweredInstructionKind.LoadDictionaryValue => EmitDictionaryInstruction(instruction, Opcode.LoadDictionaryValue),
+            LoweredInstructionKind.StoreDictionaryValue => EmitDictionaryInstruction(instruction, Opcode.StoreDictionaryValue),
+            LoweredInstructionKind.DictionaryAdd => EmitDictionaryInstruction(instruction, Opcode.DictionaryAdd),
+            LoweredInstructionKind.DictionaryExists => EmitDictionaryInstruction(instruction, Opcode.DictionaryExists),
+            LoweredInstructionKind.DictionaryRemove => EmitDictionaryInstruction(instruction, Opcode.DictionaryRemove),
+            LoweredInstructionKind.DictionaryKeys => EmitDictionaryInstruction(instruction, Opcode.DictionaryKeys),
+            LoweredInstructionKind.DictionaryCount => EmitDictionaryInstruction(instruction, Opcode.DictionaryCount),
+            LoweredInstructionKind.DictionaryTryGetValue => EmitDictionaryTryGetValue(instruction, parameterSlots, localSlots, captureSlots),
             LoweredInstructionKind.Label => null,
             _ => ReportUnsupportedInstruction(routine, instruction)
         };
@@ -553,6 +562,25 @@ public sealed partial class BytecodeCompiler
                     continue;
                 }
 
+                if (step.IsDictionaryValue)
+                {
+                    // Шаг словаря: ключ уже вычислен и лежит в локальной переменной.
+                    operands.Add(2);
+
+                    if (!TryResolveVariableSource(step.KeyVariable!, parameterSlots, localSlots, captureSlots, out var keyKind, out var keySlot))
+                    {
+                        Report(
+                            "BC5015",
+                            $"Эмиттер байткода не смог разрешить ключ адреса BYREF '{variable.Name}' в процедуре '{routine.Name}'.",
+                            instruction.Location);
+                        return null;
+                    }
+
+                    operands.Add(keyKind);
+                    operands.Add(keySlot);
+                    continue;
+                }
+
                 operands.Add(1);
                 operands.Add(step.IndexVariables.Count);
 
@@ -640,6 +668,69 @@ public sealed partial class BytecodeCompiler
                 RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName),
                 instruction.ValueCount
             ]);
+    }
+
+    private BytecodeInstruction EmitCreateDictionary(LoweredInstruction instruction)
+    {
+        // Тип словаря записывается текстовой ссылкой: она однозначно задаёт
+        // типы ключа и значения и восстанавливается сериализатором.
+        var type = (DictionaryTypeSymbol)instruction.ValueType!;
+        return new BytecodeInstruction(
+            Opcode.CreateDictionary,
+            [RegisterConstant(BytecodeConstantKind.String, DictionaryTypeReference(type))]);
+    }
+
+    private BytecodeInstruction EmitDictionaryInstruction(LoweredInstruction instruction, Opcode opcode)
+    {
+        return new BytecodeInstruction(
+            opcode,
+            [RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName)]);
+    }
+
+    /// <summary>
+    /// Переменная результата кодируется теми же видами источника, что и
+    /// BYREF-аргумент: локальная, параметр, глобальная или захваченная.
+    /// Поэтому запись идёт в фактическую переменную, включая параметр BYREF.
+    /// </summary>
+    private BytecodeInstruction? EmitDictionaryTryGetValue(
+        LoweredInstruction instruction,
+        IReadOnlyDictionary<ParameterSymbol, int> parameterSlots,
+        IReadOnlyDictionary<VariableSymbol, int> localSlots,
+        IReadOnlyDictionary<VariableSymbol, int> captureSlots)
+    {
+        if (!TryResolveVariableSource(
+                instruction.Variable!,
+                parameterSlots,
+                localSlots,
+                captureSlots,
+                out var sourceKind,
+                out var sourceSlot))
+        {
+            Report(
+                "BC5014",
+                $"Эмиттер байткода не смог разрешить переменную результата TryGetValue '{instruction.Variable!.Name}'.",
+                instruction.Location);
+            return null;
+        }
+
+        return new BytecodeInstruction(
+            Opcode.DictionaryTryGetValue,
+            [
+                RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName),
+                sourceKind,
+                sourceSlot
+            ]);
+    }
+
+    /// <summary>
+    /// Текстовая ссылка на тип словаря: DICTIONARY(ключ, значение). Имена типов
+    /// берутся каноническими, поэтому ссылка однозначно задаёт типы ключа и
+    /// значения и восстанавливается на стороне VM.
+    /// </summary>
+    private static string DictionaryTypeReference(DictionaryTypeSymbol type)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        return type.Name;
     }
 
     private static BytecodeInstruction EmitBindArrayElement(

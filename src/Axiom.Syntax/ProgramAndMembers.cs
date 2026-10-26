@@ -120,6 +120,48 @@ public sealed class ArrayTypeSyntax : TypeSyntax
     public int Rank => CommaTokens.Count + 1;
 }
 
+// DICTIONARY(<тип ключа>, <тип значения>) — самостоятельный тип коллекции.
+// Первым указывается ключ, вторым — значение; типы едины для всех записей.
+public sealed class DictionaryTypeSyntax : TypeSyntax
+{
+    public DictionaryTypeSyntax(
+        SyntaxToken dictionaryKeyword,
+        SyntaxToken openParenToken,
+        TypeSyntax keyType,
+        SyntaxToken commaToken,
+        TypeSyntax valueType,
+        SyntaxToken closeParenToken)
+    {
+        ArgumentNullException.ThrowIfNull(dictionaryKeyword);
+        ArgumentNullException.ThrowIfNull(openParenToken);
+        ArgumentNullException.ThrowIfNull(keyType);
+        ArgumentNullException.ThrowIfNull(commaToken);
+        ArgumentNullException.ThrowIfNull(valueType);
+        ArgumentNullException.ThrowIfNull(closeParenToken);
+
+        DictionaryKeyword = dictionaryKeyword;
+        OpenParenToken = openParenToken;
+        KeyType = keyType;
+        CommaToken = commaToken;
+        ValueType = valueType;
+        CloseParenToken = closeParenToken;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.DictionaryType;
+
+    public SyntaxToken DictionaryKeyword { get; }
+
+    public SyntaxToken OpenParenToken { get; }
+
+    public TypeSyntax KeyType { get; }
+
+    public SyntaxToken CommaToken { get; }
+
+    public TypeSyntax ValueType { get; }
+
+    public SyntaxToken CloseParenToken { get; }
+}
+
 public sealed class ProgramSyntax : SyntaxNode
 {
     public ProgramSyntax(

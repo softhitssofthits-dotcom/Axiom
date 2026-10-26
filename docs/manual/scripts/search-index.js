@@ -1051,6 +1051,33 @@ window.AxiomSearchIndex = [
     ]
   },
   {
+    "title": "Словарь DICTIONARY",
+    "href": "dictionary.html",
+    "kind": "Тема",
+    "category": "Массивы",
+    "description": "Словарь хранит записи, в которых ключ однозначно определяет значение. В отличие от массива, где элемент выбирается номером, здесь элемент выбирается ключом: названием товара, номером ящика или другим значением ключевого типа. Страница описывает тип DICTIONARY , обращение по ключу и его члены: Add , Exists , Remove , Keys , TryGetValue и Count .",
+    "keywords": [
+      "Словарь DICTIONARY",
+      "Массивы",
+      "словарь",
+      "DICTIONARY",
+      "Add",
+      "Exists",
+      "Remove",
+      "Keys",
+      "Count",
+      "TryGetValue",
+      "ключ",
+      "значение",
+      "коллекция",
+      "порядок добавления",
+      "отсутствующий ключ"
+    ],
+    "aliases": [
+      "Словарь DICTIONARY"
+    ]
+  },
+  {
     "title": "Диагностика массивов",
     "href": "arrays-diagnostics.html",
     "kind": "Тема",
@@ -7063,6 +7090,20 @@ window.AxiomSearchIndex = [
     ],
     "aliases": [
       "DECIMAL"
+    ]
+  },
+  {
+    "title": "DICTIONARY",
+    "href": "keyword-reference.html#type-dictionary",
+    "kind": "Тип",
+    "category": "Типы данных",
+    "description": "Тип данных DICTIONARY и ссылка на его тематическое описание.",
+    "keywords": [
+      "DICTIONARY",
+      "тип"
+    ],
+    "aliases": [
+      "DICTIONARY"
     ]
   },
   {

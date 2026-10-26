@@ -76,6 +76,9 @@ public static class DiagnosticCodes
     public const string ArrayLiteralRankMismatch = "MB2061";
     public const string InvalidForEachSource = "MB2062";
     public const string InvalidForEachElementType = "MB2063";
+    public const string InvalidDictionaryKeyType = "MB2065";
+    public const string InvalidDictionaryValueType = "MB2066";
+    public const string InvalidDictionaryMember = "MB2067";
 
     // Время выполнения (MB3xxx)
     public const string DivisionByZero = "MB3001";
@@ -92,6 +95,8 @@ public static class DiagnosticCodes
     public const string NumericDomain = "MB3012";
     public const string ArrayAllocation = "MB3013";
     public const string ExpiredArrayView = "MB3014";
+    public const string MissingDictionaryKey = "MB3015";
+    public const string DuplicateDictionaryKey = "MB3016";
 
     // Конвейер выполнения (MB4xxx)
     public const string BytecodeCoverage = "MB4001";

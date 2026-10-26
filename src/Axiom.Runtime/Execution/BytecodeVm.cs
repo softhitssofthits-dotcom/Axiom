@@ -29,6 +29,7 @@ public sealed partial class BytecodeVm
     private readonly Dictionary<(int RoutineId, int InstructionIndex), InputInstructionPlan> _inputInstructionCache = [];
     private readonly Dictionary<(int RoutineId, int InstructionIndex), TypeFieldSymbol> _recordFieldCache = [];
     private readonly Dictionary<string, UserDefinedTypeSymbol> _recordTypeCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, DictionaryTypeSymbol> _dictionaryTypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<TileTransformCacheKey, RuntimeImageValue> _tileTransformCache = [];
     private readonly Dictionary<(int CallerRoutineId, int TargetRoutineId), CaptureBinding[]> _captureBindingCache = [];
     private readonly RuntimeValue?[] _constantValues;
@@ -874,6 +875,42 @@ public sealed partial class BytecodeVm
 
             case Opcode.ValidateTypeInvariant:
                 ValidateTypeInvariant(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.CreateDictionary:
+                ExecuteCreateDictionary(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.LoadDictionaryValue:
+                ExecuteLoadDictionaryValue(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.StoreDictionaryValue:
+                ExecuteStoreDictionaryValue(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.DictionaryAdd:
+                ExecuteDictionaryAdd(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.DictionaryExists:
+                ExecuteDictionaryExists(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.DictionaryRemove:
+                ExecuteDictionaryRemove(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.DictionaryKeys:
+                ExecuteDictionaryKeys(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.DictionaryCount:
+                ExecuteDictionaryCount(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.DictionaryTryGetValue:
+                ExecuteDictionaryTryGetValue(frame, instruction, instructionIndex);
                 break;
 
             case Opcode.ValidateForStep:

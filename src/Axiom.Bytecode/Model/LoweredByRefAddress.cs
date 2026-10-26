@@ -18,32 +18,51 @@ public static class ByRefArgumentSourceKind
 
 /// <summary>
 /// Шаг адреса получателя BYREF-аргумента после базовой переменной:
-/// поле записи или элемент массива.
+/// поле записи, элемент массива или значение словаря по ключу.
 /// </summary>
 public sealed class LoweredByRefAddressStep
 {
-    private LoweredByRefAddressStep(bool isField)
+    private LoweredByRefAddressStep(bool isField, bool isDictionaryValue)
     {
         IsField = isField;
+        IsDictionaryValue = isDictionaryValue;
     }
 
     public bool IsField { get; }
+
+    /// <summary>
+    /// Шаг обращается к значению словаря по ключу: запись идёт в фактическую
+    /// запись словаря, поэтому метод TYPE видит живой получатель.
+    /// </summary>
+    public bool IsDictionaryValue { get; }
 
     public string? FieldName { get; private init; }
 
     public IReadOnlyList<VariableSymbol> IndexVariables { get; private init; } = Array.Empty<VariableSymbol>();
 
+    public VariableSymbol? KeyVariable { get; private init; }
+
     public static LoweredByRefAddressStep Field(string fieldName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(fieldName);
-        return new LoweredByRefAddressStep(isField: true) { FieldName = fieldName };
+        return new LoweredByRefAddressStep(isField: true, isDictionaryValue: false) { FieldName = fieldName };
     }
 
     public static LoweredByRefAddressStep Element(IReadOnlyList<VariableSymbol> indexVariables)
     {
         ArgumentNullException.ThrowIfNull(indexVariables);
         ArgumentOutOfRangeException.ThrowIfZero(indexVariables.Count);
-        return new LoweredByRefAddressStep(isField: false) { IndexVariables = indexVariables.ToArray() };
+        return new LoweredByRefAddressStep(isField: false, isDictionaryValue: false) { IndexVariables = indexVariables.ToArray() };
+    }
+
+    /// <summary>
+    /// Ключ вычисляется один раз при вызове и хранится в локальной временной
+    /// переменной: адрес не повторяет вычисление при каждом чтении.
+    /// </summary>
+    public static LoweredByRefAddressStep DictionaryValue(VariableSymbol keyVariable)
+    {
+        ArgumentNullException.ThrowIfNull(keyVariable);
+        return new LoweredByRefAddressStep(isField: false, isDictionaryValue: true) { KeyVariable = keyVariable };
     }
 }
 

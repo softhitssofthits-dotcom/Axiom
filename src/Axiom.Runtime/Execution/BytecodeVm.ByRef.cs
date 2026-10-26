@@ -54,7 +54,7 @@ public sealed partial class BytecodeVm
         var baseSlot = instruction.GetOperand(operandIndex++);
         var stepCount = instruction.GetOperand(operandIndex++);
 
-        var steps = new AddressStep[stepCount];
+        var steps = new BytecodeAddressStep[stepCount];
 
         for (var stepIndex = 0; stepIndex < stepCount; stepIndex++)
         {
@@ -62,7 +62,19 @@ public sealed partial class BytecodeVm
 
             if (stepKind == 0)
             {
-                steps[stepIndex] = new AddressStep(instruction.GetOperand(operandIndex++), Array.Empty<BytecodeVariableSlot>());
+                steps[stepIndex] = new BytecodeAddressStep(instruction.GetOperand(operandIndex++), Array.Empty<BytecodeVariableSlot>());
+                continue;
+            }
+
+            if (stepKind == 2)
+            {
+                // Шаг словаря: ключ уже вычислен вызывающей стороной.
+                var keyKind = instruction.GetOperand(operandIndex++);
+                var keySlot = instruction.GetOperand(operandIndex++);
+                steps[stepIndex] = new BytecodeAddressStep(
+                    -1,
+                    [CreateVariableSlot(callerFrame, keyKind, keySlot)],
+                    IsDictionaryValue: true);
                 continue;
             }
 
@@ -76,17 +88,16 @@ public sealed partial class BytecodeVm
                 indexSlots[indexIndex] = CreateVariableSlot(callerFrame, indexKind, indexSlot);
             }
 
-            steps[stepIndex] = new AddressStep(-1, indexSlots);
+            steps[stepIndex] = new BytecodeAddressStep(-1, indexSlots);
         }
 
         var baseVariableSlot = CreateVariableSlot(callerFrame, baseKind, baseSlot);
 
-        return new BytecodeVariableSlot(
-            () => ReadAddressedValue(baseVariableSlot, steps),
-            value => WriteAddressedValue(baseVariableSlot, steps, value));
+        return new BytecodeAddressVariableSlot(
+            baseVariableSlot, steps, ReadAddressedValue, WriteAddressedValue);
     }
 
-    private RuntimeValue ReadAddressedValue(BytecodeVariableSlot baseSlot, AddressStep[] steps)
+    private RuntimeValue ReadAddressedValue(BytecodeVariableSlot baseSlot, BytecodeAddressStep[] steps)
     {
         var current = baseSlot.Value;
 
@@ -98,7 +109,7 @@ public sealed partial class BytecodeVm
         return current;
     }
 
-    private void WriteAddressedValue(BytecodeVariableSlot baseSlot, AddressStep[] steps, RuntimeValue value)
+    private void WriteAddressedValue(BytecodeVariableSlot baseSlot, BytecodeAddressStep[] steps, RuntimeValue value)
     {
         ArgumentNullException.ThrowIfNull(value);
 
@@ -118,13 +129,30 @@ public sealed partial class BytecodeVm
         WriteAddressStep(current, steps[^1], value);
     }
 
-    private RuntimeValue ReadAddressStep(RuntimeValue container, AddressStep step)
+    private RuntimeValue ReadAddressStep(RuntimeValue container, BytecodeAddressStep step)
     {
         if (step.FieldNameConstantIndex >= 0)
         {
             var fieldName = ReadDebugName(step.FieldNameConstantIndex);
             var record = container.AsRecord();
             return record.GetField(ResolveFieldByName(record.Type, fieldName, FallbackRuntimeLocation));
+        }
+
+        if (step.IsDictionaryValue)
+        {
+            var dictionary = container.AsDictionary();
+            var key = step.IndexSlots[0].Value;
+
+            if (!dictionary.TryGetValue(key, out var stored))
+            {
+                ReportRuntimeDiagnostic(
+                    DiagnosticCodes.MissingDictionaryKey,
+                    $"Адресуемая запись словаря не содержит ключ {DescribeDictionaryKey(key)}.",
+                    FallbackRuntimeLocation);
+                throw new RuntimeFailureException();
+            }
+
+            return stored;
         }
 
         var array = container.AsArray();
@@ -138,13 +166,21 @@ public sealed partial class BytecodeVm
         return array.GetValue(indices);
     }
 
-    private void WriteAddressStep(RuntimeValue container, AddressStep step, RuntimeValue value)
+    private void WriteAddressStep(RuntimeValue container, BytecodeAddressStep step, RuntimeValue value)
     {
         if (step.FieldNameConstantIndex >= 0)
         {
             var fieldName = ReadDebugName(step.FieldNameConstantIndex);
             var record = container.AsRecord();
             record.SetField(ResolveFieldByName(record.Type, fieldName, FallbackRuntimeLocation), value);
+            return;
+        }
+
+        if (step.IsDictionaryValue)
+        {
+            // Запись идёт в фактическую запись словаря: метод TYPE видит живой
+            // получатель, а не временную копию.
+            container.AsDictionary().Set(step.IndexSlots[0].Value, value);
             return;
         }
 
@@ -187,6 +223,4 @@ public sealed partial class BytecodeVm
             $"Индекс адресуемого элемента массива должен быть целым числом, получен '{value.Type.Name}'.",
             location);
     }
-
-    private readonly record struct AddressStep(int FieldNameConstantIndex, BytecodeVariableSlot[] IndexSlots);
 }

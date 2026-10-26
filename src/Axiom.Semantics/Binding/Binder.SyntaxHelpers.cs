@@ -62,6 +62,19 @@ public sealed partial class Binder
         };
     }
 
+    private static TextLocation GetLocation(TypeSyntax typeSyntax)
+    {
+        return typeSyntax switch
+        {
+            NamedTypeSyntax namedType => namedType.TypeToken.Location,
+            FixedLengthStringTypeSyntax fixedStringType => fixedStringType.StringKeyword.Location,
+            FunctionTypeSyntax functionType => functionType.FunctionKeyword.Location,
+            ArrayTypeSyntax arrayType => GetLocation(arrayType.ElementType),
+            DictionaryTypeSyntax dictionaryType => dictionaryType.DictionaryKeyword.Location,
+            _ => DefaultLocation
+        };
+    }
+
     private static TextLocation GetLocation(StatementSyntax statement)
     {
         return statement switch

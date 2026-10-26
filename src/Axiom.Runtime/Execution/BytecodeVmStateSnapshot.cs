@@ -7,6 +7,9 @@ internal sealed record BytecodeVmStateSnapshot(
     BytecodeVmExecutionSnapshot ExecutionSnapshot,
     IReadOnlyDictionary<int, RuntimeValue> Globals,
     IReadOnlyList<BytecodeCallFrameSnapshot> CallFramesBottomToTop,
+    IReadOnlyList<Diagnostic> Diagnostics,
+    Diagnostic? LastRuntimeFailureDiagnostic,
+    string? LastRuntimeErrorMessage,
     string PendingOutput,
     bool HasPendingOutput,
     int? OutputCheckpoint,
@@ -19,6 +22,7 @@ internal sealed record BytecodeCallFrameSnapshot(
     IReadOnlyList<BytecodeVariableSlotSnapshot> Captures,
     TextLocation CallSiteLocation,
     IReadOnlyList<RuntimeValue> EvaluationStackBottomToTop,
+    IReadOnlyList<BytecodeErrorHandlerFrame> ErrorHandlers,
     int InstructionPointer);
 
 internal sealed record BytecodeVariableSlotSnapshot(BytecodeVariableSlot Slot);

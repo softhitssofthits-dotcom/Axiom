@@ -1,0 +1,33 @@
+' Порядок ключей и независимый снимок Keys().
+' Замена значения сохраняет место записи, удаление и повторное добавление
+' помещают ключ в конец. Массив, полученный из Keys(), не меняется вместе
+' со словарём.
+' Ожидаемый вывод:
+' а б в
+' а в б
+' снимок: а б
+' записей сейчас: 2
+
+DIM items AS DICTIONARY(STRING, INTEGER)
+items.Add("а", 1)
+items.Add("б", 2)
+items.Add("в", 3)
+
+' Замена цены не переставляет запись.
+items["б"] = 20
+DIM first[] AS STRING = items.Keys()
+PRINT first[1], first[2], first[3]
+
+' Удалённый и добавленный заново ключ уходит в конец.
+items.Remove("б")
+items.Add("б", 200)
+DIM second[] AS STRING = items.Keys()
+PRINT second[1], second[2], second[3]
+
+' Снимок ключей самостоятелен: позднее удаление его не меняет.
+DIM snapshot[] AS STRING = items.Keys()
+items.Remove("б")
+PRINT "снимок: "; snapshot[1]; " "; snapshot[3]
+PRINT "записей сейчас: "; items.Count
+
+SLEEP 2000

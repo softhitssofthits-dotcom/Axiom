@@ -189,6 +189,13 @@ public sealed partial class BoundProgramLowerer
                 LowerInterpolatedString(interpolated, instructions);
                 break;
 
+            case BoundDictionaryAccessExpression:
+            case BoundDictionaryCountExpression:
+            case BoundDictionaryMethodCallExpression:
+            case BoundDictionaryTryGetValueExpression:
+                LowerDictionaryExpression(expression, instructions);
+                break;
+
             default:
                 ReportUnsupported(expression, "выражение");
                 break;
@@ -252,7 +259,10 @@ public sealed partial class BoundProgramLowerer
                     continue;
                 }
 
-                if (argument is not (BoundVariableExpression or BoundFieldAccessExpression or BoundArrayAccessExpression)
+                // Значение словаря тоже адресуемо: временная копия потеряла бы
+                // изменения SELF, поэтому оно идёт путём адреса ниже.
+                if (argument is not (BoundVariableExpression or BoundFieldAccessExpression
+                        or BoundArrayAccessExpression or BoundDictionaryAccessExpression)
                     && IsTemporaryTypeMethodSelfArgument(function.Function, parameter, index))
                 {
                     var receiverTemporary = CreateInternalTemporary(argument.Type, "__type_method_self");
@@ -436,6 +446,37 @@ public sealed partial class BoundProgramLowerer
                 }
 
                 steps.Add(LoweredByRefAddressStep.Element(indexTemporaries));
+                return true;
+            }
+
+            case BoundDictionaryAccessExpression dictionaryAccess:
+            {
+                var stepsBeforeDictionary = steps.Count;
+                var resolvedDictionaryVariable = default(VariableSymbol);
+
+                if (dictionaryAccess.Target is BoundVariableExpression or BoundFieldAccessExpression
+                    && TryAppendByRefAddressSteps(dictionaryAccess.Target, instructions, steps, out resolvedDictionaryVariable))
+                {
+                }
+                else
+                {
+                    // Словарь, полученный выражением, вычисляется один раз:
+                    // временная переменная хранит ссылку на тот же экземпляр,
+                    // поэтому адрес остаётся живым.
+                    steps.RemoveRange(stepsBeforeDictionary, steps.Count - stepsBeforeDictionary);
+                    resolvedDictionaryVariable = CreateInternalTemporary(dictionaryAccess.Target.Type, "__byref_dictionary");
+                    LowerExpression(dictionaryAccess.Target, instructions);
+                    instructions.Add(LoweredInstruction.StoreVariable(dictionaryAccess.Target.Location, resolvedDictionaryVariable));
+                }
+
+                baseVariable = resolvedDictionaryVariable;
+
+                // Ключ вычисляется один раз при вызове и сохраняется локально.
+                var keyTemporary = CreateInternalTemporary(dictionaryAccess.Key.Type, "__byref_key");
+                LowerExpression(dictionaryAccess.Key, instructions);
+                instructions.Add(LoweredInstruction.StoreVariable(dictionaryAccess.Key.Location, keyTemporary));
+
+                steps.Add(LoweredByRefAddressStep.DictionaryValue(keyTemporary));
                 return true;
             }
 

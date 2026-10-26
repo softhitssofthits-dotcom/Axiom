@@ -294,11 +294,22 @@ public static class BytecodeModuleSerializer
         return type switch
         {
             UserDefinedTypeSymbol userDefinedType => userDefinedType.TypeIdentity,
+            DictionaryTypeSymbol dictionaryType => CreateDictionaryTypeReference(dictionaryType),
             ArrayTypeSymbol { ElementType: FunctionTypeSymbol } arrayType => $"({TypeReference(arrayType.ElementType)})({new string(',', arrayType.Rank - 1)})",
             ArrayTypeSymbol arrayType => $"{TypeReference(arrayType.ElementType)}({new string(',', arrayType.Rank - 1)})",
             FunctionTypeSymbol functionType => CreateFunctionTypeReference(functionType),
             _ => type.Name
         };
+    }
+
+    /// <summary>
+    /// Ссылка на словарь: DICTIONARY(ключ, значение). Вложенные массивы и
+    /// словари значений сохраняют собственную запись, поэтому ссылка остаётся
+    /// однозначной при восстановлении.
+    /// </summary>
+    private static string CreateDictionaryTypeReference(DictionaryTypeSymbol dictionaryType)
+    {
+        return $"DICTIONARY({TypeReference(dictionaryType.KeyType)}, {TypeReference(dictionaryType.ValueType)})";
     }
 
     private static string CreateFunctionTypeReference(FunctionTypeSymbol functionType)
@@ -651,6 +662,14 @@ public static class BytecodeModuleSerializer
                     RegisterType(arrayType.ElementType);
                     break;
 
+                // Тип словаря ссылается на типы ключа и значения: без их
+                // регистрации определение TYPE, используемого только внутри
+                // словаря, отсутствовало бы в снимке.
+                case DictionaryTypeSymbol dictionaryType:
+                    RegisterType(dictionaryType.KeyType);
+                    RegisterType(dictionaryType.ValueType);
+                    break;
+
                 case FunctionTypeSymbol functionType:
                     RegisterType(functionType.ReturnType);
                     foreach (var parameterType in functionType.ParameterTypes)
@@ -722,16 +741,137 @@ public static class BytecodeModuleSerializer
         // группирует массивы функций и отличает их от функции, возвращающей массив.
         if (userDefinedTypes is TypeResolutionContext { IsLegacy: true }
             && TryResolveArrayType(name, userDefinedTypes, out var legacyArray)) return legacyArray;
+
+        return ResolveStructuredType(name.Trim(), userDefinedTypes);
+    }
+
+    /// <summary>
+    /// Разбирает ссылку типа слева направо, поэтому внешние суффиксы массива
+    /// отделяются раньше содержимого: DICTIONARY(STRING, INTEGER)() — это
+    /// массив словарей, а не словарь со скобкой в конце. Функциональный тип
+    /// проверяется первым: в ссылке FUNCTION() AS T[,] суффикс относится к
+    /// результату функции, а не к самой функции.
+    /// </summary>
+    private static TypeSymbol ResolveStructuredType(
+        string name,
+        IReadOnlyDictionary<string, UserDefinedTypeSymbol> userDefinedTypes)
+    {
+        name = name.Trim();
+
         if (name.StartsWith("FUNCTION(", StringComparison.Ordinal))
         {
             return ResolveFunctionType(name, userDefinedTypes);
         }
 
-        if (TryResolveArrayType(name, userDefinedTypes, out var arrayType))
+        if (name.StartsWith("DICTIONARY(", StringComparison.Ordinal))
         {
-            return arrayType;
+            const string prefix = "DICTIONARY(";
+            var closing = FindClosingParen(name, prefix.Length - 1);
+            if (closing < 0)
+            {
+                throw new InvalidOperationException($"Неверная ссылка на тип словаря '{name}'.");
+            }
+
+            var dictionaryType = ResolveDictionaryType(name[..(closing + 1)], userDefinedTypes);
+            var tail = name[(closing + 1)..];
+
+            if (tail.Length == 0)
+            {
+                return dictionaryType;
+            }
+
+            if (!TryParseArraySuffix(tail, out var dictionaryRank))
+            {
+                throw new InvalidOperationException($"Неверная ссылка на тип словаря '{name}'.");
+            }
+
+            return ArrayTypeSymbol.Create(dictionaryType, dictionaryRank);
         }
 
+        if (TryPeelArraySuffix(name, out var elementName, out var rank))
+        {
+            // Массив функционального типа записывается в скобках: (FUNCTION(...) AS T)().
+            var element = IsWrappedWholeExpression(elementName) ? elementName[1..^1] : elementName;
+            return ArrayTypeSymbol.Create(ResolveStructuredType(element, userDefinedTypes), rank);
+        }
+
+        return ResolveScalarType(name, userDefinedTypes);
+    }
+
+    /// <summary>
+    /// Разбирает суффикс массива, оставшийся после закрывающей скобки типа:
+    /// () для ранга 1 и (,), (,,) для следующих рангов.
+    /// </summary>
+    private static bool TryParseArraySuffix(string suffix, out int rank)
+    {
+        rank = 0;
+
+        if (suffix.Length < 2 || suffix[0] != '(' || suffix[^1] != ')')
+        {
+            return false;
+        }
+
+        var rankToken = suffix[1..^1];
+        if (rankToken.Any(static ch => ch != ','))
+        {
+            return false;
+        }
+
+        rank = rankToken.Length + 1;
+        return true;
+    }
+
+    /// <summary>
+    /// Отделяет внешний суффикс массива: закрывающая скобка, перед ней только
+    /// запятые и открывающая скобка.
+    /// </summary>
+    private static bool TryPeelArraySuffix(string name, out string elementName, out int rank)
+    {
+        elementName = string.Empty;
+        rank = 0;
+
+        if (!name.EndsWith(")", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var open = name.LastIndexOf('(');
+        if (open <= 0)
+        {
+            return false;
+        }
+
+        var rankToken = name[(open + 1)..^1];
+        if (rankToken.Any(static ch => ch != ','))
+        {
+            return false;
+        }
+
+        elementName = name[..open];
+        rank = rankToken.Length + 1;
+        return true;
+    }
+
+    /// <summary>
+    /// Проверяет, что внешние скобки охватывают всё выражение целиком, а не
+    /// только его начало.
+    /// </summary>
+    private static bool IsWrappedWholeExpression(string name)
+    {
+        var depth = 0;
+        for (var index = 0; index < name.Length; index++)
+        {
+            if (name[index] == '(') depth++;
+            else if (name[index] == ')' && --depth == 0) return index == name.Length - 1;
+        }
+
+        return false;
+    }
+
+    private static TypeSymbol ResolveScalarType(
+        string name,
+        IReadOnlyDictionary<string, UserDefinedTypeSymbol> userDefinedTypes)
+    {
         return name switch
         {
             "INTEGER" => TypeSymbol.Integer,
@@ -868,6 +1008,68 @@ public static class BytecodeModuleSerializer
             parameters.Add(ResolveType(byRef ? segment["BYREF ".Length..] : segment, userDefinedTypes));
         }
         return FunctionTypeSymbol.Create(parameters, ResolveType(returnText, userDefinedTypes), passingModes);
+    }
+
+    /// <summary>
+    /// Восстанавливает тип словаря из ссылки DICTIONARY(ключ, значение).
+    /// Закрывающая скобка ищется по глубине, а разделитель — на верхнем уровне,
+    /// поэтому вложенные массивы и функциональные типы не путаются с концом
+    /// ссылки и разделителем аргументов.
+    /// </summary>
+    private static TypeSymbol ResolveDictionaryType(
+        string name,
+        IReadOnlyDictionary<string, UserDefinedTypeSymbol> userDefinedTypes)
+    {
+        const string prefix = "DICTIONARY(";
+
+        var closing = FindClosingParen(name, prefix.Length - 1);
+        if (closing < 0)
+        {
+            throw new InvalidOperationException($"Неверная ссылка на тип словаря '{name}'.");
+        }
+
+        var inner = name[prefix.Length..closing];
+        var separator = FindTopLevelComma(inner);
+        if (separator < 0)
+        {
+            throw new InvalidOperationException($"Неверная ссылка на тип словаря '{name}'.");
+        }
+
+        var keyType = ResolveStructuredType(inner[..separator].Trim(), userDefinedTypes);
+        var valueType = ResolveStructuredType(inner[(separator + 1)..].Trim(), userDefinedTypes);
+
+        var dictionaryType = DictionaryTypeSymbol.Create(keyType, valueType);
+        if (dictionaryType == TypeSymbol.Error)
+        {
+            throw new InvalidOperationException($"Недопустимый тип словаря '{name}'.");
+        }
+
+        return dictionaryType;
+    }
+
+    private static int FindClosingParen(string text, int openIndex)
+    {
+        var depth = 0;
+        for (var index = openIndex; index < text.Length; index++)
+        {
+            if (text[index] == '(') depth++;
+            else if (text[index] == ')' && --depth == 0) return index;
+        }
+
+        return -1;
+    }
+
+    private static int FindTopLevelComma(string text)
+    {
+        var depth = 0;
+        for (var index = 0; index < text.Length; index++)
+        {
+            if (text[index] == '(') depth++;
+            else if (text[index] == ')') depth--;
+            else if (text[index] == ',' && depth == 0) return index;
+        }
+
+        return -1;
     }
 
     private static ParameterPassingMode ParseParameterPassingMode(string? value)

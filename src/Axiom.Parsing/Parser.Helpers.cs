@@ -43,10 +43,7 @@ public sealed partial class Parser
         // иначе читатель ищет опечатку там, где её нет.
         if (IsKeywordKind(Current.Kind))
         {
-            Diagnostics.Report(
-                DiagnosticCodes.ExpectedIdentifier,
-                $"Ключевое слово '{Current.Text}' нельзя использовать как имя.",
-                CreateDiagnosticLocation(Current.Location));
+            ReportKeywordAsName(Current);
             // Токен забирается: иначе разбор объявления спотыкался бы об то же
             // слово и выдавал каскад лишних диагностик.
             NextToken();
@@ -75,12 +72,33 @@ public sealed partial class Parser
             return NextToken();
         }
 
+        // Имя поля и метода задаётся программистом, поэтому зарезервированное
+        // слово отклоняется тем же сообщением, что и обычное имя.
+        if (IsKeywordKind(Current.Kind))
+        {
+            ReportKeywordAsName(Current);
+            NextToken();
+            return CreateMissingToken(SyntaxKind.IdentifierToken);
+        }
+
         Diagnostics.Report(
             DiagnosticCodes.ExpectedIdentifier,
             "Ожидался идентификатор.",
             CreateDiagnosticLocation(Current.Location));
 
         return CreateMissingToken(SyntaxKind.IdentifierToken);
+    }
+
+    // Единое сообщение для всех мест, где программист задаёт имя: объявление,
+    // параметр, поле, метод и имя после точки.
+    private void ReportKeywordAsName(SyntaxToken token)
+    {
+        ArgumentNullException.ThrowIfNull(token);
+
+        Diagnostics.Report(
+            DiagnosticCodes.ExpectedIdentifier,
+            $"Ключевое слово '{token.Text}' нельзя использовать как имя.",
+            CreateDiagnosticLocation(token.Location));
     }
 
     private bool IsExpressionNameToken(SyntaxKind kind)
@@ -204,8 +222,7 @@ public sealed partial class Parser
             CreateDiagnosticLocation(Current.Location));
     }
 
-    private void ReportExpectedExpression()
-    {
+    private void ReportExpectedExpression()    {
         Diagnostics.Report(
             DiagnosticCodes.ExpectedExpression,
             "Ожидалось выражение.",
@@ -346,6 +363,7 @@ public sealed partial class Parser
             TokenKind.DateKeyword => SyntaxKind.DateKeyword,
             TokenKind.DateTimeKeyword => SyntaxKind.DateTimeKeyword,
             TokenKind.DecimalKeyword => SyntaxKind.DecimalKeyword,
+            TokenKind.DictionaryKeyword => SyntaxKind.DictionaryKeyword,
             TokenKind.DimKeyword => SyntaxKind.DimKeyword,
             TokenKind.DoKeyword => SyntaxKind.DoKeyword,
             TokenKind.DoubleKeyword => SyntaxKind.DoubleKeyword,

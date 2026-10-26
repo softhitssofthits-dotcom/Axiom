@@ -213,6 +213,9 @@ public sealed partial class BytecodeVm
             executionSnapshot,
             globals,
             frames,
+            _diagnostics.ToArray(),
+            _lastRuntimeFailureDiagnostic,
+            _lastRuntimeErrorMessage,
             _pendingOutput.ToString(),
             _hasPendingOutput,
             GetOutputCheckpoint(),
@@ -276,6 +279,17 @@ public sealed partial class BytecodeVm
             var captures = RestoreCapturedSlots(frameSnapshot, sharedValues);
             frame.SetCapturedSlots(captures);
 
+            foreach (var savedHandler in frameSnapshot.ErrorHandlers)
+            {
+                var handler = savedHandler.Clone();
+                if (handler.PendingReturnValue is { } returnValue)
+                {
+                    handler.PendingReturnValue = CloneSnapshotValue(returnValue, fixedStringLength: null, sharedValues);
+                }
+
+                frame.PushErrorHandler(handler);
+            }
+
             foreach (var value in frameSnapshot.EvaluationStackBottomToTop)
             {
                 frame.EvaluationStack.Push(CloneSnapshotValue(value, fixedStringLength: null, sharedValues));
@@ -285,6 +299,13 @@ public sealed partial class BytecodeVm
         }
 
         _pendingOutput.Clear();
+        foreach (var diagnostic in _diagnostics.ToArray())
+        {
+            _diagnostics.Remove(diagnostic);
+        }
+        _diagnostics.AddRange(snapshot.Diagnostics);
+        _lastRuntimeFailureDiagnostic = snapshot.LastRuntimeFailureDiagnostic;
+        _lastRuntimeErrorMessage = snapshot.LastRuntimeErrorMessage;
         _pendingOutput.Append(snapshot.PendingOutput);
         _hasPendingOutput = snapshot.HasPendingOutput;
         RestoreOutputCheckpoint(snapshot.OutputCheckpoint);
@@ -407,6 +428,23 @@ public sealed partial class BytecodeVm
             return null;
         }
 
+        var handlers = new List<BytecodeErrorHandlerFrame>(frame.ErrorHandlers.Count);
+        foreach (var sourceHandler in frame.ErrorHandlers)
+        {
+            var handler = sourceHandler.Clone();
+            if (handler.PendingReturnValue is { } returnValue)
+            {
+                if (!TryCreateValueSnapshot(returnValue, fixedStringLength: null, sharedValues, out var returnSnapshot))
+                {
+                    return null;
+                }
+
+                handler.PendingReturnValue = returnSnapshot;
+            }
+
+            handlers.Add(handler);
+        }
+
         return new BytecodeCallFrameSnapshot(
             frame.Routine,
             argumentSnapshots,
@@ -414,6 +452,7 @@ public sealed partial class BytecodeVm
             captureSnapshots,
             frame.CallSiteLocation,
             evaluationStackSnapshot,
+            handlers,
             frame.InstructionPointer);
     }
 

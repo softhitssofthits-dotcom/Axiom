@@ -736,6 +736,37 @@ public sealed partial class Binder
             location);
     }
 
+    private void ReportDictionaryKeyType(TypeSymbol keyType, TextLocation location)
+    {
+        ArgumentNullException.ThrowIfNull(keyType);
+
+        _diagnostics.Report(
+            DiagnosticCodes.InvalidDictionaryKeyType,
+            $"Тип ключа словаря должен быть STRING, INTEGER или LONG, а указан {keyType.Name}.",
+            location);
+    }
+
+    private void ReportDictionaryValueType(TypeSymbol valueType, TextLocation location)
+    {
+        ArgumentNullException.ThrowIfNull(valueType);
+
+        _diagnostics.Report(
+            DiagnosticCodes.InvalidDictionaryValueType,
+            $"Тип значения словаря {valueType.Name} не поддерживается: допускаются числа, строки, BOOLEAN, временные значения, TYPE и массивы.",
+            location);
+    }
+
+    private void ReportInvalidDictionaryMember(string memberName, TypeSymbol dictionaryType, TextLocation location)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(memberName);
+        ArgumentNullException.ThrowIfNull(dictionaryType);
+
+        _diagnostics.Report(
+            DiagnosticCodes.InvalidDictionaryMember,
+            $"Словарь {dictionaryType.Name} не содержит член '{memberName}'. Доступны Add, Exists, Remove, Keys, TryGetValue и Count.",
+            location);
+    }
+
     private void ReportInvalidReturnContext(TextLocation location)
     {
         _diagnostics.Report(DiagnosticCodes.InvalidReturnContext, "RETURN допустим только внутри SUB или FUNCTION.", location);

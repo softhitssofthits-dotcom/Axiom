@@ -97,7 +97,10 @@ public sealed partial class Binder
         // Смысл оператора-выражения — побочный эффект вызова. Одиночное имя,
         // литерал, индекс или чтение поля ничего не изменяют и молча терялись:
         // например `FLUSH f` без скобок выглядел исполнившимся, но не выполнялся.
-        if (expression is not (BoundCallExpression or BoundErrorExpression))
+        // Методы словаря изменяют сам словарь или переменную результата, поэтому
+        // их вызов остаётся допустимым оператором и без использования результата.
+        if (expression is not (BoundCallExpression or BoundErrorExpression
+            or BoundDictionaryMethodCallExpression or BoundDictionaryTryGetValueExpression))
         {
             ReportExpressionStatementHasNoEffect(GetLocation(statement));
         }

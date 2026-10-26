@@ -133,5 +133,14 @@ public enum Opcode
     GetArrayStructuralVersion,
     FreshLocal,
     BindArrayElement,
-    ClearForEachItem
+    ClearForEachItem,
+    CreateDictionary,
+    LoadDictionaryValue,
+    StoreDictionaryValue,
+    DictionaryAdd,
+    DictionaryExists,
+    DictionaryRemove,
+    DictionaryKeys,
+    DictionaryCount,
+    DictionaryTryGetValue
 }

@@ -1,0 +1,40 @@
+' Подсчёт слов: словарь хранит число повторов каждого слова.
+' Ключ — слово, значение — счётчик. Порядок обхода совпадает с порядком
+' первого появления слова в тексте.
+' Ожидаемый вывод:
+' яблоко: 2
+' груша: 1
+' банан: 1
+' всего разных слов: 3
+' всего слов: 4
+
+DIM counts AS DICTIONARY(STRING, INTEGER)
+DIM text AS STRING = "яблоко груша яблоко банан"
+
+' SPLIT возвращает массив слов; каждый элемент обходится по значению.
+DIM words[] AS STRING = SPLIT(text, " ")
+
+FOR EACH word IN words[]
+    ' TryGetValue не сообщает ошибку на новом слове: счётчик просто равен нулю.
+    DIM seen AS INTEGER
+    IF counts.TryGetValue(word, seen) THEN
+        counts[word] = seen + 1
+    ELSE
+        counts[word] = 1
+    END IF
+NEXT word
+
+FOR EACH word IN counts.Keys()
+    PRINT $"{word}: {counts[word]}"
+NEXT word
+
+PRINT "всего разных слов: "; counts.Count
+
+' Сумма счётчиков даёт общее число слов текста.
+DIM total AS INTEGER = 0
+FOR EACH word IN counts.Keys()
+    total = total + counts[word]
+NEXT word
+PRINT "всего слов: "; total
+
+SLEEP 2000

@@ -82,5 +82,9 @@ public enum BoundNodeKind
     CallExpression,
     ConversionExpression,
     ErrorExpression,
-    InterpolatedStringExpression
+    InterpolatedStringExpression,
+    DictionaryAccessExpression,
+    DictionaryCountExpression,
+    DictionaryMethodCallExpression,
+    DictionaryTryGetValueExpression
 }

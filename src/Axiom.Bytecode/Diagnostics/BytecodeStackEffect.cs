@@ -131,6 +131,43 @@ internal static class BytecodeStackEffect
             case Opcode.ClearForEachItem:
                 return true;
 
+            case Opcode.CreateDictionary:
+                pushCount = 1;
+                return true;
+
+            case Opcode.LoadDictionaryValue:
+                // Словарь и ключ заменяются значением записи.
+                popCount = 2;
+                pushCount = 1;
+                return true;
+
+            case Opcode.StoreDictionaryValue:
+                // Значение, словарь и ключ уходят со стека.
+                popCount = 3;
+                return true;
+
+            case Opcode.DictionaryAdd:
+                popCount = 3;
+                return true;
+
+            case Opcode.DictionaryExists:
+            case Opcode.DictionaryRemove:
+                popCount = 2;
+                pushCount = 1;
+                return true;
+
+            case Opcode.DictionaryKeys:
+            case Opcode.DictionaryCount:
+                popCount = 1;
+                pushCount = 1;
+                return true;
+
+            case Opcode.DictionaryTryGetValue:
+                // Словарь и ключ заменяются признаком наличия; переменная
+                // результата записывается самой инструкцией.
+                popCount = 2;
+                pushCount = 1;
+                return true;
             case Opcode.StoreElement:
                 popCount = instruction.GetOperand(1) + 2;
                 return true;

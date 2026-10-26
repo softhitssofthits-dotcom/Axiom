@@ -58,6 +58,7 @@ public enum TokenKind
     DateTimeKeyword,
     UtcDateTimeKeyword,
     DecimalKeyword,
+    DictionaryKeyword,
     DimKeyword,
     DoKeyword,
     DoubleKeyword,

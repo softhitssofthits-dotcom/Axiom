@@ -24,6 +24,11 @@ public sealed partial class Binder
         var location = GetLocation(expression.Target);
         var displayName = GetArrayTargetDisplayName(target);
 
+        if (target.Type is DictionaryTypeSymbol dictionaryType)
+        {
+            return BindDictionaryAccessExpression(expression, target, dictionaryType, forAssignment);
+        }
+
         if (target.Type is not ArrayTypeSymbol arrayType)
         {
             if (target.Type != TypeSymbol.Error)
@@ -133,6 +138,7 @@ public sealed partial class Binder
         {
             BoundVariableExpression variableExpression => variableExpression.Variable,
             BoundArrayAccessExpression arrayAccessExpression => TryGetAssignedVariable(arrayAccessExpression.Target),
+            BoundDictionaryAccessExpression dictionaryAccessExpression => TryGetAssignedVariable(dictionaryAccessExpression.Target),
             BoundFieldAccessExpression fieldAccessExpression => TryGetAssignedVariable(fieldAccessExpression.Target),
             _ => null
         };
@@ -260,6 +266,7 @@ public sealed partial class Binder
             BoundVariableExpression variableExpression => variableExpression.Variable.Name,
             BoundFieldAccessExpression fieldAccessExpression => $"{GetArrayTargetDisplayName(fieldAccessExpression.Target)}.{fieldAccessExpression.Field.Name}",
             BoundArrayAccessExpression arrayAccessExpression => $"{GetArrayTargetDisplayName(arrayAccessExpression.Target)}(...)",
+            BoundDictionaryAccessExpression dictionaryAccessExpression => $"{GetArrayTargetDisplayName(dictionaryAccessExpression.Target)}[...]",
             _ => "массива"
         };
     }

@@ -1,0 +1,30 @@
+' TryGetValue записывает результат в переменную любого допустимого вида:
+' локальную, параметр BYREF, глобальную или захваченную.
+' Ожидаемый вывод:
+' TRUE
+' 42
+' TRUE
+' 42
+
+DIM prices AS DICTIONARY(STRING, INTEGER)
+prices.Add("яблоко", 42)
+
+' Параметр BYREF: значение записывается в переменную вызывающего кода.
+DIM fromParameter AS INTEGER
+ReadInto(prices, fromParameter)
+PRINT fromParameter
+
+' Глобальная переменная, изменяемая из процедуры.
+DIM shared AS INTEGER
+FillGlobal(prices)
+PRINT shared
+
+SUB ReadInto(items AS DICTIONARY(STRING, INTEGER), BYREF result AS INTEGER)
+    PRINT items.TryGetValue("яблоко", result)
+END SUB
+
+SUB FillGlobal(items AS DICTIONARY(STRING, INTEGER))
+    PRINT items.TryGetValue("яблоко", shared)
+END SUB
+
+SLEEP 2000

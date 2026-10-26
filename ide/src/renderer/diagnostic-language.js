@@ -20,9 +20,11 @@
     MB2057:'Sort field must name an orderable field of a one-dimensional record array.', MB2058:'Sort direction must be STEP 1 or STEP -1, and only in ARRAYSORT or ARRAYTOSORTED.',
     MB2059:'An empty array literal requires a known element type.', MB2060:'Array literal element is not compatible with the element type.', MB2061:'An array literal creates a one-dimensional array only.',
     MB2062:'FOR EACH source must be an array.', MB2063:'FOR EACH loop variable type is not compatible with the element type.',
+    MB2065:'Dictionary key type must be STRING, INTEGER or LONG.', MB2066:'Dictionary value type is not supported.', MB2067:'Invalid dictionary member or call form.',
     MB3001:'Division by zero.', MB3002:'Array index is out of bounds.', MB3003:'Input cannot be converted to the required type.', MB3004:'FOR STEP cannot be zero.', MB3005:'Invalid runtime state.',
     MB3006:'Function completed without returning a value.', MB3007:'Invalid built-in argument.', MB3008:'Numeric overflow.', MB3009:'Function value is empty.', MB3010:'Required graphics mode is not active.', MB3011:'Call stack overflow.', MB3012:'Argument is outside the numeric domain.',
     MB3013:'Failed to allocate array: the element count exceeds the supported limit.', MB3014:'Array view refers to released storage.',
+    MB3015:'Dictionary does not contain this key.', MB3016:'Dictionary already contains this key.',
     MB4001:'Bytecode does not support this construct.', MB4002:'Cannot capture the value in bytecode.', MB4003:'Cannot create a bytecode JSON snapshot.',
     MB4004:'Cannot read an imported dependency file.',
   };

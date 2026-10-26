@@ -8,8 +8,8 @@
 
 <p align="center"><strong>BASIC-inspired syntax, strict types, and a dedicated development environment.</strong></p>
 
-![version](https://img.shields.io/badge/version-0.8.0-blue)
-![IDE](https://img.shields.io/badge/IDE-0.13.0-green)
+![version](https://img.shields.io/badge/version-0.9.0-blue)
+![IDE](https://img.shields.io/badge/IDE-0.14.0-green)
 ![platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![status](https://img.shields.io/badge/status-early%20preview-orange)
 ![license](https://img.shields.io/badge/license-MIT-blue)
@@ -55,7 +55,7 @@ Square brackets denote arrays; parentheses denote function calls. String interpo
 | Area | Axiom features |
 |---|---|
 | **Types and numbers** | Strict typing, `BOOLEAN`, `INTEGER`, `LONG`, `DOUBLE`, `DECIMAL`, strings, dates, times, and UTC values |
-| **Arrays and data** | `[...]` literals, multidimensional arrays, custom bounds, views, `REDIM PRESERVE`, record sorting, search, filtering, and aggregation |
+| **Arrays and collections** | `[...]` literals, multidimensional arrays, custom bounds, views, `REDIM PRESERVE`, record sorting, search, filtering, and aggregation; typed `DICTIONARY(key, value)` with `Add`, `Exists`, `Remove`, `Keys`, `Count`, and `TryGetValue` |
 | **User-defined types** | `TYPE` records with fields, methods, and constructors; record literals and structural equality |
 | **Functions and modules** | `SUB`, `FUNCTION`, `BYVAL`/`BYREF`, nested routines, functions as values, closures, `IMPORT`, `PUBLIC`, and `PRIVATE` |
 | **Strings and errors** | `$"..."` interpolation, Unicode utilities, regular expressions, `TRY` / `CATCH` / `FINALLY` |
@@ -155,7 +155,7 @@ If you like BASIC, I welcome feedback and suggestions. A bug report, a small exa
 
 ## Project status
 
-Axiom is in early development. Current versions: language `0.8.0`, compiler `0.9.0`, IDE `0.13.0`. Windows is the primary platform. The language and IDE are still evolving; a portable distribution and support for other platforms have not been announced.
+Axiom is in early development. Current versions: language `0.9.0`, compiler `0.10.0`, IDE `0.14.0`. Windows is the primary platform. The language and IDE are still evolving; a portable distribution and support for other platforms have not been announced.
 
 ## License
 
