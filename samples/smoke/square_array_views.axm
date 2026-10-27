@@ -1,4 +1,4 @@
-' Таблица, представление строки, массивное поле TYPE и замена через BYREF.
+' Независимая копия строки таблицы и изменение массива через BYREF.
 TYPE Basket
     fruits[] AS STRING
 END TYPE
@@ -7,16 +7,17 @@ DIM grades[-1 TO 0, 4 TO 5] AS INTEGER
 grades[0, 4] = 3
 DIM rowValues[] = grades[0]
 
-' Представление сохраняет границы и меняет исходную таблицу.
+' При сохранении выбранной строки создаётся независимая копия с прежними границами.
 rowValues[5] = 4
 PRINT grades[0, 4]; " "; grades[0, 5]
+PRINT rowValues[5]
 PRINT LBOUND(rowValues[])
 
 DIM bag AS Basket
 bag.fruits[] = SPLIT("яблоко,банан", ",")
 DIM fruits[] = bag.fruits[]
 
-' BYREF заменяет саму переменную fruits[], а не прежнее поле bag.fruits[].
+' fruits[] — независимая копия поля. BYREF заменяет эту копию.
 Refill(fruits[])
 PRINT fruits[1]
 PRINT bag.fruits[1]
