@@ -129,6 +129,7 @@ public sealed partial class RuntimeArrayValue
         }
         public int Length => _integers?.Length ?? _values!.Length;
         public int ReadInteger(int index) => _integers![index];
+        public void WriteInteger(int index, int value) => _integers![index] = value;
         public void Clear(int index)
         {
             if (_integers is not null) _integers[index] = 0;

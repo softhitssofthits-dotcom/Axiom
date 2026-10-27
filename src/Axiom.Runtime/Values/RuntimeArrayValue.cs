@@ -547,6 +547,17 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool TrySetInteger1(int index0, int value)
+    {
+        EnsureAllocated();
+        if (ElementType != TypeSymbol.Integer || !TryGetLinearIndex1(index0, out var linearIndex))
+            return false;
+
+        _elements!.WriteInteger(linearIndex, value);
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool TrySetValue1(int index0, RuntimeValue value)
     {
         ArgumentNullException.ThrowIfNull(value);

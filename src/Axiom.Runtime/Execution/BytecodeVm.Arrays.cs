@@ -282,6 +282,20 @@ public sealed partial class BytecodeVm
     private bool TryExecuteFastStoreElement1(BytecodeCallFrame frame)
     {
         var stack = frame.EvaluationStack;
+        if (stack.Count >= 3 && stack.TryGetImmediateInteger(out var integerValue, 2))
+        {
+            var index = stack.PeekUnchecked();
+            var target = stack.PeekUnchecked(1);
+            if (index.Type == TypeSymbol.Integer
+                && target.Type is ArrayTypeSymbol && target.Value is RuntimeArrayValue integerArray
+                && integerArray.IsAllocated && integerArray.Rank == 1
+                && integerArray.TrySetInteger1(GetIntegerUnchecked(index), integerValue))
+            {
+                stack.DiscardTop(3);
+                return true;
+            }
+        }
+
         var indexValue = stack.Pop();
 
         if (indexValue.Type != TypeSymbol.Integer)

@@ -71,9 +71,9 @@ internal sealed class BytecodeEvaluationStack
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetImmediateInteger(out int value)
+    public bool TryGetImmediateInteger(out int value, int depthFromTop = 0)
     {
-        var index = Count - 1;
+        var index = Count - 1 - depthFromTop;
         if (index >= 0 && _items[index] is null)
         {
             value = _integers[index];
@@ -91,6 +91,8 @@ internal sealed class BytecodeEvaluationStack
     {
         Count -= 2;
     }
+
+    public void DiscardTop(int count) => Count -= count;
 
     public void ReplaceIntegerOperands(int result)
     {
