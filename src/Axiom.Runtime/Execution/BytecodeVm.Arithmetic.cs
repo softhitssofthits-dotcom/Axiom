@@ -11,6 +11,18 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
+    private void ExecuteIntegerLogicalInstruction(BytecodeCallFrame frame, Opcode opcode, int instructionIndex)
+    {
+        var stack = frame.EvaluationStack;
+        if (stack.TryGetIntegerOperands(out var left, out var right))
+        {
+            stack.ReplaceIntegerOperands(opcode == Opcode.Eqv ? ~(left ^ right) : ~left | right);
+            return;
+        }
+
+        ExecuteBinaryInstruction(frame, opcode, instructionIndex);
+    }
+
     private void ExecuteBinaryInstruction(BytecodeCallFrame frame, Opcode opcode, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
@@ -220,6 +232,12 @@ public sealed partial class BytecodeVm
     private void ExecuteShiftLeftInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
+        if (stack.TryGetIntegerOperands(out var integerLeft, out var integerRight) && integerRight is >= 0 and <= 63)
+        {
+            stack.ReplaceIntegerOperands(integerLeft << integerRight);
+            return;
+        }
+
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
@@ -235,6 +253,12 @@ public sealed partial class BytecodeVm
     private void ExecuteShiftRightInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
+        if (stack.TryGetIntegerOperands(out var integerLeft, out var integerRight) && integerRight is >= 0 and <= 63)
+        {
+            stack.ReplaceIntegerOperands(integerLeft >> integerRight);
+            return;
+        }
+
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 

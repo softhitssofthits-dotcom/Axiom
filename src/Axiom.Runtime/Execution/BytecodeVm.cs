@@ -757,9 +757,12 @@ public sealed partial class BytecodeVm
 
             case Opcode.Power:
             case Opcode.IntegralDivide:
+                ExecuteBinaryInstruction(frame, instruction.Opcode, instructionIndex);
+                break;
+
             case Opcode.Eqv:
             case Opcode.Imp:
-                ExecuteBinaryInstruction(frame, instruction.Opcode, instructionIndex);
+                ExecuteIntegerLogicalInstruction(frame, instruction.Opcode, instructionIndex);
                 break;
 
             case Opcode.Divide:
