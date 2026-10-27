@@ -47,6 +47,15 @@ public sealed partial class BytecodeVm
             && frame.EvaluationStack.TryGetImmediateInteger(out _))
             return;
 
+        if (executionInfo.CanonicalId == BuiltinFunctionId.CLng && argumentCount == 1
+            && executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
+            && frame.EvaluationStack.TryGetImmediateInteger(out var integerForLong))
+        {
+            frame.EvaluationStack.DiscardTop(1);
+            frame.EvaluationStack.PushUnchecked(RuntimeValue.FromLong(integerForLong));
+            return;
+        }
+
         if (executionInfo.CanonicalId == BuiltinFunctionId.Abs && argumentCount == 1
             && executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
             && frame.EvaluationStack.TryGetImmediateInteger(out var integerValue) && integerValue != int.MinValue)

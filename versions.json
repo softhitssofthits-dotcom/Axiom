@@ -1,10 +1,10 @@
 {
   "language": "0.12.0",
-  "compiler": "0.13.16",
+  "compiler": "0.13.17",
   "ide": "0.15.3",
   "compilerOnlyChange": {
-    "version": "0.13.16",
-    "reason": "Внутренний быстрый путь ABS сохраняет результаты и диагностику.",
+    "version": "0.13.17",
+    "reason": "Внутренний путь CLNG сохраняет тип LONG, значения и диагностику преобразования.",
     "paths": [
       "src/Axiom.Runtime/Execution/BytecodeVm.BuiltinCalls.cs"
     ]
