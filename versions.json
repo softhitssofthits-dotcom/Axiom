@@ -1,10 +1,10 @@
 {
   "language": "0.12.0",
-  "compiler": "0.13.10",
+  "compiler": "0.13.11",
   "ide": "0.15.3",
   "compilerOnlyChange": {
-    "version": "0.13.10",
-    "reason": "Внутреннее выполнение сдвигов, EQV и IMP на стеке сохраняет результаты и диагностику языка.",
+    "version": "0.13.11",
+    "reason": "Внутреннее выполнение целочисленного деления сохраняет результаты и диагностику языка.",
     "paths": [
       "src/Axiom.Runtime/Execution/BytecodeVm.Arithmetic.cs",
       "src/Axiom.Runtime/Execution/BytecodeVm.cs"

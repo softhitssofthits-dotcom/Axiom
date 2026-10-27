@@ -11,6 +11,19 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
+    private void ExecuteIntegralDivideInstruction(BytecodeCallFrame frame, int instructionIndex)
+    {
+        var stack = frame.EvaluationStack;
+        if (stack.TryGetIntegerOperands(out var left, out var right)
+            && right != 0 && (left != int.MinValue || right != -1))
+        {
+            stack.ReplaceIntegerOperands(left / right);
+            return;
+        }
+
+        ExecuteBinaryInstruction(frame, Opcode.IntegralDivide, instructionIndex);
+    }
+
     private void ExecuteIntegerLogicalInstruction(BytecodeCallFrame frame, Opcode opcode, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
