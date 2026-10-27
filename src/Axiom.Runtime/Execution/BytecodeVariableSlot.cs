@@ -5,7 +5,9 @@ namespace Axiom.Runtime;
 
 internal class BytecodeVariableSlot
 {
-    private RuntimeValue _value;
+    // Для непосредственного INTEGER без внешнего получателя null обозначает значение _integer.
+    private RuntimeValue? _value;
+    private int _integer;
     private readonly Func<RuntimeValue>? _getter;
     private readonly Action<RuntimeValue>? _setter;
 
@@ -68,6 +70,26 @@ internal class BytecodeVariableSlot
         return new BytecodeVariableSlot(value, fixedStringLength, isForEachItem, isForEachItemPending, adoptValue: true);
     }
 
+    public static BytecodeVariableSlot AdoptInteger(int value)
+    {
+        var slot = new BytecodeVariableSlot(RuntimeValue.Void, null, false, false, adoptValue: true);
+        slot._value = null;
+        slot._integer = value;
+        return slot;
+    }
+
+    public bool TryGetImmediateInteger(out int value)
+    {
+        if (_getter is null && _value is null)
+        {
+            value = _integer;
+            return true;
+        }
+
+        value = 0;
+        return false;
+    }
+
     public int? FixedStringLength { get; }
 
     public bool IsForEachItem { get; internal set; }
@@ -76,7 +98,7 @@ internal class BytecodeVariableSlot
 
     public virtual RuntimeValue Value
     {
-        get => _getter is null ? _value : _getter();
+        get => _getter is null ? _value ?? RuntimeValue.FromInteger(_integer) : _getter();
         set
         {
             ArgumentNullException.ThrowIfNull(value);

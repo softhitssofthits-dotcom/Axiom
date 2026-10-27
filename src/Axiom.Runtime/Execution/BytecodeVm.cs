@@ -455,6 +455,16 @@ public sealed partial class BytecodeVm
     {
         var template = _frameTemplatesByRoutineId[routine.Id];
         var argumentSlots = CreateArgumentSlots(routine, arguments, byRefArgumentSlots, byValValuesAreSnapshots);
+        return CreateFrameWithSlots(routine, argumentSlots, captures, callSiteLocation, template);
+    }
+
+    private BytecodeCallFrame CreateFrameWithSlots(
+        BytecodeRoutine routine,
+        BytecodeVariableSlot[] argumentSlots,
+        BytecodeVariableSlot[] captures,
+        TextLocation callSiteLocation,
+        RoutineFrameTemplate template)
+    {
         if (_cachedFrames.Remove(routine.Id, out var cachedFrame))
         {
             cachedFrame.Reset(argumentSlots, captures, callSiteLocation, template.DefaultLocals);
@@ -709,7 +719,11 @@ public sealed partial class BytecodeVm
                 break;
 
             case Opcode.LoadArgument:
-                frame.EvaluationStack.Push(frame.Arguments[instruction.GetOperand(0)].Value);
+                var argument = frame.Arguments[instruction.GetOperand(0)];
+                if (argument.TryGetImmediateInteger(out var integerArgument))
+                    frame.EvaluationStack.PushInteger(integerArgument);
+                else
+                    frame.EvaluationStack.Push(argument.Value);
                 break;
 
             case Opcode.StoreArgument:
@@ -1444,6 +1458,18 @@ public sealed partial class BytecodeVm
 
     private void ExecuteReturn(BytecodeCallFrame frame, int instructionIndex)
     {
+        if (frame.Routine.ResultType == TypeSymbol.Integer && frame.ErrorHandlerCount == 0
+            && !frame.HasCallbackContinuation && frame.EvaluationStack.TryGetImmediateInteger(out var integerResult))
+        {
+            var discard = frame.DiscardReturnValue;
+            frame.EvaluationStack.DiscardTop(1);
+            _callStack.Pop();
+            CacheReusableFrame(frame);
+            if (_callStack.Count > 0 && !discard)
+                CurrentFrame.EvaluationStack.PushInteger(integerResult);
+            return;
+        }
+
         RuntimeValue returnValue = RuntimeValue.Void;
 
         if (frame.Routine.ResultType != TypeSymbol.Void)

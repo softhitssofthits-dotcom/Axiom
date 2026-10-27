@@ -25,6 +25,25 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
+        if (instruction.Opcode == Opcode.Call && argumentCount == 1
+            && targetRoutine.ParameterCount == 1 && targetRoutine.ParameterVariables.Count == 1
+            && targetRoutine.ParameterVariables[0].Type == TypeSymbol.Integer
+            && callerFrame.EvaluationStack.TryGetImmediateInteger(out var integerArgument))
+        {
+            callerFrame.EvaluationStack.DiscardTop(1);
+            var directCaptures = ResolveCapturedSlots(callerFrame, targetRoutine, instructionIndex);
+            var callLocation = ResolveLocation(callerFrame.Routine.Id, instructionIndex);
+            if (_callStack.Count >= MaxCallDepth)
+            {
+                ReportCallStackOverflow(targetRoutine.Name, callLocation);
+                throw new RuntimeFailureException();
+            }
+
+            var slots = new[] { BytecodeVariableSlot.AdoptInteger(integerArgument) };
+            _callStack.Push(CreateFrameWithSlots(targetRoutine, slots, directCaptures, callLocation, _frameTemplatesByRoutineId[targetRoutine.Id]));
+            return;
+        }
+
         using var arguments = RentArguments(callerFrame, byValArgumentCount, instructionIndex);
         var captures = ResolveCapturedSlots(callerFrame, targetRoutine, instructionIndex);
         var byRefArgumentSlots = instruction.Opcode == Opcode.CallByRef
