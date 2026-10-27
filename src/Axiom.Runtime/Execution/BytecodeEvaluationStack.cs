@@ -70,6 +70,23 @@ internal sealed class BytecodeEvaluationStack
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGetImmediateInteger(out int value)
+    {
+        var index = Count - 1;
+        if (index >= 0 && _items[index] is null)
+        {
+            value = _integers[index];
+            return true;
+        }
+
+        value = 0;
+        return false;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ReplaceImmediateInteger(int value) => _integers[Count - 1] = value;
+
     public void DiscardIntegerOperands()
     {
         Count -= 2;

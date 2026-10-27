@@ -249,6 +249,13 @@ public sealed partial class BytecodeVm
 
     private void ExecuteNegateInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
+        var stack = frame.EvaluationStack;
+        if (stack.TryGetImmediateInteger(out var integer) && integer != int.MinValue)
+        {
+            stack.ReplaceImmediateInteger(-integer);
+            return;
+        }
+
         var operand = frame.EvaluationStack.PopUnchecked();
 
         if (TryEvaluateHotNegate(operand, out var result))
@@ -320,6 +327,13 @@ public sealed partial class BytecodeVm
 
     private void ExecuteNotInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
+        var stack = frame.EvaluationStack;
+        if (stack.TryGetImmediateInteger(out var integer))
+        {
+            stack.ReplaceImmediateInteger(~integer);
+            return;
+        }
+
         var operand = frame.EvaluationStack.PopUnchecked();
 
         if (TryEvaluateHotNot(operand, out var result))
