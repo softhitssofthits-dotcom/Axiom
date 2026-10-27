@@ -186,16 +186,16 @@ internal static class BuiltinArrayAggregateHelpers
         var best = FirstValue(array, functionName, location, reportArgumentError);
         var comparisonKind = ResolveExtremeComparisonKind(functionName, best, location, reportArgumentError);
 
-        if (!preferLarger && array.ElementType == TypeSymbol.Integer && best.Type == TypeSymbol.Integer)
+        if (array.ElementType == TypeSymbol.Integer && best.Type == TypeSymbol.Integer)
         {
-            var minimum = best.AsInteger();
+            var extreme = best.AsInteger();
             BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices =>
             {
                 var value = array.GetIntegerDirect(indices);
-                if (value < minimum)
-                    minimum = value;
+                if (preferLarger ? value > extreme : value < extreme)
+                    extreme = value;
             });
-            return RuntimeValue.FromInteger(minimum);
+            return RuntimeValue.FromInteger(extreme);
         }
 
         ForEachAfterFirst(array, v =>
