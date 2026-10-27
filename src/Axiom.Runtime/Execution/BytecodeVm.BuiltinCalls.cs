@@ -47,6 +47,14 @@ public sealed partial class BytecodeVm
             && frame.EvaluationStack.TryGetImmediateInteger(out _))
             return;
 
+        if (executionInfo.CanonicalId == BuiltinFunctionId.Abs && argumentCount == 1
+            && executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
+            && frame.EvaluationStack.TryGetImmediateInteger(out var integerValue) && integerValue != int.MinValue)
+        {
+            frame.EvaluationStack.ReplaceImmediateInteger(integerValue < 0 ? -integerValue : integerValue);
+            return;
+        }
+
         if (TryExecuteFastGraphicsBuiltin(frame, executionInfo, instructionIndex, out var fastResult))
         {
             if (executionInfo.ReturnsValue)

@@ -1,10 +1,10 @@
 {
   "language": "0.12.0",
-  "compiler": "0.13.15",
+  "compiler": "0.13.16",
   "ide": "0.15.3",
   "compilerOnlyChange": {
-    "version": "0.13.15",
-    "reason": "Внутренний быстрый путь CINT сохраняет правила преобразований и диагностику.",
+    "version": "0.13.16",
+    "reason": "Внутренний быстрый путь ABS сохраняет результаты и диагностику.",
     "paths": [
       "src/Axiom.Runtime/Execution/BytecodeVm.BuiltinCalls.cs"
     ]
