@@ -41,6 +41,12 @@ public sealed partial class BytecodeVm
             InvalidateReverseExecutionHistory();
         }
 
+        // CINT над непосредственным INTEGER не меняет значение и не требует упаковки.
+        if (executionInfo.CanonicalId == BuiltinFunctionId.CInt && argumentCount == 1
+            && executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
+            && frame.EvaluationStack.TryGetImmediateInteger(out _))
+            return;
+
         if (TryExecuteFastGraphicsBuiltin(frame, executionInfo, instructionIndex, out var fastResult))
         {
             if (executionInfo.ReturnsValue)
