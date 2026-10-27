@@ -88,10 +88,8 @@ internal static class BuiltinArrayAggregateHelpers
         var useSmallGroups = array.Length < 128;
         var firstShift = 2046;
         var lastShift = 0;
-        ForEach(array, v =>
+        void Accumulate(double value)
         {
-            RequireNumeric("ARRAYAVERAGE", v, location, reportArgumentError);
-            var value = v.Type == TypeSymbol.Decimal ? (double)v.AsDecimal() : v.AsDouble();
             RequireFinite("ARRAYAVERAGE", value, location, reportResultError);
             // Каждый конечный DOUBLE точно представим целым числом единиц 2^-1074.
             var bits = BitConverter.DoubleToUInt64Bits(value);
@@ -122,7 +120,20 @@ internal static class BuiltinArrayAggregateHelpers
                 }
             }
             count++;
-        });
+        }
+
+        if (array.ElementType == TypeSymbol.Integer)
+        {
+            BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices => Accumulate(array.GetIntegerDirect(indices)));
+        }
+        else
+        {
+            ForEach(array, v =>
+            {
+                RequireNumeric("ARRAYAVERAGE", v, location, reportArgumentError);
+                Accumulate(v.Type == TypeSymbol.Decimal ? (double)v.AsDecimal() : v.AsDouble());
+            });
+        }
         if (count == 0)
         {
             reportArgumentError("не может быть пустым выделенным массивом.", location);

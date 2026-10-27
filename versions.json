@@ -1,10 +1,10 @@
 {
   "language": "0.12.0",
-  "compiler": "0.13.22",
+  "compiler": "0.13.23",
   "ide": "0.15.3",
   "compilerOnlyChange": {
-    "version": "0.13.22",
-    "reason": "Внутренний обход ARRAYMAX сохраняет результаты и диагностику.",
+    "version": "0.13.23",
+    "reason": "Внутренний обход ARRAYAVERAGE сохраняет точность результата и диагностику.",
     "paths": [
       "src/Axiom.Runtime/Builtins/BuiltinArrayAggregateHelpers.cs"
     ]
