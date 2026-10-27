@@ -603,9 +603,21 @@ public sealed partial class BytecodeVm
         }
 
         var shouldCaptureReversibleState = ShouldCaptureReversibleStateHistory();
-        var stateBeforeInstruction = shouldCaptureReversibleState
-            ? TryCreateReversibleStateSnapshot(snapshot!)
-            : null;
+        var previousSnapshot = _previousReversibleStateSnapshot;
+        var previousInstruction = previousSnapshot?.ExecutionSnapshot;
+        // Откат выбирает первую инструкцию предыдущей строки. После загрузки
+        // неизменяемого 0 или 1 более ранний снимок той же строки достаточен.
+        var canReusePrevious = canCheckStopFirst && shouldCaptureReversibleState
+            && snapshot is not null && previousInstruction is not null
+            && previousInstruction.RoutineId == snapshot.RoutineId
+            && previousInstruction.CallDepth == snapshot.CallDepth
+            && previousInstruction.InstructionIndex + 1 == snapshot.InstructionIndex
+            && previousInstruction.Opcode is Opcode.PushIntegerZero or Opcode.PushIntegerOne
+            && SourceLine.From(previousInstruction.SourceLocation) == SourceLine.From(snapshot.SourceLocation)
+            && _openFiles.Count == 0 && !HasActiveCallbackContinuation();
+        var stateBeforeInstruction = canReusePrevious
+            ? previousSnapshot
+            : shouldCaptureReversibleState ? TryCreateReversibleStateSnapshot(snapshot!) : null;
         if (snapshot is not null)
         {
             _instructionObserver?.Invoke(snapshot);
