@@ -593,6 +593,15 @@ public sealed partial class BytecodeVm
         var snapshot = needsExecutionSnapshot
             ? CreateExecutionSnapshot(frame, instructionIndex, instruction)
             : null;
+        // Без внешних обратных вызовов проверка остановки не меняет состояние программы.
+        // Снимок перед остановленной инструкцией всё равно не используется для отката.
+        var canCheckStopFirst = _instructionObserver is null && _shouldStopBeforeInstruction is null;
+        if (canCheckStopFirst && snapshot is not null && ShouldStopBefore(snapshot))
+        {
+            _stopState = new BytecodeVmStopState(snapshot, this, _previousReversibleStateSnapshot);
+            return;
+        }
+
         var shouldCaptureReversibleState = ShouldCaptureReversibleStateHistory();
         var stateBeforeInstruction = shouldCaptureReversibleState
             ? TryCreateReversibleStateSnapshot(snapshot!)
@@ -602,7 +611,7 @@ public sealed partial class BytecodeVm
             _instructionObserver?.Invoke(snapshot);
         }
 
-        if (snapshot is not null && ShouldStopBefore(snapshot))
+        if (!canCheckStopFirst && snapshot is not null && ShouldStopBefore(snapshot))
         {
             _stopState = new BytecodeVmStopState(snapshot, this, _previousReversibleStateSnapshot);
             return;

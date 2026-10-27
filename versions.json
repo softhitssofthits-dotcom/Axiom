@@ -1,12 +1,12 @@
 {
   "language": "0.12.0",
-  "compiler": "0.13.23",
+  "compiler": "0.13.24",
   "ide": "0.15.3",
   "compilerOnlyChange": {
-    "version": "0.13.23",
-    "reason": "Внутренний обход ARRAYAVERAGE сохраняет точность результата и диагностику.",
+    "version": "0.13.24",
+    "reason": "Внутреннее удаление отброшенного снимка сохраняет шаги, историю и наблюдателей.",
     "paths": [
-      "src/Axiom.Runtime/Builtins/BuiltinArrayAggregateHelpers.cs"
+      "src/Axiom.Runtime/Execution/BytecodeVm.cs"
     ]
   }
 }
