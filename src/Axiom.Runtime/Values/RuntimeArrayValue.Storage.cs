@@ -4,7 +4,7 @@ namespace Axiom.Runtime;
 
 public sealed partial class RuntimeArrayValue
 {
-    private RuntimeValue[] CreateDefaultElements(IReadOnlyList<int> lowerBounds, IReadOnlyList<int> upperBounds)
+    private ElementStorage CreateDefaultElements(IReadOnlyList<int> lowerBounds, IReadOnlyList<int> upperBounds)
     {
         var length = CalculateLength(lowerBounds, upperBounds);
         var elements = CreateElementStorage(length);
@@ -17,11 +17,11 @@ public sealed partial class RuntimeArrayValue
         return elements;
     }
 
-    private static RuntimeValue[] CreateElementStorage(int length)
+    private ElementStorage CreateElementStorage(int length)
     {
         try
         {
-            return new RuntimeValue[length];
+            return new ElementStorage(length, ElementType == TypeSymbol.Integer);
         }
         catch (OutOfMemoryException)
         {
@@ -58,7 +58,7 @@ public sealed partial class RuntimeArrayValue
         return (int)grown;
     }
 
-    private void AttachStorage(RuntimeValue[] elements)
+    private void AttachStorage(ElementStorage elements)
     {
         InvalidateStorageLifetime();
         _elements = elements;
@@ -118,4 +118,38 @@ public sealed partial class RuntimeArrayValue
             throw new InvalidOperationException("Array view cannot be resized or deallocated.");
         }
     }
+    private sealed class ElementStorage
+    {
+        private readonly int[]? _integers;
+        private readonly RuntimeValue[]? _values;
+        public ElementStorage(int length, bool integers)
+        {
+            if (integers) _integers = new int[length];
+            else _values = new RuntimeValue[length];
+        }
+        public int Length => _integers?.Length ?? _values!.Length;
+        public int ReadInteger(int index) => _integers![index];
+        public void Clear(int index)
+        {
+            if (_integers is not null) _integers[index] = 0;
+            else _values![index] = RuntimeValue.Void;
+        }
+        public RuntimeValue this[int index]
+        {
+            get => _integers is null ? _values![index] : RuntimeValue.FromInteger(_integers[index]);
+            set { if (_integers is null) _values![index] = value; else _integers[index] = value.AsInteger(); }
+        }
+        public void CopyTo(int sourceIndex, RuntimeValue[] target, int targetIndex, int count)
+        {
+            if (_values is not null) Array.Copy(_values, sourceIndex, target, targetIndex, count);
+            else for (var i = 0; i < count; i++) target[targetIndex + i] = RuntimeValue.FromInteger(_integers![sourceIndex + i]);
+        }
+        public static void Copy(ElementStorage source, int sourceIndex, ElementStorage target, int targetIndex, int count)
+        {
+            if (source._integers is not null && target._integers is not null) Array.Copy(source._integers, sourceIndex, target._integers, targetIndex, count);
+            else if (source._values is not null && target._values is not null) Array.Copy(source._values, sourceIndex, target._values, targetIndex, count);
+            else for (var i = 0; i < count; i++) target[targetIndex + i] = source[sourceIndex + i];
+        }
+    }
+
 }

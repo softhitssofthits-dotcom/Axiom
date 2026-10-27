@@ -28,11 +28,10 @@ internal static class BuiltinArrayAggregateHelpers
             {
                 case var t when t == TypeSymbol.Integer:
                 {
-                    var acc = first.AsInteger();
-                    ForEachAfterFirst(array, v =>
+                    var acc = 0;
+                    BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices =>
                     {
-                        RequireNumeric("ARRAYSUM", v, location, reportArgumentError);
-                        acc = checked(acc + v.AsInteger());
+                        acc = checked(acc + array.GetIntegerDirect(indices));
                     });
                     return RuntimeValue.FromInteger(acc);
                 }

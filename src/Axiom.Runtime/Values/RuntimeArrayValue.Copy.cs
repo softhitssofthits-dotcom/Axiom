@@ -88,6 +88,11 @@ public sealed partial class RuntimeArrayValue
         // fails normal reads and iteration, but its bytes still need to be copied
         // into an invalidated snapshot so a debugger can preserve the same error.
         var length = Math.Min(_elements.Length, target._elements.Length);
+        if (ElementType == TypeSymbol.Integer && target.ElementType == TypeSymbol.Integer)
+        {
+            ElementStorage.Copy(_elements, 0, target._elements, 0, length);
+            return;
+        }
         for (var index = 0; index < length; index++)
         {
             target._elements[index] = snapshotElement(_elements[index]);
@@ -204,14 +209,22 @@ public sealed partial class RuntimeArrayValue
             return false;
         }
 
-        return TryCopyOneDimensionalRangeTo(LowerBound, Length, clone._elements!, destinationIndex: 0);
+        if (!TryGetLinearIndex1(LowerBound, out var first)
+            || !TryGetLinearIndex1(UpperBound, out var last)
+            || last - first + 1 != Length)
+        {
+            return false;
+        }
+
+        ElementStorage.Copy(_elements!, first, clone._elements!, 0, Length);
+        return true;
     }
 
     private void CopyIntersection(
-        RuntimeValue[] sourceElements,
+        ElementStorage sourceElements,
         IReadOnlyList<int> sourceLowerBounds,
         IReadOnlyList<int> sourceUpperBounds,
-        RuntimeValue[] targetElements,
+        ElementStorage targetElements,
         IReadOnlyList<int> targetLowerBounds,
         IReadOnlyList<int> targetUpperBounds)
     {
@@ -233,7 +246,7 @@ public sealed partial class RuntimeArrayValue
             var copyCount = copyUpperBound - copyLowerBound + 1;
             var sourceOffset = copyLowerBound - sourceLowerBounds[0];
             var targetOffset = copyLowerBound - targetLowerBounds[0];
-            Array.Copy(sourceElements, sourceOffset, targetElements, targetOffset, copyCount);
+            ElementStorage.Copy(sourceElements, sourceOffset, targetElements, targetOffset, copyCount);
             return;
         }
 
@@ -270,10 +283,10 @@ public sealed partial class RuntimeArrayValue
     private void CopyIntersectionRecursive(
         int dimension,
         int[] indices,
-        RuntimeValue[] sourceElements,
+        ElementStorage sourceElements,
         IReadOnlyList<int> sourceLowerBounds,
         IReadOnlyList<int> sourceStrides,
-        RuntimeValue[] targetElements,
+        ElementStorage targetElements,
         IReadOnlyList<int> targetLowerBounds,
         IReadOnlyList<int> targetStrides,
         IReadOnlyList<int> copyLowerBounds,

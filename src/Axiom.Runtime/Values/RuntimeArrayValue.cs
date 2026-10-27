@@ -11,7 +11,7 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
     /// </summary>
     internal const int MaxElementCount = 64 * 1024 * 1024;
 
-    private RuntimeValue[]? _elements;
+    private ElementStorage? _elements;
     private StorageLifetime? _storageLifetime;
     private long _shapeRevision;
     private int _capacity;
@@ -110,7 +110,7 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
         array._visibleStorageDimensions = CreateIdentityStorageDimensions(rank: 1);
         array._isView = false;
 
-        var elements = new RuntimeValue[values.Count];
+        var elements = array.CreateElementStorage(values.Count);
         for (var index = 0; index < values.Count; index++)
         {
             elements[index] = values[index].CopyForStorage(fixedStringLength);
@@ -145,7 +145,7 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
         var totalLength = firstLength <= 0 || secondLength <= 0
             ? 0
             : ValidateElementCount((long)firstLength * secondLength);
-        var elements = CreateElementStorage(totalLength);
+        var elements = array.CreateElementStorage(totalLength);
         var elementIndex = 0;
 
         for (var firstIndex = 1; firstIndex <= firstLength; firstIndex++)
@@ -169,7 +169,7 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
         int? fixedStringLength,
         IReadOnlyList<int> lowerBounds,
         IReadOnlyList<int> upperBounds,
-        RuntimeValue[] elements,
+        ElementStorage elements,
         IReadOnlyList<int> storageLowerBounds,
         IReadOnlyList<int> storageUpperBounds,
         IReadOnlyList<int?> fixedStorageIndices,
@@ -284,6 +284,12 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
         return UpperBounds[dimension - 1];
     }
 
+    internal int GetIntegerDirect(IReadOnlyList<int> indices)
+    {
+        EnsureAllocated();
+        return _elements!.ReadInteger(GetLinearIndex(indices));
+    }
+
     public RuntimeValue GetValue(int index)
     {
         EnsureOneDimensional();
@@ -316,6 +322,45 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
         }
 
         value = _elements![linearIndex];
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool TryGetInteger(ReadOnlySpan<int> indices, out int value)
+    {
+        EnsureAllocated();
+        if (ElementType != TypeSymbol.Integer || !TryGetLinearIndex(indices, out var linearIndex))
+        {
+            value = 0;
+            return false;
+        }
+        value = _elements!.ReadInteger(linearIndex);
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool TryGetInteger3(int index0, int index1, int index2, out int value)
+    {
+        EnsureAllocated();
+        if (ElementType != TypeSymbol.Integer || !TryGetLinearIndex3(index0, index1, index2, out var linearIndex))
+        {
+            value = 0;
+            return false;
+        }
+        value = _elements!.ReadInteger(linearIndex);
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool TryGetInteger1(int index0, out int value)
+    {
+        EnsureAllocated();
+        if (ElementType != TypeSymbol.Integer || !TryGetLinearIndex1(index0, out var linearIndex))
+        {
+            value = 0;
+            return false;
+        }
+        value = _elements!.ReadInteger(linearIndex);
         return true;
     }
 
@@ -554,7 +599,7 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
             return false;
         }
 
-        Array.Copy(_elements!, sourceLinearIndex, destination, destinationIndex, count);
+        _elements!.CopyTo(sourceLinearIndex, destination, destinationIndex, count);
         return true;
     }
 
@@ -583,7 +628,7 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
             return false;
         }
 
-        Array.Copy(_elements!, sourceLinearIndex, _elements!, destinationLinearIndex, count);
+        ElementStorage.Copy(_elements!, sourceLinearIndex, _elements!, destinationLinearIndex, count);
         return true;
     }
 
@@ -615,7 +660,7 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
 
             if (Length > 0)
             {
-                Array.Copy(_elements, 0, nextElements, 0, Length);
+                ElementStorage.Copy(_elements, 0, nextElements, 0, Length);
             }
 
             AttachStorage(nextElements);
@@ -652,7 +697,7 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
 
         var previousLength = Length;
         value = _elements![previousLength - 1];
-        _elements[previousLength - 1] = RuntimeValue.Void;
+        _elements.Clear(previousLength - 1);
 
         if (previousLength == 1)
         {

@@ -262,6 +262,12 @@ public sealed partial class BytecodeVm
             return false;
         }
 
+        if (array.TryGetInteger1(GetIntegerUnchecked(indexValue), out var integerValue))
+        {
+            stack.PushInteger(integerValue);
+            return true;
+        }
+
         if (!array.TryGetValue1(GetIntegerUnchecked(indexValue), out var directValue))
         {
             stack.PushUnchecked(arrayValue);
@@ -398,6 +404,12 @@ public sealed partial class BytecodeVm
 
         if (directArray.Rank == 1)
         {
+            if (directArray.TryGetInteger1(index0, out var integerValue))
+            {
+                stack.PushInteger(integerValue);
+                return;
+            }
+
             if (directArray.TryGetValue1(index0, out var directValue))
             {
                 stack.PushUnchecked(directValue);
@@ -428,6 +440,12 @@ public sealed partial class BytecodeVm
 
         if (directArray.Rank == 3)
         {
+            if (directArray.TryGetInteger3(index0, index1, index2, out var integerValue))
+            {
+                stack.PushInteger(integerValue);
+                return;
+            }
+
             if (directArray.TryGetValue3(index0, index1, index2, out var directValue))
             {
                 stack.PushUnchecked(directValue);
@@ -453,6 +471,12 @@ public sealed partial class BytecodeVm
     {
         if (indices.Length == directArray.Rank)
         {
+            if (directArray.TryGetInteger(indices, out var integerValue))
+            {
+                frame.EvaluationStack.PushInteger(integerValue);
+                return;
+            }
+
             if (directArray.TryGetValue(indices, out var directValue))
             {
                 frame.EvaluationStack.PushUnchecked(directValue);

@@ -23,7 +23,7 @@ const validate = versions => {
   const change = versions.compilerOnlyChange;
   if (change !== undefined && (!change || !valid(change.version) || typeof change.reason !== 'string' || !change.reason.trim() ||
       !Array.isArray(change.paths) || !change.paths.length || new Set(change.paths).size !== change.paths.length ||
-      change.paths.some(p => typeof p !== 'string' || !/^src\/Axiom\.(Core|Semantics|Execution|Formatting)\/(?:[\w-]+\/)*[\w.-]+\.cs$/.test(p))))
+      change.paths.some(p => typeof p !== 'string' || !/^src\/Axiom\.(Core|Semantics|Runtime|Execution|Formatting)\/(?:[\w-]+\/)*[\w.-]+\.cs$/.test(p))))
     fail('compilerOnlyChange требует версию компилятора, причину и точные пути его исходников.');
 };
 const coreSource = v => `// Создан scripts/versioning.mjs из versions.json. Не редактировать вручную.\nnamespace Axiom.Core;\n\npublic static class AxiomVersionInfo\n{\n    public const string LanguageVersion = "${v.language}";\n    public const string CompilerVersion = "${v.compiler}";\n}\n`;

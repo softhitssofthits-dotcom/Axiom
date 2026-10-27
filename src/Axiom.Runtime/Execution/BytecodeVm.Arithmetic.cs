@@ -55,6 +55,18 @@ public sealed partial class BytecodeVm
     private void ExecuteAddInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
+        if (stack.TryGetIntegerOperands(out var integerLeft, out var integerRight))
+        {
+            try
+            {
+                stack.ReplaceIntegerOperands(checked(integerLeft + integerRight));
+                return;
+            }
+            catch (OverflowException)
+            {
+                // Обычный путь выдаёт прежнюю диагностику и расположение ошибки.
+            }
+        }
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
@@ -95,6 +107,18 @@ public sealed partial class BytecodeVm
     private void ExecuteSubtractInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
+        if (stack.TryGetIntegerOperands(out var integerLeft, out var integerRight))
+        {
+            try
+            {
+                stack.ReplaceIntegerOperands(checked(integerLeft - integerRight));
+                return;
+            }
+            catch (OverflowException)
+            {
+                // Обычный путь выдаёт прежнюю диагностику и расположение ошибки.
+            }
+        }
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
@@ -110,6 +134,14 @@ public sealed partial class BytecodeVm
     private void ExecuteModuloInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
+        if (stack.TryGetIntegerOperands(out var integerLeft, out var integerRight)
+            && integerRight != 0
+            && (integerLeft != int.MinValue || integerRight != -1))
+        {
+            stack.ReplaceIntegerOperands(integerLeft % integerRight);
+            return;
+        }
+
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
@@ -125,6 +157,12 @@ public sealed partial class BytecodeVm
     private void ExecuteAndInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
+        if (stack.TryGetIntegerOperands(out var integerLeft, out var integerRight))
+        {
+            stack.ReplaceIntegerOperands(integerLeft & integerRight);
+            return;
+        }
+
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
@@ -140,6 +178,12 @@ public sealed partial class BytecodeVm
     private void ExecuteOrInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
+        if (stack.TryGetIntegerOperands(out var integerLeft, out var integerRight))
+        {
+            stack.ReplaceIntegerOperands(integerLeft | integerRight);
+            return;
+        }
+
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
@@ -155,6 +199,12 @@ public sealed partial class BytecodeVm
     private void ExecuteXorInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
+        if (stack.TryGetIntegerOperands(out var integerLeft, out var integerRight))
+        {
+            stack.ReplaceIntegerOperands(integerLeft ^ integerRight);
+            return;
+        }
+
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
@@ -306,9 +356,32 @@ public sealed partial class BytecodeVm
         return false;
     }
 
+    private static bool TryConsumeIntegerComparison(BytecodeEvaluationStack stack, Opcode opcode, out bool result)
+    {
+        result = false;
+        if (!stack.TryGetIntegerOperands(out var left, out var right)) return false;
+        result = opcode switch
+        {
+            Opcode.CompareEqual => left == right,
+            Opcode.CompareNotEqual => left != right,
+            Opcode.CompareLess => left < right,
+            Opcode.CompareLessOrEqual => left <= right,
+            Opcode.CompareGreater => left > right,
+            Opcode.CompareGreaterOrEqual => left >= right,
+            _ => throw new InvalidOperationException("Неподдерживаемое сравнение INTEGER.")
+        };
+        stack.DiscardIntegerOperands();
+        return true;
+    }
+
     private void ExecuteJumpIfEqualInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
+        if (TryConsumeIntegerComparison(stack, Opcode.CompareEqual, out var integerResult))
+        {
+            if (integerResult) frame.InstructionPointer = instruction.GetOperand(0);
+            return;
+        }
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
         var targetInstruction = instruction.GetOperand(0);
@@ -332,6 +405,11 @@ public sealed partial class BytecodeVm
     private void ExecuteCompareEqualInstruction(BytecodeCallFrame frame)
     {
         var stack = frame.EvaluationStack;
+        if (TryConsumeIntegerComparison(stack, Opcode.CompareEqual, out var integerResult))
+        {
+            stack.PushUnchecked(RuntimeValue.FromBoolean(integerResult));
+            return;
+        }
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
         stack.PushUnchecked(RuntimeValue.FromBoolean(ValuesEqual(left, right)));
@@ -340,6 +418,11 @@ public sealed partial class BytecodeVm
     private void ExecuteCompareNotEqualInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
+        if (TryConsumeIntegerComparison(stack, Opcode.CompareNotEqual, out var integerResult))
+        {
+            stack.PushUnchecked(RuntimeValue.FromBoolean(integerResult));
+            return;
+        }
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
@@ -356,6 +439,11 @@ public sealed partial class BytecodeVm
     private void ExecuteJumpIfNotEqualInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
+        if (TryConsumeIntegerComparison(stack, Opcode.CompareNotEqual, out var integerResult))
+        {
+            if (integerResult) frame.InstructionPointer = instruction.GetOperand(0);
+            return;
+        }
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
         var targetInstruction = instruction.GetOperand(0);
@@ -417,6 +505,11 @@ public sealed partial class BytecodeVm
         Opcode comparisonOpcode)
     {
         var stack = frame.EvaluationStack;
+        if (TryConsumeIntegerComparison(stack, comparisonOpcode, out var integerResult))
+        {
+            stack.PushUnchecked(RuntimeValue.FromBoolean(integerResult));
+            return;
+        }
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
@@ -445,6 +538,11 @@ public sealed partial class BytecodeVm
         Opcode comparisonOpcode)
     {
         var stack = frame.EvaluationStack;
+        if (TryConsumeIntegerComparison(stack, comparisonOpcode, out var integerResult))
+        {
+            if (integerResult) frame.InstructionPointer = instruction.GetOperand(0);
+            return;
+        }
         var right = stack.Pop();
         var left = stack.Pop();
         var targetInstruction = instruction.GetOperand(0);
@@ -541,6 +639,18 @@ public sealed partial class BytecodeVm
     private void ExecuteMultiplyInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
+        if (stack.TryGetIntegerOperands(out var integerLeft, out var integerRight))
+        {
+            try
+            {
+                stack.ReplaceIntegerOperands(checked(integerLeft * integerRight));
+                return;
+            }
+            catch (OverflowException)
+            {
+                // Сохраняем операнды для прежней диагностики переполнения.
+            }
+        }
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
@@ -571,6 +681,11 @@ public sealed partial class BytecodeVm
     private void ExecuteCompareGreaterInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
+        if (TryConsumeIntegerComparison(stack, Opcode.CompareGreater, out var integerResult))
+        {
+            stack.PushUnchecked(RuntimeValue.FromBoolean(integerResult));
+            return;
+        }
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
