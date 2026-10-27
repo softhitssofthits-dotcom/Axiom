@@ -1,18 +1,12 @@
 {
   "language": "0.12.0",
-  "compiler": "0.13.6",
+  "compiler": "0.13.7",
   "ide": "0.15.3",
   "compilerOnlyChange": {
-    "version": "0.13.6",
-    "reason": "Внутреннее хранение массивов и числовой стек сохраняют договор языка.",
+    "version": "0.13.7",
+    "reason": "Сообщения и правила индексации сохраняются; изменён только момент формирования диагностической строки.",
     "paths": [
-      "src/Axiom.Runtime/Builtins/BuiltinArrayAggregateHelpers.cs",
-      "src/Axiom.Runtime/Execution/BytecodeEvaluationStack.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.Arithmetic.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.Arrays.cs",
-      "src/Axiom.Runtime/Values/RuntimeArrayValue.Copy.cs",
-      "src/Axiom.Runtime/Values/RuntimeArrayValue.Storage.cs",
-      "src/Axiom.Runtime/Values/RuntimeArrayValue.cs"
+      "src/Axiom.Runtime/Execution/BytecodeVm.Arrays.cs"
     ]
   }
 }

@@ -323,10 +323,7 @@ public sealed partial class BytecodeVm
 
         for (var dimension = dimensionCount - 1; dimension >= 0; dimension--)
         {
-            var detailSuffix = dimensionCount == 1
-                ? string.Empty
-                : $" измерения {dimension + 1}";
-            indices[dimension] = ToArrayBound(PopValue(frame, instructionIndex), location, $"Значение индекса массива{detailSuffix}");
+            indices[dimension] = ToArrayIndex(PopValue(frame, instructionIndex), location, dimensionCount, dimension);
         }
 
         return indices;
@@ -348,10 +345,7 @@ public sealed partial class BytecodeVm
 
         for (var dimension = dimensionCount - 1; dimension >= 0; dimension--)
         {
-            var detailSuffix = dimensionCount == 1
-                ? string.Empty
-                : $" измерения {dimension + 1}";
-            span[dimension] = ToArrayBound(PopValue(frame, instructionIndex), location, $"Значение индекса массива{detailSuffix}");
+            span[dimension] = ToArrayIndex(PopValue(frame, instructionIndex), location, dimensionCount, dimension);
         }
 
         return new PooledIntBuffer(buffer, dimensionCount);
@@ -368,10 +362,7 @@ public sealed partial class BytecodeVm
 
         for (var dimension = dimensionCount - 1; dimension >= 0; dimension--)
         {
-            var detailSuffix = dimensionCount == 1
-                ? string.Empty
-                : $" измерения {dimension + 1}";
-            indices[dimension] = ToArrayBound(stack.Pop(), location, $"Значение индекса массива{detailSuffix}");
+            indices[dimension] = ToArrayIndex(stack.Pop(), location, dimensionCount, dimension);
         }
     }
 
@@ -634,6 +625,17 @@ public sealed partial class BytecodeVm
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int ToArrayBound(RuntimeValue value, TextLocation location, string detail)
+        => ToArrayBound(value, location, detail, 0, 0);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private int ToArrayIndex(RuntimeValue value, TextLocation location, int dimensionCount, int dimension)
+        => ToArrayBound(value, location, null, dimensionCount, dimension);
+
+    private static string ArrayIndexDetail(int dimensionCount, int dimension)
+        => dimensionCount == 1 ? "Значение индекса массива" : $"Значение индекса массива измерения {dimension + 1}";
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private int ToArrayBound(RuntimeValue value, TextLocation location, string? detail, int dimensionCount, int dimension)
     {
         var type = value.Type;
 
@@ -650,7 +652,7 @@ public sealed partial class BytecodeVm
                 return (int)longValue;
             }
 
-            return ToInt32Checked(longValue, location, detail);
+            return ToInt32Checked(longValue, location, detail ?? ArrayIndexDetail(dimensionCount, dimension));
         }
 
         if (type == TypeSymbol.Double)
@@ -659,7 +661,7 @@ public sealed partial class BytecodeVm
 
             if (!double.IsFinite(rawValue) || rawValue != Math.Truncate(rawValue))
             {
-                ReportNonIntegralArrayBound(rawValue.ToString(CultureInfo.InvariantCulture), location, detail);
+                ReportNonIntegralArrayBound(rawValue.ToString(CultureInfo.InvariantCulture), location, detail ?? ArrayIndexDetail(dimensionCount, dimension));
             }
 
             if (rawValue >= int.MinValue && rawValue <= int.MaxValue)
@@ -667,7 +669,7 @@ public sealed partial class BytecodeVm
                 return (int)rawValue;
             }
 
-            return ToInt32Checked(rawValue, location, detail);
+            return ToInt32Checked(rawValue, location, detail ?? ArrayIndexDetail(dimensionCount, dimension));
         }
 
         if (type == TypeSymbol.Decimal)
@@ -676,7 +678,7 @@ public sealed partial class BytecodeVm
 
             if (rawValue != decimal.Truncate(rawValue))
             {
-                ReportNonIntegralArrayBound(rawValue.ToString(CultureInfo.InvariantCulture), location, detail);
+                ReportNonIntegralArrayBound(rawValue.ToString(CultureInfo.InvariantCulture), location, detail ?? ArrayIndexDetail(dimensionCount, dimension));
             }
 
             if (rawValue >= int.MinValue && rawValue <= int.MaxValue)
@@ -684,7 +686,7 @@ public sealed partial class BytecodeVm
                 return (int)rawValue;
             }
 
-            return ToInt32Checked(rawValue, location, detail);
+            return ToInt32Checked(rawValue, location, detail ?? ArrayIndexDetail(dimensionCount, dimension));
         }
 
         return ReportInvalidRuntimeState<int>(
