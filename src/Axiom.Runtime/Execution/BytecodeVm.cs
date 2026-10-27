@@ -684,7 +684,12 @@ public sealed partial class BytecodeVm
                 break;
 
             case Opcode.StoreLocal:
-                frame.StoreLocalValue(instruction.GetOperand(0), PopValue(frame, instructionIndex));
+                var localSlot = instruction.GetOperand(0);
+                if (frame.EvaluationStack.TryGetImmediateInteger(out var immediateInteger)
+                    && frame.TryStoreImmediateInteger(localSlot, immediateInteger))
+                    frame.EvaluationStack.DiscardTop(1);
+                else
+                    frame.StoreLocalValue(localSlot, PopValue(frame, instructionIndex));
                 break;
 
             case Opcode.FreshLocal:
