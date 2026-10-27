@@ -1,12 +1,12 @@
 {
   "language": "0.12.0",
-  "compiler": "0.13.17",
+  "compiler": "0.13.18",
   "ide": "0.15.3",
   "compilerOnlyChange": {
-    "version": "0.13.17",
-    "reason": "Внутренний путь CLNG сохраняет тип LONG, значения и диагностику преобразования.",
+    "version": "0.13.18",
+    "reason": "Внутреннее неявное преобразование сохраняет тип LONG, значения и диагностику.",
     "paths": [
-      "src/Axiom.Runtime/Execution/BytecodeVm.BuiltinCalls.cs"
+      "src/Axiom.Runtime/Execution/BytecodeVm.Conversions.cs"
     ]
   }
 }

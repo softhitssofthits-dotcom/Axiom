@@ -39,8 +39,16 @@ public sealed partial class BytecodeVm
 
     private void ExecuteConvert(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
-        var value = frame.EvaluationStack.PopUnchecked();
         var typeCode = (BytecodeScalarTypeCode)instruction.GetOperand(0);
+        if (typeCode == BytecodeScalarTypeCode.Long
+            && frame.EvaluationStack.TryGetImmediateInteger(out var integerValue))
+        {
+            frame.EvaluationStack.DiscardTop(1);
+            frame.EvaluationStack.PushUnchecked(RuntimeValue.FromLong(integerValue));
+            return;
+        }
+
+        var value = frame.EvaluationStack.PopUnchecked();
 
         if (typeCode == BytecodeScalarTypeCode.Integer && value.Type == TypeSymbol.Integer)
         {
