@@ -1,10 +1,10 @@
 {
   "language": "0.12.0",
-  "compiler": "0.13.19",
+  "compiler": "0.13.20",
   "ide": "0.15.3",
   "compilerOnlyChange": {
-    "version": "0.13.19",
-    "reason": "Внутреннее преобразование в DOUBLE сохраняет результаты и диагностику.",
+    "version": "0.13.20",
+    "reason": "Внутреннее преобразование в DECIMAL сохраняет результаты и диагностику.",
     "paths": [
       "src/Axiom.Runtime/Execution/BytecodeVm.Conversions.cs"
     ]

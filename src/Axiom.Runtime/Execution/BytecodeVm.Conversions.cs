@@ -40,13 +40,16 @@ public sealed partial class BytecodeVm
     private void ExecuteConvert(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
         var typeCode = (BytecodeScalarTypeCode)instruction.GetOperand(0);
-        if (typeCode is BytecodeScalarTypeCode.Long or BytecodeScalarTypeCode.Double
+        if (typeCode is BytecodeScalarTypeCode.Long or BytecodeScalarTypeCode.Double or BytecodeScalarTypeCode.Decimal
             && frame.EvaluationStack.TryGetImmediateInteger(out var integerValue))
         {
             frame.EvaluationStack.DiscardTop(1);
-            frame.EvaluationStack.PushUnchecked(typeCode == BytecodeScalarTypeCode.Long
-                ? RuntimeValue.FromLong(integerValue)
-                : RuntimeValue.FromDouble(integerValue));
+            frame.EvaluationStack.PushUnchecked(typeCode switch
+            {
+                BytecodeScalarTypeCode.Long => RuntimeValue.FromLong(integerValue),
+                BytecodeScalarTypeCode.Double => RuntimeValue.FromDouble(integerValue),
+                _ => RuntimeValue.FromDecimal(integerValue)
+            });
             return;
         }
 
