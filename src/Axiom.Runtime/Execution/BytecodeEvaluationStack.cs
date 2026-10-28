@@ -5,7 +5,7 @@ namespace Axiom.Runtime;
 internal sealed class BytecodeEvaluationStack
 {
     private RuntimeValue[] _items;
-    private int[] _integers;
+    private int[]? _integers;
     private int _highWaterMark;
 
     public BytecodeEvaluationStack(int initialCapacity = 16)
@@ -16,7 +16,6 @@ internal sealed class BytecodeEvaluationStack
         }
 
         _items = new RuntimeValue[initialCapacity];
-        _integers = new int[initialCapacity];
     }
 
     public int Count { get; private set; }
@@ -52,7 +51,7 @@ internal sealed class BytecodeEvaluationStack
     {
         if ((uint)Count >= (uint)_items.Length) Grow();
         _items[Count] = null!;
-        _integers[Count++] = value;
+        (_integers ??= new int[_items.Length])[Count++] = value;
         if (Count > _highWaterMark) _highWaterMark = Count;
     }
 
@@ -65,8 +64,8 @@ internal sealed class BytecodeEvaluationStack
         if (a is not null && b is not null) return false;
         if (a is not null && a.Type != Axiom.Semantics.TypeSymbol.Integer) return false;
         if (b is not null && b.Type != Axiom.Semantics.TypeSymbol.Integer) return false;
-        left = a is null ? _integers[Count - 2] : a.AsInteger();
-        right = b is null ? _integers[Count - 1] : b.AsInteger();
+        left = a is null ? _integers![Count - 2] : a.AsInteger();
+        right = b is null ? _integers![Count - 1] : b.AsInteger();
         return true;
     }
 
@@ -76,7 +75,7 @@ internal sealed class BytecodeEvaluationStack
         var index = Count - 1 - depthFromTop;
         if (index >= 0 && _items[index] is null)
         {
-            value = _integers[index];
+            value = _integers![index];
             return true;
         }
 
@@ -85,7 +84,7 @@ internal sealed class BytecodeEvaluationStack
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ReplaceImmediateInteger(int value) => _integers[Count - 1] = value;
+    public void ReplaceImmediateInteger(int value) => _integers![Count - 1] = value;
 
     public void DiscardIntegerOperands()
     {
@@ -115,14 +114,14 @@ internal sealed class BytecodeEvaluationStack
     public RuntimeValue PopUnchecked()
     {
         var index = --Count;
-        return _items[index] ?? RuntimeValue.FromInteger(_integers[index]);
+        return _items[index] ?? RuntimeValue.FromInteger(_integers![index]);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RuntimeValue PeekUnchecked(int depthFromTop = 0)
     {
         var index = Count - 1 - depthFromTop;
-        return _items[index] ?? RuntimeValue.FromInteger(_integers[index]);
+        return _items[index] ?? RuntimeValue.FromInteger(_integers![index]);
     }
 
     public RuntimeValue[] ToBottomToTopArray()
@@ -134,7 +133,7 @@ internal sealed class BytecodeEvaluationStack
 
         var copy = new RuntimeValue[Count];
         for (var index = 0; index < Count; index++)
-            copy[index] = _items[index] ?? RuntimeValue.FromInteger(_integers[index]);
+            copy[index] = _items[index] ?? RuntimeValue.FromInteger(_integers![index]);
         return copy;
     }
 
@@ -156,6 +155,6 @@ internal sealed class BytecodeEvaluationStack
             ? _items.Length * 2
             : _items.Length + 1024;
         Array.Resize(ref _items, newCapacity);
-        Array.Resize(ref _integers, newCapacity);
+        if (_integers is not null) Array.Resize(ref _integers, newCapacity);
     }
 }
