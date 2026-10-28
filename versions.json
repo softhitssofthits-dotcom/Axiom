@@ -1,12 +1,12 @@
 {
   "language": "0.12.0",
-  "compiler": "0.13.26",
+  "compiler": "0.13.27",
   "ide": "0.15.3",
   "compilerOnlyChange": {
-    "version": "0.13.26",
-    "reason": "Внутреннее выделение памяти стека не меняет договор языка.",
+    "version": "0.13.27",
+    "reason": "Перенос неизменённого выбора отладочного снимка в отдельный метод меняет внутреннюю структуру VM, не меняя договор языка.",
     "paths": [
-      "src/Axiom.Runtime/Execution/BytecodeEvaluationStack.cs"
+      "src/Axiom.Runtime/Execution/BytecodeVm.cs"
     ]
   }
 }

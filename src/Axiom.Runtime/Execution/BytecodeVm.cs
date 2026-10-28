@@ -603,21 +603,7 @@ public sealed partial class BytecodeVm
         }
 
         var shouldCaptureReversibleState = ShouldCaptureReversibleStateHistory();
-        var previousSnapshot = _previousReversibleStateSnapshot;
-        var previousInstruction = previousSnapshot?.ExecutionSnapshot;
-        // Откат выбирает первую инструкцию предыдущей строки. После загрузки
-        // неизменяемого 0 или 1 более ранний снимок той же строки достаточен.
-        var canReusePrevious = canCheckStopFirst && shouldCaptureReversibleState
-            && snapshot is not null && previousInstruction is not null
-            && previousInstruction.RoutineId == snapshot.RoutineId
-            && previousInstruction.CallDepth == snapshot.CallDepth
-            && previousInstruction.InstructionIndex + 1 == snapshot.InstructionIndex
-            && previousInstruction.Opcode is Opcode.PushIntegerZero or Opcode.PushIntegerOne
-            && SourceLine.From(previousInstruction.SourceLocation) == SourceLine.From(snapshot.SourceLocation)
-            && _openFiles.Count == 0 && !HasActiveCallbackContinuation();
-        var stateBeforeInstruction = canReusePrevious
-            ? previousSnapshot
-            : shouldCaptureReversibleState ? TryCreateReversibleStateSnapshot(snapshot!) : null;
+        var stateBeforeInstruction = SelectReversibleSnapshot(canCheckStopFirst, shouldCaptureReversibleState, snapshot);
         if (snapshot is not null)
         {
             _instructionObserver?.Invoke(snapshot);
@@ -672,6 +658,26 @@ public sealed partial class BytecodeVm
         catch (RuntimeFailureException) when (TryHandleRuntimeFailure(runtimeFailureBoundaryDepth))
         {
         }
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private BytecodeVmStateSnapshot? SelectReversibleSnapshot(bool canCheckStopFirst, bool shouldCaptureReversibleState, BytecodeVmExecutionSnapshot? snapshot)
+    {
+        var previousSnapshot = _previousReversibleStateSnapshot;
+        var previousInstruction = previousSnapshot?.ExecutionSnapshot;
+        // Откат выбирает первую инструкцию предыдущей строки. После загрузки
+        // неизменяемого 0 или 1 более ранний снимок той же строки достаточен.
+        var canReusePrevious = canCheckStopFirst && shouldCaptureReversibleState
+            && snapshot is not null && previousInstruction is not null
+            && previousInstruction.RoutineId == snapshot.RoutineId
+            && previousInstruction.CallDepth == snapshot.CallDepth
+            && previousInstruction.InstructionIndex + 1 == snapshot.InstructionIndex
+            && previousInstruction.Opcode is Opcode.PushIntegerZero or Opcode.PushIntegerOne
+            && SourceLine.From(previousInstruction.SourceLocation) == SourceLine.From(snapshot.SourceLocation)
+            && _openFiles.Count == 0 && !HasActiveCallbackContinuation();
+        return canReusePrevious
+            ? previousSnapshot
+            : shouldCaptureReversibleState ? TryCreateReversibleStateSnapshot(snapshot!) : null;
     }
 
     private void ExecuteInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
