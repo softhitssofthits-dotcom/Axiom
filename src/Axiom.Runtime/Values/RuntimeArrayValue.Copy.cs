@@ -88,7 +88,8 @@ public sealed partial class RuntimeArrayValue
         // fails normal reads and iteration, but its bytes still need to be copied
         // into an invalidated snapshot so a debugger can preserve the same error.
         var length = Math.Min(_elements.Length, target._elements.Length);
-        if (ElementType == TypeSymbol.Integer && target.ElementType == TypeSymbol.Integer)
+        if ((ElementType == TypeSymbol.Integer || ElementType == TypeSymbol.Long)
+            && target.ElementType == ElementType)
         {
             ElementStorage.Copy(_elements, 0, target._elements, 0, length);
             return;

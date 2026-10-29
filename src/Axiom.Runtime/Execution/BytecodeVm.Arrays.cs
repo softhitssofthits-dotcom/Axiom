@@ -263,6 +263,13 @@ public sealed partial class BytecodeVm
                     return true;
                 }
 
+                if (directArray.TryGetLong1(immediateIndex, out var immediateLongElement))
+                {
+                    stack.DiscardTop(2);
+                    stack.PushLong(immediateLongElement);
+                    return true;
+                }
+
                 if (directArray.TryGetValue1(immediateIndex, out var directElement))
                 {
                     stack.DiscardTop(2);
@@ -295,6 +302,12 @@ public sealed partial class BytecodeVm
         if (array.TryGetInteger1(GetIntegerUnchecked(indexValue), out var integerValue))
         {
             stack.PushInteger(integerValue);
+            return true;
+        }
+
+        if (array.TryGetLong1(GetIntegerUnchecked(indexValue), out var directLong))
+        {
+            stack.PushLong(directLong);
             return true;
         }
 
@@ -335,6 +348,13 @@ public sealed partial class BytecodeVm
                 {
                     if (stack.TryGetImmediateInteger(out var immediateValue, 2)
                         && integerArray.TrySetInteger1(immediateIndex, immediateValue))
+                    {
+                        stack.DiscardTop(3);
+                        return true;
+                    }
+
+                    if (stack.TryGetImmediateLong(out var immediateLong, 2)
+                        && integerArray.TrySetLong1(immediateIndex, immediateLong))
                     {
                         stack.DiscardTop(3);
                         return true;

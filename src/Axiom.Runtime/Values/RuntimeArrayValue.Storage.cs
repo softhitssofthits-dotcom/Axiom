@@ -21,7 +21,7 @@ public sealed partial class RuntimeArrayValue
     {
         try
         {
-            return new ElementStorage(length, ElementType == TypeSymbol.Integer);
+            return new ElementStorage(length, ElementType);
         }
         catch (OutOfMemoryException)
         {
@@ -121,35 +121,61 @@ public sealed partial class RuntimeArrayValue
     private sealed class ElementStorage
     {
         private readonly int[]? _integers;
+        private readonly long[]? _longs;
         private readonly RuntimeValue[]? _values;
-        public ElementStorage(int length, bool integers)
+
+        public ElementStorage(int length, TypeSymbol elementType)
         {
-            if (integers) _integers = new int[length];
+            if (elementType == TypeSymbol.Integer) _integers = new int[length];
+            else if (elementType == TypeSymbol.Long) _longs = new long[length];
             else _values = new RuntimeValue[length];
         }
-        public int Length => _integers?.Length ?? _values!.Length;
+
+        public int Length => _integers?.Length ?? _longs?.Length ?? _values!.Length;
         public int ReadInteger(int index) => _integers![index];
+        public long ReadLong(int index) => _longs![index];
         public void WriteInteger(int index, int value) => _integers![index] = value;
+        public void WriteLong(int index, long value) => _longs![index] = value;
+
         public void Clear(int index)
         {
             if (_integers is not null) _integers[index] = 0;
+            else if (_longs is not null) _longs[index] = 0L;
             else _values![index] = RuntimeValue.Void;
         }
+
         public RuntimeValue this[int index]
         {
-            get => _integers is null ? _values![index] : RuntimeValue.FromInteger(_integers[index]);
-            set { if (_integers is null) _values![index] = value; else _integers[index] = value.AsInteger(); }
+            get => _integers is not null ? RuntimeValue.FromInteger(_integers[index])
+                : _longs is not null ? RuntimeValue.FromLong(_longs[index])
+                : _values![index];
+            set
+            {
+                if (_integers is not null) _integers[index] = value.AsInteger();
+                else if (_longs is not null) _longs[index] = value.AsLong();
+                else _values![index] = value;
+            }
         }
+
         public void CopyTo(int sourceIndex, RuntimeValue[] target, int targetIndex, int count)
         {
             if (_values is not null) Array.Copy(_values, sourceIndex, target, targetIndex, count);
-            else for (var i = 0; i < count; i++) target[targetIndex + i] = RuntimeValue.FromInteger(_integers![sourceIndex + i]);
+            else if (_integers is not null)
+                for (var i = 0; i < count; i++) target[targetIndex + i] = RuntimeValue.FromInteger(_integers[sourceIndex + i]);
+            else
+                for (var i = 0; i < count; i++) target[targetIndex + i] = RuntimeValue.FromLong(_longs![sourceIndex + i]);
         }
+
         public static void Copy(ElementStorage source, int sourceIndex, ElementStorage target, int targetIndex, int count)
         {
-            if (source._integers is not null && target._integers is not null) Array.Copy(source._integers, sourceIndex, target._integers, targetIndex, count);
-            else if (source._values is not null && target._values is not null) Array.Copy(source._values, sourceIndex, target._values, targetIndex, count);
-            else for (var i = 0; i < count; i++) target[targetIndex + i] = source[sourceIndex + i];
+            if (source._integers is not null && target._integers is not null)
+                Array.Copy(source._integers, sourceIndex, target._integers, targetIndex, count);
+            else if (source._longs is not null && target._longs is not null)
+                Array.Copy(source._longs, sourceIndex, target._longs, targetIndex, count);
+            else if (source._values is not null && target._values is not null)
+                Array.Copy(source._values, sourceIndex, target._values, targetIndex, count);
+            else
+                for (var i = 0; i < count; i++) target[targetIndex + i] = source[sourceIndex + i];
         }
     }
 

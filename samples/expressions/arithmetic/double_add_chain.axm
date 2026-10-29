@@ -1,0 +1,13 @@
+' Цепочка сложения DOUBLE: результат остаётся точным во многих повторах.
+DIM a AS DOUBLE = 0.5
+DIM b AS DOUBLE = 1.25
+DIM c AS DOUBLE = 2.5
+DIM d AS DOUBLE = 4.75
+DIM result AS DOUBLE = 0
+' Промежуточные суммы (a + b) и (c + d) не теряют точность при повторах.
+FOR i = 1 TO 2000
+    result = (a + b) + (c + d)
+NEXT
+' Ожидаемый вывод: 9, затем TRUE.
+PRINT result
+PRINT result = 9

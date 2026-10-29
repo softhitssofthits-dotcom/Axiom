@@ -7,7 +7,13 @@ internal sealed class BytecodeEvaluationStack
     private RuntimeValue[] _items;
     private int[]? _integers;
     private long[]? _longs;
+    private double[]? _doubles;
     private int _highWaterMark;
+
+    // Отдельный закрытый маркер непосредственного DOUBLE, сравниваемый по
+    // идентичности. FromDouble не использует кэш, поэтому пользовательский
+    // ноль с ним не совпадёт; маркер не покидает стек как значение.
+    private static readonly RuntimeValue ImmediateDoubleMarker = RuntimeValue.FromDouble(0d);
 
     public BytecodeEvaluationStack(int initialCapacity = 16)
     {
@@ -119,6 +125,70 @@ internal sealed class BytecodeEvaluationStack
         return true;
     }
 
+    /// <summary>
+    /// Помещает непосредственный DOUBLE без создания RuntimeValue.
+    /// Слот отмечается собственным маркером стека; значение покидает стек
+    /// только материализованным через PopUnchecked/PeekUnchecked/снимки.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void PushDouble(double value)
+    {
+        if ((uint)Count >= (uint)_items.Length) Grow();
+        _items[Count] = ImmediateDoubleMarker;
+        (_doubles ??= new double[_items.Length])[Count++] = value;
+        if (Count > _highWaterMark) _highWaterMark = Count;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGetImmediateDouble(out double value, int depthFromTop = 0)
+    {
+        var index = Count - 1 - depthFromTop;
+        if (index >= 0 && ReferenceEquals(_items[index], ImmediateDoubleMarker))
+        {
+            value = _doubles![index];
+            return true;
+        }
+
+        value = 0;
+        return false;
+    }
+
+    /// <summary>
+    /// Читает два операнда как DOUBLE, когда оба представлены DOUBLE-значением
+    /// (непосредственным или материализованным). Прочие типы отвергаются:
+    /// смешанные сочетания обрабатывает прежний путь.
+    /// </summary>
+    public bool TryGetDoubleOperands(out double left, out double right)
+    {
+        left = right = 0;
+        if (Count < 2) return false;
+        if (!TryReadDoubleSlot(Count - 2, out var candidateLeft)
+            || !TryReadDoubleSlot(Count - 1, out var candidateRight)) return false;
+        left = candidateLeft;
+        right = candidateRight;
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool TryReadDoubleSlot(int index, out double value)
+    {
+        var item = _items[index];
+        if (ReferenceEquals(item, ImmediateDoubleMarker))
+        {
+            value = _doubles![index];
+            return true;
+        }
+
+        if (item is null || item.Type != Axiom.Semantics.TypeSymbol.Double)
+        {
+            value = 0;
+            return false;
+        }
+
+        value = (double)item.Value!;
+        return true;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetImmediateInteger(out int value, int depthFromTop = 0)
     {
@@ -218,6 +288,15 @@ internal sealed class BytecodeEvaluationStack
         PushLong(result);
     }
 
+    /// <summary>
+    /// Заменяет два проверенных DOUBLE-операнда одним непосредственным DOUBLE.
+    /// </summary>
+    public void ReplaceDoubleOperands(double result)
+    {
+        Count -= 2;
+        PushDouble(result);
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RuntimeValue Pop()
     {
@@ -252,8 +331,13 @@ internal sealed class BytecodeEvaluationStack
             return RuntimeValue.FromInteger(_integers![index]);
         }
 
-        return ReferenceEquals(item, RuntimeValue.ImmediateLongMarker)
-            ? RuntimeValue.FromLong(_longs![index])
+        if (ReferenceEquals(item, RuntimeValue.ImmediateLongMarker))
+        {
+            return RuntimeValue.FromLong(_longs![index]);
+        }
+
+        return ReferenceEquals(item, ImmediateDoubleMarker)
+            ? RuntimeValue.FromDouble(_doubles![index])
             : item;
     }
 
@@ -290,5 +374,6 @@ internal sealed class BytecodeEvaluationStack
         Array.Resize(ref _items, newCapacity);
         if (_integers is not null) Array.Resize(ref _integers, newCapacity);
         if (_longs is not null) Array.Resize(ref _longs, newCapacity);
+        if (_doubles is not null) Array.Resize(ref _doubles, newCapacity);
     }
 }

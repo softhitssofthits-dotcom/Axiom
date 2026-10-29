@@ -778,13 +778,16 @@ public sealed partial class BytecodeVm
 
         BuiltinArrayHelpers.ForEachArrayLineBaseIndicesForResize(array, dimension, baseIndices =>
         {
-            for (var currentIndex = previousDimensionUpperBound; currentIndex >= insertionDimensionIndex; currentIndex--)
+            if (previousDimensionUpperBound >= insertionDimensionIndex)
             {
                 var sourceIndices = baseIndices.ToArray();
                 var targetIndices = baseIndices.ToArray();
-                sourceIndices[dimension - 1] = currentIndex;
-                targetIndices[dimension - 1] = currentIndex + 1;
-                array.SetValue(targetIndices, array.GetValue(sourceIndices));
+                for (var currentIndex = previousDimensionUpperBound; currentIndex >= insertionDimensionIndex; currentIndex--)
+                {
+                    sourceIndices[dimension - 1] = currentIndex;
+                    targetIndices[dimension - 1] = currentIndex + 1;
+                    array.SetValue(targetIndices, array.GetValue(sourceIndices));
+                }
             }
 
             var insertedIndices = baseIndices.ToArray();
@@ -848,13 +851,16 @@ public sealed partial class BytecodeVm
         var upperBound = array.GetUpperBound(dimension);
         BuiltinArrayHelpers.ForEachArrayLineBaseIndicesForResize(array, dimension, baseIndices =>
         {
-            for (var currentIndex = multidimensionalRemovalIndex; currentIndex < upperBound; currentIndex++)
+            if (multidimensionalRemovalIndex < upperBound)
             {
                 var targetIndices = baseIndices.ToArray();
                 var sourceIndices = baseIndices.ToArray();
-                targetIndices[dimension - 1] = currentIndex;
-                sourceIndices[dimension - 1] = currentIndex + 1;
-                array.SetValue(targetIndices, array.GetValue(sourceIndices));
+                for (var currentIndex = multidimensionalRemovalIndex; currentIndex < upperBound; currentIndex++)
+                {
+                    targetIndices[dimension - 1] = currentIndex;
+                    sourceIndices[dimension - 1] = currentIndex + 1;
+                    array.SetValue(targetIndices, array.GetValue(sourceIndices));
+                }
             }
         });
 

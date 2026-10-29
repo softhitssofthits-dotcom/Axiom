@@ -124,6 +124,18 @@ public sealed partial class BytecodeVm
                 // Обычный путь выдаёт прежнюю диагностику и расположение ошибки.
             }
         }
+        if (stack.TryGetDoubleOperands(out var doubleLeft, out var doubleRight))
+        {
+            var doubleSum = doubleLeft + doubleRight;
+            if (double.IsFinite(doubleSum))
+            {
+                stack.ReplaceDoubleOperands(doubleSum);
+                return;
+            }
+
+            // Неконечный результат оставляет стек нетронутым: общий путь
+            // формирует действующую диагностику MB3008.
+        }
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
