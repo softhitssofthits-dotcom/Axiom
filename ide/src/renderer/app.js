@@ -261,7 +261,7 @@ class AxiomIDE {
 
     // BASIC: case-insensitive; ' and REM comments; "..." with "" escapes; $"..." with
     // {expression} holes; &H and &B integer literals; decimal numbers.
-    monaco.languages.setMonarchTokensProvider('axiom', {
+    const languageDefinition = {
       ignoreCase: true,
       defaultToken: '',
       keywords,
@@ -313,7 +313,11 @@ class AxiomIDE {
           [/[^"]+/, 'string'],
         ],
       },
-    });
+    };
+    // Один разбор языка, два контекста оформления: редактор и справочные фрагменты.
+    monaco.languages.register({ id: 'axiom-reference' });
+    monaco.languages.setMonarchTokensProvider('axiom-reference', { ...languageDefinition, tokenPostfix: '.axiom-reference' });
+    monaco.languages.setMonarchTokensProvider('axiom', languageDefinition);
 
     monaco.languages.registerDocumentSemanticTokensProvider('axiom', {
       getLegend: () => window.AxiomSemanticColors.legend,

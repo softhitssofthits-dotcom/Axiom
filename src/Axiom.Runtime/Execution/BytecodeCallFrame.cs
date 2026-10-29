@@ -13,8 +13,10 @@ internal sealed class BytecodeCallFrame
     private readonly List<BytecodeErrorHandlerFrame> _errorHandlers = [];
     private readonly RuntimeValue[] _locals;
     // После записи непосредственного INTEGER null в _locals обозначает значение из этого массива.
+    // Маркер ImmediateLongMarker в _locals обозначает непосредственный LONG из _localLongs.
     // Общие ячейки для BYREF и замыканий по-прежнему хранят RuntimeValue.
     private int[]? _localIntegers;
+    private long[]? _localLongs;
     private readonly int?[] _localFixedStringLengths;
     private BytecodeVariableSlot?[]? _sharedLocals;
     private bool _hasSharedLocals;
@@ -205,21 +207,30 @@ internal sealed class BytecodeCallFrame
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PushLocalValueOntoEvaluationStack(int slot)
     {
-        if (_locals[slot] is null && (!_hasSharedLocals || _sharedLocals![slot] is null))
+        var local = _locals[slot];
+        if (!_hasSharedLocals || _sharedLocals![slot] is null)
         {
-            EvaluationStack.PushInteger(_localIntegers![slot]);
-            return;
+            if (local is null)
+            {
+                EvaluationStack.PushInteger(_localIntegers![slot]);
+                return;
+            }
+
+            if (ReferenceEquals(local, RuntimeValue.ImmediateLongMarker))
+            {
+                EvaluationStack.PushLong(_localLongs![slot]);
+                return;
+            }
         }
 
         if (!_hasSharedLocals)
         {
-            var local = _locals[slot];
             EvaluationStack.PushUnchecked(local.Type == TypeSymbol.Void ? EnsureDefaultLocalValue(slot) : local);
             return;
         }
 
         var sharedLocals = _sharedLocals!;
-        var value = sharedLocals[slot]?.Value ?? _locals[slot];
+        var value = sharedLocals[slot]?.Value ?? ReadUnsharedLocal(slot);
         EvaluationStack.PushUnchecked(value.Type == TypeSymbol.Void ? EnsureDefaultLocalValue(slot) : value);
     }
 
@@ -239,8 +250,18 @@ internal sealed class BytecodeCallFrame
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private RuntimeValue ReadUnsharedLocal(int slot) =>
-        _locals[slot] ?? RuntimeValue.FromInteger(_localIntegers![slot]);
+    private RuntimeValue ReadUnsharedLocal(int slot)
+    {
+        var local = _locals[slot];
+        if (local is null)
+        {
+            return RuntimeValue.FromInteger(_localIntegers![slot]);
+        }
+
+        return ReferenceEquals(local, RuntimeValue.ImmediateLongMarker)
+            ? RuntimeValue.FromLong(_localLongs![slot])
+            : local;
+    }
 
     public bool TryStoreImmediateInteger(int slot, int value)
     {
@@ -252,6 +273,83 @@ internal sealed class BytecodeCallFrame
         _localIntegers ??= new int[_locals.Length];
         _localIntegers[slot] = value;
         _locals[slot] = null!;
+        return true;
+    }
+
+    /// <summary>
+    /// Читает значение локального слота как int без создания RuntimeValue.
+    /// Принимает непосредственное INTEGER и материализованный INTEGER-объект;
+    /// общие ячейки (BYREF/замыкания) и прочие типы дают отказ, и вызывающий
+    /// код использует прежний общий путь.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool TryReadLocalInteger(int slot, out int value)
+    {
+        value = 0;
+        if ((uint)slot >= (uint)_locals.Length
+            || (_hasSharedLocals && _sharedLocals![slot] is not null))
+        {
+            return false;
+        }
+
+        var local = _locals[slot];
+        if (local is null)
+        {
+            value = _localIntegers![slot];
+            return true;
+        }
+
+        if (local.Type != TypeSymbol.Integer)
+        {
+            return false;
+        }
+
+        value = (int)local.Value!;
+        return true;
+    }
+
+    public bool TryStoreImmediateLong(int slot, long value)
+    {
+        if ((uint)slot >= (uint)Routine.LocalVariables.Count
+            || Routine.LocalVariables[slot].Type != TypeSymbol.Long
+            || (_hasSharedLocals && _sharedLocals![slot] is not null))
+            return false;
+
+        _localLongs ??= new long[_locals.Length];
+        _localLongs[slot] = value;
+        _locals[slot] = RuntimeValue.ImmediateLongMarker;
+        return true;
+    }
+
+    /// <summary>
+    /// Читает значение локального слота как long без создания RuntimeValue.
+    /// Принимает непосредственный LONG и материализованный LONG-объект;
+    /// общие ячейки и прочие типы дают отказ. INTEGER не расширяется:
+    /// смешанные типы обязан обрабатывать прежний общий путь.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool TryReadLocalLong(int slot, out long value)
+    {
+        value = 0;
+        if ((uint)slot >= (uint)_locals.Length
+            || (_hasSharedLocals && _sharedLocals![slot] is not null))
+        {
+            return false;
+        }
+
+        var local = _locals[slot];
+        if (ReferenceEquals(local, RuntimeValue.ImmediateLongMarker))
+        {
+            value = _localLongs![slot];
+            return true;
+        }
+
+        if (local is null || local.Type != TypeSymbol.Long)
+        {
+            return false;
+        }
+
+        value = (long)local.Value!;
         return true;
     }
 
@@ -381,10 +479,9 @@ internal sealed class BytecodeCallFrame
     {
         if (!_hasSharedLocals)
         {
-            var locals = _locals;
-            current = locals[currentSlot] ?? RuntimeValue.FromInteger(_localIntegers![currentSlot]);
-            end = locals[endSlot] ?? RuntimeValue.FromInteger(_localIntegers![endSlot]);
-            step = locals[stepSlot] ?? RuntimeValue.FromInteger(_localIntegers![stepSlot]);
+            current = ReadUnsharedLocal(currentSlot);
+            end = ReadUnsharedLocal(endSlot);
+            step = ReadUnsharedLocal(stepSlot);
             return;
         }
 
@@ -399,9 +496,8 @@ internal sealed class BytecodeCallFrame
     {
         if (!_hasSharedLocals)
         {
-            var locals = _locals;
-            current = locals[currentSlot] ?? RuntimeValue.FromInteger(_localIntegers![currentSlot]);
-            step = locals[stepSlot] ?? RuntimeValue.FromInteger(_localIntegers![stepSlot]);
+            current = ReadUnsharedLocal(currentSlot);
+            step = ReadUnsharedLocal(stepSlot);
             return;
         }
 

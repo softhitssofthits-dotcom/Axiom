@@ -713,7 +713,7 @@ const LangFeatures = (() => {
             const hint = isSet
               ? window.AxiomKeywordHints?.setMemberHint?.(name, I18N.current || 'ru')
               : window.AxiomKeywordHints?.memberHint?.(name, I18N.current || 'ru');
-            const role = I18N.t(isSet ? 'hover.setMember' : 'hover.dictionaryMember');
+            const role = I18N.t('hover.' + (isSet ? 'set' : 'dictionary') + (member.kind === 'Field' ? 'Property' : 'Method'));
             const value = '`' + member.detail + '`' + (hint ? '\n\n' + hint : '');
             return { range, contents: [{ value: '**' + name + '** — ' + role + '\n\n' + value }] };
           }
@@ -731,7 +731,10 @@ const LangFeatures = (() => {
           if (typeHint && !/^\s*\(/.test(after)) {
             return { range, contents: [{ value: '`' + name + '` — ' + I18N.t('hover.type') + '\n\n' + typeHint }] };
           }
-          return { range, contents: [{ value: '**' + name + '** — ' + I18N.t('hover.builtin') + (hint ? '\n\n' + hint : '') + '\n\n' + lines.join('\n\n') }] };
+          const returnsValue = family.some(b => String(b.returnType || '').toUpperCase() !== 'VOID');
+          const category = window.AxiomBuiltinHints?.category?.(name, I18N.current || 'ru', returnsValue)
+            || I18N.t(returnsValue ? 'hover.builtin' : 'hover.builtinProcedure');
+          return { range, contents: [{ value: '**' + name + '** — ' + category + (hint ? '\n\n' + hint : '') + '\n\n' + lines.join('\n\n') }] };
         }
 
         // Offline fallback is limited to explicit declarations; never invent a type.
@@ -775,9 +778,8 @@ const LangFeatures = (() => {
           && meta.keywords.some((k) => k.toUpperCase() === name.toUpperCase());
         const keywordHint = window.AxiomKeywordHints?.hint?.(name, I18N.current || 'ru');
         if (isRegistryKeyword || keywordHint) {
-          const value = keywordHint
-            ? '`' + name + '` — ' + I18N.t('hover.keyword') + '\n\n' + keywordHint
-            : '`' + name + '` — ' + I18N.t('hover.keyword');
+          const category = window.AxiomKeywordHints?.category?.(name, I18N.current || 'ru') || I18N.t('hover.keyword');
+          const value = '`' + name + '` — ' + category + (keywordHint ? '\n\n' + keywordHint : '');
           return { range, contents: [{ value }] };
         }
 

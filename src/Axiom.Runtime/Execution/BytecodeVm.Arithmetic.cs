@@ -21,6 +21,20 @@ public sealed partial class BytecodeVm
             return;
         }
 
+        if (stack.TryGetLongOperands(out var longLeft, out var longRight)
+            && longRight != 0)
+        {
+            try
+            {
+                stack.ReplaceLongOperands(checked(longLeft / longRight));
+                return;
+            }
+            catch (OverflowException)
+            {
+                // Обычный путь выдаёт прежнюю диагностику переполнения LONG.
+            }
+        }
+
         ExecuteBinaryInstruction(frame, Opcode.IntegralDivide, instructionIndex);
     }
 
@@ -30,6 +44,12 @@ public sealed partial class BytecodeVm
         if (stack.TryGetIntegerOperands(out var left, out var right))
         {
             stack.ReplaceIntegerOperands(opcode == Opcode.Eqv ? ~(left ^ right) : ~left | right);
+            return;
+        }
+
+        if (stack.TryGetLongOperands(out var longLeft, out var longRight))
+        {
+            stack.ReplaceLongOperands(opcode == Opcode.Eqv ? ~(longLeft ^ longRight) : ~longLeft | longRight);
             return;
         }
 
@@ -92,6 +112,18 @@ public sealed partial class BytecodeVm
                 // Обычный путь выдаёт прежнюю диагностику и расположение ошибки.
             }
         }
+        if (stack.TryGetLongOperands(out var longLeft, out var longRight))
+        {
+            try
+            {
+                stack.ReplaceLongOperands(checked(longLeft + longRight));
+                return;
+            }
+            catch (OverflowException)
+            {
+                // Обычный путь выдаёт прежнюю диагностику и расположение ошибки.
+            }
+        }
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
@@ -107,6 +139,26 @@ public sealed partial class BytecodeVm
     private void ExecuteAddLongIntegerInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
+
+        // Прямые операнды: LONG слева (непосредственный или объект) и
+        // INTEGER справа; результат остаётся непосредственным LONG.
+        if (stack.Count >= 2
+            && stack.TryReadLong(1, out var directLeft)
+            && stack.TryReadInteger(0, out var directRight))
+        {
+            try
+            {
+                var directSum = checked(directLeft + directRight);
+                stack.DiscardTop(2);
+                stack.PushLong(directSum);
+                return;
+            }
+            catch (OverflowException)
+            {
+                // Стек не изменён: прежний путь формирует диагностику переполнения.
+            }
+        }
+
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
@@ -144,6 +196,18 @@ public sealed partial class BytecodeVm
                 // Обычный путь выдаёт прежнюю диагностику и расположение ошибки.
             }
         }
+        if (stack.TryGetLongOperands(out var longLeft, out var longRight))
+        {
+            try
+            {
+                stack.ReplaceLongOperands(checked(longLeft - longRight));
+                return;
+            }
+            catch (OverflowException)
+            {
+                // Обычный путь выдаёт прежнюю диагностику и расположение ошибки.
+            }
+        }
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
@@ -167,6 +231,20 @@ public sealed partial class BytecodeVm
             return;
         }
 
+        if (stack.TryGetLongOperands(out var longLeft, out var longRight)
+            && longRight != 0)
+        {
+            try
+            {
+                stack.ReplaceLongOperands(checked(longLeft % longRight));
+                return;
+            }
+            catch (OverflowException)
+            {
+                // Обычный путь выдаёт прежнюю диагностику переполнения LONG.
+            }
+        }
+
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
@@ -185,6 +263,12 @@ public sealed partial class BytecodeVm
         if (stack.TryGetIntegerOperands(out var integerLeft, out var integerRight))
         {
             stack.ReplaceIntegerOperands(integerLeft & integerRight);
+            return;
+        }
+
+        if (stack.TryGetLongOperands(out var longLeft, out var longRight))
+        {
+            stack.ReplaceLongOperands(longLeft & longRight);
             return;
         }
 
@@ -209,6 +293,12 @@ public sealed partial class BytecodeVm
             return;
         }
 
+        if (stack.TryGetLongOperands(out var longLeft, out var longRight))
+        {
+            stack.ReplaceLongOperands(longLeft | longRight);
+            return;
+        }
+
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
@@ -227,6 +317,12 @@ public sealed partial class BytecodeVm
         if (stack.TryGetIntegerOperands(out var integerLeft, out var integerRight))
         {
             stack.ReplaceIntegerOperands(integerLeft ^ integerRight);
+            return;
+        }
+
+        if (stack.TryGetLongOperands(out var longLeft, out var longRight))
+        {
+            stack.ReplaceLongOperands(longLeft ^ longRight);
             return;
         }
 
@@ -251,6 +347,11 @@ public sealed partial class BytecodeVm
             return;
         }
 
+        if (TryExecuteLongShift(stack, leftShift: true))
+        {
+            return;
+        }
+
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
@@ -272,6 +373,11 @@ public sealed partial class BytecodeVm
             return;
         }
 
+        if (TryExecuteLongShift(stack, leftShift: false))
+        {
+            return;
+        }
+
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
@@ -284,6 +390,42 @@ public sealed partial class BytecodeVm
         stack.PushUnchecked(EvaluateShiftRight(left, right, ResolveLocation(frame.Routine.Id, instructionIndex)));
     }
 
+    /// <summary>
+    /// Сдвиг LONG-значения на целый счётчик без материализации операндов.
+    /// Счётчик читается как INTEGER или LONG с тем же приведением, что и
+    /// GetShiftCount; вне диапазона 0..63 работает прежний путь с MB3005.
+    /// </summary>
+    private static bool TryExecuteLongShift(BytecodeEvaluationStack stack, bool leftShift)
+    {
+        if (stack.Count < 2 || !stack.TryReadLong(1, out var value))
+        {
+            return false;
+        }
+
+        int count;
+        if (stack.TryReadInteger(0, out var integerCount))
+        {
+            count = integerCount;
+        }
+        else if (stack.TryReadLong(0, out var longCount))
+        {
+            count = unchecked((int)longCount);
+        }
+        else
+        {
+            return false;
+        }
+
+        if (count is < 0 or > 63)
+        {
+            return false;
+        }
+
+        stack.DiscardTop(2);
+        stack.PushLong(leftShift ? value << count : value >> count);
+        return true;
+    }
+
     private void ExecuteNegateInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
@@ -291,6 +433,19 @@ public sealed partial class BytecodeVm
         {
             stack.ReplaceImmediateInteger(-integer);
             return;
+        }
+
+        if (stack.TryGetImmediateLong(out var immediateLong))
+        {
+            try
+            {
+                stack.ReplaceImmediateLong(checked(-immediateLong));
+                return;
+            }
+            catch (OverflowException)
+            {
+                // Обычный путь выдаёт прежнюю диагностику переполнения LONG.
+            }
         }
 
         var operand = frame.EvaluationStack.PopUnchecked();
@@ -371,6 +526,12 @@ public sealed partial class BytecodeVm
             return;
         }
 
+        if (stack.TryGetImmediateLong(out var immediateLong))
+        {
+            stack.ReplaceImmediateLong(~immediateLong);
+            return;
+        }
+
         var operand = frame.EvaluationStack.PopUnchecked();
 
         if (TryEvaluateHotNot(operand, out var result))
@@ -425,10 +586,38 @@ public sealed partial class BytecodeVm
         return true;
     }
 
+    private static bool TryConsumeLongComparison(BytecodeEvaluationStack stack, Opcode opcode, out bool result)
+    {
+        result = false;
+        if (!stack.TryGetLongOperands(out var left, out var right)) return false;
+        result = opcode switch
+        {
+            Opcode.CompareEqual => left == right,
+            Opcode.CompareNotEqual => left != right,
+            Opcode.CompareLess => left < right,
+            Opcode.CompareLessOrEqual => left <= right,
+            Opcode.CompareGreater => left > right,
+            Opcode.CompareGreaterOrEqual => left >= right,
+            _ => throw new InvalidOperationException("Неподдерживаемое сравнение LONG.")
+        };
+        stack.DiscardIntegerOperands();
+        return true;
+    }
+
+    /// <summary>
+    /// Сравнение двух операндов одного целого типа без материализации:
+    /// сначала INTEGER, затем LONG; прочие сочетания идут прежним путём.
+    /// </summary>
+    private static bool TryConsumeNumericComparison(BytecodeEvaluationStack stack, Opcode opcode, out bool result)
+    {
+        return TryConsumeIntegerComparison(stack, opcode, out result)
+            || TryConsumeLongComparison(stack, opcode, out result);
+    }
+
     private void ExecuteJumpIfEqualInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
-        if (TryConsumeIntegerComparison(stack, Opcode.CompareEqual, out var integerResult))
+        if (TryConsumeNumericComparison(stack, Opcode.CompareEqual, out var integerResult))
         {
             if (integerResult) frame.InstructionPointer = instruction.GetOperand(0);
             return;
@@ -456,7 +645,7 @@ public sealed partial class BytecodeVm
     private void ExecuteCompareEqualInstruction(BytecodeCallFrame frame)
     {
         var stack = frame.EvaluationStack;
-        if (TryConsumeIntegerComparison(stack, Opcode.CompareEqual, out var integerResult))
+        if (TryConsumeNumericComparison(stack, Opcode.CompareEqual, out var integerResult))
         {
             stack.PushUnchecked(RuntimeValue.FromBoolean(integerResult));
             return;
@@ -469,7 +658,7 @@ public sealed partial class BytecodeVm
     private void ExecuteCompareNotEqualInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
-        if (TryConsumeIntegerComparison(stack, Opcode.CompareNotEqual, out var integerResult))
+        if (TryConsumeNumericComparison(stack, Opcode.CompareNotEqual, out var integerResult))
         {
             stack.PushUnchecked(RuntimeValue.FromBoolean(integerResult));
             return;
@@ -490,7 +679,7 @@ public sealed partial class BytecodeVm
     private void ExecuteJumpIfNotEqualInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
-        if (TryConsumeIntegerComparison(stack, Opcode.CompareNotEqual, out var integerResult))
+        if (TryConsumeNumericComparison(stack, Opcode.CompareNotEqual, out var integerResult))
         {
             if (integerResult) frame.InstructionPointer = instruction.GetOperand(0);
             return;
@@ -556,7 +745,7 @@ public sealed partial class BytecodeVm
         Opcode comparisonOpcode)
     {
         var stack = frame.EvaluationStack;
-        if (TryConsumeIntegerComparison(stack, comparisonOpcode, out var integerResult))
+        if (TryConsumeNumericComparison(stack, comparisonOpcode, out var integerResult))
         {
             stack.PushUnchecked(RuntimeValue.FromBoolean(integerResult));
             return;
@@ -589,7 +778,7 @@ public sealed partial class BytecodeVm
         Opcode comparisonOpcode)
     {
         var stack = frame.EvaluationStack;
-        if (TryConsumeIntegerComparison(stack, comparisonOpcode, out var integerResult))
+        if (TryConsumeNumericComparison(stack, comparisonOpcode, out var integerResult))
         {
             if (integerResult) frame.InstructionPointer = instruction.GetOperand(0);
             return;
@@ -644,6 +833,33 @@ public sealed partial class BytecodeVm
 
     private void ExecuteJumpIfForDoneLocalInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
+        // Непосредственное INTEGER-сравнение не материализует значения слотов.
+        // Условие в точности повторяет INTEGER-ветвь TryShouldTerminateLocalForLoop.
+        if (frame.TryReadLocalInteger(instruction.GetOperand(0), out var immediateCurrent)
+            && frame.TryReadLocalInteger(instruction.GetOperand(1), out var immediateEnd)
+            && frame.TryReadLocalInteger(instruction.GetOperand(2), out var immediateStep))
+        {
+            if (immediateStep > 0 ? immediateCurrent > immediateEnd : immediateCurrent < immediateEnd)
+            {
+                frame.InstructionPointer = instruction.GetOperand(3);
+            }
+
+            return;
+        }
+
+        // Непосредственное LONG-сравнение повторяет LONG-ветвь того же метода.
+        if (frame.TryReadLocalLong(instruction.GetOperand(0), out var longCurrent)
+            && frame.TryReadLocalLong(instruction.GetOperand(1), out var longEnd)
+            && frame.TryReadLocalLong(instruction.GetOperand(2), out var longStep))
+        {
+            if (longStep > 0L ? longCurrent > longEnd : longCurrent < longEnd)
+            {
+                frame.InstructionPointer = instruction.GetOperand(3);
+            }
+
+            return;
+        }
+
         frame.LoadForLoopLocalValues(
             instruction.GetOperand(0),
             instruction.GetOperand(1),
@@ -702,6 +918,18 @@ public sealed partial class BytecodeVm
                 // Сохраняем операнды для прежней диагностики переполнения.
             }
         }
+        if (stack.TryGetLongOperands(out var longLeft, out var longRight))
+        {
+            try
+            {
+                stack.ReplaceLongOperands(checked(longLeft * longRight));
+                return;
+            }
+            catch (OverflowException)
+            {
+                // Сохраняем операнды для прежней диагностики переполнения.
+            }
+        }
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
@@ -732,7 +960,7 @@ public sealed partial class BytecodeVm
     private void ExecuteCompareGreaterInstruction(BytecodeCallFrame frame, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
-        if (TryConsumeIntegerComparison(stack, Opcode.CompareGreater, out var integerResult))
+        if (TryConsumeNumericComparison(stack, Opcode.CompareGreater, out var integerResult))
         {
             stack.PushUnchecked(RuntimeValue.FromBoolean(integerResult));
             return;
@@ -753,6 +981,41 @@ public sealed partial class BytecodeVm
     private void ExecuteAdvanceForLoopLocalInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
     {
         var currentSlot = instruction.GetOperand(0);
+
+        // Непосредственное INTEGER-продвижение: счётчик остаётся распакованным.
+        // Переполнение и отказ слота передают управление прежнему пути, который
+        // формирует диагностику MB3008 с прежним расположением.
+        if (frame.TryReadLocalInteger(currentSlot, out var immediateCurrent)
+            && frame.TryReadLocalInteger(instruction.GetOperand(1), out var immediateStep))
+        {
+            try
+            {
+                if (frame.TryStoreImmediateInteger(currentSlot, checked(immediateCurrent + immediateStep)))
+                {
+                    return;
+                }
+            }
+            catch (OverflowException)
+            {
+            }
+        }
+
+        // Непосредственное LONG-продвижение с тем же договором переполнения.
+        if (frame.TryReadLocalLong(currentSlot, out var longCurrent)
+            && frame.TryReadLocalLong(instruction.GetOperand(1), out var longStep))
+        {
+            try
+            {
+                if (frame.TryStoreImmediateLong(currentSlot, checked(longCurrent + longStep)))
+                {
+                    return;
+                }
+            }
+            catch (OverflowException)
+            {
+            }
+        }
+
         frame.LoadForLoopAdvanceValues(currentSlot, instruction.GetOperand(1), out var current, out var step);
 
         if (TryAdvanceLocalForLoop(current, step, out var nextValue))

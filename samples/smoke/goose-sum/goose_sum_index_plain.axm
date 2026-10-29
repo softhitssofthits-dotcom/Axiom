@@ -1,0 +1,31 @@
+' Контрольный сценарий Goose SUM: та же генерация 1 000 000 элементов,
+' восемь проходов с выражением total = total + i (минимальное тело цикла).
+' Ожидаемый вывод: Количество: 1000000, Контрольная сумма: 4000004000000.
+' Программа измеряет собственное время; строка времени недетерминирована.
+DIM n AS INTEGER = 1000000
+DIM started AS DOUBLE = ELAPSEDSECONDS()
+DIM data[1 TO n] AS INTEGER
+DIM r AS LONG = 12345
+DIM x AS INTEGER = 0
+DIM total AS LONG = 0
+
+' Заполнение массива детерминированным xorshift64-генератором.
+FOR i = 1 TO n
+    r = r XOR (r << 13)
+    r = r XOR ((r >> 7) AND &H01FFFFFFFFFFFFFF)
+    r = r XOR (r << 17)
+    x = CINT(((((r >> 1) AND &H7FFFFFFFFFFFFFFF) MOD 500) * 2) + (r AND 1))
+    data[i] = x
+NEXT
+
+' Восемь проходов суммирования индекса.
+FOR p = 0 TO 7
+    FOR i = 1 TO n
+        total = total + i
+    NEXT
+NEXT
+
+DIM elapsed AS DOUBLE = ELAPSEDSECONDS() - started
+PRINT "Количество: "; n
+PRINT "Контрольная сумма: "; total
+PRINT "Время выполнения, мс: "; elapsed * 1000

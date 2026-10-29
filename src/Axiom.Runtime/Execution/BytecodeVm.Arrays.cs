@@ -246,6 +246,36 @@ public sealed partial class BytecodeVm
     private bool TryExecuteFastLoadElement1(BytecodeCallFrame frame)
     {
         var stack = frame.EvaluationStack;
+
+        // Непосредственный INTEGER-индекс читается без материализации в RuntimeValue.
+        if (stack.Count >= 2 && stack.TryGetImmediateInteger(out var immediateIndex))
+        {
+            var directArrayValue = stack.PeekUnchecked(1);
+            if (directArrayValue.Type is ArrayTypeSymbol
+                && directArrayValue.Value is RuntimeArrayValue directArray
+                && directArray.IsAllocated
+                && directArray.Rank == 1)
+            {
+                if (directArray.TryGetInteger1(immediateIndex, out var directInteger))
+                {
+                    stack.DiscardTop(2);
+                    stack.PushInteger(directInteger);
+                    return true;
+                }
+
+                if (directArray.TryGetValue1(immediateIndex, out var directElement))
+                {
+                    stack.DiscardTop(2);
+                    stack.PushUnchecked(directElement);
+                    return true;
+                }
+            }
+
+            // При несовпадении типа или выходе за границы стек остаётся нетронутым:
+            // обычный путь формирует прежнюю диагностику.
+            return false;
+        }
+
         var indexValue = stack.Pop();
 
         if (indexValue.Type != TypeSymbol.Integer)
@@ -282,17 +312,41 @@ public sealed partial class BytecodeVm
     private bool TryExecuteFastStoreElement1(BytecodeCallFrame frame)
     {
         var stack = frame.EvaluationStack;
-        if (stack.Count >= 3 && stack.TryGetImmediateInteger(out var integerValue, 2))
+        if (stack.Count >= 3)
         {
-            var index = stack.PeekUnchecked();
-            var target = stack.PeekUnchecked(1);
-            if (index.Type == TypeSymbol.Integer
-                && target.Type is ArrayTypeSymbol && target.Value is RuntimeArrayValue integerArray
-                && integerArray.IsAllocated && integerArray.Rank == 1
-                && integerArray.TrySetInteger1(GetIntegerUnchecked(index), integerValue))
+            // Непосредственный INTEGER-индекс не материализуется;
+            // непосредственное значение записывается без RuntimeValue.
+            var indexIsInteger = stack.TryGetImmediateInteger(out var immediateIndex);
+            if (!indexIsInteger)
             {
-                stack.DiscardTop(3);
-                return true;
+                var indexObject = stack.PeekUnchecked();
+                if (indexObject.Type == TypeSymbol.Integer)
+                {
+                    immediateIndex = GetIntegerUnchecked(indexObject);
+                    indexIsInteger = true;
+                }
+            }
+
+            if (indexIsInteger)
+            {
+                var target = stack.PeekUnchecked(1);
+                if (target.Type is ArrayTypeSymbol && target.Value is RuntimeArrayValue integerArray
+                    && integerArray.IsAllocated && integerArray.Rank == 1)
+                {
+                    if (stack.TryGetImmediateInteger(out var immediateValue, 2)
+                        && integerArray.TrySetInteger1(immediateIndex, immediateValue))
+                    {
+                        stack.DiscardTop(3);
+                        return true;
+                    }
+
+                    var valueToStore = stack.PeekUnchecked(2);
+                    if (integerArray.TrySetValue1(immediateIndex, valueToStore))
+                    {
+                        stack.DiscardTop(3);
+                        return true;
+                    }
+                }
             }
         }
 

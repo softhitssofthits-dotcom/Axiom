@@ -4,6 +4,12 @@
    styles.css, so controls keep the same event handlers and keyboard behaviour. */
 
 :root {
+  /* Общая палитра карточек подсказок во всех темах. */
+  --xs-tooltip-bg: #e2e2e2;
+  --xs-tooltip-text: #303030;
+  --xs-tooltip-border: #777777;
+  --xs-tooltip-code-bg: #d4d4d4;
+
   --xs-select-padding: 3px 8px 3px 7px;
   --xs-canvas: #141922;
   --xs-surface: #1c2330;

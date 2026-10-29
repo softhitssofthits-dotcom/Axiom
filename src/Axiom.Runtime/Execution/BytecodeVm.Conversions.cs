@@ -44,12 +44,43 @@ public sealed partial class BytecodeVm
             && frame.EvaluationStack.TryGetImmediateInteger(out var integerValue))
         {
             frame.EvaluationStack.DiscardTop(1);
-            frame.EvaluationStack.PushUnchecked(typeCode switch
+            if (typeCode == BytecodeScalarTypeCode.Long)
             {
-                BytecodeScalarTypeCode.Long => RuntimeValue.FromLong(integerValue),
-                BytecodeScalarTypeCode.Double => RuntimeValue.FromDouble(integerValue),
-                _ => RuntimeValue.FromDecimal(integerValue)
-            });
+                // Непосредственный LONG сохраняет распакованное представление.
+                frame.EvaluationStack.PushLong(integerValue);
+            }
+            else
+            {
+                frame.EvaluationStack.PushUnchecked(typeCode == BytecodeScalarTypeCode.Double
+                    ? RuntimeValue.FromDouble(integerValue)
+                    : RuntimeValue.FromDecimal(integerValue));
+            }
+
+            return;
+        }
+
+        if (typeCode == BytecodeScalarTypeCode.Long
+            && frame.EvaluationStack.TryGetImmediateLong(out _))
+        {
+            // Значение уже LONG в непосредственном представлении: преобразование
+            // ничего не меняет, стек остаётся нетронутым.
+            return;
+        }
+
+        if (typeCode is BytecodeScalarTypeCode.Double or BytecodeScalarTypeCode.Decimal
+            && frame.EvaluationStack.TryGetImmediateLong(out var longValue))
+        {
+            frame.EvaluationStack.DiscardTop(1);
+            frame.EvaluationStack.PushUnchecked(typeCode == BytecodeScalarTypeCode.Double
+                ? RuntimeValue.FromDouble(longValue)
+                : RuntimeValue.FromDecimal(longValue));
+            return;
+        }
+
+        if (typeCode == BytecodeScalarTypeCode.Integer
+            && frame.EvaluationStack.TryGetImmediateInteger(out _))
+        {
+            // Непосредственный INTEGER остаётся распакованным.
             return;
         }
 

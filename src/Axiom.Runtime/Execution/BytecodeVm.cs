@@ -545,7 +545,10 @@ public sealed partial class BytecodeVm
             frame.InstructionPointer++;
             try
             {
-                ExecuteInstruction(frame, instruction, instructionIndex);
+                if (instruction.Opcode == Opcode.LoadLocal)
+                    frame.PushLocalValueOntoEvaluationStack(instruction.GetOperand(0));
+                else
+                    ExecuteInstruction(frame, instruction, instructionIndex);
             }
             catch (ArrayAllocationFailureException ex)
             {
@@ -689,11 +692,13 @@ public sealed partial class BytecodeVm
                 break;
 
             case Opcode.PushIntegerZero:
-                frame.EvaluationStack.PushUnchecked(RuntimeValue.FromInteger(0));
+                // Непосредственный ноль сохраняет распакованное представление
+                // для последующих целочисленных операций и записи в слоты.
+                frame.EvaluationStack.PushInteger(0);
                 break;
 
             case Opcode.PushIntegerOne:
-                frame.EvaluationStack.PushUnchecked(RuntimeValue.FromInteger(1));
+                frame.EvaluationStack.PushInteger(1);
                 break;
 
             case Opcode.LoadFunction:
@@ -724,6 +729,9 @@ public sealed partial class BytecodeVm
                 var localSlot = instruction.GetOperand(0);
                 if (frame.EvaluationStack.TryGetImmediateInteger(out var immediateInteger)
                     && frame.TryStoreImmediateInteger(localSlot, immediateInteger))
+                    frame.EvaluationStack.DiscardTop(1);
+                else if (frame.EvaluationStack.TryGetImmediateLong(out var immediateLong)
+                    && frame.TryStoreImmediateLong(localSlot, immediateLong))
                     frame.EvaluationStack.DiscardTop(1);
                 else
                     frame.StoreLocalValue(localSlot, PopValue(frame, instructionIndex));

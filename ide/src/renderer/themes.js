@@ -148,6 +148,19 @@
       return rule;
     });
   }
+  // Цвета справочных фрагментов рассчитаны на общую светло-серую карточку.
+  // Суффикс токена отделяет их от раскраски исходного текста редактора.
+  const REFERENCE_SYNTAX = {
+    comment: '#4b5563', string: '#225c2b', stringEscape: '#005b68', interpolation: '#005b68',
+    number: '#5c4900', keyword: '#5c4900', type: '#303030', builtin: '#005468',
+    identifier: '#303030', variable: '#303030', variableReadonly: '#5c4900',
+    function: '#005468', array: '#4b356e', operator: '#5c4900', delimiter: '#444444', invalid: '#9f1c24',
+  };
+  function referenceRules() {
+    const roles = [...RULES, ['delimiter.square', 'delimiter'], ['delimiter.parenthesis', 'delimiter'],
+      ['delimiter.curly', 'delimiter'], ['string.quote', 'string']];
+    return roles.map(([token, key]) => ({ token: token + '.axiom-reference', foreground: stripHash(REFERENCE_SYNTAX[key]) }));
+  }
   function semanticTokenColors(id) {
     const syntax = get(id).syntax, out = {};
     for (const sem of Object.keys(SEMANTIC)) out[sem] = syntax[SEMANTIC[sem]];
@@ -192,12 +205,19 @@
       'menu.background': read('--xs-menu-bg'), 'menu.foreground': read('--xs-menu-text'),
       'menu.border': read('--xs-menu-border'), 'menu.separatorBackground': read('--xs-menu-border'),
       'menu.selectionBackground': read('--xs-menu-hover-bg'), 'menu.selectionForeground': read('--xs-menu-hover-text'),
-      'editorHoverWidget.background': read('--xs-menu-bg'), 'editorHoverWidget.foreground': read('--xs-menu-text'),
-      'editorHoverWidget.border': read('--xs-menu-border'),
       'quickInput.background': read('--xs-menu-bg'), 'quickInput.foreground': read('--xs-menu-text'),
       'list.hoverBackground': read('--xs-menu-hover-bg'), 'list.hoverForeground': read('--xs-menu-hover-text'),
       'list.focusBackground': read('--xs-menu-hover-bg'), 'list.focusForeground': read('--xs-menu-hover-text'),
       'list.activeSelectionBackground': read('--xs-menu-hover-bg'), 'list.activeSelectionForeground': read('--xs-menu-hover-text'),
+    });
+    Object.assign(colors, {
+      'editorHoverWidget.background': read('--xs-tooltip-bg'),
+      'editorHoverWidget.foreground': read('--xs-tooltip-text'),
+      'editorHoverWidget.border': read('--xs-tooltip-border'),
+      'editorHoverWidget.statusBarBackground': read('--xs-tooltip-bg'),
+      'textCodeBlock.background': read('--xs-tooltip-bg'),
+      'textPreformat.background': read('--xs-tooltip-code-bg'),
+      'textPreformat.foreground': read('--xs-tooltip-text'),
     });
     return colors;
   }
@@ -256,7 +276,7 @@
     return {
       base: def.monacoBase, inherit: true, semanticHighlighting: true,
       semanticTokenColors: semanticTokenColors(def.id),
-      rules: syntaxRules(def.id),
+      rules: [...syntaxRules(def.id), ...referenceRules()],
       colors: {
         ...surfaceColors(def.id), ...suggestColors(def.id), ...symbolIconColors(def.id), ...def.monacoColors,
       },
@@ -292,7 +312,7 @@
 
   return Object.freeze({
     defaultId: DEFAULT_ID, list: THEMES, ids, has, byId: get, kind,
-    syntaxRules, semanticTokenColors, monacoExtraColors, consolePalette,
+    syntaxRules, referenceRules, semanticTokenColors, monacoExtraColors, consolePalette,
     surfaceColors, monacoTheme, consoleTheme, previewPalette,
   });
 });

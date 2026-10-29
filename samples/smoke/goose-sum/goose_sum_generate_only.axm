@@ -1,0 +1,25 @@
+' Изолирующий сценарий фазы генерации Goose SUM: только xorshift64-заполнение
+' массива из 1 000 000 элементов и накопление суммы x, без проходов обхода.
+' Ожидаемый вывод: Количество: 1000000, Контрольная сумма: 499842813.
+' Это отдельное семейство измерений; не смешивать с четырьмя полными вариантами.
+DIM n AS INTEGER = 1000000
+DIM started AS DOUBLE = ELAPSEDSECONDS()
+DIM data[1 TO n] AS INTEGER
+DIM r AS LONG = 12345
+DIM x AS INTEGER = 0
+DIM total AS LONG = 0
+
+' Заполнение массива детерминированным xorshift64-генератором.
+FOR i = 1 TO n
+    r = r XOR (r << 13)
+    r = r XOR ((r >> 7) AND &H01FFFFFFFFFFFFFF)
+    r = r XOR (r << 17)
+    x = CINT(((((r >> 1) AND &H7FFFFFFFFFFFFFFF) MOD 500) * 2) + (r AND 1))
+    data[i] = x
+    total = total + x
+NEXT
+
+DIM elapsed AS DOUBLE = ELAPSEDSECONDS() - started
+PRINT "Количество: "; n
+PRINT "Контрольная сумма: "; total
+PRINT "Время выполнения, мс: "; elapsed * 1000

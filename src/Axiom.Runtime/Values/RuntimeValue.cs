@@ -30,6 +30,13 @@ public sealed class RuntimeValue : IRuntimeStoredValue
 
     public static RuntimeValue Void { get; } = new(TypeSymbol.Void, value: null);
 
+    /// <summary>
+    /// Маркер непосредственного LONG в оценочном стеке и локальных слотах VM.
+    /// Никогда не покидает границы материализации: любой внешний потребитель
+    /// получает обычное значение через FromLong.
+    /// </summary>
+    internal static RuntimeValue ImmediateLongMarker { get; } = new(TypeSymbol.Long, value: null);
+
     public TypeSymbol Type { get; }
 
     public object? Value { get; }
