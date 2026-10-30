@@ -1,0 +1,17 @@
+' Запись и последующее чтение поля.
+TYPE Counter
+    value AS INTEGER
+END TYPE
+SUB Increase(BYREF target AS Counter)
+    target.value = target.value + 1
+END SUB
+DIM item AS Counter
+item.value = 41
+PRINT item.value
+' BYREF передаёт запись, поэтому изменение видно снаружи.
+Increase(item)
+' Ожидаемый вывод: 41, затем 42.
+PRINT item.value
+' Поле отдельно нельзя передать как аргумент BYREF.
+' Здесь передана вся запись.
+' Конец программы.
