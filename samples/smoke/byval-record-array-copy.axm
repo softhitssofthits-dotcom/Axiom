@@ -1,0 +1,21 @@
+' Копирование записи TYPE с массивом при передаче BYVAL и работе BYREF.
+TYPE Box
+    items[1 TO 3] AS INTEGER
+END TYPE
+DIM shared AS Box
+shared.items[1] = 11
+' BYVAL получает независимую копию записи вместе с массивом.
+SUB ChangeCopy(byValBox AS Box)
+    byValBox.items[1] = 50
+    PRINT byValBox.items[1]
+END SUB
+ChangeCopy(shared)
+' Оригинал не изменился: копия независима.
+PRINT shared.items[1] = 11
+' BYREF работает с оригиналом: изменение видно снаружи.
+SUB ChangeOriginal(BYREF same AS Box)
+    same.items[1] = 99
+END SUB
+ChangeOriginal(shared)
+' Ожидаемый вывод: 50, затем TRUE, затем 99.
+PRINT shared.items[1]

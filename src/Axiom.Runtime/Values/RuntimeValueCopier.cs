@@ -12,7 +12,7 @@ internal sealed class RuntimeValueCopier
     private static readonly AsyncLocal<IRuntimeCancellationProvider?> Cancellation = new();
     private readonly Dictionary<object, RuntimeValue> _copies = new(ReferenceEqualityComparer.Instance);
     private readonly Queue<Action> _pending = new();
-    private int _visited;
+    private long _visited;
 
     public static IDisposable WithCancellation(IRuntimeCancellationProvider provider)
     {
@@ -35,6 +35,27 @@ internal sealed class RuntimeValueCopier
             fill();
         }
         return result;
+    }
+
+    /// <summary>
+    /// Точка отмены для прямого заполнения буфера, которое заменяет
+    /// поэлементные визиты: срабатывает, когда поэлементный путь пересёк
+    /// очередную границу в 4096 визитов. Договор совпадает с прежним
+    /// поведением: исключение до изменения источника, заготовка отбрасывается.
+    /// </summary>
+    private void CheckCancellationForBulkFill(int elementVisits)
+    {
+        var completedVisits = _visited + elementVisits;
+        var cancellation = Cancellation.Value;
+        if (cancellation is not null)
+        {
+            for (var boundary = _visited / 4096; boundary < completedVisits / 4096; boundary++)
+            {
+                if (cancellation.IsCancellationRequested)
+                    throw new ValueCopyCancelledException();
+            }
+        }
+        _visited = completedVisits;
     }
 
     private RuntimeValue Prepare(RuntimeValue value, int? fixedStringLength = null)
@@ -77,8 +98,12 @@ internal sealed class RuntimeValueCopier
                 var array = value.AsArray();
                 var arrayCopy = array.CreateEmptyForValueCopy(fixedStringLength);
                 copy = RuntimeValue.FromArray(arrayType, arrayCopy);
-                _pending.Enqueue(() => array.FillSnapshotInto(arrayCopy,
-                    element => Prepare(element, arrayCopy.FixedStringLength)));
+                var copiedFixedStringLength = arrayCopy.FixedStringLength;
+                _pending.Enqueue(() =>
+                {
+                    array.FillSnapshotInto(arrayCopy,
+                        element => Prepare(element, copiedFixedStringLength), CheckCancellationForBulkFill);
+                });
                 break;
             case DictionaryTypeSymbol dictionaryType:
                 var dictionary = value.AsDictionary();

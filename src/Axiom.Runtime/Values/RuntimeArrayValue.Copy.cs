@@ -165,10 +165,12 @@ public sealed partial class RuntimeArrayValue
     /// Заполняет заготовку снимка независимыми значениями элементов этого массива
     /// без правил присваивания.
     /// </summary>
-    internal void FillSnapshotInto(RuntimeArrayValue target, Func<RuntimeValue, RuntimeValue> snapshotElement)
+    internal void FillSnapshotInto(RuntimeArrayValue target, Func<RuntimeValue, RuntimeValue> snapshotElement,
+        Action<int> beforeNumericCopy)
     {
         ArgumentNullException.ThrowIfNull(target);
         ArgumentNullException.ThrowIfNull(snapshotElement);
+        ArgumentNullException.ThrowIfNull(beforeNumericCopy);
 
         if (!IsAllocated
             || _storageLifetime is { Invalidated: true }
@@ -178,10 +180,55 @@ public sealed partial class RuntimeArrayValue
             return;
         }
 
+        if (TryCopyNumericValuesTo(target, beforeNumericCopy))
+        {
+            return;
+        }
+
         ForEachVisibleIndexSetAscending(indices =>
         {
             target._elements![target.GetLinearIndex(indices)] = snapshotElement(GetValue(indices));
         });
+    }
+
+    /// <summary>
+    /// Прямое копирование числового буфера в независимую заготовку копии.
+    /// Применимо только к одинаковым INTEGER/INTEGER или LONG/LONG массивам
+    /// ранга 1, видимая область которых непрерывна в физическом хранилище;
+    /// цель должна быть независимым корнем. Преобразователь элементов для
+    /// этих типов не меняет скалярное значение, поэтому буфер переносится
+    /// как есть; прочие случаи остаются поэлементному обходу.
+    /// </summary>
+    private bool TryCopyNumericValuesTo(RuntimeArrayValue target, Action<int> beforeNumericCopy)
+    {
+        if ((ElementType != TypeSymbol.Integer && ElementType != TypeSymbol.Long)
+            || target.ElementType != ElementType
+            || Rank != 1
+            || target.Rank != 1
+            || target.IsView
+            || !IsAllocated
+            || !target.IsAllocated
+            || target.Length != Length
+            || Length == 0)
+        {
+            return false;
+        }
+
+        if (!TryGetLinearIndex1(LowerBound, out var first)
+            || !TryGetLinearIndex1(UpperBound, out var last)
+            || last - first + 1 != Length)
+        {
+            return false;
+        }
+
+        if (!target.TryGetLinearIndex1(target.LowerBound, out var targetFirst))
+        {
+            return false;
+        }
+
+        beforeNumericCopy(Length);
+        ElementStorage.Copy(_elements!, first, target._elements!, targetFirst, Length);
+        return true;
     }
 
     private bool RequiresElementCopy(int? fixedStringLength)
