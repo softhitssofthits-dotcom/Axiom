@@ -1,0 +1,162 @@
+' economy — рынок системы: товары, цены, количества и торговые операции.
+' Товары и цены — СВОИ; принцип перенесён из классики (RESEARCH_ELITE,
+' раздел «Экономика»): в количестве товаров экономический член ВЫЧИТАЕТСЯ,
+' в цене — ПРИБАВЛЯЕТСЯ. Поэтому бедные системы производят мало и дорого
+' покупают, богатые промышленные — наоборот. Колебания детерминированы
+' семенем системы: рынок одинаков при каждом посещении этой системы.
+' Покупка и продажа по одной цене, спреда нет — как в оригинале.
+
+Import game_config
+Import player_state
+Import flight_state
+
+' #region Таблица товаров
+
+Public Type TradeGood                                                                                   ' Описание одного товара рынка.
+    name As String                                                                                      ' Название товара.
+    basePrice As Integer                                                                                ' Базовая цена, кредитов за тонну.
+    gradient As Integer                                                                                 ' Чувствительность цены и количества к экономике.
+    baseQuantity As Integer                                                                             ' Базовое количество на рынке, тонн.
+    maskSpan As Integer                                                                                 ' Диапазон колебаний: +0..maskSpan тонн/кредитов.
+End Type
+
+Private Dim goods[1 To GOODS_TOTAL] As TradeGood                                                        ' Каталог товаров (заполняется в InitMarket).
+Private Dim marketPrice[1 To GOODS_TOTAL] As Integer                                                    ' Текущая цена товара в этой системе.
+Private Dim marketQuantity[1 To GOODS_TOTAL] As Integer                                                 ' Доступно тонн товара в этой системе.
+Private Dim marketFluctuation As Integer = 0                                                            ' Байт колебаний рынка текущей системы.
+
+' InitMarket — Заполняет каталог товаров фиксированными СВОИМИ значениями.
+' Знак градиента задаёт характер товара: положительный — промышленный
+' (дешевеет в богатых промышленных, экономика 0), отрицательный — сырьевой
+' и продовольственный (дешевеет в бедных аграрных, экономика 7).
+' Уточнение внесено после консольного прогона генерации.
+' Вызывается один раз до игрового цикла, строго ДО InitNav.
+Public Sub InitMarket()
+    goods[1] = TradeGood("ПРОДУКТЫ", 35, -5, 40, 12)                                                    ' Продовольствие: дешёвое и обильное в аграрных.
+    goods[2] = TradeGood("РУДА", 22, -3, 55, 10)                                                        ' Сырьё: дешёвое в бедных системах.
+    goods[3] = TradeGood("ТКАНИ", 60, -4, 30, 8)                                                        ' Лёгкий потребительский товар аграрного типа.
+    goods[4] = TradeGood("МЕТАЛЛЫ", 75, 8, 35, 8)                                                       ' Промышленный товар средней цены.
+    goods[5] = TradeGood("ДЕТАЛИ", 95, 10, 28, 8)                                                       ' Компоненты для машин и техники.
+    goods[6] = TradeGood("МАШИНЫ", 150, 15, 22, 6)                                                      ' Дорогой промышленный товар.
+    goods[7] = TradeGood("ТЕХНИКА", 210, 22, 18, 6)                                                     ' Высокотехнологичный: сильный разброс цен.
+    goods[8] = TradeGood("ЛЕКАРСТВА", 260, 25, 14, 4)                                                   ' Самый дорогой товар с малым объёмом.
+End Sub
+
+' #endregion
+
+' #region Генерация рынка системы
+
+' GenerateMarket — Формирует рынок системы из её семени и экономики.
+' Экономика 0 — богатая промышленная (много дешёвых товаров), 7 — бедная
+' аграрная (мало товаров, высокие цены). Вызывается при входе в систему.
+Public Sub GenerateMarket(sceneSeedValue As Long, economyType As Integer)
+    marketFluctuation = CInt(Abs(sceneSeedValue) Mod 256)                                               ' Байт колебаний из семени системы.
+
+    For goodIndex = 1 To GOODS_TOTAL                                                                    ' Каждому товару — своя порция колебания.
+        Dim wavePart As Integer = (marketFluctuation + goodIndex * 37) Mod (goods[goodIndex].maskSpan + 1) ' Детерминированное колебание по товару.
+
+        ' Цена: база + вклад экономики + колебание. Бедная система (7) дорожит
+        ' всем промышленным, богатая (0) продаёт по базе.
+        marketPrice[goodIndex] = goods[goodIndex].basePrice + economyType * goods[goodIndex].gradient + wavePart
+
+        ' Количество: база + колебание - вклад экономики. В бедной системе
+        ' товаров мало: та же экономика, что подняла цену, срезала объём.
+        Dim rawQuantity As Integer = goods[goodIndex].baseQuantity + wavePart - economyType * (goods[goodIndex].gradient \ 2)
+        If rawQuantity < 0 Then
+            rawQuantity = 0                                                                             ' Отрицательного рынка не бывает.
+        End If
+        If rawQuantity > 99 Then
+            rawQuantity = 99                                                                            ' Верхняя граница витрины.
+        End If
+        marketQuantity[goodIndex] = rawQuantity
+    Next goodIndex
+End Sub
+
+' #endregion
+
+' #region Данные рынка (только чтение)
+
+' GetGoodTotal — Число товаров каталога.
+Public Function GetGoodTotal() As Integer
+    Return GOODS_TOTAL
+End Function
+
+' GetGoodName — Название товара.
+Public Function GetGoodName(goodIndex As Integer) As String
+    Return goods[goodIndex].name
+End Function
+
+' GetMarketPrice — Цена товара в текущей системе, кредитов за тонну.
+Public Function GetMarketPrice(goodIndex As Integer) As Integer
+    Return marketPrice[goodIndex]
+End Function
+
+' GetMarketQuantity — Доступно тонн товара на рынке.
+Public Function GetMarketQuantity(goodIndex As Integer) As Integer
+    Return marketQuantity[goodIndex]
+End Function
+
+' #endregion
+
+' #region Торговые операции
+
+' BuyGood — Купить тонну выбранного товара: товар на рынке, место в трюме
+' и кредиты должны быть. Все три проверки до списания.
+Public Function BuyGood(goodIndex As Integer) As Boolean
+    Dim price As Integer = marketPrice[goodIndex]                                                       ' Цена сделки: равна рыночной, спреда нет.
+
+    If marketQuantity[goodIndex] <= 0 Then
+        Return False                                                                                    ' На рынке товара нет.
+    End If
+    If CargoFree() < 1 Then
+        Return False                                                                                    ' Трюм заполнен.
+    End If
+    If GetCredits() < price Then
+        Return False                                                                                    ' Не хватает кредитов.
+    End If
+
+    marketQuantity[goodIndex] = marketQuantity[goodIndex] - 1                                           ' Товар уходит с рынка.
+    ChangeCargo(goodIndex, 1)                                                                           ' Тонна в трюм (место проверено выше).
+    AddCredits(-price)                                                                                  ' Оплата.
+    Return True
+End Function
+
+' SellGood — Продать тонну товара с рынка: возвращает цену, товар возвращается
+' на витрину этой системы.
+Public Function SellGood(goodIndex As Integer) As Boolean
+    If GetCargoQty(goodIndex) <= 0 Then
+        Return False                                                                                    ' В трюме этого товара нет.
+    End If
+
+    ChangeCargo(goodIndex, -1)                                                                          ' Тонна из трюма.
+    marketQuantity[goodIndex] = marketQuantity[goodIndex] + 1                                           ' Товар на витрину.
+    AddCredits(marketPrice[goodIndex])                                                                  ' Выручка по рыночной цене.
+    Return True
+End Function
+
+' #endregion
+
+' #region Топливо на станции
+
+' RefuelCost — Стоимость заправки бака до полного, кредитов.
+Public Function RefuelCost() As Long
+    Dim missingTenths As Long = CLng((FUEL_MAX_LY - FlightFuel()) * 10.0)                               ' Недостающие световые годы в десятых.
+    Return missingTenths * FUEL_PRICE_PER_LY \ 10                                                       ' Цена пропорциональна недостающему объёму.
+End Function
+
+' RefuelToFull — Заправить бак за кредиты: полная стоимость удерживается
+' до списания, при нехватке кредитов заправки нет.
+Public Function RefuelToFull() As Boolean
+    Dim cost As Long = RefuelCost()                                                                     ' Стоимость полной заправки.
+    If cost = 0 Then
+        Return True                                                                                     ' Бак уже полон: операция успешна и бесплатна.
+    End If
+    If Not AddCredits(-cost) Then
+        Return False                                                                                    ' Кредитов не хватает.
+    End If
+
+    FillFuel()                                                                                          ' Бак под завязку.
+    Return True
+End Function
+
+' #endregion

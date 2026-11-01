@@ -1,0 +1,10 @@
+{
+  "formatVersion": 1,
+  "name": "Elite on Axiom",
+  "entry": "main.axm",
+  "sources": [
+    "*.axm"
+  ],
+  "assets": [],
+  "exclude": []
+}

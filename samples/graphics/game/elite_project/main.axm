@@ -1,0 +1,156 @@
+' main — точка входа игры «Elite on Axiom», этап 2: пространство и навигация.
+' Файл владеет ЕДИНСТВЕННЫМ игровым циклом: инициализация, фиксированный шаг
+' симуляции, отрисовка, пауза, карта сектора и завершение. Вся логика
+' разложена по модулям.
+'
+' Схема кадра (в духе классики, реализация собственная):
+'   часы → накопление времени → несколько фиксированных шагов симуляции
+'   → отрисовка текущего состояния → показ кадра → пауза процессора.
+' Скорость симуляции не зависит от частоты кадров. Карта сектора (M)
+' приостанавливает симуляцию, как экраны карт в классике.
+
+Import game_config
+Import math3d
+Import starfield
+Import ship_models
+Import flight_state
+Import nav_data
+Import economy
+Import render3d
+Import chart
+Import dock
+Import hud
+
+' #region Состояние игрового цикла
+
+Private Dim previousFrameTime As Double = 0                                                             ' Предыдущее показание монотонных часов.
+Private Dim currentFrameTime As Double = 0                                                              ' Текущее показание монотонных часов.
+Private Dim frameDeltaSeconds As Double = 0                                                             ' Реальная длительность предыдущего кадра.
+Private Dim simulationAccumulator As Double = 0                                                         ' Накопленное время для фиксированных шагов симуляции.
+Private Dim isPaused As Boolean = False                                                                 ' Признак паузы по клавише P.
+Private Dim previousPauseKeyDown As Boolean = False                                                     ' Состояние клавиши паузы в предыдущем кадре: для распознавания нажатия по фронту.
+Private Dim previousChartKeyDown As Boolean = False                                                     ' Состояние клавиши карты в предыдущем кадре.
+Private Dim previousDockKeyDown As Boolean = False                                                      ' Состояние клавиши стыковки в предыдущем кадре.
+Private Dim fpsFrameCount As Integer = 0                                                                ' Кадров, накопленных для измерения частоты.
+Private Dim fpsAccumSeconds As Double = 0                                                               ' Время, накопленное для измерения частоты кадров.
+Private Dim fpsValue As Double = 0                                                                      ' Измеренная частота кадров, кадров в секунду.
+
+' #endregion
+
+' #region Инициализация
+
+InitMarket()                                                                                            ' Каталог товаров: ДО генерации сектора — рынок стартовой системы строится внутри InitNav.
+InitNav()                                                                                               ' Генерируем сектор: системы, имена, экономики, рынки.
+InitDust()                                                                                              ' Раскладываем детерминированное облако звёздной пыли вокруг корабля.
+InitObjects(GetSystemSeed(GetCurrentSystem()))                                                          ' Сцена стартовой системы строится из её семени.
+
+Smooth On                                                                                               ' Включаем сглаживание показа кадра.
+Canvas VIEW_WIDTH, VIEW_HEIGHT                                                                          ' Открываем игровой холст заданного размера.
+
+previousFrameTime = Elapsedseconds()                                                                    ' Первый замер монотонных часов.
+simulationAccumulator = FIXED_STEP_SECONDS                                                              ' Первый шаг симуляции доступен сразу.
+
+' #endregion
+
+' #region Единый игровой цикл
+
+Do                                                                                                      ' Цикл продолжается до ESC после показа кадра.
+    Beginframe                                                                                          ' Начинаем скрытый кадр: рисование не видно до Present.
+    Cls COLOR_SPACE                                                                                     ' Очищаем кадр цветом открытого космоса.
+
+    ' --- Часы кадра: измеряем реальную длительность предыдущего кадра. ---
+    currentFrameTime = Elapsedseconds()                                                                 ' Монотонные часы не сбрасываются и не зависят от системного времени.
+    frameDeltaSeconds = currentFrameTime - previousFrameTime                                            ' Длительность последнего кадра.
+    previousFrameTime = currentFrameTime                                                                ' Запоминаем для следующего измерения.
+    If frameDeltaSeconds < 0 Then
+        frameDeltaSeconds = 0                                                                           ' Защита на случай нестандартного поведения часов.
+    End If
+    If frameDeltaSeconds > MAX_FRAME_DELTA_SECONDS Then
+        frameDeltaSeconds = MAX_FRAME_DELTA_SECONDS                                                     ' Ограничиваем скачки после паузы окна или сна системы.
+    End If
+
+    ' --- Служебные клавиши: пауза и карта по фронту KEYDOWN. KEYPRESS не годится
+    ' для букв: нативное окно CANVAS не добавляет буквы в очередь нажатий. ---
+    Dim pauseKeyDownNow As Boolean = Keydown(KEY_PAUSE)                                                 ' Удержание P в этом кадре.
+    If pauseKeyDownNow And Not previousPauseKeyDown Then
+        isPaused = Not isPaused                                                                         ' Переход «отпущено → нажато» означает одно нажатие: переключаем паузу.
+    End If
+    previousPauseKeyDown = pauseKeyDownNow                                                              ' Запоминаем состояние для следующего кадра.
+
+    Dim chartKeyDownNow As Boolean = Keydown(KEY_CHART)                                                 ' Удержание M в этом кадре.
+    If chartKeyDownNow And Not previousChartKeyDown Then
+        ToggleChart()                                                                                   ' M открывает и закрывает карту сектора.
+    End If
+    previousChartKeyDown = chartKeyDownNow
+
+    ' --- Ввод и логика карты: на карте симуляция стоит, как в классике. ---
+    If IsChartOpen() Then
+        HandleChartInput()                                                                              ' Выбор цели стрелками, прыжок J, закрытие M.
+    End If
+
+    ' --- Стыковка: D вблизи станции открывает рынок (из полёта, не с карты). ---
+    Dim dockKeyDownNow As Boolean = Keydown(KEY_DOCK)                                                   ' Удержание D в этом кадре.
+    If dockKeyDownNow And Not previousDockKeyDown Then
+        If DockAvailable() And Not IsChartOpen() And Not IsDockOpen() Then
+            OpenDock()                                                                                  ' Корабль у станции: открываем рынок.
+        End If
+    End If
+    previousDockKeyDown = dockKeyDownNow
+
+    ' --- Ввод и логика дока: на рынке симуляция стоит. ---
+    If IsDockOpen() Then
+        HandleDockInput()                                                                               ' Торговля, заправка, вылет.
+    End If
+
+    ' --- Фиксированный шаг симуляции: скорость игры не зависит от FPS. ---
+    If Not isPaused And Not IsChartOpen() And Not IsDockOpen() Then
+        simulationAccumulator = simulationAccumulator + frameDeltaSeconds                               ' Накапливаем реальное время кадра.
+        For stepIndex = 1 To MAX_CATCH_UP_STEPS                                                         ' Не больше лимита шагов за кадр: после долгой паузы не «догоняем» рывком.
+            If simulationAccumulator >= FIXED_STEP_SECONDS Then
+                ApplyFlightInput(FIXED_STEP_SECONDS)                                                    ' Управление: углы и скорость корабля.
+                IntegrateMotion(FIXED_STEP_SECONDS)                                                     ' Движение корабля вдоль носа со столкновениями.
+                UpdateObjects(FIXED_STEP_SECONDS)                                                       ' Вращение и размещение объектов мира.
+                UpdateDust(FIXED_STEP_SECONDS, ForwardX() * FlightSpeed(), ForwardY() * FlightSpeed(), ForwardZ() * FlightSpeed()) ' Пыль течёт мимо корабля с его фактической скоростью.
+                simulationAccumulator = simulationAccumulator - FIXED_STEP_SECONDS                      ' Списываем обработанный интервал.
+            End If
+        Next stepIndex
+        If simulationAccumulator >= FIXED_STEP_SECONDS Then
+            simulationAccumulator = 0                                                                   ' Лишнее накопление после лимита шагов сбрасываем.
+        End If
+    Else
+        simulationAccumulator = 0                                                                       ' В паузе и на карте копить время не нужно.
+    End If
+
+    ' --- Измерение частоты кадров для приборной панели. ---
+    fpsFrameCount = fpsFrameCount + 1                                                                   ' Считаем кадры.
+    fpsAccumSeconds = fpsAccumSeconds + frameDeltaSeconds                                               ' И суммарное время.
+    If fpsAccumSeconds >= 0.5 Then
+        fpsValue = fpsFrameCount / fpsAccumSeconds                                                      ' Средняя частота за окно полсекунды.
+        fpsFrameCount = 0                                                                               ' Окно измерения начинается заново.
+        fpsAccumSeconds = 0
+    End If
+
+    ' --- Отрисовка текущего состояния мира. ---
+    DrawWorld()                                                                                         ' Звёзды, каркасы объектов, прицел.
+
+    If IsDockOpen() Then
+        DrawDock()                                                                                      ' Экран рынка перекрывает мир.
+    ElseIf IsChartOpen() Then
+        DrawChart()                                                                                     ' Карта перекрывает мир: сектор, цели, прыжок.
+    Else
+        DrawHud(fpsValue, isPaused)                                                                     ' Приборная панель и подсказки.
+    End If
+
+    Present                                                                                             ' Показываем готовый кадр целиком.
+    Sleep FRAME_SLEEP_MS                                                                                ' Короткая пауза: отдаём процессор системе.
+
+Loop While Not Keydown(KEY_EXIT)                                                                        ' Выход по удержанию ESC: надёжно в любой момент кадра.
+
+' #endregion
+
+' #region Корректное завершение
+
+Screen 0                                                                                                ' Возвращаем обычный текстовый режим.
+Print "Полёт завершён."                                                                                 ' Прощальное сообщение в консоль IDE.
+
+' #endregion

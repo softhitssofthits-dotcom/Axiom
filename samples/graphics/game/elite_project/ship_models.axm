@@ -1,0 +1,394 @@
+' ship_models — каркасные (проволочные) модели мира и их размещение.
+' Модель хранится как набор трёхмерных вершин и связей-рёбер (пары номеров вершин).
+' Модуль владеет списком объектов сцены: для каждого объекта — локальная модель,
+' позиция в мире, угол вращения и цвет каркаса.
+' Каждый шаг симуляции модуль пересчитывает повернутые мировые вершины,
+' чтобы модуль рендера мог сразу проецировать их без знания математики моделей.
+
+Import game_config
+Import math3d
+
+' #region Типы данных
+
+Public Type WireModel                                                                                   ' Каркасная модель: вершины и рёбра в локальных координатах.
+    vertexX[] As Double                                                                                 ' Локальные X-координаты вершин (вершины нумеруются с 1).
+    vertexY[] As Double                                                                                 ' Локальные Y-координаты вершин.
+    vertexZ[] As Double                                                                                 ' Локальные Z-координаты вершин (нос модели смотрит в +Z).
+    edgeA[] As Integer                                                                                  ' Номер первой вершины каждого ребра.
+    edgeB[] As Integer                                                                                  ' Номер второй вершины каждого ребра.
+End Type
+
+' #endregion
+
+' #region Закрытое состояние сцены
+
+Private Const ASTEROID_COUNT As Integer = 5                                                             ' Число астероидов в системе этапа 2а.
+Private Const OBJECT_TOTAL As Integer = 2 + ASTEROID_COUNT                                              ' Всего объектов: станция, корабль-спутник и астероиды.
+
+Private Dim objectModel[1 To OBJECT_TOTAL] As WireModel                                                 ' Локальные (неподвижные) модели объектов.
+Private Dim objectRotated[1 To OBJECT_TOTAL] As WireModel                                               ' Повернутые мировые вершины, обновляются каждый шаг.
+Private Dim objectPosX[1 To OBJECT_TOTAL] As Double                                                     ' Позиция объекта в мире: X.
+Private Dim objectPosY[1 To OBJECT_TOTAL] As Double                                                     ' Позиция объекта в мире: Y.
+Private Dim objectPosZ[1 To OBJECT_TOTAL] As Double                                                     ' Позиция объекта в мире: Z.
+Private Dim objectYaw[1 To OBJECT_TOTAL] As Double                                                      ' Текущий угол вращения объекта вокруг вертикали.
+Private Dim objectSpin[1 To OBJECT_TOTAL] As Double                                                     ' Скорость вращения объекта, радиан в секунду.
+Private Dim objectColor[1 To OBJECT_TOTAL] As Integer                                                   ' Цвет каркаса объекта.
+Private Dim objectRadius[1 To OBJECT_TOTAL] As Double                                                   ' Радиус столкновения объекта: ближе него корабль не проходит.
+Private Dim sceneSeed As Long = 101                                                                     ' Текущее семя сцены: от него детерминированно расставляются астероиды.
+
+' NextSceneRandom01 — Очередное псевдослучайное число сцены в диапазоне [0; 1).
+' LCG по модулю 2^31: промежуточные произведения укладываются в LONG.
+Private Function NextSceneRandom01() As Double
+    sceneSeed = (sceneSeed * 1103515245 + 12345) Mod 2147483648                                         ' Шаг генератора от семени системы.
+    Return sceneSeed / 2147483648.0                                                                     ' Приведение к диапазону [0; 1).
+End Function
+
+' #endregion
+
+' #region Построение моделей
+
+' PutVertex — Хелпер записи одной вершины в модель: у Axiom нет разделителя
+' нескольких инструкций в строке, поэтому запись координат вынесена в процедуру.
+Private Sub PutVertex(ByRef model As WireModel, vertexIndex As Integer, coordX As Double, coordY As Double, coordZ As Double)
+    model.vertexX[vertexIndex] = coordX                                                                 ' Локальная X-координата вершины.
+    model.vertexY[vertexIndex] = coordY                                                                 ' Локальная Y-координата вершины.
+    model.vertexZ[vertexIndex] = coordZ                                                                 ' Локальная Z-координата вершины.
+End Sub
+
+' PutEdge — Хелпер записи одного ребра: пара номеров вершин.
+Private Sub PutEdge(ByRef model As WireModel, edgeIndex As Integer, firstVertex As Integer, secondVertex As Integer)
+    model.edgeA[edgeIndex] = firstVertex                                                                ' Первая вершина ребра.
+    model.edgeB[edgeIndex] = secondVertex                                                               ' Вторая вершина ребра.
+End Sub
+
+' AddStationModel — Заполняет модель вращающейся станции: октаэдр-ядро плюс кольцо
+' из восьми сегментов. Октаэдр: 6 вершин и 12 рёбер; кольцо: 8 вершин и 8 рёбер.
+Private Function AddStationModel() As WireModel
+    Dim model As WireModel                                                                              ' Локальная сборка модели; запись копируется при возврате.
+
+    REDIM model.vertexX[1 To 14]                                                                        ' Выделяем массивы модели: 14 вершин.
+    REDIM model.vertexY[1 To 14]
+    REDIM model.vertexZ[1 To 14]
+    REDIM model.edgeA[1 To 20]                                                                          ' 20 рёбер.
+    REDIM model.edgeB[1 To 20]
+
+    ' Ядро-октаэдр: четыре вершины по горизонтали и две по вертикали.
+    PutVertex(model, 1, 0.0, 0.0, 160.0)                                                                ' Носовая вершина октаэдра.
+    PutVertex(model, 2, 160.0, 0.0, 0.0)                                                                ' Правая вершина октаэдра.
+    PutVertex(model, 3, 0.0, 0.0, -160.0)                                                               ' Кормовая вершина октаэдра.
+    PutVertex(model, 4, -160.0, 0.0, 0.0)                                                               ' Левая вершина октаэдра.
+    PutVertex(model, 5, 0.0, 170.0, 0.0)                                                                ' Верхняя вершина октаэдра.
+    PutVertex(model, 6, 0.0, -170.0, 0.0)                                                               ' Нижняя вершина октаэдра.
+
+    ' Рёбра октаэдра: каждая горизонтальная вершина связана с носом, кормой, верхом и низом.
+    PutEdge(model, 1, 1, 2)                                                                             ' Нос — право.
+    PutEdge(model, 2, 1, 4)                                                                             ' Нос — лево.
+    PutEdge(model, 3, 3, 2)                                                                             ' Корма — право.
+    PutEdge(model, 4, 3, 4)                                                                             ' Корма — лево.
+    PutEdge(model, 5, 5, 1)                                                                             ' Верх — нос.
+    PutEdge(model, 6, 5, 2)                                                                             ' Верх — право.
+    PutEdge(model, 7, 5, 3)                                                                             ' Верх — корма.
+    PutEdge(model, 8, 5, 4)                                                                             ' Верх — лево.
+    PutEdge(model, 9, 6, 1)                                                                             ' Низ — нос.
+    PutEdge(model, 10, 6, 2)                                                                            ' Низ — право.
+    PutEdge(model, 11, 6, 3)                                                                            ' Низ — корма.
+    PutEdge(model, 12, 6, 4)                                                                            ' Низ — лево.
+
+    ' Кольцо стыковки: правильный восьмиугольник в горизонтальной плоскости ниже центра.
+    PutVertex(model, 7, 110.0, -60.0, 0.0)                                                              ' Кольцо: опорная точка по носу.
+    PutVertex(model, 8, 78.0, -60.0, 78.0)                                                              ' Кольцо: диагональ нос-право.
+    PutVertex(model, 9, 0.0, -60.0, 110.0)                                                              ' Кольцо: точка по правому борту.
+    PutVertex(model, 10, -78.0, -60.0, 78.0)                                                            ' Кольцо: диагональ корма-право.
+    PutVertex(model, 11, -110.0, -60.0, 0.0)                                                            ' Кольцо: точка по корме.
+    PutVertex(model, 12, -78.0, -60.0, -78.0)                                                           ' Кольцо: диагональ корма-лево.
+    PutVertex(model, 13, 0.0, -60.0, -110.0)                                                            ' Кольцо: точка по левому борту.
+    PutVertex(model, 14, 78.0, -60.0, -78.0)                                                            ' Кольцо: диагональ нос-лево.
+
+    PutEdge(model, 13, 7, 8)                                                                            ' Замкнутый восьмиугольник кольца.
+    PutEdge(model, 14, 8, 9)
+    PutEdge(model, 15, 9, 10)
+    PutEdge(model, 16, 10, 11)
+    PutEdge(model, 17, 11, 12)
+    PutEdge(model, 18, 12, 13)
+    PutEdge(model, 19, 13, 14)
+    PutEdge(model, 20, 14, 7)
+
+    Return model                                                                                        ' Запись с массивами копируется вызывающему коду.
+End Function
+
+' AddCompanionModel — Заполняет модель корабля-спутника: стреловидный планер
+' с двумя крыльями и килем. 8 вершин, 12 рёбер.
+Private Function AddCompanionModel() As WireModel
+    Dim model As WireModel                                                                              ' Локальная сборка модели.
+
+    REDIM model.vertexX[1 To 8]                                                                         ' 8 вершин.
+    REDIM model.vertexY[1 To 8]
+    REDIM model.vertexZ[1 To 8]
+    REDIM model.edgeA[1 To 12]                                                                          ' 12 рёбер.
+    REDIM model.edgeB[1 To 12]
+
+    PutVertex(model, 1, 0.0, 0.0, 120.0)                                                                ' Нос корабля.
+    PutVertex(model, 2, -90.0, 0.0, -80.0)                                                              ' Законцовка левого крыла.
+    PutVertex(model, 3, 90.0, 0.0, -80.0)                                                               ' Законцовка правого крыла.
+    PutVertex(model, 4, 0.0, 0.0, -60.0)                                                                ' Хвостовой узел фюзеляжа.
+    PutVertex(model, 5, 0.0, 55.0, -75.0)                                                               ' Верх киля.
+    PutVertex(model, 6, 0.0, -25.0, 40.0)                                                               ' Брюшной узел фюзеляжа.
+    PutVertex(model, 7, -30.0, -12.0, -55.0)                                                            ' Левый гондольный узел.
+    PutVertex(model, 8, 30.0, -12.0, -55.0)                                                             ' Правый гондольный узел.
+
+    PutEdge(model, 1, 1, 2)                                                                             ' Нос — левое крыло.
+    PutEdge(model, 2, 1, 3)                                                                             ' Нос — правое крыло.
+    PutEdge(model, 3, 2, 4)                                                                             ' Левое крыло — хвост.
+    PutEdge(model, 4, 3, 4)                                                                             ' Правое крыло — хвост.
+    PutEdge(model, 5, 1, 6)                                                                             ' Нос — брюшной узел.
+    PutEdge(model, 6, 6, 4)                                                                             ' Брюшной узел — хвост.
+    PutEdge(model, 7, 4, 5)                                                                             ' Хвост — верх киля.
+    PutEdge(model, 8, 5, 2)                                                                             ' Киль — левое крыло (силуэт).
+    PutEdge(model, 9, 5, 3)                                                                             ' Киль — правое крыло (силуэт).
+    PutEdge(model, 10, 6, 7)                                                                            ' Брюхо — левая гондола.
+    PutEdge(model, 11, 6, 8)                                                                            ' Брюхо — правая гондола.
+    PutEdge(model, 12, 7, 8)                                                                            ' Поперечина гондол.
+
+    Return model
+End Function
+
+' AddAsteroidModel — Заполняет модель астероида по номеру варианта (1..3).
+' Три авторские «глыбы» с разными силуэтами; все координаты фиксированы,
+' поэтому сцена воспроизводится одинаково при каждом запуске.
+Private Function AddAsteroidModel(variantNumber As Integer) As WireModel
+    Dim model As WireModel                                                                              ' Локальная сборка модели.
+
+    If variantNumber = 1 Then                                                                           ' Вариант 1: искажённый куб из 8 вершин.
+        REDIM model.vertexX[1 To 8]
+        REDIM model.vertexY[1 To 8]
+        REDIM model.vertexZ[1 To 8]
+        REDIM model.edgeA[1 To 12]
+        REDIM model.edgeB[1 To 12]
+
+        PutVertex(model, 1, 40.0, 25.0, 35.0)                                                           ' Передняя верхняя правая вершина.
+        PutVertex(model, 2, -45.0, 20.0, 30.0)                                                          ' Передняя верхняя левая.
+        PutVertex(model, 3, -38.0, -28.0, 40.0)                                                         ' Передняя нижняя левая.
+        PutVertex(model, 4, 35.0, -30.0, 28.0)                                                          ' Передняя нижняя правая.
+        PutVertex(model, 5, 42.0, 18.0, -38.0)                                                          ' Задняя верхняя правая.
+        PutVertex(model, 6, -40.0, 25.0, -32.0)                                                         ' Задняя верхняя левая.
+        PutVertex(model, 7, -35.0, -22.0, -45.0)                                                        ' Задняя нижняя левая.
+        PutVertex(model, 8, 30.0, -26.0, -35.0)                                                         ' Задняя нижняя правая.
+
+        PutEdge(model, 1, 1, 2)                                                                         ' Передний четырёхугольник.
+        PutEdge(model, 2, 2, 3)
+        PutEdge(model, 3, 3, 4)
+        PutEdge(model, 4, 4, 1)
+        PutEdge(model, 5, 5, 6)                                                                         ' Задний четырёхугольник.
+        PutEdge(model, 6, 6, 7)
+        PutEdge(model, 7, 7, 8)
+        PutEdge(model, 8, 8, 5)
+        PutEdge(model, 9, 1, 5)                                                                         ' Четыре продольных ребра между гранями.
+        PutEdge(model, 10, 2, 6)
+        PutEdge(model, 11, 3, 7)
+        PutEdge(model, 12, 4, 8)
+
+        Return model
+    End If
+
+    If variantNumber = 2 Then                                                                           ' Вариант 2: двойная пирамида с пятиугольным поясом.
+        REDIM model.vertexX[1 To 7]
+        REDIM model.vertexY[1 To 7]
+        REDIM model.vertexZ[1 To 7]
+        REDIM model.edgeA[1 To 15]
+        REDIM model.edgeB[1 To 15]
+
+        PutVertex(model, 1, 0.0, 42.0, 0.0)                                                             ' Верхняя вершина.
+        PutVertex(model, 2, 0.0, -38.0, 6.0)                                                            ' Нижняя вершина.
+        PutVertex(model, 3, 48.0, -2.0, 14.0)                                                           ' Пояс: точка 1.
+        PutVertex(model, 4, 18.0, 6.0, -46.0)                                                           ' Пояс: точка 2.
+        PutVertex(model, 5, -36.0, -6.0, -32.0)                                                         ' Пояс: точка 3.
+        PutVertex(model, 6, -44.0, 4.0, 16.0)                                                           ' Пояс: точка 4.
+        PutVertex(model, 7, -8.0, -4.0, 50.0)                                                           ' Пояс: точка 5.
+
+        PutEdge(model, 1, 1, 3)                                                                         ' Верхняя вершина — пояс (5 рёбер).
+        PutEdge(model, 2, 1, 4)
+        PutEdge(model, 3, 1, 5)
+        PutEdge(model, 4, 1, 6)
+        PutEdge(model, 5, 1, 7)
+        PutEdge(model, 6, 2, 3)                                                                         ' Нижняя вершина — пояс (5 рёбер).
+        PutEdge(model, 7, 2, 4)
+        PutEdge(model, 8, 2, 5)
+        PutEdge(model, 9, 2, 6)
+        PutEdge(model, 10, 2, 7)
+        PutEdge(model, 11, 3, 4)                                                                        ' Замкнутый пояс (5 рёбер).
+        PutEdge(model, 12, 4, 5)
+        PutEdge(model, 13, 5, 6)
+        PutEdge(model, 14, 6, 7)
+        PutEdge(model, 15, 7, 3)
+
+        Return model
+    End If
+
+    ' Вариант 3: искажённая шестиугольная призма из 12 вершин.
+    REDIM model.vertexX[1 To 12]
+    REDIM model.vertexY[1 To 12]
+    REDIM model.vertexZ[1 To 12]
+    REDIM model.edgeA[1 To 18]
+    REDIM model.edgeB[1 To 18]
+
+    PutVertex(model, 1, 50.0, 10.0, 22.0)                                                               ' Верхнее кольцо: точка 1.
+    PutVertex(model, 2, 22.0, 40.0, 18.0)                                                               ' Верхнее кольцо: точка 2.
+    PutVertex(model, 3, -34.0, 30.0, 26.0)                                                              ' Верхнее кольцо: точка 3.
+    PutVertex(model, 4, -48.0, -8.0, 20.0)                                                              ' Верхнее кольцо: точка 4.
+    PutVertex(model, 5, -20.0, -36.0, 24.0)                                                             ' Верхнее кольцо: точка 5.
+    PutVertex(model, 6, 30.0, -30.0, 22.0)                                                              ' Верхнее кольцо: точка 6.
+    PutVertex(model, 7, 44.0, 6.0, -20.0)                                                               ' Нижнее кольцо: точка 1.
+    PutVertex(model, 8, 18.0, 34.0, -26.0)                                                              ' Нижнее кольцо: точка 2.
+    PutVertex(model, 9, -30.0, 26.0, -18.0)                                                             ' Нижнее кольцо: точка 3.
+    PutVertex(model, 10, -44.0, -4.0, -24.0)                                                            ' Нижнее кольцо: точка 4.
+    PutVertex(model, 11, -16.0, -38.0, -20.0)                                                           ' Нижнее кольцо: точка 5.
+    PutVertex(model, 12, 26.0, -32.0, -18.0)                                                            ' Нижнее кольцо: точка 6.
+
+    PutEdge(model, 1, 1, 2)                                                                             ' Верхнее кольцо (6 рёбер).
+    PutEdge(model, 2, 2, 3)
+    PutEdge(model, 3, 3, 4)
+    PutEdge(model, 4, 4, 5)
+    PutEdge(model, 5, 5, 6)
+    PutEdge(model, 6, 6, 1)
+    PutEdge(model, 7, 7, 8)                                                                             ' Нижнее кольцо (6 рёбер).
+    PutEdge(model, 8, 8, 9)
+    PutEdge(model, 9, 9, 10)
+    PutEdge(model, 10, 10, 11)
+    PutEdge(model, 11, 11, 12)
+    PutEdge(model, 12, 12, 7)
+    PutEdge(model, 13, 1, 7)                                                                            ' Шесть продольных рёбер.
+    PutEdge(model, 14, 2, 8)
+    PutEdge(model, 15, 3, 9)
+    PutEdge(model, 16, 4, 10)
+    PutEdge(model, 17, 5, 11)
+    PutEdge(model, 18, 6, 12)
+
+    Return model
+End Function
+
+' #endregion
+
+' #region Инициализация и шаг симуляции
+
+' InitObjects — Расставляет объекты сцены по семени системы и создаёт рабочие
+' копии моделей. Станция и спутник стоят одинаково в каждой системе, а позиции
+' и вращения астероидов детерминированно порождаются LCG от семени: каждая
+' система воспроизводима, но выглядит по-своему. Вызывается до цикла и при прыжке.
+Public Sub InitObjects(sceneSeedValue As Long)
+    sceneSeed = sceneSeedValue                                                                          ' Заряжаем генератор сцены семенем системы.
+
+    objectModel[1] = AddStationModel()                                                                  ' Станция: большой вращающийся каркас.
+    objectModel[2] = AddCompanionModel()                                                                ' Корабль-спутник: меньший каркас для проверки ракурсов.
+
+    objectPosX[1] = 0.0                                                                                 ' Станция строго по оси полёта.
+    objectPosY[1] = 0.0
+    objectPosZ[1] = STATION_DISTANCE                                                                    ' Дистанция станции задаётся в конфигурации.
+    objectYaw[1] = 0.0                                                                                  ' Начальный угол вращения станции.
+    objectSpin[1] = STATION_SPIN_RATE                                                                   ' Скорость вращения станции.
+    objectColor[1] = COLOR_STATION                                                                      ' Голубой каркас станции.
+    objectRadius[1] = 190.0                                                                             ' Станция крупная: столкновение на дальнем подлёте.
+
+    objectPosX[2] = COMPANION_OFFSET_X                                                                  ' Спутник смещён вправо и вверх от оси.
+    objectPosY[2] = COMPANION_OFFSET_Y
+    objectPosZ[2] = STATION_DISTANCE * COMPANION_DISTANCE_FACTOR                                        ' Спутник ближе станции.
+    objectYaw[2] = 0.6                                                                                  ' Начальный ракурс спутника.
+    objectSpin[2] = COMPANION_SPIN_RATE                                                                 ' Спутник вращается, чтобы рёбра проверялись под разными углами.
+    objectColor[2] = COLOR_SHIP_HULL                                                                    ' Тёплый жёлтый каркас спутника.
+    objectRadius[2] = 110.0                                                                             ' Спутник меньше станции.
+
+    For objectIndex = 3 To OBJECT_TOTAL                                                                 ' Астероиды: расстановка от семени системы.
+        objectModel[objectIndex] = AddAsteroidModel((objectIndex - 3) Mod 3 + 1)                        ' Варианты глыб идут по кругу: 1, 2, 3, 1, 2.
+
+        Dim beltAngle As Double = NextSceneRandom01() * 6.28318530717958647                             ' Угол на кольце вокруг начала координат.
+        Dim beltDistance As Double = 900.0 + NextSceneRandom01() * 1600.0                               ' Дистанция в кольце: 900..2500 единиц.
+
+        objectPosX[objectIndex] = Cos(beltAngle) * beltDistance                                         ' Астероид в плоскости эклиптики: X.
+        objectPosZ[objectIndex] = Sin(beltAngle) * beltDistance                                         ' Астероид в плоскости эклиптики: Z.
+        objectPosY[objectIndex] = (NextSceneRandom01() - 0.5) * 400.0                                   ' Небольшой разброс по высоте: -200..200.
+        objectYaw[objectIndex] = NextSceneRandom01() * 6.28318530717958647                              ' Случайный начальный разворот.
+        objectSpin[objectIndex] = (NextSceneRandom01() - 0.5) * 0.9                                     ' Вращение в любую сторону: -0.45..0.45 рад/с.
+        objectColor[objectIndex] = COLOR_ASTEROID                                                       ' Серый каркас астероида.
+        objectRadius[objectIndex] = 75.0                                                                ' Радиус столкновения меньше габаритов глыбы.
+    Next objectIndex
+
+    For objectIndex = 1 To OBJECT_TOTAL                                                                 ' Рабочие копии: присваивание записи копирует все массивы независимо.
+        objectRotated[objectIndex] = objectModel[objectIndex]
+    Next objectIndex
+End Sub
+
+' UpdateObjects — Продвигает вращение объектов и пересчитывает повернутые
+' мировые вершины. Вызывается один раз за фиксированный шаг симуляции.
+Public Sub UpdateObjects(dtSeconds As Double)
+    For objectIndex = 1 To OBJECT_TOTAL                                                                 ' Обходим все объекты сцены.
+        objectYaw[objectIndex] = WrapAngle(objectYaw[objectIndex] + objectSpin[objectIndex] * dtSeconds) ' Накопление угла с нормализацией без роста.
+
+        Dim cosYaw As Double = Cos(objectYaw[objectIndex])                                              ' Тригонометрия вращения вокруг вертикали: считаем один раз на объект.
+        Dim sinYaw As Double = Sin(objectYaw[objectIndex])
+
+        Dim vertexTotal As Integer = ARRAYLENGTH(objectModel[objectIndex].vertexX[])                    ' Число вершин текущей модели.
+
+        For vertexIndex = 1 To vertexTotal                                                              ' Каждая локальная вершина превращается в мировую.
+            Dim localX As Double = objectModel[objectIndex].vertexX[vertexIndex]                        ' Локальные координаты вершины.
+            Dim localY As Double = objectModel[objectIndex].vertexY[vertexIndex]
+            Dim localZ As Double = objectModel[objectIndex].vertexZ[vertexIndex]
+
+            ' Вращение вокруг вертикальной оси Y: поворот пары (X, Z).
+            objectRotated[objectIndex].vertexX[vertexIndex] = localX * cosYaw + localZ * sinYaw + objectPosX[objectIndex] ' Мировой X.
+            objectRotated[objectIndex].vertexY[vertexIndex] = localY + objectPosY[objectIndex]          ' Мировой Y: вращения по вертикали нет.
+            objectRotated[objectIndex].vertexZ[vertexIndex] = -localX * sinYaw + localZ * cosYaw + objectPosZ[objectIndex] ' Мировой Z.
+        Next vertexIndex
+    Next objectIndex
+End Sub
+
+' #endregion
+
+' #region Данные для рендера (только чтение)
+
+' GetObjectCount — Число объектов сцены.
+Public Function GetObjectCount() As Integer
+    Return OBJECT_TOTAL                                                                                 ' Константа модуля открыта через функцию.
+End Function
+
+' GetObjectPos — Мировая позиция центра объекта одним вызовом: сканер, карта
+' и проверка столкновений вычисляют смещение относительно корабля.
+Public Sub GetObjectPos(objectIndex As Integer, ByRef posX As Double, ByRef posY As Double, ByRef posZ As Double)
+    posX = objectPosX[objectIndex]                                                                      ' Позиция центра: X.
+    posY = objectPosY[objectIndex]                                                                      ' Позиция центра: Y.
+    posZ = objectPosZ[objectIndex]                                                                      ' Позиция центра: Z.
+End Sub
+
+' GetObjectColor — Цвет каркаса объекта.
+Public Function GetObjectColor(objectIndex As Integer) As Integer
+    Return objectColor[objectIndex]
+End Function
+
+' GetObjectRadius — Радиус столкновения объекта.
+Public Function GetObjectRadius(objectIndex As Integer) As Double
+    Return objectRadius[objectIndex]
+End Function
+
+' GetObjectVertexCount — Число вершин модели объекта.
+Public Function GetObjectVertexCount(objectIndex As Integer) As Integer
+    Return ARRAYLENGTH(objectRotated[objectIndex].vertexX[])
+End Function
+
+' GetObjectVertexWorld — Повернутая мировая координата вершины одним вызовом
+' (вместо трёх: вершины обрабатываются десятками на каждый кадр).
+Public Sub GetObjectVertexWorld(objectIndex As Integer, vertexIndex As Integer, ByRef worldX As Double, ByRef worldY As Double, ByRef worldZ As Double)
+    worldX = objectRotated[objectIndex].vertexX[vertexIndex]                                            ' Мировой X вершины.
+    worldY = objectRotated[objectIndex].vertexY[vertexIndex]                                            ' Мировой Y вершины.
+    worldZ = objectRotated[objectIndex].vertexZ[vertexIndex]                                            ' Мировой Z вершины.
+End Sub
+
+' GetObjectEdgeCount — Число рёбер модели объекта.
+Public Function GetObjectEdgeCount(objectIndex As Integer) As Integer
+    Return ARRAYLENGTH(objectRotated[objectIndex].edgeA[])
+End Function
+
+' GetObjectEdge — Номера вершин, соединяемых ребром, одним вызовом.
+Public Sub GetObjectEdge(objectIndex As Integer, edgeIndex As Integer, ByRef firstVertex As Integer, ByRef secondVertex As Integer)
+    firstVertex = objectRotated[objectIndex].edgeA[edgeIndex]                                           ' Первая вершина ребра.
+    secondVertex = objectRotated[objectIndex].edgeB[edgeIndex]                                          ' Вторая вершина ребра.
+End Sub
+
+' #endregion

@@ -1,0 +1,227 @@
+' math3d — вся трёхмерная математика игры: ориентация наблюдателя, перевод
+' мировых координат в координаты наблюдателя, перспективная проекция и
+' отсечение рёбер о ближнюю плоскость.
+'
+' ВАЖНО: Axiom не имеет трёхмерной камеры — CAMERA в CANVAS лишь сдвигает
+' двумерное изображение. Поэтому вся 3D-математика написана здесь, на Axiom,
+' а рисование выполняется готовыми отрезками через DRAWLINE.
+'
+' Система координат:
+'   X — вправо, Y — вверх, Z — вперёд (в глубину экрана).
+'   Экранная вертикаль переворачивается при проекции (у CANVAS ось Y растёт вниз).
+'
+' Ориентация хранится тремя базисными векторами (право, верх, вперёд) и
+' перестраивается из углов Эйлера каждый шаг: такой способ не накапливает
+' дрейф матрицы, в отличие от пошагового поворота самой матрицы, как в оригинале.
+
+Import game_config
+
+' #region Состояние ориентации наблюдателя (закрытые данные модуля)
+
+Private Dim basisRightX As Double = 1.0                                                                 ' Компонента X вектора «право» наблюдателя.
+Private Dim basisRightY As Double = 0.0                                                                 ' Компонента Y вектора «право» наблюдателя.
+Private Dim basisRightZ As Double = 0.0                                                                 ' Компонента Z вектора «право» наблюдателя.
+Private Dim basisUpX As Double = 0.0                                                                    ' Компонента X вектора «верх» наблюдателя.
+Private Dim basisUpY As Double = 1.0                                                                    ' Компонента Y вектора «верх» наблюдателя.
+Private Dim basisUpZ As Double = 0.0                                                                    ' Компонента Z вектора «верх» наблюдателя.
+Private Dim basisForwardX As Double = 0.0                                                               ' Компонента X вектора «вперёд» наблюдателя.
+Private Dim basisForwardY As Double = 0.0                                                               ' Компонента Y вектора «вперёд» наблюдателя.
+Private Dim basisForwardZ As Double = 1.0                                                               ' Компонента Z вектора «вперёд» наблюдателя.
+
+Private Dim viewCenterX As Double = VIEW_WIDTH / 2.0                                                    ' Экранная координата центра по горизонтали.
+Private Dim viewCenterY As Double = VIEW_HEIGHT / 2.0                                                   ' Экранная координата центра по вертикали.
+
+Private Const TWO_PI As Double = 6.28318530717958647                                                    ' Полный оборот в радианах.
+
+' #endregion
+
+' #region Служебные функции углов
+
+' WrapAngle — Приводит угол к диапазону от -PI до PI, чтобы углы не росли бесконечно
+' и SIN/COS всегда получали умеренные аргументы.
+Public Function WrapAngle(angle As Double) As Double
+    ' Отрезаем целые обороты арифметически: оператор Mod в Axiom целочисленный,
+    ' поэтому для DOUBLE остаток выражается через Floor (результат в диапазоне [0, 2PI)).
+    Dim wrapped As Double = angle - TWO_PI * Floor(angle / TWO_PI)
+
+    If wrapped > 3.14159265358979323 Then                                                               ' Если ушли дальше половины оборота...
+        wrapped = wrapped - TWO_PI                                                                      ' ...переносим в отрицательную половину.
+    End If
+    If wrapped < -3.14159265358979323 Then                                                              ' Симметричный случай в другую сторону...
+        wrapped = wrapped + TWO_PI                                                                      ' ...переносим в положительную половину.
+    End If
+
+    Return wrapped                                                                                      ' Возвращаем нормализованный угол.
+End Function
+
+' #endregion
+
+' #region Ориентация наблюдателя
+
+' UpdateOrientation — Перестраивает базис наблюдателя из углов Эйлера.
+' Порядок применения: рыскание (yaw) вокруг мировой вертикали,
+' тангаж (pitch) вокруг горизонтальной оси, затем крен (roll) вокруг носа.
+' Все углы — в радианах; вызывается один раз за шаг симуляции.
+Public Sub UpdateOrientation(yawAngle As Double, pitchAngle As Double, rollAngle As Double)
+    Dim cosYaw As Double = Cos(yawAngle)                                                                ' Косинус рыскания: повторно используем в формулах.
+    Dim sinYaw As Double = Sin(yawAngle)                                                                ' Синус рыскания.
+    Dim cosPitch As Double = Cos(pitchAngle)                                                            ' Косинус тангажа.
+    Dim sinPitch As Double = Sin(pitchAngle)                                                            ' Синус тангажа.
+    Dim cosRoll As Double = Cos(rollAngle)                                                              ' Косинус крена.
+    Dim sinRoll As Double = Sin(rollAngle)                                                              ' Синус крена.
+
+    ' Вектор «вперёд» = поворот мировой оси Z сначала тангажом, затем рысканием.
+    Dim noseX As Double = cosPitch * sinYaw                                                          ' Нос: X-составляющая.
+    Dim noseY As Double = sinPitch                                                                   ' Нос: Y-составляющая (вверх при положительном тангаже).
+    Dim noseZ As Double = cosPitch * cosYaw                                                          ' Нос: Z-составляющая.
+
+    ' Вектор «право» до крена: горизонтален и перпендикулярен носу (векторное произведение
+    ' мировой вертикали с носом, нормированное — при unit-длине носа уже единичный).
+    Dim rightX As Double = cosYaw                                                                       ' Право: X-составляющая.
+    Dim rightY As Double = 0.0                                                                          ' Право: Y-составляющая.
+    Dim rightZ As Double = -sinYaw                                                                      ' Право: Z-составляющая.
+
+    ' Вектор «верх» до крена: векторное произведение носа и «право».
+    Dim upX As Double = -noseY * rightZ - noseZ * rightY                                          ' Верх: X-составляющая произведения.
+    Dim upY As Double = noseZ * rightX - noseX * rightZ                                           ' Верх: Y-составляющая произведения.
+    Dim upZ As Double = noseX * rightY - noseY * rightX                                           ' Верх: Z-составляющая произведения.
+
+    ' Крен вращает пару («право», «верх») вокруг носа; нос не меняется.
+    basisRightX = rightX * cosRoll + upX * sinRoll                                                      ' Право после крена: X.
+    basisRightY = rightY * cosRoll + upY * sinRoll                                                      ' Право после крена: Y.
+    basisRightZ = rightZ * cosRoll + upZ * sinRoll                                                      ' Право после крена: Z.
+    basisUpX = upX * cosRoll - rightX * sinRoll                                                         ' Верх после крена: X.
+    basisUpY = upY * cosRoll - rightY * sinRoll                                                         ' Верх после крена: Y.
+    basisUpZ = upZ * cosRoll - rightZ * sinRoll                                                         ' Верх после крена: Z.
+    basisForwardX = noseX                                                                            ' Нос после крена: X (не изменился).
+    basisForwardY = noseY                                                                            ' Нос после крена: Y (не изменился).
+    basisForwardZ = noseZ                                                                            ' Нос после крена: Z (не изменился).
+End Sub
+
+' #endregion
+
+' #region Доступ к базису для других модулей
+
+' ForwardX/ForwardY/ForwardZ — Направление носа наблюдателя: модуль полёта двигает
+' корабль вдоль этих компонент, чтобы скорость всегда совпадала с носом.
+Public Function ForwardX() As Double
+    Return basisForwardX                                                                                ' Компонента X носа.
+End Function
+
+Public Function ForwardY() As Double
+    Return basisForwardY                                                                                ' Компонента Y носа.
+End Function
+
+Public Function ForwardZ() As Double
+    Return basisForwardZ                                                                                ' Компонента Z носа.
+End Function
+
+' #endregion
+
+' #region Перевод в координаты наблюдателя и проекция
+
+' WorldToView — Переводит смещение объекта относительно наблюдателя (relX, relY, relZ)
+' в систему координат наблюдателя через три скалярных произведения с базисом.
+' Результат: (viewX — вправо, viewY — вверх, viewZ — вперёд от наблюдателя).
+Public Sub WorldToView(relX As Double, relY As Double, relZ As Double, ByRef viewX As Double, ByRef viewY As Double, ByRef viewZ As Double)
+    viewX = relX * basisRightX + relY * basisRightY + relZ * basisRightZ                                ' Проекция на ось «право».
+    viewY = relX * basisUpX + relY * basisUpY + relZ * basisUpZ                                         ' Проекция на ось «верх».
+    viewZ = relX * basisForwardX + relY * basisForwardY + relZ * basisForwardZ                          ' Проекция на ось «вперёд» (глубина).
+End Sub
+
+' ProjectPoint — Перспективная проекция точки из координат наблюдателя на экран.
+' Точка видна только если глубина больше ближней плоскости: иначе деление на
+' ноль или отрицательную глубину даёт зеркальные выбросы геометрии.
+Public Sub ProjectPoint(viewX As Double, viewY As Double, viewZ As Double, ByRef screenX As Integer, ByRef screenY As Integer, ByRef visible As Boolean)
+    If viewZ <= NEAR_Z Then                                                                             ' Точка на ближней плоскости или за ней...
+        visible = False                                                                                 ' ...не рисуется вовсе.
+        screenX = 0                                                                                     ' Гарантируем осмысленные значения на случай чтения.
+        screenY = 0
+        Return
+    End If
+
+    Dim scale As Double = FOCAL_LENGTH / viewZ                                                          ' Коэффициент перспективы: дальние объекты сжимаются к центру.
+    screenX = CInt(viewCenterX + viewX * scale)                                                         ' Экранный X: центр плюс смещение вправо.
+    screenY = CInt(viewCenterY - viewY * scale)                                                         ' Экранный Y: переворот вертикали (у CANVAS ось Y растёт вниз).
+    visible = True
+End Sub
+
+' ProjectRelPoint — Совмещённая операция для массовых точек (пыль): перевод в
+' координаты наблюдателя и перспективная проекция одним вызовом. Отдельно
+' возвращает глубину, чтобы вызывающий код мог выбрать цвет по дистанции.
+' Число вызовов функций критично для FPS: каждая частица исполняется VM за кадр.
+Public Sub ProjectRelPoint(relX As Double, relY As Double, relZ As Double, ByRef screenX As Integer, ByRef screenY As Integer, ByRef depthZ As Double, ByRef visible As Boolean)
+    depthZ = relX * basisForwardX + relY * basisForwardY + relZ * basisForwardZ                         ' Глубина: проекция смещения на нос.
+
+    If depthZ <= NEAR_Z Then                                                                            ' Точка на ближней плоскости или за ней...
+        visible = False                                                                                 ' ...не рисуется вовсе.
+        screenX = 0
+        screenY = 0
+        Return
+    End If
+
+    Dim viewX As Double = relX * basisRightX + relY * basisRightY + relZ * basisRightZ                  ' Смещение вбок.
+    Dim viewY As Double = relX * basisUpX + relY * basisUpY + relZ * basisUpZ                           ' Смещение по вертикали.
+    Dim scale As Double = FOCAL_LENGTH / depthZ                                                         ' Коэффициент перспективы.
+
+    screenX = CInt(viewCenterX + viewX * scale)                                                         ' Экранный X.
+    screenY = CInt(viewCenterY - viewY * scale)                                                         ' Экранный Y с переворотом вертикали.
+    visible = True
+End Sub
+
+' ProjectEdge — Проекция ребра (отрезка) с отсечением о ближнюю плоскость.
+' Ребро между двумя точками может пересекать плоскость Z = NEAR_Z. В этом случае
+' точка пересечения находится параметрически и ребро обрезается, чтобы не делить
+' на ноль и не рисовать «вывернутую» геометрию. Экранные границы НЕ режутся здесь:
+' их обрабатывает графический вывод, ближнюю плоскость обязан резать только алгоритм.
+Public Sub ProjectEdge(x1 As Double, y1 As Double, z1 As Double, x2 As Double, y2 As Double, z2 As Double, ByRef screenX1 As Integer, ByRef screenY1 As Integer, ByRef screenX2 As Integer, ByRef screenY2 As Integer, ByRef visible As Boolean)
+    visible = False                                                                                     ' По умолчанию ребро не рисуется.
+
+    If z1 <= NEAR_Z And z2 <= NEAR_Z Then                                                               ' Обе точки за ближней плоскостью — ребро целиком невидимо.
+        Return
+    End If
+
+    Dim cx1 As Double = x1                                                                              ' Рабочая копия первой точки: её, возможно, обрежем.
+    Dim cy1 As Double = y1
+    Dim cz1 As Double = z1
+
+    If z1 <= NEAR_Z Then                                                                                ' Первая точка за ближней плоскостью: находим пересечение ребра с плоскостью.
+        Dim t As Double = (NEAR_Z - z1) / (z2 - z1)                                                     ' Доля пути от первой точки до точки пересечения (0..1).
+        cx1 = x1 + (x2 - x1) * t                                                                        ' Линейная интерполяция X в точке пересечения.
+        cy1 = y1 + (y2 - y1) * t                                                                        ' Линейная интерполяция Y в точке пересечения.
+        cz1 = NEAR_Z                                                                                    ' Глубина пересечения точно равна ближней плоскости.
+    End If
+
+    Dim cx2 As Double = x2                                                                              ' Рабочая копия второй точки.
+    Dim cy2 As Double = y2
+    Dim cz2 As Double = z2
+
+    If z2 <= NEAR_Z Then                                                                                ' Вторая точка за ближней плоскостью: обрезаем её симметрично.
+        Dim t2 As Double = (NEAR_Z - z2) / (z1 - z2)                                                    ' Доля пути от второй точки к первой.
+        cx2 = x2 + (x1 - x2) * t2                                                                       ' Линейная интерполяция X.
+        cy2 = y2 + (y1 - y2) * t2                                                                       ' Линейная интерполяция Y.
+        cz2 = NEAR_Z                                                                                    ' Глубина пересечения.
+    End If
+
+    Dim okA As Boolean                                                                                  ' Видимость первого конца.
+    Dim okB As Boolean                                                                                  ' Видимость второго конца.
+    Dim ax As Integer                                                                                   ' Экранный X первого конца.
+    Dim ay As Integer                                                                                   ' Экранный Y первого конца.
+    Dim bx As Integer                                                                                   ' Экранный X второго конца.
+    Dim by As Integer                                                                                   ' Экранный Y второго конца.
+
+    ProjectPoint(cx1, cy1, cz1, ax, ay, okA)                                                            ' Проецируем первый конец.
+    ProjectPoint(cx2, cy2, cz2, bx, by, okB)                                                            ' Проецируем второй конец.
+
+    If Not okA Or Not okB Then                                                                          ' Хотя бы один конец не спроецировался (защитная проверка)...
+        Return                                                                                          ' ...ребро не рисуем.
+    End If
+
+    screenX1 = ax                                                                                       ' Отдаём экранные координаты вызывающему коду.
+    screenY1 = ay
+    screenX2 = bx
+    screenY2 = by
+    visible = True
+End Sub
+
+' #endregion

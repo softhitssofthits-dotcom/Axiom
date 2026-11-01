@@ -1,0 +1,114 @@
+' chart — карта сектора: обзор систем, выбор цели и прыжок.
+' Открывается клавишей M (фронт KEYDOWN); симуляция на карте стоит, как в
+' классике. Стрелки влево/вправо циклически выбирают цель, J — прыжок,
+' M — закрыть карту. Карта показывает все системы сектора: текущая отмечена
+' кольцом, выбранная — курсором; внизу — дистанция и признак достатка топлива.
+
+Import game_config
+Import nav_data
+Import flight_state
+
+' #region Закрытое состояние карты
+
+Private Dim chartOpen As Boolean = False                                                                ' Признак: карта сейчас на экране.
+Private Dim previousLeftKey As Boolean = False                                                          ' Стрелка влево в предыдущем кадре: для фронта.
+Private Dim previousRightKey As Boolean = False                                                         ' Стрелка вправо в предыдущем кадре.
+Private Dim previousJumpKey As Boolean = False                                                          ' Клавиша J в предыдущем кадре.
+Private Dim previousCloseKey As Boolean = False                                                         ' Клавиша M в предыдущем кадре.
+
+' #endregion
+
+' #region Режим карты
+
+' IsChartOpen — Признак открытой карты: main останавливает симуляцию и
+' переключает отрисовку на карту.
+Public Function IsChartOpen() As Boolean
+    Return chartOpen
+End Function
+
+' ToggleChart — Открыть/закрыть карту одним нажатием M.
+Public Sub ToggleChart()
+    chartOpen = Not chartOpen
+End Sub
+
+' HandleChartInput — Ввод на карте: выбор цели стрелками, прыжок J, закрытие M.
+' Все нажатия распознаются фронтом KEYDOWN, поэтому удержание не мелькает.
+Public Sub HandleChartInput()
+    Dim leftKeyNow As Boolean = Keydown(KEY_ROLL_LEFT)                                                  ' Стрелка влево в этом кадре.
+    If leftKeyNow And Not previousLeftKey Then
+        Dim newTarget As Integer = GetTargetSystem() - 1                                                ' Цель на одну систему против часовой.
+        If newTarget < 1 Then
+            newTarget = GetSystemCount()                                                                ' Циклический переход в конец списка.
+        End If
+        SetTargetSystem(newTarget)
+    End If
+    previousLeftKey = leftKeyNow
+
+    Dim rightKeyNow As Boolean = Keydown(KEY_ROLL_RIGHT)                                                ' Стрелка вправо в этом кадре.
+    If rightKeyNow And Not previousRightKey Then
+        Dim nextTarget As Integer = GetTargetSystem() + 1                                               ' Цель на одну систему по часовой.
+        If nextTarget > GetSystemCount() Then
+            nextTarget = 1                                                                              ' Циклический переход в начало списка.
+        End If
+        SetTargetSystem(nextTarget)
+    End If
+    previousRightKey = rightKeyNow
+
+    Dim closeKeyNow As Boolean = Keydown(KEY_CHART)                                                     ' M: закрыть карту.
+    If closeKeyNow And Not previousCloseKey Then
+        chartOpen = False
+    End If
+    previousCloseKey = closeKeyNow
+
+    Dim jumpKeyNow As Boolean = Keydown(KEY_JUMP)                                                       ' J: попытка прыжка.
+    If jumpKeyNow And Not previousJumpKey Then
+        Dim costLY As Double = SystemDistanceLY(GetCurrentSystem(), GetTargetSystem())                  ' Стоимость прыжка в световых годах.
+        If GetTargetSystem() <> GetCurrentSystem() And costLY <= FlightFuel() Then
+            If PerformJump() Then
+                chartOpen = False                                                                       ' Успешный прыжок закрывает карту: пилот в новой системе.
+            End If
+        End If
+    End If
+    previousJumpKey = jumpKeyNow
+End Sub
+
+' #endregion
+
+' #region Отрисовка карты
+
+' DrawChart — Рисует карту сектора: рамка, все системы, текущая и цель,
+' сводка о выбранной цели и подсказка управления.
+Public Sub DrawChart()
+    Fillrect 0, 0, VIEW_WIDTH, VIEW_HEIGHT, COLOR_SPACE                                                 ' Карта перекрывает мир целиком.
+    Drawrect CHART_LEFT - 20, CHART_TOP - 20, CHART_SPAN + 40, CHART_SPAN + 40, COLOR_HUD_FRAME         ' Рамка области карты.
+    Drawtext "КАРТА СЕКТОРА", CHART_LEFT - 20, CHART_TOP - 52, COLOR_HUD_TEXT                           ' Заголовок.
+
+    For systemIndex = 1 To GetSystemCount()                                                             ' Все системы сектора.
+        Dim dotX As Integer = CInt(CHART_LEFT + GetSystemMapX(systemIndex) / 100.0 * CHART_SPAN)        ' Экранная позиция системы: X.
+        Dim dotY As Integer = CInt(CHART_TOP + GetSystemMapY(systemIndex) / 100.0 * CHART_SPAN)         ' Экранная позиция: Y.
+
+        Fillcircle dotX, dotY, 4, COLOR_HUD_TEXT                                                        ' Точка системы.
+        Drawtext GetSystemName(systemIndex), dotX - 14, dotY + 10, COLOR_HUD_DIM                        ' Подпись под точкой.
+
+        If systemIndex = GetCurrentSystem() Then
+            Drawcircle dotX, dotY, 10, COLOR_HUD_TEXT                                                   ' Текущая система: кольцо.
+        End If
+        If systemIndex = GetTargetSystem() Then
+            Drawcircle dotX, dotY, 16, COLOR_ALERT                                                      ' Выбранная цель: курсор-кольцо.
+        End If
+    Next systemIndex
+
+    Dim costLY As Double = SystemDistanceLY(GetCurrentSystem(), GetTargetSystem())                      ' Стоимость прыжка к выбранной цели.
+    Dim summary As String = "ЦЕЛЬ: " + GetSystemName(GetTargetSystem()) + "   ДИСТАНЦИЯ: " + FormatTenths(costLY) + " LY   ТОПЛИВО: " + FormatTenths(FlightFuel()) + " LY"
+    Drawtext summary, 140, CHART_TOP + CHART_SPAN + 30, COLOR_HUD_TEXT                                  ' Сводка о цели и баке.
+
+    If GetTargetSystem() = GetCurrentSystem() Then
+        Drawtext "ЭТО ТЕКУЩАЯ СИСТЕМА - ВЫБЕРИТЕ ДРУГУЮ", 140, CHART_TOP + CHART_SPAN + 56, COLOR_HUD_DIM ' Прыжок в себя запрещён.
+    ElseIf costLY > FlightFuel() Then
+        Drawtext "ТОПЛИВА НЕ ХВАТИТ", 140, CHART_TOP + CHART_SPAN + 56, COLOR_ALERT                     ' Прыжок дороже бака.
+    Else
+        Drawtext "СТРЕЛКИ: ВЫБОР   J: ПРЫЖОК   M: ЗАКРЫТЬ", 140, CHART_TOP + CHART_SPAN + 56, COLOR_HUD_DIM ' Подсказка управления картой.
+    End If
+End Sub
+
+' #endregion

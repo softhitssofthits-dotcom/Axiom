@@ -1,0 +1,174 @@
+' dock — стыковка со станцией: экран рынка, топливо и вылет.
+' Открытие: клавиша D вблизи станции (в полёте появляется подсказка).
+' На экране: список товаров с ценой, остатком на рынке и грузом в трюме;
+' стрелки вверх/вниз — выбор, A — купить тонну, S — продать тонну,
+' F — заправка бака, L — вылет. Симуляция на экране дока стоит.
+' Покупка и продажа по одной цене (спреда нет — как в оригинале).
+
+Import game_config
+Import economy
+Import player_state
+Import flight_state
+Import nav_data
+Import ship_models
+
+' #region Закрытое состояние дока
+
+Private Dim dockOpen As Boolean = False                                                                 ' Признак: экран дока сейчас активен.
+Private Dim selectedGood As Integer = 1                                                                 ' Выбранный в списке товар.
+Private Dim previousUpKey As Boolean = False                                                            ' Стрелка вверх в предыдущем кадре: для фронта.
+Private Dim previousDownKey As Boolean = False                                                          ' Стрелка вниз в предыдущем кадре.
+Private Dim previousBuyKey As Boolean = False                                                           ' Клавиша A в предыдущем кадре.
+Private Dim previousSellKey As Boolean = False                                                          ' Клавиша S в предыдущем кадре.
+Private Dim previousFuelKey As Boolean = False                                                          ' Клавиша F в предыдущем кадре.
+Private Dim previousLeaveKey As Boolean = False                                                         ' Клавиша L в предыдущем кадре.
+Private Dim messageText As String = ""                                                                  ' Последнее сообщение об отказе операции.
+
+' #endregion
+
+' #region Доступность и режим
+
+' DistanceToStation — Текущая дистанция до станции (первый объект сцены).
+Private Function DistanceToStation() As Double
+    Dim stationX As Double                                                                              ' Позиция станции: X.
+    Dim stationY As Double                                                                              ' Позиция станции: Y.
+    Dim stationZ As Double                                                                              ' Позиция станции: Z.
+    GetObjectPos(1, stationX, stationY, stationZ)
+    Dim deltaX As Double = stationX - PlayerPosX()                                                      ' Смещение станции: X.
+    Dim deltaY As Double = stationY - PlayerPosY()                                                      ' Смещение: Y.
+    Dim deltaZ As Double = stationZ - PlayerPosZ()                                                      ' Смещение: Z.
+    Return Sqr(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ)
+End Function
+
+' DockAvailable — Корабль в зоне стыковки станции: подсказка D в полёте.
+Public Function DockAvailable() As Boolean
+    Return DistanceToStation() <= DOCK_RANGE
+End Function
+
+' IsDockOpen — Признак открытого экрана дока: main останавливает симуляцию.
+Public Function IsDockOpen() As Boolean
+    Return dockOpen
+End Function
+
+' OpenDock — Начать стыковку: рынок текущей системы уже сгенерирован.
+Public Sub OpenDock()
+    dockOpen = True                                                                                     ' Экран рынка активен.
+    selectedGood = 1                                                                                    ' Выбор начинается с первого товара.
+    messageText = ""                                                                                    ' Сообщения прошлой стыковки не переносятся.
+End Sub
+
+' CloseDock — Завершить стыковку без вылета (не используется напрямую,
+' вылет всегда через Undock).
+Private Sub CloseDock()
+    dockOpen = False
+End Sub
+
+' Undock — Вылет со станции: корабль возвращается к точке входа системы.
+Private Sub Undock()
+    dockOpen = False                                                                                    ' Экран рынка закрыт.
+    ResetShip()                                                                                         ' Корабль снова в начале системы, станция впереди.
+End Sub
+
+' #endregion
+
+' #region Ввод дока
+
+' HandleDockInput — Ввод на экране рынка: выбор товара, торговля, топливо, вылет.
+' Все нажатия распознаются фронтом KEYDOWN, поэтому удержание не мелькает.
+Public Sub HandleDockInput()
+    Dim upKeyNow As Boolean = Keydown(KEY_PITCH_UP)                                                     ' Стрелка вверх: товар выше.
+    If upKeyNow And Not previousUpKey Then
+        selectedGood = selectedGood - 1                                                                 ' Сдвиг выбора вверх по списку.
+        If selectedGood < 1 Then
+            selectedGood = GetGoodTotal()                                                               ' Циклический переход в конец списка.
+        End If
+    End If
+    previousUpKey = upKeyNow
+
+    Dim downKeyNow As Boolean = Keydown(KEY_PITCH_DOWN)                                                 ' Стрелка вниз: товар ниже.
+    If downKeyNow And Not previousDownKey Then
+        selectedGood = selectedGood + 1                                                                 ' Сдвиг выбора вниз по списку.
+        If selectedGood > GetGoodTotal() Then
+            selectedGood = 1                                                                            ' Циклический переход в начало списка.
+        End If
+    End If
+    previousDownKey = downKeyNow
+
+    Dim buyKeyNow As Boolean = Keydown(KEY_BUY)                                                         ' A: купить тонну.
+    If buyKeyNow And Not previousBuyKey Then
+        If Not BuyGood(selectedGood) Then
+            messageText = "НЕВОЗМОЖНО: НЕТ ТОВАРА, МЕСТА ИЛИ КРЕДИТОВ"                                  ' Сделка не прошла: сообщаем причину общим текстом.
+        Else
+            messageText = ""                                                                            ' Успешная сделка гасит сообщение.
+        End If
+    End If
+    previousBuyKey = buyKeyNow
+
+    Dim sellKeyNow As Boolean = Keydown(KEY_SELL)                                                       ' S: продать тонну.
+    If sellKeyNow And Not previousSellKey Then
+        If Not SellGood(selectedGood) Then
+            messageText = "В ТРЮМЕ НЕТ ЭТОГО ТОВАРА"                                                    ' Продавать нечего.
+        Else
+            messageText = ""
+        End If
+    End If
+    previousSellKey = sellKeyNow
+
+    Dim fuelKeyNow As Boolean = Keydown(KEY_REFUEL)                                                     ' F: заправка бака.
+    If fuelKeyNow And Not previousFuelKey Then
+        If Not RefuelToFull() Then
+            messageText = "НЕ ХВАТАЕТ КРЕДИТОВ НА ЗАПРАВКУ"                                             ' Заправка не по карману.
+        Else
+            messageText = ""
+        End If
+    End If
+    previousFuelKey = fuelKeyNow
+
+    Dim leaveKeyNow As Boolean = Keydown(KEY_UNDOCK)                                                    ' L: вылет со станции.
+    If leaveKeyNow And Not previousLeaveKey Then
+        Undock()
+    End If
+    previousLeaveKey = leaveKeyNow
+End Sub
+
+' #endregion
+
+' #region Отрисовка дока
+
+' DrawDock — Экран рынка: заголовок с системой, список товаров, счёт,
+' сообщение об отказе и подсказка управления.
+Public Sub DrawDock()
+    Fillrect 0, 0, VIEW_WIDTH, VIEW_HEIGHT, COLOR_SPACE                                                 ' Док перекрывает мир целиком.
+    Drawtext "СТЫКОВКА - РЫНОК СИСТЕМЫ " + GetSystemName(GetCurrentSystem()), 120, 40, COLOR_HUD_TEXT   ' Заголовок с системой.
+    Drawtext "ТОВАР", 120, 80, COLOR_HUD_DIM                                                            ' Шапка колонок.
+    Drawtext "ЦЕНА", 400, 80, COLOR_HUD_DIM
+    Drawtext "РЫНОК", 520, 80, COLOR_HUD_DIM
+    Drawtext "ТРЮМ", 650, 80, COLOR_HUD_DIM
+    Drawline 120, 100, 720, 100, COLOR_HUD_FRAME                                                        ' Линия под шапкой.
+
+    For goodIndex = 1 To GetGoodTotal()                                                                 ' Список товаров: строка на товар.
+        Dim rowY As Integer = 112 + (goodIndex - 1) * 30                                                ' Экранная строка товара.
+        Dim rowColor As Integer = COLOR_HUD_DIM                                                          ' Обычный цвет строки.
+
+        If goodIndex = selectedGood Then
+            rowColor = COLOR_HUD_TEXT                                                                   ' Выбранный товар ярче.
+            Drawrect 110, rowY - 4, 620, 24, COLOR_HUD_FRAME                                            ' Рамка выбора.
+        End If
+
+        Drawtext GetGoodName(goodIndex), 120, rowY, rowColor                                            ' Название товара.
+        Drawtext Trim(Str(GetMarketPrice(goodIndex))), 400, rowY, rowColor                              ' Цена за тонну.
+        Drawtext Trim(Str(GetMarketQuantity(goodIndex))), 520, rowY, rowColor                           ' Тонн на рынке.
+        Drawtext Trim(Str(GetCargoQty(goodIndex))), 650, rowY, rowColor                                 ' Тонн в трюме.
+    Next goodIndex
+
+    Dim creditsLine As String = "КРЕДИТЫ: " + Trim(Str(GetCredits())) + "   ГРУЗ: " + Trim(Str(CargoUsed())) + "/" + Trim(Str(CARGO_MAX_TONS)) + " Т   ЗАПРАВКА: " + Trim(Str(RefuelCost())) + " CR"
+    Drawtext creditsLine, 120, 420, COLOR_HUD_TEXT                                                      ' Счёт, груз и цена заправки.
+
+    If messageText <> "" Then
+        Drawtext messageText, 120, 450, COLOR_ALERT                                                     ' Последний отказ операции.
+    End If
+
+    Drawtext "СТРЕЛКИ: ВЫБОР   A: КУПИТЬ   S: ПРОДАТЬ   F: ЗАПРАВКА   L: ВЫЛЕТ", 120, VIEW_HEIGHT - 60, COLOR_HUD_DIM ' Подсказка управления доком.
+End Sub
+
+' #endregion

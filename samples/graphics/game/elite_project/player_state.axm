@@ -1,0 +1,70 @@
+' player_state — состояние пилота: кредиты и грузовой трюм.
+' Все изменения проходят через процедуры с проверками: трюм не переполняется,
+' кредиты не уходят в минус. Рынок (economy) и док работают только через эти
+' функции, поэтому деньги и груз согласованы между экранами.
+
+Import game_config
+
+' #region Закрытое состояние пилота
+
+Private Dim credits As Long = START_CREDITS                                                             ' Кредиты на счету пилота.
+Private Dim cargoQty[1 To GOODS_TOTAL] As Integer                                                       ' Груз: тонн по каждому товару (1..GOODS_TOTAL).
+Private Dim cargoTonsUsed As Integer = 0                                                                ' Суммарная загрузка трюма, тонн.
+
+' #endregion
+
+' #region Кредиты
+
+' GetCredits — Текущий счёт пилота.
+Public Function GetCredits() As Long
+    Return credits
+End Function
+
+' AddCredits — Изменяет счёт на дельту (покупка — минус, продажа — плюс).
+' Списание больше остатка отклоняется: долг не предусмотрен.
+Public Function AddCredits(delta As Long) As Boolean
+    If delta < 0 And credits + delta < 0 Then
+        Return False                                                                                    ' Недостаточно кредитов.
+    End If
+
+    credits = credits + delta
+    Return True
+End Function
+
+' #endregion
+
+' #region Грузовой трюм
+
+' GetCargoQty — Тонн выбранного товара в трюме.
+Public Function GetCargoQty(goodIndex As Integer) As Integer
+    Return cargoQty[goodIndex]
+End Function
+
+' CargoUsed — Суммарная загрузка трюма, тонн.
+Public Function CargoUsed() As Integer
+    Return cargoTonsUsed
+End Function
+
+' CargoFree — Свободный остаток трюма, тонн.
+Public Function CargoFree() As Integer
+    Return CARGO_MAX_TONS - cargoTonsUsed
+End Function
+
+' ChangeCargo — Меняет количество товара на дельту с проверкой ёмкости
+' и неотрицательности. Возвращает FALSE, если операция невозможна.
+Public Function ChangeCargo(goodIndex As Integer, delta As Integer) As Boolean
+    Dim newQty As Integer = cargoQty[goodIndex] + delta                                                 ' Пробное количество товара.
+
+    If newQty < 0 Then
+        Return False                                                                                    ' Продать больше, чем есть, нельзя.
+    End If
+    If cargoTonsUsed + delta > CARGO_MAX_TONS Then
+        Return False                                                                                    ' Трюм переполнен.
+    End If
+
+    cargoQty[goodIndex] = newQty                                                                        ' Применяем изменение товара.
+    cargoTonsUsed = cargoTonsUsed + delta                                                                       ' И суммарной загрузки.
+    Return True
+End Function
+
+' #endregion

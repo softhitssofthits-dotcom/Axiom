@@ -1,0 +1,119 @@
+' game_config — все настраиваемые величины игры в одном модуле.
+' Этот модуль не импортирует никого: он «лист» графа зависимостей,
+' и любой другой модуль может брать из него константы без циклов.
+' Смысл выноса: игровую балансировку и клавиши меняем здесь, не трогая логику.
+
+' #region Экран и палитра
+
+Public Const VIEW_WIDTH As Integer = 1280                                                               ' Ширина логического холста CANVAS в пикселях.
+Public Const VIEW_HEIGHT As Integer = 720                                                               ' Высота логического холста CANVAS в пикселях.
+
+Public Const COLOR_SPACE As Integer = Rgb(6, 8, 18)                                                     ' Цвет открытого космоса: почти чёрный с лёгкой синевой.
+Public Const COLOR_DUST_NEAR As Integer = Rgb(235, 235, 250)                                            ' Ближняя пыль: яркие белые точки.
+Public Const COLOR_DUST_FAR As Integer = Rgb(140, 150, 190)                                             ' Дальняя пыль: приглушённые точки.
+Public Const COLOR_SHIP_HULL As Integer = Rgb(255, 214, 120)                                            ' Каркас чужого корабля: тёплый жёлтый контур.
+Public Const COLOR_STATION As Integer = Rgb(120, 200, 255)                                              ' Каркас станции: холодный голубой контур.
+Public Const COLOR_ASTEROID As Integer = Rgb(170, 170, 185)                                             ' Каркас астероида: светло-серый, заметный на тёмном фоне.
+Public Const COLOR_RETICLE As Integer = Rgb(90, 255, 140)                                               ' Прицел по центру экрана.
+Public Const COLOR_HUD_FRAME As Integer = Rgb(60, 130, 90)                                              ' Рамки и линии приборной панели.
+Public Const COLOR_HUD_TEXT As Integer = Rgb(140, 255, 170)                                             ' Основной текст приборной панели.
+Public Const COLOR_HUD_DIM As Integer = Rgb(90, 140, 110)                                               ' Второстепенный текст приборной панели.
+Public Const COLOR_ALERT As Integer = Rgb(255, 90, 90)                                                  ' Предупреждение: столкновение и будущие аварии.
+
+' #endregion
+
+' #region Игровой цикл и время
+
+Public Const FIXED_STEP_SECONDS As Double = 0.0166666667                                                ' Фиксированный шаг симуляции: 1/60 секунды, скорость игры не зависит от FPS.
+Public Const MAX_FRAME_DELTA_SECONDS As Double = 0.1                                                    ' Максимальный скачок часов за кадр: защита от паузы окна и сна системы.
+Public Const MAX_CATCH_UP_STEPS As Integer = 6                                                          ' Сколько фиксированных шагов разрешено выполнить за один кадр максимум.
+Public Const FRAME_SLEEP_MS As Integer = 1                                                              ' Пауза между кадрами в миллисекундах: отдаём процессор операционной системе.
+
+' #endregion
+
+' #region Управление (имена клавиш для KEYDOWN/KEYPRESS)
+
+' Стрелки подтверждены для удержания KEYDOWN; буквенные клавиши W/S будут проверены
+' первым запуском этапа 1 — если удержание букв не работает, меняем только эти константы.
+Public Const KEY_PITCH_UP As String = "UP"                                                              ' Нос вверх (тангаж): стрелка вверх.
+Public Const KEY_PITCH_DOWN As String = "DOWN"                                                          ' Нос вниз (тангаж): стрелка вниз.
+Public Const KEY_ROLL_LEFT As String = "LEFT"                                                           ' Крен влево: стрелка влево.
+Public Const KEY_ROLL_RIGHT As String = "RIGHT"                                                         ' Крен вправо: стрелка вправо.
+Public Const KEY_THRUST As String = "SPACE"                                                             ' Тяга вперёд: пробел (удерживать).
+Public Const KEY_BRAKE As String = "S"                                                                  ' Торможение: S (удерживать). CONTROL непригоден: нативное окно CANVAS не отдаёт удержание модификаторов (WORKLOG Elite-8).
+Public Const KEY_EXIT As String = "ESC"                                                                 ' Выход: по удержанию KEYDOWN, независимо от очереди нажатий.
+Public Const KEY_PAUSE As String = "P"                                                                  ' Пауза: одиночное нажатие распознаётся фронтом KEYDOWN (KEYPRESS буквы в нативном окне не доходят).
+Public Const KEY_CHART As String = "M"                                                                  ' Карта сектора: одиночное нажатие (фронт KEYDOWN).
+Public Const KEY_JUMP As String = "J"                                                                   ' Прыжок на карте: переход к выбранной системе.
+Public Const KEY_DOCK As String = "D"                                                                   ' Стыковка со станцией: у удержания — вблизи станции.
+Public Const KEY_BUY As String = "A"                                                                    ' Рынок: купить тонну выбранного товара.
+Public Const KEY_SELL As String = "S"                                                                   ' Рынок: продать тонну выбранного товара.
+Public Const KEY_REFUEL As String = "F"                                                                 ' Рынок: заправить бак полностью за кредиты.
+Public Const KEY_UNDOCK As String = "L"                                                                 ' Рынок: завершить стыковку и вылететь.
+
+Public Const PITCH_RATE As Double = 1.4                                                                 ' Скорость тангажа, радиан в секунду.
+Public Const ROLL_RATE As Double = 2.2                                                                  ' Скорость крена, радиан в секунду.
+Public Const ACCELERATION As Double = 90.0                                                              ' Ускорение корабля при тяге, единиц в секунду за секунду.
+Public Const BRAKE_DECELERATION As Double = 130.0                                                       ' Замедление при торможении, единиц в секунду за секунду.
+Public Const MAX_SPEED As Double = 420.0                                                                ' Максимальная скорость корабля, единиц в секунду.
+Public Const MIN_SPEED As Double = 0.0                                                                  ' Минимальная скорость: корабль не умеет лететь назад.
+
+Public Const FUEL_MAX_LY As Double = 7.0                                                                ' Ёмкость бака, световых лет: прыжок расходует дистанцию.
+Public Const FUEL_PRICE_PER_LY As Long = 2                                                              ' Цена топлива на станции, кредитов за световой год.
+Public Const DOCK_RANGE As Double = 420.0                                                               ' Дистанция стыковки со станцией: ближе неё доступен рынок.
+Public Const CARGO_MAX_TONS As Integer = 20                                                             ' Трюм: максимум тонн груза.
+Public Const START_CREDITS As Long = 200                                                                ' Стартовые кредиты пилота.
+Public Const GOODS_TOTAL As Integer = 8                                                                 ' Число товаров рынка: таблица в модуле economy.
+
+' #endregion
+
+' #region Карта сектора
+
+Public Const CHART_LEFT As Integer = 390                                                                ' Левая граница области карты на экране.
+Public Const CHART_TOP As Integer = 170                                                                 ' Верхняя граница области карты.
+Public Const CHART_SPAN As Integer = 500                                                                ' Размер области: координаты систем 0..100 масштабируются в 500 пикселей.
+
+' #endregion
+
+' #region Проекция и мир
+
+Public Const FOCAL_LENGTH As Double = 900.0                                                             ' Фокусное расстояние перспективы: больше — «телеобъектив», меньше — широкий угол.
+Public Const NEAR_Z As Double = 8.0                                                                     ' Ближняя плоскость отсечения: всё, что ближе, не рисуется и делится безопасно.
+Public Const DUST_COUNT As Integer = 120                                                                ' Число частиц звёздной пыли: баланс плотности и стоимости кадра.
+Public Const DUST_BOX_SIZE As Double = 1200.0                                                           ' Ребро куба пыли: улетевшие частицы заворачиваются на противоположную грань.
+
+' #region Сканер (радар) и приборная полоса
+
+Public Const RADAR_BAND_TOP As Integer = 520                                                            ' Верхняя граница нижней приборной полосы, как панель в классике.
+Public Const RADAR_RANGE As Double = 3000.0                                                             ' Радиус действия сканера в единицах мира: всё дальше — не показывается.
+Public Const RADAR_CENTER_X As Integer = 640                                                            ' Центр сканера на экране: X.
+Public Const RADAR_CENTER_Y As Integer = 600                                                            ' Центр сканера на экране: Y.
+Public Const RADAR_RADIUS_X As Integer = 310                                                            ' Горизонтальная полуось эллипса сканера, пиксели.
+Public Const RADAR_RADIUS_Y As Integer = 78                                                             ' Вертикальная полуось эллипса сканера, пиксели.
+Public Const RADAR_STICK_FACTOR As Double = 1.5                                                         ' Множитель высоты «стика» (шкалы вертикали Y).
+Public Const RADAR_DASH_STEP As Integer = 4                                                             ' Шаг точек пунктира «стика»: плотный пунктир как в оригинале.
+Public Const RADAR_BLIP_RADIUS As Integer = 2                                                           ' Радиус метки объекта, пиксели.
+Public Const RADAR_STICK_DOT_RADIUS As Integer = 1                                                      ' Радиус точки пунктира «стика», пиксели.
+
+' #endregion
+
+' #region Столкновения
+
+Public Const COLLISION_MARGIN As Double = 20.0                                                          ' Запас к радиусу объекта: корабль останавливается до касания каркаса.
+Public Const COLLISION_ALERT_SECONDS As Double = 0.6                                                    ' Длительность предупреждения «СТОЛКНОВЕНИЕ» на экране, секунды.
+
+' #endregion
+
+' #endregion
+
+' #region Полётные объекты этапа 1
+
+Public Const STATION_DISTANCE As Double = 2200.0                                                        ' Стартовое расстояние до станции по оси вперёд.
+Public Const STATION_SPIN_RATE As Double = 0.35                                                         ' Скорость вращения станции вокруг вертикали, радиан в секунду.
+Public Const COMPANION_DISTANCE_FACTOR As Double = 0.7                                                  ' Дистанция корабля-спутника как доля дистанции станции.
+Public Const COMPANION_OFFSET_X As Double = 320.0                                                       ' Смещение корабля-спутника вправо от оси полёта.
+Public Const COMPANION_OFFSET_Y As Double = 90.0                                                        ' Смещение корабля-спутника вверх от оси полёта.
+Public Const COMPANION_SPIN_RATE As Double = 0.5                                                        ' Медленное вращение корабля-спутника для проверки рёбер под всеми углами.
+Public Const MAX_MODEL_VERTICES As Integer = 64                                                         ' Буфер проекции: максимальное число вершин одной модели.
+
+' #endregion

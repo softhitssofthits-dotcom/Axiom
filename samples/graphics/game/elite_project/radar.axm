@@ -1,0 +1,123 @@
+' radar — трёхмерный сканер в духе классической Elite.
+' Большой эллипс на нижней приборной полосе: горизонталь — смещение вбок,
+' ВЕРХ эллипса — объекты ВПЕРЕДИ корабля, низ — позади. Высота над плоскостью
+' показывается пунктирным «стиком»: база стика лежит на плоскости эллипса,
+' метка объекта — на его конце; чем выше объект, тем выше метка.
+' Смещения берутся в мировых осях БЕЗ поворота в систему корабля, метки
+' рисуются цветом каркаса объекта, а стик и метка обрезаются границами
+' приборной полосы — как в оригинале. Реализация собственная
+' (метод — RESEARCH_ELITE, раздел «Радар»).
+
+Import game_config
+Import ship_models
+Import flight_state
+
+' #region Рамка и маркер корабля
+
+' DrawRadarFrame — Двойной эллипс-граница сканера из коротких отрезков:
+' внешнее и внутреннее кольцо, как яркая рамка в классике.
+Private Sub DrawRadarFrame()
+    Dim segmentTotal As Integer = 32                                                                    ' Число сегментов эллипса: крупная рамка остаётся гладкой.
+    Dim ringOffset As Integer = 0                                                                       ' Смещение текущего кольца: 0 — внешнее, 3 — внутреннее.
+
+    While ringOffset <= 3                                                                               ' Два кольца: внешнее и внутреннее с зазором 3 пикселя.
+        Dim previousX As Double = RADAR_CENTER_X + RADAR_RADIUS_X - ringOffset                          ' Первый узел кольца — правая точка (угол 0).
+        Dim previousY As Double = RADAR_CENTER_Y
+
+        For segmentIndex = 1 To segmentTotal                                                            ' Замкнутая цепочка отрезков по кругу.
+            Dim angle As Double = segmentIndex / segmentTotal * 6.28318530717958647                     ' Угол сегмента в радианах.
+            Dim ringX As Double = RADAR_CENTER_X + (RADAR_RADIUS_X - ringOffset) * Cos(angle)           ' Узел кольца: обе полуоси уменьшаются равномерно.
+            Dim ringY As Double = RADAR_CENTER_Y + (RADAR_RADIUS_Y - ringOffset) * Sin(angle)
+
+            Drawline CInt(previousX), CInt(previousY), CInt(ringX), CInt(ringY), COLOR_HUD_FRAME        ' Отрезок дуги кольца.
+            previousX = ringX                                                                           ' Узел становится началом следующего отрезка.
+            previousY = ringY
+        Next segmentIndex
+
+        ringOffset = ringOffset + 3                                                                     ' Переходим к внутреннему кольцу.
+    End While
+End Sub
+
+' DrawPlayerMarker — Маркер корабля игрока в центре сканера.
+Private Sub DrawPlayerMarker()
+    Drawline RADAR_CENTER_X - 7, RADAR_CENTER_Y, RADAR_CENTER_X - 3, RADAR_CENTER_Y, COLOR_HUD_TEXT     ' Левый штрих маркера.
+    Drawline RADAR_CENTER_X + 3, RADAR_CENTER_Y, RADAR_CENTER_X + 7, RADAR_CENTER_Y, COLOR_HUD_TEXT     ' Правый штрих маркера.
+    Drawline RADAR_CENTER_X, RADAR_CENTER_Y - 7, RADAR_CENTER_X, RADAR_CENTER_Y - 3, COLOR_HUD_TEXT     ' Верхний штрих маркера.
+    Drawline RADAR_CENTER_X, RADAR_CENTER_Y + 3, RADAR_CENTER_X, RADAR_CENTER_Y + 7, COLOR_HUD_TEXT     ' Нижний штрих маркера.
+End Sub
+
+' #endregion
+
+' #region Метки объектов
+
+' DrawDashedStick — Пунктирный «стик» серией точек от базовой точки (проекция
+' на плоскость эллипса) до метки объекта. Штрихи и метка обрезаются границами
+' приборной полосы: стик не должен выходить за панель, как в оригинале.
+Private Sub DrawDashedStick(stickX As Integer, stickBaseY As Integer, stickEndY As Integer, blipColor As Integer)
+    Dim deltaY As Integer = stickEndY - stickBaseY                                                      ' Полный путь стика от базы до метки (любого знака).
+    Dim stepDirection As Integer = 1                                                                    ' Направление пунктира по экрану: вниз.
+
+    If deltaY < 0 Then
+        stepDirection = -1                                                                              ' Метка выше базы: пунктир идёт вверх.
+    End If
+
+    Dim dashTotal As Integer = CInt(Abs(deltaY) / RADAR_DASH_STEP)                                      ' Число точек пунктира с заданным шагом.
+
+    For dashIndex = 1 To dashTotal                                                                      ' Точки от базы к метке (саму метку рисуем отдельно).
+        Dim dotY As Integer = stickBaseY + stepDirection * dashIndex * RADAR_DASH_STEP                  ' Экранная позиция точки пунктира.
+        If dotY >= RADAR_BAND_TOP + 4 And dotY <= VIEW_HEIGHT - 4 Then                                  ' Обрезка стика границами приборной полосы.
+            Fillcircle stickX, dotY, RADAR_STICK_DOT_RADIUS, blipColor                                  ' Точка пунктира.
+        End If
+    Next dashIndex
+
+    Dim blipY As Integer = stickEndY                                                                    ' Метка объекта на конце стика.
+    If blipY < RADAR_BAND_TOP + RADAR_BLIP_RADIUS Then
+        blipY = RADAR_BAND_TOP + RADAR_BLIP_RADIUS                                                      ' Обрезка сверху полосой.
+    End If
+    If blipY > VIEW_HEIGHT - RADAR_BLIP_RADIUS - 4 Then
+        blipY = VIEW_HEIGHT - RADAR_BLIP_RADIUS - 4                                                     ' Обрезка снизу полосой.
+    End If
+
+    Fillcircle stickX, blipY, RADAR_BLIP_RADIUS, blipColor                                              ' Метка объекта: крупная точка в цвете каркаса.
+End Sub
+
+' DrawRadarBlips — Наносит все объекты системы на сканер.
+' Ориентация как в классике: объекты впереди — в ВЕРХНЕЙ части эллипса,
+' объекты выше плоскости — меткой ВЫШЕ базы стика.
+Private Sub DrawRadarBlips()
+    Dim playerX As Double = PlayerPosX()                                                                ' Позиция корабля игрока: X.
+    Dim playerY As Double = PlayerPosY()                                                                ' Позиция корабля игрока: Y.
+    Dim playerZ As Double = PlayerPosZ()                                                                ' Позиция корабля игрока: Z.
+
+    For objectIndex = 1 To GetObjectCount()                                                             ' Обход всех объектов сцены.
+        Dim centerPosX As Double                                                                                        ' Центр объекта: X.
+        Dim centerPosY As Double                                                                                        ' Центр объекта: Y.
+        Dim centerPosZ As Double                                                                                        ' Центр объекта: Z.
+        GetObjectPos(objectIndex, centerPosX, centerPosY, centerPosZ)
+
+        Dim relX As Double = centerPosX - playerX                                                       ' Смещение объекта относительно корабля: X (вбок).
+        Dim relY As Double = centerPosY - playerY                                                       ' Смещение: Y (высота над плоскостью).
+        Dim relZ As Double = centerPosZ - playerZ                                                       ' Смещение: Z (вперёд положительно).
+
+        If relX * relX + relZ * relZ <= RADAR_RANGE * RADAR_RANGE Then                                  ' Объект в радиусе сканера — наносим метку.
+            Dim blipX As Integer = CInt(RADAR_CENTER_X + relX / RADAR_RANGE * RADAR_RADIUS_X)           ' Экранная позиция: вбок (вправо — правее).
+            Dim stickBaseY As Integer = CInt(RADAR_CENTER_Y - relZ / RADAR_RANGE * RADAR_RADIUS_Y)      ' База стика: вперёд — ВЫШЕ центра эллипса.
+            Dim stickEndY As Integer = CInt(stickBaseY - relY / RADAR_RANGE * RADAR_RADIUS_Y * RADAR_STICK_FACTOR) ' Конец стика: выше — метка выше базы.
+            DrawDashedStick(blipX, stickBaseY, stickEndY, GetObjectColor(objectIndex))                  ' Пунктир и метка в цвете объекта.
+        End If
+    Next objectIndex
+End Sub
+
+' #endregion
+
+' #region Вывод сканера
+
+' DrawRadar — Рисует сканер целиком: двойная рамка, маркер корабля, метки.
+' Вызывается из приборной панели после текстовых показаний.
+Public Sub DrawRadar()
+    DrawRadarFrame()                                                                                    ' Двойной эллипс-граница.
+    DrawPlayerMarker()                                                                                  ' Корабль игрока в центре.
+    DrawRadarBlips()                                                                                    ' Метки всех объектов в радиусе.
+End Sub
+
+' #endregion

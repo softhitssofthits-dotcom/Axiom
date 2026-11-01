@@ -1,0 +1,104 @@
+' starfield — облако звёздной пыли вокруг корабля: источник ощущения скорости.
+' Частицы неподвижны в МИРЕ, а их смещения относительно корабля уменьшаются,
+' когда корабль летит вперёд: пыль «течёт мимо» игрока, как в классике.
+' Улетевшая за грань куба частица заворачивается на противоположную грань,
+' поэтому облако бесконечно и всегда окружает корабль.
+' (Принцип stardust оригинальной Elite; реализация собственная, см. RESEARCH_ELITE.)
+'
+' Генерация детерминированная: собственный LCG без встроенного RND,
+' картина пыли одинакова при каждом запуске.
+
+Import game_config
+
+' #region Закрытое состояние: генератор и массивы частиц
+
+Private Dim lcgSeed As Long = 20261030                                                                  ' Зерно генератора: фиксировано для детерминированной картины.
+
+Private Dim dustX[1 To DUST_COUNT] As Double                                                            ' Смещение частицы относительно корабля: X.
+Private Dim dustY[1 To DUST_COUNT] As Double                                                            ' Смещение частицы относительно корабля: Y.
+Private Dim dustZ[1 To DUST_COUNT] As Double                                                            ' Смещение частицы относительно корабля: Z.
+
+Private Dim dustHalfSize As Double = DUST_BOX_SIZE / 2.0                                                ' Половина ребра куба пыли: диапазон координат [-H; H).
+
+' #endregion
+
+' #region Детерминированный генератор
+
+' NextRandom01 — Очередное псевдослучайное число в диапазоне [0; 1).
+' Классическая схема LCG: seed = seed * A + C по модулю 2^31. Все промежуточные
+' произведения укладываются в LONG, переполнения целого не возникает.
+Private Function NextRandom01() As Double
+    lcgSeed = (lcgSeed * 1103515245 + 12345) Mod 2147483648                                             ' Шаг LCG по модулю 2^31.
+    Return lcgSeed / 2147483648.0                                                                       ' Приведение к диапазону [0; 1) делением на модуль.
+End Function
+
+' #endregion
+
+' #region Инициализация и шаг симуляции
+
+' InitDust — Раскладывает частицы равномерно по кубу вокруг корабля.
+Public Sub InitDust()
+    For dustIndex = 1 To DUST_COUNT                                                                     ' Каждая частица создаётся независимо.
+        dustX[dustIndex] = (2.0 * NextRandom01() - 1.0) * dustHalfSize                                  ' Равномерно в диапазоне [-H; H).
+        dustY[dustIndex] = (2.0 * NextRandom01() - 1.0) * dustHalfSize
+        dustZ[dustIndex] = (2.0 * NextRandom01() - 1.0) * dustHalfSize
+    Next dustIndex
+End Sub
+
+' UpdateDust — Продвигает пыль при движении корабля. Частицы неподвижны в мире,
+' поэтому их смещение относительно корабля меняется на минус пройденный путь.
+' Заворачивание написано прямо в цикле (без вызова функции на координату):
+' на кадр это сотни вызовов VM, которые дешевле не делать.
+' Вызывается один раз за фиксированный шаг симуляции со скоростью корабля.
+Public Sub UpdateDust(dtSeconds As Double, velocityX As Double, velocityY As Double, velocityZ As Double)
+    Dim shiftX As Double = velocityX * dtSeconds                                                        ' Пройденный кораблём путь за шаг: X.
+    Dim shiftY As Double = velocityY * dtSeconds                                                        ' Пройденный путь: Y.
+    Dim shiftZ As Double = velocityZ * dtSeconds                                                        ' Пройденный путь: Z.
+
+    For dustIndex = 1 To DUST_COUNT                                                                     ' Обход всех частиц облака.
+        dustX[dustIndex] = dustX[dustIndex] - shiftX                                                    ' Отодвигаем частицу назад по X.
+        dustY[dustIndex] = dustY[dustIndex] - shiftY                                                    ' По Y.
+        dustZ[dustIndex] = dustZ[dustIndex] - shiftZ                                                    ' По Z.
+
+        While dustX[dustIndex] < -dustHalfSize                                                          ' Заворачивание в куб по X: ушедшая за грань...
+            dustX[dustIndex] = dustX[dustIndex] + DUST_BOX_SIZE                                         ' ...частица появляется на противоположной грани.
+        End While
+        While dustX[dustIndex] >= dustHalfSize
+            dustX[dustIndex] = dustX[dustIndex] - DUST_BOX_SIZE
+        End While
+
+        While dustY[dustIndex] < -dustHalfSize                                                          ' Заворачивание по Y.
+            dustY[dustIndex] = dustY[dustIndex] + DUST_BOX_SIZE
+        End While
+        While dustY[dustIndex] >= dustHalfSize
+            dustY[dustIndex] = dustY[dustIndex] - DUST_BOX_SIZE
+        End While
+
+        While dustZ[dustIndex] < -dustHalfSize                                                          ' Заворачивание по Z.
+            dustZ[dustIndex] = dustZ[dustIndex] + DUST_BOX_SIZE
+        End While
+        While dustZ[dustIndex] >= dustHalfSize
+            dustZ[dustIndex] = dustZ[dustIndex] - DUST_BOX_SIZE
+        End While
+    Next dustIndex
+End Sub
+
+' #endregion
+
+' #region Данные для рендера (только чтение)
+
+' GetDustCount — Число частиц облака.
+Public Function GetDustCount() As Integer
+    Return DUST_COUNT                                                                                   ' Число задаётся конфигурацией.
+End Function
+
+' GetDustOffset — Смещение частицы относительно корабля одним вызовом
+' (вместо трёх геттеров: экономия вызовов VM на каждом из сотен кадр).
+' Смещение уже относительное: рендер проецирует его напрямую.
+Public Sub GetDustOffset(dustIndex As Integer, ByRef offsetX As Double, ByRef offsetY As Double, ByRef offsetZ As Double)
+    offsetX = dustX[dustIndex]                                                                          ' Смещение по X.
+    offsetY = dustY[dustIndex]                                                                          ' Смещение по Y.
+    offsetZ = dustZ[dustIndex]                                                                          ' Смещение по Z.
+End Sub
+
+' #endregion

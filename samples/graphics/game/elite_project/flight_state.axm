@@ -1,0 +1,174 @@
+' flight_state — корабль игрока: позиция в мире, скорость, углы ориентации
+' и обработка управления. Здесь же команда модулю математики перестроить
+' базис наблюдателя, чтобы рендер всегда работал по свежей ориентации.
+'
+' Модель полёта этапа 1 (сознательно простая, в духе классики):
+'   - корабль движется только вперёд по своему носу;
+'   - скорость скалярная: тяга увеличивает её, тормоз уменьшает;
+'   - инерция сохраняется: без клавиш скорость не меняется;
+'   - тангаж и крен меняют ориентацию, рыскание в этой версии не используется.
+
+Import game_config
+Import math3d
+Import ship_models
+
+' #region Закрытое состояние корабля
+
+Private Dim ownPosX As Double = 0.0                                                                  ' Мировая позиция корабля: X.
+Private Dim ownPosY As Double = 0.0                                                                  ' Мировая позиция корабля: Y.
+Private Dim ownPosZ As Double = 0.0                                                                  ' Мировая позиция корабля: Z.
+Private Dim ownSpeed As Double = 60.0                                                                ' Текущая скорость вперёд; стартовая — лёгкий ход.
+Private Dim yawAngle As Double = 0.0                                                                    ' Рыскание (зарезервировано для навигации этапа 2).
+Private Dim pitchAngle As Double = 0.0                                                                  ' Тангаж: плюс — нос вверх.
+Private Dim rollAngle As Double = 0.0                                                                   ' Крен: плюс — наклон на правое крыло.
+Private Dim collisionTimer As Double = 0.0                                                           ' Остаток времени показа «СТОЛКНОВЕНИЕ», секунды.
+Private Dim fuelLY As Double = FUEL_MAX_LY                                                           ' Остаток топлива, световых лет: прыжок расходует дистанцию.
+
+' #endregion
+
+' #region Управление и шаг симуляции
+
+' ApplyFlightInput — Читает клавиши и обновляет углы ориентации и скорость.
+' Вызывается один раз за фиксированный шаг симуляции с величиной шага в секундах.
+Public Sub ApplyFlightInput(dtSeconds As Double)
+    If Keydown(KEY_PITCH_UP) Then                                                                       ' Стрелка вверх удерживается — нос поднимается.
+        pitchAngle = WrapAngle(pitchAngle + PITCH_RATE * dtSeconds)
+    End If
+    If Keydown(KEY_PITCH_DOWN) Then                                                                     ' Стрелка вниз — нос опускается.
+        pitchAngle = WrapAngle(pitchAngle - PITCH_RATE * dtSeconds)
+    End If
+    If Keydown(KEY_ROLL_LEFT) Then                                                                      ' Стрелка влево — крен на левое крыло.
+        rollAngle = WrapAngle(rollAngle - ROLL_RATE * dtSeconds)
+    End If
+    If Keydown(KEY_ROLL_RIGHT) Then                                                                     ' Стрелка вправо — крен на правое крыло.
+        rollAngle = WrapAngle(rollAngle + ROLL_RATE * dtSeconds)
+    End If
+
+    If Keydown(KEY_THRUST) Then                                                                         ' Тяга: разгон до максимальной скорости.
+        ownSpeed = ownSpeed + ACCELERATION * dtSeconds
+        If ownSpeed > MAX_SPEED Then
+            ownSpeed = MAX_SPEED                                                                     ' Ограничение сверху: скорость не растёт бесконечно.
+        End If
+    End If
+    If Keydown(KEY_BRAKE) Then                                                                          ' Тормоз: плавное гашение скорости.
+        ownSpeed = ownSpeed - BRAKE_DECELERATION * dtSeconds
+        If ownSpeed < MIN_SPEED Then
+            ownSpeed = MIN_SPEED                                                                     ' Задний ход этапом 1 не предусмотрен.
+        End If
+    End If
+
+    ' Ориентация наблюдателя перестраивается из свежих углов: рендер и движение
+    ' в этом же шаге увидят согласованную ориентацию.
+    UpdateOrientation(yawAngle, pitchAngle, rollAngle)
+End Sub
+
+' IntegrateMotion — Продвигает позицию корабля по носу с текущей скоростью
+' и проверяет столкновения: влетать в каркасы объектов нельзя, как в оригинале.
+' При опасном сближении шаг движения отменяется, скорость гасится.
+Public Sub IntegrateMotion(dtSeconds As Double)
+    If collisionTimer > 0.0 Then
+        collisionTimer = collisionTimer - dtSeconds                                                     ' Предупреждение гаснет через заданное время.
+    End If
+
+    Dim travel As Double = ownSpeed * dtSeconds                                                      ' Путь за шаг: скорость, умноженная на длительность шага.
+    Dim candidateX As Double = ownPosX + ForwardX() * travel                                         ' Пробная позиция после шага: X.
+    Dim candidateY As Double = ownPosY + ForwardY() * travel                                         ' Пробная позиция: Y.
+    Dim candidateZ As Double = ownPosZ + ForwardZ() * travel                                         ' Пробная позиция: Z.
+    Dim blocked As Boolean = False                                                                      ' Признак: шаг ведёт внутрь чужого объекта.
+
+    For objectIndex = 1 To GetObjectCount()                                                             ' Проверка всех объектов сцены.
+        Dim centerPosX As Double                                                                     ' Центр объекта: X.
+        Dim centerPosY As Double                                                                     ' Центр объекта: Y.
+        Dim centerPosZ As Double                                                                     ' Центр объекта: Z.
+        GetObjectPos(objectIndex, centerPosX, centerPosY, centerPosZ)
+
+        Dim offsetX As Double = candidateX - centerPosX                                                 ' Смещение пробной позиции от центра: X.
+        Dim offsetY As Double = candidateY - centerPosY                                                 ' Смещение: Y.
+        Dim offsetZ As Double = candidateZ - centerPosZ                                                 ' Смещение: Z.
+        Dim limit As Double = GetObjectRadius(objectIndex) + COLLISION_MARGIN                           ' Граница запретной сферы объекта.
+
+        If offsetX * offsetX + offsetY * offsetY + offsetZ * offsetZ < limit * limit Then
+            blocked = True                                                                              ' Шаг приводит внутрь сферы столкновения.
+        End If
+    Next objectIndex
+
+    If blocked Then
+        ownSpeed = 0.0                                                                                  ' Корабль гасит скорость: сквозь каркас не пройти.
+        collisionTimer = COLLISION_ALERT_SECONDS                                                        ' Предупреждение на приборной панели.
+    Else
+        ownPosX = candidateX                                                                            ' Шаг безопасен: применяем движение.
+        ownPosY = candidateY
+        ownPosZ = candidateZ
+    End If
+End Sub
+
+' CollisionAlert — Признак активного предупреждения «СТОЛКНОВЕНИЕ» для панели.
+Public Function CollisionAlert() As Boolean
+    Return collisionTimer > 0.0
+End Function
+
+' FlightFuel — Остаток топлива в световых годах для панели и карты.
+Public Function FlightFuel() As Double
+    Return fuelLY
+End Function
+
+' SpendFuel — Списывает топливо за прыжок. Возвращает FALSE, если топлива
+' не хватает: списания нет, вызывающий код решает, что сообщить пилоту.
+Public Function SpendFuel(amountLY As Double) As Boolean
+    If amountLY > fuelLY Then
+        Return False                                                                                    ' Бак не позволяет такой прыжок.
+    End If
+
+    fuelLY = fuelLY - amountLY                                                                          ' Расход топлива равен дистанции в световых годах.
+    Return True
+End Function
+
+' ResetShip — Полный сброс корабля: выполняется при прыжке в другую систему.
+Public Sub ResetShip()
+    ownPosX = 0.0                                                                                       ' Позиция: начало координат новой системы.
+    ownPosY = 0.0
+    ownPosZ = 0.0
+    ownSpeed = 60.0                                                                                     ' Стартовый лёгкий ход.
+    yawAngle = 0.0                                                                                      ' Ориентация: по оси новой системы.
+    pitchAngle = 0.0
+    rollAngle = 0.0
+    collisionTimer = 0.0                                                                                ' Предупреждение о старом столкновении не переносится.
+End Sub
+
+' FillFuel — Заполняет бак полностью: вызывается заправкой на станции.
+Public Sub FillFuel()
+    fuelLY = FUEL_MAX_LY                                                                                ' Бак под завязку.
+End Sub
+
+' #endregion
+
+' #region Данные для рендера и HUD (только чтение)
+
+' PlayerPosX/Y/Z — Мировая позиция корабля; рендер вычитает её из позиций объектов.
+Public Function PlayerPosX() As Double
+    Return ownPosX
+End Function
+
+Public Function PlayerPosY() As Double
+    Return ownPosY
+End Function
+
+Public Function PlayerPosZ() As Double
+    Return ownPosZ
+End Function
+
+' FlightSpeed — Текущая скорость для приборной панели.
+Public Function FlightSpeed() As Double
+    Return ownSpeed
+End Function
+
+' FlightPitchDegrees / FlightRollDegrees — Углы в градусах для приборной панели.
+Public Function FlightPitchDegrees() As Double
+    Return WrapAngle(pitchAngle) * 180.0 / 3.14159265358979323                                          ' Перевод радиан в градусы.
+End Function
+
+Public Function FlightRollDegrees() As Double
+    Return WrapAngle(rollAngle) * 180.0 / 3.14159265358979323                                           ' Перевод радиан в градусы.
+End Function
+
+' #endregion

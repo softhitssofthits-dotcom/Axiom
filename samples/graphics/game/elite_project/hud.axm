@@ -1,0 +1,60 @@
+' hud — приборная панель и служебные надписи.
+' Панель рисуется поверх мира после DrawWorld: рамка, скорость, углы ориентации,
+' частота кадров и подсказка управления. Модуль только отображает состояние,
+' читая его через функции-геттеры других модулей.
+
+Import game_config
+Import flight_state
+Import nav_data
+Import player_state
+Import dock
+Import radar
+
+' #region Панель
+
+' DrawHud — Рисует приборную панель и подсказки. frameRate — измеренная частота
+' кадров (кадров в секунду); isPaused — признак паузы.
+Public Sub DrawHud(frameRate As Double, isPaused As Boolean)
+    Dim speedText As String = "СКОРОСТЬ: " + Trim(Str(CInt(FlightSpeed()))) + " ЕД/С"                   ' Скорость округляется до целых для панели.
+    Dim pitchText As String = "ТАНГАЖ: " + Trim(Str(CInt(FlightPitchDegrees()))) + " ГР"                ' Тангаж в градусах.
+    Dim rollText As String = "КРЕН: " + Trim(Str(CInt(FlightRollDegrees()))) + " ГР"                    ' Крен в градусах.
+    Dim fpsText As String = "КАДРОВ/С: " + Trim(Str(CInt(frameRate)))                                   ' Измеренная частота кадров.
+
+    Drawrect 16, 16, 392, 108, COLOR_HUD_FRAME                                                          ' Рамка приборной панели.
+
+    Drawtext speedText, 30, 30, COLOR_HUD_TEXT                                                          ' Строка скорости.
+    Drawtext pitchText, 30, 52, COLOR_HUD_TEXT                                                          ' Строка тангажа.
+    Drawtext rollText, 30, 74, COLOR_HUD_TEXT                                                           ' Строка крена.
+    Drawtext fpsText, 210, 30, COLOR_HUD_DIM                                                            ' Частота кадров правее, второстепенным цветом.
+    Drawtext "СИСТЕМА: " + GetSystemName(GetCurrentSystem()), 210, 52, COLOR_HUD_TEXT                   ' Текущая система сектора.
+    Drawtext "ТОПЛИВО: " + FormatTenths(FlightFuel()) + " LY", 210, 74, COLOR_HUD_TEXT                  ' Остаток бака в световых годах.
+
+    If FlightFuel() < 1.0 Then
+        Fillrect 210, 90, CInt(180 * FlightFuel() / FUEL_MAX_LY), 12, COLOR_ALERT                       ' Бак почти пуст: полоса красная.
+    Else
+        Fillrect 210, 90, CInt(180 * FlightFuel() / FUEL_MAX_LY), 12, COLOR_HUD_TEXT                    ' Полоса топлива пропорциональна остатку.
+    End If
+    Drawrect 210, 90, 180, 12, COLOR_HUD_FRAME                                                          ' Рамка полосы топлива.
+
+    If isPaused Then
+        Drawtext "ПАУЗА", 210, 52, COLOR_HUD_TEXT                                                       ' Индикатор паузы на панели.
+    End If
+
+    If CollisionAlert() Then
+        Drawtext "СТОЛКНОВЕНИЕ", VIEW_WIDTH \ 2 - 66, 150, COLOR_ALERT                                  ' Предупреждение по центру: корабль упёрся в объект.
+    End If
+
+    Dim wealthLine As String = "КРЕДИТЫ: " + Trim(Str(GetCredits())) + "   ГРУЗ: " + Trim(Str(CargoUsed())) + "/" + Trim(Str(CARGO_MAX_TONS)) + " Т"
+    Drawtext wealthLine, 20, RADAR_BAND_TOP - 26, COLOR_HUD_TEXT                                        ' Кредиты и загрузка трюма над приборной полосой.
+
+    If DockAvailable() Then
+        Drawtext "D: СТЫКОВКА", VIEW_WIDTH \ 2 - 52, RADAR_BAND_TOP - 26, COLOR_ALERT                   ' Подсказка: корабль в зоне стыковки станции.
+    End If
+
+    Drawline 0, RADAR_BAND_TOP, VIEW_WIDTH, RADAR_BAND_TOP, COLOR_HUD_FRAME                             ' Верхняя граница нижней приборной полосы, как панель в классике.
+    DrawRadar()                                                                                         ' Сканер на приборной полосе: объекты системы в плане и по высоте.
+
+    Drawtext "СТРЕЛКИ: РУЛЬ   ПРОБЕЛ: ТЯГА   S: ТОРМОЗ   P: ПАУЗА   ESC: ВЫХОД", 20, VIEW_HEIGHT - 30, COLOR_HUD_DIM ' Подсказка клавиш внизу экрана.
+End Sub
+
+' #endregion

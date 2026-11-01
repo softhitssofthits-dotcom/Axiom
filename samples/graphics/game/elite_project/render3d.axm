@@ -1,0 +1,127 @@
+' render3d — графический конвейер кадра: звёзды, каркасные объекты, прицел.
+' Модуль НЕ содержит игровой логики: он только проецирует текущее состояние
+' мира (звёзды, объекты, позиция корабля) в отрезки и точки CANVAS.
+'
+' Принцип (исторический аналог — LL9/PROJ оригинала, здесь своя реализация):
+'   1) смещение объекта относительно корабля → координаты наблюдателя (WorldToView);
+'   2) отбор и отсечение рёбер о ближнюю плоскость (ProjectEdge);
+'   3) перспективная проекция в экранные координаты;
+'   4) вывод готовых отрезков DRAWLINE.
+
+Import game_config
+Import math3d
+Import starfield
+Import ship_models
+Import flight_state
+
+' #region Закрытые буферы проекции
+
+Private Dim viewBufferX[1 To MAX_MODEL_VERTICES] As Double                                              ' Координаты наблюдателя вершин текущей модели: X.
+Private Dim viewBufferY[1 To MAX_MODEL_VERTICES] As Double                                              ' Координаты наблюдателя вершин текущей модели: Y.
+Private Dim viewBufferZ[1 To MAX_MODEL_VERTICES] As Double                                              ' Координаты наблюдателя вершин текущей модели: Z (глубина).
+
+' #endregion
+
+' #region Кадр
+
+' DrawWorld — Рисует весь игровой мир: звёздное поле, каркасы объектов, прицел.
+' Вызывается один раз за кадр между Beginframe и Present.
+Public Sub DrawWorld()
+    DrawDust()                                                                                          ' Сначала пыль: она «течёт мимо» и создаёт ощущение скорости.
+    DrawObjects()                                                                                       ' Затем каркасы станции и корабля-спутника.
+    DrawReticle()                                                                                       ' Прицел поверх мира: цель наведения по центру экрана.
+End Sub
+
+' DrawDust — Рисует облако звёздной пыли. Смещения частиц уже относительны
+' кораблю, поэтому проецируются совмещённым вызовом ProjectRelPoint.
+' Цвет и яркость выбираются по дистанции: близкие частицы белее, дальние тусклее.
+Private Sub DrawDust()
+    Dim offsetX As Double                                                                               ' Смещение частицы относительно корабля: X.
+    Dim offsetY As Double                                                                               ' Смещение частицы: Y.
+    Dim offsetZ As Double                                                                               ' Смещение частицы: Z.
+    Dim depthZ As Double                                                                                ' Глубина частицы от наблюдателя.
+    Dim screenX As Integer                                                                              ' Экранные координаты частицы.
+    Dim screenY As Integer
+    Dim visible As Boolean                                                                              ' Частица впереди ближней плоскости.
+    Dim dustColor As Integer                                                                            ' Выбранный цвет частицы.
+    Dim nearDistance As Double = DUST_BOX_SIZE / 2.0                                                    ' Порог «близкой» частицы для яркого цвета.
+
+    For dustIndex = 1 To GetDustCount()                                                                 ' Обход всех частиц облака.
+        GetDustOffset(dustIndex, offsetX, offsetY, offsetZ)                                             ' Смещение частицы одним вызовом.
+        ProjectRelPoint(offsetX, offsetY, offsetZ, screenX, screenY, depthZ, visible)                   ' Поворот и проекция одним вызовом.
+        If visible Then
+            If depthZ < nearDistance Then
+                dustColor = COLOR_DUST_NEAR                                                             ' Ближняя частица — яркая.
+            Else
+                dustColor = COLOR_DUST_FAR                                                              ' Дальняя частица — приглушённая.
+            End If
+            Fillcircle screenX, screenY, 1, dustColor                                                   ' Точка пыли радиусом один пиксель.
+        End If
+    Next dustIndex
+End Sub
+
+' DrawObjects — Рисует каркасы всех объектов сцены.
+' Для каждой модели: вершины переводятся в координаты наблюдателя и буферизуются,
+' затем рёбра проецируются с отсечением о ближнюю плоскость и выводятся линиями.
+Private Sub DrawObjects()
+    Dim playerX As Double = PlayerPosX()                                                                ' Позиция корабля: X (один раз на кадр).
+    Dim playerY As Double = PlayerPosY()                                                                ' Позиция корабля: Y.
+    Dim playerZ As Double = PlayerPosZ()                                                                ' Позиция корабля: Z.
+    Dim worldX As Double                                                                                ' Мировая координата вершины: X.
+    Dim worldY As Double                                                                                ' Мировая координата вершины: Y.
+    Dim worldZ As Double                                                                                ' Мировая координата вершины: Z.
+    Dim relX As Double                                                                                  ' Смещение вершины относительно корабля: X.
+    Dim relY As Double                                                                                  ' Смещение вершины: Y.
+    Dim relZ As Double                                                                                  ' Смещение вершины: Z.
+    Dim viewX As Double                                                                                 ' Координаты наблюдателя вершины.
+    Dim viewY As Double
+    Dim viewZ As Double
+    Dim vertexA As Integer                                                                              ' Номер первой вершины ребра.
+    Dim vertexB As Integer                                                                              ' Номер второй вершины ребра.
+    Dim screenX1 As Integer                                                                             ' Экранные координаты ребра.
+    Dim screenY1 As Integer
+    Dim screenX2 As Integer
+    Dim screenY2 As Integer
+    Dim visible As Boolean                                                                              ' Ребро прошло отсечение и проекцию.
+
+    For objectIndex = 1 To GetObjectCount()                                                             ' Обход объектов сцены.
+        Dim vertexTotal As Integer = GetObjectVertexCount(objectIndex)                                  ' Число вершин модели.
+
+        For vertexIndex = 1 To vertexTotal                                                              ' Переводим все вершины в координаты наблюдателя.
+            GetObjectVertexWorld(objectIndex, vertexIndex, worldX, worldY, worldZ)                      ' Вершина одним вызовом.
+            relX = worldX - playerX                                                                     ' Мировая вершина минус позиция корабля.
+            relY = worldY - playerY
+            relZ = worldZ - playerZ
+
+            WorldToView(relX, relY, relZ, viewX, viewY, viewZ)                                          ' Поворот в систему наблюдателя.
+            viewBufferX[vertexIndex] = viewX                                                            ' Буферизация глубины и боковых координат.
+            viewBufferY[vertexIndex] = viewY
+            viewBufferZ[vertexIndex] = viewZ
+        Next vertexIndex
+
+        For edgeIndex = 1 To GetObjectEdgeCount(objectIndex)                                            ' Рёбра проецируются по буферу вершин.
+            GetObjectEdge(objectIndex, edgeIndex, vertexA, vertexB)                                     ' Концы ребра одним вызовом.
+
+            ' Проекция ребра с отсечением ближней плоскости: если ребро пересекает
+            ' плоскость, ProjectEdge сам вычислит точку пересечения интерполяцией.
+            ProjectEdge(viewBufferX[vertexA], viewBufferY[vertexA], viewBufferZ[vertexA], viewBufferX[vertexB], viewBufferY[vertexB], viewBufferZ[vertexB], screenX1, screenY1, screenX2, screenY2, visible)
+
+            If visible Then
+                Drawline screenX1, screenY1, screenX2, screenY2, GetObjectColor(objectIndex)            ' Видимое ребро выводится линией каркаса.
+            End If
+        Next edgeIndex
+    Next objectIndex
+End Sub
+
+' DrawReticle — Прицел по центру экрана: четыре штриха с разрывом в середине.
+Private Sub DrawReticle()
+    Dim centerX As Integer = VIEW_WIDTH \ 2                                                             ' Центр экрана по горизонтали (целочисленное деление).
+    Dim centerY As Integer = VIEW_HEIGHT \ 2                                                            ' Центр экрана по вертикали.
+
+    Drawline centerX - 24, centerY, centerX - 10, centerY, COLOR_RETICLE                                ' Левый штрих прицела.
+    Drawline centerX + 10, centerY, centerX + 24, centerY, COLOR_RETICLE                                ' Правый штрих прицела.
+    Drawline centerX, centerY - 24, centerX, centerY - 10, COLOR_RETICLE                                ' Верхний штрих прицела.
+    Drawline centerX, centerY + 10, centerX, centerY + 24, COLOR_RETICLE                                ' Нижний штрих прицела.
+End Sub
+
+' #endregion

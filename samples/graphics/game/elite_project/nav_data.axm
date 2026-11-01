@@ -1,0 +1,183 @@
+' nav_data — навигация: процедурный сектор систем, текущая система и цель.
+' Метод взят из исследования классики (RESEARCH_ELITE, «Генерация галактики»):
+' вся вселенная детерминированно растёт из одного стартового семени без RND —
+' тройка 16-битных чисел, переход к следующей системе — twist-сложение
+' (s2' = s0 + s1 + s2 по модулю 2^16), параметры системы извлекаются из битов.
+' ДАННЫЕ СВОИ: стартовое семя, таблица слогов для имён, формулы координат
+' и экономики не копируются из оригинала.
+
+Import game_config
+Import flight_state
+Import ship_models
+Import economy
+
+' #region Типы и состояние сектора
+
+Public Type SystemInfo                                                                                  ' Описание одной системы сектора.
+    name As String                                                                                      ' Сгенерированное название.
+    mapX As Double                                                                                      ' Координата на карте сектора: 5..95.
+    mapY As Double                                                                                      ' Координата на карте: 5..95.
+    sceneSeed As Long                                                                                   ' Семя сцены: расстановка астероидов.
+    economyType As Integer                                                                              ' Экономика 0..7: 0 — богатая промышленная, 7 — бедная аграрная.
+    governmentType As Integer                                                                           ' Правительство 0..7 (для будущего этапа: законы и риск).
+    techLevel As Integer                                                                                ' Технологический уровень 2..7.
+End Type
+
+Private Const SYSTEM_TOTAL As Integer = 40                                                              ' Число систем сектора: 40 из одного семени.
+Private Dim systems[1 To SYSTEM_TOTAL] As SystemInfo                                                    ' Таблица систем сектора.
+Private Dim currentSystem As Integer = 1                                                                ' Индекс текущей системы.
+Private Dim targetSystem As Integer = 2                                                                 ' Индекс выбранной на карте цели прыжка.
+
+' Тройка 16-битных семян сектора и собственная таблица слогов для имён.
+' Паритет слов смешанный (чётное, нечётное, чётное): сумма трёх нечётных
+' всегда нечётна и «замыкала» сектор на половину значений экономики —
+' дефект найден консольным прогоном и устранён сменой стартовых слов.
+Private Dim seedWord0 As Long = 23062                                                                   ' Стартовое семя сектора: слово 0 (своё, чётное).
+Private Dim seedWord1 As Long = 11339                                                                   ' Стартовое семя сектора: слово 1 (своё, нечётное).
+Private Dim seedWord2 As Long = 40496                                                                   ' Стартовое семя сектора: слово 2 (своё, чётное).
+Private Dim syllableTable[] As String = ["ТА", "РО", "МИ", "НЕ", "КА", "ВЕ", "СУ", "ЛИ", "ДО", "ПА", "ГУ", "ЖИ", "ЗО", "ФЕ", "ХУ", "ЦА", "ЧО", "ШИ", "ЭН", "ЮР"] ' Свои слоги имён (динамический массив из литерала).
+
+' TwistSeeds — Переход к следующей системе: тройничное сложение по модулю 2^16.
+' После вызова тройка описывает следующую систему сектора.
+Private Sub TwistSeeds()
+    Dim sumWords As Long = (seedWord0 + seedWord1 + seedWord2) Mod 65536                                ' Тройничный шаг: сумма трёх слов.
+    seedWord0 = seedWord1                                                                               ' Сдвиг тройки.
+    seedWord1 = seedWord2
+    seedWord2 = sumWords
+End Sub
+
+' NextSyllable — Очередной слог имени из своей таблицы. Повтор предыдущего
+' слога откидывается дополнительными twist-шагами: без этого встречаются
+' имена вида «ЖИЖИЖИ», а каждое имя обязано читаться.
+Private Function NextSyllable(previousSyllable As String) As String
+    Dim candidate As String = syllableTable[CInt(seedWord2 Mod 20) + 1]                                 ' Кандидат по текущему состоянию тройки.
+    While candidate = previousSyllable                                                                  ' Слог совпал с предыдущим...
+        TwistSeeds()                                                                                    ' ...прокручиваем семя и пробуем снова.
+        candidate = syllableTable[CInt(seedWord2 Mod 20) + 1]
+    End While
+    TwistSeeds()                                                                                        ' Шаг семени после взятого слога.
+    Return candidate
+End Function
+
+' #endregion
+
+' #region Инициализация сектора
+
+' InitNav — Генерирует все системы сектора из стартового семени и выбирает
+' стартовую систему. Имя каждой — три слога из своей таблицы; экономика,
+' координаты и семя сцены — из битов тройки. Рынок стартовой системы
+' генерируется здесь же.
+Public Sub InitNav()
+    For systemIndex = 1 To SYSTEM_TOTAL                                                                 ' Системы идут последовательно по twist-цепочке.
+        Dim firstSyllable As String = NextSyllable("")                                                  ' Первый слог имени.
+        Dim secondSyllable As String = NextSyllable(firstSyllable)                                      ' Второй слог: не повторяет первый.
+        Dim thirdSyllable As String = NextSyllable(secondSyllable)                                      ' Третий слог: не повторяет второй.
+        Dim generatedName As String = firstSyllable + secondSyllable + thirdSyllable                    ' Имя из трёх слогов.
+
+        Dim mapX As Double = (seedWord0 Mod 90) + 5.0                                                   ' Координата на карте: 5..95.
+        Dim mapY As Double = (seedWord1 Mod 90) + 5.0                                                   ' Координата: 5..95.
+        Dim economyValue As Integer = CInt(seedWord1 Mod 8)                                             ' Экономика 0..7.
+        Dim governmentValue As Integer = CInt(seedWord0 Mod 8)                                          ' Правительство 0..7.
+        Dim techValue As Integer = 2 + CInt(seedWord2 Mod 6)                                            ' Техуровень 2..7.
+        Dim sceneSeedValue As Long = seedWord0 * 65536 + seedWord1                                      ' Семя сцены из пары слов.
+
+        systems[systemIndex] = SystemInfo(generatedName, mapX, mapY, sceneSeedValue, economyValue, governmentValue, techValue) ' Система готова.
+    Next systemIndex
+
+    currentSystem = 1                                                                                   ' Старт в первой системе цепочки.
+    targetSystem = 2                                                                                    ' Цель по умолчанию: следующая по цепочке.
+    GenerateMarket(GetSystemSeed(currentSystem), GetSystemEconomy(currentSystem))                       ' Рынок стартовой системы готов.
+End Sub
+
+' #endregion
+
+' #region Доступ к данным сектора
+
+' GetSystemCount — Число систем в секторе.
+Public Function GetSystemCount() As Integer
+    Return SYSTEM_TOTAL
+End Function
+
+' GetSystemName — Название системы по индексу.
+Public Function GetSystemName(systemIndex As Integer) As String
+    Return systems[systemIndex].name
+End Function
+
+' GetSystemMapX/Y — Координаты системы на карте сектора.
+Public Function GetSystemMapX(systemIndex As Integer) As Double
+    Return systems[systemIndex].mapX
+End Function
+
+Public Function GetSystemMapY(systemIndex As Integer) As Double
+    Return systems[systemIndex].mapY
+End Function
+
+' GetSystemSeed — Семя сцены системы: от него строится расстановка астероидов.
+Public Function GetSystemSeed(systemIndex As Integer) As Long
+    Return systems[systemIndex].sceneSeed
+End Function
+
+' GetSystemEconomy — Тип экономики системы (управляет рынком).
+Public Function GetSystemEconomy(systemIndex As Integer) As Integer
+    Return systems[systemIndex].economyType
+End Function
+
+' GetSystemTech — Технологический уровень системы.
+Public Function GetSystemTech(systemIndex As Integer) As Integer
+    Return systems[systemIndex].techLevel
+End Function
+
+' GetCurrentSystem — Индекс системы, где корабль находится сейчас.
+Public Function GetCurrentSystem() As Integer
+    Return currentSystem
+End Function
+
+' GetTargetSystem — Индекс системы, выбранной на карте для прыжка.
+Public Function GetTargetSystem() As Integer
+    Return targetSystem
+End Function
+
+' SetTargetSystem — Смена выбранной цели (карта).
+Public Sub SetTargetSystem(systemIndex As Integer)
+    targetSystem = systemIndex
+End Sub
+
+' SystemDistanceLY — Дистанция между системами в световых годах.
+' Карта: 10 единиц координат = 1 световой год, дистанция по теореме Пифагора.
+Public Function SystemDistanceLY(firstIndex As Integer, secondIndex As Integer) As Double
+    Dim deltaX As Double = systems[secondIndex].mapX - systems[firstIndex].mapX                         ' Разность координат: X.
+    Dim deltaY As Double = systems[secondIndex].mapY - systems[firstIndex].mapY                         ' Разность координат: Y.
+    Return Sqr(deltaX * deltaX + deltaY * deltaY) / 10.0                                                ' Пифагор с масштабом сектора.
+End Function
+
+' FormatTenths — Число с одной десятой в тексте без дробных сюрпризов:
+' значение умножается на 10, целая и дробная части печатаются раздельно.
+Public Function FormatTenths(value As Double) As String
+    Dim tenths As Long = CLng(value * 10.0)                                                             ' Значение в десятых долях.
+    Return Trim(Str(tenths \ 10)) + "." + Trim(Str(tenths Mod 10))                                       ' Целая часть, точка, десятые.
+End Function
+
+' #endregion
+
+' #region Прыжок между системами
+
+' PerformJump — Прыжок к выбранной цели: списать топливо, сбросить корабль,
+' построить сцену и рынок цели. Возвращает FALSE, если прыжок невозможен.
+Public Function PerformJump() As Boolean
+    If targetSystem = currentSystem Then
+        Return False                                                                                    ' Прыжок «в себя» бессмыслен.
+    End If
+
+    Dim costLY As Double = SystemDistanceLY(currentSystem, targetSystem)                                ' Стоимость прыжка: дистанция в световых годах.
+    If Not SpendFuel(costLY) Then
+        Return False                                                                                    ' Топлива не хватает: остаёмся на месте.
+    End If
+
+    ResetShip()                                                                                         ' Корабль появляется у точки входа новой системы.
+    InitObjects(GetSystemSeed(targetSystem))                                                            ' Сцена цели детерминированно строится из её семени.
+    GenerateMarket(GetSystemSeed(targetSystem), GetSystemEconomy(targetSystem))                         ' Рынок цели детерминированно строится из её данных.
+    currentSystem = targetSystem                                                                        ' Корабль теперь в новой системе.
+    Return True
+End Function
+
+' #endregion
