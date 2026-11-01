@@ -1,0 +1,47 @@
+' Нагрузка для измерения чтения элементов двумерного INTEGER-массива.
+' Размеры и число проходов можно менять: контрольная сумма вычисляется по формуле.
+' По умолчанию: 512 × 512 элементов, 64 прохода, 16 777 216 чтений.
+' Запускайте без отладки, чтобы измерялся обычный путь BytecodeVm.
+DIM rows AS INTEGER = 512
+DIM columns AS INTEGER = 512
+' Для 1 073 741 824 чтений установите passes = 4096; выполнение будет значительно дольше.
+DIM passes AS INTEGER = 64
+
+DIM matrix[1 TO rows, 1 TO columns] AS INTEGER
+
+' Каждая ячейка зависит от обеих координат. Заполнение не входит в замер чтения.
+FOR rowIndex = 1 TO rows
+    FOR columnIndex = 1 TO columns
+        matrix[rowIndex, columnIndex] = rowIndex * 1000 + columnIndex
+    NEXT
+NEXT
+
+DIM reads AS LONG = CLNG(rows) * columns * passes
+' Сумма арифметических прогрессий по строкам и столбцам, без чтения матрицы.
+' При выбранных размерах промежуточные значения точно представимы в DOUBLE.
+DIM expected AS LONG = CLNG(CLNG(rows) * columns * (1000 * (rows + 1) + columns + 1) * passes / 2)
+DIM total AS LONG = 0
+
+PRINT "Матрица: "; rows; " x "; columns
+PRINT "Проходов: "; passes
+PRINT "Чтений элементов: "; reads
+PRINT "Начинается измерение чтения и суммирования..."
+
+DIM started AS DOUBLE = ELAPSEDSECONDS()
+FOR pass = 1 TO passes
+    FOR rowIndex = 1 TO rows
+        FOR columnIndex = 1 TO columns
+            total = total + matrix[rowIndex, columnIndex]
+        NEXT
+    NEXT
+NEXT
+DIM elapsed AS DOUBLE = ELAPSEDSECONDS() - started
+
+' Вывод и проверка находятся после замера; LONG защищает сумму от переполнения INTEGER.
+PRINT "Контрольная сумма: "; total
+PRINT "Ожидаемая сумма: "; expected
+IF total <> expected THEN
+    ERROR "ПРОВЕРКА_МАТРИЦЫ", "Контрольная сумма не совпала"
+END IF
+PRINT "Проверка: успешно"
+PRINT "Время выполнения, мс: "; elapsed * 1000

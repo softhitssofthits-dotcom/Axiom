@@ -35,7 +35,7 @@ public sealed partial class BytecodeVm
         return false;
     }
 
-    private void ExecuteRegisterKeyHandler(BytecodeCallFrame frame, int instructionIndex, BytecodeInstruction instruction)
+    private void ExecuteRegisterKeyHandler(BytecodeCallFrame frame, int instructionIndex,  VmInstruction instruction)
     {
         var handlerValue = PopValue(frame, instructionIndex).AsFunction();
         var keyText = PopValue(frame, instructionIndex).AsString();
@@ -105,7 +105,7 @@ public sealed partial class BytecodeVm
             : string.Empty;
     }
 
-    private void ExecuteReseedRandomInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteReseedRandomInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         if (instruction.GetOperand(0) == 0)
         {
@@ -122,7 +122,7 @@ public sealed partial class BytecodeVm
         _host.Reseed((int)seed);
     }
 
-    private void ExecuteSleepInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteSleepInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         if (instruction.GetOperand(0) == 0)
         {

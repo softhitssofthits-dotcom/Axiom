@@ -7,7 +7,7 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
-    private void ExecuteOpenFile(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteOpenFile(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var existingFileValue = PopValue(frame, instructionIndex);
         var encodingName = instruction.OperandCount == 3 ? PopValue(frame, instructionIndex).AsString() : null;

@@ -112,6 +112,7 @@ public enum Opcode
     SetMapTile,
     DrawText,
     AdvanceForLoopLocal,
+    StepForLoopLocal,
     PrintValue,
     PrintUsing,
     PrintSeparator,
@@ -150,5 +151,9 @@ public enum Opcode
     SetCount,
     SetToArray,
     SetUnionWith,
-    SetIntersectWith
+    SetIntersectWith,
+    LoadLocalPair,
+    LoadLocalConst,
+    LoadElement1D,
+    LoadElement2D
 }

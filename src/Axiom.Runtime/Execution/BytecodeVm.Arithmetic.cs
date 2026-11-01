@@ -626,7 +626,7 @@ public sealed partial class BytecodeVm
             || TryConsumeLongComparison(stack, opcode, out result);
     }
 
-    private void ExecuteJumpIfEqualInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteJumpIfEqualInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
         if (TryConsumeNumericComparison(stack, Opcode.CompareEqual, out var integerResult))
@@ -688,7 +688,7 @@ public sealed partial class BytecodeVm
             !ValuesEqual(left, right)));
     }
 
-    private void ExecuteJumpIfNotEqualInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteJumpIfNotEqualInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
         if (TryConsumeNumericComparison(stack, Opcode.CompareNotEqual, out var integerResult))
@@ -716,7 +716,7 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private void ExecuteJumpIfLessInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteJumpIfLessInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         ExecuteOrderedComparisonJumpInstruction(frame, instruction, instructionIndex, Opcode.CompareLess);
     }
@@ -726,7 +726,7 @@ public sealed partial class BytecodeVm
         ExecuteOrderedComparisonInstruction(frame, instructionIndex, Opcode.CompareLess);
     }
 
-    private void ExecuteJumpIfLessOrEqualInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteJumpIfLessOrEqualInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         ExecuteOrderedComparisonJumpInstruction(frame, instruction, instructionIndex, Opcode.CompareLessOrEqual);
     }
@@ -736,12 +736,12 @@ public sealed partial class BytecodeVm
         ExecuteOrderedComparisonInstruction(frame, instructionIndex, Opcode.CompareLessOrEqual);
     }
 
-    private void ExecuteJumpIfGreaterInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteJumpIfGreaterInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         ExecuteOrderedComparisonJumpInstruction(frame, instruction, instructionIndex, Opcode.CompareGreater);
     }
 
-    private void ExecuteJumpIfGreaterOrEqualInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteJumpIfGreaterOrEqualInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         ExecuteOrderedComparisonJumpInstruction(frame, instruction, instructionIndex, Opcode.CompareGreaterOrEqual);
     }
@@ -785,7 +785,7 @@ public sealed partial class BytecodeVm
 
     private void ExecuteOrderedComparisonJumpInstruction(
         BytecodeCallFrame frame,
-        BytecodeInstruction instruction,
+         VmInstruction instruction,
         int instructionIndex,
         Opcode comparisonOpcode)
     {
@@ -828,7 +828,7 @@ public sealed partial class BytecodeVm
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void ExecuteJumpIfBooleanInstruction(
         BytecodeCallFrame frame,
-        BytecodeInstruction instruction,
+         VmInstruction instruction,
         bool invertCondition)
     {
         var shouldJump = GetBooleanUnchecked(frame.EvaluationStack.PopUnchecked());
@@ -843,7 +843,7 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private void ExecuteJumpIfForDoneLocalInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteJumpIfForDoneLocalInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         // Непосредственное INTEGER-сравнение не материализует значения слотов.
         // Условие в точности повторяет INTEGER-ветвь TryShouldTerminateLocalForLoop.
@@ -990,7 +990,7 @@ public sealed partial class BytecodeVm
             Compare(left, right, ResolveLocation(frame.Routine.Id, instructionIndex)) > 0));
     }
 
-    private void ExecuteAdvanceForLoopLocalInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteAdvanceForLoopLocalInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var currentSlot = instruction.GetOperand(0);
 
@@ -1041,6 +1041,168 @@ public sealed partial class BytecodeVm
             EvaluateAdd(current, step, ResolveLocation(frame.Routine.Id, instructionIndex)));
     }
 
+    /// <summary>
+    /// Слитная суперинструкция управления FOR (O07-1): инкремент счётчика на шаг
+    /// и проверка завершения в одном диспетчере. Ветви и диагностики повторяют
+    /// пару ExecuteAdvanceForLoopLocalInstruction + ExecuteJumpIfForDoneLocalInstruction
+    /// ветвь-в-ветвь; отличаются только цели перехода: не завершён — вход в тело,
+    /// завершён — выход из цикла.
+    /// </summary>
+    /// <summary>
+    /// Исполнение слитной пары загрузок (LoadLocalPair/LoadLocalConst) до общего
+    /// свитча плотного цикла. Тело вынесено из цикла диспетчеризации: кейсы
+    /// свитча и развёрнутые обработчики в его теле увеличивали разогрев метода
+    /// (наблюдение O07-6); неинлайновый вызов сохраняет компактность цикла.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void ExecuteFusedLoadPair(BytecodeCallFrame frame, VmInstruction instruction, int ip)
+    {
+        if (instruction.Opcode == Opcode.LoadLocalPair)
+        {
+            frame.PushLocalValueOntoEvaluationStack(instruction.A);
+            frame.PushLocalValueOntoEvaluationStack(instruction.B);
+        }
+        else
+        {
+            frame.PushLocalValueOntoEvaluationStack(instruction.A);
+            frame.EvaluationStack.PushUnchecked(ReadConstantUnchecked(instruction.B));
+        }
+
+        frame.InstructionPointer = ip + 2;
+    }
+
+    private void ExecuteStepForLoopLocal(BytecodeCallFrame frame, VmInstruction instruction, int instructionIndex)
+    {
+        var counterSlot = instruction.A;
+        var limitSlot = instruction.B;
+        var stepSlot = instruction.C;
+        var bodyEntry = instruction.D;
+        var exitTarget = instruction.E;
+
+        // 1. Инкремент счётчика: непосредственное INTEGER-продвижение, счётчик
+        //    остаётся распакованным; переполнение и отказ слота передают управление
+        //    прежним ветвям с диагностикой MB3008 на месте инструкции.
+        if (frame.TryReadLocalInteger(counterSlot, out var immediateCurrent)
+            && frame.TryReadLocalInteger(stepSlot, out var immediateStep))
+        {
+            try
+            {
+                if (frame.TryStoreImmediateInteger(counterSlot, checked(immediateCurrent + immediateStep)))
+                {
+                    StepForLoopLocalCheck(frame, instruction, instructionIndex, bodyEntry, exitTarget);
+                    return;
+                }
+            }
+            catch (OverflowException)
+            {
+            }
+        }
+
+        // Непосредственное LONG-продвижение с тем же договором переполнения.
+        if (frame.TryReadLocalLong(counterSlot, out var longCurrent)
+            && frame.TryReadLocalLong(stepSlot, out var longStep))
+        {
+            try
+            {
+                if (frame.TryStoreImmediateLong(counterSlot, checked(longCurrent + longStep)))
+                {
+                    StepForLoopLocalCheck(frame, instruction, instructionIndex, bodyEntry, exitTarget);
+                    return;
+                }
+            }
+            catch (OverflowException)
+            {
+            }
+        }
+
+        frame.LoadForLoopAdvanceValues(counterSlot, stepSlot, out var current, out var step);
+
+        if (TryAdvanceLocalForLoop(current, step, out var nextValue))
+        {
+            frame.StoreNumericLocalValueUnchecked(counterSlot, nextValue);
+            StepForLoopLocalCheck(frame, instruction, instructionIndex, bodyEntry, exitTarget);
+            return;
+        }
+
+        frame.StoreNumericLocalValueUnchecked(
+            counterSlot,
+            EvaluateAdd(current, step, ResolveLocation(frame.Routine.Id, instructionIndex)));
+        StepForLoopLocalCheck(frame, instruction, instructionIndex, bodyEntry, exitTarget);
+    }
+
+    /// <summary>
+    /// Проверка завершения слитного шага FOR: ветви повторяют
+    /// ExecuteJumpIfForDoneLocalInstruction; отличаются только цели перехода.
+    /// </summary>
+    private void StepForLoopLocalCheck(
+        BytecodeCallFrame frame,
+        VmInstruction instruction,
+        int instructionIndex,
+        int bodyEntry,
+        int exitTarget)
+    {
+        var counterSlot = instruction.A;
+        var limitSlot = instruction.B;
+        var stepSlot = instruction.C;
+
+        // Непосредственное INTEGER-сравнение не материализует значения слотов.
+        // Условие в точности повторяет INTEGER-ветвь TryShouldTerminateLocalForLoop.
+        if (frame.TryReadLocalInteger(counterSlot, out var immediateCurrent)
+            && frame.TryReadLocalInteger(limitSlot, out var immediateEnd)
+            && frame.TryReadLocalInteger(stepSlot, out var immediateStep))
+        {
+            var done = immediateStep > 0 ? immediateCurrent > immediateEnd : immediateCurrent < immediateEnd;
+            frame.InstructionPointer = done ? exitTarget : bodyEntry;
+            return;
+        }
+
+        // Непосредственное LONG-сравнение повторяет LONG-ветвь того же метода.
+        if (frame.TryReadLocalLong(counterSlot, out var longCurrent)
+            && frame.TryReadLocalLong(limitSlot, out var longEnd)
+            && frame.TryReadLocalLong(stepSlot, out var longStep))
+        {
+            var done = longStep > 0L ? longCurrent > longEnd : longCurrent < longEnd;
+            frame.InstructionPointer = done ? exitTarget : bodyEntry;
+            return;
+        }
+
+        frame.LoadForLoopLocalValues(
+            counterSlot,
+            limitSlot,
+            stepSlot,
+            out var current,
+            out var end,
+            out var step);
+
+        if (TryShouldTerminateLocalForLoop(current, end, step, out var shouldJump))
+        {
+            frame.InstructionPointer = shouldJump ? exitTarget : bodyEntry;
+            return;
+        }
+
+        if (IsZero(step))
+        {
+            ReportRuntimeDiagnostic(
+                DiagnosticCodes.StepZero,
+                "В цикле FOR недопустим STEP 0.",
+                ResolveLocation(frame.Routine.Id, instructionIndex));
+            throw new RuntimeFailureException();
+        }
+
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        var comparison = Compare(current, end, location);
+        var stepIsPositive = step.Type switch
+        {
+            var type when type == TypeSymbol.Integer => step.AsInteger() > 0,
+            var type when type == TypeSymbol.Long => step.AsLong() > 0L,
+            var type when type == TypeSymbol.Double => step.AsDouble() > 0d,
+            var type when type == TypeSymbol.Decimal => step.AsDecimal() > 0m,
+            _ => false
+        };
+        frame.InstructionPointer = stepIsPositive ? (comparison > 0 ? exitTarget : bodyEntry)
+            : (comparison < 0 ? exitTarget : bodyEntry);
+    }
+
     private static bool TryEvaluateFastBinaryInstruction(
         Opcode opcode,
         RuntimeValue left,
@@ -1081,7 +1243,7 @@ public sealed partial class BytecodeVm
             return TryEvaluateFastLongBinaryInstruction(opcode, GetLongUnchecked(left), GetLongUnchecked(right), out result);
         }
 
-        if (left.Type == TypeSymbol.String && opcode == Opcode.Add)
+        if (left.Type == TypeSymbol.String && opcode is Opcode.Add or Opcode.Concat)
         {
             result = RuntimeValue.FromString(RuntimeStringLimits.Concat(GetStringUnchecked(left), GetStringUnchecked(right)));
             return true;

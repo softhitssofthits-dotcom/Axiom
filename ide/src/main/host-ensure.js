@@ -4,7 +4,7 @@
 // ENOENT on the first backend request — the IDE opens with "Не удалось открыть IDE") or it
 // was built from older sources (BackendClient rejects host.ready with HOST_STALE because
 // the embedded source fingerprint no longer matches the checkout). Same incident family and
-// same mechanism as the axiom.exe guard (axiom-ensure.js): the Debug build stamps its
+// same mechanism as the axiom.exe guard (axiom-ensure.js): the Release build stamps its
 // sources at build time (backend-fingerprint.js writes host-build.json, see the
 // PrepareHostBuildStamp target in Axiom.DesktopHost.csproj) and this guard rebuilds while
 // that stamp no longer matches. Plain Node only (fs/path/child_process) — no Electron APIs.
@@ -15,11 +15,11 @@ const { sourceFingerprint } = require('./backend-fingerprint');
 const { portableRuntime } = require('./portable-runtime');
 
 const HOST_PROJECT = 'Axiom.DesktopHost';
-const HOST_CONFIG = 'Debug'; // backend-ipc.js spawns the Debug build; keep in sync
+const HOST_CONFIG = 'Release'; // shared by the freshness guard and backend-ipc.js
 const HOST_TFM = 'net10.0-windows';
 
 // Resolution order: explicit AXIOM_DESKTOP_HOST_EXE override (a binary we did not build
-// here — CI artifact, test injection), then the Debug build under .artifacts/bin. The
+// here — CI artifact, test injection), then the Release build under .artifacts/bin. The
 // repo's Directory.Build.props redirects all build outputs there, not under src/bin.
 function resolveHostPath(env = process.env, srcRoot = path.join(__dirname, '..', '..', '..')) {
   if (env.AXIOM_DESKTOP_HOST_EXE && fs.existsSync(env.AXIOM_DESKTOP_HOST_EXE))
@@ -46,7 +46,7 @@ function staleness(exePath, srcRoot, opts = {}) {
   return stamp.sourceFingerprint === expected && stamp.protocolVersion === 1 ? 'fresh' : 'stale';
 }
 
-// Rebuild the Debug host when it is missing or built from other sources. An explicit
+// Rebuild the Release host when it is missing or built from other sources. An explicit
 // AXIOM_DESKTOP_HOST_EXE is trusted and never rebuilt. Returns
 // { exe, rebuilt, buildOk, status, buildError }; a present-but-stale binary stays available
 // after a failed build so the shell can report HOST_STALE instead of losing the backend.

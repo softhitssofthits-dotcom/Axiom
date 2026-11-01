@@ -6,14 +6,14 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
-    private void ExecuteCreateRecord(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteCreateRecord(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var typeIdentity = ReadDebugName(instruction.GetOperand(0));
         var recordType = ResolveRecordType(typeIdentity, frame.Routine.Id, instructionIndex);
         frame.EvaluationStack.Push(RuntimeValue.FromRecord(recordType, RuntimeRecordValue.CreateDefault(recordType)));
     }
 
-    private void ExecuteLoadField(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteLoadField(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var recordValue = PopValue(frame, instructionIndex);
         if (recordValue.Type == TypeSymbol.RuntimeError)
@@ -28,7 +28,7 @@ public sealed partial class BytecodeVm
         frame.EvaluationStack.Push(recordValue.AsRecord().GetField(field));
     }
 
-    private void ExecuteStoreField(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteStoreField(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var recordValue = PopValue(frame, instructionIndex);
         var value = PopValue(frame, instructionIndex);

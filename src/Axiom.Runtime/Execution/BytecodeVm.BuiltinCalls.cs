@@ -11,7 +11,7 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
-    private void ExecuteBuiltinCall(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteBuiltinCall(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var builtinId = instruction.GetOperand(0);
         var argumentCount = instruction.GetOperand(1);
@@ -47,13 +47,48 @@ public sealed partial class BytecodeVm
             && frame.EvaluationStack.TryGetImmediateInteger(out _))
             return;
 
-        if (executionInfo.CanonicalId == BuiltinFunctionId.CLng && argumentCount == 1
+        // CINT над непосредственным LONG: та же проверка диапазона и та же
+        // диагностика, что и в общем пути, без материализации и без нового
+        // делегата отчёта (колбэк кэшируется в исполнителе).
+        if (executionInfo.CanonicalId == BuiltinFunctionId.CInt && argumentCount == 1
             && executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
-            && frame.EvaluationStack.TryGetImmediateInteger(out var integerForLong))
+            && frame.EvaluationStack.TryGetImmediateLong(out var longForCint))
         {
-            frame.EvaluationStack.DiscardTop(1);
-            frame.EvaluationStack.PushUnchecked(RuntimeValue.FromLong(integerForLong));
+            frame.EvaluationStack.ReplaceTopWithInteger(RuntimeArithmeticHelpers.ToInt32Checked(
+                longForCint,
+                ResolveLocation(frame.Routine.Id, instructionIndex),
+                "Результат CINT(value)",
+                _reportOverflow));
             return;
+        }
+
+        if (executionInfo.CanonicalId == BuiltinFunctionId.CInt && argumentCount == 1
+            && executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
+            && frame.EvaluationStack.TryGetImmediateDouble(out var doubleForCint))
+        {
+            frame.EvaluationStack.ReplaceTopWithInteger(RuntimeArithmeticHelpers.ToInt32Checked(
+                doubleForCint,
+                ResolveLocation(frame.Routine.Id, instructionIndex),
+                "Результат CINT(value)",
+                _reportOverflow));
+            return;
+        }
+
+        // CLNG над непосредственным LONG не меняет значение; над INTEGER
+        // расширяет вид без материализации; над DOUBLE и прочими типами —
+        // общий путь с прежней диагностикой диапазона.
+        if (executionInfo.CanonicalId == BuiltinFunctionId.CLng && argumentCount == 1
+            && executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe)
+        {
+            var clngStack = frame.EvaluationStack;
+            if (clngStack.TryGetImmediateLong(out _))
+                return;
+
+            if (clngStack.TryGetImmediateInteger(out var integerForLong))
+            {
+                clngStack.ReplaceTopWithLong(integerForLong);
+                return;
+            }
         }
 
         if (executionInfo.CanonicalId == BuiltinFunctionId.Abs && argumentCount == 1
@@ -89,13 +124,11 @@ public sealed partial class BytecodeVm
         }
         catch (VmCallbackSuspension suspension)
         {
-            suspension.Completion = value =>
-            {
-                if (executionInfo.ReturnsValue)
-                {
-                    frame.EvaluationStack.PushUnchecked(value);
-                }
-            };
+            // Замыкание создаётся только здесь: если лямбда объявлена прямо в
+            // catch, Roslyn поднимает конструкцию display-класса наверх метода
+            // (захватываемые переменные объявлены до try), и каждый вызов
+            // встроенной функции аллоцирует его зря.
+            SetBuiltinCompletion(suspension, frame, executionInfo.ReturnsValue);
             throw;
         }
 
@@ -108,6 +141,25 @@ public sealed partial class BytecodeVm
         {
             InvalidateReverseExecutionHistory();
         }
+    }
+
+    /// <summary>
+    /// Назначает завершение приостановленного встроенного вызова. Отдельный
+    /// метод удерживает конструкцию замыкания внутри вызова хелпера — только
+    /// на пути приостановки, вне горячего пути обычных вызовов.
+    /// </summary>
+    private static void SetBuiltinCompletion(
+        VmCallbackSuspension suspension,
+        BytecodeCallFrame frame,
+        bool returnsValue)
+    {
+        suspension.Completion = value =>
+        {
+            if (returnsValue)
+            {
+                frame.EvaluationStack.PushUnchecked(value);
+            }
+        };
     }
 
     private bool TryExecuteFastGraphicsBuiltin(

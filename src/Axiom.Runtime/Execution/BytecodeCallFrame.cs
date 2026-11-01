@@ -11,12 +11,9 @@ internal sealed class BytecodeCallFrame
     private Dictionary<int, RuntimeValue>? _cachedFunctionValuesByRoutineId;
     private Dictionary<int, BytecodeVariableSlot[]>? _cachedCapturedSlotsByRoutineId;
     private readonly List<BytecodeErrorHandlerFrame> _errorHandlers = [];
-    private readonly RuntimeValue[] _locals;
-    // После записи непосредственного INTEGER null в _locals обозначает значение из этого массива.
-    // Маркер ImmediateLongMarker в _locals обозначает непосредственный LONG из _localLongs.
+    // Локали хранятся как тегированные значения: числовые виды распакованы.
     // Общие ячейки для BYREF и замыканий по-прежнему хранят RuntimeValue.
-    private int[]? _localIntegers;
-    private long[]? _localLongs;
+    private readonly VmValue[] _locals;
     private readonly int?[] _localFixedStringLengths;
     private BytecodeVariableSlot?[]? _sharedLocals;
     private bool _hasSharedLocals;
@@ -24,11 +21,12 @@ internal sealed class BytecodeCallFrame
     public BytecodeCallFrame(
         BytecodeRoutine routine,
         BytecodeVariableSlot[] arguments,
-        RuntimeValue[] locals,
+        VmValue[] locals,
         int?[] localFixedStringLengths,
         BytecodeVariableSlot[] captures,
         TextLocation callSiteLocation,
-        int evaluationStackCapacity = 16)
+        int evaluationStackCapacity = 16,
+        VmInstruction[]? decodedInstructions = null)
     {
         ArgumentNullException.ThrowIfNull(routine);
         ArgumentNullException.ThrowIfNull(arguments);
@@ -37,6 +35,7 @@ internal sealed class BytecodeCallFrame
         ArgumentNullException.ThrowIfNull(captures);
 
         Routine = routine;
+        DecodedInstructions = decodedInstructions ?? DecodeRoutineInstructions(routine);
         Arguments = arguments;
         _locals = locals;
         _localFixedStringLengths = localFixedStringLengths;
@@ -47,6 +46,21 @@ internal sealed class BytecodeCallFrame
     }
 
     public BytecodeRoutine Routine { get; }
+
+    /// <summary>Раскодированный поток инструкций подпрограммы; источником истины остаётся модуль.</summary>
+    public VmInstruction[] DecodedInstructions { get; }
+
+    private static VmInstruction[] DecodeRoutineInstructions(BytecodeRoutine routine)
+    {
+        var source = routine.InstructionArray;
+        var decoded = new VmInstruction[source.Length];
+        for (var index = 0; index < source.Length; index++)
+        {
+            decoded[index] = new VmInstruction(source[index]);
+        }
+
+        return decoded;
+    }
 
     public BytecodeVariableSlot[] Arguments { get; }
 
@@ -128,7 +142,7 @@ internal sealed class BytecodeCallFrame
         BytecodeVariableSlot[] arguments,
         BytecodeVariableSlot[] captures,
         TextLocation callSiteLocation,
-        RuntimeValue[] defaultLocals)
+        VmValue[] defaultLocals)
     {
         Captures = captures;
         CallSiteLocation = callSiteLocation;
@@ -195,47 +209,74 @@ internal sealed class BytecodeCallFrame
     {
         if (!_hasSharedLocals)
         {
-            var local = ReadUnsharedLocal(slot);
-            return local.Type == TypeSymbol.Void ? EnsureDefaultLocalValue(slot) : local;
+            var local = _locals[slot];
+            if (local.Kind != VmValueKind.Object || local.Object!.Type != TypeSymbol.Void)
+            {
+                return local.Materialize();
+            }
+
+            return EnsureDefaultLocalValue(slot);
         }
 
         var sharedLocals = _sharedLocals!;
-        var value = sharedLocals[slot]?.Value ?? ReadUnsharedLocal(slot);
-        return value.Type == TypeSymbol.Void ? EnsureDefaultLocalValue(slot) : value;
+        if (sharedLocals[slot] is { } sharedValue)
+        {
+            return sharedValue.Value.Type == TypeSymbol.Void ? EnsureDefaultLocalValue(slot) : sharedValue.Value;
+        }
+
+        var unshared = _locals[slot];
+        return unshared.Kind == VmValueKind.Object && unshared.Object!.Type == TypeSymbol.Void
+            ? EnsureDefaultLocalValue(slot)
+            : unshared.Materialize();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PushLocalValueOntoEvaluationStack(int slot)
     {
-        var local = _locals[slot];
-        if (!_hasSharedLocals || _sharedLocals![slot] is null)
-        {
-            if (local is null)
-            {
-                EvaluationStack.PushInteger(_localIntegers![slot]);
-                return;
-            }
-
-            if (ReferenceEquals(local, RuntimeValue.ImmediateLongMarker))
-            {
-                EvaluationStack.PushLong(_localLongs![slot]);
-                return;
-            }
-        }
-
         if (!_hasSharedLocals)
         {
-            EvaluationStack.PushUnchecked(local.Type == TypeSymbol.Void ? EnsureDefaultLocalValue(slot) : local);
+            PushUnsharedLocalOntoEvaluationStack(slot);
             return;
         }
 
         var sharedLocals = _sharedLocals!;
-        var value = sharedLocals[slot]?.Value ?? ReadUnsharedLocal(slot);
-        EvaluationStack.PushUnchecked(value.Type == TypeSymbol.Void ? EnsureDefaultLocalValue(slot) : value);
+        if (sharedLocals[slot] is { } sharedValue)
+        {
+            var value = sharedValue.Value;
+            EvaluationStack.PushUnchecked(value.Type == TypeSymbol.Void ? EnsureDefaultLocalValue(slot) : value);
+            return;
+        }
+
+        PushUnsharedLocalOntoEvaluationStack(slot);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void PushUnsharedLocalOntoEvaluationStack(int slot)
+    {
+        var local = _locals[slot];
+        if (local.Kind == VmValueKind.Object)
+        {
+            var localValue = local.Object!;
+            if (localValue.Type == TypeSymbol.Void)
+            {
+                EvaluationStack.PushUnchecked(EnsureDefaultLocalValue(slot));
+                return;
+            }
+
+            // Накопитель строк в слоте живой: при помещении на стек он
+            // снимается, чтобы поздние дописывания не меняли уже вычисленное.
+            if (localValue.RequiresCopyForStorage)
+            {
+                EvaluationStack.PushUnchecked(localValue);
+                return;
+            }
+        }
+
+        EvaluationStack.PushVmValue(local);
     }
 
     /// <summary>
-    /// Возвращает текущее значение слота без создания записи. Нужен снимкам
+    /// Возвращает текущее значение слота без изменения состояния. Нужен снимкам
     /// состояния: наблюдение не должно менять исполняемое состояние.
     /// </summary>
     public RuntimeValue PeekLocalValue(int slot)
@@ -252,15 +293,7 @@ internal sealed class BytecodeCallFrame
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RuntimeValue ReadUnsharedLocal(int slot)
     {
-        var local = _locals[slot];
-        if (local is null)
-        {
-            return RuntimeValue.FromInteger(_localIntegers![slot]);
-        }
-
-        return ReferenceEquals(local, RuntimeValue.ImmediateLongMarker)
-            ? RuntimeValue.FromLong(_localLongs![slot])
-            : local;
+        return _locals[slot].Materialize();
     }
 
     public bool TryStoreImmediateInteger(int slot, int value)
@@ -270,16 +303,13 @@ internal sealed class BytecodeCallFrame
             || (_hasSharedLocals && _sharedLocals![slot] is not null))
             return false;
 
-        _localIntegers ??= new int[_locals.Length];
-        _localIntegers[slot] = value;
-        _locals[slot] = null!;
+        _locals[slot] = VmValue.FromInteger(value);
         return true;
     }
 
     /// <summary>
     /// Читает значение локального слота как int без создания RuntimeValue.
-    /// Принимает непосредственное INTEGER и материализованный INTEGER-объект;
-    /// общие ячейки (BYREF/замыкания) и прочие типы дают отказ, и вызывающий
+    /// Общие ячейки (BYREF/замыкания) и прочие типы дают отказ, и вызывающий
     /// код использует прежний общий путь.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -293,18 +323,12 @@ internal sealed class BytecodeCallFrame
         }
 
         var local = _locals[slot];
-        if (local is null)
-        {
-            value = _localIntegers![slot];
-            return true;
-        }
-
-        if (local.Type != TypeSymbol.Integer)
+        if (local.Kind != VmValueKind.Integer)
         {
             return false;
         }
 
-        value = (int)local.Value!;
+        value = local.Integer;
         return true;
     }
 
@@ -315,16 +339,13 @@ internal sealed class BytecodeCallFrame
             || (_hasSharedLocals && _sharedLocals![slot] is not null))
             return false;
 
-        _localLongs ??= new long[_locals.Length];
-        _localLongs[slot] = value;
-        _locals[slot] = RuntimeValue.ImmediateLongMarker;
+        _locals[slot] = VmValue.FromLong(value);
         return true;
     }
 
     /// <summary>
     /// Читает значение локального слота как long без создания RuntimeValue.
-    /// Принимает непосредственный LONG и материализованный LONG-объект;
-    /// общие ячейки и прочие типы дают отказ. INTEGER не расширяется:
+    /// Общие ячейки и прочие типы дают отказ. INTEGER не расширяется:
     /// смешанные типы обязан обрабатывать прежний общий путь.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -338,18 +359,12 @@ internal sealed class BytecodeCallFrame
         }
 
         var local = _locals[slot];
-        if (ReferenceEquals(local, RuntimeValue.ImmediateLongMarker))
-        {
-            value = _localLongs![slot];
-            return true;
-        }
-
-        if (local is null || local.Type != TypeSymbol.Long)
+        if (local.Kind != VmValueKind.Long)
         {
             return false;
         }
 
-        value = (long)local.Value!;
+        value = local.Long;
         return true;
     }
 
@@ -373,7 +388,7 @@ internal sealed class BytecodeCallFrame
         }
         else
         {
-            _locals[slot] = created;
+            _locals[slot] = VmValue.FromRuntime(created);
         }
 
         return created;
@@ -386,8 +401,8 @@ internal sealed class BytecodeCallFrame
         {
             var fixedStringLength = _localFixedStringLengths[slot];
             _locals[slot] = fixedStringLength is null && value.Type is not UserDefinedTypeSymbol && !value.RequiresCopyForStorage
-                ? value
-                : BytecodeVariableSlot.NormalizeForStorage(value, fixedStringLength);
+                ? VmValue.FromRuntime(value)
+                : VmValue.FromObject(BytecodeVariableSlot.NormalizeForStorage(value, fixedStringLength));
             return;
         }
 
@@ -408,8 +423,8 @@ internal sealed class BytecodeCallFrame
 
         var localFixedStringLength = _localFixedStringLengths[slot];
         _locals[slot] = localFixedStringLength is null && value.Type is not UserDefinedTypeSymbol && !value.RequiresCopyForStorage
-            ? value
-            : BytecodeVariableSlot.NormalizeForStorage(value, localFixedStringLength);
+            ? VmValue.FromRuntime(value)
+            : VmValue.FromObject(BytecodeVariableSlot.NormalizeForStorage(value, localFixedStringLength));
     }
 
     public void FreshLocal(int slot)
@@ -434,7 +449,7 @@ internal sealed class BytecodeCallFrame
         ArgumentNullException.ThrowIfNull(replacement);
         _sharedLocals ??= new BytecodeVariableSlot?[_locals.Length];
         _sharedLocals[slot] = replacement;
-        _locals[slot] = RuntimeValue.Void;
+        _locals[slot] = VmValue.FromObject(RuntimeValue.Void);
         _hasSharedLocals = true;
         InvalidateLocalVariableBindings();
     }
@@ -455,8 +470,8 @@ internal sealed class BytecodeCallFrame
         {
             var fixedStringLength = _localFixedStringLengths[slot];
             _locals[slot] = fixedStringLength is null
-                ? value
-                : BytecodeVariableSlot.NormalizeForStorage(value, fixedStringLength);
+                ? VmValue.FromRuntime(value)
+                : VmValue.FromObject(BytecodeVariableSlot.NormalizeForStorage(value, fixedStringLength));
             return;
         }
 
@@ -470,8 +485,8 @@ internal sealed class BytecodeCallFrame
 
         var localFixedStringLength = _localFixedStringLengths[slot];
         _locals[slot] = localFixedStringLength is null
-            ? value
-            : BytecodeVariableSlot.NormalizeForStorage(value, localFixedStringLength);
+            ? VmValue.FromRuntime(value)
+            : VmValue.FromObject(BytecodeVariableSlot.NormalizeForStorage(value, localFixedStringLength));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -511,7 +526,7 @@ internal sealed class BytecodeCallFrame
     {
         if (!_hasSharedLocals)
         {
-            _locals[slot] = value;
+            _locals[slot] = VmValue.FromRuntime(value);
             return;
         }
 
@@ -523,7 +538,7 @@ internal sealed class BytecodeCallFrame
             return;
         }
 
-        _locals[slot] = value;
+        _locals[slot] = VmValue.FromRuntime(value);
     }
 
     public BytecodeVariableSlot GetOrCreateLocalSlot(int slot)

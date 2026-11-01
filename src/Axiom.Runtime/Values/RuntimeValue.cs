@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using Axiom.Bytecode;
 using Axiom.Semantics;
 
@@ -29,13 +30,6 @@ public sealed class RuntimeValue : IRuntimeStoredValue
     }
 
     public static RuntimeValue Void { get; } = new(TypeSymbol.Void, value: null);
-
-    /// <summary>
-    /// Маркер непосредственного LONG в оценочном стеке и локальных слотах VM.
-    /// Никогда не покидает границы материализации: любой внешний потребитель
-    /// получает обычное значение через FromLong.
-    /// </summary>
-    internal static RuntimeValue ImmediateLongMarker { get; } = new(TypeSymbol.Long, value: null);
 
     public TypeSymbol Type { get; }
 
@@ -158,7 +152,7 @@ public sealed class RuntimeValue : IRuntimeStoredValue
     internal static RuntimeValue FromStringAccumulator(RuntimeStringAccumulator value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        return new RuntimeValue(TypeSymbol.String, value);
+        return value.CachedWrapper ??= new RuntimeValue(TypeSymbol.String, value);
     }
 
     public static RuntimeValue FromBoolean(bool value) => value ? TrueValue : FalseValue;
@@ -660,10 +654,29 @@ public sealed class RuntimeValue : IRuntimeStoredValue
 
         if (Type is TupleTypeSymbol tupleType)
         {
+            // Цикл вместо Select с лямбдой: замыкание за лямбдой Roslyn
+            // поднимает наверх метода, и класс аллоцируется на каждом вызове
+            // ToDisplayString, включая числа и строки. Предостережение:
+            // возврат к лямбде вернёт скрытую аллокацию на дисплейном пути
+            // (поведение Roslyn, проверено зондом этапа O07-5).
             var record = AsRecord();
-            var elements = tupleType.Fields.Select((field, index) =>
-                (tupleType.ElementNames[index] ?? field.Name) + " = " + record.GetField(field).ToDisplayString());
-            return "(" + string.Join(", ", elements) + ")";
+            var fields = tupleType.Fields;
+            var builder = new StringBuilder();
+            builder.Append('(');
+            for (var index = 0; index < fields.Count; index++)
+            {
+                if (index > 0)
+                {
+                    builder.Append(", ");
+                }
+
+                builder.Append(tupleType.ElementNames[index] ?? fields[index].Name);
+                builder.Append(" = ");
+                builder.Append(record.GetField(fields[index]).ToDisplayString());
+            }
+
+            builder.Append(')');
+            return builder.ToString();
         }
 
         if (Type is UserDefinedTypeSymbol userType)

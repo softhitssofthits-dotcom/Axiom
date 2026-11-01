@@ -20,7 +20,7 @@ public sealed partial class BytecodeVm
         frame.EvaluationStack.PushUnchecked(RuntimeValue.FromLong(arrayValue.AsArray().StructuralVersion));
     }
 
-    private static void ExecuteBindArrayElement(BytecodeCallFrame frame, BytecodeInstruction instruction)
+    private static void ExecuteBindArrayElement(BytecodeCallFrame frame,  VmInstruction instruction)
     {
         var targetSlot = instruction.GetOperand(0);
         var sourceSlot = instruction.GetOperand(1);
@@ -47,7 +47,7 @@ public sealed partial class BytecodeVm
             new BytecodeArrayElementVariableSlot(arrayType, array, indices, expectedVersion));
     }
 
-    private void ExecuteRedimArray(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteRedimArray(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var dimensionCount = instruction.GetOperand(2);
@@ -102,7 +102,7 @@ public sealed partial class BytecodeVm
     /// Новый объект независим от образца: повторное вычисление литерала не
     /// изменяет прежний результат и не инвалидирует представления на него.
     /// </summary>
-    private void ExecuteNewArray(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteNewArray(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var displayName = ReadDebugName(instruction.GetOperand(0));
@@ -136,7 +136,7 @@ public sealed partial class BytecodeVm
         array.Deallocate();
     }
 
-    private void ExecuteLoadElement(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteLoadElement(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var dimensionCount = instruction.GetOperand(1);
         var rangeMask = instruction.OperandCount >= 3 ? instruction.GetOperand(2) : 0;
@@ -152,6 +152,16 @@ public sealed partial class BytecodeVm
 
                 var slowLocation = ResolveLocation(frame.Routine.Id, instructionIndex);
                 ExecuteDirectLoadElement1(frame, instruction, instructionIndex, slowLocation);
+                return;
+            }
+
+            if (dimensionCount == 2 && TryExecuteFastLoadElement2(frame))
+            {
+                return;
+            }
+
+            if (dimensionCount == 3 && TryExecuteFastLoadElement3(frame))
+            {
                 return;
             }
 
@@ -208,7 +218,7 @@ public sealed partial class BytecodeVm
         frame.EvaluationStack.PushUnchecked(RuntimeValue.FromArray((ArrayTypeSymbol)resultType, array.CreateView(slices)));
     }
 
-    private void ExecuteStoreElement(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteStoreElement(BytecodeCallFrame frame, VmInstruction instruction, int instructionIndex)
     {
         var dimensionCount = instruction.GetOperand(1);
         if (dimensionCount == 1)
@@ -220,6 +230,16 @@ public sealed partial class BytecodeVm
 
             var slowLocation = ResolveLocation(frame.Routine.Id, instructionIndex);
             ExecuteDirectStoreElement1(frame, instruction, instructionIndex, slowLocation);
+            return;
+        }
+
+        if (dimensionCount == 2 && TryExecuteFastStoreElement2(frame))
+        {
+            return;
+        }
+
+        if (dimensionCount == 3 && TryExecuteFastStoreElement3(frame))
+        {
             return;
         }
 
@@ -241,6 +261,39 @@ public sealed partial class BytecodeVm
 
         using var indicesBuffer = RentArrayIndices(frame, instructionIndex, location, dimensionCount);
         ExecuteDirectStoreElement(frame, instruction, instructionIndex, location, indicesBuffer.Span, indicesBuffer.Buffer);
+    }
+
+    /// <summary>
+    /// Специализированная форма LoadElement для 1D без диапазонов: форма
+    /// выбрана при декодировании по статическим операндам, поэтому чтение
+    /// операндов формы и каскад ветвей размерности отсутствуют. Все проверки
+    /// границ, выделения массива и корректности значения — те же, что в общем
+    /// пути; динамические случаи вне быстрого пути исполняет
+    /// <see cref="ExecuteDirectLoadElement1"/> с полной диагностикой.
+    /// </summary>
+    private void ExecuteLoadElement1D(BytecodeCallFrame frame, VmInstruction instruction, int instructionIndex)
+    {
+        if (TryExecuteFastLoadElement1(frame))
+        {
+            return;
+        }
+
+        var slowLocation = ResolveLocation(frame.Routine.Id, instructionIndex);
+        ExecuteDirectLoadElement1(frame, instruction, instructionIndex, slowLocation);
+    }
+
+    /// <summary>Чтение 2D без срезов; при промахе сохраняется обычная диагностика.</summary>
+    private void ExecuteLoadElement2D(BytecodeCallFrame frame, VmInstruction instruction, int instructionIndex)
+    {
+        if (TryExecuteFastLoadElement2(frame))
+        {
+            return;
+        }
+
+        var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+        Span<int> indices = stackalloc int[2];
+        PopulateArrayIndices(frame, instructionIndex, location, indices);
+        ExecuteDirectLoadElement(frame, instruction, instructionIndex, location, indices, rentedIndices: null);
     }
 
     private bool TryExecuteFastLoadElement1(BytecodeCallFrame frame)
@@ -267,6 +320,13 @@ public sealed partial class BytecodeVm
                 {
                     stack.DiscardTop(2);
                     stack.PushLong(immediateLongElement);
+                    return true;
+                }
+
+                if (directArray.TryGetDouble1(immediateIndex, out var immediateDoubleElement))
+                {
+                    stack.DiscardTop(2);
+                    stack.PushDouble(immediateDoubleElement);
                     return true;
                 }
 
@@ -360,6 +420,13 @@ public sealed partial class BytecodeVm
                         return true;
                     }
 
+                    if (stack.TryGetImmediateDouble(out var immediateDouble, 2)
+                        && integerArray.TrySetDouble1(immediateIndex, immediateDouble))
+                    {
+                        stack.DiscardTop(3);
+                        return true;
+                    }
+
                     var valueToStore = stack.PeekUnchecked(2);
                     if (integerArray.TrySetValue1(immediateIndex, valueToStore))
                     {
@@ -400,9 +467,203 @@ public sealed partial class BytecodeVm
         return true;
     }
 
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private bool TryExecuteFastLoadElement2(BytecodeCallFrame frame)
+    {
+        var stack = frame.EvaluationStack;
+        if (stack.Count < 3 || !stack.TryGetImmediateInteger(out var index1) || !stack.TryGetImmediateInteger(out var index0, 1))
+        {
+            return false;
+        }
+
+        var directArrayValue = stack.PeekUnchecked(2);
+        if (directArrayValue.Type is ArrayTypeSymbol
+            && directArrayValue.Value is RuntimeArrayValue directArray
+            && directArray.IsAllocated
+            && directArray.Rank == 2)
+        {
+            if (directArray.TryGetInteger2(index0, index1, out var directInteger))
+            {
+                stack.DiscardTop(3);
+                stack.PushInteger(directInteger);
+                return true;
+            }
+
+            if (directArray.TryGetLong2(index0, index1, out var directLong))
+            {
+                stack.DiscardTop(3);
+                stack.PushLong(directLong);
+                return true;
+            }
+
+            if (directArray.TryGetDouble2(index0, index1, out var directDouble))
+            {
+                stack.DiscardTop(3);
+                stack.PushDouble(directDouble);
+                return true;
+            }
+
+            if (directArray.TryGetValue2(index0, index1, out var directElement))
+            {
+                stack.DiscardTop(3);
+                stack.PushUnchecked(directElement);
+                return true;
+            }
+        }
+
+        // При несовпадении типа или выходе за границы стек остаётся нетронутым:
+        // обычный путь формирует прежнюю диагностику.
+        return false;
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private bool TryExecuteFastLoadElement3(BytecodeCallFrame frame)
+    {
+        var stack = frame.EvaluationStack;
+        if (stack.Count < 4
+            || !stack.TryGetImmediateInteger(out var index2)
+            || !stack.TryGetImmediateInteger(out var index1, 1)
+            || !stack.TryGetImmediateInteger(out var index0, 2))
+        {
+            return false;
+        }
+
+        var directArrayValue = stack.PeekUnchecked(3);
+        if (directArrayValue.Type is ArrayTypeSymbol
+            && directArrayValue.Value is RuntimeArrayValue directArray
+            && directArray.IsAllocated
+            && directArray.Rank == 3)
+        {
+            if (directArray.TryGetInteger3(index0, index1, index2, out var directInteger))
+            {
+                stack.DiscardTop(4);
+                stack.PushInteger(directInteger);
+                return true;
+            }
+
+            if (directArray.TryGetLong3(index0, index1, index2, out var directLong))
+            {
+                stack.DiscardTop(4);
+                stack.PushLong(directLong);
+                return true;
+            }
+
+            if (directArray.TryGetDouble3(index0, index1, index2, out var directDouble))
+            {
+                stack.DiscardTop(4);
+                stack.PushDouble(directDouble);
+                return true;
+            }
+
+            if (directArray.TryGetValue3(index0, index1, index2, out var directElement))
+            {
+                stack.DiscardTop(4);
+                stack.PushUnchecked(directElement);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private bool TryExecuteFastStoreElement2(BytecodeCallFrame frame)
+    {
+        var stack = frame.EvaluationStack;
+        if (stack.Count < 4
+            || !stack.TryGetImmediateInteger(out var index1)
+            || !stack.TryGetImmediateInteger(out var index0, 1))
+        {
+            return false;
+        }
+
+        var target = stack.PeekUnchecked(2);
+        if (target.Type is ArrayTypeSymbol && target.Value is RuntimeArrayValue array
+            && array.IsAllocated && array.Rank == 2)
+        {
+            if (stack.TryGetImmediateInteger(out var immediateInteger, 3)
+                && array.TrySetInteger2(index0, index1, immediateInteger))
+            {
+                stack.DiscardTop(4);
+                return true;
+            }
+
+            if (stack.TryGetImmediateLong(out var immediateLong, 3)
+                && array.TrySetLong2(index0, index1, immediateLong))
+            {
+                stack.DiscardTop(4);
+                return true;
+            }
+
+            if (stack.TryGetImmediateDouble(out var immediateDouble, 3)
+                && array.TrySetDouble2(index0, index1, immediateDouble))
+            {
+                stack.DiscardTop(4);
+                return true;
+            }
+
+            var valueToStore = stack.PeekUnchecked(3);
+            if (array.TrySetValue2(index0, index1, valueToStore))
+            {
+                stack.DiscardTop(4);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private bool TryExecuteFastStoreElement3(BytecodeCallFrame frame)
+    {
+        var stack = frame.EvaluationStack;
+        if (stack.Count < 5
+            || !stack.TryGetImmediateInteger(out var index2)
+            || !stack.TryGetImmediateInteger(out var index1, 1)
+            || !stack.TryGetImmediateInteger(out var index0, 2))
+        {
+            return false;
+        }
+
+        var target = stack.PeekUnchecked(3);
+        if (target.Type is ArrayTypeSymbol && target.Value is RuntimeArrayValue array
+            && array.IsAllocated && array.Rank == 3)
+        {
+            if (stack.TryGetImmediateInteger(out var immediateInteger, 4)
+                && array.TrySetInteger3(index0, index1, index2, immediateInteger))
+            {
+                stack.DiscardTop(5);
+                return true;
+            }
+
+            if (stack.TryGetImmediateLong(out var immediateLong, 4)
+                && array.TrySetLong3(index0, index1, index2, immediateLong))
+            {
+                stack.DiscardTop(5);
+                return true;
+            }
+
+            if (stack.TryGetImmediateDouble(out var immediateDouble, 4)
+                && array.TrySetDouble3(index0, index1, index2, immediateDouble))
+            {
+                stack.DiscardTop(5);
+                return true;
+            }
+
+            var valueToStore = stack.PeekUnchecked(4);
+            if (array.TrySetValue3(index0, index1, index2, valueToStore))
+            {
+                stack.DiscardTop(5);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private int[] PopArrayIndices(
         BytecodeCallFrame frame,
-        BytecodeInstruction instruction,
+         VmInstruction instruction,
         int instructionIndex,
         TextLocation location)
     {
@@ -456,7 +717,7 @@ public sealed partial class BytecodeVm
 
     private void ExecuteDirectLoadElement(
         BytecodeCallFrame frame,
-        BytecodeInstruction instruction,
+         VmInstruction instruction,
         int instructionIndex,
         TextLocation location,
         ReadOnlySpan<int> indices,
@@ -471,7 +732,7 @@ public sealed partial class BytecodeVm
 
     private void ExecuteDirectLoadElement1(
         BytecodeCallFrame frame,
-        BytecodeInstruction instruction,
+         VmInstruction instruction,
         int instructionIndex,
         TextLocation location)
     {
@@ -505,7 +766,7 @@ public sealed partial class BytecodeVm
 
     private void ExecuteDirectLoadElement3(
         BytecodeCallFrame frame,
-        BytecodeInstruction instruction,
+         VmInstruction instruction,
         int instructionIndex,
         TextLocation location)
     {
@@ -586,7 +847,7 @@ public sealed partial class BytecodeVm
 
     private void ExecuteDirectStoreElement(
         BytecodeCallFrame frame,
-        BytecodeInstruction instruction,
+         VmInstruction instruction,
         int instructionIndex,
         TextLocation location,
         ReadOnlySpan<int> indices,
@@ -615,7 +876,7 @@ public sealed partial class BytecodeVm
 
     private void ExecuteDirectStoreElement1(
         BytecodeCallFrame frame,
-        BytecodeInstruction instruction,
+         VmInstruction instruction,
         int instructionIndex,
         TextLocation location)
     {
@@ -635,7 +896,7 @@ public sealed partial class BytecodeVm
 
     private void ExecuteDirectStoreElement3(
         BytecodeCallFrame frame,
-        BytecodeInstruction instruction,
+         VmInstruction instruction,
         int instructionIndex,
         TextLocation location)
     {
@@ -657,7 +918,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeArrayIndexSlice[] PopArrayIndexSlices(
         BytecodeCallFrame frame,
-        BytecodeInstruction instruction,
+         VmInstruction instruction,
         int instructionIndex,
         TextLocation location)
     {

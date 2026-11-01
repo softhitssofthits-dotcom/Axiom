@@ -6,7 +6,7 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
-    private BytecodeVariableSlot[] ResolveByRefArgumentSlots(BytecodeCallFrame callerFrame, BytecodeInstruction instruction)
+    private BytecodeVariableSlot[] ResolveByRefArgumentSlots(BytecodeCallFrame callerFrame,  VmInstruction instruction)
     {
         var slots = new BytecodeVariableSlot[instruction.GetOperand(1)];
         var byRefCount = instruction.GetOperand(3);
@@ -47,7 +47,7 @@ public sealed partial class BytecodeVm
     /// </summary>
     private BytecodeVariableSlot CreateAddressSlot(
         BytecodeCallFrame callerFrame,
-        BytecodeInstruction instruction,
+         VmInstruction instruction,
         ref int operandIndex)
     {
         var baseKind = instruction.GetOperand(operandIndex++);

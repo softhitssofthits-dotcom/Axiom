@@ -8,7 +8,7 @@ public sealed partial class BytecodeVm
 {
     // Словарь создаётся пустым: объявление задаёт типы ключа и значения,
     // а записи добавляются операциями словаря.
-    private void ExecuteCreateDictionary(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteCreateDictionary(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var typeName = ReadDebugName(instruction.GetOperand(0));
         var dictionaryType = ResolveDictionaryType(typeName, frame.Routine.Id, instructionIndex);
@@ -16,7 +16,7 @@ public sealed partial class BytecodeVm
             RuntimeValue.FromDictionary(dictionaryType, new RuntimeDictionaryValue(dictionaryType)));
     }
 
-    private void ExecuteLoadDictionaryValue(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteLoadDictionaryValue(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var keyValue = PopValue(frame, instructionIndex);
@@ -36,7 +36,7 @@ public sealed partial class BytecodeVm
         frame.EvaluationStack.Push(value);
     }
 
-    private void ExecuteStoreDictionaryValue(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteStoreDictionaryValue(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var keyValue = PopValue(frame, instructionIndex);
@@ -48,7 +48,7 @@ public sealed partial class BytecodeVm
         dictionary.Set(keyValue, value);
     }
 
-    private void ExecuteDictionaryAdd(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteDictionaryAdd(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var value = PopValue(frame, instructionIndex);
@@ -67,7 +67,7 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private void ExecuteDictionaryExists(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteDictionaryExists(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var keyValue = PopValue(frame, instructionIndex);
@@ -78,7 +78,7 @@ public sealed partial class BytecodeVm
         frame.EvaluationStack.PushUnchecked(RuntimeValue.FromBoolean(dictionary.ContainsKey(keyValue)));
     }
 
-    private void ExecuteDictionaryRemove(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteDictionaryRemove(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var keyValue = PopValue(frame, instructionIndex);
@@ -89,7 +89,7 @@ public sealed partial class BytecodeVm
         frame.EvaluationStack.PushUnchecked(RuntimeValue.FromBoolean(dictionary.Remove(keyValue)));
     }
 
-    private void ExecuteDictionaryKeys(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteDictionaryKeys(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var dictionaryValue = PopValue(frame, instructionIndex);
@@ -99,7 +99,7 @@ public sealed partial class BytecodeVm
         frame.EvaluationStack.PushUnchecked(dictionary.CreateKeysArray());
     }
 
-    private void ExecuteDictionaryCount(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteDictionaryCount(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var dictionaryValue = PopValue(frame, instructionIndex);
@@ -113,7 +113,7 @@ public sealed partial class BytecodeVm
     // оставляет на стеке BOOLEAN. При отсутствии ключа переменная получает
     // значение по умолчанию своего типа; отсутствующая запись не добавляется.
     // Вид источника повторяет BYREF: локальная, параметр, глобальная, захват.
-    private void ExecuteDictionaryTryGetValue(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteDictionaryTryGetValue(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var sourceKind = instruction.GetOperand(1);

@@ -11,7 +11,7 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
-    private void ExecuteRoutineCall(BytecodeCallFrame callerFrame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteRoutineCall(BytecodeCallFrame callerFrame,  VmInstruction instruction, int instructionIndex)
     {
         var targetRoutineId = instruction.GetOperand(0);
         var argumentCount = instruction.GetOperand(1);
@@ -65,7 +65,7 @@ public sealed partial class BytecodeVm
             byValValuesAreSnapshots: true));
     }
 
-    private void ExecuteFunctionValueCall(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteFunctionValueCall(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var argumentCount = instruction.GetOperand(0);
         var returnsValue = instruction.GetOperand(1) != 0;

@@ -17,6 +17,7 @@ public sealed partial class BytecodeVm
 
     private readonly DiagnosticBag _diagnostics = new();
     private readonly Dictionary<int, BytecodeRoutine> _routines;
+    private readonly Dictionary<int, VmInstruction[]> _decodedInstructions;
     private readonly Dictionary<FunctionSymbol, BytecodeRoutine> _routinesBySymbol;
     private readonly Dictionary<int, RoutineFrameTemplate> _frameTemplatesByRoutineId;
     private readonly Dictionary<int, BuiltinBinding> _builtins;
@@ -34,13 +35,17 @@ public sealed partial class BytecodeVm
     private readonly Dictionary<TileTransformCacheKey, RuntimeImageValue> _tileTransformCache = [];
     private readonly Dictionary<(int CallerRoutineId, int TargetRoutineId), CaptureBinding[]> _captureBindingCache = [];
     private readonly RuntimeValue?[] _constantValues;
-    private readonly RuntimeValue?[] _globalsBySlot;
+    private readonly VmValue[] _globalValuesBySlot;
     private readonly int?[] _globalFixedStringLengths;
     private readonly bool[] _hasGlobalSlot;
     private readonly Stack<BytecodeCallFrame> _callStack = new();
+
     private readonly Dictionary<int, BytecodeCallFrame> _cachedFrames = [];
     private readonly HashSet<RuntimeTextFile> _openFiles = [];
     private readonly StringBuilder _pendingOutput = new();
+    // Кэш колбэка отчёта переполнения: метод-группа экземпляра аллоцирует
+    // новый делегат при каждом преобразовании, кэш делает путь безаллокационным.
+    private readonly Action<string, string, TextLocation> _reportOverflow;
     private readonly IRuntimeHost _host;
     private readonly double _monotonicOriginSeconds;
     private readonly BytecodeModule _module;
@@ -70,6 +75,7 @@ public sealed partial class BytecodeVm
 
         _module = module;
         _host = host;
+        _reportOverflow = ReportRuntimeDiagnostic;
 
         // Начало монотонного измерения фиксируется при создании исполнителя,
         // поэтому ELAPSEDSECONDS() считает время именно этого запуска.
@@ -78,6 +84,19 @@ public sealed partial class BytecodeVm
         _shouldStopBeforeInstruction = shouldStopBeforeInstruction;
         _breakpoints = breakpoints;
         _routines = module.Routines.ToDictionary(static routine => routine.Id);
+        // Раскодированный поток строится для всех подпрограмм сразу: VM читает
+        // инструкции из непрерывных массивов структур, исходный модуль остаётся
+        // источником истины для валидации, сериализации и отладки. Слияние
+        // применяется только к быстрому пути: отладочная VM получает неслитный
+        // поток, чтобы поколоночные точки остановки и пошаговое исполнение
+        // видели каждую исходную инструкцию (деоптимизация под отладкой).
+        _decodedInstructions = module.Routines.ToDictionary(
+            static routine => routine.Id,
+            routine => DecodeInstructions(
+                routine.InstructionArray,
+                fuse: instructionObserver is null
+                    && shouldStopBeforeInstruction is null
+                    && breakpoints is null));
         _routinesBySymbol = module.Routines
             .Where(static routine => routine.Symbol is not null)
             .ToDictionary(static routine => routine.Symbol!);
@@ -98,7 +117,7 @@ public sealed partial class BytecodeVm
         _globalMetadata = module.Globals.ToDictionary(static global => global.Slot);
         _constantValues = module.ConstantPool.Entries.Select(TryCreateRuntimeConstant).ToArray();
         var maxGlobalSlot = module.Globals.Count == 0 ? -1 : module.Globals.Max(static global => global.Slot);
-        _globalsBySlot = maxGlobalSlot >= 0 ? new RuntimeValue[maxGlobalSlot + 1] : Array.Empty<RuntimeValue>();
+        _globalValuesBySlot = maxGlobalSlot >= 0 ? new VmValue[maxGlobalSlot + 1] : Array.Empty<VmValue>();
         _globalFixedStringLengths = maxGlobalSlot >= 0 ? new int?[maxGlobalSlot + 1] : Array.Empty<int?>();
         _hasGlobalSlot = maxGlobalSlot >= 0 ? new bool[maxGlobalSlot + 1] : Array.Empty<bool>();
 
@@ -106,11 +125,11 @@ public sealed partial class BytecodeVm
         {
             // Запись глобальной переменной создаётся её инструкцией объявления:
             // отложенная стратегия не должна превращаться в выделение всех полей-массивов
-            // ещё до начала исполнения программы.
-            var initialValue = global.Type is UserDefinedTypeSymbol
-                ? RuntimeValue.Void
-                : RuntimeValue.Default(global.Type, global.FixedStringLength);
-            _globalsBySlot[global.Slot] = initialValue;
+            // ещё до начала исполнения программы. Записи TYPE остаются пустым слотом
+            // до первого чтения (EnsureGlobalValueCreated).
+            _globalValuesBySlot[global.Slot] = global.Type is UserDefinedTypeSymbol
+                ? default
+                : VmValue.FromRuntime(RuntimeValue.Default(global.Type, global.FixedStringLength));
             _globalFixedStringLengths[global.Slot] = global.FixedStringLength;
             _hasGlobalSlot[global.Slot] = true;
         }
@@ -177,15 +196,7 @@ public sealed partial class BytecodeVm
             Array.Empty<BytecodeVariableSlot>(),
             callSiteLocation: entryPoint.Location));
 
-        while (_callStack.Count > 0 && _stopState is null)
-        {
-            if (CheckCancellationRequested())
-            {
-                break;
-            }
-
-            ExecuteCurrentInstruction();
-        }
+        RunInterpreterLoop();
     }
 
     internal RuntimeResult ResumeFrom(BytecodeVmStopState stopState)
@@ -262,15 +273,7 @@ public sealed partial class BytecodeVm
 
         try
         {
-            while (_callStack.Count > 0 && _stopState is null)
-            {
-                if (CheckCancellationRequested())
-                {
-                    break;
-                }
-
-                ExecuteCurrentInstruction();
-            }
+            RunInterpreterLoop();
         }
         catch (RuntimeFailureException)
         {
@@ -281,6 +284,829 @@ public sealed partial class BytecodeVm
         }
 
         return new RuntimeResult(_diagnostics, _stopState, GetPendingOutputPreview(), _cancelled);
+    }
+
+    /// <summary>
+    /// Единый цикл исполнения. Режим выбирается на входе: отладчик возобновляет
+    /// выполнение через ResumeFrom, поэтому каждый возобновлённый запуск заново
+    /// выбирает между плотным путём и полным путём с наблюдением и снимками.
+    /// </summary>
+    private void RunInterpreterLoop()
+    {
+        while (_callStack.Count > 0 && _stopState is null)
+        {
+            if (CheckCancellationRequested())
+            {
+                break;
+            }
+
+            if (_canUseFastInstructionPath)
+            {
+                RunCurrentFrameFast();
+            }
+            else
+            {
+                ExecuteCurrentInstruction();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Плотный цикл исполнения текущего кадра без внешнего наблюдения. Кадр,
+    /// поток инструкций и стек подняты в локальные переменные; вызов процедуры
+    /// или возврат покидают цикл, а не переищут текущий кадр на инструкцию.
+    /// Горячие тривиальные опкоды исполняются прямо в цикле, остальные
+    /// передаются общему switch. Диагностики и границы перехвата те же, что у
+    /// полного пути.
+    /// </summary>
+    private void RunCurrentFrameFast()
+    {
+        var frame = _callStack.Peek();
+        var instructions = frame.DecodedInstructions;
+        var instructionCount = instructions.Length;
+        var stack = frame.EvaluationStack;
+        var ip = frame.InstructionPointer;
+
+        try
+        {
+            while (true)
+            {
+                if (CheckCancellationRequested())
+                {
+                    return;
+                }
+
+                if ((uint)ip >= (uint)instructionCount)
+                {
+                    ReportInvalidRuntimeState(
+                        $"Instruction pointer {ip} вышел за пределы процедуры '{frame.Routine.Name}'.",
+                        ResolveLocation(frame.Routine.Id, Math.Max(0, instructionCount - 1)));
+                    throw new RuntimeFailureException();
+                }
+
+                var instruction = instructions[ip];
+                frame.InstructionPointer = ip + 1;
+                var currentOpcode = instruction.Opcode;
+
+                // Слитные пары обрабатываются до общего свитча единым вызовом:
+                // кейсы внутри свитча и развёрнутые обработчики в теле цикла
+                // увеличивали разогрев метода (наблюдение O07-6). Управление
+                // доходит до конца итерации, где ip синхронизируется
+                // с frame.InstructionPointer, поэтому continue здесь нельзя.
+                if (currentOpcode is Opcode.LoadLocalPair or Opcode.LoadLocalConst)
+                {
+                    ExecuteFusedLoadPair(frame, instruction, ip);
+                }
+                else
+                {
+                    switch (currentOpcode)
+                    {
+                    case Opcode.LoadLocal:
+                        frame.PushLocalValueOntoEvaluationStack(instruction.A);
+                        break;
+
+                    case Opcode.StoreLocal:
+                        var localSlot = instruction.A;
+                        if (stack.TryGetImmediateInteger(out var immediateInteger)
+                            && frame.TryStoreImmediateInteger(localSlot, immediateInteger))
+                            stack.DiscardTop(1);
+                        else if (stack.TryGetImmediateLong(out var immediateLong)
+                            && frame.TryStoreImmediateLong(localSlot, immediateLong))
+                            stack.DiscardTop(1);
+                        else
+                            frame.StoreLocalValue(localSlot, PopValue(frame, ip));
+                        break;
+
+                    case Opcode.PushConst:
+                        stack.PushUnchecked(ReadConstantUnchecked(instruction.A));
+                        break;
+
+                    case Opcode.PushIntegerZero:
+                        // Непосредственный ноль сохраняет распакованное представление
+                        // для последующих целочисленных операций и записи в слоты.
+                        stack.PushInteger(0);
+                        break;
+
+                    case Opcode.PushIntegerOne:
+                        stack.PushInteger(1);
+                        break;
+
+                    case Opcode.LoadGlobal:
+                        PushGlobalValueOntoEvaluationStack(stack, instruction.A);
+                        break;
+
+                    case Opcode.StoreGlobal:
+                        var globalSlot = instruction.A;
+                        if (stack.TryGetImmediateInteger(out var storeGlobalInteger)
+                            && TryStoreGlobalImmediateInteger(globalSlot, storeGlobalInteger))
+                            stack.DiscardTop(1);
+                        else if (stack.TryGetImmediateLong(out var storeGlobalLong)
+                            && TryStoreGlobalImmediateLong(globalSlot, storeGlobalLong))
+                            stack.DiscardTop(1);
+                        else
+                            StoreGlobalUnchecked(globalSlot, PopValue(frame, ip));
+                        break;
+
+                    case Opcode.Pop:
+                        _ = PopValue(frame, ip);
+                        break;
+
+                    case Opcode.Jump:
+                        frame.InstructionPointer = instruction.A;
+                        break;
+
+                    case Opcode.Call:
+                    case Opcode.CallByRef:
+                        ExecuteRoutineCall(frame, instruction, ip);
+                        if (_callStack.Peek() != frame)
+                        {
+                            return;
+                        }
+
+                        break;
+
+                    case Opcode.CallValue:
+                        ExecuteFunctionValueCall(frame, instruction, ip);
+                        if (_callStack.Peek() != frame)
+                        {
+                            return;
+                        }
+
+                        break;
+
+                    case Opcode.CallBuiltin:
+                        ExecuteBuiltinCall(frame, instruction, ip);
+                        if (_callStack.Peek() != frame)
+                        {
+                            return;
+                        }
+
+                        break;
+
+                    case Opcode.Return:
+                        ExecuteReturn(frame, ip);
+                        if (_callStack.Count == 0 || _callStack.Peek() != frame)
+                        {
+                            return;
+                        }
+
+                        break;
+
+                    case Opcode.EndFinally:
+                        // Завершение finally может закончить возврат из процедуры
+                        // и выгрузить текущий кадр: продолжать его цикл нельзя.
+                        ExecuteEndFinally(frame);
+                        if (_callStack.Count == 0 || _callStack.Peek() != frame)
+                        {
+                            return;
+                        }
+
+                        break;
+
+                    case Opcode.LoadFunction:
+                        stack.Push(LoadFunctionValue(frame, instruction.A, ip));
+                        break;
+
+                    case Opcode.LoadBuiltinFunction:
+                        stack.Push(LoadBuiltinFunctionValue(frame, instruction.A, ip));
+                        break;
+
+                    case Opcode.AppendStringGlobal:
+                        ExecuteAppendStringGlobal(frame, instruction, ip);
+                        break;
+
+                    case Opcode.FreshLocal:
+                        frame.FreshLocal(instruction.A);
+                        break;
+
+                    case Opcode.ClearForEachItem:
+                        frame.ClearForEachItem(instruction.A);
+                        break;
+
+                    case Opcode.BindArrayElement:
+                        ExecuteBindArrayElement(frame, instruction);
+                        break;
+
+                    case Opcode.AppendStringLocal:
+                        ExecuteAppendStringLocal(frame, instruction, ip);
+                        break;
+
+                    case Opcode.LoadArgument:
+                        var argument = frame.Arguments[instruction.A];
+                        if (argument.TryGetImmediateInteger(out var integerArgument))
+                            stack.PushInteger(integerArgument);
+                        else
+                            stack.Push(argument.Value);
+                        break;
+
+                    case Opcode.StoreArgument:
+                        frame.Arguments[instruction.A].Store(PopValue(frame, ip));
+                        break;
+
+                    case Opcode.AppendStringArgument:
+                        ExecuteAppendStringSlot(frame.Arguments[instruction.A], PopValue(frame, ip), instruction.B != 0);
+                        break;
+
+                    case Opcode.LoadCapture:
+                        stack.Push(frame.Captures[instruction.A].Value);
+                        break;
+
+                    case Opcode.StoreCapture:
+                        frame.Captures[instruction.A].Store(PopValue(frame, ip));
+                        break;
+
+                    case Opcode.AppendStringCapture:
+                        ExecuteAppendStringSlot(frame.Captures[instruction.A], PopValue(frame, ip), instruction.B != 0);
+                        break;
+
+                    case Opcode.SnapshotValue:
+                        stack.PushUnchecked(PopValue(frame, ip).CopyForStorage());
+                        break;
+
+                    case Opcode.Negate:
+                        ExecuteNegateInstruction(frame, ip);
+                        break;
+
+                    case Opcode.Concat:
+                        ExecuteBinaryInstruction(frame, instruction.Opcode, ip);
+                        break;
+
+                    case Opcode.Add:
+                        ExecuteAddInstruction(frame, ip);
+                        break;
+
+                    case Opcode.AddLongInteger:
+                        ExecuteAddLongIntegerInstruction(frame, ip);
+                        break;
+
+                    case Opcode.Subtract:
+                        ExecuteSubtractInstruction(frame, ip);
+                        break;
+
+                    case Opcode.Power:
+                        ExecuteBinaryInstruction(frame, instruction.Opcode, ip);
+                        break;
+
+                    case Opcode.IntegralDivide:
+                        ExecuteIntegralDivideInstruction(frame, ip);
+                        break;
+
+                    case Opcode.Eqv:
+                    case Opcode.Imp:
+                        ExecuteIntegerLogicalInstruction(frame, instruction.Opcode, ip);
+                        break;
+
+                    case Opcode.Divide:
+                        ExecuteDivideInstruction(frame, ip);
+                        break;
+
+                    case Opcode.Modulo:
+                        ExecuteModuloInstruction(frame, ip);
+                        break;
+
+                    case Opcode.And:
+                        ExecuteAndInstruction(frame, ip);
+                        break;
+
+                    case Opcode.Or:
+                        ExecuteOrInstruction(frame, ip);
+                        break;
+
+                    case Opcode.Xor:
+                        ExecuteXorInstruction(frame, ip);
+                        break;
+
+                    case Opcode.ShiftLeft:
+                        ExecuteShiftLeftInstruction(frame, ip);
+                        break;
+
+                    case Opcode.ShiftRight:
+                        ExecuteShiftRightInstruction(frame, ip);
+                        break;
+
+                    case Opcode.CompareEqual:
+                        ExecuteCompareEqualInstruction(frame);
+                        break;
+
+                    case Opcode.CompareNotEqual:
+                        ExecuteCompareNotEqualInstruction(frame, ip);
+                        break;
+
+                    case Opcode.CompareLess:
+                        ExecuteCompareLessInstruction(frame, ip);
+                        break;
+
+                    case Opcode.CompareLessOrEqual:
+                        ExecuteCompareLessOrEqualInstruction(frame, ip);
+                        break;
+
+                    case Opcode.Multiply:
+                        ExecuteMultiplyInstruction(frame, ip);
+                        break;
+
+                    case Opcode.CompareGreater:
+                        ExecuteCompareGreaterInstruction(frame, ip);
+                        break;
+
+                    case Opcode.CompareGreaterOrEqual:
+                        ExecuteCompareGreaterOrEqualInstruction(frame, ip);
+                        break;
+
+                    case Opcode.Not:
+                        ExecuteNotInstruction(frame, ip);
+                        break;
+
+                    case Opcode.Convert:
+                        ExecuteConvert(frame, instruction, ip);
+                        break;
+
+                    case Opcode.JumpIfEqual:
+                        ExecuteJumpIfEqualInstruction(frame, instruction, ip);
+                        break;
+
+                    case Opcode.JumpIfNotEqual:
+                        ExecuteJumpIfNotEqualInstruction(frame, instruction, ip);
+                        break;
+
+                    case Opcode.JumpIfLess:
+                        ExecuteJumpIfLessInstruction(frame, instruction, ip);
+                        break;
+
+                    case Opcode.JumpIfLessOrEqual:
+                        ExecuteJumpIfLessOrEqualInstruction(frame, instruction, ip);
+                        break;
+
+                    case Opcode.JumpIfGreater:
+                        ExecuteJumpIfGreaterInstruction(frame, instruction, ip);
+                        break;
+
+                    case Opcode.JumpIfGreaterOrEqual:
+                        ExecuteJumpIfGreaterOrEqualInstruction(frame, instruction, ip);
+                        break;
+
+                    case Opcode.JumpIfForDoneLocal:
+                        ExecuteJumpIfForDoneLocalInstruction(frame, instruction, ip);
+                        break;
+
+                    case Opcode.JumpIfTrue:
+                        ExecuteJumpIfBooleanInstruction(frame, instruction, invertCondition: false);
+                        break;
+
+                    case Opcode.JumpIfFalse:
+                        ExecuteJumpIfBooleanInstruction(frame, instruction, invertCondition: true);
+                        break;
+
+                    case Opcode.OpenFile:
+                        ExecuteOpenFile(frame, instruction, ip);
+                        break;
+
+                    case Opcode.CloseFile:
+                        ExecuteCloseFile(frame, ip);
+                        break;
+
+                    case Opcode.RedimArray:
+                        ExecuteRedimArray(frame, instruction, ip);
+                        break;
+
+                    case Opcode.NewArray:
+                        ExecuteNewArray(frame, instruction, ip);
+                        break;
+
+                    case Opcode.GetArrayStructuralVersion:
+                        ExecuteGetArrayStructuralVersion(frame, ip);
+                        break;
+
+                    case Opcode.EraseArray:
+                        ExecuteEraseArray(frame, ip);
+                        break;
+
+                    case Opcode.LoadElement:
+                        ExecuteLoadElement(frame, instruction, ip);
+                        break;
+
+                    case Opcode.LoadElement1D:
+                        ExecuteLoadElement1D(frame, instruction, ip);
+                        break;
+
+                    case Opcode.LoadElement2D:
+                        ExecuteLoadElement2D(frame, instruction, ip);
+                        break;
+
+                    case Opcode.StoreElement:
+                        ExecuteStoreElement(frame, instruction, ip);
+                        break;
+
+                    case Opcode.CreateRecord:
+                        ExecuteCreateRecord(frame, instruction, ip);
+                        break;
+
+                    case Opcode.LoadField:
+                        ExecuteLoadField(frame, instruction, ip);
+                        break;
+
+                    case Opcode.StoreField:
+                        ExecuteStoreField(frame, instruction, ip);
+                        break;
+
+                    case Opcode.ValidateTypeInvariant:
+                        ValidateTypeInvariant(frame, instruction, ip);
+                        break;
+
+                    case Opcode.CreateDictionary:
+                        ExecuteCreateDictionary(frame, instruction, ip);
+                        break;
+
+                    case Opcode.LoadDictionaryValue:
+                        ExecuteLoadDictionaryValue(frame, instruction, ip);
+                        break;
+
+                    case Opcode.StoreDictionaryValue:
+                        ExecuteStoreDictionaryValue(frame, instruction, ip);
+                        break;
+
+                    case Opcode.DictionaryAdd:
+                        ExecuteDictionaryAdd(frame, instruction, ip);
+                        break;
+
+                    case Opcode.DictionaryExists:
+                        ExecuteDictionaryExists(frame, instruction, ip);
+                        break;
+
+                    case Opcode.DictionaryRemove:
+                        ExecuteDictionaryRemove(frame, instruction, ip);
+                        break;
+
+                    case Opcode.DictionaryKeys:
+                        ExecuteDictionaryKeys(frame, instruction, ip);
+                        break;
+
+                    case Opcode.DictionaryCount:
+                        ExecuteDictionaryCount(frame, instruction, ip);
+                        break;
+
+                    case Opcode.DictionaryTryGetValue:
+                        ExecuteDictionaryTryGetValue(frame, instruction, ip);
+                        break;
+
+                    case Opcode.CreateSet:
+                        ExecuteCreateSet(frame, instruction, ip);
+                        break;
+
+                    case Opcode.SetAdd:
+                        ExecuteSetAdd(frame, instruction, ip);
+                        break;
+
+                    case Opcode.SetContains:
+                        ExecuteSetContains(frame, instruction, ip);
+                        break;
+
+                    case Opcode.SetRemove:
+                        ExecuteSetRemove(frame, instruction, ip);
+                        break;
+
+                    case Opcode.SetCount:
+                        ExecuteSetCount(frame, instruction, ip);
+                        break;
+
+                    case Opcode.SetToArray:
+                        ExecuteSetToArray(frame, instruction, ip);
+                        break;
+
+                    case Opcode.SetUnionWith:
+                        ExecuteSetUnionWith(frame, instruction, ip);
+                        break;
+
+                    case Opcode.SetIntersectWith:
+                        ExecuteSetIntersectWith(frame, instruction, ip);
+                        break;
+
+                    case Opcode.ValidateForStep:
+                        ValidateForStep(frame, ip);
+                        break;
+
+                    case Opcode.AdvanceForLoopLocal:
+                        ExecuteAdvanceForLoopLocalInstruction(frame, instruction, ip);
+                        break;
+
+                    case Opcode.StepForLoopLocal:
+                        ExecuteStepForLoopLocal(frame, instruction, ip);
+                        break;
+
+                    case Opcode.PrintValue:
+                        AppendPendingOutput(PopValue(frame, ip));
+                        break;
+
+                    case Opcode.PrintUsing:
+                        ExecutePrintUsing(frame, instruction, ip);
+                        break;
+
+                    case Opcode.PrintSeparator:
+                        ExecutePrintSeparator(instruction.A, ip);
+                        break;
+
+                    case Opcode.PrintLine:
+                        FlushPendingOutput(forceEmptyLine: true);
+                        break;
+
+                    case Opcode.Input:
+                        ExecuteInput(frame, instruction, ip);
+                        break;
+
+                    case Opcode.Sleep:
+                        ExecuteSleepInstruction(frame, instruction, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.ReseedRandom:
+                        ExecuteReseedRandomInstruction(frame, instruction, ip);
+                        break;
+
+                    case Opcode.FormatInterpolatedPart:
+                        ExecuteFormatInterpolatedPart(frame, ip);
+                        break;
+
+                    case Opcode.Screen:
+                        ExecuteScreenInstruction(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.Canvas:
+                        ExecuteCanvasInstruction(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.Smooth:
+                        _host.SetGraphicsSmoothing(instruction.A != 0);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.BeginFrame:
+                        ExecuteBeginFrameInstruction(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.Present:
+                        ExecutePresentInstruction(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.Camera:
+                        ExecuteCameraInstruction(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.Viewport:
+                        ExecuteViewportInstruction(frame, instruction, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.ResetCamera:
+                        ExecuteResetCameraInstruction(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.View:
+                        ExecuteViewInstruction(frame, instruction, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.ViewPrint:
+                        ExecuteViewPrintInstruction(frame, instruction, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.Window:
+                        ExecuteWindowInstruction(frame, instruction, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.Cls:
+                        ExecuteClsInstruction(frame, instruction, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.Color:
+                        ExecuteColorInstruction(frame, instruction, ip);
+                        break;
+
+                    case Opcode.Locate:
+                        ExecuteLocateInstruction(frame, ip);
+                        break;
+
+                    case Opcode.Palette:
+                        ExecutePaletteInstruction(frame, instruction, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.PCopy:
+                        ExecutePCopyInstruction(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.PSet:
+                        ExecutePSetInstruction(frame, instruction, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.Get:
+                        ExecuteGetInstruction(frame, instruction, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.Put:
+                        ExecutePutInstruction(frame, instruction, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.Line:
+                        ExecuteLineInstruction(frame, instruction, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.Circle:
+                        ExecuteCircleInstruction(frame, instruction, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.Paint:
+                        ExecutePaintInstruction(frame, instruction, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.Draw:
+                        ExecuteDrawInstruction(frame, instruction, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.DrawRect:
+                        ExecuteDrawRectInstruction(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.FillRect:
+                        ExecuteFillRectInstruction(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.DrawLine:
+                        ExecuteDrawLineInstruction(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.DrawCircle:
+                        ExecuteDrawCircleInstruction(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.FillCircle:
+                        ExecuteFillCircleInstruction(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.DrawImage:
+                        ExecuteDrawImageInstruction(frame, instruction, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.DrawSprite:
+                        ExecuteDrawSpriteInstruction(frame, instruction, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.DrawTile:
+                        ExecuteDrawTileInstruction(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.DrawTilemap:
+                        ExecuteDrawTilemapInstruction(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.DrawTileLayer:
+                        ExecuteDrawTileLayerInstruction(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.SetMapTile:
+                        ExecuteSetMapTileInstruction(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.DrawText:
+                        ExecuteDrawTextInstruction(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.StatementBoundary:
+                        ExecuteStatementBoundary(ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.RegisterKeyHandler:
+                        ExecuteRegisterKeyHandler(frame, ip, instruction);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.UnregisterKeyHandler:
+                        ExecuteUnregisterKeyHandler(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.PauseKeyHandler:
+                        ExecutePauseKeyHandler(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.ResumeKeyHandler:
+                        ExecuteResumeKeyHandler(frame, ip);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.RegisterMouseHandler:
+                        ExecuteRegisterMouseHandler(frame, ip, instruction);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.UnregisterMouseHandler:
+                        ExecuteUnregisterMouseHandler(frame, ip, instruction);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.PauseMouseHandler:
+                        ExecutePauseMouseHandler(frame, ip, instruction);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.ResumeMouseHandler:
+                        ExecuteResumeMouseHandler(frame, ip, instruction);
+                        InvalidateReverseExecutionHistory();
+                        break;
+
+                    case Opcode.PushErrorHandler:
+                        ExecutePushErrorHandler(frame, instruction);
+                        break;
+
+                    case Opcode.PopErrorHandler:
+                        _ = frame.TryPopErrorHandler(out _);
+                        break;
+
+                    case Opcode.RaiseError:
+                        ExecuteRaiseError(frame, instruction, ip);
+                        break;
+
+                    default:
+                        ReportInvalidRuntimeState(
+                            $"Bytecode VM пока не поддерживает opcode '{instruction.Opcode}'.",
+                            ResolveLocation(frame.Routine.Id, ip));
+                        throw new RuntimeFailureException();
+                    }
+                }
+
+                ip = frame.InstructionPointer;
+            }
+        }
+        catch (ArrayAllocationFailureException ex)
+        {
+            HandleArrayRuntimeFailure(ex, frame, ip, 0);
+        }
+        catch (SetEntryLimitException ex)
+        {
+            HandleSetRuntimeFailure(ex, frame, ip, 0);
+        }
+        catch (Exception ex) when (ex is SetOperationCancelledException or ValueCopyCancelledException)
+        {
+            // Операция прервана внутри собственного обхода: получатель не
+            // изменён, выполнение прекращается как при обычной отмене.
+            CancelRun();
+            return;
+        }
+        catch (StringResourceLimitException ex)
+        {
+            HandleStringResourceFailure(ex.Message, frame, ip, 0);
+        }
+        catch (OutOfMemoryException)
+        {
+            HandleStringResourceFailure("Недостаточно памяти для результата операции.", frame, ip, 0);
+        }
+        catch (ExpiredArrayViewException ex)
+        {
+            HandleArrayRuntimeFailure(ex, frame, ip, 0);
+        }
+        catch (EvaluationStackUnderflowException ex)
+        {
+            ReportInvalidRuntimeState(ex.Message, ResolveLocation(frame.Routine.Id, ip));
+            throw new RuntimeFailureException();
+        }
+        catch (VmCallbackSuspension suspension)
+        {
+            PushSuspendedCallback(suspension);
+            return;
+        }
+        catch (RuntimeFailureException) when (TryHandleRuntimeFailure(0))
+        {
+            return;
+        }
     }
 
     private bool CheckCancellationRequested()
@@ -445,6 +1271,119 @@ public sealed partial class BytecodeVm
         };
     }
 
+    private static VmInstruction[] DecodeInstructions(BytecodeInstruction[] source, bool fuse)
+    {
+        var decoded = new VmInstruction[source.Length];
+        for (var index = 0; index < source.Length; index++)
+        {
+            decoded[index] = new VmInstruction(source[index]);
+        }
+
+        if (!fuse)
+        {
+            return decoded;
+        }
+
+        // Слияние тройки управления FOR (AdvanceForLoopLocal → Jump → JumpIfForDoneLocal)
+        // в одну суперинструкцию: декодированный поток внутренний, публичный байт-код
+        // не меняется. Проверка на верхушке цикла остаётся для первого входа; слитная
+        // инструкция сама выполняет инкремент, проверку завершения и переход.
+        for (var index = 0; index + 1 < decoded.Length; index++)
+        {
+            if (decoded[index].Opcode != Opcode.AdvanceForLoopLocal
+                || decoded[index + 1].Opcode != Opcode.Jump)
+            {
+                continue;
+            }
+
+            var backTarget = decoded[index + 1].A;
+            if (backTarget < 0 || backTarget >= decoded.Length
+                || decoded[backTarget].Opcode != Opcode.JumpIfForDoneLocal)
+            {
+                continue;
+            }
+
+            var check = decoded[backTarget];
+            if (check.A != decoded[index].A
+                || check.C != decoded[index].B
+                || backTarget + 1 >= decoded.Length)
+            {
+                continue;
+            }
+
+            decoded[index] = new VmInstruction(
+                Opcode.StepForLoopLocal,
+                check.A,
+                check.B,
+                check.C,
+                backTarget + 1,
+                check.D);
+        }
+
+        // Слияние пар тривиальных стековых операций (аналог суперинструкций
+        // LOAD_FAST__LOAD_FAST и LOAD_FAST__LOAD_CONST CPython 3.11+): одна
+        // диспетчеризация вместо двух. Замена выполняется на месте без сжатия
+        // потока, поэтому адреса переходов не сдвигаются, а вторая инструкция
+        // пары остаётся в слоте и остаётся корректной точкой прямого перехода.
+        // Обход слева направо: слитая пара пропускает оба слота.
+        for (var index = 0; index + 1 < decoded.Length; index++)
+        {
+            if (decoded[index].Opcode != Opcode.LoadLocal)
+            {
+                continue;
+            }
+
+            var nextOpcode = decoded[index + 1].Opcode;
+            if (nextOpcode == Opcode.LoadLocal)
+            {
+                decoded[index] = new VmInstruction(
+                    Opcode.LoadLocalPair,
+                    decoded[index].A,
+                    decoded[index + 1].A,
+                    0,
+                    0,
+                    0);
+                index++;
+            }
+            else if (nextOpcode == Opcode.PushConst)
+            {
+                decoded[index] = new VmInstruction(
+                    Opcode.LoadLocalConst,
+                    decoded[index].A,
+                    decoded[index + 1].A,
+                    0,
+                    0,
+                    0);
+                index++;
+            }
+        }
+
+        // Специализация формы чтения элемента 1D/2D без диапазонов: размерность
+        // и маска срезов — статические операнды, адаптивность не требуется.
+        // Все проверки границ, выделения массива и корректности значения
+        // остаются в общем пути исполнения; отладочные VM получают общий
+        // LoadElement (гейт fuse выше).
+        for (var index = 0; index < decoded.Length; index++)
+        {
+            if (decoded[index].Opcode != Opcode.LoadElement
+                || decoded[index].GetOperand(1) is not (1 or 2)
+                || decoded[index].GetOperand(2) != 0)
+            {
+                continue;
+            }
+
+            decoded[index] = new VmInstruction(
+                decoded[index].B == 1 ? Opcode.LoadElement1D : Opcode.LoadElement2D,
+                decoded[index].A,
+                decoded[index].B,
+                decoded[index].C,
+                0,
+                0);
+        }
+
+        return decoded;
+    }
+
     private BytecodeCallFrame CreateFrame(
         BytecodeRoutine routine,
         ReadOnlySpan<RuntimeValue> arguments,
@@ -471,17 +1410,17 @@ public sealed partial class BytecodeVm
             return cachedFrame;
         }
 
-        RuntimeValue[] locals;
+        VmValue[] locals;
         int?[] localFixedStringLengths;
 
         if (routine.LocalSlotCount == 0)
         {
-            locals = Array.Empty<RuntimeValue>();
+            locals = Array.Empty<VmValue>();
             localFixedStringLengths = Array.Empty<int?>();
         }
         else
         {
-            locals = (RuntimeValue[])template.DefaultLocals.Clone();
+            locals = (VmValue[])template.DefaultLocals.Clone();
             localFixedStringLengths = template.LocalFixedStringLengths;
         }
 
@@ -492,7 +1431,8 @@ public sealed partial class BytecodeVm
             localFixedStringLengths,
             captures,
             callSiteLocation,
-            routine.MaxEvaluationStackDepth);
+            routine.MaxEvaluationStackDepth,
+            _decodedInstructions[routine.Id]);
     }
 
     private static BytecodeVariableSlot[] CreateArgumentSlots(
@@ -527,7 +1467,7 @@ public sealed partial class BytecodeVm
     private void ExecuteCurrentInstruction(int runtimeFailureBoundaryDepth = 0)
     {
         var frame = CurrentFrame;
-        var instructions = frame.Routine.InstructionArray;
+        var instructions = frame.DecodedInstructions;
         var instructionCount = instructions.Length;
 
         if (frame.InstructionPointer < 0 || frame.InstructionPointer >= instructionCount)
@@ -683,7 +1623,7 @@ public sealed partial class BytecodeVm
             : shouldCaptureReversibleState ? TryCreateReversibleStateSnapshot(snapshot!) : null;
     }
 
-    private void ExecuteInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteInstruction(BytecodeCallFrame frame, VmInstruction instruction, int instructionIndex)
     {
         switch (instruction.Opcode)
         {
@@ -723,6 +1663,20 @@ public sealed partial class BytecodeVm
 
             case Opcode.LoadLocal:
                 frame.PushLocalValueOntoEvaluationStack(instruction.GetOperand(0));
+                break;
+
+            case Opcode.LoadLocalPair:
+                // Отладочный путь исполняет ту же слитную форму одним шагом:
+                // указатель пропускает второй слот пары (см. DecodeInstructions).
+                frame.PushLocalValueOntoEvaluationStack(instruction.GetOperand(0));
+                frame.PushLocalValueOntoEvaluationStack(instruction.GetOperand(1));
+                frame.InstructionPointer = instructionIndex + 2;
+                break;
+
+            case Opcode.LoadLocalConst:
+                frame.PushLocalValueOntoEvaluationStack(instruction.GetOperand(0));
+                frame.EvaluationStack.PushUnchecked(ReadConstantUnchecked(instruction.GetOperand(1)));
+                frame.InstructionPointer = instructionIndex + 2;
                 break;
 
             case Opcode.StoreLocal:
@@ -967,6 +1921,14 @@ public sealed partial class BytecodeVm
                 ExecuteLoadElement(frame, instruction, instructionIndex);
                 break;
 
+            case Opcode.LoadElement1D:
+                ExecuteLoadElement1D(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.LoadElement2D:
+                ExecuteLoadElement2D(frame, instruction, instructionIndex);
+                break;
+
             case Opcode.StoreElement:
                 ExecuteStoreElement(frame, instruction, instructionIndex);
                 break;
@@ -1061,6 +2023,10 @@ public sealed partial class BytecodeVm
 
             case Opcode.AdvanceForLoopLocal:
                 ExecuteAdvanceForLoopLocalInstruction(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.StepForLoopLocal:
+                ExecuteStepForLoopLocal(frame, instruction, instructionIndex);
                 break;
 
             case Opcode.PrintValue:
@@ -1378,7 +2344,7 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private void ExecutePrintUsing(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecutePrintUsing(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var valueCount = instruction.GetOperand(0);
         var separatorKind = instruction.GetOperand(1);
@@ -1441,7 +2407,7 @@ public sealed partial class BytecodeVm
         throw new RuntimeFailureException();
     }
 
-    private void ValidateTypeInvariant(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ValidateTypeInvariant(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var result = PopValue(frame, instructionIndex);
         if (result.Type != TypeSymbol.Boolean)
@@ -1477,7 +2443,7 @@ public sealed partial class BytecodeVm
         throw new RuntimeFailureException();
     }
 
-    private IReadOnlyList<RuntimeCallChainFrame>? CreateConstructorChainFrames(BytecodeInstruction instruction, TextLocation callSite)
+    private IReadOnlyList<RuntimeCallChainFrame>? CreateConstructorChainFrames( VmInstruction instruction, TextLocation callSite)
     {
         // Кадр конструктора к моменту проверки инварианта уже выгружен, поэтому
         // цепочка строится по операнду инструкции, сохраняя имя конструктора
@@ -1609,7 +2575,7 @@ public sealed partial class BytecodeVm
     }
 
     private readonly record struct DebugStepBoundary(DebugStepMode Mode, SourceLine StartLine, int StartCallDepth);
-    private readonly record struct RoutineFrameTemplate(RuntimeValue[] DefaultLocals, int?[] LocalFixedStringLengths);
+    private readonly record struct RoutineFrameTemplate(VmValue[] DefaultLocals, int?[] LocalFixedStringLengths);
 
     private readonly record struct CaptureBinding(CaptureSourceKind Kind, int Slot);
 

@@ -7,7 +7,7 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
-    private void ExecuteInput(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteInput(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var plan = GetInputInstructionPlan(frame.Routine, instruction, instructionIndex);
@@ -44,7 +44,7 @@ public sealed partial class BytecodeVm
         return ReadConstant(promptOperand - 1).AsString();
     }
 
-    private InputInstructionPlan GetInputInstructionPlan(BytecodeRoutine routine, BytecodeInstruction instruction, int instructionIndex)
+    private InputInstructionPlan GetInputInstructionPlan(BytecodeRoutine routine,  VmInstruction instruction, int instructionIndex)
     {
         var key = (routine.Id, instructionIndex);
         if (_inputInstructionCache.TryGetValue(key, out var cached))

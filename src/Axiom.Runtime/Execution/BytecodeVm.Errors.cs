@@ -11,7 +11,7 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
-    private void ExecutePushErrorHandler(BytecodeCallFrame frame, BytecodeInstruction instruction)
+    private void ExecutePushErrorHandler(BytecodeCallFrame frame,  VmInstruction instruction)
     {
         frame.PushErrorHandler(new BytecodeErrorHandlerFrame(
             instruction.GetOperand(0),
@@ -21,7 +21,7 @@ public sealed partial class BytecodeVm
             instruction.GetOperand(4)));
     }
 
-    private void ExecuteRaiseError(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteRaiseError(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var mode = instruction.GetOperand(0);
         if (mode == 2)

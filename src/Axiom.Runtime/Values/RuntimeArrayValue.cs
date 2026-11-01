@@ -352,6 +352,19 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool TryGetInteger2(int index0, int index1, out int value)
+    {
+        EnsureAllocated();
+        if (ElementType != TypeSymbol.Integer || !TryGetLinearIndex2(index0, index1, out var linearIndex))
+        {
+            value = 0;
+            return false;
+        }
+        value = _elements!.ReadInteger(linearIndex);
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool TryGetInteger1(int index0, out int value)
     {
         EnsureAllocated();
@@ -370,6 +383,21 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
         EnsureAllocated();
 
         if (!TryGetLinearIndex1(index0, out var linearIndex))
+        {
+            value = RuntimeValue.Void;
+            return false;
+        }
+
+        value = _elements![linearIndex];
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool TryGetValue2(int index0, int index1, out RuntimeValue value)
+    {
+        EnsureAllocated();
+
+        if (!TryGetLinearIndex2(index0, index1, out var linearIndex))
         {
             value = RuntimeValue.Void;
             return false;
@@ -564,6 +592,43 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
         EnsureAllocated();
 
         if (!TryGetLinearIndex1(index0, out var linearIndex))
+        {
+            return false;
+        }
+
+        _elements![linearIndex] = value.CopyForStorage(FixedStringLength);
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool TrySetInteger2(int index0, int index1, int value)
+    {
+        EnsureAllocated();
+        if (ElementType != TypeSymbol.Integer || !TryGetLinearIndex2(index0, index1, out var linearIndex))
+            return false;
+
+        _elements!.WriteInteger(linearIndex, value);
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool TrySetInteger3(int index0, int index1, int index2, int value)
+    {
+        EnsureAllocated();
+        if (ElementType != TypeSymbol.Integer || !TryGetLinearIndex3(index0, index1, index2, out var linearIndex))
+            return false;
+
+        _elements!.WriteInteger(linearIndex, value);
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool TrySetValue2(int index0, int index1, RuntimeValue value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        EnsureAllocated();
+
+        if (!TryGetLinearIndex2(index0, index1, out var linearIndex))
         {
             return false;
         }

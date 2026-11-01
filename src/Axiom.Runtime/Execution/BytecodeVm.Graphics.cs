@@ -111,7 +111,7 @@ public sealed partial class BytecodeVm
         _host.SetCanvasCamera(x, y);
     }
 
-    private void ExecuteViewportInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteViewportInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         if (!_host.IsCanvasActive)
@@ -167,7 +167,7 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private void ExecuteViewInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteViewInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         RequireScreenActive("VIEW", location);
@@ -194,7 +194,7 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private void ExecuteViewPrintInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteViewPrintInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         RequireScreenActive("VIEW PRINT", location);
@@ -214,7 +214,7 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private void ExecuteWindowInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteWindowInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         RequireScreenActive("WINDOW", location);
@@ -237,7 +237,7 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private void ExecuteClsInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteClsInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         if (instruction.GetOperand(0) == 1)
         {
@@ -266,7 +266,7 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private void ExecuteColorInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteColorInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         RequireScreenActive("COLOR", location);
@@ -291,7 +291,7 @@ public sealed partial class BytecodeVm
         _host.LocateText(row, column);
     }
 
-    private void ExecutePaletteInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecutePaletteInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         RequireScreenActive("PALETTE", location);
@@ -350,7 +350,7 @@ public sealed partial class BytecodeVm
         };
     }
 
-    private void ExecutePSetInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecutePSetInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var flags = instruction.GetOperand(0);
@@ -373,7 +373,7 @@ public sealed partial class BytecodeVm
         _host.SetPixel(x, y, color);
     }
 
-    private void ExecuteGetInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteGetInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         RequireDrawableSurfaceActive("GET", location);
@@ -405,7 +405,7 @@ public sealed partial class BytecodeVm
         catch (OutOfMemoryException) { throw CreateGraphicsMemoryFailure("GET", location); }
     }
 
-    private void ExecutePutInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecutePutInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         RequireDrawableSurfaceActive("PUT", location);
@@ -446,7 +446,7 @@ public sealed partial class BytecodeVm
         return new RuntimeFailureException();
     }
 
-    private void ExecuteLineInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteLineInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         RequireScreenActive("LINE", location);
@@ -477,7 +477,7 @@ public sealed partial class BytecodeVm
         _host.DrawLine(line.X1, line.Y1, line.X2, line.Y2, line.Color, line.Kind);
     }
 
-    private void ExecuteCircleInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteCircleInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         RequireScreenActive("CIRCLE", location);
@@ -521,7 +521,7 @@ public sealed partial class BytecodeVm
             circle.DrawEndRadius);
     }
 
-    private void ExecutePaintInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecutePaintInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         RequireDrawableSurfaceActive("PAINT", location);
@@ -545,7 +545,7 @@ public sealed partial class BytecodeVm
         _host.SetGraphicsCurrentPosition(x, y);
     }
 
-    private void ExecuteDrawInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteDrawInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         RequireScreenActive("DRAW", location);
@@ -693,7 +693,7 @@ public sealed partial class BytecodeVm
         _host.SetGraphicsCurrentPosition(x, y);
     }
 
-    private void ExecuteDrawImageInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteDrawImageInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         if (!_host.IsScreenActive && !_host.IsCanvasActive)
         {
@@ -740,7 +740,7 @@ public sealed partial class BytecodeVm
         _host.SetGraphicsCurrentPosition(x, y);
     }
 
-    private void ExecuteDrawSpriteInstruction(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteDrawSpriteInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         if (!_host.IsScreenActive && !_host.IsCanvasActive)
         {

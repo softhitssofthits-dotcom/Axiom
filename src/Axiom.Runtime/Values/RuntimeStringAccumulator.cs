@@ -13,6 +13,13 @@ internal sealed class RuntimeStringAccumulator
         _builder = new StringBuilder(initialText);
     }
 
+    /// <summary>
+    /// Кэш обёртки значения: добавления переиспользуют один экземпляр RuntimeValue.
+    /// Любая передача на хранение материализует независимую строку через CopyForStorage,
+    /// поэтому общий доступ к кэшу не создаёт синонимов аккумулятора.
+    /// </summary>
+    internal RuntimeValue? CachedWrapper { get; set; }
+
     public void Append(string text)
     {
         ArgumentNullException.ThrowIfNull(text);

@@ -165,12 +165,10 @@ public sealed partial class RuntimeArrayValue
     /// Заполняет заготовку снимка независимыми значениями элементов этого массива
     /// без правил присваивания.
     /// </summary>
-    internal void FillSnapshotInto(RuntimeArrayValue target, Func<RuntimeValue, RuntimeValue> snapshotElement,
-        Action<int> beforeNumericCopy)
+    internal void FillSnapshotInto(RuntimeArrayValue target, RuntimeValueCopier copier, int? fixedStringLength)
     {
         ArgumentNullException.ThrowIfNull(target);
-        ArgumentNullException.ThrowIfNull(snapshotElement);
-        ArgumentNullException.ThrowIfNull(beforeNumericCopy);
+        ArgumentNullException.ThrowIfNull(copier);
 
         if (!IsAllocated
             || _storageLifetime is { Invalidated: true }
@@ -180,14 +178,34 @@ public sealed partial class RuntimeArrayValue
             return;
         }
 
-        if (TryCopyNumericValuesTo(target, beforeNumericCopy))
+        if (TryCopyNumericValuesTo(target, copier))
         {
             return;
         }
 
+        if (Rank == 1)
+        {
+            // Ранг 1: линейный обход без энумераторов и замыканий.
+            if (TryGetLinearIndex1(LowerBound, out var first)
+                && TryGetLinearIndex1(UpperBound, out var last)
+                && last - first + 1 == Length
+                && target.TryGetLinearIndex1(target.LowerBound, out var targetFirstLinear))
+            {
+                for (var offset = 0; offset < Length; offset++)
+                {
+                    var sourceValue = _elements![first + offset];
+                    target._elements![targetFirstLinear + offset] =
+                        copier.PrepareValueForFill(sourceValue, fixedStringLength);
+                }
+
+                return;
+            }
+        }
+
         ForEachVisibleIndexSetAscending(indices =>
         {
-            target._elements![target.GetLinearIndex(indices)] = snapshotElement(GetValue(indices));
+            target._elements![target.GetLinearIndex(indices)] =
+                copier.PrepareValueForFill(GetValue(indices), fixedStringLength);
         });
     }
 
@@ -199,9 +217,9 @@ public sealed partial class RuntimeArrayValue
     /// этих типов не меняет скалярное значение, поэтому буфер переносится
     /// как есть; прочие случаи остаются поэлементному обходу.
     /// </summary>
-    private bool TryCopyNumericValuesTo(RuntimeArrayValue target, Action<int> beforeNumericCopy)
+    private bool TryCopyNumericValuesTo(RuntimeArrayValue target, RuntimeValueCopier copier)
     {
-        if ((ElementType != TypeSymbol.Integer && ElementType != TypeSymbol.Long)
+        if ((ElementType != TypeSymbol.Integer && ElementType != TypeSymbol.Long && ElementType != TypeSymbol.Double)
             || target.ElementType != ElementType
             || Rank != 1
             || target.Rank != 1
@@ -226,7 +244,7 @@ public sealed partial class RuntimeArrayValue
             return false;
         }
 
-        beforeNumericCopy(Length);
+        copier.CheckCancellationForBulkFill(Length);
         ElementStorage.Copy(_elements!, first, target._elements!, targetFirst, Length);
         return true;
     }

@@ -13,12 +13,12 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateCintBuiltin(RuntimeValue value, TextLocation location)
     {
-        return BuiltinNumericHelpers.EvaluateCint(value, location, ReportRuntimeDiagnostic);
+        return BuiltinNumericHelpers.EvaluateCint(value, location, _reportOverflow);
     }
 
     private RuntimeValue EvaluateClngBuiltin(RuntimeValue value, TextLocation location)
     {
-        return BuiltinNumericHelpers.EvaluateClng(value, location, ReportRuntimeDiagnostic);
+        return BuiltinNumericHelpers.EvaluateClng(value, location, _reportOverflow);
     }
 
     private RuntimeValue EvaluateCdblBuiltin(RuntimeValue value)
@@ -28,7 +28,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue EvaluateCdecBuiltin(RuntimeValue value, TextLocation location)
     {
-        return BuiltinNumericHelpers.EvaluateCdec(value, location, ReportRuntimeDiagnostic);
+        return BuiltinNumericHelpers.EvaluateCdec(value, location, _reportOverflow);
     }
 
     private int EvaluateIntBuiltin(RuntimeValue value, TextLocation location)
@@ -247,17 +247,17 @@ public sealed partial class BytecodeVm
 
     private int ToInt32Checked(double value, TextLocation location, string detail)
     {
-        return RuntimeArithmeticHelpers.ToInt32Checked(value, location, detail, ReportRuntimeDiagnostic);
+        return RuntimeArithmeticHelpers.ToInt32Checked(value, location, detail, _reportOverflow);
     }
 
     private int ToInt32Checked(long value, TextLocation location, string detail)
     {
-        return RuntimeArithmeticHelpers.ToInt32Checked(value, location, detail, ReportRuntimeDiagnostic);
+        return RuntimeArithmeticHelpers.ToInt32Checked(value, location, detail, _reportOverflow);
     }
 
     private int ToInt32Checked(decimal value, TextLocation location, string detail)
     {
-        return RuntimeArithmeticHelpers.ToInt32Checked(value, location, detail, ReportRuntimeDiagnostic);
+        return RuntimeArithmeticHelpers.ToInt32Checked(value, location, detail, _reportOverflow);
     }
 
     private bool HasNegativeSign(RuntimeValue value, TextLocation location)

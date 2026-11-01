@@ -59,7 +59,7 @@ public sealed partial class BytecodeVm
         return formatted;
     }
 
-    private void ExecuteAppendStringGlobal(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteAppendStringGlobal(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var slot = instruction.GetOperand(0);
         var right = PopValue(frame, instructionIndex);
@@ -70,7 +70,7 @@ public sealed partial class BytecodeVm
         StoreAppendStringGlobalValue(slot, value);
     }
 
-    private void ExecuteAppendStringLocal(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteAppendStringLocal(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var slot = instruction.GetOperand(0);
         var right = PopValue(frame, instructionIndex);

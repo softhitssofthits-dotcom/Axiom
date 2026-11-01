@@ -62,7 +62,7 @@ public sealed partial class BytecodeVm
 
     private static bool IsForEachItemInstructionScopeActive(BytecodeCallFrame frame, int localSlot)
     {
-        var instructions = frame.Routine.InstructionArray;
+        var instructions = frame.DecodedInstructions;
         var instructionPointer = frame.InstructionPointer;
 
         for (var start = 0; start < instructions.Length; start++)
@@ -97,7 +97,7 @@ public sealed partial class BytecodeVm
     private BytecodeVmExecutionSnapshot CreateExecutionSnapshot(
         BytecodeCallFrame frame,
         int instructionIndex,
-        BytecodeInstruction instruction)
+        VmInstruction instruction)
     {
         return new BytecodeVmExecutionSnapshot(
             frame.Routine.Id,
@@ -243,13 +243,13 @@ public sealed partial class BytecodeVm
     {
         var sharedValues = new Dictionary<object, object>(ReferenceEqualityComparer.Instance);
 
-        Array.Clear(_globalsBySlot);
+        Array.Clear(_globalValuesBySlot);
         foreach (var (slot, value) in snapshot.Globals)
         {
             var clonedValue = CloneSnapshotValue(value, GetGlobalFixedStringLength(slot), sharedValues);
-            if ((uint)slot < (uint)_globalsBySlot.Length)
+            if ((uint)slot < (uint)_globalValuesBySlot.Length)
             {
-                _globalsBySlot[slot] = clonedValue;
+                _globalValuesBySlot[slot] = VmValue.FromRuntime(clonedValue);
             }
         }
 
@@ -347,18 +347,18 @@ public sealed partial class BytecodeVm
         return captures;
     }
 
-    private static (RuntimeValue[] Values, int?[] FixedStringLengths, BytecodeVariableSlot[] Slots) CreateLocalStateFromSnapshots(
+    private static (VmValue[] Values, int?[] FixedStringLengths, BytecodeVariableSlot[] Slots) CreateLocalStateFromSnapshots(
         IReadOnlyList<BytecodeVariableSlotSnapshot> snapshots,
         Dictionary<object, object> sharedValues)
     {
-        var values = new RuntimeValue[snapshots.Count];
+        var values = new VmValue[snapshots.Count];
         var fixedStringLengths = new int?[snapshots.Count];
         var slots = new BytecodeVariableSlot[snapshots.Count];
 
         for (var index = 0; index < snapshots.Count; index++)
         {
             slots[index] = CloneSnapshotSlot(snapshots[index].Slot, sharedValues);
-            values[index] = RuntimeValue.Void;
+            values[index] = VmValue.FromObject(RuntimeValue.Void);
             fixedStringLengths[index] = snapshots[index].Slot.FixedStringLength;
         }
 
@@ -402,7 +402,8 @@ public sealed partial class BytecodeVm
         foreach (var global in _module.Globals)
         {
             var slot = global.Slot;
-            var value = _globalsBySlot[slot]!;
+            var slotValue = _globalValuesBySlot[slot];
+            var value = slotValue.Kind == VmValueKind.Empty ? RuntimeValue.Void : slotValue.Materialize();
             if (!TryCreateValueSnapshot(value, GetGlobalFixedStringLength(slot), sharedValues, out var valueSnapshot))
             {
                 globals = snapshots;
@@ -615,10 +616,13 @@ public sealed partial class BytecodeVm
             candidate => string.Equals(candidate.Name, name, StringComparison.OrdinalIgnoreCase));
 
         if (global is not null
-            && (uint)global.Slot < (uint)_globalsBySlot.Length
-            && _globalsBySlot[global.Slot] is { } globalValue)
+            && (uint)global.Slot < (uint)_globalValuesBySlot.Length)
         {
-            return globalValue;
+            var slotValue = _globalValuesBySlot[global.Slot];
+            if (slotValue.Kind != VmValueKind.Empty)
+            {
+                return slotValue.Materialize();
+            }
         }
 
         return null;

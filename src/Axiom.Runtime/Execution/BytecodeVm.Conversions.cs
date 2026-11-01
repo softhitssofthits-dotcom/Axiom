@@ -37,7 +37,7 @@ public sealed partial class BytecodeVm
         };
     }
 
-    private void ExecuteConvert(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteConvert(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var typeCode = (BytecodeScalarTypeCode)instruction.GetOperand(0);
         if (typeCode is BytecodeScalarTypeCode.Long or BytecodeScalarTypeCode.Double or BytecodeScalarTypeCode.Decimal

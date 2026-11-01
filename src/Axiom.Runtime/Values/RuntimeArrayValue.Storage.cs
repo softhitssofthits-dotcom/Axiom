@@ -122,25 +122,30 @@ public sealed partial class RuntimeArrayValue
     {
         private readonly int[]? _integers;
         private readonly long[]? _longs;
+        private readonly double[]? _doubles;
         private readonly RuntimeValue[]? _values;
 
         public ElementStorage(int length, TypeSymbol elementType)
         {
             if (elementType == TypeSymbol.Integer) _integers = new int[length];
             else if (elementType == TypeSymbol.Long) _longs = new long[length];
+            else if (elementType == TypeSymbol.Double) _doubles = new double[length];
             else _values = new RuntimeValue[length];
         }
 
-        public int Length => _integers?.Length ?? _longs?.Length ?? _values!.Length;
+        public int Length => _integers?.Length ?? _longs?.Length ?? _doubles?.Length ?? _values!.Length;
         public int ReadInteger(int index) => _integers![index];
         public long ReadLong(int index) => _longs![index];
+        public double ReadDouble(int index) => _doubles![index];
         public void WriteInteger(int index, int value) => _integers![index] = value;
         public void WriteLong(int index, long value) => _longs![index] = value;
+        public void WriteDouble(int index, double value) => _doubles![index] = value;
 
         public void Clear(int index)
         {
             if (_integers is not null) _integers[index] = 0;
             else if (_longs is not null) _longs[index] = 0L;
+            else if (_doubles is not null) _doubles[index] = 0d;
             else _values![index] = RuntimeValue.Void;
         }
 
@@ -148,11 +153,13 @@ public sealed partial class RuntimeArrayValue
         {
             get => _integers is not null ? RuntimeValue.FromInteger(_integers[index])
                 : _longs is not null ? RuntimeValue.FromLong(_longs[index])
+                : _doubles is not null ? RuntimeValue.FromDouble(_doubles[index])
                 : _values![index];
             set
             {
                 if (_integers is not null) _integers[index] = value.AsInteger();
                 else if (_longs is not null) _longs[index] = value.AsLong();
+                else if (_doubles is not null) _doubles[index] = value.AsDouble();
                 else _values![index] = value;
             }
         }
@@ -162,6 +169,8 @@ public sealed partial class RuntimeArrayValue
             if (_values is not null) Array.Copy(_values, sourceIndex, target, targetIndex, count);
             else if (_integers is not null)
                 for (var i = 0; i < count; i++) target[targetIndex + i] = RuntimeValue.FromInteger(_integers[sourceIndex + i]);
+            else if (_doubles is not null)
+                for (var i = 0; i < count; i++) target[targetIndex + i] = RuntimeValue.FromDouble(_doubles[sourceIndex + i]);
             else
                 for (var i = 0; i < count; i++) target[targetIndex + i] = RuntimeValue.FromLong(_longs![sourceIndex + i]);
         }
@@ -172,6 +181,8 @@ public sealed partial class RuntimeArrayValue
                 Array.Copy(source._integers, sourceIndex, target._integers, targetIndex, count);
             else if (source._longs is not null && target._longs is not null)
                 Array.Copy(source._longs, sourceIndex, target._longs, targetIndex, count);
+            else if (source._doubles is not null && target._doubles is not null)
+                Array.Copy(source._doubles, sourceIndex, target._doubles, targetIndex, count);
             else if (source._values is not null && target._values is not null)
                 Array.Copy(source._values, sourceIndex, target._values, targetIndex, count);
             else

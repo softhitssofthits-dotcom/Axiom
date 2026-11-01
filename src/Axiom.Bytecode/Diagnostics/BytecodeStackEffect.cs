@@ -29,8 +29,16 @@ internal static class BytecodeStackEffect
                 pushCount = 1;
                 return true;
 
+            // Слитные пары декодированного потока в сериализуемый байт-код не
+            // попадают; эффект объявлен для полноты таблицы.
+            case Opcode.LoadLocalPair:
+            case Opcode.LoadLocalConst:
+                pushCount = 2;
+                return true;
+
             case Opcode.JumpIfForDoneLocal:
             case Opcode.AdvanceForLoopLocal:
+            case Opcode.StepForLoopLocal:
                 return true;
 
             case Opcode.StoreGlobal:
@@ -108,6 +116,18 @@ internal static class BytecodeStackEffect
 
             case Opcode.LoadElement:
                 popCount = instruction.GetOperand(1) + CountRangeBits(instruction) + 1;
+                pushCount = 1;
+                return true;
+
+            // Специализированная форма 1D без диапазонов (декодированный поток);
+            // эффект объявлен для полноты таблицы.
+            case Opcode.LoadElement1D:
+                popCount = 2;
+                pushCount = 1;
+                return true;
+
+            case Opcode.LoadElement2D:
+                popCount = 3;
                 pushCount = 1;
                 return true;
 

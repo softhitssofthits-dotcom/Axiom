@@ -20,9 +20,9 @@ const unusable = !fs.existsSync(r.exe) || (r.rebuilt && (!r.buildOk || r.status 
 if (unusable) {
   console.error(
     r.status === 'missing'
-      ? 'No Axiom.DesktopHost.exe after the build. Build it manually: dotnet build src/Axiom.DesktopHost/Axiom.DesktopHost.csproj'
-      : 'Axiom.DesktopHost.exe is out of date and the automatic Debug rebuild failed. ' +
-        'Close running IDE instances and rebuild: dotnet build src/Axiom.DesktopHost/Axiom.DesktopHost.csproj'
+      ? 'No Axiom.DesktopHost.exe after the build. Build it manually: dotnet build src/Axiom.DesktopHost/Axiom.DesktopHost.csproj -c Release'
+      : 'Axiom.DesktopHost.exe is out of date and the automatic Release rebuild failed. ' +
+        'Close running IDE instances and rebuild: dotnet build src/Axiom.DesktopHost/Axiom.DesktopHost.csproj -c Release'
   );
   if (r.buildError) console.error(r.buildError);
   process.exit(1);

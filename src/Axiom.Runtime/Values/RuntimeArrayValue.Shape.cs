@@ -191,6 +191,37 @@ public sealed partial class RuntimeArrayValue
         return true;
     }
 
+    private bool TryGetLinearIndex2(int index0, int index1, out int linearIndex)
+    {
+        if (Rank != 2)
+        {
+            linearIndex = 0;
+            return false;
+        }
+
+        var lowerBounds = _lowerBounds!;
+        var upperBounds = _upperBounds!;
+
+        if (index0 < lowerBounds[0] || index0 > upperBounds[0]
+            || index1 < lowerBounds[1] || index1 > upperBounds[1])
+        {
+            linearIndex = 0;
+            return false;
+        }
+
+        var visibleStorageDimensions = GetVisibleStorageDimensions();
+        var storageLowerBounds = _storageLowerBounds!;
+        var storageStrides = _storageStrides!;
+        var storageDimension0 = visibleStorageDimensions[0];
+        var storageDimension1 = visibleStorageDimensions[1];
+
+        linearIndex = checked(
+            _fixedStorageBaseOffset
+            + ((index0 - storageLowerBounds[storageDimension0]) * storageStrides[storageDimension0])
+            + ((index1 - storageLowerBounds[storageDimension1]) * storageStrides[storageDimension1]));
+        return true;
+    }
+
     private bool TryGetLinearIndex3(int index0, int index1, int index2, out int linearIndex)
     {
         if (Rank != 3)

@@ -8,7 +8,7 @@ public sealed partial class BytecodeVm
 {
     // Множество создаётся пустым: объявление задаёт тип элемента, а элементы
     // добавляются операциями множества.
-    private void ExecuteCreateSet(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteCreateSet(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var typeName = ReadDebugName(instruction.GetOperand(0));
         var setType = ResolveSetType(typeName, frame.Routine.Id, instructionIndex);
@@ -16,7 +16,7 @@ public sealed partial class BytecodeVm
             RuntimeValue.FromSet(setType, new RuntimeSetValue(setType)));
     }
 
-    private void ExecuteSetAdd(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteSetAdd(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var element = PopValue(frame, instructionIndex);
@@ -28,7 +28,7 @@ public sealed partial class BytecodeVm
         frame.EvaluationStack.PushUnchecked(RuntimeValue.FromBoolean(set.TryAdd(element)));
     }
 
-    private void ExecuteSetContains(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteSetContains(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var element = PopValue(frame, instructionIndex);
@@ -39,7 +39,7 @@ public sealed partial class BytecodeVm
         frame.EvaluationStack.PushUnchecked(RuntimeValue.FromBoolean(set.Contains(element)));
     }
 
-    private void ExecuteSetRemove(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteSetRemove(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var element = PopValue(frame, instructionIndex);
@@ -51,7 +51,7 @@ public sealed partial class BytecodeVm
         frame.EvaluationStack.PushUnchecked(RuntimeValue.FromBoolean(set.Remove(element)));
     }
 
-    private void ExecuteSetCount(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteSetCount(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var setValue = PopValue(frame, instructionIndex);
@@ -61,7 +61,7 @@ public sealed partial class BytecodeVm
         frame.EvaluationStack.PushUnchecked(RuntimeValue.FromInteger(set.Count));
     }
 
-    private void ExecuteSetToArray(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteSetToArray(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var setValue = PopValue(frame, instructionIndex);
@@ -74,7 +74,7 @@ public sealed partial class BytecodeVm
     // Объединение изменяет получателя и значения не возвращает. Проверка
     // вместимости выполняется до изменения, поэтому логическое превышение
     // предела не оставляет получателя частично изменённым.
-    private void ExecuteSetUnionWith(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteSetUnionWith(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var argument = PopValue(frame, instructionIndex);
@@ -86,7 +86,7 @@ public sealed partial class BytecodeVm
         receiver.UnionWith(argumentSet, _host);
     }
 
-    private void ExecuteSetIntersectWith(BytecodeCallFrame frame, BytecodeInstruction instruction, int instructionIndex)
+    private void ExecuteSetIntersectWith(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
         var argument = PopValue(frame, instructionIndex);

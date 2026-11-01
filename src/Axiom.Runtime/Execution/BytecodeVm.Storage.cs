@@ -69,10 +69,10 @@ public sealed partial class BytecodeVm
     {
         if (routine.LocalSlotCount == 0)
         {
-            return new RoutineFrameTemplate(Array.Empty<RuntimeValue>(), Array.Empty<int?>());
+            return new RoutineFrameTemplate(Array.Empty<VmValue>(), Array.Empty<int?>());
         }
 
-        var defaultLocals = new RuntimeValue[routine.LocalSlotCount];
+        var defaultLocals = new VmValue[routine.LocalSlotCount];
         var localFixedStringLengths = new int?[routine.LocalSlotCount];
 
         for (var index = 0; index < defaultLocals.Length; index++)
@@ -83,8 +83,8 @@ public sealed partial class BytecodeVm
             // подготовленный шаблон кадра не должен выделять поля-массивы даже
             // для процедур, которые так и не будут вызваны.
             defaultLocals[index] = variable is null || variable.Type is UserDefinedTypeSymbol or ArrayTypeSymbol or DictionaryTypeSymbol or SetTypeSymbol
-                ? RuntimeValue.Void
-                : RuntimeValue.Default(variable.Type, variable.FixedStringLength);
+                ? VmValue.FromObject(RuntimeValue.Void)
+                : VmValue.FromRuntime(RuntimeValue.Default(variable.Type, variable.FixedStringLength));
             localFixedStringLengths[index] = variable?.FixedStringLength;
         }
 
@@ -106,7 +106,7 @@ public sealed partial class BytecodeVm
 
     private RuntimeValue LoadGlobal(int slot)
     {
-        if ((uint)slot < (uint)_globalsBySlot.Length && _hasGlobalSlot[slot])
+        if ((uint)slot < (uint)_globalValuesBySlot.Length && _hasGlobalSlot[slot])
         {
             return EnsureGlobalValueCreated(slot);
         }
@@ -117,8 +117,69 @@ public sealed partial class BytecodeVm
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RuntimeValue LoadGlobalUnchecked(int slot)
     {
-        var value = _globalsBySlot[slot]!;
-        return value.Type == TypeSymbol.Void ? EnsureGlobalValueCreated(slot) : value;
+        var value = _globalValuesBySlot[slot];
+        return value.Kind == VmValueKind.Empty ? EnsureGlobalValueCreated(slot) : value.Materialize();
+    }
+
+    /// <summary>
+    /// Помещает значение глобального слота на стек без материализации:
+    /// числа и логические значения идут напрямую, записи TYPE создаются
+    /// при первом чтении, накопитель строк снимается копией.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void PushGlobalValueOntoEvaluationStack(BytecodeEvaluationStack stack, int slot)
+    {
+        var global = _globalValuesBySlot[slot];
+        if (global.Kind == VmValueKind.Object)
+        {
+            var globalValue = global.Object!;
+            if (globalValue.Type == TypeSymbol.Void)
+            {
+                stack.PushUnchecked(EnsureGlobalValueCreated(slot));
+                return;
+            }
+
+            // Накопитель строк в слоте живой: при помещении на стек он
+            // снимается, чтобы поздние дописывания не меняли уже вычисленное.
+            if (globalValue.RequiresCopyForStorage)
+            {
+                stack.PushUnchecked(globalValue);
+                return;
+            }
+        }
+        else if (global.Kind == VmValueKind.Empty)
+        {
+            stack.PushUnchecked(EnsureGlobalValueCreated(slot));
+            return;
+        }
+
+        stack.PushVmValue(global);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool TryStoreGlobalImmediateInteger(int slot, int value)
+    {
+        if ((uint)slot >= (uint)_globalValuesBySlot.Length
+            || !_hasGlobalSlot[slot]
+            || !_globalMetadata.TryGetValue(slot, out var global)
+            || global.Type != TypeSymbol.Integer)
+            return false;
+
+        _globalValuesBySlot[slot] = VmValue.FromInteger(value);
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool TryStoreGlobalImmediateLong(int slot, long value)
+    {
+        if ((uint)slot >= (uint)_globalValuesBySlot.Length
+            || !_hasGlobalSlot[slot]
+            || !_globalMetadata.TryGetValue(slot, out var global)
+            || global.Type != TypeSymbol.Long)
+            return false;
+
+        _globalValuesBySlot[slot] = VmValue.FromLong(value);
+        return true;
     }
 
     /// <summary>
@@ -133,7 +194,7 @@ public sealed partial class BytecodeVm
             && global.Type is UserDefinedTypeSymbol recordType)
         {
             var created = RuntimeValue.Default(recordType, global.FixedStringLength);
-            _globalsBySlot[slot] = created;
+            _globalValuesBySlot[slot] = VmValue.FromRuntime(created);
             return created;
         }
 
@@ -175,34 +236,37 @@ public sealed partial class BytecodeVm
 
     private void StoreGlobal(int slot, RuntimeValue value)
     {
-        if ((uint)slot >= (uint)_globalsBySlot.Length || !_hasGlobalSlot[slot])
+        if ((uint)slot >= (uint)_globalValuesBySlot.Length || !_hasGlobalSlot[slot])
         {
             ReportInvalidRuntimeState($"Не найден глобальный слот {slot}.", FallbackRuntimeLocation);
             throw new RuntimeFailureException();
         }
 
         var fixedStringLength = GetGlobalFixedStringLength(slot);
-        _globalsBySlot[slot] = fixedStringLength is null && value.Type is not UserDefinedTypeSymbol && !value.RequiresCopyForStorage
-            ? value
-            : BytecodeVariableSlot.NormalizeForStorage(value, fixedStringLength);
+        _globalValuesBySlot[slot] = VmValue.FromRuntime(
+            fixedStringLength is null && value.Type is not UserDefinedTypeSymbol && !value.RequiresCopyForStorage
+                ? value
+                : BytecodeVariableSlot.NormalizeForStorage(value, fixedStringLength));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void StoreGlobalUnchecked(int slot, RuntimeValue value)
     {
         var fixedStringLength = _globalFixedStringLengths[slot];
-        _globalsBySlot[slot] = fixedStringLength is null && value.Type is not UserDefinedTypeSymbol && !value.RequiresCopyForStorage
-            ? value
-            : BytecodeVariableSlot.NormalizeForStorage(value, fixedStringLength);
+        _globalValuesBySlot[slot] = VmValue.FromRuntime(
+            fixedStringLength is null && value.Type is not UserDefinedTypeSymbol && !value.RequiresCopyForStorage
+                ? value
+                : BytecodeVariableSlot.NormalizeForStorage(value, fixedStringLength));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void StoreAppendStringGlobalValue(int slot, RuntimeValue value)
     {
         var fixedStringLength = _globalFixedStringLengths[slot];
-        _globalsBySlot[slot] = fixedStringLength is null
-            ? value
-            : BytecodeVariableSlot.NormalizeForStorage(value, fixedStringLength);
+        _globalValuesBySlot[slot] = VmValue.FromRuntime(
+            fixedStringLength is null
+                ? value
+                : BytecodeVariableSlot.NormalizeForStorage(value, fixedStringLength));
     }
 
     private static RuntimeValue LoadLocal(BytecodeCallFrame frame, int slot, int instructionIndex)

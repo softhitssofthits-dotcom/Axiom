@@ -46,7 +46,7 @@ public sealed partial class BytecodeVm
         _bufferedMouseEvents.Clear();
     }
 
-    private void ExecuteRegisterMouseHandler(BytecodeCallFrame frame, int instructionIndex, BytecodeInstruction instruction)
+    private void ExecuteRegisterMouseHandler(BytecodeCallFrame frame, int instructionIndex,  VmInstruction instruction)
     {
         var handlerValue = PopValue(frame, instructionIndex).AsFunction();
         var buttonNumber = PopValue(frame, instructionIndex).AsInteger();
@@ -61,7 +61,7 @@ public sealed partial class BytecodeVm
         _mouseHandlers[new BuiltinMouseHelpers.MouseHandlerKey(eventKind, buttonNumber)] = new MouseHandlerRegistration(handlerValue!, passEvent, IsEnabled: true);
     }
 
-    private void ExecuteUnregisterMouseHandler(BytecodeCallFrame frame, int instructionIndex, BytecodeInstruction instruction)
+    private void ExecuteUnregisterMouseHandler(BytecodeCallFrame frame, int instructionIndex,  VmInstruction instruction)
     {
         var buttonNumber = PopValue(frame, instructionIndex).AsInteger();
         var eventKind = ToMouseInputEventKind(instruction.OperandCount > 0 ? instruction.GetOperand(0) : 0);
@@ -71,14 +71,14 @@ public sealed partial class BytecodeVm
         }
     }
 
-    private void ExecutePauseMouseHandler(BytecodeCallFrame frame, int instructionIndex, BytecodeInstruction instruction)
+    private void ExecutePauseMouseHandler(BytecodeCallFrame frame, int instructionIndex,  VmInstruction instruction)
     {
         var buttonNumber = PopValue(frame, instructionIndex).AsInteger();
         var eventKind = ToMouseInputEventKind(instruction.OperandCount > 0 ? instruction.GetOperand(0) : 0);
         BuiltinMouseHelpers.SetMouseHandlerEnabled(_mouseHandlers, buttonNumber, eventKind, isEnabled: false);
     }
 
-    private void ExecuteResumeMouseHandler(BytecodeCallFrame frame, int instructionIndex, BytecodeInstruction instruction)
+    private void ExecuteResumeMouseHandler(BytecodeCallFrame frame, int instructionIndex,  VmInstruction instruction)
     {
         var buttonNumber = PopValue(frame, instructionIndex).AsInteger();
         var eventKind = ToMouseInputEventKind(instruction.OperandCount > 0 ? instruction.GetOperand(0) : 0);
