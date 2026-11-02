@@ -100,20 +100,16 @@ internal sealed class RuntimeValueCopier
         Set = 3,
     }
 
-    /// <summary>Структурный элемент списка работ: без замыканий и делегатов.</summary>
+    /// <summary>
+    /// Компактный элемент очереди: Kind задаёт типы Source и Target.
+    /// Для записи Source — RuntimeValue, чтобы сохранить исходный символ типа;
+    /// для остальных видов — соответствующий объект исходной коллекции.
+    /// </summary>
     private struct FillWork
     {
         public FillKind Kind;
-        public UserDefinedTypeSymbol? RecordType;
-        public RuntimeRecordValue? RecordSource;
-        public RuntimeRecordValue? RecordCopy;
-        public RuntimeArrayValue? ArraySource;
-        public RuntimeArrayValue? ArrayTarget;
-        public RuntimeDictionaryValue? DictionarySource;
-        public RuntimeDictionaryValue? DictionaryCopy;
-        public RuntimeSetValue? SetSource;
-        public RuntimeSetValue? SetCopy;
-        public int? FixedStringLength;
+        public object Source;
+        public object Target;
     }
 
     private void RunPendingFills()
@@ -137,25 +133,31 @@ internal sealed class RuntimeValueCopier
         {
             case FillKind.Record:
             {
-                var fields = work.RecordType!.Fields;
+                var sourceValue = (RuntimeValue)work.Source;
+                var source = sourceValue.AsRecord();
+                var target = (RuntimeRecordValue)work.Target;
+                var fields = ((UserDefinedTypeSymbol)sourceValue.Type).Fields;
                 for (var fieldIndex = 0; fieldIndex < fields.Count; fieldIndex++)
                 {
                     var field = fields[fieldIndex];
-                    work.RecordCopy!.SetSnapshotField(field, Prepare(work.RecordSource!.GetField(field), field.FixedStringLength));
+                    target.SetSnapshotField(field, Prepare(source.GetField(field), field.FixedStringLength));
                 }
 
                 break;
             }
 
             case FillKind.Array:
-                work.ArraySource!.FillSnapshotInto(work.ArrayTarget!, this, work.FixedStringLength);
+                var arrayTarget = (RuntimeArrayValue)work.Target;
+                ((RuntimeArrayValue)work.Source).FillSnapshotInto(arrayTarget, this, arrayTarget.FixedStringLength);
                 break;
 
             case FillKind.Dictionary:
             {
-                foreach (var (key, element) in work.DictionarySource!.Entries())
+                var source = (RuntimeDictionaryValue)work.Source;
+                var target = (RuntimeDictionaryValue)work.Target;
+                foreach (var (key, element) in source.Entries())
                 {
-                    work.DictionaryCopy!.AppendForSnapshot(key, Prepare(element));
+                    target.AppendForSnapshot(key, Prepare(element));
                 }
 
                 break;
@@ -163,9 +165,11 @@ internal sealed class RuntimeValueCopier
 
             case FillKind.Set:
             {
-                foreach (var element in work.SetSource!.Entries())
+                var source = (RuntimeSetValue)work.Source;
+                var target = (RuntimeSetValue)work.Target;
+                foreach (var element in source.Entries())
                 {
-                    work.SetCopy!.AppendForSnapshot(Prepare(element));
+                    target.AppendForSnapshot(Prepare(element));
                 }
 
                 break;
@@ -227,31 +231,17 @@ internal sealed class RuntimeValueCopier
         switch (value.Type)
         {
             case UserDefinedTypeSymbol recordType:
-                var record = value.AsRecord();
+                _ = value.AsRecord();
                 var recordCopy = RuntimeRecordValue.CreateForSnapshot(recordType);
                 copy = RuntimeValue.FromRecord(recordType, recordCopy);
-                if (IsFlatScalarRecordType(recordType))
+                // Вложенная запись заполняется в порядке очереди независимо от
+                // состава: иначе меняется порядок ошибок и проверок отмены.
+                EnqueueFill(new FillWork
                 {
-                    // Плоская запись как вложенная вершина: поля копируются сразу,
-                    // без постановки в список работ. Индексный цикл без
-                    // упакованного энумератора интерфейсного IReadOnlyList.
-                    var flatFields = recordType.Fields;
-                    for (var fieldIndex = 0; fieldIndex < flatFields.Count; fieldIndex++)
-                    {
-                        var field = flatFields[fieldIndex];
-                        recordCopy.SetSnapshotField(field, Prepare(record.GetField(field), field.FixedStringLength));
-                    }
-                }
-                else
-                {
-                    EnqueueFill(new FillWork
-                    {
-                        Kind = FillKind.Record,
-                        RecordType = recordType,
-                        RecordSource = record,
-                        RecordCopy = recordCopy,
-                    });
-                }
+                    Kind = FillKind.Record,
+                    Source = value,
+                    Target = recordCopy,
+                });
                 break;
             case ArrayTypeSymbol arrayType:
                 var array = value.AsArray();
@@ -260,9 +250,8 @@ internal sealed class RuntimeValueCopier
                 EnqueueFill(new FillWork
                 {
                     Kind = FillKind.Array,
-                    ArraySource = array,
-                    ArrayTarget = arrayCopy,
-                    FixedStringLength = arrayCopy.FixedStringLength,
+                    Source = array,
+                    Target = arrayCopy,
                 });
                 break;
             case DictionaryTypeSymbol dictionaryType:
@@ -272,8 +261,8 @@ internal sealed class RuntimeValueCopier
                 EnqueueFill(new FillWork
                 {
                     Kind = FillKind.Dictionary,
-                    DictionarySource = dictionary,
-                    DictionaryCopy = dictionaryCopy,
+                    Source = dictionary,
+                    Target = dictionaryCopy,
                 });
                 break;
             case SetTypeSymbol setType:
@@ -283,8 +272,8 @@ internal sealed class RuntimeValueCopier
                 EnqueueFill(new FillWork
                 {
                     Kind = FillKind.Set,
-                    SetSource = set,
-                    SetCopy = setCopy,
+                    Source = set,
+                    Target = setCopy,
                 });
                 break;
             default:

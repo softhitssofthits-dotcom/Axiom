@@ -1105,7 +1105,9 @@ public sealed partial class BytecodeVm
             PushSuspendedCallback(suspension);
             return;
         }
-        catch (RuntimeFailureException) when (TryHandleRuntimeFailure(0))
+        // Повреждённый указатель — ошибка VM, а не исключение программы:
+        // отладочный путь тоже проверяет его вне пользовательского CATCH.
+        catch (RuntimeFailureException) when ((uint)ip < (uint)instructionCount && TryHandleRuntimeFailure(0))
         {
             return;
         }
@@ -1487,58 +1489,6 @@ public sealed partial class BytecodeVm
 
         var instructionIndex = frame.InstructionPointer;
         var instruction = instructions[instructionIndex];
-        if (CanUseFastInstructionPath())
-        {
-            frame.InstructionPointer++;
-            try
-            {
-                if (instruction.Opcode == Opcode.LoadLocal)
-                    frame.PushLocalValueOntoEvaluationStack(instruction.GetOperand(0));
-                else
-                    ExecuteInstruction(frame, instruction, instructionIndex);
-            }
-            catch (ArrayAllocationFailureException ex)
-            {
-                HandleArrayRuntimeFailure(ex, frame, instructionIndex, runtimeFailureBoundaryDepth);
-            }
-            catch (SetEntryLimitException ex)
-            {
-                HandleSetRuntimeFailure(ex, frame, instructionIndex, runtimeFailureBoundaryDepth);
-            }
-            catch (Exception ex) when (ex is SetOperationCancelledException or ValueCopyCancelledException)
-            {
-                // Операция прервана внутри собственного обхода: получатель не
-                // изменён, выполнение прекращается как при обычной отмене.
-                CancelRun();
-                return;
-            }
-            catch (StringResourceLimitException ex)
-            {
-                HandleStringResourceFailure(ex.Message, frame, instructionIndex, runtimeFailureBoundaryDepth);
-            }
-            catch (OutOfMemoryException)
-            {
-                HandleStringResourceFailure("Недостаточно памяти для результата операции.", frame, instructionIndex, runtimeFailureBoundaryDepth);
-            }
-            catch (ExpiredArrayViewException ex)
-            {
-                HandleArrayRuntimeFailure(ex, frame, instructionIndex, runtimeFailureBoundaryDepth);
-            }
-            catch (EvaluationStackUnderflowException ex)
-            {
-                ReportInvalidRuntimeState(ex.Message, ResolveLocation(frame.Routine.Id, instructionIndex));
-                throw new RuntimeFailureException();
-            }
-            catch (VmCallbackSuspension suspension)
-            {
-                PushSuspendedCallback(suspension);
-            }
-            catch (RuntimeFailureException) when (TryHandleRuntimeFailure(runtimeFailureBoundaryDepth))
-            {
-            }
-            return;
-        }
-
         var needsExecutionSnapshot = NeedsExecutionSnapshot();
         var snapshot = needsExecutionSnapshot
             ? CreateExecutionSnapshot(frame, instructionIndex, instruction)
@@ -2315,11 +2265,6 @@ public sealed partial class BytecodeVm
                     ResolveLocation(frame.Routine.Id, instructionIndex));
                 throw new RuntimeFailureException();
         }
-    }
-
-    private bool CanUseFastInstructionPath()
-    {
-        return _canUseFastInstructionPath;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

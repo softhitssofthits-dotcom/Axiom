@@ -507,7 +507,7 @@ button:disabled, [aria-disabled="true"] { opacity: var(--xs-disabled-opacity); c
 .toolbar-btn:disabled { background: none; border-color: transparent; }
 .toolbar-btn.tb-run { color: var(--xs-success); }
 .toolbar-btn.tb-stop { color: var(--xs-danger); }
-.toolbar-btn.tb-run:hover { color: var(--xs-success); background: color-mix(in srgb, var(--xs-success) 13%, transparent); }
+.toolbar-btn.tb-run:hover:not(:disabled):not([aria-disabled="true"]) { color: var(--xs-success); background: color-mix(in srgb, var(--xs-success) 13%, transparent); }
 .toolbar-btn.tb-stop:hover { color: var(--xs-danger); background: color-mix(in srgb, var(--xs-danger) 13%, transparent); }
 
 /* Общие раскрывающиеся списки: геометрия и поведение едины, цвета задаёт палитра. */
