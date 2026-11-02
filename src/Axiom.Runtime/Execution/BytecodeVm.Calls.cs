@@ -39,8 +39,20 @@ public sealed partial class BytecodeVm
                 throw new RuntimeFailureException();
             }
 
-            var slots = new[] { BytecodeVariableSlot.AdoptInteger(integerArgument) };
-            _callStack.Push(CreateFrameWithSlots(targetRoutine, slots, directCaptures, callLocation, _frameTemplatesByRoutineId[targetRoutine.Id]));
+            var template = _frameTemplatesByRoutineId[targetRoutine.Id];
+            if (_cachedFrames.Remove(targetRoutine.Id, out var cachedFrame))
+            {
+                // Контейнер кадра возвращён после освобождения; саму ячейку
+                // создаём заново, поскольку прежняя могла уйти в замыкание.
+                cachedFrame.Arguments[0] = BytecodeVariableSlot.AdoptInteger(integerArgument);
+                cachedFrame.Reset(cachedFrame.Arguments, directCaptures, callLocation, template.DefaultLocals);
+                _callStack.Push(cachedFrame);
+            }
+            else
+            {
+                var slots = new[] { BytecodeVariableSlot.AdoptInteger(integerArgument) };
+                _callStack.Push(CreateFrameWithSlots(targetRoutine, slots, directCaptures, callLocation, template));
+            }
             return;
         }
 

@@ -1,10 +1,12 @@
 {
   "language": "0.12.15",
-  "compiler": "0.13.56",
+  "compiler": "0.13.57",
   "ide": "0.15.7",
   "compilerOnlyChange": {
-    "version": "0.13.56",
-    "reason": "Удалён недостижимый путь VM и согласована обработка повреждённого байткода, отклоняемого валидатором; договор языка не изменён.",
-    "paths": ["src/Axiom.Runtime/Execution/BytecodeVm.cs"]
+    "version": "0.13.57",
+    "reason": "Повторное использование контейнера аргумента VM без изменения договора языка.",
+    "paths": [
+      "src/Axiom.Runtime/Execution/BytecodeVm.Calls.cs"
+    ]
   }
 }
