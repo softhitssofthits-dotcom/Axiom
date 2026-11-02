@@ -1,12 +1,12 @@
 {
   "language": "0.12.15",
-  "compiler": "0.13.58",
+  "compiler": "0.13.59",
   "ide": "0.15.7",
   "compilerOnlyChange": {
-    "version": "0.13.58",
-    "reason": "Уплотнено внутреннее представление инструкций VM без изменения договора языка и формата байткода.",
+    "version": "0.13.59",
+    "reason": "Повторно используется неизменяемое начальное значение строковых элементов без изменения договора языка.",
     "paths": [
-      "src/Axiom.Runtime/Execution/VmInstruction.cs"
+      "src/Axiom.Runtime/Values/RuntimeArrayValue.Storage.cs"
     ]
   }
 }

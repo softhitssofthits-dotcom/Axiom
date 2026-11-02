@@ -9,6 +9,14 @@ public sealed partial class RuntimeArrayValue
         var length = CalculateLength(lowerBounds, upperBounds);
         var elements = CreateElementStorage(length);
 
+        if (length > 0 && ElementType == TypeSymbol.String && FixedStringLength is not null)
+        {
+            // Строка и её RuntimeValue здесь неизменяемы; последующая запись
+            // заменяет значение ячейки, не меняя соседние элементы.
+            elements.FillValue(RuntimeValue.Default(ElementType, FixedStringLength));
+            return elements;
+        }
+
         for (var index = 0; index < elements.Length; index++)
         {
             elements[index] = RuntimeValue.Default(ElementType, FixedStringLength);
@@ -140,6 +148,7 @@ public sealed partial class RuntimeArrayValue
         public void WriteInteger(int index, int value) => _integers![index] = value;
         public void WriteLong(int index, long value) => _longs![index] = value;
         public void WriteDouble(int index, double value) => _doubles![index] = value;
+        public void FillValue(RuntimeValue value) => Array.Fill(_values!, value);
 
         public void Clear(int index)
         {
