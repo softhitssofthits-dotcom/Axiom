@@ -1,12 +1,12 @@
 {
   "language": "0.12.15",
-  "compiler": "0.13.57",
+  "compiler": "0.13.58",
   "ide": "0.15.7",
   "compilerOnlyChange": {
-    "version": "0.13.57",
-    "reason": "Повторное использование контейнера аргумента VM без изменения договора языка.",
+    "version": "0.13.58",
+    "reason": "Уплотнено внутреннее представление инструкций VM без изменения договора языка и формата байткода.",
     "paths": [
-      "src/Axiom.Runtime/Execution/BytecodeVm.Calls.cs"
+      "src/Axiom.Runtime/Execution/VmInstruction.cs"
     ]
   }
 }

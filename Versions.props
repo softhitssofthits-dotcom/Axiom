@@ -2,9 +2,9 @@
   <!-- Создан scripts/versioning.mjs из versions.json. -->
   <PropertyGroup>
     <AxiomLanguageVersion>0.12.15</AxiomLanguageVersion>
-    <AxiomCompilerVersion>0.13.57</AxiomCompilerVersion>
+    <AxiomCompilerVersion>0.13.58</AxiomCompilerVersion>
     <AxiomIdeVersion>0.15.7</AxiomIdeVersion>
-    <Version Condition="'$(MSBuildProjectName)' != 'Axiom.DesktopHost'">0.13.57</Version>
+    <Version Condition="'$(MSBuildProjectName)' != 'Axiom.DesktopHost'">0.13.58</Version>
     <Version Condition="'$(MSBuildProjectName)' == 'Axiom.DesktopHost'">0.15.7</Version>
   </PropertyGroup>
 </Project>
