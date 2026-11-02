@@ -66,7 +66,9 @@ public sealed partial class BoundProgramLowerer
 
             case BoundFieldAccessExpression fieldAccess:
                 LowerExpression(fieldAccess.Target, instructions);
-                instructions.Add(LoweredInstruction.LoadField(fieldAccess.Location, fieldAccess.Field.Name));
+                instructions.Add(fieldAccess.Target.Type == TypeSymbol.RuntimeError
+                    ? LoweredInstruction.LoadField(fieldAccess.Location, fieldAccess.Field.Name)
+                    : LoweredInstruction.LoadField(fieldAccess.Location, fieldAccess.Field));
                 break;
 
             case BoundRecordLiteralExpression recordLiteral:
@@ -77,7 +79,7 @@ public sealed partial class BoundProgramLowerer
                 {
                     LowerExpression(initializer.Expression, instructions);
                     instructions.Add(LoweredInstruction.LoadVariable(recordLiteral.Location, recordTemporary));
-                    instructions.Add(LoweredInstruction.StoreField(recordLiteral.Location, initializer.Field.Name));
+                    instructions.Add(LoweredInstruction.StoreField(recordLiteral.Location, initializer.Field));
                 }
                 instructions.Add(LoweredInstruction.LoadVariable(recordLiteral.Location, recordTemporary));
                 break;
@@ -549,7 +551,7 @@ public sealed partial class BoundProgramLowerer
                 return true;
 
             case BoundFieldAccessExpression fieldAccess when TryCreateByRefStoragePlan(fieldAccess.Target, instructions, out var parentPlan):
-                plan = new FieldByRefStoragePlan(parentPlan, fieldAccess.Field.Name, fieldAccess.Location);
+                plan = new FieldByRefStoragePlan(parentPlan, fieldAccess.Field, fieldAccess.Location);
                 return true;
 
             case BoundArrayAccessExpression arrayAccess:

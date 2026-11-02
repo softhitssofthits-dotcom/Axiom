@@ -712,6 +712,12 @@ public sealed partial class BytecodeModuleValidator
                     ValidateStringConstantIndex(module, routine, instructionIndex, instruction, operandIndex: 0, "имя массива");
                     break;
 
+                case Opcode.LoadFieldOrdinal:
+                case Opcode.StoreFieldOrdinal:
+                    ValidateOperandCount(module, routine, instructionIndex, instruction, 2);
+                    ValidateStringConstantIndex(module, routine, instructionIndex, instruction, operandIndex: 0, "имя поля");
+                    break;
+
                 case Opcode.LoadField:
                 case Opcode.StoreField:
                     ValidateOperandCount(module, routine, instructionIndex, instruction, 1);
@@ -2223,10 +2229,12 @@ public sealed partial class BytecodeModuleValidator
                 ApplySetSetOperationStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
 
+            case Opcode.LoadFieldOrdinal:
             case Opcode.LoadField:
                 ApplyLoadFieldStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
 
+            case Opcode.StoreFieldOrdinal:
             case Opcode.StoreField:
                 ApplyStoreFieldStackTypeEffect(module, routine, instructionIndex, instruction, workingStack);
                 break;
@@ -2718,7 +2726,9 @@ public sealed partial class BytecodeModuleValidator
             return null;
         }
 
-        if (fieldName is null || !recordType.TryGetField(fieldName, out var field) || field is null)
+        if (fieldName is null || !recordType.TryGetField(fieldName, out var field) || field is null
+            || (instruction.Opcode is Opcode.LoadFieldOrdinal or Opcode.StoreFieldOrdinal
+                && field.Ordinal != instruction.GetOperand(1)))
         {
             Report(
                 "BC4115",

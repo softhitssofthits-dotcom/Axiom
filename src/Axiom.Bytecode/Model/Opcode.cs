@@ -155,5 +155,7 @@ public enum Opcode
     LoadLocalPair,
     LoadLocalConst,
     LoadElement1D,
-    LoadElement2D
+    LoadElement2D,
+    LoadFieldOrdinal,
+    StoreFieldOrdinal
 }

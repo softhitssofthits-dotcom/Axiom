@@ -60,6 +60,8 @@ public sealed class LoweredInstruction
 
     public TextLocation Location { get; }
 
+    public TypeFieldSymbol? Field { get; private init; }
+
     public object? LiteralValue { get; }
 
     public TypeSymbol? ValueType { get; }
@@ -278,6 +280,12 @@ public sealed class LoweredInstruction
             displayName: displayName,
             valueCount: dimensionCount);
     }
+
+    public static LoweredInstruction LoadField(TextLocation location, TypeFieldSymbol field)
+        => new(LoweredInstructionKind.LoadField, location, displayName: field.Name) { Field = field };
+
+    public static LoweredInstruction StoreField(TextLocation location, TypeFieldSymbol field)
+        => new(LoweredInstructionKind.StoreField, location, displayName: field.Name) { Field = field };
 
     public static LoweredInstruction LoadField(TextLocation location, string displayName)
     {

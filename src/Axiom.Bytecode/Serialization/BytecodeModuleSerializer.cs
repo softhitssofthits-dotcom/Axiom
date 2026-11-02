@@ -7,12 +7,13 @@ namespace Axiom.Bytecode;
 
 public static class BytecodeModuleSerializer
 {
-    public const int CurrentArtifactSchemaVersion = 3;
+    public const int CurrentArtifactSchemaVersion = 4;
 
     /// <summary>
     /// Снимок версии 2 не содержал идентичности TYPE и восстанавливается по
     /// коротким именам. Версия 3 добавляет идентичность, поэтому два закрытых
     /// TYPE с одинаковым именем из разных модулей не сливаются.
+    /// Версия 4 добавляет инструкции доступа к полям по ordinal.
     /// </summary>
     private const int LegacyArtifactSchemaVersion = 2;
 
@@ -104,10 +105,11 @@ public static class BytecodeModuleSerializer
     {
         if (artifact.ArtifactSchemaVersion is int schemaVersion
             && schemaVersion != CurrentArtifactSchemaVersion
+            && schemaVersion != 3
             && schemaVersion != LegacyArtifactSchemaVersion)
         {
             throw new InvalidOperationException(
-                $"JSON-снимок байткода имеет неподдерживаемую версию схемы {schemaVersion}. Поддерживаются версии {LegacyArtifactSchemaVersion} и {CurrentArtifactSchemaVersion}.");
+                $"JSON-снимок байткода имеет неподдерживаемую версию схемы {schemaVersion}. Поддерживаются версии {LegacyArtifactSchemaVersion}, 3 и {CurrentArtifactSchemaVersion}.");
         }
 
         if (artifact.Header is null)

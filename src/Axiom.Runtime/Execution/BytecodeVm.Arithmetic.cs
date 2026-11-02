@@ -220,6 +220,15 @@ public sealed partial class BytecodeVm
                 // Обычный путь выдаёт прежнюю диагностику и расположение ошибки.
             }
         }
+        if (stack.TryGetDoubleOperands(out var doubleLeft, out var doubleRight))
+        {
+            var difference = doubleLeft - doubleRight;
+            if (double.IsFinite(difference))
+            {
+                stack.ReplaceDoubleOperands(difference);
+                return;
+            }
+        }
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 

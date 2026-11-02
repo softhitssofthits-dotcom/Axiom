@@ -700,10 +700,12 @@ public sealed partial class BytecodeVm
                         ExecuteCreateRecord(frame, instruction, ip);
                         break;
 
+                    case Opcode.LoadFieldOrdinal:
                     case Opcode.LoadField:
                         ExecuteLoadField(frame, instruction, ip);
                         break;
 
+                    case Opcode.StoreFieldOrdinal:
                     case Opcode.StoreField:
                         ExecuteStoreField(frame, instruction, ip);
                         break;
@@ -1441,6 +1443,11 @@ public sealed partial class BytecodeVm
         BytecodeVariableSlot[]? byRefArgumentSlots,
         bool byValValuesAreSnapshots)
     {
+        if (routine.ParameterCount == 0)
+        {
+            return Array.Empty<BytecodeVariableSlot>();
+        }
+
         var argumentSlots = new BytecodeVariableSlot[routine.ParameterCount];
         var byValIndex = 0;
 
@@ -1937,10 +1944,12 @@ public sealed partial class BytecodeVm
                 ExecuteCreateRecord(frame, instruction, instructionIndex);
                 break;
 
+            case Opcode.LoadFieldOrdinal:
             case Opcode.LoadField:
                 ExecuteLoadField(frame, instruction, instructionIndex);
                 break;
 
+            case Opcode.StoreFieldOrdinal:
             case Opcode.StoreField:
                 ExecuteStoreField(frame, instruction, instructionIndex);
                 break;

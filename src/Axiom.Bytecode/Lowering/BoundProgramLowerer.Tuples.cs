@@ -20,7 +20,7 @@ public sealed partial class BoundProgramLowerer
             var from = source.Fields[i];
             var to = target.Fields[i];
             instructions.Add(LoweredInstruction.LoadVariable(location, sourceTemp));
-            instructions.Add(LoweredInstruction.LoadField(location, from.Name));
+            instructions.Add(LoweredInstruction.LoadField(location, from));
             if (from.Type != to.Type)
             {
                 if (from.Type is TupleTypeSymbol nestedSource && to.Type is TupleTypeSymbol nestedTarget)
@@ -29,7 +29,7 @@ public sealed partial class BoundProgramLowerer
                     instructions.Add(LoweredInstruction.Convert(location, to.Type));
             }
             instructions.Add(LoweredInstruction.LoadVariable(location, resultTemp));
-            instructions.Add(LoweredInstruction.StoreField(location, to.Name));
+            instructions.Add(LoweredInstruction.StoreField(location, to));
         }
         instructions.Add(LoweredInstruction.LoadVariable(location, resultTemp));
     }

@@ -1,0 +1,27 @@
+﻿' Вызовы без параметров: рекурсивные кадры и захваченная переменная.
+DIM depth AS INTEGER = 4
+DIM total AS INTEGER = 0
+SUB Tick()
+    total = total + 1
+END SUB
+SUB Walk()
+    IF depth > 0 THEN
+        depth = depth - 1
+        Walk()
+    END IF
+    Tick()
+END SUB
+SUB LocalCall(n AS INTEGER)
+    Increment()
+    Increment()
+    PRINT n
+    SUB Increment()
+        n = n + 1
+    END SUB
+END SUB
+Walk()
+PRINT total
+LocalCall(40)
+LocalCall(1)
+' Ожидается: 5, 42, 3; новый вызов LocalCall получает своё значение n.
+' Открыть файл в Electron и выполнить обычной командой запуска.

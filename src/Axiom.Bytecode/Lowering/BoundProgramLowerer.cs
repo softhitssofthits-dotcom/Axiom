@@ -51,26 +51,26 @@ public sealed partial class BoundProgramLowerer
     private sealed class FieldByRefStoragePlan : ByRefStoragePlan
     {
         private readonly ByRefStoragePlan _parent;
-        private readonly string _fieldName;
+        private readonly TypeFieldSymbol _field;
         private readonly Axiom.Core.TextLocation _location;
 
-        public FieldByRefStoragePlan(ByRefStoragePlan parent, string fieldName, Axiom.Core.TextLocation location)
+        public FieldByRefStoragePlan(ByRefStoragePlan parent, TypeFieldSymbol field, Axiom.Core.TextLocation location)
         {
             _parent = parent;
-            _fieldName = fieldName;
+            _field = field;
             _location = location;
         }
 
         public override void EmitLoadValue(List<LoweredInstruction> instructions)
         {
             _parent.EmitLoadValue(instructions);
-            instructions.Add(LoweredInstruction.LoadField(_location, _fieldName));
+            instructions.Add(LoweredInstruction.LoadField(_location, _field));
         }
 
         public override void EmitStoreValue(List<LoweredInstruction> instructions)
         {
             _parent.EmitLoadValue(instructions);
-            instructions.Add(LoweredInstruction.StoreField(_location, _fieldName));
+            instructions.Add(LoweredInstruction.StoreField(_location, _field));
         }
     }
 

@@ -23,7 +23,7 @@ public sealed partial class BytecodeVm
             return;
         }
 
-        var field = ResolveRecordField(frame.Routine.Id, instructionIndex, recordValue, ReadDebugName(instruction.GetOperand(0)));
+        var field = ResolveInstructionField(frame.Routine.Id, instructionIndex, recordValue, instruction);
 
         frame.EvaluationStack.Push(recordValue.AsRecord().GetField(field));
     }
@@ -32,9 +32,34 @@ public sealed partial class BytecodeVm
     {
         var recordValue = PopValue(frame, instructionIndex);
         var value = PopValue(frame, instructionIndex);
-        var field = ResolveRecordField(frame.Routine.Id, instructionIndex, recordValue, ReadDebugName(instruction.GetOperand(0)));
+        var field = ResolveInstructionField(frame.Routine.Id, instructionIndex, recordValue, instruction);
 
         recordValue.AsRecord().SetField(field, value);
+    }
+
+    private TypeFieldSymbol ResolveInstructionField(int routineId, int instructionIndex, RuntimeValue value, VmInstruction instruction)
+    {
+        if (instruction.Opcode is not (Opcode.LoadFieldOrdinal or Opcode.StoreFieldOrdinal))
+        {
+            return ResolveRecordField(routineId, instructionIndex, value, ReadDebugName(instruction.GetOperand(0)));
+        }
+
+        if (value.Type is not UserDefinedTypeSymbol recordType)
+        {
+            return ReportInvalidRuntimeState<TypeFieldSymbol>(
+                $"Значение типа '{value.Type.Name}' не является TYPE для доступа к полю '{ReadDebugName(instruction.GetOperand(0))}'.",
+                ResolveLocation(routineId, instructionIndex));
+        }
+
+        var ordinal = instruction.GetOperand(1);
+        if ((uint)ordinal >= (uint)recordType.Fields.Count)
+        {
+            return ReportInvalidRuntimeState<TypeFieldSymbol>(
+                $"TYPE '{recordType.Name}' не содержит поле с номером {ordinal}.",
+                ResolveLocation(routineId, instructionIndex));
+        }
+
+        return recordType.Fields[ordinal];
     }
 
     private TypeFieldSymbol ResolveRecordField(int routineId, int instructionIndex, RuntimeValue recordValue, string fieldName)

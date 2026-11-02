@@ -795,7 +795,10 @@ public sealed partial class BytecodeCompiler
 
     private BytecodeInstruction EmitFieldInstruction(LoweredInstruction instruction, Opcode opcode)
     {
-        return new BytecodeInstruction(opcode, [RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName)]);
+        var nameIndex = RegisterConstant(BytecodeConstantKind.String, instruction.DisplayName);
+        return instruction.Field is { } field
+            ? new BytecodeInstruction(opcode == Opcode.LoadField ? Opcode.LoadFieldOrdinal : Opcode.StoreFieldOrdinal, [nameIndex, field.Ordinal])
+            : new BytecodeInstruction(opcode, [nameIndex]);
     }
 
     private BytecodeInstruction EmitCreateRecord(LoweredInstruction instruction)

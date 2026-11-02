@@ -120,7 +120,7 @@ public sealed partial class BoundProgramLowerer
         {
             LowerExpression(assignment.Expression, instructions);
             LowerExpression(fieldAccess.Target, instructions);
-            instructions.Add(LoweredInstruction.StoreField(assignment.Location, fieldAccess.Field.Name));
+            instructions.Add(LoweredInstruction.StoreField(assignment.Location, fieldAccess.Field));
             return;
         }
 

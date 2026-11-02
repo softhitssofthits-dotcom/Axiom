@@ -104,9 +104,10 @@ internal static class BytecodeStackEffect
             case Opcode.CompareLessOrEqual:
             case Opcode.CompareGreater:
             case Opcode.CompareGreaterOrEqual:
+            case Opcode.StoreFieldOrdinal:
             case Opcode.StoreField:
                 popCount = 2;
-                pushCount = instruction.Opcode is Opcode.StoreField ? 0 : 1;
+                pushCount = instruction.Opcode is Opcode.StoreField or Opcode.StoreFieldOrdinal ? 0 : 1;
                 return true;
 
             case Opcode.RegisterKeyHandler:
@@ -222,6 +223,7 @@ internal static class BytecodeStackEffect
                 popCount = instruction.GetOperand(1) + 2;
                 return true;
 
+            case Opcode.LoadFieldOrdinal:
             case Opcode.LoadField:
                 popCount = 1;
                 pushCount = 1;
