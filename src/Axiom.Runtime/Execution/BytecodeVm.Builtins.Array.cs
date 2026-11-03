@@ -736,6 +736,11 @@ public sealed partial class BytecodeVm
                 return RuntimeValue.Void;
             }
 
+            if (array.TryInsertOneDimensionalAt(insertionIndex, arguments[2]))
+            {
+                return RuntimeValue.Void;
+            }
+
             array.AllocatePreserving(isEmpty ? 1 : array.LowerBound, newUpperBound);
 
             if (!array.TryMoveOneDimensionalRange(
@@ -812,6 +817,11 @@ public sealed partial class BytecodeVm
             if (removalIndex == array.UpperBound && array.TryPopOneDimensional(out var poppedValue))
             {
                 return poppedValue;
+            }
+
+            if (array.TryRemoveOneDimensionalAt(removalIndex, out var removedMiddleValue))
+            {
+                return removedMiddleValue;
             }
 
             var removedValue = array.GetValue(removalIndex);

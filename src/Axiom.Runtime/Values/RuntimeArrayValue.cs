@@ -760,6 +760,110 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
         return true;
     }
 
+    /// <summary>
+    /// Вставка в начало или середину одномерного корневого массива сдвигом хвоста
+    /// в том же хранилище (механизм memmove списка CPython); при нехватке ёмкости
+    /// буфер растёт по удвоению, а не под точный размер. Возвращает false для видов,
+    /// пустого массива с неединичной нижней границей и неплотного хранилища —
+    /// эти случаи обрабатывает общий путь перевыделения.
+    /// </summary>
+    internal bool TryInsertOneDimensionalAt(int insertionIndex, RuntimeValue value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        EnsureResizableRoot();
+        EnsureAllocated();
+
+        if (Rank != 1 || IsView || (Length == 0 && LowerBound != 1))
+        {
+            return false;
+        }
+
+        if (insertionIndex < LowerBound || insertionIndex > UpperBound)
+        {
+            return false;
+        }
+
+        if (!TryGetDenseOneDimensionalLinearIndex(insertionIndex, out var linearIndex))
+        {
+            return false;
+        }
+
+        if (Length + 1 > MaxElementCount)
+        {
+            throw new ArrayAllocationFailureException(
+                $"Не удалось расширить массив: число элементов превысит предел {MaxElementCount}.");
+        }
+
+        if (_elements!.Length < Length + 1)
+        {
+            var nextElements = CreateElementStorage(GrowCapacity(Length + 1));
+
+            if (Length > 0)
+            {
+                ElementStorage.Copy(_elements, 0, nextElements, 0, Length);
+            }
+
+            AttachStorage(nextElements);
+        }
+
+        var tailCount = UpperBound - insertionIndex + 1;
+        if (tailCount > 0)
+        {
+            ElementStorage.Copy(_elements, linearIndex, _elements, linearIndex + 1, tailCount);
+        }
+
+        _elements[linearIndex] = value.CopyForStorage(FixedStringLength);
+        _upperBounds![0] = checked(UpperBound + 1);
+        _storageUpperBounds = _upperBounds;
+        _visibleLength = UpperBound - LowerBound + 1;
+        _isView = false;
+        RenewStorageLifetime();
+        return true;
+    }
+
+    /// <summary>
+    /// Удаление из начала или середины одномерного корневого массива сдвигом хвоста
+    /// в том же хранилище без перевыделения; последний слот очищается. Последний
+    /// элемент обрабатывает TryPopOneDimensional, поэтому сюда он не входит.
+    /// </summary>
+    internal bool TryRemoveOneDimensionalAt(int removalIndex, out RuntimeValue value)
+    {
+        EnsureResizableRoot();
+        EnsureAllocated();
+
+        if (Rank != 1 || IsView || Length <= 1 || removalIndex >= UpperBound)
+        {
+            value = RuntimeValue.Void;
+            return false;
+        }
+
+        if (!TryGetDenseOneDimensionalLinearIndex(removalIndex, out var linearIndex))
+        {
+            value = RuntimeValue.Void;
+            return false;
+        }
+
+        value = _elements![linearIndex];
+        ElementStorage.Copy(_elements, linearIndex + 1, _elements, linearIndex, UpperBound - removalIndex);
+        _elements.Clear(UpperBound - LowerBound);
+        _upperBounds![0] = UpperBound - 1;
+        _storageUpperBounds = _upperBounds;
+        _visibleLength = UpperBound - LowerBound + 1;
+        _isView = false;
+        RenewStorageLifetime();
+        return true;
+    }
+
+    private bool TryGetDenseOneDimensionalLinearIndex(int index, out int linearIndex)
+    {
+        if (!TryGetLinearIndex1(index, out linearIndex))
+        {
+            return false;
+        }
+
+        return linearIndex == index - _lowerBounds![0];
+    }
+
     internal bool TryPopOneDimensional(out RuntimeValue value)
     {
         EnsureResizableRoot();
