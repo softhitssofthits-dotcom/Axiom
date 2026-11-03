@@ -1,13 +1,14 @@
 {
   "language": "0.12.15",
-  "compiler": "0.13.61",
+  "compiler": "0.13.62",
   "ide": "0.15.7",
   "compilerOnlyChange": {
-    "version": "0.13.61",
-    "reason": "Компактный механизм копировщика: единый массив узлов и вынос замыкания из FillSnapshotInto; договор языка не менялся.",
+    "version": "0.13.62",
+    "reason": "Предвыделение и перенос ключей без обёрток при независимом копировании словаря и множества; договор языка не менялся.",
     "paths": [
-      "src/Axiom.Runtime/Values/RuntimeValueCopier.cs",
-      "src/Axiom.Runtime/Values/RuntimeArrayValue.Copy.cs"
+      "src/Axiom.Runtime/Values/RuntimeDictionaryValue.cs",
+      "src/Axiom.Runtime/Values/RuntimeSetValue.cs",
+      "src/Axiom.Runtime/Values/RuntimeValueCopier.cs"
     ]
   }
 }

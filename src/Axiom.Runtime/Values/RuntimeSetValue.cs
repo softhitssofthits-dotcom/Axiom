@@ -304,15 +304,49 @@ public sealed class RuntimeSetValue
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var normalized = NormalizeElement(value);
-        if (_indexByKey.ContainsKey(normalized))
+        AppendForSnapshotRaw(NormalizeElement(value));
+    }
+
+    /// <summary>
+    /// Добавление по уже приведённому ключу: путь независимого копирования
+    /// без повторной нормализации и без промежуточных обёрток.
+    /// </summary>
+    internal void AppendForSnapshotRaw(RuntimeCollectionKey key)
+    {
+        if (_indexByKey.ContainsKey(key))
         {
             return;
         }
 
         // Снимок уже содержит согласованный набор элементов, поэтому повторное
         // копирование значений не выполняется: общие ссылки сохраняет обход графа.
-        Append(normalized);
+        Append(key);
+    }
+
+    /// <summary>
+    /// Предвыделяет место под известное число элементов при независимом
+    /// копировании: рост списка и индекса с нуля не выполняется.
+    /// </summary>
+    internal void ReserveForSnapshot(int count)
+    {
+        _entries.EnsureCapacity(count);
+        _indexByKey.EnsureCapacity(count);
+    }
+
+    /// <summary>
+    /// Элементы в порядке добавления без обёрток: ключи уже в приведённом виде.
+    /// </summary>
+    internal IEnumerable<RuntimeCollectionKey> RawEntries()
+    {
+        foreach (var entry in _entries)
+        {
+            if (entry is null)
+            {
+                continue;
+            }
+
+            yield return entry.Value;
+        }
     }
 
     public IEnumerable<RuntimeValue> Entries()

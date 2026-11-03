@@ -161,9 +161,12 @@ internal sealed class RuntimeValueCopier
             {
                 var source = (RuntimeDictionaryValue)work.Identity;
                 var target = work.Copy.AsDictionary();
-                foreach (var (key, element) in source.Entries())
+                // Копия заполняется под размер источника и уже приведёнными
+                // ключами: без роста индекса с нуля и промежуточных обёрток.
+                target.ReserveForSnapshot(source.Count);
+                foreach (var (key, element) in source.RawEntries())
                 {
-                    target.AppendForSnapshot(key, Prepare(element));
+                    target.AppendForSnapshotRaw(key, Prepare(element));
                 }
 
                 break;
@@ -173,9 +176,14 @@ internal sealed class RuntimeValueCopier
             {
                 var source = (RuntimeSetValue)work.Identity;
                 var target = work.Copy.AsSet();
-                foreach (var element in source.Entries())
+                // Элементы множества — только скаляры: копия переносит ключи
+                // без обёрток и с предвыделенным местом. Счётчик визитов на
+                // элемент сохраняет прежние границы проверки отмены (Prepare).
+                target.ReserveForSnapshot(source.Count);
+                foreach (var element in source.RawEntries())
                 {
-                    target.AppendForSnapshot(Prepare(element));
+                    CheckCancellationForBulkFill(1);
+                    target.AppendForSnapshotRaw(element);
                 }
 
                 break;
