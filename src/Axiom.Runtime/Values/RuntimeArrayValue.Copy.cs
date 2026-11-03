@@ -202,6 +202,14 @@ public sealed partial class RuntimeArrayValue
             }
         }
 
+        // Обход с замыканием вынесен в отдельный метод: захват параметров поднимает
+        // создание display-класса в начало метода, и оно происходило на каждом
+        // вызове даже при прохождении быстрых путей выше (образец — вынос O07-5).
+        FillSnapshotIntoByVisit(target, copier, fixedStringLength);
+    }
+
+    private void FillSnapshotIntoByVisit(RuntimeArrayValue target, RuntimeValueCopier copier, int? fixedStringLength)
+    {
         ForEachVisibleIndexSetAscending(indices =>
         {
             target._elements![target.GetLinearIndex(indices)] =

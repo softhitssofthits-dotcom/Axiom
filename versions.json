@@ -1,13 +1,13 @@
 {
   "language": "0.12.15",
-  "compiler": "0.13.60",
+  "compiler": "0.13.61",
   "ide": "0.15.7",
   "compilerOnlyChange": {
-    "version": "0.13.60",
-    "reason": "Вставка и удаление в начале и середине одномерного массива без перевыделения при достаточной ёмкости; договор языка не менялся.",
+    "version": "0.13.61",
+    "reason": "Компактный механизм копировщика: единый массив узлов и вынос замыкания из FillSnapshotInto; договор языка не менялся.",
     "paths": [
-      "src/Axiom.Runtime/Values/RuntimeArrayValue.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Array.cs"
+      "src/Axiom.Runtime/Values/RuntimeValueCopier.cs",
+      "src/Axiom.Runtime/Values/RuntimeArrayValue.Copy.cs"
     ]
   }
 }
