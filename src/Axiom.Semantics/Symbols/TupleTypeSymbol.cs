@@ -25,8 +25,17 @@ public sealed class TupleTypeSymbol : UserDefinedTypeSymbol
         return base.TryGetField(name, out field);
     }
 
-    public override bool Equals(object? obj) => obj is TupleTypeSymbol other &&
-        Fields.Count == other.Fields.Count && Fields.Zip(other.Fields).All(p => p.First.Type == p.Second.Type);
+    public override bool Equals(object? obj)
+    {
+        if (obj is not TupleTypeSymbol other || Fields.Count != other.Fields.Count)
+            return false;
+
+        for (var i = 0; i < Fields.Count; i++)
+            if (Fields[i].Type != other.Fields[i].Type)
+                return false;
+
+        return true;
+    }
 
     public override int GetHashCode()
     {

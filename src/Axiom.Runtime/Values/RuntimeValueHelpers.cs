@@ -197,8 +197,13 @@ public static class RuntimeValueHelpers
             return false;
         }
 
-        foreach (var field in left.Type.Fields)
+        // Индексный проход вместо перебора через интерфейс: foreach по
+        // IReadOnlyList выделял класс-перечислитель на каждое сравнение,
+        // который устранял только разогретый оптимизирующий ярус JIT.
+        var fields = left.Type.Fields;
+        for (var fieldIndex = 0; fieldIndex < fields.Count; fieldIndex++)
         {
+            var field = fields[fieldIndex];
             if (!ValuesEqual(left.GetField(field), right.GetField(field)))
             {
                 return false;

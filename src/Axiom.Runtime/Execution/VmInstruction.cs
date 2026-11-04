@@ -17,6 +17,9 @@ internal readonly struct VmInstruction
     /// <summary>Число операндов, хранящихся полями; совпадает с максимумом, читаемым исполнителем напрямую.</summary>
     private const int InlineOperandSlots = 5;
     private const ushort Extended = ushort.MaxValue;
+    // Общий маркер только для внутренней специализации; исходные инструкции
+    // создаются без этой ссылки, включая повреждённый внешний байт-код.
+    private static readonly int[] FreshRecordLocalMarker = new int[0];
     private readonly ushort _opcode;
     private readonly ushort _operandCount;
 
@@ -62,6 +65,21 @@ internal readonly struct VmInstruction
         E = e;
         ExtraOperands = _opcode == Extended ? [opcodeValue] : null;
     }
+
+    private VmInstruction(int typeIdentity, int localSlot)
+    {
+        _opcode = (ushort)Opcode.CreateRecord;
+        _operandCount = 1;
+        A = typeIdentity;
+        B = localSlot;
+        C = D = E = 0;
+        ExtraOperands = FreshRecordLocalMarker;
+    }
+
+    internal static VmInstruction CreateFreshRecordLocal(int typeIdentity, int localSlot)
+        => new(typeIdentity, localSlot);
+
+    internal bool IsFreshRecordLocal => ReferenceEquals(ExtraOperands, FreshRecordLocalMarker);
 
     /// <summary>Опкод за пределами обычного диапазона хранится без потери в дополнительном массиве.</summary>
     public Opcode Opcode => _opcode == Extended ? (Opcode)ExtraOperands![0] : (Opcode)_opcode;

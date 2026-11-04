@@ -698,6 +698,18 @@ public sealed partial class BytecodeVm
 
                     case Opcode.CreateRecord:
                         ExecuteCreateRecord(frame, instruction, ip);
+                        if (instruction.IsFreshRecordLocal)
+                        {
+                            // Точка отмены и исходный индекс второй инструкции
+                            // остаются между созданием и записью в локальный слот.
+                            ip++;
+                            if (CheckCancellationRequested())
+                                return;
+                            frame.InstructionPointer = ip + 1;
+                            var fresh = PopValue(frame, ip);
+                            if (!frame.TryAdoptFreshFlatRecord(instruction.B, fresh))
+                                frame.StoreLocalValue(instruction.B, fresh);
+                        }
                         break;
 
                     case Opcode.LoadFieldOrdinal:
@@ -1286,6 +1298,18 @@ public sealed partial class BytecodeVm
         if (!fuse)
         {
             return decoded;
+        }
+
+        // Созданная запись принадлежит стеку до следующего StoreLocal. Второй
+        // слот остаётся нетронутым на случай прямого перехода к нему.
+        for (var index = 0; index + 1 < source.Length; index++)
+        {
+            if (source[index].Opcode == Opcode.CreateRecord && source[index].OperandCount == 1
+                && source[index + 1].Opcode == Opcode.StoreLocal && source[index + 1].OperandCount == 1)
+            {
+                decoded[index] = VmInstruction.CreateFreshRecordLocal(source[index].GetOperand(0), source[index + 1].GetOperand(0));
+                index++;
+            }
         }
 
         // Слияние тройки управления FOR (AdvanceForLoopLocal → Jump → JumpIfForDoneLocal)

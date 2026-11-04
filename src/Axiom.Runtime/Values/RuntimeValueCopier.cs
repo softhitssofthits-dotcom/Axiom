@@ -11,8 +11,10 @@ namespace Axiom.Runtime;
 /// Для малых графов поиск соответствия линейный по узлам; после 32 узлов строится
 /// словарь соответствий, а сами узлы остаются списком работ в прежнем порядке.
 /// Функции с захватами и внешние ресурсы сохраняют прежнюю идентичность.
-/// Плоская запись (только скалярные поля и строки) копируется без узлов вовсе:
-/// совместные вершины внутри неё невозможны, а порядок визитов совпадает.
+/// Плоская запись (только скалярные поля и строки), плоский массив (элементы —
+/// скаляры и строки) и запись с единственным составным полем-плоским массивом
+/// копируются без узлов вовсе: совместные вершины и циклы в таких графах
+/// невозможны, а порядок визитов совпадает с общим путём.
 /// </summary>
 internal sealed class RuntimeValueCopier
 {
@@ -46,10 +48,48 @@ internal sealed class RuntimeValueCopier
             return CopyFlatScalarRecordRoot(value, rootType);
         }
 
+        if (value.Type is ArrayTypeSymbol rootArrayType
+            && IsFlatScalarArrayType(rootArrayType.ElementType))
+        {
+            // Корневой плоский массив: элементы-атомы не дают повторов и циклов.
+            return CopyFlatScalarArrayRoot(value, rootArrayType, fixedStringLength);
+        }
+
+        if (fixedStringLength is null
+            && value.Type is UserDefinedTypeSymbol singleArrayType
+            && IsSingleFlatArrayFieldRecordType(singleArrayType))
+        {
+            // Запись с единственным полем-плоским массивом: повтор невозможен,
+            // массив заполняется после полей, как в общем пути.
+            return CopySingleFlatArrayFieldRecordRoot(value, singleArrayType);
+        }
+
         var copier = new RuntimeValueCopier();
+        if (value.Type is ArrayTypeSymbol hintType && !IsFlatScalarArrayType(hintType.ElementType))
+        {
+            // Верхняя граница графа известна: корень плюс каждый элемент массива.
+            copier.Reserve(value.AsArray().Length + 1);
+        }
+
         var result = copier.Prepare(value, fixedStringLength);
         copier.RunPendingFills();
         return result;
+    }
+
+    /// <summary>
+    /// Точное предвыделение узлов, когда верхняя граница графа известна:
+    /// без резерва массив узлов растёт удвоением, а словарь соответствий —
+    /// перехешированием, и суммарно выделяют заметно больше финального размера.
+    /// Граф может превысить резерв (составные поля элементов), рост сохранён.
+    /// </summary>
+    internal void Reserve(int capacity)
+    {
+        if (capacity <= InlineNodeLimit || _nodes is not null)
+        {
+            return;
+        }
+
+        _nodes = new CopyNode[capacity];
     }
 
     private static RuntimeValue CopyFlatScalarRecordRoot(RuntimeValue value, UserDefinedTypeSymbol recordType)
@@ -93,6 +133,81 @@ internal sealed class RuntimeValueCopier
         }
 
         return RuntimeValue.FromRecord(recordType, recordCopy);
+    }
+
+    /// <summary>
+    /// Плоский массив без узлов: последовательность совпадает с общим путём —
+    /// визит корня, заготовка через <see cref="RuntimeArrayValue.CreateEmptyForValueCopy"/>,
+    /// затем заполнение <see cref="RuntimeArrayValue.FillSnapshotInto"/>, которое
+    /// само выдерживает границы отмены для массового и поэлементного заполнения.
+    /// </summary>
+    private static RuntimeValue CopyFlatScalarArrayRoot(RuntimeValue value, ArrayTypeSymbol arrayType, int? fixedStringLength)
+    {
+        var source = value.AsArray();
+        var copier = new RuntimeValueCopier();
+        copier.Visit();
+        var target = source.CreateEmptyForValueCopy(fixedStringLength);
+        // Общий путь передаёт заполнению разрешённую длину цели, а не сырой параметр.
+        source.FillSnapshotInto(target, copier, target.FixedStringLength);
+        return RuntimeValue.FromArray(arrayType, target);
+    }
+
+    /// <summary>
+    /// Запись с единственным полем-плоским массивом без узлов: поля заполняются
+    /// по порядку, как в общем пути, а заполнение массива выполняется после всех
+    /// полей — на месте, где общий путь обрабатывал бы его узел из очереди.
+    /// </summary>
+    private static RuntimeValue CopySingleFlatArrayFieldRecordRoot(RuntimeValue value, UserDefinedTypeSymbol recordType)
+    {
+        var source = value.AsRecord();
+        var copier = new RuntimeValueCopier();
+        copier.Visit();
+        var recordCopy = RuntimeRecordValue.CreateForSnapshot(recordType);
+        var fields = recordType.Fields;
+        RuntimeArrayValue? pendingSource = null;
+        RuntimeArrayValue? pendingTarget = null;
+        for (var fieldIndex = 0; fieldIndex < fields.Count; fieldIndex++)
+        {
+            var field = fields[fieldIndex];
+            copier.Visit();
+            var fieldValue = source.GetField(field);
+            RuntimeValue copied;
+            if (fieldValue.Type is ArrayTypeSymbol arrayFieldType)
+            {
+                var arraySource = fieldValue.AsArray();
+                var arrayTarget = arraySource.CreateEmptyForValueCopy(field.FixedStringLength);
+                pendingSource = arraySource;
+                pendingTarget = arrayTarget;
+                copied = RuntimeValue.FromArray(arrayFieldType, arrayTarget);
+            }
+            else if (fieldValue.Type == TypeSymbol.String)
+            {
+                copied = fieldValue.CopyForStorage(field.FixedStringLength);
+            }
+            else if (fieldValue.Type is UserDefinedTypeSymbol or DictionaryTypeSymbol or SetTypeSymbol)
+            {
+                // Недостижимо для записи с единственным полем-плоским массивом.
+                throw new InvalidOperationException("Неподдерживаемый составной тип копии.");
+            }
+            else
+            {
+                copied = fieldValue;
+            }
+
+            recordCopy.SetSnapshotField(field, copied);
+        }
+
+        pendingSource?.FillSnapshotInto(pendingTarget!, copier, pendingTarget!.FixedStringLength);
+        return RuntimeValue.FromRecord(recordType, recordCopy);
+    }
+
+    /// <summary>Визит общего пути с его границей проверки отмены.</summary>
+    private void Visit()
+    {
+        if ((++_visited & 4095) == 0 && Cancellation.Value?.IsCancellationRequested == true)
+        {
+            throw new ValueCopyCancelledException();
+        }
     }
 
     /// <summary>Вид узла: задаёт тип исходной вершины и вид работы заполнения.</summary>
@@ -180,10 +295,24 @@ internal sealed class RuntimeValueCopier
                 // без обёрток и с предвыделенным местом. Счётчик визитов на
                 // элемент сохраняет прежние границы проверки отмены (Prepare).
                 target.ReserveForSnapshot(source.Count);
-                foreach (var element in source.RawEntries())
+                var entries = source.GetRawEntriesEnumerator();
+                try
                 {
-                    CheckCancellationForBulkFill(1);
-                    target.AppendForSnapshotRaw(element);
+                    while (entries.MoveNext())
+                    {
+                        var element = entries.Current;
+                        if (element is null)
+                        {
+                            continue;
+                        }
+
+                        CheckCancellationForBulkFill(1);
+                        target.AppendForSnapshotRaw(element.Value);
+                    }
+                }
+                finally
+                {
+                    entries.Dispose();
                 }
 
                 break;
@@ -305,19 +434,23 @@ internal sealed class RuntimeValueCopier
         // Старт 2: самый частый граф — корень и одна составная вершина (массив
         // или вложенная запись); дальнейший рост удвоением.
         _nodes ??= new CopyNode[2];
+        if (_nodeCount == InlineNodeLimit)
+        {
+            // Эскалация по счёту узлов, а не по границе удвоения: при точном
+            // резерве граница массива может не совпасть с порогом. Ёмкость
+            // словаря берётся с резерва, чтобы избежать перехеширования.
+            // Дальше соответствия ищет словарь; узлы остаются списком работ
+            // в прежнем порядке.
+            _copies = new Dictionary<object, RuntimeValue>(
+                Math.Max(InlineNodeLimit, _nodes.Length), ReferenceEqualityComparer.Instance);
+            for (var index = 0; index < _nodeCount; index++)
+            {
+                _copies.Add(_nodes[index].Identity, _nodes[index].Copy);
+            }
+        }
+
         if (_nodeCount == _nodes.Length)
         {
-            if (_nodeCount == InlineNodeLimit)
-            {
-                // Эскалация: дальше соответствия ищет словарь; узлы остаются
-                // списком работ в прежнем порядке.
-                _copies = new Dictionary<object, RuntimeValue>(ReferenceEqualityComparer.Instance);
-                for (var index = 0; index < _nodeCount; index++)
-                {
-                    _copies.Add(_nodes[index].Identity, _nodes[index].Copy);
-                }
-            }
-
             Array.Resize(ref _nodes, _nodeCount * 2);
         }
 
@@ -339,6 +472,41 @@ internal sealed class RuntimeValueCopier
         }
 
         return true;
+    }
+
+    /// <summary>Атомарный элемент: составные элементы оставляют общий путь с узлами.</summary>
+    private static bool IsFlatScalarArrayType(TypeSymbol elementType)
+    {
+        return elementType is not (UserDefinedTypeSymbol or ArrayTypeSymbol
+            or DictionaryTypeSymbol or SetTypeSymbol);
+    }
+
+    /// <summary>
+    /// Ровно одно составное поле, и это плоский массив: в таком графе нет
+    /// ни повторов, ни циклов, поэтому соответствия не требуются.
+    /// </summary>
+    private static bool IsSingleFlatArrayFieldRecordType(UserDefinedTypeSymbol type)
+    {
+        var fields = type.Fields;
+        var compositeCount = 0;
+        for (var fieldIndex = 0; fieldIndex < fields.Count; fieldIndex++)
+        {
+            if (fields[fieldIndex].Type is not (UserDefinedTypeSymbol or ArrayTypeSymbol
+                or DictionaryTypeSymbol or SetTypeSymbol))
+            {
+                continue;
+            }
+
+            compositeCount++;
+            if (compositeCount > 1
+                || fields[fieldIndex].Type is not ArrayTypeSymbol arrayFieldType
+                || !IsFlatScalarArrayType(arrayFieldType.ElementType))
+            {
+                return false;
+            }
+        }
+
+        return compositeCount == 1;
     }
 }
 

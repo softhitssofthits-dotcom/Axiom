@@ -17,7 +17,27 @@ public sealed class RuntimeRecordValue : IRuntimeStoredValue
 
     public static RuntimeRecordValue CreateDefault(UserDefinedTypeSymbol type)
     {
-        return CreateDefault(type, []);
+        ArgumentNullException.ThrowIfNull(type);
+
+        // Если вложенных записей нет, рекурсивный обход невозможен и набор
+        // активных типов не нужен. Для остальных случаев сохраняется общий путь.
+        var fields = type.Fields;
+        for (var i = 0; i < fields.Count; i++)
+        {
+            if (fields[i].Type is UserDefinedTypeSymbol)
+            {
+                return CreateDefault(type, []);
+            }
+        }
+
+        var record = new RuntimeRecordValue(type);
+        for (var i = 0; i < fields.Count; i++)
+        {
+            var field = fields[i];
+            record._fields[field.Ordinal] = CreateDefaultFieldValue(field, null);
+        }
+
+        return record;
     }
 
     private static RuntimeRecordValue CreateDefault(UserDefinedTypeSymbol type, HashSet<UserDefinedTypeSymbol> activeTypes)
@@ -74,10 +94,9 @@ public sealed class RuntimeRecordValue : IRuntimeStoredValue
         return RuntimeValueCopier.Copy(RuntimeValue.FromRecord(Type, this)).AsRecord();
     }
 
-    private static RuntimeValue CreateDefaultFieldValue(TypeFieldSymbol field, HashSet<UserDefinedTypeSymbol> activeTypes)
+    private static RuntimeValue CreateDefaultFieldValue(TypeFieldSymbol field, HashSet<UserDefinedTypeSymbol>? activeTypes)
     {
         ArgumentNullException.ThrowIfNull(field);
-        ArgumentNullException.ThrowIfNull(activeTypes);
 
         if (field.HasDefaultValue)
         {
@@ -86,6 +105,7 @@ public sealed class RuntimeRecordValue : IRuntimeStoredValue
 
         if (field.Type is UserDefinedTypeSymbol nestedType)
         {
+            ArgumentNullException.ThrowIfNull(activeTypes);
             return RuntimeValue.FromRecord(nestedType, CreateDefault(nestedType, activeTypes));
         }
 

@@ -427,6 +427,46 @@ internal sealed class BytecodeCallFrame
             : VmValue.FromObject(BytecodeVariableSlot.NormalizeForStorage(value, localFixedStringLength));
     }
 
+    // Новая плоская запись ещё нигде не опубликована. Пропускаем копирование
+    // только при условиях, при которых плоский копировщик не опрашивает отмену
+    // и не нормализует поля; общий или связанный слот остаётся на обычном пути.
+    internal bool TryAdoptFreshFlatRecord(int slot, RuntimeValue value)
+    {
+        if (_localFixedStringLengths[slot] is not null
+            || (_hasSharedLocals && _sharedLocals![slot] is not null)
+            || value.Type is not UserDefinedTypeSymbol type
+            || type.Fields.Count >= 4095)
+        {
+            return false;
+        }
+
+        var fields = type.Fields;
+        for (var i = 0; i < fields.Count; i++)
+        {
+            var field = fields[i];
+            if (field.Ordinal != i || field.FixedStringLength is not null
+                || !IsFreshRecordScalar(field.Type))
+            {
+                return false;
+            }
+        }
+
+        _locals[slot] = VmValue.FromRuntime(value);
+        return true;
+    }
+
+    private static bool IsFreshRecordScalar(TypeSymbol type)
+        => ReferenceEquals(type, TypeSymbol.Integer)
+           || ReferenceEquals(type, TypeSymbol.Long)
+           || ReferenceEquals(type, TypeSymbol.Double)
+           || ReferenceEquals(type, TypeSymbol.Decimal)
+           || ReferenceEquals(type, TypeSymbol.String)
+           || ReferenceEquals(type, TypeSymbol.Boolean)
+           || ReferenceEquals(type, TypeSymbol.Date)
+           || ReferenceEquals(type, TypeSymbol.Time)
+           || ReferenceEquals(type, TypeSymbol.DateTime)
+           || ReferenceEquals(type, TypeSymbol.UtcDateTime);
+
     public void FreshLocal(int slot)
     {
         var value = RuntimeValue.Default(Routine.LocalVariables[slot].Type, _localFixedStringLengths[slot]);

@@ -56,6 +56,13 @@ public sealed partial class BytecodeVm
             return;
         }
 
+        if (instruction.Opcode == Opcode.Call && argumentCount == 1
+            && targetRoutine.ParameterCount == 1 && callerFrame.EvaluationStack.Count > 0)
+        {
+            ExecuteSingleValueCall(callerFrame, targetRoutine, instructionIndex);
+            return;
+        }
+
         using var arguments = RentArguments(callerFrame, byValArgumentCount, instructionIndex);
         var captures = ResolveCapturedSlots(callerFrame, targetRoutine, instructionIndex);
         var byRefArgumentSlots = instruction.Opcode == Opcode.CallByRef
@@ -75,6 +82,34 @@ public sealed partial class BytecodeVm
             ResolveLocation(callerFrame.Routine.Id, instructionIndex),
             byRefArgumentSlots,
             byValValuesAreSnapshots: true));
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void ExecuteSingleValueCall(BytecodeCallFrame callerFrame, BytecodeRoutine targetRoutine, int instructionIndex)
+    {
+        // Значение уже зафиксировано компилятором в момент вычисления аргумента.
+        // Ячейка создаётся заново: предыдущая могла сохраниться в замыкании.
+        var value = callerFrame.EvaluationStack.Pop();
+        var captures = ResolveCapturedSlots(callerFrame, targetRoutine, instructionIndex);
+        var location = ResolveLocation(callerFrame.Routine.Id, instructionIndex);
+        if (_callStack.Count >= MaxCallDepth)
+        {
+            ReportCallStackOverflow(targetRoutine.Name, location);
+            throw new RuntimeFailureException();
+        }
+
+        var template = _frameTemplatesByRoutineId[targetRoutine.Id];
+        var argument = BytecodeVariableSlot.Adopt(value);
+        if (_cachedFrames.Remove(targetRoutine.Id, out var cachedFrame))
+        {
+            cachedFrame.Arguments[0] = argument;
+            cachedFrame.Reset(cachedFrame.Arguments, captures, location, template.DefaultLocals);
+            _callStack.Push(cachedFrame);
+        }
+        else
+        {
+            _callStack.Push(CreateFrameWithSlots(targetRoutine, [argument], captures, location, template));
+        }
     }
 
     private void ExecuteFunctionValueCall(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)

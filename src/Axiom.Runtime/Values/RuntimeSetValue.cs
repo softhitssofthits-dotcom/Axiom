@@ -334,20 +334,10 @@ public sealed class RuntimeSetValue
     }
 
     /// <summary>
-    /// Элементы в порядке добавления без обёрток: ключи уже в приведённом виде.
+    /// Перечислитель исходного списка сохраняет порядок и проверку изменения
+    /// коллекции во время обхода; null обозначает удалённый элемент.
     /// </summary>
-    internal IEnumerable<RuntimeCollectionKey> RawEntries()
-    {
-        foreach (var entry in _entries)
-        {
-            if (entry is null)
-            {
-                continue;
-            }
-
-            yield return entry.Value;
-        }
-    }
+    internal List<RuntimeCollectionKey?>.Enumerator GetRawEntriesEnumerator() => _entries.GetEnumerator();
 
     public IEnumerable<RuntimeValue> Entries()
     {

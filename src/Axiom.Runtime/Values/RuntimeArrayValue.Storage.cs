@@ -9,6 +9,16 @@ public sealed partial class RuntimeArrayValue
         var length = CalculateLength(lowerBounds, upperBounds);
         var elements = CreateElementStorage(length);
 
+        // Числовые буферы ElementStorage создаются как int[]/long[]/double[].
+        // CLR уже инициализирует их нулями, совпадающими со значением Axiom;
+        // повторный обход для DOUBLE ещё и создавал обёртку на каждый элемент.
+        if (ReferenceEquals(ElementType, TypeSymbol.Integer)
+            || ReferenceEquals(ElementType, TypeSymbol.Long)
+            || ReferenceEquals(ElementType, TypeSymbol.Double))
+        {
+            return elements;
+        }
+
         if (length > 0 && ElementType == TypeSymbol.String && FixedStringLength is not null)
         {
             // Строка и её RuntimeValue здесь неизменяемы; последующая запись
