@@ -117,6 +117,10 @@ public sealed partial class BytecodeVm
         var location = executionInfo.Execution.RequiresLocation
             ? ResolveLocation(frame.Routine.Id, instructionIndex)
             : FallbackRuntimeLocation;
+        if (executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
+            && TryExecuteArrayCallbackDirect(frame, executionInfo.CanonicalId, instructionIndex, location))
+            return;
+
         RuntimeValue result;
         try
         {
@@ -142,6 +146,36 @@ public sealed partial class BytecodeVm
             InvalidateReverseExecutionHistory();
         }
     }
+
+    private bool TryExecuteArrayCallbackDirect(BytecodeCallFrame frame, BuiltinFunctionId builtin,
+        int instructionIndex, TextLocation location)
+    {
+        if (builtin is not (BuiltinFunctionId.ArrayEvery or BuiltinFunctionId.ArraySome
+            or BuiltinFunctionId.ArrayFilter or BuiltinFunctionId.ArrayMap or BuiltinFunctionId.ArrayReduce))
+            return false;
+
+        // Порядок извлечения совпадает с общей диспетчеризацией Binary/Ternary.
+        var last = PopValue(frame, instructionIndex);
+        var middle = PopValue(frame, instructionIndex);
+        var first = builtin == BuiltinFunctionId.ArrayReduce ? PopValue(frame, instructionIndex) : middle;
+        var step = builtin switch
+        {
+            BuiltinFunctionId.ArrayEvery => EvaluateArrayEveryBuiltin(first, last, location),
+            BuiltinFunctionId.ArraySome => EvaluateArraySomeBuiltin(first, last, location),
+            BuiltinFunctionId.ArrayFilter => EvaluateArrayFilterBuiltin(first, last, location),
+            BuiltinFunctionId.ArrayMap => EvaluateArrayMapBuiltin(first, last, location),
+            BuiltinFunctionId.ArrayReduce => EvaluateArrayReduceBuiltin(first, middle, last, location),
+            _ => throw new InvalidOperationException()
+        };
+        if (step is VmCallbackComplete complete)
+            frame.EvaluationStack.PushUnchecked(complete.Value);
+        else
+            ResumeCallbackChain(step, CreateCallbackCompletion(frame));
+        return true;
+    }
+
+    private static Action<RuntimeValue> CreateCallbackCompletion(BytecodeCallFrame frame)
+        => value => frame.EvaluationStack.PushUnchecked(value);
 
     /// <summary>
     /// Назначает завершение приостановленного встроенного вызова. Отдельный
@@ -733,7 +767,16 @@ public sealed partial class BytecodeVm
         RuntimeFunctionValue functionValue,
         ReadOnlySpan<RuntimeValue> arguments,
         TextLocation callSiteLocation)
+        => InvokeBuiltinFunctionValue(functionValue, arguments, callSiteLocation, false, out _);
+
+    private RuntimeValue InvokeBuiltinFunctionValue(
+        RuntimeFunctionValue functionValue,
+        ReadOnlySpan<RuntimeValue> arguments,
+        TextLocation callSiteLocation,
+        bool allowCallbackStep,
+        out VmCallbackStep? callbackStep)
     {
+        callbackStep = null;
         var function = functionValue.Function;
 
         if (!function.IsBuiltIn)
@@ -764,6 +807,30 @@ public sealed partial class BytecodeVm
         if (!IsBuiltinReverseExecutionSafe(builtin.CanonicalId))
         {
             InvalidateReverseExecutionHistory();
+        }
+
+        // Сохраняем проверку дескриптора и прежнюю обработку повреждённой
+        // арности; для остальных вызовов остаётся общий путь диспетчеризации.
+        if (allowCallbackStep && _builtinExecutions.TryGetValue(builtin.Id, out var execution))
+        {
+            if (execution.Arity == BuiltinExecutionArity.Binary && arguments.Length >= 2)
+            {
+                callbackStep = builtin.CanonicalId switch
+                {
+                    BuiltinFunctionId.ArrayEvery => EvaluateArrayEveryBuiltin(arguments[0], arguments[1], callSiteLocation),
+                    BuiltinFunctionId.ArraySome => EvaluateArraySomeBuiltin(arguments[0], arguments[1], callSiteLocation),
+                    BuiltinFunctionId.ArrayFilter => EvaluateArrayFilterBuiltin(arguments[0], arguments[1], callSiteLocation),
+                    BuiltinFunctionId.ArrayMap => EvaluateArrayMapBuiltin(arguments[0], arguments[1], callSiteLocation),
+                    _ => null
+                };
+            }
+            else if (execution.Arity == BuiltinExecutionArity.Ternary && arguments.Length >= 3
+                && builtin.CanonicalId == BuiltinFunctionId.ArrayReduce)
+            {
+                callbackStep = EvaluateArrayReduceBuiltin(arguments[0], arguments[1], arguments[2], callSiteLocation);
+            }
+            if (callbackStep is not null)
+                return RuntimeValue.Void;
         }
 
         return ExecuteBuiltinFromArguments(builtin, arguments, callSiteLocation);

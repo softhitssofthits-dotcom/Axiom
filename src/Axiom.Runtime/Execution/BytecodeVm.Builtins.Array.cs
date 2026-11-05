@@ -1035,7 +1035,7 @@ public sealed partial class BytecodeVm
         return RuntimeValue.FromInteger(BuiltinArrayHelpers.FindArrayBinarySearchIndex(array, arguments[1], (l, r) => Compare(l, r, location)));
     }
 
-    private bool EvaluateArrayEveryBuiltin(RuntimeValue argument, RuntimeValue predicateArgument, TextLocation location)
+    private VmCallbackStep EvaluateArrayEveryBuiltin(RuntimeValue argument, RuntimeValue predicateArgument, TextLocation location)
     {
         var array = RequireAllocatedArrayArgument(argument, "ARRAYEVERY", "array", location);
         var predicate = RequireFunctionArgument(predicateArgument, location);
@@ -1046,6 +1046,18 @@ public sealed partial class BytecodeVm
         }
 
         var cursor = new ArrayIndexCursor(array);
+        // Состояние цепочки создаётся один раз; индексы курсора читаются
+        // только синхронно внутри Next, поэтому клон не требуется.
+        var arguments = new RuntimeValue[1];
+
+        VmCallbackStep Step(RuntimeValue result)
+        {
+            return result.AsBoolean()
+                ? Next()
+                : new VmCallbackComplete(RuntimeValue.FromBoolean(false));
+        }
+
+        VmCallbackInvoke invoke = null!;
 
         VmCallbackStep Next()
         {
@@ -1054,19 +1066,16 @@ public sealed partial class BytecodeVm
                 return new VmCallbackComplete(RuntimeValue.FromBoolean(true));
             }
 
-            return new VmCallbackInvoke(
-                predicate,
-                [array.GetValue(indices)],
-                location,
-                result => result.AsBoolean()
-                    ? Next()
-                    : new VmCallbackComplete(RuntimeValue.FromBoolean(false)));
+            arguments[0] = array.GetValue(indices);
+            return invoke;
         }
 
-        return RunCallbackChain(Next()).AsBoolean();
+        invoke = new VmCallbackInvoke(predicate, arguments, location, Step);
+
+        return Next();
     }
 
-    private bool EvaluateArraySomeBuiltin(RuntimeValue argument, RuntimeValue predicateArgument, TextLocation location)
+    private VmCallbackStep EvaluateArraySomeBuiltin(RuntimeValue argument, RuntimeValue predicateArgument, TextLocation location)
     {
         var array = RequireAllocatedArrayArgument(argument, "ARRAYSOME", "array", location);
         var predicate = RequireFunctionArgument(predicateArgument, location);
@@ -1077,6 +1086,16 @@ public sealed partial class BytecodeVm
         }
 
         var cursor = new ArrayIndexCursor(array);
+        var arguments = new RuntimeValue[1];
+
+        VmCallbackStep Step(RuntimeValue result)
+        {
+            return result.AsBoolean()
+                ? new VmCallbackComplete(RuntimeValue.FromBoolean(true))
+                : Next();
+        }
+
+        VmCallbackInvoke invoke = null!;
 
         VmCallbackStep Next()
         {
@@ -1085,19 +1104,16 @@ public sealed partial class BytecodeVm
                 return new VmCallbackComplete(RuntimeValue.FromBoolean(false));
             }
 
-            return new VmCallbackInvoke(
-                predicate,
-                [array.GetValue(indices)],
-                location,
-                result => result.AsBoolean()
-                    ? new VmCallbackComplete(RuntimeValue.FromBoolean(true))
-                    : Next());
+            arguments[0] = array.GetValue(indices);
+            return invoke;
         }
 
-        return RunCallbackChain(Next()).AsBoolean();
+        invoke = new VmCallbackInvoke(predicate, arguments, location, Step);
+
+        return Next();
     }
 
-    private RuntimeValue EvaluateArrayFilterBuiltin(RuntimeValue argument, RuntimeValue predicateArgument, TextLocation location)
+    private VmCallbackStep EvaluateArrayFilterBuiltin(RuntimeValue argument, RuntimeValue predicateArgument, TextLocation location)
     {
         var array = RequireAllocatedArrayArgument(argument, "ARRAYFILTER", "array", location);
         var sourceArrayType = (ArrayTypeSymbol)argument.Type;
@@ -1111,6 +1127,20 @@ public sealed partial class BytecodeVm
 
         var values = new List<RuntimeValue>(array.Length);
         var cursor = new ArrayIndexCursor(array);
+        var arguments = new RuntimeValue[1];
+        var pending = RuntimeValue.Void;
+
+        VmCallbackStep Step(RuntimeValue result)
+        {
+            if (result.AsBoolean())
+            {
+                values.Add(pending);
+            }
+
+            return Next();
+        }
+
+        VmCallbackInvoke invoke = null!;
 
         VmCallbackStep Next()
         {
@@ -1119,26 +1149,17 @@ public sealed partial class BytecodeVm
                 return new VmCallbackComplete(CreateCompactArrayValue(resultArrayType, values));
             }
 
-            var value = array.GetValue(indices);
-            return new VmCallbackInvoke(
-                predicate,
-                [value],
-                location,
-                result =>
-                {
-                    if (result.AsBoolean())
-                    {
-                        values.Add(value);
-                    }
-
-                    return Next();
-                });
+            pending = array.GetValue(indices);
+            arguments[0] = pending;
+            return invoke;
         }
 
-        return RunCallbackChain(Next());
+        invoke = new VmCallbackInvoke(predicate, arguments, location, Step);
+
+        return Next();
     }
 
-    private RuntimeValue EvaluateArrayMapBuiltin(RuntimeValue argument, RuntimeValue selectorArgument, TextLocation location)
+    private VmCallbackStep EvaluateArrayMapBuiltin(RuntimeValue argument, RuntimeValue selectorArgument, TextLocation location)
     {
         var array = RequireAllocatedArrayArgument(argument, "ARRAYMAP", "array", location);
         var selector = RequireFunctionArgument(selectorArgument, location);
@@ -1155,6 +1176,18 @@ public sealed partial class BytecodeVm
             array.LowerBounds,
             array.UpperBounds);
         var cursor = new ArrayIndexCursor(array);
+        // Клон индексов обязателен: буфер курсора переиспользуется, а запись
+        // в результат происходит после продвижения курсора.
+        var arguments = new RuntimeValue[1];
+        var targetIndices = new int[array.Rank];
+
+        VmCallbackStep Step(RuntimeValue value)
+        {
+            result.SetValue(targetIndices, value);
+            return Next();
+        }
+
+        VmCallbackInvoke invoke = null!;
 
         VmCallbackStep Next()
         {
@@ -1163,22 +1196,17 @@ public sealed partial class BytecodeVm
                 return new VmCallbackComplete(RuntimeValue.FromArray(resultType, result));
             }
 
-            var targetIndices = (int[])indices.Clone();
-            return new VmCallbackInvoke(
-                selector,
-                [array.GetValue(indices)],
-                location,
-                value =>
-                {
-                    result.SetValue(targetIndices, value);
-                    return Next();
-                });
+            Array.Copy(indices, targetIndices, indices.Length);
+            arguments[0] = array.GetValue(indices);
+            return invoke;
         }
 
-        return RunCallbackChain(Next());
+        invoke = new VmCallbackInvoke(selector, arguments, location, Step);
+
+        return Next();
     }
 
-    private RuntimeValue EvaluateArrayReduceBuiltin(
+    private VmCallbackStep EvaluateArrayReduceBuiltin(
         RuntimeValue argument,
         RuntimeValue seed,
         RuntimeValue reducerArgument,
@@ -1194,6 +1222,15 @@ public sealed partial class BytecodeVm
 
         var accumulator = seed;
         var cursor = new ArrayIndexCursor(array);
+        var arguments = new RuntimeValue[2];
+
+        VmCallbackStep Step(RuntimeValue value)
+        {
+            accumulator = value;
+            return Next();
+        }
+
+        VmCallbackInvoke invoke = null!;
 
         VmCallbackStep Next()
         {
@@ -1202,21 +1239,17 @@ public sealed partial class BytecodeVm
                 return new VmCallbackComplete(accumulator);
             }
 
-            return new VmCallbackInvoke(
-                reducer,
-                [accumulator, array.GetValue(indices)],
-                location,
-                value =>
-                {
-                    accumulator = value;
-                    return Next();
-                });
+            arguments[0] = accumulator;
+            arguments[1] = array.GetValue(indices);
+            return invoke;
         }
 
-        return RunCallbackChain(Next());
+        invoke = new VmCallbackInvoke(reducer, arguments, location, Step);
+
+        return Next();
     }
 
-    private bool EvaluateOneDimensionalArrayEveryBuiltin(
+    private VmCallbackStep EvaluateOneDimensionalArrayEveryBuiltin(
         RuntimeArrayValue array,
         RuntimeFunctionValue predicate,
         TextLocation location)
@@ -1224,6 +1257,17 @@ public sealed partial class BytecodeVm
         var index = array.LowerBound;
         var upperBound = array.UpperBound;
         var exhausted = index > upperBound;
+        var arguments = new RuntimeValue[1];
+        var current = 0;
+
+        VmCallbackStep Step(RuntimeValue result)
+        {
+            return result.AsBoolean()
+                ? Next()
+                : new VmCallbackComplete(RuntimeValue.FromBoolean(false));
+        }
+
+        VmCallbackInvoke invoke = null!;
 
         VmCallbackStep Next()
         {
@@ -1232,7 +1276,7 @@ public sealed partial class BytecodeVm
                 return new VmCallbackComplete(RuntimeValue.FromBoolean(true));
             }
 
-            var current = index;
+            current = index;
             if (index == upperBound)
             {
                 exhausted = true;
@@ -1242,19 +1286,16 @@ public sealed partial class BytecodeVm
                 index++;
             }
 
-            return new VmCallbackInvoke(
-                predicate,
-                [array.GetValue(current)],
-                location,
-                result => result.AsBoolean()
-                    ? Next()
-                    : new VmCallbackComplete(RuntimeValue.FromBoolean(false)));
+            arguments[0] = array.GetValue(current);
+            return invoke;
         }
 
-        return RunCallbackChain(Next()).AsBoolean();
+        invoke = new VmCallbackInvoke(predicate, arguments, location, Step);
+
+        return Next();
     }
 
-    private bool EvaluateOneDimensionalArraySomeBuiltin(
+    private VmCallbackStep EvaluateOneDimensionalArraySomeBuiltin(
         RuntimeArrayValue array,
         RuntimeFunctionValue predicate,
         TextLocation location)
@@ -1262,6 +1303,17 @@ public sealed partial class BytecodeVm
         var index = array.LowerBound;
         var upperBound = array.UpperBound;
         var exhausted = index > upperBound;
+        var arguments = new RuntimeValue[1];
+        var current = 0;
+
+        VmCallbackStep Step(RuntimeValue result)
+        {
+            return result.AsBoolean()
+                ? new VmCallbackComplete(RuntimeValue.FromBoolean(true))
+                : Next();
+        }
+
+        VmCallbackInvoke invoke = null!;
 
         VmCallbackStep Next()
         {
@@ -1270,7 +1322,7 @@ public sealed partial class BytecodeVm
                 return new VmCallbackComplete(RuntimeValue.FromBoolean(false));
             }
 
-            var current = index;
+            current = index;
             if (index == upperBound)
             {
                 exhausted = true;
@@ -1280,19 +1332,16 @@ public sealed partial class BytecodeVm
                 index++;
             }
 
-            return new VmCallbackInvoke(
-                predicate,
-                [array.GetValue(current)],
-                location,
-                result => result.AsBoolean()
-                    ? new VmCallbackComplete(RuntimeValue.FromBoolean(true))
-                    : Next());
+            arguments[0] = array.GetValue(current);
+            return invoke;
         }
 
-        return RunCallbackChain(Next()).AsBoolean();
+        invoke = new VmCallbackInvoke(predicate, arguments, location, Step);
+
+        return Next();
     }
 
-    private RuntimeValue EvaluateOneDimensionalArrayFilterBuiltin(
+    private VmCallbackStep EvaluateOneDimensionalArrayFilterBuiltin(
         RuntimeArrayValue array,
         ArrayTypeSymbol resultArrayType,
         RuntimeFunctionValue predicate,
@@ -1302,6 +1351,29 @@ public sealed partial class BytecodeVm
         var index = array.LowerBound;
         var upperBound = array.UpperBound;
         var exhausted = index > upperBound;
+        // Состояние цепочки создаётся один раз: запись, массив аргументов и
+        // продолжение переиспользуются, значения заполняются перед каждым кадром.
+        // Кадр копирует значения при постановке, поэтому повторное заполнение
+        // массива не влияет на уже сохранённые результаты.
+        var arguments = new RuntimeValue[1];
+        var current = 0;
+        var pending = RuntimeValue.Void;
+
+        // Предварительное объявление разрывает цикл локальных функций:
+        // Step ссылается на Next, а Next возвращает переиспользуемую запись.
+        VmCallbackInvoke invoke = null!;
+
+        VmCallbackStep Step(RuntimeValue result)
+        {
+            if (result.AsBoolean())
+            {
+                values.Add(pending);
+            }
+
+            return Next();
+        }
+
+        invoke = new VmCallbackInvoke(predicate, arguments, location, Step);
 
         VmCallbackStep Next()
         {
@@ -1310,7 +1382,7 @@ public sealed partial class BytecodeVm
                 return new VmCallbackComplete(CreateCompactArrayValue(resultArrayType, values));
             }
 
-            var current = index;
+            current = index;
             if (index == upperBound)
             {
                 exhausted = true;
@@ -1320,26 +1392,15 @@ public sealed partial class BytecodeVm
                 index++;
             }
 
-            var value = array.GetValue(current);
-            return new VmCallbackInvoke(
-                predicate,
-                [value],
-                location,
-                result =>
-                {
-                    if (result.AsBoolean())
-                    {
-                        values.Add(value);
-                    }
-
-                    return Next();
-                });
+            pending = array.GetValue(current);
+            arguments[0] = pending;
+            return invoke;
         }
 
-        return RunCallbackChain(Next());
+        return Next();
     }
 
-    private RuntimeValue EvaluateOneDimensionalArrayMapBuiltin(
+    private VmCallbackStep EvaluateOneDimensionalArrayMapBuiltin(
         RuntimeArrayValue array,
         ArrayTypeSymbol resultType,
         RuntimeFunctionValue selector,
@@ -1353,6 +1414,22 @@ public sealed partial class BytecodeVm
         var index = array.LowerBound;
         var upperBound = array.UpperBound;
         var exhausted = index > upperBound;
+        // Состояние цепочки создаётся один раз; порядки «заполнение — кадр —
+        // продолжение» гарантируют, что текущий индекс читается до продвижения.
+        var arguments = new RuntimeValue[1];
+        var current = 0;
+
+        // Предварительное объявление разрывает цикл локальных функций:
+        // Step ссылается на Next, а Next возвращает переиспользуемую запись.
+        VmCallbackInvoke invoke = null!;
+
+        VmCallbackStep Step(RuntimeValue value)
+        {
+            result.SetValue(current, value);
+            return Next();
+        }
+
+        invoke = new VmCallbackInvoke(selector, arguments, location, Step);
 
         VmCallbackStep Next()
         {
@@ -1361,7 +1438,7 @@ public sealed partial class BytecodeVm
                 return new VmCallbackComplete(RuntimeValue.FromArray(resultType, result));
             }
 
-            var current = index;
+            current = index;
             if (index == upperBound)
             {
                 exhausted = true;
@@ -1371,21 +1448,14 @@ public sealed partial class BytecodeVm
                 index++;
             }
 
-            return new VmCallbackInvoke(
-                selector,
-                [array.GetValue(current)],
-                location,
-                value =>
-                {
-                    result.SetValue(current, value);
-                    return Next();
-                });
+            arguments[0] = array.GetValue(current);
+            return invoke;
         }
 
-        return RunCallbackChain(Next());
+        return Next();
     }
 
-    private RuntimeValue EvaluateOneDimensionalArrayReduceBuiltin(
+    private VmCallbackStep EvaluateOneDimensionalArrayReduceBuiltin(
         RuntimeArrayValue array,
         RuntimeValue seed,
         RuntimeFunctionValue reducer,
@@ -1395,6 +1465,22 @@ public sealed partial class BytecodeVm
         var index = array.LowerBound;
         var upperBound = array.UpperBound;
         var exhausted = index > upperBound;
+        // Состояние цепочки создаётся один раз; аккумулятор заполняется перед
+        // кадром, продолжение читает результат до продвижения курсора.
+        var arguments = new RuntimeValue[2];
+        var current = 0;
+
+        // Предварительное объявление разрывает цикл локальных функций:
+        // Step ссылается на Next, а Next возвращает переиспользуемую запись.
+        VmCallbackInvoke invoke = null!;
+
+        VmCallbackStep Step(RuntimeValue value)
+        {
+            accumulator = value;
+            return Next();
+        }
+
+        invoke = new VmCallbackInvoke(reducer, arguments, location, Step);
 
         VmCallbackStep Next()
         {
@@ -1403,7 +1489,7 @@ public sealed partial class BytecodeVm
                 return new VmCallbackComplete(accumulator);
             }
 
-            var current = index;
+            current = index;
             if (index == upperBound)
             {
                 exhausted = true;
@@ -1413,18 +1499,12 @@ public sealed partial class BytecodeVm
                 index++;
             }
 
-            return new VmCallbackInvoke(
-                reducer,
-                [accumulator, array.GetValue(current)],
-                location,
-                value =>
-                {
-                    accumulator = value;
-                    return Next();
-                });
+            arguments[0] = accumulator;
+            arguments[1] = array.GetValue(current);
+            return invoke;
         }
 
-        return RunCallbackChain(Next());
+        return Next();
     }
 
     private sealed class ArrayIndexCursor

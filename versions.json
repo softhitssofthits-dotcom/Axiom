@@ -1,21 +1,16 @@
 {
   "language": "0.12.15",
-  "compiler": "0.13.63",
+  "compiler": "0.13.75",
   "ide": "0.15.7",
   "compilerOnlyChange": {
-    "version": "0.13.63",
-    "reason": "Сокращены служебные выделения кортежей, записей, их сравнения, множеств, числовых массивов и копировщика: плоские графы без узлов и резерв на больших графах; договор языка сохранён.",
+    "version": "0.13.75",
+    "reason": "Внутренняя подготовка вызовов и функциональных типов сокращает выделения без изменения поведения языка.",
     "paths": [
-      "src/Axiom.Semantics/Symbols/TupleTypeSymbol.cs",
-      "src/Axiom.Runtime/Values/RuntimeRecordValue.cs",
-      "src/Axiom.Runtime/Values/RuntimeSetValue.cs",
-      "src/Axiom.Runtime/Values/RuntimeValueCopier.cs",
-      "src/Axiom.Runtime/Execution/VmInstruction.cs",
-      "src/Axiom.Runtime/Execution/BytecodeCallFrame.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.cs",
       "src/Axiom.Runtime/Execution/BytecodeVm.Calls.cs",
-      "src/Axiom.Runtime/Values/RuntimeArrayValue.Storage.cs",
-      "src/Axiom.Runtime/Values/RuntimeValueHelpers.cs"
+      "src/Axiom.Runtime/Execution/BytecodeVm.BuiltinCalls.cs",
+      "src/Axiom.Runtime/Execution/BytecodeVm.BuiltinDispatch.cs",
+      "src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Array.cs",
+      "src/Axiom.Semantics/Symbols/Symbols.cs"
     ]
   }
 }

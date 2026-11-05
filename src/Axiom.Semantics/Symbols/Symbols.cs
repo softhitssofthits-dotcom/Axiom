@@ -621,6 +621,17 @@ public sealed class FunctionTypeSymbol : TypeSymbol
     public static FunctionTypeSymbol FromFunction(FunctionSymbol function)
     {
         ArgumentNullException.ThrowIfNull(function);
+        // Для списка, создаваемого связывателем, сохраняем отдельные снимки
+        // типа и режима; другие реализации IReadOnlyList идут общим путём.
+        if (function.Parameters is List<ParameterSymbol> { Count: 1 } parameters
+            && parameters.GetType() == typeof(List<ParameterSymbol>))
+        {
+            var parameterType = parameters[0].Type;
+            var returnType = function.ReturnType;
+            var passingMode = parameters[0].PassingMode;
+            return Create(new TypeSymbol[] { parameterType }, returnType, new ParameterPassingMode[] { passingMode });
+        }
+
         return Create(
             function.Parameters.Select(static parameter => parameter.Type).ToArray(),
             function.ReturnType,
@@ -674,6 +685,19 @@ public sealed class FunctionTypeSymbol : TypeSymbol
         TypeSymbol returnType,
         IReadOnlyList<ParameterPassingMode> parameterPassingModes)
     {
+        if (parameterTypes is TypeSymbol[] { Length: 0 }
+            && parameterPassingModes is ParameterPassingMode[] { Length: 0 })
+            return $"FUNCTION() AS {returnType.Name}";
+
+        // FromFunction передаёт массивы; для одной позиции обходимся без
+        // делегата и итератора Select, сохраняя отдельный объект сигнатуры.
+        if (parameterTypes is TypeSymbol[] { Length: 1 } types
+            && parameterPassingModes is ParameterPassingMode[] { Length: 1 } modes)
+        {
+            var prefix = modes[0] == ParameterPassingMode.ByRef ? "BYREF " : "";
+            return $"FUNCTION({prefix}{types[0].Name}) AS {returnType.Name}";
+        }
+
         var parameterList = string.Join(
             ", ",
             parameterTypes.Select((parameterType, index) => parameterPassingModes[index] == ParameterPassingMode.ByRef

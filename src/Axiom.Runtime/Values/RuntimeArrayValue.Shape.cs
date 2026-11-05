@@ -256,17 +256,66 @@ public sealed partial class RuntimeArrayValue
         return true;
     }
 
+    // Канонические массивы разделяются между массивами одного ранга:
+    // все вызыватели копируют их перед изменением.
+    private static readonly int?[][] SharedEmptyFixedStorageIndices = CreateSharedFixedStorageIndices();
+
+    private static readonly int[][] SharedIdentityStorageDimensions = CreateSharedIdentityStorageDimensions();
+
+    private static int?[][] CreateSharedFixedStorageIndices()
+    {
+        var ranks = new int?[9][];
+
+        for (var rank = 1; rank < ranks.Length; rank++)
+        {
+            ranks[rank] = new int?[rank];
+        }
+
+        return ranks;
+    }
+
+    private static int[][] CreateSharedIdentityStorageDimensions()
+    {
+        var ranks = new int[9][];
+
+        for (var rank = 1; rank < ranks.Length; rank++)
+        {
+            var dimensions = new int[rank];
+
+            for (var index = 0; index < dimensions.Length; index++)
+            {
+                dimensions[index] = index;
+            }
+
+            ranks[rank] = dimensions;
+        }
+
+        return ranks;
+    }
+
     private int?[] GetFixedStorageIndices()
     {
-        return _fixedStorageIndices ?? CreateEmptyFixedStorageIndices(_storageLowerBounds?.Length ?? Rank);
+        return _fixedStorageIndices ?? GetSharedEmptyFixedStorageIndices(_storageLowerBounds?.Length ?? Rank);
     }
 
     private int[] GetVisibleStorageDimensions()
     {
-        return _visibleStorageDimensions ?? CreateIdentityStorageDimensions(Rank);
+        return _visibleStorageDimensions ?? GetSharedIdentityStorageDimensions(Rank);
     }
 
     private static int?[] CreateEmptyFixedStorageIndices(int rank) => new int?[rank];
+
+    private static int?[] GetSharedEmptyFixedStorageIndices(int rank)
+    {
+        var shared = SharedEmptyFixedStorageIndices;
+        return (uint)rank < (uint)shared.Length ? shared[rank]! : new int?[rank];
+    }
+
+    private static int[] GetSharedIdentityStorageDimensions(int rank)
+    {
+        var shared = SharedIdentityStorageDimensions;
+        return (uint)rank < (uint)shared.Length ? shared[rank]! : CreateIdentityStorageDimensions(rank);
+    }
 
     private static int[] CreateIdentityStorageDimensions(int rank)
     {

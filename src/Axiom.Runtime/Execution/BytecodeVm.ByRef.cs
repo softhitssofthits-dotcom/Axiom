@@ -6,6 +6,10 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
+    private Dictionary<int, GlobalSlotAccessors>? _globalSlotAccessors;
+
+    private sealed record GlobalSlotAccessors(Func<RuntimeValue> Read, Action<RuntimeValue> Write);
+
     private BytecodeVariableSlot[] ResolveByRefArgumentSlots(BytecodeCallFrame callerFrame,  VmInstruction instruction)
     {
         var slots = new BytecodeVariableSlot[instruction.GetOperand(1)];
@@ -29,15 +33,32 @@ public sealed partial class BytecodeVm
     {
         return sourceKind switch
         {
-            ByRefArgumentSourceKind.Global => new BytecodeVariableSlot(
-                () => LoadGlobalUnchecked(sourceSlot),
-                value => StoreGlobalUnchecked(sourceSlot, value),
-                GetGlobalFixedStringLength(sourceSlot)),
+            ByRefArgumentSourceKind.Global => CreateGlobalVariableSlot(sourceSlot),
             ByRefArgumentSourceKind.Argument => callerFrame.Arguments[sourceSlot],
             ByRefArgumentSourceKind.Local => callerFrame.GetOrCreateLocalSlot(sourceSlot),
             ByRefArgumentSourceKind.Capture => callerFrame.Captures[sourceSlot],
             _ => throw new InvalidOperationException($"Unsupported BYREF source kind '{sourceKind}'.")
         };
+    }
+
+    private BytecodeVariableSlot CreateGlobalVariableSlot(int sourceSlot)
+    {
+        if ((uint)sourceSlot >= (uint)_globalValuesBySlot.Length)
+        {
+            // Повреждённый внешний байткод сохраняет прежнее отложенное поведение.
+            return new BytecodeVariableSlot(() => LoadGlobalUnchecked(sourceSlot),
+                value => StoreGlobalUnchecked(sourceSlot, value), GetGlobalFixedStringLength(sourceSlot));
+        }
+
+        var cache = _globalSlotAccessors ??= new Dictionary<int, GlobalSlotAccessors>();
+        if (!cache.TryGetValue(sourceSlot, out var accessors))
+        {
+            accessors = new GlobalSlotAccessors(
+                () => LoadGlobalUnchecked(sourceSlot), value => StoreGlobalUnchecked(sourceSlot, value));
+            cache.Add(sourceSlot, accessors);
+        }
+        // Ячейка не разделяется: отладочные снимки и флаги сохраняют прежнюю идентичность.
+        return new BytecodeVariableSlot(accessors.Read, accessors.Write, GetGlobalFixedStringLength(sourceSlot));
     }
 
     /// <summary>

@@ -12,7 +12,7 @@ namespace Axiom.Runtime;
 /// словарь соответствий, а сами узлы остаются списком работ в прежнем порядке.
 /// Функции с захватами и внешние ресурсы сохраняют прежнюю идентичность.
 /// Плоская запись (только скалярные поля и строки), плоский массив (элементы —
-/// скаляры и строки) и запись с единственным составным полем-плоским массивом
+/// скаляры и строки), корневое множество и запись с единственным составным полем-плоским массивом
 /// копируются без узлов вовсе: совместные вершины и циклы в таких графах
 /// невозможны, а порядок визитов совпадает с общим путём.
 /// </summary>
@@ -53,6 +53,27 @@ internal sealed class RuntimeValueCopier
         {
             // Корневой плоский массив: элементы-атомы не дают повторов и циклов.
             return CopyFlatScalarArrayRoot(value, rootArrayType, fixedStringLength);
+        }
+
+        if (value.Type is SetTypeSymbol rootSetType)
+        {
+            // Элементы множества атомарны: повторные вершины и циклы невозможны.
+            var source = value.AsSet();
+            var target = source.CreateEmptyForValueCopy();
+            long setVisited = 1;
+            FillSetCore(source, target, ref setVisited);
+            return RuntimeValue.FromSet(rootSetType, target);
+        }
+
+        if (fixedStringLength is null
+            && value.Type is DictionaryTypeSymbol rootDictionaryType
+            && IsAtomicDictionaryType(rootDictionaryType)
+            && HasOnlyAtomicValues(value.AsDictionary()))
+        {
+            // Ключи и значения атомарны по типу и по факту: повторные вершины
+            // и циклы невозможны. Хранимое значение может отличаться от
+            // заявленного типа, поэтому проверяются фактические записи.
+            return CopyFlatDictionaryRoot(value, rootDictionaryType);
         }
 
         if (fixedStringLength is null
@@ -133,6 +154,86 @@ internal sealed class RuntimeValueCopier
         }
 
         return RuntimeValue.FromRecord(recordType, recordCopy);
+    }
+
+    /// <summary>
+    /// Корневой словарь с атомарными ключами и значениями: узлы не требуются,
+    /// ключи переносятся как есть, значения проходят те же правила, что и
+    /// Prepare общего пути (строки копируются для хранения без длины).
+    /// </summary>
+    private static RuntimeValue CopyFlatDictionaryRoot(RuntimeValue value, DictionaryTypeSymbol dictionaryType)
+    {
+        var source = value.AsDictionary();
+        var target = source.CreateEmptyForSnapshot();
+        long visited = 1;
+        if ((visited & 4095) == 0 && Cancellation.Value?.IsCancellationRequested == true)
+        {
+            throw new ValueCopyCancelledException();
+        }
+
+        target.ReserveForSnapshot(source.Count);
+        var entries = source.GetRawEntriesEnumerator();
+        try
+        {
+            while (entries.MoveNext())
+            {
+                var entry = entries.Current;
+                if (entry is null)
+                    continue;
+                if ((++visited & 4095) == 0 && Cancellation.Value?.IsCancellationRequested == true)
+                {
+                    throw new ValueCopyCancelledException();
+                }
+
+                var element = entry.Value;
+                var copied = element.Type == TypeSymbol.String ? element.CopyForStorage(null) : element;
+                target.AppendForSnapshotRaw(entry.Key, copied);
+            }
+        }
+        finally
+        {
+            entries.Dispose();
+        }
+
+        return RuntimeValue.FromDictionary(dictionaryType, target);
+    }
+
+    /// <summary>
+    /// Фактические значения записей атомарны: составное хранимое значение
+    /// при атомарном заявленном типе возвращает общий путь с узлами.
+    /// </summary>
+    private static bool HasOnlyAtomicValues(RuntimeDictionaryValue source)
+    {
+        var entries = source.GetRawEntriesEnumerator();
+        try
+        {
+            while (entries.MoveNext())
+            {
+                var entry = entries.Current;
+                if (entry is null)
+                    continue;
+                if (entry.Value.Type is UserDefinedTypeSymbol or ArrayTypeSymbol
+                    or DictionaryTypeSymbol or SetTypeSymbol)
+                {
+                    return false;
+                }
+            }
+        }
+        finally
+        {
+            entries.Dispose();
+        }
+
+        return true;
+    }
+
+    /// <summary>Атомарные ключи и значения словаря: общий путь с узлами не нужен.</summary>
+    private static bool IsAtomicDictionaryType(DictionaryTypeSymbol type)
+    {
+        return type.KeyType is not (UserDefinedTypeSymbol or ArrayTypeSymbol
+            or DictionaryTypeSymbol or SetTypeSymbol)
+            && type.ValueType is not (UserDefinedTypeSymbol or ArrayTypeSymbol
+            or DictionaryTypeSymbol or SetTypeSymbol);
     }
 
     /// <summary>
@@ -279,35 +380,15 @@ internal sealed class RuntimeValueCopier
                 // Копия заполняется под размер источника и уже приведёнными
                 // ключами: без роста индекса с нуля и промежуточных обёрток.
                 target.ReserveForSnapshot(source.Count);
-                foreach (var (key, element) in source.RawEntries())
-                {
-                    target.AppendForSnapshotRaw(key, Prepare(element));
-                }
-
-                break;
-            }
-
-            case FillKind.Set:
-            {
-                var source = (RuntimeSetValue)work.Identity;
-                var target = work.Copy.AsSet();
-                // Элементы множества — только скаляры: копия переносит ключи
-                // без обёрток и с предвыделенным местом. Счётчик визитов на
-                // элемент сохраняет прежние границы проверки отмены (Prepare).
-                target.ReserveForSnapshot(source.Count);
                 var entries = source.GetRawEntriesEnumerator();
                 try
                 {
                     while (entries.MoveNext())
                     {
-                        var element = entries.Current;
-                        if (element is null)
-                        {
+                        var entry = entries.Current;
+                        if (entry is null)
                             continue;
-                        }
-
-                        CheckCancellationForBulkFill(1);
-                        target.AppendForSnapshotRaw(element.Value);
+                        target.AppendForSnapshotRaw(entry.Key, Prepare(entry.Value));
                     }
                 }
                 finally
@@ -317,6 +398,40 @@ internal sealed class RuntimeValueCopier
 
                 break;
             }
+
+            case FillKind.Set:
+            {
+                var source = (RuntimeSetValue)work.Identity;
+                var target = work.Copy.AsSet();
+                FillSet(source, target);
+                break;
+            }
+        }
+    }
+
+    private void FillSet(RuntimeSetValue source, RuntimeSetValue target)
+    {
+        FillSetCore(source, target, ref _visited);
+    }
+
+    private static void FillSetCore(RuntimeSetValue source, RuntimeSetValue target, ref long visited)
+    {
+        target.ReserveForSnapshot(source.Count);
+        var entries = source.GetRawEntriesEnumerator();
+        try
+        {
+            while (entries.MoveNext())
+            {
+                var element = entries.Current;
+                if (element is null)
+                    continue;
+                CheckCancellationForBulkFillCore(ref visited, 1);
+                target.AppendForSnapshotRaw(element.Value);
+            }
+        }
+        finally
+        {
+            entries.Dispose();
         }
     }
 
@@ -328,17 +443,22 @@ internal sealed class RuntimeValueCopier
     /// </summary>
     internal void CheckCancellationForBulkFill(int elementVisits)
     {
-        var completedVisits = _visited + elementVisits;
+        CheckCancellationForBulkFillCore(ref _visited, elementVisits);
+    }
+
+    private static void CheckCancellationForBulkFillCore(ref long visited, int elementVisits)
+    {
+        var completedVisits = visited + elementVisits;
         var cancellation = Cancellation.Value;
         if (cancellation is not null)
         {
-            for (var boundary = _visited / 4096; boundary < completedVisits / 4096; boundary++)
+            for (var boundary = visited / 4096; boundary < completedVisits / 4096; boundary++)
             {
                 if (cancellation.IsCancellationRequested)
                     throw new ValueCopyCancelledException();
             }
         }
-        _visited = completedVisits;
+        visited = completedVisits;
     }
 
     /// <summary>Вход для заполнения массива из узла: без делегатов.</summary>

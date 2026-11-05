@@ -197,18 +197,7 @@ public sealed class RuntimeDictionaryValue
     /// Записи в порядке добавления без обёрток ключей: путь независимого
     /// копирования, где ключ уже хранится в приведённом виде.
     /// </summary>
-    internal IEnumerable<(RuntimeCollectionKey Key, RuntimeValue Value)> RawEntries()
-    {
-        foreach (var entry in _entries)
-        {
-            if (entry is null)
-            {
-                continue;
-            }
-
-            yield return (entry.Key, entry.Value);
-        }
-    }
+    internal List<Entry?>.Enumerator GetRawEntriesEnumerator() => _entries.GetEnumerator();
 
     /// <summary>
     /// Предвыделяет место под известное число записей при независимом
@@ -274,7 +263,7 @@ public sealed class RuntimeDictionaryValue
     /// измеренно дешевле роста массива структур (struct-вариант давал +14 %
     /// выделений на добавление ради сокращения копии — отклонён).
     /// </summary>
-    private sealed class Entry
+    internal sealed class Entry
     {
         public Entry(RuntimeCollectionKey key, RuntimeValue value)
         {

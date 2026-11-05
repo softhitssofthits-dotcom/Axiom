@@ -29,6 +29,11 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
     private int _fixedStorageBaseOffset;
 
     public RuntimeArrayValue(TypeSymbol elementType, int? fixedStringLength = null, int rank = 1)
+        : this(elementType, fixedStringLength, rank, allocateUnallocatedBounds: true)
+    {
+    }
+
+    private RuntimeArrayValue(TypeSymbol elementType, int? fixedStringLength, int rank, bool allocateUnallocatedBounds)
     {
         ArgumentNullException.ThrowIfNull(elementType);
 
@@ -40,8 +45,17 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
         ElementType = elementType;
         FixedStringLength = fixedStringLength;
         Rank = rank;
-        _unallocatedLowerBounds = new int[rank];
-        _unallocatedUpperBounds = new int[rank];
+        if (allocateUnallocatedBounds)
+        {
+            _unallocatedLowerBounds = new int[rank];
+            _unallocatedUpperBounds = new int[rank];
+        }
+        else
+        {
+            // Представление всегда размещено и не возвращает неявные границы.
+            _unallocatedLowerBounds = Array.Empty<int>();
+            _unallocatedUpperBounds = Array.Empty<int>();
+        }
     }
 
     public RuntimeArrayValue(TypeSymbol elementType, int? fixedStringLength, int lowerBound, int upperBound)
@@ -197,6 +211,33 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
         _storageLifetime = storageLifetime;
         _isView = true;
         RefreshShapeMetadata();
+    }
+
+    // Все массивы переданы исключительно во владение нового представления.
+    private RuntimeArrayValue(RuntimeArrayValue source, int[] lowerBounds, int[] upperBounds,
+        int?[] fixedStorageIndices, int[] visibleStorageDimensions)
+        : this(source.ElementType, source.FixedStringLength, lowerBounds.Length, allocateUnallocatedBounds: false)
+    {
+        _lowerBounds = lowerBounds;
+        _upperBounds = upperBounds;
+        // Границы хранения корня заменяются при перевыделении, а не
+        // изменяются на месте: вид разделяет массивы источника и сохраняет
+        // момент создания благодаря проверке срока действия.
+        _storageLowerBounds = source._storageLowerBounds!;
+        _storageUpperBounds = source._storageUpperBounds!;
+        _fixedStorageIndices = fixedStorageIndices;
+        _visibleStorageDimensions = visibleStorageDimensions;
+        _elements = source._elements;
+        _capacity = source._elements!.Length;
+        _storageLifetime = source._storageLifetime;
+        _isView = true;
+        // Границы хранения клонированы без изменений, поэтому шаги совпадают
+        // с источником; вычисляются только длина и базовое смещение.
+        _storageStrides = source._storageStrides;
+        _visibleLength = CalculateLength(_lowerBounds, _upperBounds);
+        _fixedStorageBaseOffset = _storageStrides is not null
+            ? CalculateFixedStorageBaseOffset(GetFixedStorageIndices(), _storageLowerBounds, _storageStrides)
+            : 0;
     }
 
     public TypeSymbol ElementType { get; }
@@ -458,13 +499,21 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
             throw new ArgumentOutOfRangeException(nameof(leadingIndices), "Leading indices must stay within array bounds.");
         }
 
-        var slices = new RuntimeArrayIndexSlice[leadingIndices.Length];
+        var fixedIndices = (int?[])GetFixedStorageIndices().Clone();
+        var visibleDimensions = GetVisibleStorageDimensions();
         for (var index = 0; index < leadingIndices.Length; index++)
         {
-            slices[index] = RuntimeArrayIndexSlice.Single(leadingIndices[index]);
+            fixedIndices[visibleDimensions[index]] = leadingIndices[index];
         }
 
-        return CreateView(slices);
+        var remaining = Rank - leadingIndices.Length;
+        var lowerBounds = new int[remaining];
+        var upperBounds = new int[remaining];
+        var nextDimensions = new int[remaining];
+        Array.Copy(_lowerBounds!, leadingIndices.Length, lowerBounds, 0, remaining);
+        Array.Copy(_upperBounds!, leadingIndices.Length, upperBounds, 0, remaining);
+        Array.Copy(visibleDimensions, leadingIndices.Length, nextDimensions, 0, remaining);
+        return new RuntimeArrayValue(this, lowerBounds, upperBounds, fixedIndices, nextDimensions);
     }
 
     public RuntimeArrayValue CreateView(IReadOnlyList<RuntimeArrayIndexSlice> slices)
@@ -478,12 +527,61 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
             throw new ArgumentException("Slice count must be between 1 and array rank.", nameof(slices));
         }
 
+        if (Rank == 2 && slices is RuntimeArrayIndexSlice[] { Length: 2 } rowSlices
+            && !rowSlices[0].IsRange && rowSlices[1].IsRange)
+        {
+            var fixedIndex = rowSlices[0].LowerBound;
+            if (fixedIndex < _lowerBounds![0] || fixedIndex > _upperBounds![0])
+                throw new ArgumentOutOfRangeException(nameof(slices), "Fixed index must stay within array bounds.");
+
+            var range = rowSlices[1];
+            ValidateVisibleRange(range.LowerBound, range.UpperBound, _lowerBounds[1], _upperBounds[1]);
+            var dimensions = GetVisibleStorageDimensions();
+            var fixedIndices = (int?[])GetFixedStorageIndices().Clone();
+            fixedIndices[dimensions[0]] = fixedIndex;
+            return new RuntimeArrayValue(this, [range.LowerBound], [range.UpperBound], fixedIndices, [dimensions[1]]);
+        }
+
+        if (Rank == 2 && slices is RuntimeArrayIndexSlice[] { Length: 2 } columnSlices
+            && columnSlices[0].IsRange && !columnSlices[1].IsRange)
+        {
+            var range = columnSlices[0];
+            ValidateVisibleRange(range.LowerBound, range.UpperBound, _lowerBounds![0], _upperBounds![0]);
+            var fixedIndex = columnSlices[1].LowerBound;
+            if (fixedIndex < _lowerBounds[1] || fixedIndex > _upperBounds[1])
+                throw new ArgumentOutOfRangeException(nameof(slices), "Fixed index must stay within array bounds.");
+
+            var dimensions = GetVisibleStorageDimensions();
+            var fixedIndices = (int?[])GetFixedStorageIndices().Clone();
+            fixedIndices[dimensions[1]] = fixedIndex;
+            return new RuntimeArrayValue(this, [range.LowerBound], [range.UpperBound], fixedIndices, [dimensions[0]]);
+        }
+
         var currentFixedStorageIndices = GetFixedStorageIndices();
         var currentVisibleStorageDimensions = GetVisibleStorageDimensions();
-        var nextFixedStorageIndices = currentFixedStorageIndices.ToArray();
-        var nextVisibleStorageDimensions = new List<int>(Rank);
-        var nextLowerBounds = new List<int>(Rank);
-        var nextUpperBounds = new List<int>(Rank);
+        // Размеры известны заранее: видимые измерения = ранг минус число
+        // фиксированных срезов. Массивы принадлежат новому представлению.
+        var fixedSliceCount = 0;
+        for (var dimension = 0; dimension < slices.Count; dimension++)
+        {
+            if (!slices[dimension].IsRange)
+            {
+                fixedSliceCount++;
+            }
+        }
+
+        var visibleCount = Rank - fixedSliceCount;
+        if (visibleCount <= 0)
+        {
+            throw new ArgumentException("Slice view must keep at least one visible dimension.", nameof(slices));
+        }
+
+        var nextFixedStorageIndices = new int?[currentFixedStorageIndices.Length];
+        Array.Copy(currentFixedStorageIndices, nextFixedStorageIndices, currentFixedStorageIndices.Length);
+        var nextVisibleStorageDimensions = new int[visibleCount];
+        var nextLowerBounds = new int[visibleCount];
+        var nextUpperBounds = new int[visibleCount];
+        var nextIndex = 0;
 
         for (var dimension = 0; dimension < Rank; dimension++)
         {
@@ -498,9 +596,10 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
                 if (slice.IsRange)
                 {
                     ValidateVisibleRange(slice.LowerBound, slice.UpperBound, lowerBound, upperBound);
-                    nextVisibleStorageDimensions.Add(storageDimension);
-                    nextLowerBounds.Add(slice.LowerBound);
-                    nextUpperBounds.Add(slice.UpperBound);
+                    nextVisibleStorageDimensions[nextIndex] = storageDimension;
+                    nextLowerBounds[nextIndex] = slice.LowerBound;
+                    nextUpperBounds[nextIndex] = slice.UpperBound;
+                    nextIndex++;
                     continue;
                 }
 
@@ -513,27 +612,13 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
                 continue;
             }
 
-            nextVisibleStorageDimensions.Add(storageDimension);
-            nextLowerBounds.Add(lowerBound);
-            nextUpperBounds.Add(upperBound);
+            nextVisibleStorageDimensions[nextIndex] = storageDimension;
+            nextLowerBounds[nextIndex] = lowerBound;
+            nextUpperBounds[nextIndex] = upperBound;
+            nextIndex++;
         }
 
-        if (nextVisibleStorageDimensions.Count == 0)
-        {
-            throw new ArgumentException("Slice view must keep at least one visible dimension.", nameof(slices));
-        }
-
-        return new RuntimeArrayValue(
-            ElementType,
-            FixedStringLength,
-            nextLowerBounds,
-            nextUpperBounds,
-            _elements!,
-            _storageLowerBounds!,
-            _storageUpperBounds!,
-            nextFixedStorageIndices,
-            nextVisibleStorageDimensions,
-            _storageLifetime!);
+        return new RuntimeArrayValue(this, nextLowerBounds, nextUpperBounds, nextFixedStorageIndices, nextVisibleStorageDimensions);
     }
 
     public void SetValue(int index, RuntimeValue value)
