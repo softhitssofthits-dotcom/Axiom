@@ -34,9 +34,9 @@ public sealed partial class BytecodeVm
         return sourceKind switch
         {
             ByRefArgumentSourceKind.Global => CreateGlobalVariableSlot(sourceSlot),
-            ByRefArgumentSourceKind.Argument => callerFrame.Arguments[sourceSlot],
+            ByRefArgumentSourceKind.Argument => MarkSlotEscaped(callerFrame.Arguments[sourceSlot]),
             ByRefArgumentSourceKind.Local => callerFrame.GetOrCreateLocalSlot(sourceSlot),
-            ByRefArgumentSourceKind.Capture => callerFrame.Captures[sourceSlot],
+            ByRefArgumentSourceKind.Capture => MarkSlotEscaped(callerFrame.Captures[sourceSlot]),
             _ => throw new InvalidOperationException($"Unsupported BYREF source kind '{sourceKind}'.")
         };
     }

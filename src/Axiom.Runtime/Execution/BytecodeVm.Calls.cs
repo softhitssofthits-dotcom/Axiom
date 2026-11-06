@@ -44,7 +44,7 @@ public sealed partial class BytecodeVm
             {
                 // Контейнер кадра возвращён после освобождения; саму ячейку
                 // создаём заново, поскольку прежняя могла уйти в замыкание.
-                cachedFrame.Arguments[0] = BytecodeVariableSlot.AdoptInteger(integerArgument);
+                cachedFrame.Arguments[0] = ReuseIntegerSlot(cachedFrame.Arguments[0], integerArgument);
                 cachedFrame.Reset(cachedFrame.Arguments, directCaptures, callLocation, template.DefaultLocals);
                 _callStack.Push(cachedFrame);
             }
@@ -142,6 +142,18 @@ public sealed partial class BytecodeVm
         return count;
     }
 
+    private static BytecodeVariableSlot MarkSlotEscaped(BytecodeVariableSlot slot)
+    {
+        slot.MarkEscaped();
+        return slot;
+    }
+
+    private static BytecodeVariableSlot ReuseIntegerSlot(BytecodeVariableSlot? slot, int value)
+        => slot is not null && slot.TryResetInteger(value) ? slot : BytecodeVariableSlot.AdoptInteger(value);
+
+    private static BytecodeVariableSlot ReuseValueSlot(BytecodeVariableSlot? slot, RuntimeValue value)
+        => slot is not null && slot.TryResetValue(value) ? slot : BytecodeVariableSlot.AdoptReusable(value);
+
     private static bool HasCompleteByRefSlots(BytecodeVariableSlot[] slots)
     {
         for (var index = 0; index < slots.Length; index++)
@@ -166,18 +178,16 @@ public sealed partial class BytecodeVm
         }
 
         var template = _frameTemplatesByRoutineId[targetRoutine.Id];
-        var firstSlot = BytecodeVariableSlot.AdoptInteger(first);
-        var secondSlot = BytecodeVariableSlot.AdoptInteger(second);
         if (_cachedFrames.Remove(targetRoutine.Id, out var cachedFrame))
         {
-            cachedFrame.Arguments[0] = firstSlot;
-            cachedFrame.Arguments[1] = secondSlot;
+            cachedFrame.Arguments[0] = ReuseIntegerSlot(cachedFrame.Arguments[0], first);
+            cachedFrame.Arguments[1] = ReuseIntegerSlot(cachedFrame.Arguments[1], second);
             cachedFrame.Reset(cachedFrame.Arguments, captures, location, template.DefaultLocals);
             _callStack.Push(cachedFrame);
         }
         else
         {
-            _callStack.Push(CreateFrameWithSlots(targetRoutine, [firstSlot, secondSlot], captures, location, template));
+            _callStack.Push(CreateFrameWithSlots(targetRoutine, [BytecodeVariableSlot.AdoptInteger(first), BytecodeVariableSlot.AdoptInteger(second)], captures, location, template));
         }
     }
 
@@ -195,20 +205,17 @@ public sealed partial class BytecodeVm
         }
 
         var template = _frameTemplatesByRoutineId[targetRoutine.Id];
-        var firstSlot = BytecodeVariableSlot.AdoptInteger(first);
-        var secondSlot = BytecodeVariableSlot.AdoptInteger(second);
-        var thirdSlot = BytecodeVariableSlot.AdoptInteger(third);
         if (_cachedFrames.Remove(targetRoutine.Id, out var cachedFrame))
         {
-            cachedFrame.Arguments[0] = firstSlot;
-            cachedFrame.Arguments[1] = secondSlot;
-            cachedFrame.Arguments[2] = thirdSlot;
+            cachedFrame.Arguments[0] = ReuseIntegerSlot(cachedFrame.Arguments[0], first);
+            cachedFrame.Arguments[1] = ReuseIntegerSlot(cachedFrame.Arguments[1], second);
+            cachedFrame.Arguments[2] = ReuseIntegerSlot(cachedFrame.Arguments[2], third);
             cachedFrame.Reset(cachedFrame.Arguments, captures, location, template.DefaultLocals);
             _callStack.Push(cachedFrame);
         }
         else
         {
-            _callStack.Push(CreateFrameWithSlots(targetRoutine, [firstSlot, secondSlot, thirdSlot], captures, location, template));
+            _callStack.Push(CreateFrameWithSlots(targetRoutine, [BytecodeVariableSlot.AdoptInteger(first), BytecodeVariableSlot.AdoptInteger(second), BytecodeVariableSlot.AdoptInteger(third)], captures, location, template));
         }
     }
 
@@ -216,7 +223,7 @@ public sealed partial class BytecodeVm
     private void ExecuteSingleValueCall(BytecodeCallFrame callerFrame, BytecodeRoutine targetRoutine, int instructionIndex)
     {
         // Значение уже зафиксировано компилятором в момент вычисления аргумента.
-        // Ячейка создаётся заново: предыдущая могла сохраниться в замыкании.
+        // Повторная ячейка допустима только пока она не ушла в замыкание или BYREF.
         var value = callerFrame.EvaluationStack.Pop();
         var captures = ResolveCapturedSlots(callerFrame, targetRoutine, instructionIndex);
         var location = ResolveLocation(callerFrame.Routine.Id, instructionIndex);
@@ -227,16 +234,15 @@ public sealed partial class BytecodeVm
         }
 
         var template = _frameTemplatesByRoutineId[targetRoutine.Id];
-        var argument = BytecodeVariableSlot.Adopt(value);
         if (_cachedFrames.Remove(targetRoutine.Id, out var cachedFrame))
         {
-            cachedFrame.Arguments[0] = argument;
+            cachedFrame.Arguments[0] = ReuseValueSlot(cachedFrame.Arguments[0], value);
             cachedFrame.Reset(cachedFrame.Arguments, captures, location, template.DefaultLocals);
             _callStack.Push(cachedFrame);
         }
         else
         {
-            _callStack.Push(CreateFrameWithSlots(targetRoutine, [argument], captures, location, template));
+            _callStack.Push(CreateFrameWithSlots(targetRoutine, [BytecodeVariableSlot.AdoptReusable(value)], captures, location, template));
         }
     }
 
@@ -302,8 +308,8 @@ public sealed partial class BytecodeVm
         if (argumentCount == 1 && routine.ParameterCount == 1
             && _cachedFrames.Remove(routine.Id, out var cachedFrame))
         {
-            // Саму ячейку не переиспользуем: её могло сохранить замыкание.
-            cachedFrame.Arguments[0] = BytecodeVariableSlot.Adopt(arguments.Span[0]);
+            // Повторная ячейка допустима, пока прежняя не ушла в замыкание.
+            cachedFrame.Arguments[0] = ReuseValueSlot(cachedFrame.Arguments[0], arguments.Span[0]);
             var template = _frameTemplatesByRoutineId[routine.Id];
             cachedFrame.Reset(cachedFrame.Arguments, functionCaptures, location, template.DefaultLocals);
             cachedFrame.DiscardReturnValue = !returnsValue;
@@ -340,9 +346,9 @@ public sealed partial class BytecodeVm
         {
             captures[index] = bindings[index].Kind switch
             {
-                CaptureSourceKind.Argument => callerFrame.Arguments[bindings[index].Slot],
+                CaptureSourceKind.Argument => MarkSlotEscaped(callerFrame.Arguments[bindings[index].Slot]),
                 CaptureSourceKind.Local => callerFrame.GetOrCreateLocalSlot(bindings[index].Slot),
-                CaptureSourceKind.Capture => callerFrame.Captures[bindings[index].Slot],
+                CaptureSourceKind.Capture => MarkSlotEscaped(callerFrame.Captures[bindings[index].Slot]),
                 _ => throw new InvalidOperationException($"Unsupported capture source kind '{bindings[index].Kind}'.")
             };
         }

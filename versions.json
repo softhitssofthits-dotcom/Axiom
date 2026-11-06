@@ -1,22 +1,16 @@
 {
   "language": "0.12.15",
-  "compiler": "0.13.75",
+  "compiler": "0.13.78",
   "ide": "0.15.7",
   "compilerOnlyChange": {
-    "version": "0.13.75",
-    "reason": "Внутренние оптимизации вызовов, продолжений, функциональных типов, представлений и копирования значений в отправленном диапазоне сокращают выделения без изменения поведения языка.",
+    "version": "0.13.78",
+    "reason": "Повторное использование ячеек аргументов вызовов ограничено кадром и не меняет поведение языка.",
     "paths": [
-      "src/Axiom.Runtime/Execution/BytecodeVm.Calls.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.BuiltinCalls.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.BuiltinDispatch.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.Builtins.Array.cs",
+      "src/Axiom.Runtime/Execution/BytecodeCallFrame.cs",
+      "src/Axiom.Runtime/Execution/BytecodeVariableSlot.cs",
       "src/Axiom.Runtime/Execution/BytecodeVm.ByRef.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.Callbacks.cs",
-      "src/Axiom.Runtime/Values/RuntimeArrayValue.Shape.cs",
-      "src/Axiom.Runtime/Values/RuntimeArrayValue.cs",
-      "src/Axiom.Runtime/Values/RuntimeDictionaryValue.cs",
-      "src/Axiom.Runtime/Values/RuntimeValueCopier.cs",
-      "src/Axiom.Semantics/Symbols/Symbols.cs"
+      "src/Axiom.Runtime/Execution/BytecodeVm.Calls.cs",
+      "src/Axiom.Runtime/Execution/BytecodeVm.cs"
     ]
   }
 }

@@ -101,7 +101,7 @@ internal sealed class BytecodeCallFrame
     /// Освобождает ссылки завершённого кадра до помещения в пул. Значения
     /// захваченных ячеек остаются живыми через сами слоты замыканий.
     /// </summary>
-    public void ReleaseReferences()
+    public void ReleaseReferences(bool keepReusableIntegerSlots)
     {
         ClearCallbackState();
         _visibleVariables = null;
@@ -125,7 +125,8 @@ internal sealed class BytecodeCallFrame
 
         for (var index = 0; index < Arguments.Length; index++)
         {
-            Arguments[index] = null!;
+            if (!keepReusableIntegerSlots || Arguments[index] is not { } slot || !slot.PrepareForReuse())
+                Arguments[index] = null!;
         }
     }
 

@@ -1421,6 +1421,17 @@ public sealed partial class BytecodeVm
         bool byValValuesAreSnapshots = false)
     {
         var template = _frameTemplatesByRoutineId[routine.Id];
+        if (_cachedFrames.Remove(routine.Id, out var cachedFrame)
+            && cachedFrame.Arguments.Length == routine.ParameterCount)
+        {
+            // Собственные byval-ячейки кадра сбрасываются на новые значения;
+            // иностранные BYREF-слоты подставляются без изменения и при выходе
+            // кадра не возвращаются в пул, поскольку не помечены повторными.
+            FillArgumentSlots(cachedFrame.Arguments, arguments, byRefArgumentSlots, byValValuesAreSnapshots);
+            cachedFrame.Reset(cachedFrame.Arguments, captures, callSiteLocation, template.DefaultLocals);
+            return cachedFrame;
+        }
+
         var argumentSlots = CreateArgumentSlots(routine, arguments, byRefArgumentSlots, byValValuesAreSnapshots);
         return CreateFrameWithSlots(routine, argumentSlots, captures, callSiteLocation, template);
     }
@@ -1489,12 +1500,49 @@ public sealed partial class BytecodeVm
 
             var value = byValIndex < arguments.Length ? arguments[byValIndex] : RuntimeValue.Void;
             argumentSlots[index] = byValValuesAreSnapshots
-                ? BytecodeVariableSlot.Adopt(value)
-                : BytecodeVariableSlot.Adopt(value.CopyForStorage());
+                ? BytecodeVariableSlot.AdoptReusable(value)
+                : BytecodeVariableSlot.AdoptReusable(value.CopyForStorage());
             byValIndex++;
         }
 
         return argumentSlots;
+    }
+
+    // Заполняет массив ячеек кэшированного кадра на месте: собственные ячейки
+    // byval-аргументов сбрасываются на новые значения, иностранные BYREF-слоты
+    // подставляются без изменения. Ячейка без признака повторного использования
+    // (глобальный accessor, локальная или помеченная вышедшей ячейка) не
+    // сбрасывается и заменяется новой.
+    private static void FillArgumentSlots(
+        BytecodeVariableSlot[] argumentSlots,
+        ReadOnlySpan<RuntimeValue> arguments,
+        BytecodeVariableSlot[]? byRefArgumentSlots,
+        bool byValValuesAreSnapshots)
+    {
+        var byValIndex = 0;
+
+        for (var index = 0; index < argumentSlots.Length; index++)
+        {
+            if (byRefArgumentSlots is not null
+                && index < byRefArgumentSlots.Length
+                && byRefArgumentSlots[index] is not null)
+            {
+                argumentSlots[index] = byRefArgumentSlots[index];
+                continue;
+            }
+
+            var value = byValIndex < arguments.Length ? arguments[byValIndex] : RuntimeValue.Void;
+            if (!byValValuesAreSnapshots)
+            {
+                value = value.CopyForStorage();
+            }
+
+            var slot = argumentSlots[index];
+            argumentSlots[index] = slot is not null && slot.TryResetValue(value)
+                ? slot
+                : BytecodeVariableSlot.AdoptReusable(value);
+            byValIndex++;
+        }
     }
 
     private void ExecuteCurrentInstruction(int runtimeFailureBoundaryDepth = 0)
@@ -2537,7 +2585,8 @@ public sealed partial class BytecodeVm
 
     private void CacheReusableFrame(BytecodeCallFrame frame)
     {
-        frame.ReleaseReferences();
+        // В наблюдаемом и отладочном режимах сохраняем прежнее владение ячейками.
+        frame.ReleaseReferences(keepReusableIntegerSlots: !NeedsExecutionSnapshot());
         _cachedFrames.TryAdd(frame.Routine.Id, frame);
     }
 
