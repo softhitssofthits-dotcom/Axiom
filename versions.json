@@ -1,13 +1,15 @@
 {
   "language": "0.12.15",
-  "compiler": "0.13.81",
+  "compiler": "0.13.82",
   "ide": "0.15.8",
   "compilerOnlyChange": {
-    "version": "0.13.81",
-    "reason": "Немедленное хранение DOUBLE при записи в слоты, в аргументах вызовов и в результате преобразования INTEGER/LONG без материализации: внутренний механизм VM без изменения договора языка.",
+    "version": "0.13.82",
+    "reason": "Немедленное хранение DOUBLE при записи в слоты, в аргументах вызовов, в результате преобразования INTEGER/LONG и в одноместных математических функциях без материализации: внутренний механизм VM без изменения договора языка.",
     "paths": [
       "src/Axiom.Runtime/Execution/BytecodeCallFrame.cs",
+      "src/Axiom.Runtime/Execution/BytecodeEvaluationStack.cs",
       "src/Axiom.Runtime/Execution/BytecodeVariableSlot.cs",
+      "src/Axiom.Runtime/Execution/BytecodeVm.BuiltinCalls.cs",
       "src/Axiom.Runtime/Execution/BytecodeVm.Calls.cs",
       "src/Axiom.Runtime/Execution/BytecodeVm.Conversions.cs",
       "src/Axiom.Runtime/Execution/BytecodeVm.Storage.cs",

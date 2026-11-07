@@ -212,6 +212,10 @@ internal sealed class BytecodeEvaluationStack
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ReplaceTopWithLong(long value) => _items[Count - 1] = VmValue.FromLong(value);
 
+    /// <summary>Заменяет верхний слот неупакованным DOUBLE со сменой вида значения.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ReplaceTopWithDouble(double value) => _items[Count - 1] = VmValue.FromDouble(value);
+
     public void DiscardIntegerOperands()
     {
         Count -= 2;

@@ -99,6 +99,18 @@ public sealed partial class BytecodeVm
             return;
         }
 
+        // Одноместные математические функции над непосредственным DOUBLE
+        // вычисляются без материализации аргумента и результата. Нарушение
+        // домена и не конечный результат уходят в общий путь с прежними
+        // диагностиками и прежней обработкой.
+        if (argumentCount == 1 && executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
+            && frame.EvaluationStack.TryGetImmediateDouble(out var mathOperand)
+            && TryComputeImmediateDoubleMath(executionInfo.CanonicalId, mathOperand, out var mathResult))
+        {
+            frame.EvaluationStack.ReplaceTopWithDouble(mathResult);
+            return;
+        }
+
         if (TryExecuteFastGraphicsBuiltin(frame, executionInfo, instructionIndex, out var fastResult))
         {
             if (executionInfo.ReturnsValue)
@@ -702,6 +714,87 @@ public sealed partial class BytecodeVm
             default:
                 return false;
         }
+    }
+
+    // Домены повторяют условия общего пути: SQR >= 0, LOG* > 0,
+    // ASIN/ACOS в [-1; 1], ACOSH >= 1, ATANH в (-1; 1). Не конечный
+    // результат и прочие функции дают отказ ветки: общий путь воспроизводит
+    // прежние диагностики.
+    private static bool TryComputeImmediateDoubleMath(BuiltinFunctionId canonicalId, double operand, out double result)
+    {
+        switch (canonicalId)
+        {
+            case BuiltinFunctionId.Sin:
+                result = Math.Sin(operand);
+                break;
+            case BuiltinFunctionId.Cos:
+                result = Math.Cos(operand);
+                break;
+            case BuiltinFunctionId.Tan:
+                result = Math.Tan(operand);
+                break;
+            case BuiltinFunctionId.Atn:
+                result = Math.Atan(operand);
+                break;
+            case BuiltinFunctionId.Cbrt:
+                result = Math.Cbrt(operand);
+                break;
+            case BuiltinFunctionId.Exp:
+                result = Math.Exp(operand);
+                break;
+            case BuiltinFunctionId.Asinh:
+                result = Math.Asinh(operand);
+                break;
+            case BuiltinFunctionId.Sinh:
+                result = Math.Sinh(operand);
+                break;
+            case BuiltinFunctionId.Cosh:
+                result = Math.Cosh(operand);
+                break;
+            case BuiltinFunctionId.Sqr:
+                if (operand < 0d) { result = 0d; return false; }
+                result = Math.Sqrt(operand);
+                break;
+            case BuiltinFunctionId.Log:
+                if (operand <= 0d) { result = 0d; return false; }
+                result = Math.Log(operand);
+                break;
+            case BuiltinFunctionId.Log10:
+                if (operand <= 0d) { result = 0d; return false; }
+                result = Math.Log10(operand);
+                break;
+            case BuiltinFunctionId.Log2:
+                if (operand <= 0d) { result = 0d; return false; }
+                result = Math.Log2(operand);
+                break;
+            case BuiltinFunctionId.Asin:
+                if (operand < -1d || operand > 1d) { result = 0d; return false; }
+                result = Math.Asin(operand);
+                break;
+            case BuiltinFunctionId.Acos:
+                if (operand < -1d || operand > 1d) { result = 0d; return false; }
+                result = Math.Acos(operand);
+                break;
+            case BuiltinFunctionId.Acosh:
+                if (operand < 1d) { result = 0d; return false; }
+                result = Math.Acosh(operand);
+                break;
+            case BuiltinFunctionId.Atanh:
+                if (operand <= -1d || operand >= 1d) { result = 0d; return false; }
+                result = Math.Atanh(operand);
+                break;
+            default:
+                result = 0d;
+                return false;
+        }
+
+        if (!double.IsFinite(result))
+        {
+            result = 0d;
+            return false;
+        }
+
+        return true;
     }
 
     private RuntimeValue ExecuteBuiltin(
