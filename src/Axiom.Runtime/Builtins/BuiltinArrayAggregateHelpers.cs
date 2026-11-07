@@ -126,6 +126,16 @@ internal static class BuiltinArrayAggregateHelpers
         {
             BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices => Accumulate(array.GetIntegerDirect(indices)));
         }
+        else if (array.ElementType == TypeSymbol.Double)
+        {
+            // Прямое чтение double[]-хранилища: значения идентичны общему пути.
+            BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices => Accumulate(array.GetDoubleDirect(indices)));
+        }
+        else if (array.ElementType == TypeSymbol.Long)
+        {
+            // Прямое чтение long[]-хранилища с тем же преобразованием в DOUBLE.
+            BuiltinArrayHelpers.ForEachArrayIndexSetAscending(array, indices => Accumulate((double)array.GetLongDirect(indices)));
+        }
         else
         {
             ForEach(array, v =>

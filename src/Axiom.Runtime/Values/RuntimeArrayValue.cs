@@ -331,6 +331,18 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
         return _elements!.ReadInteger(GetLinearIndex(indices));
     }
 
+    internal double GetDoubleDirect(IReadOnlyList<int> indices)
+    {
+        EnsureAllocated();
+        return _elements!.ReadDouble(GetLinearIndex(indices));
+    }
+
+    internal long GetLongDirect(IReadOnlyList<int> indices)
+    {
+        EnsureAllocated();
+        return _elements!.ReadLong(GetLinearIndex(indices));
+    }
+
     public RuntimeValue GetValue(int index)
     {
         EnsureOneDimensional();
@@ -828,6 +840,117 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
         }
 
         _elements![Length] = value.CopyForStorage(FixedStringLength);
+        _lowerBounds![0] = nextLowerBound;
+        _upperBounds![0] = nextUpperBound;
+        _storageLowerBounds = _lowerBounds;
+        _storageUpperBounds = _upperBounds;
+
+        if (_storageStrides is null || _storageStrides[0] != 1)
+        {
+            _storageStrides = [1];
+        }
+
+        _fixedStorageBaseOffset = 0;
+        _visibleLength = nextUpperBound - nextLowerBound + 1;
+        _isView = false;
+        RenewStorageLifetime();
+        return true;
+    }
+
+    /// <summary>
+    /// Добавляет непосредственный INTEGER в плотное int[]-хранилище без
+    /// материализации значения: зеркало TryAppendOneDimensional с прямой
+    /// записью в типизированный буфер. Условия совпадают с общим путём.
+    /// </summary>
+    internal bool TryAppendOneDimensionalInteger(int value)
+    {
+        EnsureResizableRoot();
+        EnsureAllocated();
+
+        if (Rank != 1 || IsView)
+        {
+            return false;
+        }
+
+        if (Length + 1 > MaxElementCount)
+        {
+            throw new ArrayAllocationFailureException(
+                $"Не удалось расширить массив: число элементов превысит предел {MaxElementCount}.");
+        }
+
+        var nextLowerBound = LowerBound;
+        var nextUpperBound = Length == 0
+            ? nextLowerBound
+            : checked(UpperBound + 1);
+
+        if (_elements!.Length < Length + 1)
+        {
+            var nextElements = CreateElementStorage(GrowCapacity(Length + 1));
+
+            if (Length > 0)
+            {
+                ElementStorage.Copy(_elements, 0, nextElements, 0, Length);
+            }
+
+            AttachStorage(nextElements);
+        }
+
+        _elements!.WriteInteger(Length, value);
+        _lowerBounds![0] = nextLowerBound;
+        _upperBounds![0] = nextUpperBound;
+        _storageLowerBounds = _lowerBounds;
+        _storageUpperBounds = _upperBounds;
+
+        if (_storageStrides is null || _storageStrides[0] != 1)
+        {
+            _storageStrides = [1];
+        }
+
+        _fixedStorageBaseOffset = 0;
+        _visibleLength = nextUpperBound - nextLowerBound + 1;
+        _isView = false;
+        RenewStorageLifetime();
+        return true;
+    }
+
+    /// <summary>
+    /// Добавляет непосредственный DOUBLE в плотное double[]-хранилище без
+    /// материализации значения: зеркало TryAppendOneDimensional.
+    /// </summary>
+    internal bool TryAppendOneDimensionalDouble(double value)
+    {
+        EnsureResizableRoot();
+        EnsureAllocated();
+
+        if (Rank != 1 || IsView)
+        {
+            return false;
+        }
+
+        if (Length + 1 > MaxElementCount)
+        {
+            throw new ArrayAllocationFailureException(
+                $"Не удалось расширить массив: число элементов превысит предел {MaxElementCount}.");
+        }
+
+        var nextLowerBound = LowerBound;
+        var nextUpperBound = Length == 0
+            ? nextLowerBound
+            : checked(UpperBound + 1);
+
+        if (_elements!.Length < Length + 1)
+        {
+            var nextElements = CreateElementStorage(GrowCapacity(Length + 1));
+
+            if (Length > 0)
+            {
+                ElementStorage.Copy(_elements, 0, nextElements, 0, Length);
+            }
+
+            AttachStorage(nextElements);
+        }
+
+        _elements!.WriteDouble(Length, value);
         _lowerBounds![0] = nextLowerBound;
         _upperBounds![0] = nextUpperBound;
         _storageLowerBounds = _lowerBounds;

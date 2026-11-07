@@ -1,14 +1,14 @@
 {
   "language": "0.12.15",
-  "compiler": "0.13.86",
+  "compiler": "0.13.87",
   "ide": "0.15.8",
   "compilerOnlyChange": {
-    "version": "0.13.86",
-    "reason": "Пул-стек кадров для рекурсии, немедленные аргументы прямых и косвенных вызовов DOUBLE и немедленный возврат DOUBLE: внутренний механизм VM без изменения договора языка.",
+    "version": "0.13.87",
+    "reason": "Немедленный ARRAYPUSH в плотное типизированное хранилище и прямое чтение double[]/long[] в ARRAYAVERAGE: внутренний механизм VM без изменения договора языка.",
     "paths": [
-      "src/Axiom.Runtime/Execution/BytecodeVm.Callbacks.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.Calls.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.cs"
+      "src/Axiom.Runtime/Builtins/BuiltinArrayAggregateHelpers.cs",
+      "src/Axiom.Runtime/Execution/BytecodeVm.BuiltinCalls.cs",
+      "src/Axiom.Runtime/Values/RuntimeArrayValue.cs"
     ]
   }
 }

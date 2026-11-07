@@ -99,6 +99,38 @@ public sealed partial class BytecodeVm
             return;
         }
 
+        // ARRAYPUSH с непосредственным значением добавляет элемент в плотное
+        // типизированное хранилище без материализации аргумента. Несовпадение
+        // формы (не одномерный корневой массив, вид, неплотное хранилище) —
+        // общий путь с прежними проверками.
+        if (executionInfo.CanonicalId == BuiltinFunctionId.ArrayPush && argumentCount == 2
+            && !executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
+            && frame.EvaluationStack.PeekVmValue(1).Object is { } peekedPushTarget && peekedPushTarget.AsArray() is { } pushArray
+            && pushArray.Rank == 1 && !pushArray.IsView && pushArray.IsAllocated
+            && pushArray.UpperBound < int.MaxValue
+            && frame.EvaluationStack.TryGetImmediateInteger(out var pushInteger))
+        {
+            if (pushArray.TryAppendOneDimensionalInteger(pushInteger))
+            {
+                frame.EvaluationStack.DiscardTop(2);
+                return;
+            }
+        }
+
+        if (executionInfo.CanonicalId == BuiltinFunctionId.ArrayPush && argumentCount == 2
+            && !executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
+            && frame.EvaluationStack.PeekVmValue(1).Object is { } peekedPushDoubleTarget && peekedPushDoubleTarget.AsArray() is { } pushDoubleArray
+            && pushDoubleArray.Rank == 1 && !pushDoubleArray.IsView && pushDoubleArray.IsAllocated
+            && pushDoubleArray.UpperBound < int.MaxValue
+            && frame.EvaluationStack.TryGetImmediateDouble(out var pushDouble))
+        {
+            if (pushDoubleArray.TryAppendOneDimensionalDouble(pushDouble))
+            {
+                frame.EvaluationStack.DiscardTop(2);
+                return;
+            }
+        }
+
         // Одноместные математические функции над непосредственным DOUBLE
         // вычисляются без материализации аргумента и результата. Нарушение
         // домена и не конечный результат уходят в общий путь с прежними
