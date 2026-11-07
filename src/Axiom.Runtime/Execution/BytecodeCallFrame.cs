@@ -513,6 +513,65 @@ internal sealed class BytecodeCallFrame
         return true;
     }
 
+    // ВРЕМЕННАЯ инструментировка П08 (удалить после диагностики).
+    public static int DbgTryTakeCalls, DbgMapMiss, DbgSharedBlock, DbgRefMismatch, DbgTypeMismatch, DbgRememberCalls, DbgReuseTaken;
+
+    /// <summary>
+    /// Возвращает прежнюю свежую запись слота для повторного использования,
+    /// если она всё ещё является текущим значением слота: уход записи в
+    /// замыкание или BYREF делает слот общим и хранящееся значение
+    /// обнуляется, поэтому ссылка естественно разрывается. Запись
+    /// сбрасывается к значениям по умолчанию на месте.
+    /// </summary>
+    internal RuntimeRecordValue? TryTakeReusableFreshFlatRecord(int slot, string typeIdentity)
+    {
+        DbgTryTakeCalls++;
+        var storedValue = _locals[slot].Object;
+        if (storedValue is null || storedValue.Type == TypeSymbol.Void)
+        {
+            DbgMapMiss++;
+            return null;
+        }
+
+        if (!_freshFlatRecordsBySlot.TryGetValue(slot, out var cachedWrapper))
+        {
+            DbgMapMiss++;
+            return null;
+        }
+
+        if (_hasSharedLocals && _sharedLocals![slot] is not null)
+        {
+            DbgSharedBlock++;
+            return null;
+        }
+
+        // Слот хранит ОБЁРТКУ RuntimeValue, карта — тоже: сравниваем их.
+        if (!ReferenceEquals(storedValue, cachedWrapper))
+        {
+            DbgRefMismatch++;
+            return null;
+        }
+
+        if (cachedWrapper.AsRecord() is not { } record
+            || !string.Equals(record.Type.Name, typeIdentity, StringComparison.Ordinal))
+        {
+            DbgTypeMismatch++;
+            return null;
+        }
+
+        DbgReuseTaken++;
+        record.ResetToDefaults();
+        return record;
+    }
+
+    internal void RememberFreshFlatRecord(int slot, RuntimeValue freshWrapper)
+    {
+        DbgRememberCalls++;
+        _freshFlatRecordsBySlot[slot] = freshWrapper;
+    }
+
+    private readonly Dictionary<int, RuntimeValue> _freshFlatRecordsBySlot = [];
+
     private static bool IsFreshRecordScalar(TypeSymbol type)
         => ReferenceEquals(type, TypeSymbol.Integer)
            || ReferenceEquals(type, TypeSymbol.Long)
@@ -569,6 +628,7 @@ internal sealed class BytecodeCallFrame
         _visibleVariables = null;
         _cachedFunctionValuesByRoutineId?.Clear();
         _cachedCapturedSlotsByRoutineId?.Clear();
+        _freshFlatRecordsBySlot.Clear();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

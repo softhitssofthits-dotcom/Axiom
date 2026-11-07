@@ -59,6 +59,19 @@ public sealed class RuntimeRecordValue : IRuntimeStoredValue
     }
 
     /// <summary>
+    /// Сбрасывает все поля записи к значениям по умолчанию на месте. Вызывается
+    /// для слота переменной, объявленной в цикле, пока запись не ушла за
+    /// пределы слота: копии, сделанные при присваиваниях, остаются независимыми.
+    /// </summary>
+    internal void ResetToDefaults()
+    {
+        foreach (var field in Type.Fields)
+        {
+            _fields[field.Ordinal] = CreateDefaultFieldValue(field, null);
+        }
+    }
+
+    /// <summary>
     /// Создаёт запись для снимка состояния. Поля заполняются отдельно методом
     /// <see cref="SetSnapshotField"/> без правил присваивания: вызывающая сторона
     /// сама строит независимый граф значений.

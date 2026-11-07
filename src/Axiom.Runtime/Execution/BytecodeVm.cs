@@ -11,6 +11,9 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
+    // ВРЕМЕННАЯ инструментировка П08.
+    public static string DbgFreshRecordSnapshot() =>
+        $"tryTake={BytecodeCallFrame.DbgTryTakeCalls} mapMiss={BytecodeCallFrame.DbgMapMiss} shared={BytecodeCallFrame.DbgSharedBlock} refMis={BytecodeCallFrame.DbgRefMismatch} typeMis={BytecodeCallFrame.DbgTypeMismatch} taken={BytecodeCallFrame.DbgReuseTaken} remember={BytecodeCallFrame.DbgRememberCalls}";
     private const int MaxCallDepth = 200;
 
     private static readonly TextLocation FallbackRuntimeLocation = new(new TextSpan(0, 0), 1, 1);
@@ -742,6 +745,31 @@ public sealed partial class BytecodeVm
                         break;
 
                     case Opcode.CreateRecord:
+                        RuntimeRecordValue? reusedFreshRecord = null;
+                        if (instruction.IsFreshRecordLocal)
+                        {
+                            // Повторное использование прежней свежей записи
+                            // слота, пока она не ушла в замыкание или BYREF.
+                            reusedFreshRecord = frame.TryTakeReusableFreshFlatRecord(
+                                instruction.B, ReadDebugName(instruction.GetOperand(0)));
+                            if (reusedFreshRecord is not null)
+                            {
+                                var reusedType = ResolveRecordType(
+                                    ReadDebugName(instruction.GetOperand(0)), frame.Routine.Id, ip);
+                                frame.EvaluationStack.Push(RuntimeValue.FromRecord(reusedType, reusedFreshRecord));
+                                ip++;
+                                if (CheckCancellationRequested())
+                                    return;
+                                frame.InstructionPointer = ip + 1;
+                                var adoptedReuse = PopValue(frame, ip);
+                                if (!frame.TryAdoptFreshFlatRecord(instruction.B, adoptedReuse))
+                                    frame.StoreLocalValue(instruction.B, adoptedReuse);
+                                // Карта должна держать ту обёртку, что теперь в слоте.
+                                frame.RememberFreshFlatRecord(instruction.B, adoptedReuse);
+                                break;
+                            }
+                        }
+
                         ExecuteCreateRecord(frame, instruction, ip);
                         if (instruction.IsFreshRecordLocal)
                         {
@@ -752,6 +780,8 @@ public sealed partial class BytecodeVm
                                 return;
                             frame.InstructionPointer = ip + 1;
                             var fresh = PopValue(frame, ip);
+                            frame.RememberFreshFlatRecord(instruction.B, fresh);
+
                             if (!frame.TryAdoptFreshFlatRecord(instruction.B, fresh))
                                 frame.StoreLocalValue(instruction.B, fresh);
                         }
