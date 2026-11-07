@@ -40,7 +40,44 @@ public sealed partial class BytecodeVm
     private readonly bool[] _hasGlobalSlot;
     private readonly Stack<BytecodeCallFrame> _callStack = new();
 
-    private readonly Dictionary<int, BytecodeCallFrame> _cachedFrames = [];
+    // Пул кадров по процедурам: стек свободных кадров допускает рекурсию —
+    // каждый вложенный вызов берёт кадр из пула, а не аллоцирует новый.
+    // Живая память ограничена глубиной стека вызовов (MaxCallDepth).
+    private sealed class FramePool
+    {
+        private readonly Dictionary<int, Stack<BytecodeCallFrame>> _framesByRoutine = [];
+
+        public bool TryTake(int routineId, out BytecodeCallFrame frame)
+        {
+            if (_framesByRoutine.TryGetValue(routineId, out var stack) && stack.Count > 0)
+            {
+                frame = stack.Pop();
+                return true;
+            }
+
+            frame = null!;
+            return false;
+        }
+
+        public bool Contains(int routineId) =>
+            _framesByRoutine.TryGetValue(routineId, out var stack) && stack.Count > 0;
+
+        public void Store(int routineId, BytecodeCallFrame frame)
+        {
+            if (!_framesByRoutine.TryGetValue(routineId, out var stack))
+            {
+                stack = [];
+                _framesByRoutine[routineId] = stack;
+            }
+
+            if (stack.Count < MaxCallDepth)
+            {
+                stack.Push(frame);
+            }
+        }
+    }
+
+    private readonly FramePool _framePool = new();
     private readonly HashSet<RuntimeTextFile> _openFiles = [];
     private readonly StringBuilder _pendingOutput = new();
     // Кэш колбэка отчёта переполнения: метод-группа экземпляра аллоцирует
@@ -1429,7 +1466,7 @@ public sealed partial class BytecodeVm
         bool byValValuesAreSnapshots = false)
     {
         var template = _frameTemplatesByRoutineId[routine.Id];
-        if (_cachedFrames.Remove(routine.Id, out var cachedFrame)
+        if (_framePool.TryTake(routine.Id, out var cachedFrame)
             && cachedFrame.Arguments.Length == routine.ParameterCount)
         {
             // Собственные byval-ячейки кадра сбрасываются на новые значения;
@@ -1451,7 +1488,7 @@ public sealed partial class BytecodeVm
         TextLocation callSiteLocation,
         RoutineFrameTemplate template)
     {
-        if (_cachedFrames.Remove(routine.Id, out var cachedFrame))
+        if (_framePool.TryTake(routine.Id, out var cachedFrame))
         {
             cachedFrame.Reset(argumentSlots, captures, callSiteLocation, template.DefaultLocals);
             return cachedFrame;
@@ -2510,6 +2547,20 @@ public sealed partial class BytecodeVm
             return;
         }
 
+        // Непосредственный DOUBLE возвращается без материализации: зеркало
+        // целочисленной ветки; CopyForStorage для DOUBLE — тождество.
+        if (frame.Routine.ResultType == TypeSymbol.Double && frame.ErrorHandlerCount == 0
+            && !frame.HasCallbackContinuation && frame.EvaluationStack.TryGetImmediateDouble(out var doubleResult))
+        {
+            var discard = frame.DiscardReturnValue;
+            frame.EvaluationStack.DiscardTop(1);
+            _callStack.Pop();
+            CacheReusableFrame(frame);
+            if (_callStack.Count > 0 && !discard)
+                CurrentFrame.EvaluationStack.PushDouble(doubleResult);
+            return;
+        }
+
         RuntimeValue returnValue = RuntimeValue.Void;
 
         if (frame.Routine.ResultType != TypeSymbol.Void)
@@ -2600,7 +2651,7 @@ public sealed partial class BytecodeVm
     {
         // В наблюдаемом и отладочном режимах сохраняем прежнее владение ячейками.
         frame.ReleaseReferences(keepReusableIntegerSlots: !NeedsExecutionSnapshot());
-        _cachedFrames.TryAdd(frame.Routine.Id, frame);
+        _framePool.Store(frame.Routine.Id, frame);
     }
 
     private TextLocation ResolveCurrentLocation(int instructionIndex)

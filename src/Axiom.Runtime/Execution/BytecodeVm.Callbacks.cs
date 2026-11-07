@@ -179,14 +179,14 @@ public sealed partial class BytecodeVm
         BytecodeCallFrame frame;
         var count = invoke.Arguments.Length;
         if (count is 1 or 2 && routine.ParameterCount == count
-            && _cachedFrames.ContainsKey(routine.Id))
+            && _framePool.Contains(routine.Id))
         {
             // Копии и новые ячейки создаются до изъятия кадра, как в общем пути:
             // копирование может завершиться ошибкой или вызвать проверку отмены.
             var first = BytecodeVariableSlot.Adopt(invoke.Arguments[0].CopyForStorage());
             var second = count == 2 ? BytecodeVariableSlot.Adopt(invoke.Arguments[1].CopyForStorage()) : null;
             var template = _frameTemplatesByRoutineId[routine.Id];
-            if (_cachedFrames.Remove(routine.Id, out var cachedFrame))
+            if (_framePool.TryTake(routine.Id, out var cachedFrame))
             {
                 cachedFrame.Arguments[0] = first;
                 if (second is not null)

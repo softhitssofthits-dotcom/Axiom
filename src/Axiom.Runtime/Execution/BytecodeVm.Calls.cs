@@ -40,7 +40,7 @@ public sealed partial class BytecodeVm
             }
 
             var template = _frameTemplatesByRoutineId[targetRoutine.Id];
-            if (_cachedFrames.Remove(targetRoutine.Id, out var cachedFrame))
+            if (_framePool.TryTake(targetRoutine.Id, out var cachedFrame))
             {
                 // Контейнер кадра возвращён после освобождения; саму ячейку
                 // создаём заново, поскольку прежняя могла уйти в замыкание.
@@ -71,7 +71,7 @@ public sealed partial class BytecodeVm
             }
 
             var template = _frameTemplatesByRoutineId[targetRoutine.Id];
-            if (_cachedFrames.Remove(targetRoutine.Id, out var cachedFrame))
+            if (_framePool.TryTake(targetRoutine.Id, out var cachedFrame))
             {
                 // Контейнер кадра возвращён после освобождения; саму ячейку
                 // создаём заново, поскольку прежняя могла уйти в замыкание.
@@ -104,6 +104,27 @@ public sealed partial class BytecodeVm
             return;
         }
 
+        if (instruction.Opcode == Opcode.Call && argumentCount == 2
+            && targetRoutine.ParameterCount == 2 && targetRoutine.ParameterVariables.Count == 2
+            && targetRoutine.ParameterVariables[0].Type == TypeSymbol.Double
+            && targetRoutine.ParameterVariables[1].Type == TypeSymbol.Double
+            && callerFrame.EvaluationStack.TryGetDoubleOperands(out var firstDouble, out var secondDouble))
+        {
+            ExecuteTwoDoubleCall(callerFrame, targetRoutine, instructionIndex, firstDouble, secondDouble);
+            return;
+        }
+
+        if (instruction.Opcode == Opcode.Call && argumentCount == 2
+            && targetRoutine.ParameterCount == 2 && targetRoutine.ParameterVariables.Count == 2
+            && targetRoutine.ParameterVariables[0].Type == TypeSymbol.Integer
+            && targetRoutine.ParameterVariables[1].Type == TypeSymbol.Double
+            && callerFrame.EvaluationStack.TryGetImmediateInteger(out var mixedInteger, 1)
+            && callerFrame.EvaluationStack.TryGetImmediateDouble(out var mixedDouble))
+        {
+            ExecuteMixedIntegerDoubleCall(callerFrame, targetRoutine, instructionIndex, mixedInteger, mixedDouble);
+            return;
+        }
+
         if (instruction.Opcode == Opcode.Call && argumentCount == 3
             && targetRoutine.ParameterCount == 3 && targetRoutine.ParameterVariables.Count == 3
             && targetRoutine.ParameterVariables[0].Type == TypeSymbol.Integer
@@ -113,6 +134,18 @@ public sealed partial class BytecodeVm
             && callerFrame.EvaluationStack.TryGetIntegerOperands(out var secondOfThree, out var thirdOfThree))
         {
             ExecuteThreeIntegerCall(callerFrame, targetRoutine, instructionIndex, firstOfThree, secondOfThree, thirdOfThree);
+            return;
+        }
+
+        if (instruction.Opcode == Opcode.Call && argumentCount == 3
+            && targetRoutine.ParameterCount == 3 && targetRoutine.ParameterVariables.Count == 3
+            && targetRoutine.ParameterVariables[0].Type == TypeSymbol.Double
+            && targetRoutine.ParameterVariables[1].Type == TypeSymbol.Double
+            && targetRoutine.ParameterVariables[2].Type == TypeSymbol.Double
+            && callerFrame.EvaluationStack.TryGetImmediateDouble(out var firstDoubleOfThree, 2)
+            && callerFrame.EvaluationStack.TryGetDoubleOperands(out var secondDoubleOfThree, out var thirdDoubleOfThree))
+        {
+            ExecuteThreeDoubleCall(callerFrame, targetRoutine, instructionIndex, firstDoubleOfThree, secondDoubleOfThree, thirdDoubleOfThree);
             return;
         }
 
@@ -212,7 +245,7 @@ public sealed partial class BytecodeVm
         }
 
         var template = _frameTemplatesByRoutineId[targetRoutine.Id];
-        if (_cachedFrames.Remove(targetRoutine.Id, out var cachedFrame))
+        if (_framePool.TryTake(targetRoutine.Id, out var cachedFrame))
         {
             cachedFrame.Arguments[0] = ReuseIntegerSlot(cachedFrame.Arguments[0], first);
             cachedFrame.Arguments[1] = ReuseIntegerSlot(cachedFrame.Arguments[1], second);
@@ -239,7 +272,7 @@ public sealed partial class BytecodeVm
         }
 
         var template = _frameTemplatesByRoutineId[targetRoutine.Id];
-        if (_cachedFrames.Remove(targetRoutine.Id, out var cachedFrame))
+        if (_framePool.TryTake(targetRoutine.Id, out var cachedFrame))
         {
             cachedFrame.Arguments[0] = ReuseIntegerSlot(cachedFrame.Arguments[0], first);
             cachedFrame.Arguments[1] = ReuseIntegerSlot(cachedFrame.Arguments[1], second);
@@ -250,6 +283,88 @@ public sealed partial class BytecodeVm
         else
         {
             _callStack.Push(CreateFrameWithSlots(targetRoutine, [BytecodeVariableSlot.AdoptInteger(first), BytecodeVariableSlot.AdoptInteger(second), BytecodeVariableSlot.AdoptInteger(third)], captures, location, template));
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void ExecuteTwoDoubleCall(BytecodeCallFrame callerFrame, BytecodeRoutine targetRoutine,
+        int instructionIndex, double first, double second)
+    {
+        callerFrame.EvaluationStack.DiscardTop(2);
+        var captures = ResolveCapturedSlots(callerFrame, targetRoutine, instructionIndex);
+        var location = ResolveLocation(callerFrame.Routine.Id, instructionIndex);
+        if (_callStack.Count >= MaxCallDepth)
+        {
+            ReportCallStackOverflow(targetRoutine.Name, location);
+            throw new RuntimeFailureException();
+        }
+
+        var template = _frameTemplatesByRoutineId[targetRoutine.Id];
+        if (_framePool.TryTake(targetRoutine.Id, out var cachedFrame))
+        {
+            cachedFrame.Arguments[0] = ReuseDoubleSlot(cachedFrame.Arguments[0], first);
+            cachedFrame.Arguments[1] = ReuseDoubleSlot(cachedFrame.Arguments[1], second);
+            cachedFrame.Reset(cachedFrame.Arguments, captures, location, template.DefaultLocals);
+            _callStack.Push(cachedFrame);
+        }
+        else
+        {
+            _callStack.Push(CreateFrameWithSlots(targetRoutine, [BytecodeVariableSlot.AdoptDouble(first), BytecodeVariableSlot.AdoptDouble(second)], captures, location, template));
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void ExecuteThreeDoubleCall(BytecodeCallFrame callerFrame, BytecodeRoutine targetRoutine,
+        int instructionIndex, double first, double second, double third)
+    {
+        callerFrame.EvaluationStack.DiscardTop(3);
+        var captures = ResolveCapturedSlots(callerFrame, targetRoutine, instructionIndex);
+        var location = ResolveLocation(callerFrame.Routine.Id, instructionIndex);
+        if (_callStack.Count >= MaxCallDepth)
+        {
+            ReportCallStackOverflow(targetRoutine.Name, location);
+            throw new RuntimeFailureException();
+        }
+
+        var template = _frameTemplatesByRoutineId[targetRoutine.Id];
+        if (_framePool.TryTake(targetRoutine.Id, out var cachedFrame))
+        {
+            cachedFrame.Arguments[0] = ReuseDoubleSlot(cachedFrame.Arguments[0], first);
+            cachedFrame.Arguments[1] = ReuseDoubleSlot(cachedFrame.Arguments[1], second);
+            cachedFrame.Arguments[2] = ReuseDoubleSlot(cachedFrame.Arguments[2], third);
+            cachedFrame.Reset(cachedFrame.Arguments, captures, location, template.DefaultLocals);
+            _callStack.Push(cachedFrame);
+        }
+        else
+        {
+            _callStack.Push(CreateFrameWithSlots(targetRoutine, [BytecodeVariableSlot.AdoptDouble(first), BytecodeVariableSlot.AdoptDouble(second), BytecodeVariableSlot.AdoptDouble(third)], captures, location, template));
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void ExecuteMixedIntegerDoubleCall(BytecodeCallFrame callerFrame, BytecodeRoutine targetRoutine,
+        int instructionIndex, int first, double second)
+    {
+        callerFrame.EvaluationStack.DiscardTop(2);
+        var captures = ResolveCapturedSlots(callerFrame, targetRoutine, instructionIndex);
+        var location = ResolveLocation(callerFrame.Routine.Id, instructionIndex);
+        if (_callStack.Count >= MaxCallDepth)
+        {
+            ReportCallStackOverflow(targetRoutine.Name, location);
+            throw new RuntimeFailureException();
+        }
+
+        var template = _frameTemplatesByRoutineId[targetRoutine.Id];
+        if (_framePool.TryTake(targetRoutine.Id, out var cachedFrame))
+        {
+            cachedFrame.Arguments[0] = ReuseIntegerSlot(cachedFrame.Arguments[0], first);
+            cachedFrame.Arguments[1] = ReuseDoubleSlot(cachedFrame.Arguments[1], second);
+            cachedFrame.Reset(cachedFrame.Arguments, captures, location, template.DefaultLocals);
+            _callStack.Push(cachedFrame);
+        }
+        else
+        {
+            _callStack.Push(CreateFrameWithSlots(targetRoutine, [BytecodeVariableSlot.AdoptInteger(first), BytecodeVariableSlot.AdoptDouble(second)], captures, location, template));
         }
     }
 
@@ -268,7 +383,7 @@ public sealed partial class BytecodeVm
         }
 
         var template = _frameTemplatesByRoutineId[targetRoutine.Id];
-        if (_cachedFrames.Remove(targetRoutine.Id, out var cachedFrame))
+        if (_framePool.TryTake(targetRoutine.Id, out var cachedFrame))
         {
             cachedFrame.Arguments[0] = ReuseValueSlot(cachedFrame.Arguments[0], value);
             cachedFrame.Reset(cachedFrame.Arguments, captures, location, template.DefaultLocals);
@@ -285,6 +400,46 @@ public sealed partial class BytecodeVm
         var argumentCount = instruction.GetOperand(0);
         var returnsValue = instruction.GetOperand(1) != 0;
         var location = ResolveLocation(frame.Routine.Id, instructionIndex);
+
+        // Немедленная пара DOUBLE для косвенного вызова пользовательской
+        // функции: аргументы и функциональное значение читаются без
+        // материализации, кадр берётся из пула. Прочие формы — общий путь.
+        if (argumentCount == 2 && frame.EvaluationStack.Count >= 3
+            && frame.EvaluationStack.PeekVmValue(2).Object is { } peekedTarget
+            && peekedTarget.AsFunction() is { } peekedFunction
+            && !peekedFunction.Function.IsBuiltIn
+            && TryResolveFunctionRoutine(peekedFunction, location, out var peekedRoutine)
+            && peekedRoutine.ParameterCount == 2 && peekedRoutine.ParameterVariables.Count == 2
+            && peekedRoutine.ParameterVariables[0].Type == TypeSymbol.Double
+            && peekedRoutine.ParameterVariables[1].Type == TypeSymbol.Double
+            && frame.EvaluationStack.TryGetImmediateDouble(out var peekedFirst, 1)
+            && frame.EvaluationStack.TryGetImmediateDouble(out var peekedSecond))
+        {
+            if (_callStack.Count >= MaxCallDepth)
+            {
+                ReportCallStackOverflow(peekedFunction.Function.Name, location);
+                throw new RuntimeFailureException();
+            }
+
+            frame.EvaluationStack.DiscardTop(3);
+            var indirectCaptures = GetFunctionCaptures(peekedFunction);
+            var template = _frameTemplatesByRoutineId[peekedRoutine.Id];
+            if (_framePool.TryTake(peekedRoutine.Id, out var pooledFrame))
+            {
+                pooledFrame.Arguments[0] = ReuseDoubleSlot(pooledFrame.Arguments[0], peekedFirst);
+                pooledFrame.Arguments[1] = ReuseDoubleSlot(pooledFrame.Arguments[1], peekedSecond);
+                pooledFrame.Reset(pooledFrame.Arguments, indirectCaptures, location, template.DefaultLocals);
+                pooledFrame.DiscardReturnValue = !returnsValue;
+                _callStack.Push(pooledFrame);
+                return;
+            }
+
+            var freshSlots = new[] { BytecodeVariableSlot.AdoptDouble(peekedFirst), BytecodeVariableSlot.AdoptDouble(peekedSecond) };
+            var freshFrame = CreateFrameWithSlots(peekedRoutine, freshSlots, indirectCaptures, location, template);
+            freshFrame.DiscardReturnValue = !returnsValue;
+            _callStack.Push(freshFrame);
+            return;
+        }
 
         using var arguments = RentArguments(frame, argumentCount, instructionIndex);
         var target = PopValue(frame, instructionIndex);
@@ -340,7 +495,7 @@ public sealed partial class BytecodeVm
 
         var functionCaptures = GetFunctionCaptures(functionValue);
         if (argumentCount == 1 && routine.ParameterCount == 1
-            && _cachedFrames.Remove(routine.Id, out var cachedFrame))
+            && _framePool.TryTake(routine.Id, out var cachedFrame))
         {
             // Повторная ячейка допустима, пока прежняя не ушла в замыкание.
             cachedFrame.Arguments[0] = ReuseValueSlot(cachedFrame.Arguments[0], arguments.Span[0]);
