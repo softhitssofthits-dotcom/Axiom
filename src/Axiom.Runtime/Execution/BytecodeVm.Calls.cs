@@ -381,7 +381,7 @@ public sealed partial class BytecodeVm
             captures[index] = bindings[index].Kind switch
             {
                 CaptureSourceKind.Argument => MarkSlotEscaped(callerFrame.Arguments[bindings[index].Slot]),
-                CaptureSourceKind.Local => callerFrame.GetOrCreateLocalSlot(bindings[index].Slot),
+                CaptureSourceKind.Local => MarkSlotEscaped(callerFrame.GetOrCreateLocalSlot(bindings[index].Slot)),
                 CaptureSourceKind.Capture => MarkSlotEscaped(callerFrame.Captures[bindings[index].Slot]),
                 _ => throw new InvalidOperationException($"Unsupported capture source kind '{bindings[index].Kind}'.")
             };

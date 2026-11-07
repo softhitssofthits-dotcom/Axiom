@@ -14,6 +14,7 @@ internal class BytecodeVariableSlot
     private bool _reusableInteger;
     private bool _reusableValue;
     private bool _reusableDouble;
+    private bool _reusableForEach;
     private readonly Func<RuntimeValue>? _getter;
     private readonly Action<RuntimeValue>? _setter;
 
@@ -101,6 +102,18 @@ internal class BytecodeVariableSlot
     }
 
     /// <summary>
+    /// Свежий слот переменной FOR EACH или объявления внутри цикла. Слот может
+    /// быть сброшен следующей итерацией, пока не ушёл в замыкание или BYREF:
+    /// уход сбрасывает признак, и следующая итерация создаёт новый слот.
+    /// </summary>
+    public static BytecodeVariableSlot AdoptForEach(RuntimeValue value, int? fixedStringLength)
+    {
+        var slot = new BytecodeVariableSlot(value, fixedStringLength, isForEachItem: false, isForEachItemPending: true, adoptValue: true);
+        slot._reusableForEach = true;
+        return slot;
+    }
+
+    /// <summary>
     /// Слот аргумента с материализованным значением, который можно вернуть
     /// в свободный кадр после очистки значения. Захват и передача по BYREF
     /// снимают право повторного использования так же, как у INTEGER-ячеек.
@@ -119,6 +132,7 @@ internal class BytecodeVariableSlot
         _reusableInteger = false;
         _reusableValue = false;
         _reusableDouble = false;
+        _reusableForEach = false;
     }
 
     internal bool PrepareForReuse()
@@ -175,6 +189,67 @@ internal class BytecodeVariableSlot
         _value = value;
         IsForEachItem = false;
         IsForEachItemPending = false;
+        return true;
+    }
+
+    /// <summary>
+    /// Готовит слот FOR EACH к новой итерации с теми же флагами, что и свежий
+    /// Adopt: значение по умолчанию и ожидание первого использования. Числовые
+    /// типы сбрасываются в немедленную форму, составные — значением по
+    /// умолчанию.
+    /// </summary>
+    internal bool TryResetForEach(TypeSymbol type, int? fixedStringLength)
+    {
+        if (!_reusableForEach) return false;
+
+        if (ReferenceEquals(type, TypeSymbol.Integer))
+        {
+            _value = null;
+            _integer = 0;
+            _double = 0;
+            _immediateDouble = false;
+        }
+        else if (ReferenceEquals(type, TypeSymbol.Double))
+        {
+            _value = null;
+            _integer = 0;
+            _double = 0;
+            _immediateDouble = true;
+        }
+        else
+        {
+            _value = RuntimeValue.Default(type, fixedStringLength);
+            _integer = 0;
+            _double = 0;
+            _immediateDouble = false;
+        }
+
+        IsForEachItem = false;
+        IsForEachItemPending = true;
+        return true;
+    }
+
+    /// <summary>Принимает непосредственный INTEGER в целочисленном режиме слота.</summary>
+    public bool TryStoreImmediateInteger(int value)
+    {
+        if (_getter is not null || _value is not null || _immediateDouble)
+        {
+            return false;
+        }
+
+        _integer = value;
+        return true;
+    }
+
+    /// <summary>Принимает непосредственный DOUBLE в режиме непосредственного DOUBLE.</summary>
+    public bool TryStoreImmediateDouble(double value)
+    {
+        if (_getter is not null || _value is not null || !_immediateDouble)
+        {
+            return false;
+        }
+
+        _double = value;
         return true;
     }
 

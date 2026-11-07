@@ -59,6 +59,23 @@ public sealed partial class BytecodeVm
     private void ExecuteBinaryInstruction(BytecodeCallFrame frame, Opcode opcode, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
+
+        // Немедленная пара DOUBLE для '^': доменный отказ (отрицательное
+        // основание с нецелой степенью) и не конечный результат уходят в
+        // общий путь с прежними диагностиками.
+        if (opcode == Opcode.Power && stack.TryGetDoubleOperands(out var powerBase, out var powerExponent))
+        {
+            if (!(powerBase < 0d && !double.IsInteger(powerExponent)))
+            {
+                var powerResult = Math.Pow(powerBase, powerExponent);
+                if (double.IsFinite(powerResult))
+                {
+                    stack.ReplaceDoubleOperands(powerResult);
+                    return;
+                }
+            }
+        }
+
         var right = stack.PopUnchecked();
         var left = stack.PopUnchecked();
 
@@ -467,6 +484,14 @@ public sealed partial class BytecodeVm
             {
                 // Обычный путь выдаёт прежнюю диагностику переполнения LONG.
             }
+        }
+
+        // Знаковая инверсия IEEE точна для всех значений; не конечные
+        // результаты уходят в общий путь с прежней обработкой.
+        if (stack.TryGetImmediateDouble(out var immediateDouble) && double.IsFinite(-immediateDouble))
+        {
+            stack.ReplaceTopWithDouble(-immediateDouble);
+            return;
         }
 
         var operand = frame.EvaluationStack.PopUnchecked();

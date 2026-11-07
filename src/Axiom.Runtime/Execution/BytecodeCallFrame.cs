@@ -243,6 +243,19 @@ internal sealed class BytecodeCallFrame
         var sharedLocals = _sharedLocals!;
         if (sharedLocals[slot] is { } sharedValue)
         {
+            // Немедленные режимы FOR EACH-слота читаются без материализации.
+            if (sharedValue.TryGetImmediateInteger(out var sharedInteger))
+            {
+                EvaluationStack.PushInteger(sharedInteger);
+                return;
+            }
+
+            if (sharedValue.TryGetImmediateDouble(out var sharedDouble))
+            {
+                EvaluationStack.PushDouble(sharedDouble);
+                return;
+            }
+
             var value = sharedValue.Value;
             EvaluationStack.PushUnchecked(value.Type == TypeSymbol.Void ? EnsureDefaultLocalValue(slot) : value);
             return;
@@ -300,9 +313,17 @@ internal sealed class BytecodeCallFrame
     public bool TryStoreImmediateInteger(int slot, int value)
     {
         if ((uint)slot >= (uint)Routine.LocalVariables.Count
-            || Routine.LocalVariables[slot].Type != TypeSymbol.Integer
-            || (_hasSharedLocals && _sharedLocals![slot] is not null))
+            || Routine.LocalVariables[slot].Type != TypeSymbol.Integer)
             return false;
+
+        if (_hasSharedLocals && _sharedLocals![slot] is { } sharedSlot)
+        {
+            // Слот FOR EACH в целочисленном режиме принимает значение без
+            // материализации; прочие общие слоты дают отказ общему пути.
+            if (!sharedSlot.TryStoreImmediateInteger(value)) return false;
+            CompleteSharedImmediateStore(sharedSlot);
+            return true;
+        }
 
         _locals[slot] = VmValue.FromInteger(value);
         return true;
@@ -345,20 +366,39 @@ internal sealed class BytecodeCallFrame
     }
 
     /// <summary>
-    /// Записывает непосредственный DOUBLE в необщий локальный слот без
-    /// материализации значения. Общие ячейки (BYREF/замыкания) и прочие
-    /// объявленные типы дают отказ: вызывающий код использует прежний общий
-    /// путь с прежними правилами копирования.
+    /// Записывает непосредственный DOUBLE в локальный слот без материализации
+    /// значения. Общий слот FOR EACH в режиме непосредственного DOUBLE
+    /// принимает значение на месте; прочие общие ячейки и типы дают отказ:
+    /// вызывающий код использует прежний общий путь с прежними правилами
+    /// копирования.
     /// </summary>
     public bool TryStoreImmediateDouble(int slot, double value)
     {
         if ((uint)slot >= (uint)Routine.LocalVariables.Count
-            || Routine.LocalVariables[slot].Type != TypeSymbol.Double
-            || (_hasSharedLocals && _sharedLocals![slot] is not null))
+            || Routine.LocalVariables[slot].Type != TypeSymbol.Double)
             return false;
+
+        if (_hasSharedLocals && _sharedLocals![slot] is { } sharedSlot)
+        {
+            if (!sharedSlot.TryStoreImmediateDouble(value)) return false;
+            CompleteSharedImmediateStore(sharedSlot);
+            return true;
+        }
 
         _locals[slot] = VmValue.FromDouble(value);
         return true;
+    }
+
+    // Первая запись значения итерации публикует переменную: флаги ForEachItem
+    // переключаются так же, как на общем пути записи.
+    private void CompleteSharedImmediateStore(BytecodeVariableSlot sharedSlot)
+    {
+        if (sharedSlot.IsForEachItemPending)
+        {
+            sharedSlot.IsForEachItem = true;
+            sharedSlot.IsForEachItemPending = false;
+            InvalidateLocalVariableBindings();
+        }
     }
 
     /// <summary>
@@ -487,8 +527,18 @@ internal sealed class BytecodeCallFrame
 
     public void FreshLocal(int slot)
     {
-        var value = RuntimeValue.Default(Routine.LocalVariables[slot].Type, _localFixedStringLengths[slot]);
-        ReplaceLocalSlot(slot, BytecodeVariableSlot.Adopt(value, _localFixedStringLengths[slot], isForEachItemPending: true));
+        var type = Routine.LocalVariables[slot].Type;
+        // Слот предыдущей итерации переиспользуется, пока не ушёл в замыкание
+        // или BYREF: уход сбрасывает признак, и итерация создаёт новый слот с
+        // прежней идентичностью для захватов.
+        var existing = _sharedLocals?[slot];
+        if (existing is not null && existing.TryResetForEach(type, _localFixedStringLengths[slot]))
+        {
+            return;
+        }
+
+        var value = RuntimeValue.Default(type, _localFixedStringLengths[slot]);
+        ReplaceLocalSlot(slot, BytecodeVariableSlot.AdoptForEach(value, _localFixedStringLengths[slot]));
     }
 
     public void ClearForEachItem(int slot)
