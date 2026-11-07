@@ -85,6 +85,7 @@ class AxiomIDE {
       this.editor.getContribution('editor.contrib.inlineCompletionsController');
       this.editor.updateOptions(window.EditorPreferences.options(this.settings.editorPreferences || {}, {}, window.EditorPreferences.defaults(this.monaco)));
       this.setupEditorContextMenu();
+      this.setupMenuShadowStyles();
       this.setupMenubar();
       this.setupToolbar();
       this.setToolbarVisible(this.settings.toolbarVisible !== false);
@@ -429,7 +430,10 @@ class AxiomIDE {
     // treated as an open menu (and never removed): detaching it kills Monaco's context
     // view for the whole session.
     document.addEventListener('mousedown', (e) => {
-      const menu = document.querySelector('.monaco-menu');
+      // Меню может жить в shadow root внутри .context-view; ищем и там.
+      const shadowHost = document.querySelector('.context-view .shadow-root-host');
+      const menu = (shadowHost && shadowHost.shadowRoot && shadowHost.shadowRoot.querySelector('.monaco-menu'))
+        || document.querySelector('.monaco-menu');
       if (menu && menu.children.length > 0 && !menu.contains(e.target)) {
         menu.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
         setTimeout(() => {
@@ -438,6 +442,44 @@ class AxiomIDE {
       }
     }, true);
     this.rebuildOutline();
+  }
+
+  // Monaco 0.57 монтирует контекстное меню редактора и панель переполнения
+  // строки меню в shadow root (div.shadow-root-host). Документные таблицы
+  // стилей в shadow root не действуют, а собственная таблица Monaco не содержит
+  // правил фона, текста и подсветки пунктов: отдельная сборка передаёт их
+  // инлайн из темы, что в standalone-редакторе не срабатывает. Инъекция
+  // восполняет ровно этот пробел и ссылается на --xs-menu-* напрямую: значения
+  // наследуются через границу shadow DOM от html[data-theme], конкурирующих
+  // правил в shadow-таблице нет, поэтому !important не требуется. Оформление
+  // остаётся в единственном источнике — design-system.css.
+  injectMenuShadowStyles(host) {
+    const root = host && host.shadowRoot;
+    if (!root || root.querySelector('style[data-ax-menu]') || !root.querySelector('.monaco-menu')) return;
+    const style = document.createElement('style');
+    style.setAttribute('data-ax-menu', '');
+    style.textContent = [
+      '.monaco-menu { background-color: var(--xs-menu-bg); color: var(--xs-menu-text); }',
+      '.monaco-menu .monaco-action-bar.vertical .action-item.focused:not(.disabled),',
+      '.monaco-menu .monaco-action-bar.vertical .action-item:hover:not(.disabled) { background-color: var(--xs-menu-hover-bg); }',
+      '.monaco-menu .monaco-action-bar.vertical .keybinding { color: var(--xs-menu-muted); }',
+      '.monaco-menu .monaco-action-bar.vertical .action-item.focused:not(.disabled) .action-label,',
+      '.monaco-menu .monaco-action-bar.vertical .action-item.focused:not(.disabled) .keybinding,',
+      '.monaco-menu .monaco-action-bar.vertical .action-item:hover:not(.disabled) .action-label,',
+      '.monaco-menu .monaco-action-bar.vertical .action-item:hover:not(.disabled) .keybinding { color: var(--xs-menu-hover-text); }',
+    ].join('\n');
+    root.appendChild(style);
+  }
+
+  setupMenuShadowStyles() {
+    // Наблюдатель по body с subtree: оболочка .context-view и панель
+    // переполнения монтируются в разных местах, а обратные вызовы батчатся.
+    const observer = new MutationObserver(() => {
+      for (const host of document.querySelectorAll('.shadow-root-host')) {
+        this.injectMenuShadowStyles(host);
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
   }
 
   setupEditorContextMenu() {

@@ -736,6 +736,8 @@ select option:is(:checked,:hover,:focus) { color:var(--xs-select-highlight-text)
 }
 .monaco-menu-container .monaco-menu .action-item.focused .action-label,
 .monaco-menu-container .monaco-menu .action-item:hover .action-label { color: var(--xs-menu-hover-text) !important; }
+.monaco-menu-container .monaco-menu .action-item.focused .keybinding,
+.monaco-menu-container .monaco-menu .action-item:hover .keybinding { color: var(--xs-menu-hover-text) !important; }
 .monaco-menu-container .monaco-menu .action-item .keybinding { color: var(--xs-menu-muted) !important; }
 .monaco-menu-container .monaco-menu .action-item.separator { border-bottom-color: var(--xs-menu-border) !important; }
 .monaco-menu-container .monaco-menu .xs-context-icon {
@@ -782,6 +784,8 @@ select option:is(:checked,:hover,:focus) { color:var(--xs-select-highlight-text)
 }
 .context-view .monaco-menu .action-item.focused .action-label,
 .context-view .monaco-menu .action-item:hover .action-label { color: var(--xs-menu-hover-text) !important; }
+.context-view .monaco-menu .action-item.focused .keybinding,
+.context-view .monaco-menu .action-item:hover .keybinding { color: var(--xs-menu-hover-text) !important; }
 .context-view .monaco-menu .action-item .keybinding { color: var(--xs-menu-muted) !important; }
 .context-view .monaco-menu .xs-context-icon { color: var(--xs-menu-muted); }
 

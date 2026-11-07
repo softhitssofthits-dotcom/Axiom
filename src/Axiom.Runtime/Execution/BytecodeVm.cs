@@ -373,6 +373,9 @@ public sealed partial class BytecodeVm
                         else if (stack.TryGetImmediateLong(out var immediateLong)
                             && frame.TryStoreImmediateLong(localSlot, immediateLong))
                             stack.DiscardTop(1);
+                        else if (stack.TryGetImmediateDouble(out var immediateDouble)
+                            && frame.TryStoreImmediateDouble(localSlot, immediateDouble))
+                            stack.DiscardTop(1);
                         else
                             frame.StoreLocalValue(localSlot, PopValue(frame, ip));
                         break;
@@ -402,6 +405,9 @@ public sealed partial class BytecodeVm
                             stack.DiscardTop(1);
                         else if (stack.TryGetImmediateLong(out var storeGlobalLong)
                             && TryStoreGlobalImmediateLong(globalSlot, storeGlobalLong))
+                            stack.DiscardTop(1);
+                        else if (stack.TryGetImmediateDouble(out var storeGlobalDouble)
+                            && TryStoreGlobalImmediateDouble(globalSlot, storeGlobalDouble))
                             stack.DiscardTop(1);
                         else
                             StoreGlobalUnchecked(globalSlot, PopValue(frame, ip));
@@ -495,6 +501,8 @@ public sealed partial class BytecodeVm
                         var argument = frame.Arguments[instruction.A];
                         if (argument.TryGetImmediateInteger(out var integerArgument))
                             stack.PushInteger(integerArgument);
+                        else if (argument.TryGetImmediateDouble(out var doubleArgumentValue))
+                            stack.PushDouble(doubleArgumentValue);
                         else
                             stack.Push(argument.Value);
                         break;
@@ -1716,6 +1724,9 @@ public sealed partial class BytecodeVm
                 else if (frame.EvaluationStack.TryGetImmediateLong(out var immediateLong)
                     && frame.TryStoreImmediateLong(localSlot, immediateLong))
                     frame.EvaluationStack.DiscardTop(1);
+                else if (frame.EvaluationStack.TryGetImmediateDouble(out var immediateDouble)
+                    && frame.TryStoreImmediateDouble(localSlot, immediateDouble))
+                    frame.EvaluationStack.DiscardTop(1);
                 else
                     frame.StoreLocalValue(localSlot, PopValue(frame, instructionIndex));
                 break;
@@ -1740,6 +1751,8 @@ public sealed partial class BytecodeVm
                 var argument = frame.Arguments[instruction.GetOperand(0)];
                 if (argument.TryGetImmediateInteger(out var integerArgument))
                     frame.EvaluationStack.PushInteger(integerArgument);
+                else if (argument.TryGetImmediateDouble(out var doubleArgumentValue))
+                    frame.EvaluationStack.PushDouble(doubleArgumentValue);
                 else
                     frame.EvaluationStack.Push(argument.Value);
                 break;

@@ -345,6 +345,23 @@ internal sealed class BytecodeCallFrame
     }
 
     /// <summary>
+    /// Записывает непосредственный DOUBLE в необщий локальный слот без
+    /// материализации значения. Общие ячейки (BYREF/замыкания) и прочие
+    /// объявленные типы дают отказ: вызывающий код использует прежний общий
+    /// путь с прежними правилами копирования.
+    /// </summary>
+    public bool TryStoreImmediateDouble(int slot, double value)
+    {
+        if ((uint)slot >= (uint)Routine.LocalVariables.Count
+            || Routine.LocalVariables[slot].Type != TypeSymbol.Double
+            || (_hasSharedLocals && _sharedLocals![slot] is not null))
+            return false;
+
+        _locals[slot] = VmValue.FromDouble(value);
+        return true;
+    }
+
+    /// <summary>
     /// Читает значение локального слота как long без создания RuntimeValue.
     /// Общие ячейки и прочие типы дают отказ. INTEGER не расширяется:
     /// смешанные типы обязан обрабатывать прежний общий путь.

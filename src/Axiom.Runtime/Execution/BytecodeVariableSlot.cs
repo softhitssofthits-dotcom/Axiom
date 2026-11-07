@@ -6,10 +6,14 @@ namespace Axiom.Runtime;
 internal class BytecodeVariableSlot
 {
     // Для непосредственного INTEGER без внешнего получателя null обозначает значение _integer.
+    // Немедленный DOUBLE помечается отдельным флагом: null в _value при нём означает _double.
     private RuntimeValue? _value;
     private int _integer;
+    private double _double;
+    private bool _immediateDouble;
     private bool _reusableInteger;
     private bool _reusableValue;
+    private bool _reusableDouble;
     private readonly Func<RuntimeValue>? _getter;
     private readonly Action<RuntimeValue>? _setter;
 
@@ -82,6 +86,21 @@ internal class BytecodeVariableSlot
     }
 
     /// <summary>
+    /// Слот аргумента с непосредственным DOUBLE: значение хранится в слоте без
+    /// материализации и может повторно использоваться кадром, пока ячейка не
+    /// ушла в замыкание или BYREF.
+    /// </summary>
+    public static BytecodeVariableSlot AdoptDouble(double value)
+    {
+        var slot = new BytecodeVariableSlot(RuntimeValue.Void, null, false, false, adoptValue: true);
+        slot._value = null;
+        slot._double = value;
+        slot._immediateDouble = true;
+        slot._reusableDouble = true;
+        return slot;
+    }
+
+    /// <summary>
     /// Слот аргумента с материализованным значением, который можно вернуть
     /// в свободный кадр после очистки значения. Захват и передача по BYREF
     /// снимают право повторного использования так же, как у INTEGER-ячеек.
@@ -99,6 +118,7 @@ internal class BytecodeVariableSlot
     {
         _reusableInteger = false;
         _reusableValue = false;
+        _reusableDouble = false;
     }
 
     internal bool PrepareForReuse()
@@ -108,6 +128,13 @@ internal class BytecodeVariableSlot
             // Не удерживать материализованное значение между вызовами.
             _value = null;
             _integer = 0;
+            return true;
+        }
+
+        if (_reusableDouble)
+        {
+            _value = null;
+            _double = 0;
             return true;
         }
 
@@ -122,7 +149,19 @@ internal class BytecodeVariableSlot
     {
         if (!_reusableInteger) return false;
         _value = null;
+        _immediateDouble = false;
         _integer = value;
+        IsForEachItem = false;
+        IsForEachItemPending = false;
+        return true;
+    }
+
+    internal bool TryResetDouble(double value)
+    {
+        if (!_reusableDouble) return false;
+        _value = null;
+        _immediateDouble = true;
+        _double = value;
         IsForEachItem = false;
         IsForEachItemPending = false;
         return true;
@@ -141,9 +180,22 @@ internal class BytecodeVariableSlot
 
     public bool TryGetImmediateInteger(out int value)
     {
-        if (_getter is null && _value is null)
+        if (_getter is null && _value is null && !_immediateDouble)
         {
             value = _integer;
+            return true;
+        }
+
+        value = 0;
+        return false;
+    }
+
+    /// <summary>Читает непосредственный DOUBLE слота без создания объекта; прочие режимы дают отказ.</summary>
+    public bool TryGetImmediateDouble(out double value)
+    {
+        if (_getter is null && _value is null && _immediateDouble)
+        {
+            value = _double;
             return true;
         }
 
@@ -159,7 +211,9 @@ internal class BytecodeVariableSlot
 
     public virtual RuntimeValue Value
     {
-        get => _getter is null ? _value ?? RuntimeValue.FromInteger(_integer) : _getter();
+        get => _getter is null
+            ? _value ?? (_immediateDouble ? RuntimeValue.FromDouble(_double) : RuntimeValue.FromInteger(_integer))
+            : _getter();
         set
         {
             ArgumentNullException.ThrowIfNull(value);

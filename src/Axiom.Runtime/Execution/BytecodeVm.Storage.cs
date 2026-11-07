@@ -183,6 +183,25 @@ public sealed partial class BytecodeVm
     }
 
     /// <summary>
+    /// Записывает непосредственный DOUBLE в глобальный слот без материализации
+    /// значения. Несовпадение объявленного типа и нечисловые слоты дают отказ:
+    /// вызывающий код использует прежний общий путь с прежними правилами
+    /// копирования.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool TryStoreGlobalImmediateDouble(int slot, double value)
+    {
+        if ((uint)slot >= (uint)_globalValuesBySlot.Length
+            || !_hasGlobalSlot[slot]
+            || !_globalMetadata.TryGetValue(slot, out var global)
+            || global.Type != TypeSymbol.Double)
+            return false;
+
+        _globalValuesBySlot[slot] = VmValue.FromDouble(value);
+        return true;
+    }
+
+    /// <summary>
     /// Запись глобальной переменной создаётся при первом чтении, если инструкция
     /// объявления ещё не исполнялась. Правила наблюдаемого поведения сохраняются:
     /// до DIM глобальная запись содержит значения по умолчанию, а выделение

@@ -57,6 +57,37 @@ public sealed partial class BytecodeVm
         }
 
         if (instruction.Opcode == Opcode.Call && argumentCount == 1
+            && targetRoutine.ParameterCount == 1 && targetRoutine.ParameterVariables.Count == 1
+            && targetRoutine.ParameterVariables[0].Type == TypeSymbol.Double
+            && callerFrame.EvaluationStack.TryGetImmediateDouble(out var doubleArgument))
+        {
+            callerFrame.EvaluationStack.DiscardTop(1);
+            var directCaptures = ResolveCapturedSlots(callerFrame, targetRoutine, instructionIndex);
+            var callLocation = ResolveLocation(callerFrame.Routine.Id, instructionIndex);
+            if (_callStack.Count >= MaxCallDepth)
+            {
+                ReportCallStackOverflow(targetRoutine.Name, callLocation);
+                throw new RuntimeFailureException();
+            }
+
+            var template = _frameTemplatesByRoutineId[targetRoutine.Id];
+            if (_cachedFrames.Remove(targetRoutine.Id, out var cachedFrame))
+            {
+                // Контейнер кадра возвращён после освобождения; саму ячейку
+                // создаём заново, поскольку прежняя могла уйти в замыкание.
+                cachedFrame.Arguments[0] = ReuseDoubleSlot(cachedFrame.Arguments[0], doubleArgument);
+                cachedFrame.Reset(cachedFrame.Arguments, directCaptures, callLocation, template.DefaultLocals);
+                _callStack.Push(cachedFrame);
+            }
+            else
+            {
+                var slots = new[] { BytecodeVariableSlot.AdoptDouble(doubleArgument) };
+                _callStack.Push(CreateFrameWithSlots(targetRoutine, slots, directCaptures, callLocation, template));
+            }
+            return;
+        }
+
+        if (instruction.Opcode == Opcode.Call && argumentCount == 1
             && targetRoutine.ParameterCount == 1 && callerFrame.EvaluationStack.Count > 0)
         {
             ExecuteSingleValueCall(callerFrame, targetRoutine, instructionIndex);
@@ -150,6 +181,9 @@ public sealed partial class BytecodeVm
 
     private static BytecodeVariableSlot ReuseIntegerSlot(BytecodeVariableSlot? slot, int value)
         => slot is not null && slot.TryResetInteger(value) ? slot : BytecodeVariableSlot.AdoptInteger(value);
+
+    private static BytecodeVariableSlot ReuseDoubleSlot(BytecodeVariableSlot? slot, double value)
+        => slot is not null && slot.TryResetDouble(value) ? slot : BytecodeVariableSlot.AdoptDouble(value);
 
     private static BytecodeVariableSlot ReuseValueSlot(BytecodeVariableSlot? slot, RuntimeValue value)
         => slot is not null && slot.TryResetValue(value) ? slot : BytecodeVariableSlot.AdoptReusable(value);

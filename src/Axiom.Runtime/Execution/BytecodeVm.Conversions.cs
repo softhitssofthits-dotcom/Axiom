@@ -49,11 +49,15 @@ public sealed partial class BytecodeVm
                 // Непосредственный LONG сохраняет распакованное представление.
                 frame.EvaluationStack.PushLong(integerValue);
             }
+            else if (typeCode == BytecodeScalarTypeCode.Double)
+            {
+                // Непосредственный DOUBLE сохраняет распакованное представление:
+                // смешанная арифметика не покидает неупакованный конвейер.
+                frame.EvaluationStack.PushDouble(integerValue);
+            }
             else
             {
-                frame.EvaluationStack.PushUnchecked(typeCode == BytecodeScalarTypeCode.Double
-                    ? RuntimeValue.FromDouble(integerValue)
-                    : RuntimeValue.FromDecimal(integerValue));
+                frame.EvaluationStack.PushUnchecked(RuntimeValue.FromDecimal(integerValue));
             }
 
             return;
@@ -71,9 +75,16 @@ public sealed partial class BytecodeVm
             && frame.EvaluationStack.TryGetImmediateLong(out var longValue))
         {
             frame.EvaluationStack.DiscardTop(1);
-            frame.EvaluationStack.PushUnchecked(typeCode == BytecodeScalarTypeCode.Double
-                ? RuntimeValue.FromDouble(longValue)
-                : RuntimeValue.FromDecimal(longValue));
+            if (typeCode == BytecodeScalarTypeCode.Double)
+            {
+                // Непосредственный DOUBLE сохраняет распакованное представление.
+                frame.EvaluationStack.PushDouble(longValue);
+            }
+            else
+            {
+                frame.EvaluationStack.PushUnchecked(RuntimeValue.FromDecimal(longValue));
+            }
+
             return;
         }
 
@@ -117,13 +128,13 @@ public sealed partial class BytecodeVm
 
             if (value.Type == TypeSymbol.Integer)
             {
-                frame.EvaluationStack.PushUnchecked(RuntimeValue.FromDouble(GetIntegerUnchecked(value)));
+                frame.EvaluationStack.PushDouble(GetIntegerUnchecked(value));
                 return;
             }
 
             if (value.Type == TypeSymbol.Long)
             {
-                frame.EvaluationStack.PushUnchecked(RuntimeValue.FromDouble(GetLongUnchecked(value)));
+                frame.EvaluationStack.PushDouble(GetLongUnchecked(value));
                 return;
             }
 
