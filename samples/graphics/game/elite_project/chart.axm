@@ -14,7 +14,6 @@ Private Dim chartOpen As Boolean = False                                        
 Private Dim previousLeftKey As Boolean = False                                                          ' Стрелка влево в предыдущем кадре: для фронта.
 Private Dim previousRightKey As Boolean = False                                                         ' Стрелка вправо в предыдущем кадре.
 Private Dim previousJumpKey As Boolean = False                                                          ' Клавиша J в предыдущем кадре.
-Private Dim previousCloseKey As Boolean = False                                                         ' Клавиша M в предыдущем кадре.
 
 ' #endregion
 
@@ -31,7 +30,11 @@ Public Sub ToggleChart()
     chartOpen = Not chartOpen
 End Sub
 
-' HandleChartInput — Ввод на карте: выбор цели стрелками, прыжок J, закрытие M.
+' HandleChartInput — Ввод на карте: выбор цели стрелками и прыжок J.
+' Закрытие карты по M здесь НЕ обрабатывается: открытие и закрытие по M
+' владеет ЕДИНСТВЕННЫЙ фронт клавиши в main (ToggleChart). До аудита
+' 2026-11-02 модуль закрывал карту своим фронтом M в том же кадре, в котором
+' main её открывал, — карта не могла открыться вовсе (WORKLOG Elite-15).
 ' Все нажатия распознаются фронтом KEYDOWN, поэтому удержание не мелькает.
 Public Sub HandleChartInput()
     Dim leftKeyNow As Boolean = Keydown(KEY_ROLL_LEFT)                                                  ' Стрелка влево в этом кадре.
@@ -53,12 +56,6 @@ Public Sub HandleChartInput()
         SetTargetSystem(nextTarget)
     End If
     previousRightKey = rightKeyNow
-
-    Dim closeKeyNow As Boolean = Keydown(KEY_CHART)                                                     ' M: закрыть карту.
-    If closeKeyNow And Not previousCloseKey Then
-        chartOpen = False
-    End If
-    previousCloseKey = closeKeyNow
 
     Dim jumpKeyNow As Boolean = Keydown(KEY_JUMP)                                                       ' J: попытка прыжка.
     If jumpKeyNow And Not previousJumpKey Then

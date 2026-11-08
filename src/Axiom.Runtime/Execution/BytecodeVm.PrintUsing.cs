@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using Axiom.Core;
 using Axiom.Runtime.Builtins;
 
@@ -8,14 +8,14 @@ public sealed partial class BytecodeVm
 {
     private void AppendFormattedUsing(
         string format,
-        ReadOnlySpan<RuntimeValue> values,
+        RuntimeValue[] values,
+        int valueCount,
         TextLocation statementLocation)
     {
-        var valuesArray = values.ToArray();
         var formatted = BuiltinPrintUsingHelpers.FormatUsing(
             format,
-            index => valuesArray[index],
-            valuesArray.Length,
+            values,
+            valueCount,
             detail =>
             {
                 ReportPrintUsingError(detail, statementLocation);

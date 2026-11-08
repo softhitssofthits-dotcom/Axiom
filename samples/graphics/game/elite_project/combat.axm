@@ -1,0 +1,542 @@
+' combat — бой: лазеры обеих сторон, рейдер с искусственным интеллектом,
+' попадания и награды (этап 4).
+'
+' Принципы перенесены из исследования классики (RESEARCH_ELITE, «Бой»)
+' собственной реализацией: попадание ГЕОМЕТРИЧЕСКОЕ, без разброса у игрока —
+' импульс должен пройти рядом с центром цели; ИИ противника — машина
+' состояний по дистанции и своей живучести (сближение → атака → бегство),
+' прицеливание наводкой носа на цель. Повреждения идут каскадом
+' «щиты → корпус», щиты заряжаются от энергии (см. player_state).
+' Урон, скорости и награды — СВОИ величины для этой игры.
+'
+' Модуль не содержит ни одного вызова CANVAS: боевая логика проверяется
+' консольными прогонами на копиях модулей, как торгово-навигационное ядро
+' (WORKLOG Elite-13). Отрисовку импульсов выполняет render3d через getters.
+'
+' Здесь же сознательно задействованы ещё не покрытые игрой средства языка:
+' SELECT CASE (машина состояний ИИ), ATN2/ASIN (наводка), CLAMP/MIN/MAX
+' (ограничения), XOR (перемешивание семени встреч), DICTIONARY и FOR EACH
+' (журнал побед по системам), интерполяция $"..." (сообщения).
+
+Import game_config
+Import math3d
+Import flight_state
+Import ship_models
+Import player_state
+Import nav_data
+
+' #region Режимы ИИ (свои коды состояний)
+
+Private Const AI_APPROACH As Integer = 1                                                                ' Режим: сближение с игроком.
+Private Const AI_ATTACK As Integer = 2                                                                  ' Режим: атака с маневрированием.
+Private Const AI_FLEE As Integer = 3                                                                    ' Режим: бегство от игрока.
+
+' #endregion
+
+' #region Закрытое состояние боя
+
+Private Dim raiderShield As Double = RAIDER_SHIELD_MAX                                                  ' Щиты рейдера.
+Private Dim raiderHull As Double = RAIDER_HULL_MAX                                                      ' Корпус рейдера.
+Private Dim raiderMode As Integer = AI_APPROACH                                                         ' Текущее состояние ИИ.
+Private Dim raiderFireCooldown As Double = 0.0                                                          ' Остаток паузы до выстрела рейдера.
+Private Dim raiderRespawnTimer As Double = 0.0                                                          ' Остаток ожидания новой встречи.
+Private Dim raiderStrafeTimer As Double = 0.0                                                           ' Остаток периода маневра уклонения.
+Private Dim raiderStrafeX As Double = 0.0                                                               ' Точка уклонения: смещение от игрока X.
+Private Dim raiderStrafeY As Double = 0.0                                                               ' Смещение Y.
+Private Dim raiderStrafeZ As Double = 0.0                                                               ' Смещение Z.
+
+Private Dim playerFireCooldown As Double = 0.0                                                          ' Остаток паузы между выстрелами игрока.
+Private Dim lastSystemIndex As Integer = 0                                                              ' Система, в которой бой настроен: смена = новая встреча.
+Private Dim combatLcgSeed As Long = 424242                                                              ' Семя генератора боя: встречи и маневры детерминированы.
+
+Private Dim messageText As String = ""                                                                  ' Текст последнего боевого события для панели.
+Private Dim messageTimer As Double = 0.0                                                                ' Остаток времени показа сообщения, секунды.
+
+' Журнал побед: имя системы → число уничтоженных в ней рейдеров.
+' Словарь типизирован (STRING → INTEGER) и обходится через FOR EACH по Keys().
+Private Dim killLog As Dictionary(String, Integer)
+
+' #endregion
+
+' #region Пул лазерных импульсов
+
+' Импульсы обеих сторон живут в одном пуле параллельных массивов:
+' вложенных массивов в Axiom нет, а перебор плоскими массивами дешевле.
+Private Dim boltActive[1 To BOLT_MAX] As Boolean                                                        ' Импульс существует.
+Private Dim boltX[1 To BOLT_MAX] As Double                                                              ' Позиция импульса: X.
+Private Dim boltY[1 To BOLT_MAX] As Double                                                              ' Позиция: Y.
+Private Dim boltZ[1 To BOLT_MAX] As Double                                                              ' Позиция: Z.
+Private Dim boltDirX[1 To BOLT_MAX] As Double                                                           ' Единичное направление полёта: X.
+Private Dim boltDirY[1 To BOLT_MAX] As Double                                                           ' Направление: Y.
+Private Dim boltDirZ[1 To BOLT_MAX] As Double                                                           ' Направление: Z.
+Private Dim boltLife[1 To BOLT_MAX] As Double                                                           ' Остаток времени жизни, секунды.
+Private Dim boltHostile[1 To BOLT_MAX] As Boolean                                                       ' TRUE: импульс рейдера (красный).
+Private Dim boltCursor As Integer = 0                                                                   ' Кольцевой курсор выдачи слотов.
+
+' #endregion
+
+' #region Детерминированный генератор боя
+
+' NextCombatRandom01 — Очередное псевдослучайное число боя в диапазоне [0; 1).
+' Тот же класс LCG, что в пыли и сценах: встречи воспроизводимы от семени.
+Private Function NextCombatRandom01() As Double
+    combatLcgSeed = (combatLcgSeed * 1103515245 + 12345) Mod 2147483648                                 ' Шаг LCG по модулю 2^31.
+    Return combatLcgSeed / 2147483648.0                                                                 ' Приведение к [0; 1).
+End Function
+
+' #endregion
+
+' #region Инициализация и появление противника
+
+' InitCombat — Готовит бой в текущей системе: семя от сцены, журнал не
+' стирается (накопленные победы остаются за весь полёт), рейдер появляется.
+' Вызывается на старте и автоматически при смене системы (прыжок).
+Public Sub InitCombat(sceneSeedValue As Long)
+    combatLcgSeed = sceneSeedValue Xor 9721                                                             ' Перемешиваем семя сцены: у боя своя последовательность (XOR-микс).
+    lastSystemIndex = GetCurrentSystem()                                                                ' Запоминаем систему: её смену заметим в UpdateCombat.
+
+    For boltIndex = 1 To BOLT_MAX                                                                       ' В новом бою чужие импульсы не летят (счётчик FOR локален сам по себе).
+        boltActive[boltIndex] = False
+    Next boltIndex
+
+    SpawnRaider()                                                                                       ' Первая встреча происходит сразу.
+End Sub
+
+' SpawnRaider — Создаёт новую встречу: рейдер появляется на случайном
+' направлении от игрока на дистанции появления, целый и в режиме сближения.
+Private Sub SpawnRaider()
+    Dim spawnAngle As Double = NextCombatRandom01() * 6.28318530717958647                               ' Направление появления: угол в плоскости эклиптики.
+    Dim spawnDistance As Double = RAIDER_SPAWN_MIN + NextCombatRandom01() * (RAIDER_SPAWN_MAX - RAIDER_SPAWN_MIN) ' Дистанция появления.
+    Dim spawnHeight As Double = (NextCombatRandom01() - 0.5) * 500.0                                    ' Небольшой разброс по высоте: -250..250.
+
+    Dim spawnX As Double = Cos(spawnAngle) * spawnDistance                                              ' Позиция появления: X.
+    Dim spawnZ As Double = Sin(spawnAngle) * spawnDistance                                              ' Позиция: Z.
+
+    ' Начальная ориентация — носом на игрока: курс из направления на него.
+    Dim toPlayerX As Double = PlayerPosX() - spawnX                                                     ' Направление на игрока: X.
+    Dim toPlayerY As Double = PlayerPosY() - spawnHeight                                                ' Направление: Y (высота рейдера).
+    Dim toPlayerZ As Double = PlayerPosZ() - spawnZ                                                     ' Направление: Z.
+    Dim aimLength As Double = Sqr(toPlayerX * toPlayerX + toPlayerY * toPlayerY + toPlayerZ * toPlayerZ)
+    If aimLength < 1.0 Then
+        aimLength = 1.0                                                                                 ' Защита от деления на нуль у самой точки.
+    End If
+
+    Dim spawnYaw As Double = Atn2(toPlayerX, toPlayerZ)                                                ' Курс: угол в плоскости (X, Z) — ATN2(дельта X, дельта Z).
+    Dim spawnPitch As Double = Asin(Clamp(toPlayerY / aimLength, -1.0, 1.0))                            ' Наклон носа: арксинус вертикальной доли направления.
+
+    SetObjectTransform(GetRaiderSlot(), spawnX, spawnHeight, spawnZ, spawnYaw, spawnPitch)              ' Рейдер на сцене, нос на игрока.
+    SetObjectAlive(GetRaiderSlot(), True)                                                               ' Встреча активна: объект виден и сканируется.
+
+    raiderShield = RAIDER_SHIELD_MAX                                                                    ' Противник целый.
+    raiderHull = RAIDER_HULL_MAX
+    raiderMode = AI_APPROACH                                                                            ' Начинает со сближения.
+    raiderFireCooldown = RAIDER_FIRE_COOLDOWN                                                           ' Первого выстрела немного подождёт.
+    PickStrafePoint()                                                                                   ' Точка уклонения готова заранее.
+End Sub
+
+' PickStrafePoint — Выбирает новую точку маневра уклонения: смещение около
+' игрока, у которого рейдер «кружит» в режиме атаки.
+Private Sub PickStrafePoint()
+    raiderStrafeX = (NextCombatRandom01() - 0.5) * 640.0                                                ' Смещение вбок: -320..320.
+    raiderStrafeY = (NextCombatRandom01() - 0.5) * 320.0                                                ' Смещение по высоте: -160..160.
+    raiderStrafeZ = (NextCombatRandom01() - 0.5) * 640.0                                                ' Смещение по курсу: -320..320.
+    raiderStrafeTimer = RAIDER_STRAFE_SECONDS                                                           ' Период до следующей смены маневра.
+End Sub
+
+' #endregion
+
+' #region Ввод игрока и стрельба
+
+' ApplyCombatInput — Читает клавишу огня. Вынесено из UpdateCombat,
+' чтобы консольная проверка боя не зависела от графического ввода:
+' harness вызывает FirePlayerLaser напрямую.
+Public Sub ApplyCombatInput()
+    If playerFireCooldown <= 0.0 Then
+        If Keydown(KEY_FIRE) Then                                                                       ' Удержание X: лазер стреляет с паузой «нагрева».
+            FirePlayerLaser()
+        End If
+    End If
+End Sub
+
+' FirePlayerLaser — Импульс из носа корабля вдоль текущего направления взгляда.
+' Попадание геометрическое: куда смотрит пилот — туда летит импульс.
+Public Sub FirePlayerLaser()
+    Dim startX As Double = PlayerPosX() + ForwardX() * 45.0                                             ' Старт: чуть впереди носа корабля.
+    Dim startY As Double = PlayerPosY() + ForwardY() * 45.0
+    Dim startZ As Double = PlayerPosZ() + ForwardZ() * 45.0
+
+    SpawnBolt(startX, startY, startZ, ForwardX(), ForwardY(), ForwardZ(), False)                       ' Импульс игрока: направление = нос.
+    playerFireCooldown = LASER_COOLDOWN                                                                 ' Пауза «нагрева» до следующего выстрела.
+End Sub
+
+' SpawnBolt — Занимает кольцевой слот пула под новый импульс: направление
+' нормируется, время жизни назначается по принадлежности.
+Private Sub SpawnBolt(posX As Double, posY As Double, posZ As Double, dirX As Double, dirY As Double, dirZ As Double, hostileShot As Boolean)
+    boltCursor = boltCursor Mod BOLT_MAX + 1                                                            ' Кольцевой курсор: старейший слот переиспользуется.
+
+    Dim length As Double = Sqr(dirX * dirX + dirY * dirY + dirZ * dirZ)                                 ' Длина направления.
+    If length < 0.000001 Then
+        length = 1.0                                                                                    ' Нулевое направление не допуским.
+    End If
+
+    boltActive[boltCursor] = True                                                                       ' Слот занят.
+    boltX[boltCursor] = posX
+    boltY[boltCursor] = posY
+    boltZ[boltCursor] = posZ
+    boltDirX[boltCursor] = dirX / length                                                                ' Нормированное направление: X.
+    boltDirY[boltCursor] = dirY / length
+    boltDirZ[boltCursor] = dirZ / length
+    boltLife[boltCursor] = BOLT_LIFE_SECONDS                                                            ' Импульс гаснет по времени, а не по дистанции.
+    boltHostile[boltCursor] = hostileShot                                                               ' Принадлежность: игрок или рейдер.
+End Sub
+
+' #endregion
+
+' #region Шаг боя
+
+' UpdateCombat — Продвигает бой на фиксированный шаг: восстановление систем,
+' полёт и попадания импульсов, ИИ рейдера, его стрельба и возрождение.
+' Вызывается из единого цикла рядом с движением корабля.
+Public Sub UpdateCombat(dtSeconds As Double)
+    If GetCurrentSystem() <> lastSystemIndex Then                                                       ' Прыжок выполнен без прямого вызова InitCombat...
+        InitCombat(GetSystemSeed(GetCurrentSystem()))                                                   ' ...настраиваем бой в новой системе сами.
+    End If
+
+    ' --- Таймеры кадра боя. ---
+    If playerFireCooldown > 0.0 Then
+        playerFireCooldown = playerFireCooldown - dtSeconds                                             ' «Нагрев» лазера остывает.
+    End If
+    If messageTimer > 0.0 Then
+        messageTimer = messageTimer - dtSeconds                                                         ' Сообщение события гаснет.
+        If messageTimer <= 0.0 Then
+            messageText = ""
+        End If
+    End If
+
+    RechargeShipSystems(dtSeconds)                                                                      ' Энергия вырабатывается, щиты подзаряжаются.
+    UpdateBolts(dtSeconds)                                                                              ' Полёт импульсов и проверка попаданий.
+
+    ' --- Судьба рейдера: ожидание новой встречи или живой ИИ. ---
+    If GetObjectAlive(GetRaiderSlot()) Then
+        UpdateRaiderAI(dtSeconds)
+    Else
+        If raiderRespawnTimer > 0.0 Then
+            raiderRespawnTimer = raiderRespawnTimer - dtSeconds                                         ' Противник уничтожен: ждём новую встречу.
+            If raiderRespawnTimer <= 0.0 Then
+                SpawnRaider()
+            End If
+        End If
+    End If
+End Sub
+
+' UpdateBolts — Двигает все импульсы и проверяет попадания: импульс игрока —
+' по рейдеру, импульс рейдера — по кораблю игрока. Промах-запас к радиусу
+' цели делает близкий проход попаданием, как «площадь цели» в классике.
+Private Sub UpdateBolts(dtSeconds As Double)
+    For boltIndex = 1 To BOLT_MAX                                                                       ' Обход пула: занятые слоты летят (счётчик FOR локален сам по себе).
+        If boltActive[boltIndex] Then
+            Dim speed As Double = BOLT_SPEED_ENEMY                                                      ' Скорость по принадлежности.
+            If Not boltHostile[boltIndex] Then
+                speed = BOLT_SPEED_PLAYER
+            End If
+
+            Dim travel As Double = speed * dtSeconds                                                    ' Путь импульса за шаг.
+            boltX[boltIndex] = boltX[boltIndex] + boltDirX[boltIndex] * travel                          ' Полёт: X.
+            boltY[boltIndex] = boltY[boltIndex] + boltDirY[boltIndex] * travel                          ' Полёт: Y.
+            boltZ[boltIndex] = boltZ[boltIndex] + boltDirZ[boltIndex] * travel                          ' Полёт: Z.
+            boltLife[boltIndex] = boltLife[boltIndex] - dtSeconds                                       ' Время жизни убывает.
+
+            If boltLife[boltIndex] <= 0.0 Then
+                boltActive[boltIndex] = False                                                           ' Импульс погас по времени.
+            Else
+                CheckBoltHit(boltIndex)                                                                 ' Проверка попадания по принадлежности.
+            End If
+        End If
+    Next boltIndex
+End Sub
+
+' CheckBoltHit — Проверяет один летящий импульс против соответствующей цели.
+Private Sub CheckBoltHit(boltIndex As Integer)
+    If boltHostile[boltIndex] Then                                                                      ' Импульс рейдера летит в игрока.
+        Dim dx As Double = boltX[boltIndex] - PlayerPosX()                                              ' Смещение импульса от корабля: X.
+        Dim dy As Double = boltY[boltIndex] - PlayerPosY()                                              ' Смещение: Y.
+        Dim dz As Double = boltZ[boltIndex] - PlayerPosZ()                                              ' Смещение: Z.
+        Dim reach As Double = PLAYER_HIT_RADIUS + BOLT_HIT_MARGIN                                       ' Порог попадания: радиус корабля и запас.
+
+        If dx * dx + dy * dy + dz * dz <= reach * reach Then
+            boltActive[boltIndex] = False                                                               ' Импульс погас на щитах.
+            Dim destroyed As Boolean = ApplyShipDamage(BOLT_DAMAGE_ENEMY)                               ' Урон каскадом «щиты → корпус».
+            ShowMessage("ПОПАДАНИЕ В КОРАБЛЬ", 0.7)                                                     ' Пилот видит удар на панели.
+            If destroyed Then
+                DestroyPlayer()
+            End If
+        End If
+    Else                                                                                                ' Импульс игрока летит в рейдера.
+        If GetObjectAlive(GetRaiderSlot()) Then                                                         ' Мёртвого рейдера импульсы пролетают насквозь.
+            Dim raiderX As Double                                                                       ' Позиция рейдера: X.
+            Dim raiderY As Double                                                                       ' Позиция: Y.
+            Dim raiderZ As Double                                                                       ' Позиция: Z.
+            GetObjectPos(GetRaiderSlot(), raiderX, raiderY, raiderZ)
+
+            Dim rx As Double = boltX[boltIndex] - raiderX                                               ' Смещение импульса от рейдера: X.
+            Dim ry As Double = boltY[boltIndex] - raiderY                                               ' Смещение: Y.
+            Dim rz As Double = boltZ[boltIndex] - raiderZ                                               ' Смещение: Z.
+            Dim raiderReach As Double = GetObjectRadius(GetRaiderSlot()) + BOLT_HIT_MARGIN              ' Порог: габарит рейдера и запас.
+
+            If rx * rx + ry * ry + rz * rz <= raiderReach * raiderReach Then
+                boltActive[boltIndex] = False                                                           ' Импульс погас на цели.
+                ApplyRaiderDamage(BOLT_DAMAGE_PLAYER)                                                   ' Урон рейдеру.
+            End If
+        End If
+    End If
+End Sub
+
+' #endregion
+
+' #region Искусственный интеллект рейдера
+
+' UpdateRaiderAI — Машина состояний противника (принцип TACTICS классики:
+' состояния по дистанции и живучести, маневрирование на цель). Скорость и
+' цель движения выбираются режимом; поворот модели — носом по движению.
+Private Sub UpdateRaiderAI(dtSeconds As Double)
+    Dim raiderX As Double                                                                               ' Позиция рейдера: X.
+    Dim raiderY As Double                                                                               ' Позиция: Y.
+    Dim raiderZ As Double                                                                               ' Позиция: Z.
+    GetObjectPos(GetRaiderSlot(), raiderX, raiderY, raiderZ)
+
+    Dim toPlayerX As Double = PlayerPosX() - raiderX                                                    ' Направление на игрока: X.
+    Dim toPlayerY As Double = PlayerPosY() - raiderY                                                    ' Направление: Y.
+    Dim toPlayerZ As Double = PlayerPosZ() - raiderZ                                                    ' Направление: Z.
+    Dim distance As Double = Sqr(toPlayerX * toPlayerX + toPlayerY * toPlayerY + toPlayerZ * toPlayerZ) ' Дистанция до игрока.
+
+    If distance > RAIDER_MAX_DISTANCE Then                                                              ' Старая встреча ушла слишком далеко...
+        SpawnRaider()                                                                                   ' ...заменяем новой: рейдер всегда рядом.
+        Return
+    End If
+
+    Dim moveSpeed As Double = RAIDER_SPEED_APPROACH                                                     ' Скорость режима по умолчанию.
+    Dim targetX As Double = PlayerPosX()                                                                ' Цель режима по умолчанию: сам игрок.
+    Dim targetY As Double = PlayerPosY()
+    Dim targetZ As Double = PlayerPosZ()
+
+    ' --- Выбор режима: переходы по дистанции и живучести. ---
+    Select Case raiderMode
+        Case AI_APPROACH                                                                                ' Сближение: летим прямо на игрока.
+            If distance <= RAIDER_ENGAGE_RANGE Then
+                raiderMode = AI_ATTACK                                                                  ' Дострелил: переходим к маневрам.
+                PickStrafePoint()
+            End If
+        Case AI_ATTACK                                                                                  ' Атака: кружим около игрока и стреляем.
+            If distance > RAIDER_BREAK_RANGE Then
+                raiderMode = AI_APPROACH                                                                ' Игрок ушёл: догоняем напрямик.
+            End If
+            If raiderShield + raiderHull < RAIDER_FLEE_HP Then
+                raiderMode = AI_FLEE                                                                    ' Потрёпан: уходит жить.
+            End If
+        Case AI_FLEE                                                                                    ' Бегство: летим от игрока врага.
+            If distance > RAIDER_BREAK_RANGE Then
+                raiderMode = AI_APPROACH                                                                ' Оторвался: возвращается в бой.
+            End If
+        Case Else                                                                                       ' Неизвестный код состояния невозможен.
+            raiderMode = AI_APPROACH                                                                    ' Возвращаемся в безопасный режим.
+    End Select
+
+    ' --- Цель и скорость выбранного режима. ---
+    Select Case raiderMode
+        Case AI_APPROACH
+            moveSpeed = RAIDER_SPEED_APPROACH                                                           ' Быстрое сближение.
+        Case AI_ATTACK
+            moveSpeed = RAIDER_SPEED_ATTACK                                                             ' Маневренная скорость.
+            raiderStrafeTimer = raiderStrafeTimer - dtSeconds                                          ' Маневр меняется периодически.
+            If raiderStrafeTimer <= 0.0 Then
+                PickStrafePoint()
+            End If
+            targetX = PlayerPosX() + raiderStrafeX                                                      ' Цель атаки: точка уклонения около игрока.
+            targetY = PlayerPosY() + raiderStrafeY
+            targetZ = PlayerPosZ() + raiderStrafeZ
+        Case AI_FLEE
+            moveSpeed = RAIDER_SPEED_FLEE                                                               ' Полная скорость прочь.
+            Dim fleeFactor As Double = 2.0                                                              ' Цель убегания: точка за спиной рейдера.
+            targetX = PlayerPosX() + (raiderX - PlayerPosX()) * fleeFactor
+            targetY = PlayerPosY() + (raiderY - PlayerPosY()) * fleeFactor
+            targetZ = PlayerPosZ() + (raiderZ - PlayerPosZ()) * fleeFactor
+    End Select
+
+    ' --- Движение к цели и наводка носа. ---
+    Dim dirX As Double = targetX - raiderX                                                              ' Направление движения: X.
+    Dim dirY As Double = targetY - raiderY                                                              ' Направление: Y.
+    Dim dirZ As Double = targetZ - raiderZ                                                              ' Направление: Z.
+    Dim dirLength As Double = Sqr(dirX * dirX + dirY * dirY + dirZ * dirZ)                              ' Длина направления.
+    If dirLength < 1.0 Then
+        dirLength = 1.0                                                                                 ' Цель достигнута: направление вырождено, держим курс.
+        dirX = toPlayerX                                                                                ' fallback: смотрим на игрока.
+        dirY = toPlayerY
+        dirZ = toPlayerZ
+        dirLength = Max(distance, 1.0)                                                                  ' Длина направления на игрока.
+    End If
+
+    Dim nextX As Double = raiderX + dirX / dirLength * moveSpeed * dtSeconds                            ' Пробная позиция: X.
+    Dim nextY As Double = raiderY + dirY / dirLength * moveSpeed * dtSeconds                            ' Пробная позиция: Y.
+    Dim nextZ As Double = raiderZ + dirZ / dirLength * moveSpeed * dtSeconds                            ' Пробная позиция: Z.
+
+    Dim ramX As Double = nextX - PlayerPosX()                                                           ' Смещение пробной позиции от игрока: X.
+    Dim ramY As Double = nextY - PlayerPosY()                                                           ' Смещение: Y.
+    Dim ramZ As Double = nextZ - PlayerPosZ()                                                           ' Смещение: Z.
+    Dim ramDistance As Double = Sqr(ramX * ramX + ramY * ramY + ramZ * ramZ)                            ' Дистанция сближения.
+
+    If ramDistance > PLAYER_HIT_RADIUS + GetObjectRadius(GetRaiderSlot()) Then                          ' Таран не предусмотрен: ближе суммы радиусов не летим.
+        SetObjectTransform(GetRaiderSlot(), nextX, nextY, nextZ, Atn2(dirX, dirZ), Asin(Clamp(dirY / dirLength, -1.0, 1.0))) ' Летим и смотрим по движению.
+    Else
+        SetObjectTransform(GetRaiderSlot(), raiderX, raiderY, raiderZ, Atn2(toPlayerX, toPlayerZ), Asin(Clamp(toPlayerY / Max(distance, 1.0), -1.0, 1.0))) ' Стоим на месте, разворот носа на игрока.
+    End If
+
+    ' --- Стрельба рейдера: только в атаке, в дальности, после паузы. ---
+    If raiderMode = AI_ATTACK Then
+        If raiderFireCooldown > 0.0 Then
+            raiderFireCooldown = raiderFireCooldown - dtSeconds                                         ' Пауза между выстрелами убывает.
+        End If
+        If raiderFireCooldown <= 0.0 And distance <= RAIDER_FIRE_RANGE Then
+            FireRaiderLaser(raiderX, raiderY, raiderZ, toPlayerX, toPlayerY, toPlayerZ, distance)
+        End If
+    End If
+End Sub
+
+' FireRaiderLaser — Выстрел рейдера по игроку с разбросом прицеливания:
+' несовершенный пилот промахивается на случайную величину поперёк линии
+' огня (у игрока разброса нет — как прицел классики).
+Private Sub FireRaiderLaser(raiderX As Double, raiderY As Double, raiderZ As Double, aimX As Double, aimY As Double, aimZ As Double, aimDistance As Double)
+    If aimDistance < 1.0 Then
+        aimDistance = 1.0                                                                               ' Защита от нулевой дистанции.
+    End If
+
+    Dim missX As Double = (NextCombatRandom01() - 0.5) * 2.0 * RAIDER_AIM_ERROR                         ' Промах: смещение точки прицеливания X.
+    Dim missY As Double = (NextCombatRandom01() - 0.5) * 2.0 * RAIDER_AIM_ERROR                         ' Промах: смещение Y.
+    Dim missZ As Double = (NextCombatRandom01() - 0.5) * 2.0 * RAIDER_AIM_ERROR                         ' Промах: смещение Z.
+
+    Dim targetX As Double = PlayerPosX() + missX                                                        ' Точка, в которую стреляет рейдер: X.
+    Dim targetY As Double = PlayerPosY() + missY                                                        ' Точка: Y.
+    Dim targetZ As Double = PlayerPosZ() + missZ                                                        ' Точка: Z.
+
+    Dim dirX As Double = targetX - raiderX                                                              ' Направление выстрела: X.
+    Dim dirY As Double = targetY - raiderY                                                              ' Направление: Y.
+    Dim dirZ As Double = targetZ - raiderZ                                                              ' Направление: Z.
+
+    Dim muzzle As Double = GetObjectRadius(GetRaiderSlot()) + 30.0                                      ' Ствол чуть впереди каркаса.
+    Dim dirLength As Double = Sqr(dirX * dirX + dirY * dirY + dirZ * dirZ)
+    If dirLength < 1.0 Then
+        dirLength = 1.0
+    End If
+
+    Dim startX As Double = raiderX + dirX / dirLength * muzzle                                          ' Старт импульса: X.
+    Dim startY As Double = raiderY + dirY / dirLength * muzzle                                          ' Старт: Y.
+    Dim startZ As Double = raiderZ + dirZ / dirLength * muzzle                                          ' Старт: Z.
+
+    SpawnBolt(startX, startY, startZ, dirX, dirY, dirZ, True)                                           ' Красный импульс в полёт.
+    raiderFireCooldown = RAIDER_FIRE_COOLDOWN                                                           ' Следующий выстрел после паузы.
+End Sub
+
+' #endregion
+
+' #region Повреждения и события
+
+' ApplyRaiderDamage — Урон рейдеру каскадом «щиты → корпус»; при уничтожении
+' начисляется награда и обновляется журнал побед. Открытая функция:
+' будущие этапы (столкновения, ракеты) наносят урон тем же правилом.
+Public Sub ApplyRaiderDamage(damageAmount As Double)
+    Dim absorbed As Double = Min(damageAmount, raiderShield)                                            ' Щиты рейдера поглощают первыми.
+    raiderShield = raiderShield - absorbed
+    raiderHull = Max(raiderHull - (damageAmount - absorbed), 0.0)                                       ' Остаток — в корпус, без отрицательных значений.
+
+    If raiderHull <= 0.0 Then
+        RaiderDestroyed()
+    End If
+End Sub
+
+' RaiderDestroyed — Победа: рейдер исчезает со сцены, пилот получает награду,
+' журнал побед пополняется, назначается ожидание новой встречи.
+Private Sub RaiderDestroyed()
+    SetObjectAlive(GetRaiderSlot(), False)                                                              ' Каркас исчезает: радар и экран чисты.
+    raiderRespawnTimer = RAIDER_RESPAWN_SECONDS                                                         ' Новая встреча через паузу.
+    AddCredits(RAIDER_BOUNTY)                                                                           ' Награда за победу.
+
+    Dim systemName As String = GetSystemName(GetCurrentSystem())                                        ' Система, в которой одержана победа.
+    If killLog.Exists(systemName) Then
+        killLog[systemName] = killLog[systemName] + 1                                                   ' Повторная победа в той же системе.
+    Else
+        killLog.Add(systemName, 1)                                                                      ' Первая победа в этой системе.
+    End If
+
+    ShowMessage($"РЕЙДЕР УНИЧТОЖЕН: +{RAIDER_BOUNTY} CR", 2.0)                                          ' Сообщение с интерполяцией значений.
+End Sub
+
+' DestroyPlayer — Гибель пилота. Сохранений в игре ещё нет (этап 5),
+' поэтому аварийная капсула возвращает пилота к началу текущей системы:
+' корабль целый, карман платит за спасение. Осознанное упрощение.
+Private Sub DestroyPlayer()
+    RestoreShipFully()                                                                                  ' Капсула с новым корпусом и щитами.
+    ResetShip()                                                                                         ' Корабль у точки входа системы.
+    ShowMessage("КОРАБЛЬ УНИЧТОЖЕН - СПАСАТЕЛЬНАЯ КАПСУЛА ВЕРНУЛА ПИЛОТА", 3.0)
+End Sub
+
+' ShowMessage — Запоминает боевое событие для панели с временем показа.
+Private Sub ShowMessage(text As String, seconds As Double)
+    messageText = text
+    messageTimer = seconds
+End Sub
+
+' #endregion
+
+' #region Данные для панели и рендера (только чтение)
+
+' GetCombatMessage — Текст последнего боевого события (пусто, если показ вышел).
+Public Function GetCombatMessage() As String
+    Return messageText
+End Function
+
+' TotalKills — Суммарные победы по всем системам: обход журнала через
+' FOR EACH по снимку ключей (прямой обход словаря в Axiom не вводится).
+Public Function TotalKills() As Integer
+    Dim total As Integer = 0
+    For Each systemName As String In killLog.Keys()                                                     ' Ключи — снимок в порядке добавления систем.
+        total = total + killLog[systemName]                                                             ' Складываем победы каждой системы.
+    Next systemName
+    Return total
+End Function
+
+' EnemyDistance — Дистанция до живого рейдера (0, если встречи нет):
+' панель показывает её рядом с индикатором цели.
+Public Function EnemyDistance() As Double
+    If Not GetObjectAlive(GetRaiderSlot()) Then
+        Return 0.0
+    End If
+
+    Dim raiderX As Double
+    Dim raiderY As Double
+    Dim raiderZ As Double
+    GetObjectPos(GetRaiderSlot(), raiderX, raiderY, raiderZ)
+    Dim dx As Double = raiderX - PlayerPosX()
+    Dim dy As Double = raiderY - PlayerPosY()
+    Dim dz As Double = raiderZ - PlayerPosZ()
+    Return Sqr(dx * dx + dy * dy + dz * dz)
+End Function
+
+' GetBoltCount — Число слотов пула импульсов: рендер обходит их все.
+Public Function GetBoltCount() As Integer
+    Return BOLT_MAX
+End Function
+
+' GetBoltDraw — Данные одного импульса для отрисовки одним вызовом:
+' позиция, направление, принадлежность и существование.
+Public Sub GetBoltDraw(boltIndex As Integer, ByRef posX As Double, ByRef posY As Double, ByRef posZ As Double, ByRef dirX As Double, ByRef dirY As Double, ByRef dirZ As Double, ByRef tailLength As Double, ByRef hostileShot As Boolean, ByRef isActive As Boolean)
+    posX = boltX[boltIndex]
+    posY = boltY[boltIndex]
+    posZ = boltZ[boltIndex]
+    dirX = boltDirX[boltIndex]
+    dirY = boltDirY[boltIndex]
+    dirZ = boltDirZ[boltIndex]
+    tailLength = BOLT_TAIL_LENGTH
+    hostileShot = boltHostile[boltIndex]
+    isActive = boltActive[boltIndex]
+End Sub
+
+' #endregion

@@ -1,17 +1,5 @@
 {
-  "language": "0.12.15",
-  "compiler": "0.13.88",
-  "ide": "0.15.8",
-  "compilerOnlyChange": {
-    "version": "0.13.88",
-    "reason": "Повторное использование записей, объявленных в цикле (FreshRecordLocal), со сбросом полей на месте и дисциплиной выхода через ReferenceEquals обёрток: внутренний механизм VM без изменения договора языка.",
-    "paths": [
-      "src/Axiom.Runtime/Execution/BytecodeCallFrame.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVariableSlot.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.Callbacks.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.Calls.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.cs",
-      "src/Axiom.Runtime/Values/RuntimeRecordValue.cs"
-    ]
-  }
+  "language": "0.12.16",
+  "compiler": "0.13.90",
+  "ide": "0.15.8"
 }

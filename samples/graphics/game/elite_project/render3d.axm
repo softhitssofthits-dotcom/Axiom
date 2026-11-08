@@ -1,6 +1,7 @@
-' render3d — графический конвейер кадра: звёзды, каркасные объекты, прицел.
-' Модуль НЕ содержит игровой логики: он только проецирует текущее состояние
-' мира (звёзды, объекты, позиция корабля) в отрезки и точки CANVAS.
+' render3d — графический конвейер кадра: звёзды, каркасные объекты, лазерные
+' импульсы и прицел. Модуль НЕ содержит игровой логики: он только проецирует
+' текущее состояние мира (звёзды, объекты, импульсы, позиция корабля)
+' в отрезки и точки CANVAS.
 '
 ' Принцип (исторический аналог — LL9/PROJ оригинала, здесь своя реализация):
 '   1) смещение объекта относительно корабля → координаты наблюдателя (WorldToView);
@@ -13,6 +14,7 @@ Import math3d
 Import starfield
 Import ship_models
 Import flight_state
+Import combat
 
 ' #region Закрытые буферы проекции
 
@@ -24,11 +26,13 @@ Private Dim viewBufferZ[1 To MAX_MODEL_VERTICES] As Double                      
 
 ' #region Кадр
 
-' DrawWorld — Рисует весь игровой мир: звёздное поле, каркасы объектов, прицел.
-' Вызывается один раз за кадр между Beginframe и Present.
+' DrawWorld — Рисует весь игровой мир: звёздное поле, каркасы объектов,
+' лазерные импульсы и прицел. Вызывается один раз за кадр между Beginframe
+' и Present.
 Public Sub DrawWorld()
     DrawDust()                                                                                          ' Сначала пыль: она «течёт мимо» и создаёт ощущение скорости.
-    DrawObjects()                                                                                       ' Затем каркасы станции и корабля-спутника.
+    DrawObjects()                                                                                       ' Затем каркасы станции, спутника, астероидов и рейдера.
+    DrawBolts()                                                                                         ' Лазерные импульсы боя поверх каркасов.
     DrawReticle()                                                                                       ' Прицел поверх мира: цель наведения по центру экрана.
 End Sub
 
@@ -85,32 +89,81 @@ Private Sub DrawObjects()
     Dim visible As Boolean                                                                              ' Ребро прошло отсечение и проекцию.
 
     For objectIndex = 1 To GetObjectCount()                                                             ' Обход объектов сцены.
-        Dim vertexTotal As Integer = GetObjectVertexCount(objectIndex)                                  ' Число вершин модели.
+        If GetObjectAlive(objectIndex) Then                                                             ' Уничтоженный объект не рисуется (этап 4).
+            Dim vertexTotal As Integer = GetObjectVertexCount(objectIndex)                              ' Число вершин модели.
 
-        For vertexIndex = 1 To vertexTotal                                                              ' Переводим все вершины в координаты наблюдателя.
-            GetObjectVertexWorld(objectIndex, vertexIndex, worldX, worldY, worldZ)                      ' Вершина одним вызовом.
-            relX = worldX - playerX                                                                     ' Мировая вершина минус позиция корабля.
-            relY = worldY - playerY
-            relZ = worldZ - playerZ
+            For vertexIndex = 1 To vertexTotal                                                          ' Переводим все вершины в координаты наблюдателя.
+                GetObjectVertexWorld(objectIndex, vertexIndex, worldX, worldY, worldZ)                  ' Вершина одним вызовом.
+                relX = worldX - playerX                                                                 ' Мировая вершина минус позиция корабля.
+                relY = worldY - playerY
+                relZ = worldZ - playerZ
 
-            WorldToView(relX, relY, relZ, viewX, viewY, viewZ)                                          ' Поворот в систему наблюдателя.
-            viewBufferX[vertexIndex] = viewX                                                            ' Буферизация глубины и боковых координат.
-            viewBufferY[vertexIndex] = viewY
-            viewBufferZ[vertexIndex] = viewZ
-        Next vertexIndex
+                WorldToView(relX, relY, relZ, viewX, viewY, viewZ)                                      ' Поворот в систему наблюдателя.
+                viewBufferX[vertexIndex] = viewX                                                        ' Буферизация глубины и боковых координат.
+                viewBufferY[vertexIndex] = viewY
+                viewBufferZ[vertexIndex] = viewZ
+            Next vertexIndex
 
-        For edgeIndex = 1 To GetObjectEdgeCount(objectIndex)                                            ' Рёбра проецируются по буферу вершин.
-            GetObjectEdge(objectIndex, edgeIndex, vertexA, vertexB)                                     ' Концы ребра одним вызовом.
+            For edgeIndex = 1 To GetObjectEdgeCount(objectIndex)                                        ' Рёбра проецируются по буферу вершин.
+                GetObjectEdge(objectIndex, edgeIndex, vertexA, vertexB)                                 ' Концы ребра одним вызовом.
 
-            ' Проекция ребра с отсечением ближней плоскости: если ребро пересекает
-            ' плоскость, ProjectEdge сам вычислит точку пересечения интерполяцией.
-            ProjectEdge(viewBufferX[vertexA], viewBufferY[vertexA], viewBufferZ[vertexA], viewBufferX[vertexB], viewBufferY[vertexB], viewBufferZ[vertexB], screenX1, screenY1, screenX2, screenY2, visible)
+                ' Проекция ребра с отсечением ближней плоскости: если ребро пересекает
+                ' плоскость, ProjectEdge сам вычислит точку пересечения интерполяцией.
+                ProjectEdge(viewBufferX[vertexA], viewBufferY[vertexA], viewBufferZ[vertexA], viewBufferX[vertexB], viewBufferY[vertexB], viewBufferZ[vertexB], screenX1, screenY1, screenX2, screenY2, visible)
 
-            If visible Then
-                Drawline screenX1, screenY1, screenX2, screenY2, GetObjectColor(objectIndex)            ' Видимое ребро выводится линией каркаса.
-            End If
-        Next edgeIndex
+                If visible Then
+                    Drawline screenX1, screenY1, screenX2, screenY2, GetObjectColor(objectIndex)        ' Видимое ребро выводится линией каркаса.
+                End If
+            Next edgeIndex
+        End If
     Next objectIndex
+End Sub
+
+' DrawBolts — Рисует летящие лазерные импульсы короткими яркими штрихами:
+' от текущей позиции назад по направлению полёта. Цвет различает стороны.
+Private Sub DrawBolts()
+    Dim playerX As Double = PlayerPosX()                                                                ' Позиция корабля: X (один раз на кадр).
+    Dim playerY As Double = PlayerPosY()                                                                ' Позиция: Y.
+    Dim playerZ As Double = PlayerPosZ()                                                                ' Позиция: Z.
+
+    Dim posX As Double                                                                                  ' Позиция импульса: X.
+    Dim posY As Double                                                                                  ' Позиция: Y.
+    Dim posZ As Double                                                                                  ' Позиция: Z.
+    Dim dirX As Double                                                                                  ' Направление полёта: X.
+    Dim dirY As Double                                                                                  ' Направление: Y.
+    Dim dirZ As Double                                                                                  ' Направление: Z.
+    Dim tailLength As Double                                                                            ' Длина штриха импульса.
+    Dim hostileShot As Boolean                                                                          ' Принадлежность импульса рейдеру.
+    Dim isActive As Boolean                                                                             ' Слот занят летящим импульсом.
+
+    Dim headX As Integer                                                                                ' Экранные координаты головы штриха.
+    Dim headY As Integer
+    Dim tailX As Integer                                                                                ' Экранные координаты хвоста штриха.
+    Dim tailY As Integer
+    Dim headDepth As Double                                                                             ' Глубина головы (не используется, обязательна параметром).
+    Dim tailDepth As Double                                                                             ' Глубина хвоста.
+    Dim headVisible As Boolean                                                                          ' Голова впереди ближней плоскости.
+    Dim tailVisible As Boolean                                                                          ' Хвост впереди ближней плоскости.
+
+    Dim boltColor As Integer = COLOR_LASER_PLAYER                                                       ' Цвет по умолчанию: импульс игрока.
+
+    For boltIndex = 1 To GetBoltCount()                                                                 ' Обход пула импульсов боя.
+        GetBoltDraw(boltIndex, posX, posY, posZ, dirX, dirY, dirZ, tailLength, hostileShot, isActive)   ' Данные импульса одним вызовом.
+
+        If isActive Then
+            ProjectRelPoint(posX - playerX, posY - playerY, posZ - playerZ, headX, headY, headDepth, headVisible) ' Голова штриха.
+            ProjectRelPoint(posX - playerX - dirX * tailLength, posY - playerY - dirY * tailLength, posZ - playerZ - dirZ * tailLength, tailX, tailY, tailDepth, tailVisible) ' Хвост: назад по полёту.
+
+            If headVisible And tailVisible Then                                                         ' Весь штрих впереди плоскости: рисуем.
+                If hostileShot Then
+                    boltColor = COLOR_LASER_ENEMY                                                       ' Красный штрих рейдера.
+                Else
+                    boltColor = COLOR_LASER_PLAYER                                                      ' Белый штрих игрока.
+                End If
+                Drawline headX, headY, tailX, tailY, boltColor                                          ' Импульс — короткая яркая линия.
+            End If
+        End If
+    Next boltIndex
 End Sub
 
 ' DrawReticle — Прицел по центру экрана: четыре штриха с разрывом в середине.

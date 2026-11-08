@@ -105,26 +105,30 @@ public sealed partial class BytecodeVm
         // общий путь с прежними проверками.
         if (executionInfo.CanonicalId == BuiltinFunctionId.ArrayPush && argumentCount == 2
             && !executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
-            && frame.EvaluationStack.PeekVmValue(1).Object is { } peekedPushTarget && peekedPushTarget.AsArray() is { } pushArray
+            && frame.EvaluationStack.PeekVmValue(1).Object is { } peekedPushTarget
+            && peekedPushTarget.Type is ArrayTypeSymbol && peekedPushTarget.Value is RuntimeArrayValue pushArray
             && pushArray.Rank == 1 && !pushArray.IsView && pushArray.IsAllocated
-            && pushArray.UpperBound < int.MaxValue
-            && frame.EvaluationStack.TryGetImmediateInteger(out var pushInteger))
+            && pushArray.UpperBound < int.MaxValue)
         {
-            if (pushArray.TryAppendOneDimensionalInteger(pushInteger))
+            if (pushArray.ElementType == TypeSymbol.Integer
+                && frame.EvaluationStack.TryGetImmediateInteger(out var pushInteger)
+                && pushArray.TryAppendOneDimensionalInteger(pushInteger))
             {
                 frame.EvaluationStack.DiscardTop(2);
                 return;
             }
-        }
 
-        if (executionInfo.CanonicalId == BuiltinFunctionId.ArrayPush && argumentCount == 2
-            && !executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
-            && frame.EvaluationStack.PeekVmValue(1).Object is { } peekedPushDoubleTarget && peekedPushDoubleTarget.AsArray() is { } pushDoubleArray
-            && pushDoubleArray.Rank == 1 && !pushDoubleArray.IsView && pushDoubleArray.IsAllocated
-            && pushDoubleArray.UpperBound < int.MaxValue
-            && frame.EvaluationStack.TryGetImmediateDouble(out var pushDouble))
-        {
-            if (pushDoubleArray.TryAppendOneDimensionalDouble(pushDouble))
+            if (pushArray.ElementType == TypeSymbol.Long
+                && frame.EvaluationStack.TryGetImmediateLong(out var pushLong)
+                && pushArray.TryAppendOneDimensionalLong(pushLong))
+            {
+                frame.EvaluationStack.DiscardTop(2);
+                return;
+            }
+
+            if (pushArray.ElementType == TypeSymbol.Double
+                && frame.EvaluationStack.TryGetImmediateDouble(out var pushDouble)
+                && pushArray.TryAppendOneDimensionalDouble(pushDouble))
             {
                 frame.EvaluationStack.DiscardTop(2);
                 return;

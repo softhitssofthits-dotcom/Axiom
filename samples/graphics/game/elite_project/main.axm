@@ -1,13 +1,13 @@
-' main — точка входа игры «Elite on Axiom», этап 2: пространство и навигация.
+' main — точка входа игры «Elite on Axiom», этап 4: пространство, навигация и бой.
 ' Файл владеет ЕДИНСТВЕННЫМ игровым циклом: инициализация, фиксированный шаг
-' симуляции, отрисовка, пауза, карта сектора и завершение. Вся логика
+' симуляции, отрисовка, пауза, карта сектора, рынок и завершение. Вся логика
 ' разложена по модулям.
 '
 ' Схема кадра (в духе классики, реализация собственная):
 '   часы → накопление времени → несколько фиксированных шагов симуляции
 '   → отрисовка текущего состояния → показ кадра → пауза процессора.
-' Скорость симуляции не зависит от частоты кадров. Карта сектора (M)
-' приостанавливает симуляцию, как экраны карт в классике.
+' Скорость симуляции не зависит от частоты кадров. Карта сектора (M) и рынок
+' станции (D) приостанавливают симуляцию, как экраны карт в классике.
 
 Import game_config
 Import math3d
@@ -16,6 +16,7 @@ Import ship_models
 Import flight_state
 Import nav_data
 Import economy
+Import combat
 Import render3d
 Import chart
 Import dock
@@ -43,6 +44,7 @@ InitMarket()                                                                    
 InitNav()                                                                                               ' Генерируем сектор: системы, имена, экономики, рынки.
 InitDust()                                                                                              ' Раскладываем детерминированное облако звёздной пыли вокруг корабля.
 InitObjects(GetSystemSeed(GetCurrentSystem()))                                                          ' Сцена стартовой системы строится из её семени.
+InitCombat(GetSystemSeed(GetCurrentSystem()))                                                           ' Бой: первая встреча с рейдером из семени системы (этап 4).
 
 Smooth On                                                                                               ' Включаем сглаживание показа кадра.
 Canvas VIEW_WIDTH, VIEW_HEIGHT                                                                          ' Открываем игровой холст заданного размера.
@@ -79,7 +81,9 @@ Do                                                                              
 
     Dim chartKeyDownNow As Boolean = Keydown(KEY_CHART)                                                 ' Удержание M в этом кадре.
     If chartKeyDownNow And Not previousChartKeyDown Then
-        ToggleChart()                                                                                   ' M открывает и закрывает карту сектора.
+        If Not IsDockOpen() Then
+            ToggleChart()                                                                                ' M открывает и закрывает карту сектора — единый фронт клавиши. В доке карта не открывается: торговый экран не совмещается с прыжком (аудит 2026-11-02, WORKLOG Elite-15).
+        End If
     End If
     previousChartKeyDown = chartKeyDownNow
 
@@ -108,8 +112,10 @@ Do                                                                              
         For stepIndex = 1 To MAX_CATCH_UP_STEPS                                                         ' Не больше лимита шагов за кадр: после долгой паузы не «догоняем» рывком.
             If simulationAccumulator >= FIXED_STEP_SECONDS Then
                 ApplyFlightInput(FIXED_STEP_SECONDS)                                                    ' Управление: углы и скорость корабля.
+                ApplyCombatInput()                                                                      ' Огонь лазера: клавиша X с паузой «нагрева» (этап 4).
                 IntegrateMotion(FIXED_STEP_SECONDS)                                                     ' Движение корабля вдоль носа со столкновениями.
                 UpdateObjects(FIXED_STEP_SECONDS)                                                       ' Вращение и размещение объектов мира.
+                UpdateCombat(FIXED_STEP_SECONDS)                                                        ' Бой: импульсы, попадания, ИИ рейдера, живучесть (этап 4).
                 UpdateDust(FIXED_STEP_SECONDS, ForwardX() * FlightSpeed(), ForwardY() * FlightSpeed(), ForwardZ() * FlightSpeed()) ' Пыль течёт мимо корабля с его фактической скоростью.
                 simulationAccumulator = simulationAccumulator - FIXED_STEP_SECONDS                      ' Списываем обработанный интервал.
             End If
@@ -131,7 +137,12 @@ Do                                                                              
     End If
 
     ' --- Отрисовка текущего состояния мира. ---
-    DrawWorld()                                                                                         ' Звёзды, каркасы объектов, прицел.
+    ' Полноэкранные экраны дока и карты закрашивают кадр целиком: рисовать
+    ' под ними трёхмерный мир — впустую тратить весь конвейер проекции
+    ' (аудит 2026-11-02, WORKLOG Elite-15).
+    If Not IsDockOpen() And Not IsChartOpen() Then
+        DrawWorld()                                                                                     ' Звёзды, каркасы объектов, прицел.
+    End If
 
     If IsDockOpen() Then
         DrawDock()                                                                                      ' Экран рынка перекрывает мир.

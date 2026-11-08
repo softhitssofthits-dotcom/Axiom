@@ -11,9 +11,6 @@ namespace Axiom.Runtime;
 
 public sealed partial class BytecodeVm
 {
-    // ВРЕМЕННАЯ инструментировка П08.
-    public static string DbgFreshRecordSnapshot() =>
-        $"tryTake={BytecodeCallFrame.DbgTryTakeCalls} mapMiss={BytecodeCallFrame.DbgMapMiss} shared={BytecodeCallFrame.DbgSharedBlock} refMis={BytecodeCallFrame.DbgRefMismatch} typeMis={BytecodeCallFrame.DbgTypeMismatch} taken={BytecodeCallFrame.DbgReuseTaken} remember={BytecodeCallFrame.DbgRememberCalls}";
     private const int MaxCallDepth = 200;
 
     private static readonly TextLocation FallbackRuntimeLocation = new(new TextSpan(0, 0), 1, 1);
@@ -745,29 +742,35 @@ public sealed partial class BytecodeVm
                         break;
 
                     case Opcode.CreateRecord:
-                        RuntimeRecordValue? reusedFreshRecord = null;
-                        if (instruction.IsFreshRecordLocal)
+                        if (instruction.IsFreshRecordLocal
+                            && frame.TryGetReusableFreshFlatRecord(
+                                instruction.B,
+                                ReadDebugName(instruction.GetOperand(0)),
+                                out var reusedRecordWrapper,
+                                out var reusedFreshRecord))
                         {
-                            // Повторное использование прежней свежей записи
-                            // слота, пока она не ушла в замыкание или BYREF.
-                            reusedFreshRecord = frame.TryTakeReusableFreshFlatRecord(
-                                instruction.B, ReadDebugName(instruction.GetOperand(0)));
-                            if (reusedFreshRecord is not null)
+                            // Повторное использование прежней свежей записи слота,
+                            // пока она не ушла в замыкание или BYREF. Сброс полей
+                            // выполняется только после проверки отмены между
+                            // CreateRecord и StoreLocal, чтобы отмена на границе
+                            // инструкций не меняла прежнее значение локальной переменной.
+                            frame.EvaluationStack.Push(reusedRecordWrapper);
+                            ip++;
+                            if (CheckCancellationRequested())
+                                return;
+                            frame.InstructionPointer = ip + 1;
+                            var adoptedReuse = PopValue(frame, ip);
+                            reusedFreshRecord.ResetToDefaults();
+                            if (frame.TryAdoptFreshFlatRecord(instruction.B, adoptedReuse))
                             {
-                                var reusedType = ResolveRecordType(
-                                    ReadDebugName(instruction.GetOperand(0)), frame.Routine.Id, ip);
-                                frame.EvaluationStack.Push(RuntimeValue.FromRecord(reusedType, reusedFreshRecord));
-                                ip++;
-                                if (CheckCancellationRequested())
-                                    return;
-                                frame.InstructionPointer = ip + 1;
-                                var adoptedReuse = PopValue(frame, ip);
-                                if (!frame.TryAdoptFreshFlatRecord(instruction.B, adoptedReuse))
-                                    frame.StoreLocalValue(instruction.B, adoptedReuse);
-                                // Карта должна держать ту обёртку, что теперь в слоте.
                                 frame.RememberFreshFlatRecord(instruction.B, adoptedReuse);
-                                break;
                             }
+                            else
+                            {
+                                frame.StoreLocalValue(instruction.B, adoptedReuse);
+                            }
+
+                            break;
                         }
 
                         ExecuteCreateRecord(frame, instruction, ip);
@@ -780,10 +783,15 @@ public sealed partial class BytecodeVm
                                 return;
                             frame.InstructionPointer = ip + 1;
                             var fresh = PopValue(frame, ip);
-                            frame.RememberFreshFlatRecord(instruction.B, fresh);
 
-                            if (!frame.TryAdoptFreshFlatRecord(instruction.B, fresh))
+                            if (frame.TryAdoptFreshFlatRecord(instruction.B, fresh))
+                            {
+                                frame.RememberFreshFlatRecord(instruction.B, fresh);
+                            }
+                            else
+                            {
                                 frame.StoreLocalValue(instruction.B, fresh);
+                            }
                         }
                         break;
 
@@ -1758,7 +1766,18 @@ public sealed partial class BytecodeVm
                 break;
 
             case Opcode.StoreGlobal:
-                StoreGlobalUnchecked(instruction.GetOperand(0), PopValue(frame, instructionIndex));
+                var globalSlot = instruction.GetOperand(0);
+                if (frame.EvaluationStack.TryGetImmediateInteger(out var storeGlobalInteger)
+                    && TryStoreGlobalImmediateInteger(globalSlot, storeGlobalInteger))
+                    frame.EvaluationStack.DiscardTop(1);
+                else if (frame.EvaluationStack.TryGetImmediateLong(out var storeGlobalLong)
+                    && TryStoreGlobalImmediateLong(globalSlot, storeGlobalLong))
+                    frame.EvaluationStack.DiscardTop(1);
+                else if (frame.EvaluationStack.TryGetImmediateDouble(out var storeGlobalDouble)
+                    && TryStoreGlobalImmediateDouble(globalSlot, storeGlobalDouble))
+                    frame.EvaluationStack.DiscardTop(1);
+                else
+                    StoreGlobal(globalSlot, PopValue(frame, instructionIndex));
                 break;
 
             case Opcode.AppendStringGlobal:
@@ -2466,7 +2485,7 @@ public sealed partial class BytecodeVm
             }
 
             var format = stack.Pop().AsString();
-            AppendFormattedUsing(format, rentedValues.AsSpan(0, valueCount), location);
+            AppendFormattedUsing(format, rentedValues, valueCount, location);
         }
         finally
         {

@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text;
 using Axiom.Semantics;
 
@@ -6,9 +5,17 @@ namespace Axiom.Runtime.Builtins;
 
 internal static partial class BuiltinPrintUsingHelpers
 {
+    /// <summary>
+    /// Однопроходное форматирование: маска читается слева направо, литералы и поля
+    /// пишутся сразу в общий <see cref="StringBuilder"/>. Список токенов, строки
+    /// литералов и промежуточные строковые значения не создаются; тот же подход
+    /// применяет _PyUnicodeWriter в CPython, когда форматирование пишет в готовый
+    /// буфер вместо последовательности временных объектов. Порядок разбора и
+    /// порядок потребления значений, диагностики и предел длины сохранены.
+    /// </summary>
     public static string FormatUsing(
         string format,
-        Func<int, RuntimeValue> getValue,
+        RuntimeValue[] values,
         int valueCount,
         Func<string, Exception> createError)
     {
@@ -17,65 +24,141 @@ internal static partial class BuiltinPrintUsingHelpers
             throw createError("длина форматной строки не должна превышать 2048 символов.");
         }
 
-        var tokens = ParsePrintUsingFormat(format);
-        var builder = new StringBuilder();
+        var builder = new StringBuilder(format.Length + 8);
         var argumentIndex = 0;
+        var literalStart = 0;
+        var index = 0;
 
-        foreach (var token in tokens)
+        while (index < format.Length)
         {
-            switch (token)
+            var current = format[index];
+
+            if (current == '_')
             {
-                case PrintUsingLiteralToken literalToken:
-                    RuntimeStringLimits.Append(builder, literalToken.Text);
-                    break;
-
-                case PrintUsingStringFieldToken stringFieldToken:
+                if (index + 1 < format.Length)
                 {
-                    var valueText = GetNextStringFormatValue(stringFieldToken, getValue, valueCount, ref argumentIndex, createError);
-                    RuntimeStringLimits.Append(builder, FormatStringField(stringFieldToken, valueText));
-                    break;
+                    AppendLiteral(builder, format, literalStart, index - literalStart);
+                    RuntimeStringLimits.Append(builder, format.AsSpan(index + 1, 1));
+                    index += 2;
+                    literalStart = index;
+                }
+                else
+                {
+                    index++;
                 }
 
-                case PrintUsingNumericFieldToken numericFieldToken:
-                {
-                    var value = GetNextNumericFormatValue(getValue, valueCount, ref argumentIndex, createError);
-                    RuntimeStringLimits.Append(builder, FormatNumericField(numericFieldToken, value));
-                    break;
-                }
+                continue;
             }
+
+            if (current is '!' or '&')
+            {
+                AppendLiteral(builder, format, literalStart, index - literalStart);
+                var kind = current == '!'
+                    ? PrintUsingStringFieldKind.Bang
+                    : PrintUsingStringFieldKind.Ampersand;
+                AppendStringField(builder, kind, 0, values, valueCount, ref argumentIndex, createError);
+                index++;
+                literalStart = index;
+                continue;
+            }
+
+            if (current == '\\')
+            {
+                var start = index++;
+                var spaces = 0;
+
+                while (index < format.Length && format[index] == ' ')
+                {
+                    spaces++;
+                    index++;
+                }
+
+                if (index < format.Length && format[index] == '\\')
+                {
+                    index++;
+                    AppendLiteral(builder, format, literalStart, start - literalStart);
+                    AppendStringField(
+                        builder,
+                        PrintUsingStringFieldKind.Backslash,
+                        spaces + 2,
+                        values,
+                        valueCount,
+                        ref argumentIndex,
+                        createError);
+                    literalStart = index;
+                    continue;
+                }
+
+                // Одиночная обратная косая черта остаётся литералом; пробелы после
+                // неё снова читаются обычным путём, как в прежнем разборе.
+                index = start + 1;
+                continue;
+            }
+
+            if (IsNumericMaskCharacter(current))
+            {
+                var start = index;
+
+                while (index < format.Length && IsNumericMaskCharacter(format[index]))
+                {
+                    index++;
+                }
+
+                var info = ParseNumericMask(format.AsSpan(start, index - start));
+                AppendLiteral(builder, format, literalStart, start - literalStart);
+
+                if (info.IntegerDigits + info.FractionDigits == 0)
+                {
+                    RuntimeStringLimits.Append(builder, format.AsSpan(start, index - start));
+                }
+                else
+                {
+                    var value = GetNextNumericFormatValue(values, valueCount, ref argumentIndex, createError);
+                    RuntimeStringLimits.Append(builder, FormatNumericField(info, value));
+                }
+
+                literalStart = index;
+                continue;
+            }
+
+            index++;
         }
 
+        AppendLiteral(builder, format, literalStart, format.Length - literalStart);
         return builder.ToString();
     }
 
-    public static string FormatStringField(PrintUsingStringFieldToken field, string value)
+    private static void AppendLiteral(StringBuilder builder, string format, int start, int length)
     {
-        return field.Kind switch
+        if (length > 0)
         {
-            PrintUsingStringFieldKind.Bang => value.Length == 0 ? string.Empty : value[..1],
-            PrintUsingStringFieldKind.Ampersand => value,
-            PrintUsingStringFieldKind.Backslash when value.Length == field.Width => value,
-            PrintUsingStringFieldKind.Backslash when value.Length < field.Width => value.PadRight(field.Width, ' '),
-            PrintUsingStringFieldKind.Backslash => value[..field.Width],
-            _ => value
-        };
+            RuntimeStringLimits.Append(builder, format.AsSpan(start, length));
+        }
     }
 
-    private static string GetNextStringFormatValue(
-        PrintUsingStringFieldToken field,
-        Func<int, RuntimeValue> getValue,
+    private static void AppendStringField(
+        StringBuilder builder,
+        PrintUsingStringFieldKind kind,
+        int width,
+        RuntimeValue[] values,
         int valueCount,
-        ref int index,
+        ref int argumentIndex,
         Func<string, Exception> createError)
     {
-        if (index >= valueCount)
+        if (argumentIndex >= valueCount)
         {
-            return field.Kind == PrintUsingStringFieldKind.Backslash
-                ? new string(' ', field.Width)
-                : string.Empty;
+            // Отсутствующее строковое значение: поле ! и & ничего не выводят,
+            // фиксированное поле заполняется пробелами до своей ширины.
+            if (kind == PrintUsingStringFieldKind.Backslash && width > 0)
+            {
+                RuntimeStringLimits.Check((long)builder.Length + width);
+                builder.Append(' ', width);
+            }
+
+            return;
         }
 
-        var value = getValue(index++);
+        var value = values[argumentIndex++];
 
         if (value.Type != TypeSymbol.String)
         {
@@ -83,11 +166,38 @@ internal static partial class BuiltinPrintUsingHelpers
                 $"строковое поле требует значение типа STRING, но получен {value.Type.Name}.");
         }
 
-        return value.AsString();
+        var text = value.AsString();
+
+        switch (kind)
+        {
+            case PrintUsingStringFieldKind.Bang:
+                if (text.Length > 0)
+                {
+                    RuntimeStringLimits.Append(builder, text.AsSpan(0, 1));
+                }
+
+                break;
+
+            case PrintUsingStringFieldKind.Ampersand:
+                RuntimeStringLimits.Append(builder, text);
+                break;
+
+            default:
+                var length = Math.Min(text.Length, width);
+                RuntimeStringLimits.Append(builder, text.AsSpan(0, length));
+
+                if (length < width)
+                {
+                    RuntimeStringLimits.Check((long)builder.Length + (width - length));
+                    builder.Append(' ', width - length);
+                }
+
+                break;
+        }
     }
 
     private static RuntimeValue GetNextNumericFormatValue(
-        Func<int, RuntimeValue> getValue,
+        RuntimeValue[] values,
         int valueCount,
         ref int index,
         Func<string, Exception> createError)
@@ -97,7 +207,7 @@ internal static partial class BuiltinPrintUsingHelpers
             throw createError("для числового поля не хватило значения.");
         }
 
-        var value = getValue(index++);
+        var value = values[index++];
 
         if (!IsNumericType(value.Type))
         {
@@ -106,35 +216,6 @@ internal static partial class BuiltinPrintUsingHelpers
         }
 
         return value;
-    }
-
-    public abstract record PrintUsingFormatToken;
-
-    public sealed record PrintUsingLiteralToken(string Text) : PrintUsingFormatToken;
-
-    public sealed record PrintUsingStringFieldToken(PrintUsingStringFieldKind Kind, int Width = 0) : PrintUsingFormatToken;
-
-    public sealed record PrintUsingNumericFieldToken(string Mask, PrintUsingNumericFormatInfo Info) : PrintUsingFormatToken;
-
-    public sealed class PrintUsingNumericFormatInfo
-    {
-        public int TotalWidth { get; init; }
-
-        public int IntegerDigits { get; set; }
-
-        public int FractionDigits { get; set; }
-
-        public bool ForceSign { get; init; }
-
-        public bool NegativeSignOnly { get; init; }
-
-        public bool HasThousands { get; init; }
-
-        public bool HasDollar { get; init; }
-
-        public bool HasStarFill { get; init; }
-
-        public bool HasExponent { get; init; }
     }
 
     public enum PrintUsingStringFieldKind

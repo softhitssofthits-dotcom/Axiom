@@ -82,6 +82,8 @@ Public Const NEAR_Z As Double = 8.0                                             
 Public Const DUST_COUNT As Integer = 120                                                                ' Число частиц звёздной пыли: баланс плотности и стоимости кадра.
 Public Const DUST_BOX_SIZE As Double = 1200.0                                                           ' Ребро куба пыли: улетевшие частицы заворачиваются на противоположную грань.
 
+' #endregion
+
 ' #region Сканер (радар) и приборная полоса
 
 Public Const RADAR_BAND_TOP As Integer = 520                                                            ' Верхняя граница нижней приборной полосы, как панель в классике.
@@ -104,8 +106,6 @@ Public Const COLLISION_ALERT_SECONDS As Double = 0.6                            
 
 ' #endregion
 
-' #endregion
-
 ' #region Полётные объекты этапа 1
 
 Public Const STATION_DISTANCE As Double = 2200.0                                                        ' Стартовое расстояние до станции по оси вперёд.
@@ -115,5 +115,49 @@ Public Const COMPANION_OFFSET_X As Double = 320.0                               
 Public Const COMPANION_OFFSET_Y As Double = 90.0                                                        ' Смещение корабля-спутника вверх от оси полёта.
 Public Const COMPANION_SPIN_RATE As Double = 0.5                                                        ' Медленное вращение корабля-спутника для проверки рёбер под всеми углами.
 Public Const MAX_MODEL_VERTICES As Integer = 64                                                         ' Буфер проекции: максимальное число вершин одной модели.
+
+' #endregion
+
+' #region Бой (этап 4)
+
+Public Const KEY_FIRE As String = "X"                                                                   ' Лазер игрока: огонь с удержанием; X не занят другими экранами.
+Public Const COLOR_RAIDER As Integer = Rgb(255, 110, 80)                                                ' Каркас рейдера: тревожный красно-оранжевый контур.
+Public Const COLOR_LASER_PLAYER As Integer = Rgb(170, 255, 255)                                         ' Импульс лазера игрока: холодный белый штрих.
+Public Const COLOR_LASER_ENEMY As Integer = Rgb(255, 90, 90)                                            ' Импульс лазера рейдера: красный штрих.
+
+Public Const PLAYER_SHIELD_MAX As Double = 100.0                                                        ' Ёмкость щитов корабля игрока.
+Public Const PLAYER_HULL_MAX As Double = 100.0                                                          ' Запас прочности корпуса игрока.
+Public Const PLAYER_ENERGY_MAX As Double = 100.0                                                        ' Банки энергии: питают подзарядку щитов.
+Public Const PLAYER_SHIELD_REGEN As Double = 9.0                                                        ' Подзарядка щитов в секунду; тратит энергию один к одному.
+Public Const PLAYER_ENERGY_REGEN As Double = 5.0                                                        ' Восстановление энергии в секунду.
+Public Const PLAYER_HIT_RADIUS As Double = 55.0                                                         ' Радиус поражения корабля игрока.
+Public Const LASER_COOLDOWN As Double = 0.22                                                            ' Пауза между выстрелами лазера игрока, секунды (упрощённый «нагрев»).
+
+Public Const RAIDER_SHIELD_MAX As Double = 60.0                                                         ' Щиты рейдера.
+Public Const RAIDER_HULL_MAX As Double = 60.0                                                           ' Корпус рейдера.
+Public Const RAIDER_BOUNTY As Long = 150                                                                ' Награда за уничтоженный рейдер, кредиты.
+Public Const RAIDER_SPEED_APPROACH As Double = 150.0                                                    ' Скорость рейдера в режиме сближения.
+Public Const RAIDER_SPEED_ATTACK As Double = 120.0                                                      ' Скорость рейдера в режиме атаки.
+Public Const RAIDER_SPEED_FLEE As Double = 180.0                                                        ' Скорость рейдера в режиме бегства.
+Public Const RAIDER_FIRE_RANGE As Double = 950.0                                                        ' Дальше неё рейдер не стреляет.
+Public Const RAIDER_FIRE_COOLDOWN As Double = 0.9                                                       ' Пауза между выстрелами рейдера, секунды.
+Public Const RAIDER_ENGAGE_RANGE As Double = 700.0                                                      ' Ближе неё сближение сменяется атакой.
+Public Const RAIDER_BREAK_RANGE As Double = 1500.0                                                      ' Дальше неё атака возвращается к сближению.
+Public Const RAIDER_FLEE_HP As Double = 25.0                                                            ' Ниже этой суммарной живучести рейдер уходит в бегство.
+Public Const RAIDER_RESPAWN_SECONDS As Double = 8.0                                                     ' Пауза после победы до новой встречи.
+Public Const RAIDER_SPAWN_MIN As Double = 1800.0                                                        ' Ближняя граница появления новой встречи.
+Public Const RAIDER_SPAWN_MAX As Double = 2400.0                                                        ' Дальняя граница появления новой встречи.
+Public Const RAIDER_MAX_DISTANCE As Double = 3500.0                                                     ' Дальше неё старая встреча заменяется новой.
+Public Const RAIDER_STRAFE_SECONDS As Double = 1.6                                                      ' Период смены маневра уклонения в атаке.
+Public Const RAIDER_AIM_ERROR As Double = 45.0                                                          ' Разброс прицеливания рейдера, единицы поперёк линии огня.
+
+Public Const BOLT_MAX As Integer = 24                                                                   ' Пул лазерных импульсов: свои и чужие вместе.
+Public Const BOLT_SPEED_PLAYER As Double = 1300.0                                                       ' Скорость импульса игрока, единиц в секунду.
+Public Const BOLT_SPEED_ENEMY As Double = 950.0                                                         ' Скорость импульса рейдера.
+Public Const BOLT_DAMAGE_PLAYER As Double = 13.0                                                        ' Урон импульса игрока.
+Public Const BOLT_DAMAGE_ENEMY As Double = 9.0                                                          ' Урон импульса рейдера.
+Public Const BOLT_LIFE_SECONDS As Double = 1.3                                                          ' Время жизни импульса, секунды.
+Public Const BOLT_TAIL_LENGTH As Double = 26.0                                                          ' Длина штриха импульса на экране.
+Public Const BOLT_HIT_MARGIN As Double = 28.0                                                           ' Промах-запас к радиусу цели: близкий проход считается попаданием.
 
 ' #endregion

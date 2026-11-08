@@ -867,7 +867,7 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
         EnsureResizableRoot();
         EnsureAllocated();
 
-        if (Rank != 1 || IsView)
+        if (Rank != 1 || IsView || ElementType != TypeSymbol.Integer)
         {
             return false;
         }
@@ -914,6 +914,61 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
     }
 
     /// <summary>
+    /// Добавляет непосредственный LONG в плотное long[]-хранилище без
+    /// материализации значения: зеркало TryAppendOneDimensional.
+    /// </summary>
+    internal bool TryAppendOneDimensionalLong(long value)
+    {
+        EnsureResizableRoot();
+        EnsureAllocated();
+
+        if (Rank != 1 || IsView || ElementType != TypeSymbol.Long)
+        {
+            return false;
+        }
+
+        if (Length + 1 > MaxElementCount)
+        {
+            throw new ArrayAllocationFailureException(
+                $"Не удалось расширить массив: число элементов превысит предел {MaxElementCount}.");
+        }
+
+        var nextLowerBound = LowerBound;
+        var nextUpperBound = Length == 0
+            ? nextLowerBound
+            : checked(UpperBound + 1);
+
+        if (_elements!.Length < Length + 1)
+        {
+            var nextElements = CreateElementStorage(GrowCapacity(Length + 1));
+
+            if (Length > 0)
+            {
+                ElementStorage.Copy(_elements, 0, nextElements, 0, Length);
+            }
+
+            AttachStorage(nextElements);
+        }
+
+        _elements!.WriteLong(Length, value);
+        _lowerBounds![0] = nextLowerBound;
+        _upperBounds![0] = nextUpperBound;
+        _storageLowerBounds = _lowerBounds;
+        _storageUpperBounds = _upperBounds;
+
+        if (_storageStrides is null || _storageStrides[0] != 1)
+        {
+            _storageStrides = [1];
+        }
+
+        _fixedStorageBaseOffset = 0;
+        _visibleLength = nextUpperBound - nextLowerBound + 1;
+        _isView = false;
+        RenewStorageLifetime();
+        return true;
+    }
+
+    /// <summary>
     /// Добавляет непосредственный DOUBLE в плотное double[]-хранилище без
     /// материализации значения: зеркало TryAppendOneDimensional.
     /// </summary>
@@ -922,7 +977,7 @@ public sealed partial class RuntimeArrayValue : IRuntimeStoredValue
         EnsureResizableRoot();
         EnsureAllocated();
 
-        if (Rank != 1 || IsView)
+        if (Rank != 1 || IsView || ElementType != TypeSymbol.Double)
         {
             return false;
         }

@@ -58,6 +58,9 @@ Public Sub GenerateMarket(sceneSeedValue As Long, economyType As Integer)
         ' Цена: база + вклад экономики + колебание. Бедная система (7) дорожит
         ' всем промышленным, богатая (0) продаёт по базе.
         marketPrice[goodIndex] = goods[goodIndex].basePrice + economyType * goods[goodIndex].gradient + wavePart
+        If marketPrice[goodIndex] < 1 Then
+            marketPrice[goodIndex] = 1                                                                    ' Порог не ниже одного кредита: нулевой цены не бывает даже в бедных аграрных системах (аудит соответствия 2026-11-05).
+        End If
 
         ' Количество: база + колебание - вклад экономики. В бедной системе
         ' товаров мало: та же экономика, что подняла цену, срезала объём.
@@ -121,8 +124,8 @@ Public Function BuyGood(goodIndex As Integer) As Boolean
     Return True
 End Function
 
-' SellGood — Продать тонну товара с рынка: возвращает цену, товар возвращается
-' на витрину этой системы.
+' SellGood — Продать тонну товара ИЗ ТРУМА по рыночной цене: выручка зачисляется
+' пилоту, а товар возвращается на витрину этой системы.
 Public Function SellGood(goodIndex As Integer) As Boolean
     If GetCargoQty(goodIndex) <= 0 Then
         Return False                                                                                    ' В трюме этого товара нет.

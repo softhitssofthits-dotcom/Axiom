@@ -8,7 +8,7 @@
 
 <p align="center"><strong>BASIC-inspired syntax, strict types, and a dedicated development environment.</strong></p>
 
-![version](https://img.shields.io/badge/version-0.12.15-blue)
+![version](https://img.shields.io/badge/version-0.12.16-blue)
 ![IDE](https://img.shields.io/badge/IDE-0.15.8-green)
 ![platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![status](https://img.shields.io/badge/status-early%20preview-orange)
@@ -155,7 +155,7 @@ If you like BASIC, I welcome feedback and suggestions. A bug report, a small exa
 
 ## Project status
 
-Axiom is in early development. Current versions: language `0.12.15`, compiler `0.13.88`, IDE `0.15.8`. Windows is the primary platform. The language and IDE are still evolving; a portable distribution and support for other platforms have not been announced.
+Axiom is in early development. Current versions: language `0.12.16`, compiler `0.13.90`, IDE `0.15.8`. Windows is the primary platform. The language and IDE are still evolving; a portable distribution and support for other platforms have not been announced.
 
 ## License
 

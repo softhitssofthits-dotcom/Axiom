@@ -116,12 +116,13 @@ internal sealed class BytecodeCallFrame
             Array.Clear(_locals, 0, _locals.Length);
         }
 
-        if (_sharedLocals is not null)
+        if (_hasSharedLocals && _sharedLocals is not null)
         {
             Array.Clear(_sharedLocals, 0, _sharedLocals.Length);
         }
 
         _hasSharedLocals = false;
+        _freshFlatRecordsBySlot.Clear();
 
         for (var index = 0; index < Arguments.Length; index++)
         {
@@ -166,6 +167,7 @@ internal sealed class BytecodeCallFrame
         }
 
         _hasSharedLocals = false;
+        _freshFlatRecordsBySlot.Clear();
 
         for (var index = 0; index < Arguments.Length; index++)
         {
@@ -513,60 +515,48 @@ internal sealed class BytecodeCallFrame
         return true;
     }
 
-    // ВРЕМЕННАЯ инструментировка П08 (удалить после диагностики).
-    public static int DbgTryTakeCalls, DbgMapMiss, DbgSharedBlock, DbgRefMismatch, DbgTypeMismatch, DbgRememberCalls, DbgReuseTaken;
-
     /// <summary>
-    /// Возвращает прежнюю свежую запись слота для повторного использования,
+    /// Возвращает прежнюю свежую обёртку записи слота для повторного использования,
     /// если она всё ещё является текущим значением слота: уход записи в
     /// замыкание или BYREF делает слот общим и хранящееся значение
-    /// обнуляется, поэтому ссылка естественно разрывается. Запись
-    /// сбрасывается к значениям по умолчанию на месте.
+    /// обнуляется, поэтому ссылка естественно разрывается.
     /// </summary>
-    internal RuntimeRecordValue? TryTakeReusableFreshFlatRecord(int slot, string typeIdentity)
+    internal bool TryGetReusableFreshFlatRecord(int slot, string typeIdentity, out RuntimeValue reusableWrapper, out RuntimeRecordValue reusableRecord)
     {
-        DbgTryTakeCalls++;
+        reusableWrapper = RuntimeValue.Void;
+        reusableRecord = null!;
+
+        if (_localFixedStringLengths[slot] is not null
+            || (_hasSharedLocals && _sharedLocals![slot] is not null))
+        {
+            return false;
+        }
+
         var storedValue = _locals[slot].Object;
         if (storedValue is null || storedValue.Type == TypeSymbol.Void)
         {
-            DbgMapMiss++;
-            return null;
+            return false;
         }
 
-        if (!_freshFlatRecordsBySlot.TryGetValue(slot, out var cachedWrapper))
+        if (!_freshFlatRecordsBySlot.TryGetValue(slot, out var cachedWrapper)
+            || !ReferenceEquals(storedValue, cachedWrapper))
         {
-            DbgMapMiss++;
-            return null;
-        }
-
-        if (_hasSharedLocals && _sharedLocals![slot] is not null)
-        {
-            DbgSharedBlock++;
-            return null;
-        }
-
-        // Слот хранит ОБЁРТКУ RuntimeValue, карта — тоже: сравниваем их.
-        if (!ReferenceEquals(storedValue, cachedWrapper))
-        {
-            DbgRefMismatch++;
-            return null;
+            return false;
         }
 
         if (cachedWrapper.AsRecord() is not { } record
-            || !string.Equals(record.Type.Name, typeIdentity, StringComparison.Ordinal))
+            || !TypeIdentityFormat.Equals(record.Type.TypeIdentity, typeIdentity))
         {
-            DbgTypeMismatch++;
-            return null;
+            return false;
         }
 
-        DbgReuseTaken++;
-        record.ResetToDefaults();
-        return record;
+        reusableWrapper = cachedWrapper;
+        reusableRecord = record;
+        return true;
     }
 
     internal void RememberFreshFlatRecord(int slot, RuntimeValue freshWrapper)
     {
-        DbgRememberCalls++;
         _freshFlatRecordsBySlot[slot] = freshWrapper;
     }
 

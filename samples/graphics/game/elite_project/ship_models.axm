@@ -1,9 +1,13 @@
 ' ship_models — каркасные (проволочные) модели мира и их размещение.
 ' Модель хранится как набор трёхмерных вершин и связей-рёбер (пары номеров вершин).
 ' Модуль владеет списком объектов сцены: для каждого объекта — локальная модель,
-' позиция в мире, угол вращения и цвет каркаса.
+' позиция в мире, углы поворота и цвет каркаса.
 ' Каждый шаг симуляции модуль пересчитывает повернутые мировые вершины,
 ' чтобы модуль рендера мог сразу проецировать их без знания математики моделей.
+' Большинство объектов — «декорации» с собственным вращением; слот рейдера
+' (этап 4) управляется извне: модуль боя задаёт позицию и углы, а здесь
+' только выполняется поворот вершин. Уничтоженный объект скрывается
+' с экрана, сканера и из проверок столкновений признаком «жив».
 
 Import game_config
 Import math3d
@@ -23,7 +27,8 @@ End Type
 ' #region Закрытое состояние сцены
 
 Private Const ASTEROID_COUNT As Integer = 5                                                             ' Число астероидов в системе этапа 2а.
-Private Const OBJECT_TOTAL As Integer = 2 + ASTEROID_COUNT                                              ' Всего объектов: станция, корабль-спутник и астероиды.
+Private Const RAIDER_COUNT As Integer = 1                                                               ' Число рейдеров: один противник на сцене (этап 4).
+Private Const OBJECT_TOTAL As Integer = 2 + ASTEROID_COUNT + RAIDER_COUNT                               ' Всего объектов: станция, корабль-спутник, астероиды и рейдер.
 
 Private Dim objectModel[1 To OBJECT_TOTAL] As WireModel                                                 ' Локальные (неподвижные) модели объектов.
 Private Dim objectRotated[1 To OBJECT_TOTAL] As WireModel                                               ' Повернутые мировые вершины, обновляются каждый шаг.
@@ -31,7 +36,10 @@ Private Dim objectPosX[1 To OBJECT_TOTAL] As Double                             
 Private Dim objectPosY[1 To OBJECT_TOTAL] As Double                                                     ' Позиция объекта в мире: Y.
 Private Dim objectPosZ[1 To OBJECT_TOTAL] As Double                                                     ' Позиция объекта в мире: Z.
 Private Dim objectYaw[1 To OBJECT_TOTAL] As Double                                                      ' Текущий угол вращения объекта вокруг вертикали.
-Private Dim objectSpin[1 To OBJECT_TOTAL] As Double                                                     ' Скорость вращения объекта, радиан в секунду.
+Private Dim objectPitch[1 To OBJECT_TOTAL] As Double                                                    ' Текущий наклон объекта: нос вверх или вниз, радианы.
+Private Dim objectSpin[1 To OBJECT_TOTAL] As Double                                                     ' Скорость собственного вращения объекта, радиан в секунду.
+Private Dim objectExternal[1 To OBJECT_TOTAL] As Boolean                                                'TRUE: углы и позицию задаёт внешний модуль (бой), собственного вращения нет.
+Private Dim objectAlive[1 To OBJECT_TOTAL] As Boolean                                                   ' FALSE: объект уничтожен — не рисуется, не сканируется, не сталкивается.
 Private Dim objectColor[1 To OBJECT_TOTAL] As Integer                                                   ' Цвет каркаса объекта.
 Private Dim objectRadius[1 To OBJECT_TOTAL] As Double                                                   ' Радиус столкновения объекта: ближе него корабль не проходит.
 Private Dim sceneSeed As Long = 101                                                                     ' Текущее семя сцены: от него детерминированно расставляются астероиды.
@@ -148,6 +156,46 @@ Private Function AddCompanionModel() As WireModel
     PutEdge(model, 10, 6, 7)                                                                            ' Брюхо — левая гондола.
     PutEdge(model, 11, 6, 8)                                                                            ' Брюхо — правая гондола.
     PutEdge(model, 12, 7, 8)                                                                            ' Поперечина гондол.
+
+    Return model
+End Function
+
+' AddRaiderModel — Заполняет модель враждебного рейдера (этап 4): агрессивный
+' «дротик» с широкими крыльями, высоким килем и парой двигателей позади.
+' Авторская геометрия, 8 вершин и 14 рёбер; нос модели смотрит в +Z,
+' поэтому поворот yaw+pitch наводит её точно на цель.
+Private Function AddRaiderModel() As WireModel
+    Dim model As WireModel                                                                              ' Локальная сборка модели.
+
+    REDIM model.vertexX[1 To 8]                                                                         ' 8 вершин.
+    REDIM model.vertexY[1 To 8]
+    REDIM model.vertexZ[1 To 8]
+    REDIM model.edgeA[1 To 14]                                                                          ' 14 рёбер.
+    REDIM model.edgeB[1 To 14]
+
+    PutVertex(model, 1, 0.0, 0.0, 150.0)                                                                ' Нос рейдера: длинная игла вперёд.
+    PutVertex(model, 2, -150.0, 0.0, -70.0)                                                             ' Законцовка левого крыла.
+    PutVertex(model, 3, 150.0, 0.0, -70.0)                                                              ' Законцовка правого крыла.
+    PutVertex(model, 4, 0.0, 80.0, -95.0)                                                               ' Вершина киля.
+    PutVertex(model, 5, 0.0, -45.0, -65.0)                                                              ' Нижний хвостовой узел.
+    PutVertex(model, 6, 0.0, 30.0, -25.0)                                                               ' Верхний узел хребта фюзеляжа.
+    PutVertex(model, 7, -45.0, -15.0, -105.0)                                                           ' Левый двигатель.
+    PutVertex(model, 8, 45.0, -15.0, -105.0)                                                            ' Правый двигатель.
+
+    PutEdge(model, 1, 1, 2)                                                                             ' Нос — левое крыло.
+    PutEdge(model, 2, 1, 3)                                                                             ' Нос — правое крыло.
+    PutEdge(model, 3, 2, 5)                                                                             ' Левое крыло — нижний хвост.
+    PutEdge(model, 4, 3, 5)                                                                             ' Правое крыло — нижний хвост.
+    PutEdge(model, 5, 2, 4)                                                                             ' Левое крыло — киль (силуэт).
+    PutEdge(model, 6, 3, 4)                                                                             ' Правое крыло — киль (силуэт).
+    PutEdge(model, 7, 4, 6)                                                                             ' Киль — хребет.
+    PutEdge(model, 8, 6, 1)                                                                             ' Хребет — нос: продольная линия фюзеляжа.
+    PutEdge(model, 9, 5, 6)                                                                             ' Нижний хвост — хребет.
+    PutEdge(model, 10, 2, 7)                                                                            ' Левое крыло — левый двигатель.
+    PutEdge(model, 11, 3, 8)                                                                            ' Правое крыло — правый двигатель.
+    PutEdge(model, 12, 7, 8)                                                                            ' Поперечина двигателей.
+    PutEdge(model, 13, 7, 5)                                                                            ' Левый двигатель — нижний хвост.
+    PutEdge(model, 14, 8, 5)                                                                            ' Правый двигатель — нижний хвост.
 
     Return model
 End Function
@@ -296,7 +344,7 @@ Public Sub InitObjects(sceneSeedValue As Long)
     objectColor[2] = COLOR_SHIP_HULL                                                                    ' Тёплый жёлтый каркас спутника.
     objectRadius[2] = 110.0                                                                             ' Спутник меньше станции.
 
-    For objectIndex = 3 To OBJECT_TOTAL                                                                 ' Астероиды: расстановка от семени системы.
+    For objectIndex = 3 To OBJECT_TOTAL - 1                                                             ' Астероиды: расстановка от семени системы.
         objectModel[objectIndex] = AddAsteroidModel((objectIndex - 3) Mod 3 + 1)                        ' Варианты глыб идут по кругу: 1, 2, 3, 1, 2.
 
         Dim beltAngle As Double = NextSceneRandom01() * 6.28318530717958647                             ' Угол на кольце вокруг начала координат.
@@ -311,6 +359,29 @@ Public Sub InitObjects(sceneSeedValue As Long)
         objectRadius[objectIndex] = 75.0                                                                ' Радиус столкновения меньше габаритов глыбы.
     Next objectIndex
 
+    ' Слот рейдера (последний): модель готова, но встреча ещё не случилась —
+    ' модуль боя оживит её командой SetObjectAlive из собственного семени.
+    objectModel[OBJECT_TOTAL] = AddRaiderModel()                                                        ' Каркас рейдера этапа 4.
+    objectPosX[OBJECT_TOTAL] = 0.0                                                                      ' Позиция будет назначена при появлении.
+    objectPosY[OBJECT_TOTAL] = 0.0
+    objectPosZ[OBJECT_TOTAL] = -1500.0                                                                  ' До появления стоит далеко позади корабля.
+    objectYaw[OBJECT_TOTAL] = 0.0                                                                       ' Ориентацию задаёт модуль боя.
+    objectPitch[OBJECT_TOTAL] = 0.0
+    objectSpin[OBJECT_TOTAL] = 0.0                                                                      ' Собственного вращения нет: цель маневрирует.
+    objectExternal[OBJECT_TOTAL] = True                                                                 ' Управление трансформом — внешнее (модуль боя).
+    objectColor[OBJECT_TOTAL] = COLOR_RAIDER                                                            ' Красно-оранжевый каркас противника.
+    objectRadius[OBJECT_TOTAL] = 90.0                                                                   ' Габарит рейдера для попаданий и столкновений.
+
+    For objectIndex = 1 To OBJECT_TOTAL                                                                 ' Общие начальные признаки: декорации живы и крутятся сами.
+        If objectIndex < OBJECT_TOTAL Then
+            objectAlive[objectIndex] = True                                                             ' Станция, спутник и астероиды существуют сразу.
+            objectExternal[objectIndex] = False                                                         ' Их вращением владеет этот модуль.
+            objectPitch[objectIndex] = 0.0                                                              ' Декорации не наклоняются: только рыскание.
+        Else
+            objectAlive[objectIndex] = False                                                            ' Рейдер появится командой модуля боя.
+        End If
+    Next objectIndex
+
     For objectIndex = 1 To OBJECT_TOTAL                                                                 ' Рабочие копии: присваивание записи копирует все массивы независимо.
         objectRotated[objectIndex] = objectModel[objectIndex]
     Next objectIndex
@@ -318,25 +389,40 @@ End Sub
 
 ' UpdateObjects — Продвигает вращение объектов и пересчитывает повернутые
 ' мировые вершины. Вызывается один раз за фиксированный шаг симуляции.
+' Внешние объекты (рейдер) не крутятся сами: их углы назначил модуль боя,
+' но поворот вершин до мировых координат выполняется здесь же, единым кодом.
 Public Sub UpdateObjects(dtSeconds As Double)
     For objectIndex = 1 To OBJECT_TOTAL                                                                 ' Обходим все объекты сцены.
-        objectYaw[objectIndex] = WrapAngle(objectYaw[objectIndex] + objectSpin[objectIndex] * dtSeconds) ' Накопление угла с нормализацией без роста.
+        If objectAlive[objectIndex] Then                                                                ' Уничтоженный объект не обновляется и не рисуется.
+            If Not objectExternal[objectIndex] Then                                                     ' Декорации накапливают собственное вращение...
+                objectYaw[objectIndex] = WrapAngle(objectYaw[objectIndex] + objectSpin[objectIndex] * dtSeconds) ' ...с нормализацией угла без роста.
+            End If
 
-        Dim cosYaw As Double = Cos(objectYaw[objectIndex])                                              ' Тригонометрия вращения вокруг вертикали: считаем один раз на объект.
-        Dim sinYaw As Double = Sin(objectYaw[objectIndex])
+            Dim cosYaw As Double = Cos(objectYaw[objectIndex])                                          ' Тригонометрия вращения вокруг вертикали: считаем один раз на объект.
+            Dim sinYaw As Double = Sin(objectYaw[objectIndex])
+            Dim cosPitch As Double = Cos(objectPitch[objectIndex])                                      ' Тангаж: наклон носа вверх или вниз.
+            Dim sinPitch As Double = Sin(objectPitch[objectIndex])
 
-        Dim vertexTotal As Integer = ARRAYLENGTH(objectModel[objectIndex].vertexX[])                    ' Число вершин текущей модели.
+            Dim vertexTotal As Integer = ARRAYLENGTH(objectModel[objectIndex].vertexX[])                ' Число вершин текущей модели.
 
-        For vertexIndex = 1 To vertexTotal                                                              ' Каждая локальная вершина превращается в мировую.
-            Dim localX As Double = objectModel[objectIndex].vertexX[vertexIndex]                        ' Локальные координаты вершины.
-            Dim localY As Double = objectModel[objectIndex].vertexY[vertexIndex]
-            Dim localZ As Double = objectModel[objectIndex].vertexZ[vertexIndex]
+            For vertexIndex = 1 To vertexTotal                                                          ' Каждая локальная вершина превращается в мировую.
+                Dim localX As Double = objectModel[objectIndex].vertexX[vertexIndex]                    ' Локальные координаты вершины.
+                Dim localY As Double = objectModel[objectIndex].vertexY[vertexIndex]
+                Dim localZ As Double = objectModel[objectIndex].vertexZ[vertexIndex]
 
-            ' Вращение вокруг вертикальной оси Y: поворот пары (X, Z).
-            objectRotated[objectIndex].vertexX[vertexIndex] = localX * cosYaw + localZ * sinYaw + objectPosX[objectIndex] ' Мировой X.
-            objectRotated[objectIndex].vertexY[vertexIndex] = localY + objectPosY[objectIndex]          ' Мировой Y: вращения по вертикали нет.
-            objectRotated[objectIndex].vertexZ[vertexIndex] = -localX * sinYaw + localZ * cosYaw + objectPosZ[objectIndex] ' Мировой Z.
-        Next vertexIndex
+                ' Шаг 1: тангаж вокруг ЛОКАЛЬНОЙ оси X — поворот пары (Y, Z): нос (+Z)
+                ' при положительном угле поднимается вверх (+Y), как у корабля игрока.
+                ' Тангаж идёт ПЕРВЫМ: тогда нос после рыскания указывает ровно туда,
+                ' куда рассчитаны углы наводки (yaw = ATN2(x,z), pitch = ASIN(y)).
+                Dim pitchY As Double = localY * cosPitch + localZ * sinPitch                            ' Y после тангажа.
+                Dim pitchZ As Double = -localY * sinPitch + localZ * cosPitch                           ' Z после тангажа.
+
+                ' Шаг 2: вращение вокруг вертикальной оси Y мира — поворот пары (X, Z).
+                objectRotated[objectIndex].vertexX[vertexIndex] = localX * cosYaw + pitchZ * sinYaw + objectPosX[objectIndex] ' Мировой X.
+                objectRotated[objectIndex].vertexY[vertexIndex] = pitchY + objectPosY[objectIndex]      ' Мировой Y: рыскание вертикаль не меняет.
+                objectRotated[objectIndex].vertexZ[vertexIndex] = -localX * sinYaw + pitchZ * cosYaw + objectPosZ[objectIndex] ' Мировой Z.
+            Next vertexIndex
+        End If
     Next objectIndex
 End Sub
 
@@ -389,6 +475,39 @@ End Function
 Public Sub GetObjectEdge(objectIndex As Integer, edgeIndex As Integer, ByRef firstVertex As Integer, ByRef secondVertex As Integer)
     firstVertex = objectRotated[objectIndex].edgeA[edgeIndex]                                           ' Первая вершина ребра.
     secondVertex = objectRotated[objectIndex].edgeB[edgeIndex]                                          ' Вторая вершина ребра.
+End Sub
+
+' #endregion
+
+' #region Управление боевыми объектами (этап 4)
+
+' GetRaiderSlot — Номер слота рейдера в списке объектов сцены.
+Public Function GetRaiderSlot() As Integer
+    Return OBJECT_TOTAL                                                                                 ' Рейдер всегда последний: удобно для добавления декораций.
+End Function
+
+' GetObjectAlive — Существует ли объект сейчас: уничтоженный не рисуется,
+' не сканируется и не сталкивается.
+Public Function GetObjectAlive(objectIndex As Integer) As Boolean
+    Return objectAlive[objectIndex]
+End Function
+
+' SetObjectAlive — Прячет или показывает объект: модуль боя «уничтожает»
+' рейдера и позднее возвращает новую встречу тем же слотом.
+Public Sub SetObjectAlive(objectIndex As Integer, aliveNow As Boolean)
+    objectAlive[objectIndex] = aliveNow
+End Sub
+
+' SetObjectTransform — Назначает позицию и углы объекта извне (модулем боя):
+' рейдер летит и маневрирует, а поворот вершин останется общей работой
+' UpdateObjects. Углы наводки: yaw = ATN2(направление.X, направление.Z),
+' pitch = ASIN(направление.Y) для единичного направления.
+Public Sub SetObjectTransform(objectIndex As Integer, posX As Double, posY As Double, posZ As Double, yawValue As Double, pitchValue As Double)
+    objectPosX[objectIndex] = posX                                                                      ' Мировая позиция: X.
+    objectPosY[objectIndex] = posY                                                                      ' Позиция: Y.
+    objectPosZ[objectIndex] = posZ                                                                      ' Позиция: Z.
+    objectYaw[objectIndex] = yawValue                                                                   ' Курс: рыскание вокруг вертикали.
+    objectPitch[objectIndex] = pitchValue                                                               ' Наклон носа: тангаж.
 End Sub
 
 ' #endregion

@@ -6,19 +6,17 @@ namespace Axiom.Runtime.Builtins;
 
 internal static partial class BuiltinPrintUsingHelpers
 {
-    public static string FormatNumericField(PrintUsingNumericFieldToken field, RuntimeValue value)
+    public static string FormatNumericField(PrintUsingNumericFormatInfo info, RuntimeValue value)
     {
-        var info = field.Info;
-
         if (!info.HasDollar && !info.HasStarFill && !info.HasThousands && !info.HasExponent)
         {
-            return FormatNumericBasic(field.Mask, info, value);
+            return FormatNumericBasic(info, value);
         }
 
-        return FormatNumericExtended(field.Mask, info, value);
+        return FormatNumericExtended(info, value);
     }
 
-    public static string FormatNumericBasic(string mask, PrintUsingNumericFormatInfo info, RuntimeValue value)
+    public static string FormatNumericBasic(PrintUsingNumericFormatInfo info, RuntimeValue value)
     {
         var negative = IsNegative(value);
         var fullInvariant = value.ToDisplayString();
@@ -41,7 +39,15 @@ internal static partial class BuiltinPrintUsingHelpers
             builder.Append('-');
         }
 
-        builder.Append(integerPart.PadLeft(info.IntegerDigits, ' '));
+        var signInDigitSlots = negative && !info.ForceSign && !info.NegativeSignOnly;
+        var requiredDigitsWidth = integerPart.Length + (signInDigitSlots ? 1 : 0);
+        if (requiredDigitsWidth > info.IntegerDigits)
+        {
+            return "%" + fullInvariant;
+        }
+
+        var coreIntegerText = signInDigitSlots ? "-" + integerPart : integerPart;
+        builder.Append(coreIntegerText.PadLeft(info.IntegerDigits, ' '));
 
         if (info.FractionDigits > 0)
         {
@@ -59,7 +65,7 @@ internal static partial class BuiltinPrintUsingHelpers
             : builder.ToString();
     }
 
-    public static string FormatNumericExtended(string mask, PrintUsingNumericFormatInfo info, RuntimeValue value)
+    public static string FormatNumericExtended(PrintUsingNumericFormatInfo info, RuntimeValue value)
     {
         var negative = IsNegative(value);
         var fullInvariant = value.ToDisplayString();

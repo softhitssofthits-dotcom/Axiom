@@ -77,18 +77,20 @@ Public Sub IntegrateMotion(dtSeconds As Double)
     Dim blocked As Boolean = False                                                                      ' Признак: шаг ведёт внутрь чужого объекта.
 
     For objectIndex = 1 To GetObjectCount()                                                             ' Проверка всех объектов сцены.
-        Dim centerPosX As Double                                                                     ' Центр объекта: X.
-        Dim centerPosY As Double                                                                     ' Центр объекта: Y.
-        Dim centerPosZ As Double                                                                     ' Центр объекта: Z.
-        GetObjectPos(objectIndex, centerPosX, centerPosY, centerPosZ)
+        If GetObjectAlive(objectIndex) Then                                                             ' Уничтоженный объект не сталкивается (этап 4).
+            Dim centerPosX As Double                                                                    ' Центр объекта: X.
+            Dim centerPosY As Double                                                                    ' Центр объекта: Y.
+            Dim centerPosZ As Double                                                                    ' Центр объекта: Z.
+            GetObjectPos(objectIndex, centerPosX, centerPosY, centerPosZ)
 
-        Dim offsetX As Double = candidateX - centerPosX                                                 ' Смещение пробной позиции от центра: X.
-        Dim offsetY As Double = candidateY - centerPosY                                                 ' Смещение: Y.
-        Dim offsetZ As Double = candidateZ - centerPosZ                                                 ' Смещение: Z.
-        Dim limit As Double = GetObjectRadius(objectIndex) + COLLISION_MARGIN                           ' Граница запретной сферы объекта.
+            Dim offsetX As Double = candidateX - centerPosX                                             ' Смещение пробной позиции от центра: X.
+            Dim offsetY As Double = candidateY - centerPosY                                             ' Смещение: Y.
+            Dim offsetZ As Double = candidateZ - centerPosZ                                             ' Смещение: Z.
+            Dim limit As Double = GetObjectRadius(objectIndex) + COLLISION_MARGIN                       ' Граница запретной сферы объекта.
 
-        If offsetX * offsetX + offsetY * offsetY + offsetZ * offsetZ < limit * limit Then
-            blocked = True                                                                              ' Шаг приводит внутрь сферы столкновения.
+            If offsetX * offsetX + offsetY * offsetY + offsetZ * offsetZ < limit * limit Then
+                blocked = True                                                                          ' Шаг приводит внутрь сферы столкновения.
+            End If
         End If
     Next objectIndex
 

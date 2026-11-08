@@ -32,6 +32,7 @@ Private Dim viewCenterX As Double = VIEW_WIDTH / 2.0                            
 Private Dim viewCenterY As Double = VIEW_HEIGHT / 2.0                                                   ' Экранная координата центра по вертикали.
 
 Private Const TWO_PI As Double = 6.28318530717958647                                                    ' Полный оборот в радианах.
+Private Const CLIP_EPSILON As Double = 0.01                                                              ' Запас за ближней плоскостью: обрезанное ребро обязано оказаться СТРОГО впереди порога видимости ProjectPoint (NEAR_Z + запас > NEAR_Z); без запаса обрезанное ребро отбрасывалось как невидимое (аудит 2026-11-02, WORKLOG Elite-15).
 
 ' #endregion
 
@@ -82,7 +83,10 @@ Public Sub UpdateOrientation(yawAngle As Double, pitchAngle As Double, rollAngle
     Dim rightZ As Double = -sinYaw                                                                      ' Право: Z-составляющая.
 
     ' Вектор «верх» до крена: векторное произведение носа и «право».
-    Dim upX As Double = -noseY * rightZ - noseZ * rightY                                          ' Верх: X-составляющая произведения.
+    ' (Аудит 2026-11-02: в компоненте X была ошибка знака — базис терял
+    ' перпендикулярность при ненулевых рыскании И тангаже одновременно;
+    ' доказано консольным тестом ортогональности, см. WORKLOG Elite-15.)
+    Dim upX As Double = noseY * rightZ - noseZ * rightY                                          ' Верх: X-составляющая произведения.
     Dim upY As Double = noseZ * rightX - noseX * rightZ                                           ' Верх: Y-составляющая произведения.
     Dim upZ As Double = noseX * rightY - noseY * rightX                                           ' Верх: Z-составляющая произведения.
 
@@ -186,10 +190,10 @@ Public Sub ProjectEdge(x1 As Double, y1 As Double, z1 As Double, x2 As Double, y
     Dim cz1 As Double = z1
 
     If z1 <= NEAR_Z Then                                                                                ' Первая точка за ближней плоскостью: находим пересечение ребра с плоскостью.
-        Dim t As Double = (NEAR_Z - z1) / (z2 - z1)                                                     ' Доля пути от первой точки до точки пересечения (0..1).
+        Dim t As Double = (NEAR_Z + CLIP_EPSILON - z1) / (z2 - z1)                                      ' Доля пути от первой точки до точки пересечения (0..1).
         cx1 = x1 + (x2 - x1) * t                                                                        ' Линейная интерполяция X в точке пересечения.
         cy1 = y1 + (y2 - y1) * t                                                                        ' Линейная интерполяция Y в точке пересечения.
-        cz1 = NEAR_Z                                                                                    ' Глубина пересечения точно равна ближней плоскости.
+        cz1 = NEAR_Z + CLIP_EPSILON                                                                     ' Глубина пересечения: чуть ЗА плоскостью, иначе ProjectPoint сочтёт её невидимой.
     End If
 
     Dim cx2 As Double = x2                                                                              ' Рабочая копия второй точки.
@@ -197,10 +201,10 @@ Public Sub ProjectEdge(x1 As Double, y1 As Double, z1 As Double, x2 As Double, y
     Dim cz2 As Double = z2
 
     If z2 <= NEAR_Z Then                                                                                ' Вторая точка за ближней плоскостью: обрезаем её симметрично.
-        Dim t2 As Double = (NEAR_Z - z2) / (z1 - z2)                                                    ' Доля пути от второй точки к первой.
+        Dim t2 As Double = (NEAR_Z + CLIP_EPSILON - z2) / (z1 - z2)                                     ' Доля пути от второй точки к первой.
         cx2 = x2 + (x1 - x2) * t2                                                                       ' Линейная интерполяция X.
         cy2 = y2 + (y1 - y2) * t2                                                                       ' Линейная интерполяция Y.
-        cz2 = NEAR_Z                                                                                    ' Глубина пересечения.
+        cz2 = NEAR_Z + CLIP_EPSILON                                                                     ' Глубина пересечения: чуть ЗА плоскостью, симметрично первой точке.
     End If
 
     Dim okA As Boolean                                                                                  ' Видимость первого конца.

@@ -1,7 +1,9 @@
-' player_state — состояние пилота: кредиты и грузовой трюм.
-' Все изменения проходят через процедуры с проверками: трюм не переполняется,
-' кредиты не уходят в минус. Рынок (economy) и док работают только через эти
-' функции, поэтому деньги и груз согласованы между экранами.
+' player_state — состояние пилота и его корабля: кредиты, грузовой трюм
+' и живучесть (щиты, корпус, энергия). Все изменения проходят через
+' процедуры с проверками: трюм не переполняется, кредиты не уходят в минус,
+' урон каскадом «щиты → корпус» не уходит в отрицательные значения.
+' Рынок (economy), док и бой (combat) работают только через эти функции,
+' поэтому деньги, груз и живучесть согласованы между экранами.
 
 Import game_config
 
@@ -10,6 +12,14 @@ Import game_config
 Private Dim credits As Long = START_CREDITS                                                             ' Кредиты на счету пилота.
 Private Dim cargoQty[1 To GOODS_TOTAL] As Integer                                                       ' Груз: тонн по каждому товару (1..GOODS_TOTAL).
 Private Dim cargoTonsUsed As Integer = 0                                                                ' Суммарная загрузка трюма, тонн.
+
+' #endregion
+
+' #region Закрытое состояние живучести (этап 4)
+
+Private Dim shieldAmount As Double = PLAYER_SHIELD_MAX                                                  ' Щиты: поглощают урон до корпуса.
+Private Dim hullAmount As Double = PLAYER_HULL_MAX                                                      ' Корпус: запас прочности после щитов.
+Private Dim energyAmount As Double = PLAYER_ENERGY_MAX                                                  ' Энергия: питает подзарядку щитов.
 
 ' #endregion
 
@@ -66,5 +76,75 @@ Public Function ChangeCargo(goodIndex As Integer, delta As Integer) As Boolean
     cargoTonsUsed = cargoTonsUsed + delta                                                                       ' И суммарной загрузки.
     Return True
 End Function
+
+' #endregion
+
+' #region Живучесть корабля (этап 4)
+
+' ShipShieldRatio / ShipHullRatio / ShipEnergyRatio — Заполненность щитов,
+' корпуса и энергии в долях единицы: приборная панель рисует полосы
+' умножением ширины на эти значения.
+Public Function ShipShieldRatio() As Double
+    Return shieldAmount / PLAYER_SHIELD_MAX
+End Function
+
+Public Function ShipHullRatio() As Double
+    Return hullAmount / PLAYER_HULL_MAX
+End Function
+
+Public Function ShipEnergyRatio() As Double
+    Return energyAmount / PLAYER_ENERGY_MAX
+End Function
+
+' ApplyShipDamage — Наносит урон каскадом, как в классике: сначала расходуются
+' щиты, остаток уходит в корпус. Значения не опускаются ниже нуля.
+' Возвращает TRUE, если после удара корпус уничтожен: вызывающий код боя
+' решает, что делать с погибшим пилотом.
+Public Function ApplyShipDamage(damageAmount As Double) As Boolean
+    Dim absorbedByShield As Double = Min(damageAmount, shieldAmount)                                    ' Сколько урона возьмут на себя щиты.
+
+    shieldAmount = shieldAmount - absorbedByShield                                                      ' Щиты тратятся первыми...
+    Dim toHull As Double = damageAmount - absorbedByShield                                              ' ...остаток проходит в корпус.
+    If toHull > 0.0 Then
+        hullAmount = hullAmount - toHull                                                                ' Корпус пробит: прочность убывает.
+    End If
+
+    If shieldAmount < 0.0 Then
+        shieldAmount = 0.0                                                                              ' Щиты не бывают отрицательными.
+    End If
+    If hullAmount < 0.0 Then
+        hullAmount = 0.0                                                                                ' Корпус тоже: ноль означает гибель.
+    End If
+
+    Return hullAmount <= 0.0                                                                            ' TRUE — корабль уничтожен.
+End Function
+
+' RechargeShipSystems — Шаг восстановления: энергию корабль вырабатывает сам,
+' а щиты заряжаются от энергии один к одному, пока она есть (принцип
+' «щиты питаются энергией» из классики). Вызывается раз за шаг симуляции.
+Public Sub RechargeShipSystems(dtSeconds As Double)
+    energyAmount = energyAmount + PLAYER_ENERGY_REGEN * dtSeconds                                       ' Банки энергии восстанавливаются постоянно.
+    If energyAmount > PLAYER_ENERGY_MAX Then
+        energyAmount = PLAYER_ENERGY_MAX                                                                ' Выше ёмкости не запасём.
+    End If
+
+    If shieldAmount < PLAYER_SHIELD_MAX And energyAmount > 0.0 Then                                     ' Щиты просят заряд, пока энергия есть.
+        Dim needed As Double = PLAYER_SHIELD_MAX - shieldAmount                                         ' Сколько щитам осталось до полного.
+        Dim charge As Double = Min(PLAYER_SHIELD_REGEN * dtSeconds, energyAmount)                       ' Заряд ограничен скоростью и энергией.
+        charge = Min(charge, needed)                                                                    ' И остатком ёмкости щитов.
+
+        shieldAmount = shieldAmount + charge                                                            ' Щиты заряжаются...
+        energyAmount = energyAmount - charge                                                            ' ...а энергия расходуется один к одному.
+    End If
+End Sub
+
+' RestoreShipFully — Полное восстановление щитов, корпуса и энергии:
+' авария пилота (спасательная капсула) возвращает корабль в строй.
+
+Public Sub RestoreShipFully()
+    shieldAmount = PLAYER_SHIELD_MAX
+    hullAmount = PLAYER_HULL_MAX
+    energyAmount = PLAYER_ENERGY_MAX
+End Sub
 
 ' #endregion

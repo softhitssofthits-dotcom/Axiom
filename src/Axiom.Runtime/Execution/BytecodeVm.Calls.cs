@@ -406,7 +406,8 @@ public sealed partial class BytecodeVm
         // материализации, кадр берётся из пула. Прочие формы — общий путь.
         if (argumentCount == 2 && frame.EvaluationStack.Count >= 3
             && frame.EvaluationStack.PeekVmValue(2).Object is { } peekedTarget
-            && peekedTarget.AsFunction() is { } peekedFunction
+            && peekedTarget.Type is FunctionTypeSymbol
+            && peekedTarget.Value is RuntimeFunctionValue peekedFunction
             && !peekedFunction.Function.IsBuiltIn
             && TryResolveFunctionRoutine(peekedFunction, location, out var peekedRoutine)
             && peekedRoutine.ParameterCount == 2 && peekedRoutine.ParameterVariables.Count == 2

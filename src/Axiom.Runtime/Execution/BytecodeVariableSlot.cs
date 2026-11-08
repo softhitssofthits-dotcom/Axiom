@@ -141,14 +141,20 @@ internal class BytecodeVariableSlot
         {
             // Не удерживать материализованное значение между вызовами.
             _value = null;
+            _immediateDouble = false;
             _integer = 0;
+            IsForEachItem = false;
+            IsForEachItemPending = false;
             return true;
         }
 
         if (_reusableDouble)
         {
             _value = null;
+            _immediateDouble = true;
             _double = 0;
+            IsForEachItem = false;
+            IsForEachItemPending = false;
             return true;
         }
 

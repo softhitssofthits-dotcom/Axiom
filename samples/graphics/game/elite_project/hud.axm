@@ -1,13 +1,15 @@
 ' hud — приборная панель и служебные надписи.
-' Панель рисуется поверх мира после DrawWorld: рамка, скорость, углы ориентации,
-' частота кадров и подсказка управления. Модуль только отображает состояние,
-' читая его через функции-геттеры других модулей.
+' Панель рисуется поверх мира после DrawWorld: слева — полётные показания,
+' справа — боевая панель (щиты, энергия, корпус, победы), внизу — сканер.
+' Модуль только отображает состояние, читая его через функции-геттеры
+' других модулей.
 
 Import game_config
 Import flight_state
 Import nav_data
 Import player_state
 Import dock
+Import combat
 Import radar
 
 ' #region Панель
@@ -37,11 +39,16 @@ Public Sub DrawHud(frameRate As Double, isPaused As Boolean)
     Drawrect 210, 90, 180, 12, COLOR_HUD_FRAME                                                          ' Рамка полосы топлива.
 
     If isPaused Then
-        Drawtext "ПАУЗА", 210, 52, COLOR_HUD_TEXT                                                       ' Индикатор паузы на панели.
+        Drawtext "ПАУЗА", 30, 96, COLOR_HUD_TEXT                                                        ' Индикатор паузы: своя строка под креном (до аудита 2026-11-02 печатался поверх строки «СИСТЕМА»).
     End If
 
     If CollisionAlert() Then
         Drawtext "СТОЛКНОВЕНИЕ", VIEW_WIDTH \ 2 - 66, 150, COLOR_ALERT                                  ' Предупреждение по центру: корабль упёрся в объект.
+    End If
+
+    Dim combatMessage As String = GetCombatMessage()                                                    ' Последнее боевое событие (пустое — не показываем).
+    If combatMessage <> "" Then
+        Drawtext combatMessage, 340, 180, COLOR_ALERT                                                   ' Боевое сообщение ниже столкновения: своей строкой, без наложений.
     End If
 
     Dim wealthLine As String = "КРЕДИТЫ: " + Trim(Str(GetCredits())) + "   ГРУЗ: " + Trim(Str(CargoUsed())) + "/" + Trim(Str(CARGO_MAX_TONS)) + " Т"
@@ -51,10 +58,35 @@ Public Sub DrawHud(frameRate As Double, isPaused As Boolean)
         Drawtext "D: СТЫКОВКА", VIEW_WIDTH \ 2 - 52, RADAR_BAND_TOP - 26, COLOR_ALERT                   ' Подсказка: корабль в зоне стыковки станции.
     End If
 
+    ' --- Боевая панель (этап 4): зеркально полётной, в правом верхнем углу. ---
+    Drawrect 872, 16, 392, 108, COLOR_HUD_FRAME                                                         ' Рамка боевой панели.
+
+    Drawtext "ЩИТ", 886, 22, COLOR_HUD_TEXT                                                             ' Метка полосы щитов.
+    Fillrect 950, 24, CInt(180 * ShipShieldRatio()), 12, COLOR_HUD_TEXT                                 ' Заполнение щитов.
+    Drawrect 950, 24, 180, 12, COLOR_HUD_FRAME                                                          ' Рамка полосы щитов.
+
+    Drawtext "ЭНЕРГИЯ", 886, 44, COLOR_HUD_TEXT                                                         ' Метка полосы энергии.
+    Fillrect 950, 46, CInt(180 * ShipEnergyRatio()), 12, COLOR_HUD_TEXT                                 ' Заполнение банков энергии.
+    Drawrect 950, 46, 180, 12, COLOR_HUD_FRAME                                                          ' Рамка полосы энергии.
+
+    Drawtext "КОРПУС", 886, 66, COLOR_HUD_TEXT                                                          ' Метка полосы корпуса.
+    Dim hullColor As Integer = COLOR_HUD_TEXT                                                           ' Цвет корпуса: обычный зелёный.
+    If ShipHullRatio() < 0.34 Then
+        hullColor = COLOR_ALERT                                                                         ' Пробития: корпус мигает красным.
+    End If
+    Fillrect 950, 68, CInt(180 * ShipHullRatio()), 12, hullColor                                        ' Заполнение корпуса.
+    Drawrect 950, 68, 180, 12, COLOR_HUD_FRAME                                                          ' Рамка полосы корпуса.
+
+    Drawtext "ПОБЕДЫ: " + Trim(Str(TotalKills())), 886, 96, COLOR_HUD_TEXT                              ' Счёт уничтоженных рейдеров за весь полёт.
+
+    If EnemyDistance() > 0.0 Then                                                                       ' Живой рейдер: дистанция до него.
+        Drawtext "ЦЕЛЬ: " + Trim(Str(CInt(EnemyDistance()))) + " ЕД", 1044, 96, COLOR_ALERT             ' Красная строка цели в правой части панели.
+    End If
+
     Drawline 0, RADAR_BAND_TOP, VIEW_WIDTH, RADAR_BAND_TOP, COLOR_HUD_FRAME                             ' Верхняя граница нижней приборной полосы, как панель в классике.
     DrawRadar()                                                                                         ' Сканер на приборной полосе: объекты системы в плане и по высоте.
 
-    Drawtext "СТРЕЛКИ: РУЛЬ   ПРОБЕЛ: ТЯГА   S: ТОРМОЗ   P: ПАУЗА   ESC: ВЫХОД", 20, VIEW_HEIGHT - 30, COLOR_HUD_DIM ' Подсказка клавиш внизу экрана.
+    Drawtext "СТРЕЛКИ: РУЛЬ   ПРОБЕЛ: ТЯГА   S: ТОРМОЗ   X: ОГОНЬ   M: КАРТА   P: ПАУЗА", 20, VIEW_HEIGHT - 30, COLOR_HUD_DIM ' Подсказка клавиш внизу экрана: огонь добавлен в список (этап 4).
 End Sub
 
 ' #endregion

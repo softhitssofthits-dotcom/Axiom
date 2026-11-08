@@ -3,12 +3,15 @@
 ' ВЕРХ эллипса — объекты ВПЕРЕДИ корабля, низ — позади. Высота над плоскостью
 ' показывается пунктирным «стиком»: база стика лежит на плоскости эллипса,
 ' метка объекта — на его конце; чем выше объект, тем выше метка.
-' Смещения берутся в мировых осях БЕЗ поворота в систему корабля, метки
-' рисуются цветом каркаса объекта, а стик и метка обрезаются границами
-' приборной полосы — как в оригинале. Реализация собственная
-' (метод — RESEARCH_ELITE, раздел «Радар»).
+' Смещения ПОВОРАЧИВАЮТСЯ в систему корабля (WorldToView): сканер показывает
+' пространство вокруг носа пилота — при тангаже и крене метки поворачиваются
+' вместе с кораблём, как в оригинале. (Аудит 2026-11-02: до исправления метки
+' брались в мировых осях и при наклоне носа указывали неверные направления.)
+' Метки рисуются цветом каркаса объекта, а стик и метка обрезаются границами
+' приборной полосы. Реализация собственная (метод — RESEARCH_ELITE, «Радар»).
 
 Import game_config
+Import math3d
 Import ship_models
 Import flight_state
 
@@ -82,28 +85,36 @@ Private Sub DrawDashedStick(stickX As Integer, stickBaseY As Integer, stickEndY 
 End Sub
 
 ' DrawRadarBlips — Наносит все объекты системы на сканер.
-' Ориентация как в классике: объекты впереди — в ВЕРХНЕЙ части эллипса,
-' объекты выше плоскости — меткой ВЫШЕ базы стика.
+' Ориентация как в классике: смещение объекта поворачивается в систему
+' КОРАБЛЯ (WorldToView), объекты впереди носа — в ВЕРХНЕЙ части эллипса,
+' объекты выше корабля — меткой ВЫШЕ базы стика.
 Private Sub DrawRadarBlips()
     Dim playerX As Double = PlayerPosX()                                                                ' Позиция корабля игрока: X.
     Dim playerY As Double = PlayerPosY()                                                                ' Позиция корабля игрока: Y.
     Dim playerZ As Double = PlayerPosZ()                                                                ' Позиция корабля игрока: Z.
 
     For objectIndex = 1 To GetObjectCount()                                                             ' Обход всех объектов сцены.
-        Dim centerPosX As Double                                                                                        ' Центр объекта: X.
-        Dim centerPosY As Double                                                                                        ' Центр объекта: Y.
-        Dim centerPosZ As Double                                                                                        ' Центр объекта: Z.
-        GetObjectPos(objectIndex, centerPosX, centerPosY, centerPosZ)
+        If GetObjectAlive(objectIndex) Then                                                             ' Уничтоженный объект пропадает и со сканера (этап 4).
+            Dim centerPosX As Double                                                                    ' Центр объекта: X.
+            Dim centerPosY As Double                                                                    ' Центр объекта: Y.
+            Dim centerPosZ As Double                                                                    ' Центр объекта: Z.
+            GetObjectPos(objectIndex, centerPosX, centerPosY, centerPosZ)
 
-        Dim relX As Double = centerPosX - playerX                                                       ' Смещение объекта относительно корабля: X (вбок).
-        Dim relY As Double = centerPosY - playerY                                                       ' Смещение: Y (высота над плоскостью).
-        Dim relZ As Double = centerPosZ - playerZ                                                       ' Смещение: Z (вперёд положительно).
+            Dim relX As Double = centerPosX - playerX                                                   ' Смещение объекта относительно корабля: X.
+            Dim relY As Double = centerPosY - playerY                                                   ' Смещение: Y.
+            Dim relZ As Double = centerPosZ - playerZ                                                   ' Смещение: Z.
 
-        If relX * relX + relZ * relZ <= RADAR_RANGE * RADAR_RANGE Then                                  ' Объект в радиусе сканера — наносим метку.
-            Dim blipX As Integer = CInt(RADAR_CENTER_X + relX / RADAR_RANGE * RADAR_RADIUS_X)           ' Экранная позиция: вбок (вправо — правее).
-            Dim stickBaseY As Integer = CInt(RADAR_CENTER_Y - relZ / RADAR_RANGE * RADAR_RADIUS_Y)      ' База стика: вперёд — ВЫШЕ центра эллипса.
-            Dim stickEndY As Integer = CInt(stickBaseY - relY / RADAR_RANGE * RADAR_RADIUS_Y * RADAR_STICK_FACTOR) ' Конец стика: выше — метка выше базы.
-            DrawDashedStick(blipX, stickBaseY, stickEndY, GetObjectColor(objectIndex))                  ' Пунктир и метка в цвете объекта.
+            Dim viewX As Double                                                                         ' Смещение в осях корабля: вправо от носа.
+            Dim viewY As Double                                                                         ' Смещение в осях корабля: вверх.
+            Dim viewZ As Double                                                                         ' Смещение в осях корабля: вперёд.
+            WorldToView(relX, relY, relZ, viewX, viewY, viewZ)                                          ' Поворот в систему корабля: сканер видит то, что видит пилот.
+
+            If viewX * viewX + viewY * viewY + viewZ * viewZ <= RADAR_RANGE * RADAR_RANGE Then          ' Объект в сфере действия сканера — наносим метку.
+                Dim blipX As Integer = CInt(RADAR_CENTER_X + viewX / RADAR_RANGE * RADAR_RADIUS_X)      ' Экранная позиция: вправо от носа — правее.
+                Dim stickBaseY As Integer = CInt(RADAR_CENTER_Y - viewZ / RADAR_RANGE * RADAR_RADIUS_Y) ' База стика: вперёд носа — ВЫШЕ центра эллипса.
+                Dim stickEndY As Integer = CInt(stickBaseY - viewY / RADAR_RANGE * RADAR_RADIUS_Y * RADAR_STICK_FACTOR) ' Конец стика: выше корабля — метка выше базы.
+                DrawDashedStick(blipX, stickBaseY, stickEndY, GetObjectColor(objectIndex))              ' Пунктир и метка в цвете объекта.
+            End If
         End If
     Next objectIndex
 End Sub
