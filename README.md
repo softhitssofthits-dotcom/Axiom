@@ -9,6 +9,7 @@
 <p align="center"><strong>Синтаксис BASIC, строгие типы и собственная среда разработки.</strong></p>
 
 ![version](https://img.shields.io/badge/version-0.12.16-blue)
+![compiler](https://img.shields.io/badge/%D0%9A%D0%BE%D0%BC%D0%BF%D0%B8%D0%BB%D1%8F%D1%82%D0%BE%D1%80%20%2F%20CLI-0.13.90-blueviolet)
 ![IDE](https://img.shields.io/badge/IDE-0.15.8-green)
 ![platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![status](https://img.shields.io/badge/status-early%20preview-orange)

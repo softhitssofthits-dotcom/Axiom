@@ -29,8 +29,9 @@ const validate = versions => {
 const coreSource = v => `// Создан scripts/versioning.mjs из versions.json. Не редактировать вручную.\nnamespace Axiom.Core;\n\npublic static class AxiomVersionInfo\n{\n    public const string LanguageVersion = "${v.language}";\n    public const string CompilerVersion = "${v.compiler}";\n}\n`;
 const propsSource = v => `<Project>\n  <!-- Создан scripts/versioning.mjs из versions.json. -->\n  <PropertyGroup>\n    <AxiomLanguageVersion>${v.language}</AxiomLanguageVersion>\n    <AxiomCompilerVersion>${v.compiler}</AxiomCompilerVersion>\n    <AxiomIdeVersion>${v.ide}</AxiomIdeVersion>\n    <Version Condition="'$(MSBuildProjectName)' != 'Axiom.DesktopHost'">${v.compiler}</Version>\n    <Version Condition="'$(MSBuildProjectName)' == 'Axiom.DesktopHost'">${v.ide}</Version>\n  </PropertyGroup>\n</Project>\n`;
 const row = v => `Язык **${v.language}** · компилятор/CLI **${v.compiler}** · IDE **${v.ide}**`;
-const readmeBadges = v => [
+const readmeBadges = (v, file) => [
   ['version', `![version](https://img.shields.io/badge/version-${v.language}-blue)`],
+  ['compiler', `![compiler](https://img.shields.io/badge/${encodeURIComponent(file === 'README.md' ? 'Компилятор / CLI' : 'Compiler / CLI')}-${v.compiler}-blueviolet)`],
   ['IDE', `![IDE](https://img.shields.io/badge/IDE-${v.ide}-green)`],
 ];
 const readmeStatusPatterns = {
@@ -39,8 +40,9 @@ const readmeStatusPatterns = {
 };
 const readmeSynced = (text, v, file, strict) => {
   let out = text;
-  for (const [name, line] of readmeBadges(v)) {
-    const pattern = new RegExp(`!\\[${name}\\]\\(https://img\\.shields\\.io/badge/${name}-[^)]*\\)`);
+  for (const [name, line] of readmeBadges(v, file)) {
+    const label = name === 'compiler' ? '[^/)]+' : name;
+    const pattern = new RegExp(`!\\[${name}\\]\\(https://img\\.shields\\.io/badge/${label}-[^)]*\\)`);
     if (strict && !pattern.test(out)) fail(`${file}: не найден бейдж ${name}.`);
     out = out.replace(pattern, line);
   }
