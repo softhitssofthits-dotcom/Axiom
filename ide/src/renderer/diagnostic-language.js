@@ -22,6 +22,7 @@
     MB2062:'FOR EACH source must be an array.', MB2063:'FOR EACH loop variable type is not compatible with the element type.',
     MB2065:'Dictionary key type must be STRING, INTEGER or LONG.', MB2066:'Dictionary value type is not supported.', MB2067:'Invalid dictionary member or call form.',
     MB2068:'Set element type must be STRING, INTEGER or LONG.', MB2069:'Invalid set member or call form.', MB2070:'A value is required; a call that returns nothing must be a separate statement.',
+    MB2071:'The IN set constructor cannot be empty: list at least one value or range.', MB2072:'The IN set element type is not compatible with the value.', MB2073:'A bracket set constructor is only allowed to the right of the IN operator.',
     MB3001:'Division by zero.', MB3002:'Array index is out of bounds.', MB3003:'Input cannot be converted to the required type.', MB3004:'FOR STEP cannot be zero.', MB3005:'Invalid runtime state.',
     MB3006:'Function completed without returning a value.', MB3007:'Invalid built-in argument.', MB3008:'Numeric overflow.', MB3009:'Function value is empty.', MB3010:'Required graphics mode is not active.', MB3011:'Call stack overflow.', MB3012:'Argument is outside the numeric domain.',
     MB3013:'Failed to allocate array: the element count exceeds the supported limit.', MB3014:'Array view refers to released storage.',

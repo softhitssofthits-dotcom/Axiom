@@ -36,6 +36,7 @@ public sealed partial class Binder
             SyntaxKind.OrKeyword => "OR",
             SyntaxKind.NotKeyword => "NOT",
             SyntaxKind.XorKeyword => "XOR",
+            SyntaxKind.InKeyword => "IN",
             _ => kind.ToString()
         };
     }
@@ -57,6 +58,7 @@ public sealed partial class Binder
             CallExpressionSyntax callExpression => GetLocation(callExpression.Target),
             ArrayAccessExpressionSyntax arrayAccessExpression => GetLocation(arrayAccessExpression.Target),
             ArrayLiteralExpressionSyntax arrayLiteralExpression => arrayLiteralExpression.OpenBracketToken.Location,
+            SetConstructorExpressionSyntax setConstructorExpression => setConstructorExpression.OpenBracketToken.Location,
             FieldAccessExpressionSyntax fieldAccessExpression => fieldAccessExpression.Identifier.Location,
             ErrorExpressionSyntax errorExpression => errorExpression.Token.Location,
             _ => throw new ArgumentOutOfRangeException(nameof(expression), expression, "Unsupported expression.")

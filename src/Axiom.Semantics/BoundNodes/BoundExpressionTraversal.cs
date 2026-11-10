@@ -18,6 +18,12 @@ internal static class BoundExpressionTraversal
             BoundTypeConstructorExpression node => [..node.Arguments],
             BoundUnaryExpression node => [node.Operand],
             BoundBinaryExpression node => [node.Left, node.Right],
+            BoundInExpression node => [node.Value, ..node.Items.SelectMany(static item => item switch
+            {
+                BoundInValueItem valueItem => new[] { valueItem.Value },
+                BoundInRangeItem rangeItem => new[] { rangeItem.LowerBound, rangeItem.UpperBound },
+                _ => Array.Empty<BoundExpression>()
+            })],
             BoundCallExpression node => [node.Target, ..node.Arguments],
             BoundConversionExpression node => [node.Expression],
             BoundErrorExpression node => [],

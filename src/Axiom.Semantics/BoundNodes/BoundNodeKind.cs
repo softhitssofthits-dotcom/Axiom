@@ -79,6 +79,7 @@ public enum BoundNodeKind
     TypeConstructorExpression,
     UnaryExpression,
     BinaryExpression,
+    InExpression,
     CallExpression,
     ConversionExpression,
     ErrorExpression,

@@ -266,6 +266,7 @@ public enum SyntaxKind
     CallExpression,
     ArrayAccessExpression,
     ArrayLiteralExpression,
+    SetConstructorExpression,
     FieldAccessExpression,
     ErrorExpression,
     InterpolatedStringExpression,

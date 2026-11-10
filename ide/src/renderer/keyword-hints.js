@@ -1,7 +1,7 @@
 // Axiom IDE — пояснения к ключевым словам для подсказки при наведении.
 // Каждое слово описано на русском и английском языках тем, что оно делает
-// в языке Axiom. EACH и IN — зарезервированные ключевые слова заголовка
-// FOR EACH: как имена они не используются.
+// в языке Axiom. EACH и IN — зарезервированные слова: IN работает и в
+// заголовке FOR EACH, и как операция вхождения, как имена они не используются.
 (function(root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -60,7 +60,7 @@
     IF: ['Открывает условную конструкцию; в одной строке допускает короткую форму.', 'Opens a conditional construct and allows a single-line short form.'],
     IMP: ['Логическая импликация BOOLEAN или побитовая импликация целых: ложь или нулевой разряд получается при истине или единице слева и лжи или нуле справа.', 'Boolean implication or bitwise implication for integers: false or a zero bit results when the left side is true or one and the right side is false or zero.'],
     IMPORT: ['Подключает другой модуль проекта и его открытые имена.', 'Imports another project module and its public names.'],
-    IN: ['Ключевое слово заголовка FOR EACH: отделяет переменную цикла от массива-источника.', 'Keyword of the FOR EACH header that separates the loop variable from the source array.'],
+    IN: ['В заголовке FOR EACH — между переменной цикла и массивом-источником. Как операция — проверка вхождения: a In [1 To 4, 6 To 9] истинно, когда значение попадает хотя бы в один диапазон или совпадает с перечисленным значением; границы включены, значения и диапазоны можно смешивать. Справа также допускаются множество HASHSET, словарь (проверяются ключи, не значения) и массив. Приоритет — как у сравнений, поэтому отрицание записывается скобками: Not (a In [1 To 4]).', 'In a FOR EACH header it stands between the loop variable and the source array. As an operator it tests membership: a In [1 To 4, 6 To 9] is true when the value falls into at least one range or equals one of the listed values; bounds are inclusive and values may be mixed with ranges. A HASHSET, a dictionary (keys are tested, not values) or an array is also allowed on the right. The precedence matches comparisons, so negation is written with parentheses: Not (a In [1 To 4]).'],
     INPUT: ["Читает значения с консоли; LINE INPUT читает строку целиком. FOR INPUT в OPEN открывает текстовый файл для чтения.","Reads console values; LINE INPUT reads a whole line. FOR INPUT in OPEN opens a text file for reading."],
     IS: ['Сравнение с образцом в SELECT CASE, например IS > 10.', 'A pattern comparison in SELECT CASE, for example IS > 10.'],
     KEY: ['Указывает клавишу в обработчике ON KEY и связанных конструкциях.', 'Names a key in an ON KEY handler and related constructs.'],
@@ -203,7 +203,7 @@
   "HASHSET": "DIM <name> AS HASHSET(<elementType>)",
   "FOR": "FOR <i> = <start> TO <end> STEP <step>\n    ...\nNEXT\n\nFOR EACH <item> IN <array>[]\n    ...\nNEXT",
   "EACH": "FOR EACH <item> IN <array>[]\n    ...\nNEXT",
-  "IN": "FOR EACH <item> IN <array>[]",
+  "IN": "FOR EACH <item> IN <array>[]\n\n<a> IN [<value>, <low> TO <high>]\n<a> IN <set>\n<a> IN <dictionary>\n<a> IN <array>[]",
   "BYREF": "BYREF <name> AS <type>\nFOR EACH BYREF <item> IN <array>[]",
   "BYVAL": "BYVAL <name> AS <type>\nFOR EACH BYVAL <item> IN <array>[]",
   "NEXT": "NEXT\nNEXT <variable>",
@@ -399,7 +399,7 @@
     ["IF", ["условный оператор","conditional statement"]],
     ["IMP", ["логический и побитовый оператор импликации","logical and bitwise implication operator"]],
     ["IMPORT", ["оператор подключения модуля","module import statement"]],
-    ["IN", ["слово заголовка FOR EACH","FOR EACH header keyword"]],
+    ["IN", ["слово заголовка FOR EACH и операция вхождения","FOR EACH header keyword and membership operator"]],
     ["INPUT", ["оператор ввода или режим открытия файла","input statement or file open mode"]],
     ["IS", ["часть условия выбора","selection condition syntax"]],
     ["KEY", ["обозначение источника события","event source"]],

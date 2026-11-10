@@ -1,0 +1,31 @@
+' Операция IN справа принимает не только конструктор набора: множество
+' HASHSET и массив проверяются методами Contains и ARRAYCONTAINS.
+
+Dim primes As HASHSET(INTEGER)
+primes.Add(2)
+primes.Add(3)
+primes.Add(5)
+
+' Форма множества: то же, что primes.Contains(7).
+Print 3 In primes
+Print 7 In primes
+
+Dim values[0 To 2] As Integer
+values[0] = 10
+values[1] = 20
+values[2] = 30
+
+' Форма массива: то же, что ARRAYCONTAINS(values[], 20).
+Print 20 In values[]
+Print 99 In values[]
+
+' Значение вычисляется один раз даже при нескольких диапазонах.
+Dim calls As Integer = 0
+Dim flag As Boolean = Probe() In [1 To 4, 6 To 9]
+Print calls
+Print flag
+
+Function Probe() As Integer
+    calls = calls + 1
+    Return 7
+End Function

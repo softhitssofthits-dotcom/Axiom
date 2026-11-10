@@ -7927,5 +7927,19 @@ window.AxiomSearchIndex = [
     "aliases": [
       "XOR"
     ]
+  },
+  {
+    "title": "Операция IN",
+    "href": "arithmetic-and-logic.html#in-operator",
+    "kind": "Операция",
+    "category": "Выражения и операции",
+    "description": "Проверка вхождения значения в набор значений и диапазонов, множество, словарь (по ключам) или массив.",
+    "keywords": [
+      "IN",
+      "InKeyword"
+    ],
+    "aliases": [
+      "Операция IN"
+    ]
   }
 ];

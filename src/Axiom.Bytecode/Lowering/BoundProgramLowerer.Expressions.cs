@@ -169,6 +169,10 @@ public sealed partial class BoundProgramLowerer
 
                 break;
 
+            case BoundInExpression inExpression:
+                LowerInExpression(inExpression, instructions);
+                break;
+
             case BoundConversionExpression conversion:
                 if (conversion.Expression.Type is TupleTypeSymbol sourceTuple && conversion.Type is TupleTypeSymbol targetTuple)
                 {
@@ -244,6 +248,56 @@ public sealed partial class BoundProgramLowerer
         {
             LowerExpression(part.Expression, instructions);
         }
+    }
+
+    /// <summary>
+    /// Проверка вхождения понижается в сравнения по образцу селекторов SELECT
+    /// CASE: значение вычисляется один раз во временную переменную, элементы
+    /// проверяются слева направо с ранним выходом при первом совпадении.
+    /// Существующие опкоды переиспользуются, новых инструкций не вводится.
+    /// </summary>
+    private void LowerInExpression(BoundInExpression inExpression, List<LoweredInstruction> instructions)
+    {
+        var matchLabel = CreateLabel();
+        var endLabel = CreateLabel();
+        var valueTemporary = CreateInternalTemporary(inExpression.Value.Type, "__in_value");
+
+        LowerExpression(inExpression.Value, instructions);
+        instructions.Add(LoweredInstruction.StoreVariable(inExpression.Location, valueTemporary));
+
+        foreach (var item in inExpression.Items)
+        {
+            switch (item)
+            {
+                case BoundInValueItem valueItem:
+                    instructions.Add(LoweredInstruction.LoadVariable(valueItem.Location, valueTemporary));
+                    LowerExpression(valueItem.Value, instructions);
+                    instructions.Add(LoweredInstruction.BinaryOperation(valueItem.Location, SyntaxKind.EqualsToken));
+                    break;
+
+                case BoundInRangeItem rangeItem:
+                    instructions.Add(LoweredInstruction.LoadVariable(rangeItem.Location, valueTemporary));
+                    LowerExpression(rangeItem.LowerBound, instructions);
+                    instructions.Add(LoweredInstruction.BinaryOperation(rangeItem.LowerBound.Location, SyntaxKind.GreaterOrEqualsToken));
+                    instructions.Add(LoweredInstruction.LoadVariable(rangeItem.Location, valueTemporary));
+                    LowerExpression(rangeItem.UpperBound, instructions);
+                    instructions.Add(LoweredInstruction.BinaryOperation(rangeItem.UpperBound.Location, SyntaxKind.LessOrEqualsToken));
+                    instructions.Add(LoweredInstruction.BinaryOperation(rangeItem.Location, SyntaxKind.AndKeyword));
+                    break;
+
+                default:
+                    ReportUnsupported(item.Location, "элемент набора IN");
+                    break;
+            }
+
+            instructions.Add(LoweredInstruction.JumpIfTrue(item.Location, matchLabel));
+        }
+
+        instructions.Add(LoweredInstruction.LoadLiteral(inExpression.Location, false, TypeSymbol.Boolean));
+        instructions.Add(LoweredInstruction.Jump(inExpression.Location, endLabel));
+        instructions.Add(LoweredInstruction.LabelMarker(inExpression.Location, matchLabel));
+        instructions.Add(LoweredInstruction.LoadLiteral(inExpression.Location, true, TypeSymbol.Boolean));
+        instructions.Add(LoweredInstruction.LabelMarker(inExpression.Location, endLabel));
     }
 
     private void LowerCall(BoundCallExpression call, List<LoweredInstruction> instructions)

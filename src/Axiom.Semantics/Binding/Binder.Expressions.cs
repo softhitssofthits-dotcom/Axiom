@@ -33,6 +33,7 @@ public sealed partial class Binder
             CallExpressionSyntax callExpression => BindCallExpression(callExpression),
             ArrayAccessExpressionSyntax arrayAccessExpression => BindSquareArrayAccessExpression(arrayAccessExpression),
             ArrayLiteralExpressionSyntax arrayLiteralExpression => BindArrayLiteralExpression(arrayLiteralExpression, expectedType),
+            SetConstructorExpressionSyntax setConstructorExpression => BindStandaloneSetConstructorExpression(setConstructorExpression),
             FieldAccessExpressionSyntax fieldAccessExpression => BindFieldAccessExpression(fieldAccessExpression),
             InterpolatedStringExpressionSyntax interpolatedExpression => BindInterpolatedStringExpression(interpolatedExpression),
             ErrorExpressionSyntax errorExpression => new BoundErrorExpression(errorExpression.Token.Location),
@@ -416,6 +417,13 @@ public sealed partial class Binder
 
     private BoundExpression BindBinaryExpression(BinaryExpressionSyntax expression)
     {
+        // IN связывается отдельно: правый операнд — конструктор набора,
+        // множество или массив, а не обычное выражение.
+        if (expression.OperatorToken.Kind == SyntaxKind.InKeyword)
+        {
+            return BindInExpression(expression);
+        }
+
         var left = BindExpression(expression.Left);
         var right = BindExpression(expression.Right);
 

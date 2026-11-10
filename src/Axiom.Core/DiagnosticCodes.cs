@@ -82,6 +82,9 @@ public static class DiagnosticCodes
     public const string InvalidSetElementType = "MB2068";
     public const string InvalidSetMember = "MB2069";
     public const string ValueExpected = "MB2070";
+    public const string EmptyInSet = "MB2071";
+    public const string InvalidInElement = "MB2072";
+    public const string InvalidSetConstructorUse = "MB2073";
 
     // Время выполнения (MB3xxx)
     public const string DivisionByZero = "MB3001";

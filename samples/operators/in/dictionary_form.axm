@@ -1,0 +1,20 @@
+' Операция IN со словарём проверяет ключи, а не значения: запись
+' "яблоко" In prices эквивалентна вызову prices.Exists("яблоко").
+
+DIM prices AS DICTIONARY(STRING, INTEGER)
+prices.Add("яблоко", 42)
+prices.Add("груша", 7)
+
+' Ключ есть — TRUE, ключа нет — FALSE.
+PRINT "яблоко" IN prices
+PRINT "слива" IN prices
+
+' Эквивалентность методу Exists на обоих исходах.
+PRINT prices.Exists("груша") = ("груша" IN prices)
+PRINT prices.Exists("банан") = ("банан" IN prices)
+
+' Числовой ключ словаря работает по тем же правилам.
+DIM counts AS DICTIONARY(INTEGER, STRING)
+counts.Add(3, "три")
+PRINT 3 IN counts
+PRINT 4 IN counts

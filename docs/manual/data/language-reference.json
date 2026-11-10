@@ -26,7 +26,7 @@
     "src/Axiom.Semantics/Symbols/Builtins/BuiltinFunctions.cs",
     "src/Axiom.Syntax/SyntaxKind.cs"
   ],
-  "sourceFingerprint": "37b4315251d8eaa563d12596eba6364f4663a0a151b72bd1e118d5fafc28bfca",
+  "sourceFingerprint": "06451559aa13db33756a3af5c1a125212650f41d818af4717733155cb6cc35a4",
   "functions": [
     {
       "name": "ABS",
@@ -8434,6 +8434,12 @@
       "token": "GreaterOrEqualsToken",
       "description": "Больше или равно.",
       "href": "arithmetic-and-logic.html"
+    },
+    {
+      "name": "IN",
+      "token": "InKeyword",
+      "description": "Проверка вхождения значения в набор значений и диапазонов, множество, словарь (по ключам) или массив.",
+      "href": "arithmetic-and-logic.html#in-operator"
     },
     {
       "name": "<<",

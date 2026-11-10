@@ -30,7 +30,20 @@ public sealed partial class Parser
             }
 
             var operatorToken = NextToken();
-            var right = ParseExpression(IsRightAssociativeBinaryOperator(operatorToken.Kind) ? precedence - 1 : precedence);
+
+            // Справа от IN квадратная скобка открывает конструктор набора со
+            // значениями и диапазонами TO, а не литерал массива. Форма доступна
+            // только здесь: в остальных позициях [...] остаётся литералом.
+            ExpressionSyntax right;
+            if (operatorToken.Kind == SyntaxKind.InKeyword && Current.Kind == SyntaxKind.OpenBracketToken)
+            {
+                right = ParseSetConstructorExpression();
+            }
+            else
+            {
+                right = ParseExpression(IsRightAssociativeBinaryOperator(operatorToken.Kind) ? precedence - 1 : precedence);
+            }
+
             left = new BinaryExpressionSyntax(left, operatorToken, right);
         }
 
@@ -107,6 +120,39 @@ public sealed partial class Parser
 
         var closeBracketToken = Match(SyntaxKind.CloseBracketToken, "]");
         return new ArrayLiteralExpressionSyntax(openBracketToken, items, commaTokens, closeBracketToken);
+    }
+
+    private SetConstructorExpressionSyntax ParseSetConstructorExpression()
+    {
+        var openBracketToken = Match(SyntaxKind.OpenBracketToken, "[");
+        var items = new List<ExpressionSyntax>();
+        var commaTokens = new List<SyntaxToken>();
+
+        // Элемент конструктора — значение или диапазон TO, как селекторы CASE.
+        // Пустой конструктор разбирается, но отвергается связывателем.
+        while (Current.Kind is not (SyntaxKind.CloseBracketToken or SyntaxKind.EndOfFileToken))
+        {
+            var item = ParseExpression();
+
+            if (Current.Kind == SyntaxKind.ToKeyword)
+            {
+                var toKeyword = NextToken();
+                var upperBound = ParseExpression();
+                item = new RangeExpressionSyntax(item, toKeyword, upperBound);
+            }
+
+            items.Add(item);
+
+            if (Current.Kind != SyntaxKind.CommaToken)
+            {
+                break;
+            }
+
+            commaTokens.Add(NextToken());
+        }
+
+        var closeBracketToken = Match(SyntaxKind.CloseBracketToken, "]");
+        return new SetConstructorExpressionSyntax(openBracketToken, items, commaTokens, closeBracketToken);
     }
 
     private InterpolatedStringExpressionSyntax ParseInterpolatedStringExpression()
@@ -313,7 +359,7 @@ public sealed partial class Parser
             SyntaxKind.StarToken or SyntaxKind.SlashToken or SyntaxKind.BackslashToken or SyntaxKind.ModKeyword => 9,
             SyntaxKind.PlusToken or SyntaxKind.MinusToken or SyntaxKind.AmpersandToken => 8,
             SyntaxKind.LessLessToken or SyntaxKind.GreaterGreaterToken => 7,
-            SyntaxKind.EqualsToken or SyntaxKind.NotEqualsToken or SyntaxKind.LessToken or SyntaxKind.LessOrEqualsToken or SyntaxKind.GreaterToken or SyntaxKind.GreaterOrEqualsToken => 6,
+            SyntaxKind.EqualsToken or SyntaxKind.NotEqualsToken or SyntaxKind.LessToken or SyntaxKind.LessOrEqualsToken or SyntaxKind.GreaterToken or SyntaxKind.GreaterOrEqualsToken or SyntaxKind.InKeyword => 6,
             SyntaxKind.AndKeyword or SyntaxKind.AndAlsoKeyword => 5,
             SyntaxKind.XorKeyword => 4,
             SyntaxKind.OrKeyword or SyntaxKind.OrElseKeyword => 3,

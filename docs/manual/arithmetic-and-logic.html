@@ -30,7 +30,7 @@ PRINT 7 MOD 2</code></pre>
 <tr><td>3</td><td><code>*</code>, <code>/</code>, <code>\</code>, <code>MOD</code></td><td>Умножение, деление, целочисленное деление, остаток от деления.</td></tr>
 <tr><td>4</td><td><code>+</code>, <code>-</code>, <code>&amp;</code></td><td>Сложение чисел или соединение двух строк; вычитание; соединение текстовых представлений значений.</td></tr>
 <tr><td>5</td><td><code>&lt;&lt;</code>, <code>&gt;&gt;</code></td><td>Побитовый сдвиг влево и вправо.</td></tr>
-<tr><td>6</td><td><code>=</code>, <code>&lt;&gt;</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code></td><td>Равно, не равно, меньше, меньше или равно, больше, больше или равно.</td></tr>
+<tr><td>6</td><td><code>=</code>, <code>&lt;&gt;</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>, <code>IN</code></td><td>Равно, не равно, меньше, меньше или равно, больше, больше или равно; проверка вхождения.</td></tr>
 <tr><td>7</td><td><code>AND</code>, <code>ANDALSO</code></td><td>Логическое или побитовое И; логическое И с коротким замыканием, то есть с пропуском правого операнда при ложном левом.</td></tr>
 <tr><td>8</td><td><code>XOR</code></td><td>Логическое или побитовое исключающее ИЛИ.</td></tr>
 <tr><td>9</td><td><code>OR</code>, <code>ORELSE</code></td><td>Логическое или побитовое ИЛИ; логическое ИЛИ с коротким замыканием, то есть с пропуском правого операнда при истинном левом.</td></tr>
@@ -47,7 +47,25 @@ PRINT -7 MOD 2</code></pre>
 <p>В первом выражении степень вычисляется раньше изменения знака; запись <code>(-2) ^ 2</code> возводит в квадрат уже отрицательное число.</p></section><section class="article-section" id="comparisons"><h2>Сравнение значений</h2>
 <p>Результат любого сравнения имеет тип BOOLEAN. Для чисел и строк допустимы равенство <code>=</code>, неравенство <code>&lt;&gt;</code> и упорядоченные сравнения <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>; строки сравниваются по кодовым единицам UTF-16 с различением регистра и без языковой сортировки. Для BOOLEAN поддержаны только равенство и неравенство.</p>
 <p>Числовое сравнение использует то же продвижение типов, что сложение: если один операнд DOUBLE, другой приводится к DOUBLE, и округление при этом может повлиять на результат сравнения.</p>
-<p>Временные значения сравниваются по <a href="date-time-functions.html">правилам даты и времени</a>, равенство пользовательских записей определяется <a href="type.html">правилами TYPE</a>. Совпадение внешнего текстового представления само по себе не делает значения разных типов совместимыми.</p></section><section class="article-section" id="logical"><h2>Логические операции</h2>
+<p>Временные значения сравниваются по <a href="date-time-functions.html">правилам даты и времени</a>, равенство пользовательских записей определяется <a href="type.html">правилами TYPE</a>. Совпадение внешнего текстового представления само по себе не делает значения разных типов совместимыми.</p></section><section class="article-section" id="in-operator"><h2>Проверка вхождения IN</h2>
+<p>Операция <code>IN</code> проверяет, входит ли значение слева в набор справа, и возвращает BOOLEAN. Набор задаётся конструктором в квадратных скобках: отдельные значения и диапазоны <code>To</code> можно смешивать в одном списке. Запись <code>a In [1 To 4, 6 To 9]</code> истинна, когда <code>a</code> попадает хотя бы в один диапазон; значение 5 из зазора между диапазонами не входит.</p>
+<pre><code class="language-axiom">Dim a As Integer = 3
+If a In [1 To 4, 6 To 9] Then
+    Print $"{a} входит в набор"
+End If
+
+Print 5 In [1 To 4, 6 To 9]   ' зазор между диапазонами
+Print 2 In [1, 2, 3]          ' набор отдельных значений
+Print 2.5 In [2, 3]           ' FALSE: равенства нет
+Print 2.5 In [2 To 3]         ' TRUE: диапазон ловит дробное</code></pre>
+<p>Результат:</p><pre><code>3 входит в набор
+FALSE
+TRUE
+FALSE
+TRUE</code></pre>
+<p>Диапазон <code>&lt;нижняя&gt; To &lt;верхняя&gt;</code> включает обе границы и эквивалентен паре сравнений <code>a &gt;= нижняя And a &lt;= верхняя</code>; границы — произвольные выражения. Справа от IN вместо конструктора допускаются множество <a href="hashset.html">HASHSET</a>, <a href="dictionary.html">словарь</a> и массив: <code>3 In primes</code> равносильно <code>primes.Contains(3)</code>, <code>"яблоко" In prices</code> — <code>prices.Exists("яблоко")</code> (проверяются ключи, а не значения), а <code>20 In values[]</code> — <code>ARRAYCONTAINS(values[], 20)</code>.</p>
+<p>Совместимость типов повторяет селекторы SELECT CASE: числа сравниваются с приведением к типу проверяемого значения, строки упорядочиваются по кодовым единицам, временные значения допускают строковые границы, разбираемые в вид значения. BOOLEAN и записи допускаются только как отдельные значения набора, без диапазонов. Проверяемое значение вычисляется один раз, элементы проверяются слева направо с ранним выходом при первом совпадении.</p>
+<p>IN имеет приоритет сравнений, поэтому отрицание требует скобок: <code>Not (a In [1 To 4])</code>. Конструктор набора допустим только справа от IN; в остальных позициях квадратные скобки остаются литералом массива или индексированием. Пустой конструктор <code>[]</code> отвергается при проверке.</p></section><section class="article-section" id="logical"><h2>Логические операции</h2>
 <p><code>NOT</code> с одним операндом BOOLEAN меняет TRUE на FALSE и обратно, а бинарные операции принимают два логических выражения. Полные таблицы истинности и договор типа находятся в <a href="boolean.html">статье BOOLEAN</a>.</p>
 <ul><li>AND возвращает TRUE при истинности обоих операндов.</li>
 <li>OR возвращает TRUE, если хотя бы один операнд истинен.</li>
@@ -89,6 +107,8 @@ END FUNCTION</code></pre>
 <ul><li><code>MB0003</code>: некорректный числовой литерал, например префикс &amp;H без цифр.</li>
 <li><code>MB0004</code>: величина литерала выходит за поддерживаемый диапазон.</li>
 <li><code>MB2003</code>: операция применена к несовместимым типам.</li>
+<li><code>MB2071</code>: конструктор набора IN пуст.</li>
+<li><code>MB2072</code>: элемент набора IN несовместим по типу со значением.</li>
 <li><code>MB3001</code>: деление на ноль.</li>
 <li><code>MB3007</code>: соединённая строка превышает допустимую длину.</li>
 <li><code>MB3008</code>: арифметическое переполнение или неконечный числовой результат.</li>
@@ -100,6 +120,11 @@ END FUNCTION</code></pre>
                 <li><a href="../../samples/operators/mod/basic_usage.axm">Оператор MOD</a></li>
                 <li><a href="../../samples/expressions/hex-literals/basic_usage.axm">Шестнадцатеричные литералы &amp;H</a></li>
                 <li><a href="../../samples/expressions/comparisons/basic_compare.axm">Сравнения</a></li>
+                <li><a href="../../samples/operators/in/basic_usage.axm">Операция IN: значения и диапазоны</a></li>
+                <li><a href="../../samples/operators/in/set_and_array_forms.axm">Операция IN: множество и массив</a></li>
+                <li><a href="../../samples/operators/in/dictionary_form.axm">Операция IN: словарь по ключам</a></li>
+                <li><a href="../../samples/operators/in/empty_set_error.axm">Операция IN: пустой набор (ошибка)</a></li>
+                <li><a href="../../samples/operators/in/element_type_error.axm">Операция IN: несовместимый тип (ошибка)</a></li>
                 <li><a href="../../samples/expressions/comparisons/string_order.axm">Сравнения строк</a></li>
                 <li><a href="../../samples/expressions/logical/basic_logic.axm">Логические операции</a></li>
                 <li><a href="../../samples/operators/and/bitwise_usage.axm">Побитовый AND</a></li>
