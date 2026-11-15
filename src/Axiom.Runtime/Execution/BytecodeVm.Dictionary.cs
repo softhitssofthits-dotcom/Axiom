@@ -162,95 +162,13 @@ public sealed partial class BytecodeVm
 
     private DictionaryTypeSymbol ResolveDictionaryType(string typeName, int routineId, int instructionIndex)
     {
-        if (_dictionaryTypeCache.TryGetValue(typeName, out var cachedType))
+        if (_prepared.DictionaryTypesByName.TryGetValue(typeName, out var cachedType))
         {
             return cachedType;
-        }
-
-        var visited = new HashSet<TypeSymbol>(ReferenceEqualityComparer.Instance);
-
-        foreach (var global in _module.Globals)
-        {
-            if (TryResolveDictionaryType(global.Type, typeName, visited) is { } globalType)
-            {
-                _dictionaryTypeCache[typeName] = globalType;
-                return globalType;
-            }
-        }
-
-        foreach (var routine in _module.Routines)
-        {
-            if (TryResolveDictionaryType(routine.ResultType, typeName, visited) is { } resultType)
-            {
-                _dictionaryTypeCache[typeName] = resultType;
-                return resultType;
-            }
-
-            foreach (var variable in routine.ParameterVariables)
-            {
-                if (TryResolveDictionaryType(variable.Type, typeName, visited) is { } parameterType)
-                {
-                    _dictionaryTypeCache[typeName] = parameterType;
-                    return parameterType;
-                }
-            }
-
-            foreach (var variable in routine.LocalVariables)
-            {
-                if (TryResolveDictionaryType(variable.Type, typeName, visited) is { } localType)
-                {
-                    _dictionaryTypeCache[typeName] = localType;
-                    return localType;
-                }
-            }
-
-            foreach (var variable in routine.CapturedVariables)
-            {
-                if (TryResolveDictionaryType(variable.Type, typeName, visited) is { } capturedType)
-                {
-                    _dictionaryTypeCache[typeName] = capturedType;
-                    return capturedType;
-                }
-            }
         }
 
         return ReportInvalidRuntimeState<DictionaryTypeSymbol>(
             $"Не удалось разрешить тип словаря '{typeName}' для инструкции CreateDictionary.",
             ResolveLocation(routineId, instructionIndex));
-    }
-
-    private static DictionaryTypeSymbol? TryResolveDictionaryType(TypeSymbol type, string typeName, HashSet<TypeSymbol> visited)
-    {
-        ArgumentNullException.ThrowIfNull(type);
-        ArgumentNullException.ThrowIfNull(visited);
-
-        if (!visited.Add(type))
-        {
-            return null;
-        }
-
-        if (type is DictionaryTypeSymbol dictionaryType)
-        {
-            return string.Equals(dictionaryType.Name, typeName, StringComparison.OrdinalIgnoreCase)
-                ? dictionaryType
-                : null;
-        }
-
-        if (type is UserDefinedTypeSymbol userType)
-        {
-            foreach (var field in userType.Fields)
-            {
-                if (TryResolveDictionaryType(field.Type, typeName, visited) is { } nestedType)
-                {
-                    return nestedType;
-                }
-            }
-
-            return null;
-        }
-
-        return type is ArrayTypeSymbol arrayType
-            ? TryResolveDictionaryType(arrayType.ElementType, typeName, visited)
-            : null;
     }
 }

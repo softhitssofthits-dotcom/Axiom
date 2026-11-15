@@ -47,7 +47,7 @@ public sealed partial class BytecodeVm
     private InputInstructionPlan GetInputInstructionPlan(BytecodeRoutine routine,  VmInstruction instruction, int instructionIndex)
     {
         var key = (routine.Id, instructionIndex);
-        if (_inputInstructionCache.TryGetValue(key, out var cached))
+        if (_inputInstructionCache is not null && _inputInstructionCache.TryGetValue(key, out var cached))
         {
             return cached;
         }
@@ -74,7 +74,7 @@ public sealed partial class BytecodeVm
         }
 
         var plan = new InputInstructionPlan(promptText, targets, arrayTargetName);
-        _inputInstructionCache[key] = plan;
+        (_inputInstructionCache ??= [])[key] = plan;
         return plan;
     }
 
@@ -94,7 +94,7 @@ public sealed partial class BytecodeVm
 
     private InputTarget ResolveGlobalInputTarget(int slot, int instructionIndex)
     {
-        if (!_globalMetadata.TryGetValue(slot, out var global))
+        if (!_prepared.TryGetGlobal(slot, out var global))
         {
             ReportInvalidRuntimeState($"Не найден глобальный слот INPUT {slot}.", ResolveCurrentLocation(instructionIndex));
             throw new RuntimeFailureException();

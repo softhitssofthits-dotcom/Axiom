@@ -161,7 +161,7 @@ public sealed partial class BytecodeVm
     {
         if ((uint)slot >= (uint)_globalValuesBySlot.Length
             || !_hasGlobalSlot[slot]
-            || !_globalMetadata.TryGetValue(slot, out var global)
+            || !_prepared.TryGetGlobal(slot, out var global)
             || global.Type != TypeSymbol.Integer)
             return false;
 
@@ -174,7 +174,7 @@ public sealed partial class BytecodeVm
     {
         if ((uint)slot >= (uint)_globalValuesBySlot.Length
             || !_hasGlobalSlot[slot]
-            || !_globalMetadata.TryGetValue(slot, out var global)
+            || !_prepared.TryGetGlobal(slot, out var global)
             || global.Type != TypeSymbol.Long)
             return false;
 
@@ -193,7 +193,7 @@ public sealed partial class BytecodeVm
     {
         if ((uint)slot >= (uint)_globalValuesBySlot.Length
             || !_hasGlobalSlot[slot]
-            || !_globalMetadata.TryGetValue(slot, out var global)
+            || !_prepared.TryGetGlobal(slot, out var global)
             || global.Type != TypeSymbol.Double)
             return false;
 
@@ -209,7 +209,7 @@ public sealed partial class BytecodeVm
     /// </summary>
     private RuntimeValue EnsureGlobalValueCreated(int slot)
     {
-        if (_globalMetadata.TryGetValue(slot, out var global)
+        if (_prepared.TryGetGlobal(slot, out var global)
             && global.Type is UserDefinedTypeSymbol recordType)
         {
             var created = RuntimeValue.Default(recordType, global.FixedStringLength);
@@ -227,7 +227,7 @@ public sealed partial class BytecodeVm
             return cachedFunctionValue;
         }
 
-        if (!_routines.TryGetValue(routineId, out var routine) || routine.Symbol is null)
+        if (!_prepared.TryGetRoutine(routineId, out var routine) || routine.Symbol is null)
         {
             ReportInvalidRuntimeState(
                 $"Не найдена процедура для значения функции с routine-id {routineId}.",
@@ -242,7 +242,7 @@ public sealed partial class BytecodeVm
     }
     private RuntimeValue LoadBuiltinFunctionValue(BytecodeCallFrame frame, int builtinId, int instructionIndex)
     {
-        if (!_builtins.TryGetValue(builtinId, out var builtin) || builtin.Function is null)
+        if (!_prepared.TryGetBuiltin(builtinId, out var builtin) || builtin.Function is null)
         {
             ReportInvalidRuntimeState(
                 $"Не найдена встроенная функция для значения функции с built-in-id {builtinId}.",

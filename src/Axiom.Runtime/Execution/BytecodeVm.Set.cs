@@ -117,95 +117,13 @@ public sealed partial class BytecodeVm
     /// </summary>
     private SetTypeSymbol ResolveSetType(string typeName, int routineId, int instructionIndex)
     {
-        if (_setTypeCache.TryGetValue(typeName, out var cachedType))
+        if (_prepared.SetTypesByName.TryGetValue(typeName, out var cachedType))
         {
             return cachedType;
-        }
-
-        var visited = new HashSet<TypeSymbol>(ReferenceEqualityComparer.Instance);
-
-        foreach (var global in _module.Globals)
-        {
-            if (TryResolveSetType(global.Type, typeName, visited) is { } globalType)
-            {
-                _setTypeCache[typeName] = globalType;
-                return globalType;
-            }
-        }
-
-        foreach (var routine in _module.Routines)
-        {
-            if (TryResolveSetType(routine.ResultType, typeName, visited) is { } resultType)
-            {
-                _setTypeCache[typeName] = resultType;
-                return resultType;
-            }
-
-            foreach (var variable in routine.ParameterVariables)
-            {
-                if (TryResolveSetType(variable.Type, typeName, visited) is { } parameterType)
-                {
-                    _setTypeCache[typeName] = parameterType;
-                    return parameterType;
-                }
-            }
-
-            foreach (var variable in routine.LocalVariables)
-            {
-                if (TryResolveSetType(variable.Type, typeName, visited) is { } localType)
-                {
-                    _setTypeCache[typeName] = localType;
-                    return localType;
-                }
-            }
-
-            foreach (var variable in routine.CapturedVariables)
-            {
-                if (TryResolveSetType(variable.Type, typeName, visited) is { } capturedType)
-                {
-                    _setTypeCache[typeName] = capturedType;
-                    return capturedType;
-                }
-            }
         }
 
         return ReportInvalidRuntimeState<SetTypeSymbol>(
             $"Не удалось разрешить тип множества '{typeName}' для инструкции CreateSet.",
             ResolveLocation(routineId, instructionIndex));
-    }
-
-    private static SetTypeSymbol? TryResolveSetType(TypeSymbol type, string typeName, HashSet<TypeSymbol> visited)
-    {
-        ArgumentNullException.ThrowIfNull(type);
-        ArgumentNullException.ThrowIfNull(visited);
-
-        if (!visited.Add(type))
-        {
-            return null;
-        }
-
-        if (type is SetTypeSymbol setType)
-        {
-            return string.Equals(setType.Name, typeName, StringComparison.OrdinalIgnoreCase)
-                ? setType
-                : null;
-        }
-
-        if (type is UserDefinedTypeSymbol userType)
-        {
-            foreach (var field in userType.Fields)
-            {
-                if (TryResolveSetType(field.Type, typeName, visited) is { } nestedType)
-                {
-                    return nestedType;
-                }
-            }
-
-            return null;
-        }
-
-        return type is ArrayTypeSymbol arrayType
-            ? TryResolveSetType(arrayType.ElementType, typeName, visited)
-            : null;
     }
 }

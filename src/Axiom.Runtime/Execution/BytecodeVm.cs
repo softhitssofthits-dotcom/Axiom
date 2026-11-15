@@ -16,42 +16,54 @@ public sealed partial class BytecodeVm
     private static readonly TextLocation FallbackRuntimeLocation = new(new TextSpan(0, 0), 1, 1);
 
     private readonly DiagnosticBag _diagnostics = new();
-    private readonly Dictionary<int, BytecodeRoutine> _routines;
-    private readonly Dictionary<int, VmInstruction[]> _decodedInstructions;
-    private readonly Dictionary<FunctionSymbol, BytecodeRoutine> _routinesBySymbol;
-    private readonly Dictionary<int, RoutineFrameTemplate> _frameTemplatesByRoutineId;
-    private readonly Dictionary<int, BuiltinBinding> _builtins;
-    private readonly Dictionary<FunctionSymbol, BuiltinBinding> _builtinsByFunction;
-    private readonly Dictionary<BuiltinFunctionId, BuiltinBinding> _builtinsByCanonicalId;
-    private readonly Dictionary<int, BuiltinExecution> _builtinExecutions;
-    private readonly BuiltinExecutionInfo[] _builtinExecutionInfosById;
-    private readonly Dictionary<int, BytecodeGlobal> _globalMetadata;
-    private readonly Dictionary<(int RoutineId, int InstructionIndex), TextLocation> _sourceLocationCache = [];
-    private readonly Dictionary<(int RoutineId, int InstructionIndex), InputInstructionPlan> _inputInstructionCache = [];
-    private readonly Dictionary<(int RoutineId, int InstructionIndex), TypeFieldSymbol> _recordFieldCache = [];
-    private readonly Dictionary<string, UserDefinedTypeSymbol> _recordTypeCache = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, DictionaryTypeSymbol> _dictionaryTypeCache = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, SetTypeSymbol> _setTypeCache = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<TileTransformCacheKey, RuntimeImageValue> _tileTransformCache = [];
-    private readonly Dictionary<(int CallerRoutineId, int TargetRoutineId), CaptureBinding[]> _captureBindingCache = [];
+    private readonly PreparedBytecodeModule _prepared;
+    private readonly bool _fuseDecodedInstructions;
+    private Dictionary<(int RoutineId, int InstructionIndex), InputInstructionPlan>? _inputInstructionCache;
+    private Dictionary<(int RoutineId, int InstructionIndex), TypeFieldSymbol>? _recordFieldCache;
+    private Dictionary<TileTransformCacheKey, RuntimeImageValue>? _tileTransformCache;
+    private Dictionary<(int CallerRoutineId, int TargetRoutineId), CaptureBinding[]>? _captureBindingCache;
     private readonly RuntimeValue?[] _constantValues;
     private readonly VmValue[] _globalValuesBySlot;
     private readonly int?[] _globalFixedStringLengths;
     private readonly bool[] _hasGlobalSlot;
     private readonly Stack<BytecodeCallFrame> _callStack = new();
 
-    // Пул кадров по процедурам: стек свободных кадров допускает рекурсию —
-    // каждый вложенный вызов берёт кадр из пула, а не аллоцирует новый.
+    // Пул кадров по процедурам: плотный массив стеков свободных кадров допускает
+    // рекурсию — каждый вложенный вызов берёт кадр из пула без хеширования по routineId.
     // Живая память ограничена глубиной стека вызовов (MaxCallDepth).
     private sealed class FramePool
     {
-        private readonly Dictionary<int, Stack<BytecodeCallFrame>> _framesByRoutine = [];
+        private readonly Stack<BytecodeCallFrame>?[] _denseFramesByRoutine;
+        private Dictionary<int, Stack<BytecodeCallFrame>>? _sparseFramesByRoutine;
 
+        public FramePool(int denseCapacity)
+        {
+            _denseFramesByRoutine = denseCapacity > 0
+                ? new Stack<BytecodeCallFrame>?[denseCapacity]
+                : Array.Empty<Stack<BytecodeCallFrame>?>();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryTake(int routineId, out BytecodeCallFrame frame)
         {
-            if (_framesByRoutine.TryGetValue(routineId, out var stack) && stack.Count > 0)
+            if ((uint)routineId < (uint)_denseFramesByRoutine.Length)
             {
-                frame = stack.Pop();
+                var stack = _denseFramesByRoutine[routineId];
+                if (stack is not null && stack.Count > 0)
+                {
+                    frame = stack.Pop();
+                    return true;
+                }
+
+                frame = null!;
+                return false;
+            }
+
+            if (_sparseFramesByRoutine is not null
+                && _sparseFramesByRoutine.TryGetValue(routineId, out var sparseStack)
+                && sparseStack.Count > 0)
+            {
+                frame = sparseStack.Pop();
                 return true;
             }
 
@@ -59,26 +71,54 @@ public sealed partial class BytecodeVm
             return false;
         }
 
-        public bool Contains(int routineId) =>
-            _framesByRoutine.TryGetValue(routineId, out var stack) && stack.Count > 0;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Contains(int routineId)
+        {
+            if ((uint)routineId < (uint)_denseFramesByRoutine.Length)
+            {
+                return _denseFramesByRoutine[routineId] is { Count: > 0 };
+            }
+
+            return _sparseFramesByRoutine is not null
+                && _sparseFramesByRoutine.TryGetValue(routineId, out var stack)
+                && stack.Count > 0;
+        }
 
         public void Store(int routineId, BytecodeCallFrame frame)
         {
-            if (!_framesByRoutine.TryGetValue(routineId, out var stack))
+            if ((uint)routineId < (uint)_denseFramesByRoutine.Length)
             {
-                stack = [];
-                _framesByRoutine[routineId] = stack;
+                var stack = _denseFramesByRoutine[routineId];
+                if (stack is null)
+                {
+                    stack = [];
+                    _denseFramesByRoutine[routineId] = stack;
+                }
+
+                if (stack.Count < MaxCallDepth)
+                {
+                    stack.Push(frame);
+                }
+
+                return;
             }
 
-            if (stack.Count < MaxCallDepth)
+            _sparseFramesByRoutine ??= [];
+            if (!_sparseFramesByRoutine.TryGetValue(routineId, out var sparseStack))
             {
-                stack.Push(frame);
+                sparseStack = [];
+                _sparseFramesByRoutine[routineId] = sparseStack;
+            }
+
+            if (sparseStack.Count < MaxCallDepth)
+            {
+                sparseStack.Push(frame);
             }
         }
     }
 
-    private readonly FramePool _framePool = new();
-    private readonly HashSet<RuntimeTextFile> _openFiles = [];
+    private readonly FramePool _framePool;
+    private HashSet<RuntimeTextFile>? _openFiles;
     private readonly StringBuilder _pendingOutput = new();
     // Кэш колбэка отчёта переполнения: метод-группа экземпляра аллоцирует
     // новый делегат при каждом преобразовании, кэш делает путь безаллокационным.
@@ -110,6 +150,8 @@ public sealed partial class BytecodeVm
         ArgumentNullException.ThrowIfNull(module);
         ArgumentNullException.ThrowIfNull(host);
 
+        var prepared = PreparedBytecodeModule.GetOrCreate(module);
+        _prepared = prepared;
         _module = module;
         _host = host;
         _reportOverflow = ReportRuntimeDiagnostic;
@@ -120,58 +162,35 @@ public sealed partial class BytecodeVm
         _instructionObserver = instructionObserver;
         _shouldStopBeforeInstruction = shouldStopBeforeInstruction;
         _breakpoints = breakpoints;
-        _routines = module.Routines.ToDictionary(static routine => routine.Id);
-        // Раскодированный поток строится для всех подпрограмм сразу: VM читает
-        // инструкции из непрерывных массивов структур, исходный модуль остаётся
-        // источником истины для валидации, сериализации и отладки. Слияние
-        // применяется только к быстрому пути: отладочная VM получает неслитный
-        // поток, чтобы поколоночные точки остановки и пошаговое исполнение
-        // видели каждую исходную инструкцию (деоптимизация под отладкой).
-        _decodedInstructions = module.Routines.ToDictionary(
-            static routine => routine.Id,
-            routine => DecodeInstructions(
-                routine.InstructionArray,
-                fuse: instructionObserver is null
-                    && shouldStopBeforeInstruction is null
-                    && breakpoints is null));
-        _routinesBySymbol = module.Routines
-            .Where(static routine => routine.Symbol is not null)
-            .ToDictionary(static routine => routine.Symbol!);
-        _frameTemplatesByRoutineId = module.Routines.ToDictionary(
-            static routine => routine.Id,
-            static routine => CreateRoutineFrameTemplate(routine));
-        _builtins = module.Builtins.ToDictionary(static builtin => builtin.Id);
-        _builtinsByFunction = module.Builtins
-            .Where(static builtin => builtin.Function is not null)
-            .ToDictionary(static builtin => builtin.Function!);
-        _builtinsByCanonicalId = module.Builtins
-            .GroupBy(static builtin => builtin.CanonicalId)
-            .ToDictionary(static group => group.Key, static group => group.First());
-        _builtinExecutions = module.Builtins.ToDictionary(
-            static builtin => builtin.Id,
-            static builtin => CreateBuiltinExecution(builtin));
-        _builtinExecutionInfosById = CreateBuiltinExecutionInfosById(module.Builtins, _builtinExecutions);
-        _globalMetadata = module.Globals.ToDictionary(static global => global.Slot);
-        _constantValues = module.ConstantPool.Entries.Select(TryCreateRuntimeConstant).ToArray();
-        var maxGlobalSlot = module.Globals.Count == 0 ? -1 : module.Globals.Max(static global => global.Slot);
-        _globalValuesBySlot = maxGlobalSlot >= 0 ? new VmValue[maxGlobalSlot + 1] : Array.Empty<VmValue>();
-        _globalFixedStringLengths = maxGlobalSlot >= 0 ? new int?[maxGlobalSlot + 1] : Array.Empty<int?>();
-        _hasGlobalSlot = maxGlobalSlot >= 0 ? new bool[maxGlobalSlot + 1] : Array.Empty<bool>();
+        _fuseDecodedInstructions = instructionObserver is null
+            && shouldStopBeforeInstruction is null
+            && breakpoints is null;
+        _constantValues = prepared.ConstantValues;
+        _globalFixedStringLengths = prepared.GlobalFixedStringLengths;
+        _hasGlobalSlot = prepared.HasGlobalSlot;
+        _framePool = new FramePool(prepared.RoutinesById.Length);
 
-        foreach (var global in module.Globals)
+        if (prepared.InitialGlobalValuesBySlot.Length == 0)
         {
-            // Запись глобальной переменной создаётся её инструкцией объявления:
-            // отложенная стратегия не должна превращаться в выделение всех полей-массивов
-            // ещё до начала исполнения программы. Записи TYPE остаются пустым слотом
-            // до первого чтения (EnsureGlobalValueCreated).
-            _globalValuesBySlot[global.Slot] = global.Type is UserDefinedTypeSymbol
-                ? default
-                : VmValue.FromRuntime(RuntimeValue.Default(global.Type, global.FixedStringLength));
-            _globalFixedStringLengths[global.Slot] = global.FixedStringLength;
-            _hasGlobalSlot[global.Slot] = true;
+            _globalValuesBySlot = Array.Empty<VmValue>();
+        }
+        else
+        {
+            _globalValuesBySlot = new VmValue[prepared.InitialGlobalValuesBySlot.Length];
+            Array.Copy(prepared.InitialGlobalValuesBySlot, _globalValuesBySlot, _globalValuesBySlot.Length);
+
+            var globals = module.Globals;
+            for (var i = 0; i < globals.Count; i++)
+            {
+                var global = globals[i];
+                if ((uint)global.Slot < (uint)_globalValuesBySlot.Length
+                    && global.Type is ArrayTypeSymbol or DictionaryTypeSymbol or SetTypeSymbol)
+                {
+                    _globalValuesBySlot[global.Slot] = VmValue.FromRuntime(RuntimeValue.Default(global.Type, global.FixedStringLength));
+                }
+            }
         }
 
-        BuildRecordTypeCache(module);
         RefreshFastInstructionPathFlag();
     }
 
@@ -219,7 +238,7 @@ public sealed partial class BytecodeVm
     private void ExecuteModule()
     {
         using var copyCancellation = RuntimeValueCopier.WithCancellation(_host);
-        if (!_routines.TryGetValue(_module.EntryPointRoutineId, out var entryPoint))
+        if (!_prepared.TryGetRoutine(_module.EntryPointRoutineId, out var entryPoint))
         {
             ReportInvalidRuntimeState(
                 $"Не найдена точка входа VM с routine-id {_module.EntryPointRoutineId}.",
@@ -1503,7 +1522,7 @@ public sealed partial class BytecodeVm
         BytecodeVariableSlot[]? byRefArgumentSlots = null,
         bool byValValuesAreSnapshots = false)
     {
-        var template = _frameTemplatesByRoutineId[routine.Id];
+        var template = _prepared.GetFrameTemplate(routine.Id);
         if (_framePool.TryTake(routine.Id, out var cachedFrame)
             && cachedFrame.Arguments.Length == routine.ParameterCount)
         {
@@ -1554,7 +1573,7 @@ public sealed partial class BytecodeVm
             captures,
             callSiteLocation,
             routine.MaxEvaluationStackDepth,
-            _decodedInstructions[routine.Id]);
+            _prepared.GetDecodedInstructions(routine.Id, _fuseDecodedInstructions));
     }
 
     private static BytecodeVariableSlot[] CreateArgumentSlots(
@@ -1729,7 +1748,7 @@ public sealed partial class BytecodeVm
             && previousInstruction.InstructionIndex + 1 == snapshot.InstructionIndex
             && previousInstruction.Opcode is Opcode.PushIntegerZero or Opcode.PushIntegerOne
             && SourceLine.From(previousInstruction.SourceLocation) == SourceLine.From(snapshot.SourceLocation)
-            && _openFiles.Count == 0 && !HasActiveCallbackContinuation();
+            && (_openFiles is null || _openFiles.Count == 0) && !HasActiveCallbackContinuation();
         return canReusePrevious
             ? previousSnapshot
             : shouldCaptureReversibleState ? TryCreateReversibleStateSnapshot(snapshot!) : null;
@@ -2574,7 +2593,7 @@ public sealed partial class BytecodeVm
         // цепочка строится по операнду инструкции, сохраняя имя конструктора
         // и место его вызова в диагностике.
         if (instruction.OperandCount < 2
-            || !_routines.TryGetValue(instruction.GetOperand(1), out var constructorRoutine))
+            || !_prepared.TryGetRoutine(instruction.GetOperand(1), out var constructorRoutine))
         {
             return null;
         }

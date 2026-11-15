@@ -185,7 +185,7 @@ public sealed partial class BytecodeVm
             // копирование может завершиться ошибкой или вызвать проверку отмены.
             var first = BytecodeVariableSlot.Adopt(invoke.Arguments[0].CopyForStorage());
             var second = count == 2 ? BytecodeVariableSlot.Adopt(invoke.Arguments[1].CopyForStorage()) : null;
-            var template = _frameTemplatesByRoutineId[routine.Id];
+            var template = _prepared.GetFrameTemplate(routine.Id);
             if (_framePool.TryTake(routine.Id, out var cachedFrame))
             {
                 cachedFrame.Arguments[0] = first;
@@ -233,7 +233,7 @@ public sealed partial class BytecodeVm
         }
 
         var resolved = functionValue.BytecodeRoutine;
-        if (resolved is null && !_routinesBySymbol.TryGetValue(functionValue.Function, out resolved))
+        if (resolved is null && !_prepared.RoutinesBySymbol.TryGetValue(functionValue.Function, out resolved))
         {
             ReportInvalidRuntimeState<RuntimeValue>(
                 $"Для вызова '{functionValue.Function.Name}' отсутствует байткодная процедура.",

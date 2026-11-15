@@ -185,7 +185,7 @@ public sealed partial class BytecodeVm
 
     private BytecodeVmStateSnapshot? TryCreateReversibleStateSnapshot(BytecodeVmExecutionSnapshot executionSnapshot)
     {
-        if (_openFiles.Count > 0 || HasActiveCallbackContinuation())
+        if ((_openFiles is not null && _openFiles.Count > 0) || HasActiveCallbackContinuation())
         {
             return null;
         }

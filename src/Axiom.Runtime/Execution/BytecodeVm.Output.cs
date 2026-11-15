@@ -24,27 +24,10 @@ public sealed partial class BytecodeVm
         FlushPendingOutput(forceEmptyLine: false);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private TextLocation ResolveLocation(int routineId, int instructionIndex)
     {
-        var cacheKey = (routineId, instructionIndex);
-        if (_sourceLocationCache.TryGetValue(cacheKey, out var cachedLocation))
-        {
-            return cachedLocation;
-        }
-
-        var resolvedLocation = FallbackRuntimeLocation;
-        if (_module.DebugInfo is not null
-            && _module.DebugInfo.TryGetLocation(routineId, instructionIndex, out var location))
-        {
-            resolvedLocation = location;
-        }
-        else if (_routines.TryGetValue(routineId, out var routine))
-        {
-            resolvedLocation = routine.Location;
-        }
-
-        _sourceLocationCache[cacheKey] = resolvedLocation;
-        return resolvedLocation;
+        return _prepared.ResolveLocation(routineId, instructionIndex);
     }
 
     private void AppendPendingOutput(string text)

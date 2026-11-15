@@ -16,16 +16,7 @@ public sealed partial class BytecodeVm
         var builtinId = instruction.GetOperand(0);
         var argumentCount = instruction.GetOperand(1);
 
-        if ((uint)builtinId >= (uint)_builtinExecutionInfosById.Length)
-        {
-            ReportInvalidRuntimeState(
-                $"Не найден built-in с идентификатором {builtinId}.",
-                ResolveLocation(frame.Routine.Id, instructionIndex));
-            throw new RuntimeFailureException();
-        }
-
-        var executionInfo = _builtinExecutionInfosById[builtinId];
-        if (executionInfo is null)
+        if (!_prepared.TryGetBuiltinExecutionInfo(builtinId, out var executionInfo))
         {
             ReportInvalidRuntimeState(
                 $"Не найден built-in с идентификатором {builtinId}.",
@@ -921,11 +912,11 @@ public sealed partial class BytecodeVm
                 callSiteLocation);
         }
 
-        var builtin = functionValue.BytecodeBuiltinBindingId is { } builtinBindingId && _builtins.TryGetValue(builtinBindingId, out var directBuiltin)
+        var builtin = functionValue.BytecodeBuiltinBindingId is { } builtinBindingId && _prepared.TryGetBuiltin(builtinBindingId, out var directBuiltin)
             ? directBuiltin
-            : _builtinsByFunction.TryGetValue(function, out var mappedBuiltin)
+            : _prepared.BuiltinsByFunction.TryGetValue(function, out var mappedBuiltin)
                 ? mappedBuiltin
-                : _builtinsByCanonicalId.GetValueOrDefault(builtinId);
+                : _prepared.BuiltinsByCanonicalId.GetValueOrDefault(builtinId);
         if (builtin is null)
         {
             return ReportInvalidRuntimeState<RuntimeValue>(
@@ -940,8 +931,9 @@ public sealed partial class BytecodeVm
 
         // Сохраняем проверку дескриптора и прежнюю обработку повреждённой
         // арности; для остальных вызовов остаётся общий путь диспетчеризации.
-        if (allowCallbackStep && _builtinExecutions.TryGetValue(builtin.Id, out var execution))
+        if (allowCallbackStep && _prepared.TryGetBuiltinExecutionInfo(builtin.Id, out var executionInfo))
         {
+            var execution = executionInfo.Execution;
             if (execution.Arity == BuiltinExecutionArity.Binary && arguments.Length >= 2)
             {
                 callbackStep = builtin.CanonicalId switch
@@ -970,12 +962,14 @@ public sealed partial class BytecodeVm
         ReadOnlySpan<RuntimeValue> arguments,
         TextLocation location)
     {
-        if (!_builtinExecutions.TryGetValue(builtin.Id, out var execution))
+        if (!_prepared.TryGetBuiltinExecutionInfo(builtin.Id, out var executionInfo))
         {
             return ReportInvalidRuntimeState<RuntimeValue>(
                 $"Для built-in '{builtin.Name}' отсутствует исполняемый дескриптор Bytecode VM.",
                 location);
         }
+
+        var execution = executionInfo.Execution;
 
         return execution.Arity switch
         {
@@ -1014,30 +1008,6 @@ public sealed partial class BytecodeVm
         }
 
         return new PooledArgumentBuffer(buffer, argumentCount, pooled: true);
-    }
-
-    private static BuiltinExecutionInfo[] CreateBuiltinExecutionInfosById(
-        IReadOnlyList<BuiltinBinding> builtins,
-        IReadOnlyDictionary<int, BuiltinExecution> executions)
-    {
-        if (builtins.Count == 0)
-        {
-            return Array.Empty<BuiltinExecutionInfo>();
-        }
-
-        var maxBuiltinId = builtins.Max(static builtin => builtin.Id);
-        var infos = new BuiltinExecutionInfo[maxBuiltinId + 1];
-
-        foreach (var builtin in builtins)
-        {
-            infos[builtin.Id] = new BuiltinExecutionInfo(
-                executions[builtin.Id],
-                builtin.ReturnsValue,
-                IsBuiltinReverseExecutionSafe(builtin.CanonicalId),
-                builtin.CanonicalId);
-        }
-
-        return infos;
     }
 
     private readonly struct PooledArgumentBuffer : IDisposable

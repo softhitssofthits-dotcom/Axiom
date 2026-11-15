@@ -17,7 +17,7 @@ public sealed partial class BytecodeVm
         var argumentCount = instruction.GetOperand(1);
         var byValArgumentCount = instruction.Opcode == Opcode.CallByRef ? instruction.GetOperand(2) : argumentCount;
 
-        if (!_routines.TryGetValue(targetRoutineId, out var targetRoutine))
+        if (!_prepared.TryGetRoutine(targetRoutineId, out var targetRoutine))
         {
             ReportInvalidRuntimeState(
                 $"Не найдена вызываемая процедура с routine-id {targetRoutineId}.",
@@ -39,7 +39,7 @@ public sealed partial class BytecodeVm
                 throw new RuntimeFailureException();
             }
 
-            var template = _frameTemplatesByRoutineId[targetRoutine.Id];
+            var template = _prepared.GetFrameTemplate(targetRoutine.Id);
             if (_framePool.TryTake(targetRoutine.Id, out var cachedFrame))
             {
                 // Контейнер кадра возвращён после освобождения; саму ячейку
@@ -70,7 +70,7 @@ public sealed partial class BytecodeVm
                 throw new RuntimeFailureException();
             }
 
-            var template = _frameTemplatesByRoutineId[targetRoutine.Id];
+            var template = _prepared.GetFrameTemplate(targetRoutine.Id);
             if (_framePool.TryTake(targetRoutine.Id, out var cachedFrame))
             {
                 // Контейнер кадра возвращён после освобождения; саму ячейку
@@ -165,7 +165,7 @@ public sealed partial class BytecodeVm
             && byRefArgumentSlots.Length == targetRoutine.ParameterCount
             && HasCompleteByRefSlots(byRefArgumentSlots))
         {
-            var template = _frameTemplatesByRoutineId[targetRoutine.Id];
+            var template = _prepared.GetFrameTemplate(targetRoutine.Id);
             _callStack.Push(CreateFrameWithSlots(targetRoutine, byRefArgumentSlots, captures,
                 ResolveLocation(callerFrame.Routine.Id, instructionIndex), template));
             return;
@@ -183,7 +183,7 @@ public sealed partial class BytecodeVm
                 if (byRefArgumentSlots[index] is null)
                     byRefArgumentSlots[index] = BytecodeVariableSlot.Adopt(arguments.Span[byValIndex++]);
             }
-            var template = _frameTemplatesByRoutineId[targetRoutine.Id];
+            var template = _prepared.GetFrameTemplate(targetRoutine.Id);
             _callStack.Push(CreateFrameWithSlots(targetRoutine, byRefArgumentSlots, captures,
                 ResolveLocation(callerFrame.Routine.Id, instructionIndex), template));
             return;
@@ -244,7 +244,7 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        var template = _frameTemplatesByRoutineId[targetRoutine.Id];
+        var template = _prepared.GetFrameTemplate(targetRoutine.Id);
         if (_framePool.TryTake(targetRoutine.Id, out var cachedFrame))
         {
             cachedFrame.Arguments[0] = ReuseIntegerSlot(cachedFrame.Arguments[0], first);
@@ -271,7 +271,7 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        var template = _frameTemplatesByRoutineId[targetRoutine.Id];
+        var template = _prepared.GetFrameTemplate(targetRoutine.Id);
         if (_framePool.TryTake(targetRoutine.Id, out var cachedFrame))
         {
             cachedFrame.Arguments[0] = ReuseIntegerSlot(cachedFrame.Arguments[0], first);
@@ -299,7 +299,7 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        var template = _frameTemplatesByRoutineId[targetRoutine.Id];
+        var template = _prepared.GetFrameTemplate(targetRoutine.Id);
         if (_framePool.TryTake(targetRoutine.Id, out var cachedFrame))
         {
             cachedFrame.Arguments[0] = ReuseDoubleSlot(cachedFrame.Arguments[0], first);
@@ -326,7 +326,7 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        var template = _frameTemplatesByRoutineId[targetRoutine.Id];
+        var template = _prepared.GetFrameTemplate(targetRoutine.Id);
         if (_framePool.TryTake(targetRoutine.Id, out var cachedFrame))
         {
             cachedFrame.Arguments[0] = ReuseDoubleSlot(cachedFrame.Arguments[0], first);
@@ -354,7 +354,7 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        var template = _frameTemplatesByRoutineId[targetRoutine.Id];
+        var template = _prepared.GetFrameTemplate(targetRoutine.Id);
         if (_framePool.TryTake(targetRoutine.Id, out var cachedFrame))
         {
             cachedFrame.Arguments[0] = ReuseIntegerSlot(cachedFrame.Arguments[0], first);
@@ -382,7 +382,7 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        var template = _frameTemplatesByRoutineId[targetRoutine.Id];
+        var template = _prepared.GetFrameTemplate(targetRoutine.Id);
         if (_framePool.TryTake(targetRoutine.Id, out var cachedFrame))
         {
             cachedFrame.Arguments[0] = ReuseValueSlot(cachedFrame.Arguments[0], value);
@@ -424,7 +424,7 @@ public sealed partial class BytecodeVm
 
             frame.EvaluationStack.DiscardTop(3);
             var indirectCaptures = GetFunctionCaptures(peekedFunction);
-            var template = _frameTemplatesByRoutineId[peekedRoutine.Id];
+            var template = _prepared.GetFrameTemplate(peekedRoutine.Id);
             if (_framePool.TryTake(peekedRoutine.Id, out var pooledFrame))
             {
                 pooledFrame.Arguments[0] = ReuseDoubleSlot(pooledFrame.Arguments[0], peekedFirst);
@@ -500,7 +500,7 @@ public sealed partial class BytecodeVm
         {
             // Повторная ячейка допустима, пока прежняя не ушла в замыкание.
             cachedFrame.Arguments[0] = ReuseValueSlot(cachedFrame.Arguments[0], arguments.Span[0]);
-            var template = _frameTemplatesByRoutineId[routine.Id];
+            var template = _prepared.GetFrameTemplate(routine.Id);
             cachedFrame.Reset(cachedFrame.Arguments, functionCaptures, location, template.DefaultLocals);
             cachedFrame.DiscardReturnValue = !returnsValue;
             _callStack.Push(cachedFrame);
@@ -550,7 +550,7 @@ public sealed partial class BytecodeVm
     private CaptureBinding[] ResolveCaptureBindings(BytecodeRoutine callerRoutine, BytecodeRoutine targetRoutine, int instructionIndex)
     {
         var cacheKey = (callerRoutine.Id, targetRoutine.Id);
-        if (_captureBindingCache.TryGetValue(cacheKey, out var cachedBindings))
+        if (_captureBindingCache is not null && _captureBindingCache.TryGetValue(cacheKey, out var cachedBindings))
         {
             return cachedBindings;
         }
@@ -572,7 +572,7 @@ public sealed partial class BytecodeVm
             throw new RuntimeFailureException();
         }
 
-        _captureBindingCache[cacheKey] = bindings;
+        (_captureBindingCache ??= [])[cacheKey] = bindings;
         return bindings;
     }
 

@@ -953,7 +953,7 @@ public sealed partial class BytecodeVm
                 var tileset = tilemap.GetTileset1Based(cell.TilesetIndex).Tileset;
                 var tileX = checked(range.AdjustedOriginX + ((long)column * tilemap.TileWidth) + tileset.TileOffsetX);
                 var tileY = checked(range.AdjustedOriginY + ((long)row * tilemap.TileHeight) + tileset.TileOffsetY);
-                TilemapRenderSupport.DrawTile(_host, tileset, cell.TileIndex, cell.Flags, tileX, tileY, _tileTransformCache);
+                TilemapRenderSupport.DrawTile(_host, tileset, cell.TileIndex, cell.Flags, tileX, tileY, _tileTransformCache ??= []);
             });
     }
 

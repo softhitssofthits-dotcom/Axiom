@@ -34,7 +34,7 @@ public sealed partial class BytecodeVm
                 encodingName,
                 ThrowIfBuiltinCancellationRequested);
 
-            _openFiles.Add(file);
+            (_openFiles ??= []).Add(file);
             InvalidateReverseExecutionHistory();
             frame.EvaluationStack.Push(RuntimeValue.FromFile(file));
         }
@@ -59,7 +59,14 @@ public sealed partial class BytecodeVm
 
         try
         {
-            BuiltinFileIOHelpers.CloseFile(file, _openFiles);
+            if (_openFiles is not null)
+            {
+                BuiltinFileIOHelpers.CloseFile(file, _openFiles);
+            }
+            else
+            {
+                file.Dispose();
+            }
         }
         catch (Exception ex) when (BuiltinFileIOHelpers.IsFileIoException(ex))
         {
@@ -175,13 +182,24 @@ public sealed partial class BytecodeVm
 
     private void CloseAllOpenFiles()
     {
+        if (_openFiles is null || _openFiles.Count == 0)
+        {
+            return;
+        }
+
         BuiltinFileIOHelpers.CloseAllOpenFiles(_openFiles, (file, ex) =>
             ReportFileIOError($"Не удалось закрыть файл '{file.Path}' при завершении программы: {ex.Message}", FallbackRuntimeLocation));
     }
 
     private void CloseFile(RuntimeTextFile file)
     {
-        BuiltinFileIOHelpers.CloseFile(file, _openFiles);
+        if (_openFiles is not null)
+        {
+            BuiltinFileIOHelpers.CloseFile(file, _openFiles);
+            return;
+        }
+
+        file.Dispose();
     }
 
     private void ReportFileIOError(string detail, TextLocation location)
