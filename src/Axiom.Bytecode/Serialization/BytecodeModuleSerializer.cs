@@ -7,13 +7,19 @@ namespace Axiom.Bytecode;
 
 public static class BytecodeModuleSerializer
 {
-    public const int CurrentArtifactSchemaVersion = 4;
+    public const int CurrentArtifactSchemaVersion = 5;
 
     /// <summary>
     /// Снимок версии 2 не содержал идентичности TYPE и восстанавливается по
     /// коротким именам. Версия 3 добавляет идентичность, поэтому два закрытых
     /// TYPE с одинаковым именем из разных модулей не сливаются.
     /// Версия 4 добавляет инструкции доступа к полям по ordinal.
+    /// Версия 5 вводит слитую раскладку слотов кадра (localsplus): параметры
+    /// занимают первые слоты таблицы локальных переменных, опкоды отдельного
+    /// пространства аргументов не эмитятся. Снимки версий 4 и старше
+    /// адаптируются при загрузке: таблица локальных слотов дополняется
+    /// параметрами, операнды локальных слотов сдвигаются на число параметров,
+    /// аргументные опкоды заменяются общими локальными.
     /// </summary>
     private const int LegacyArtifactSchemaVersion = 2;
 
@@ -80,6 +86,7 @@ public static class BytecodeModuleSerializer
         var functionSymbols = new Dictionary<string, FunctionSymbol>(StringComparer.Ordinal);
         var variableSymbols = new Dictionary<string, VariableSymbol>(StringComparer.Ordinal);
         var userDefinedTypes = CreateUserDefinedTypes(artifact.TypeDefinitions, artifact.ArtifactSchemaVersion is null or <= LegacyArtifactSchemaVersion);
+        var adaptLegacySlots = artifact.ArtifactSchemaVersion is null or < CurrentArtifactSchemaVersion;
 
         // Регистрируем параметры процедур до таблиц захваченных переменных:
         // один и тот же SymbolId может сначала встретиться в замыкании вложенной процедуры.
@@ -91,13 +98,17 @@ public static class BytecodeModuleSerializer
             }
         }
 
+        var legacyParameterOffsets = adaptLegacySlots
+            ? artifact.Routines.ToDictionary(static routine => routine.Id, static routine => routine.ParameterCount)
+            : new Dictionary<int, int>();
+
         return new BytecodeModule(
             FromArtifact(artifact.Header),
             new ConstantPool(artifact.ConstantPool.OrderBy(static entry => entry.Index).Select(FromArtifact).ToArray()),
-            artifact.Routines.Select(routine => FromArtifact(routine, functionSymbols, variableSymbols, userDefinedTypes)).ToArray(),
+            artifact.Routines.Select(routine => FromArtifact(routine, functionSymbols, variableSymbols, userDefinedTypes, adaptLegacySlots)).ToArray(),
             artifact.Globals.Select(global => FromArtifact(global, userDefinedTypes)).ToArray(),
             artifact.Builtins.Select(builtin => FromArtifact(builtin, functionSymbols, variableSymbols, userDefinedTypes)).ToArray(),
-            artifact.DebugInfo is null ? null : FromArtifact(artifact.DebugInfo),
+            artifact.DebugInfo is null ? null : FromArtifact(artifact.DebugInfo, legacyParameterOffsets),
             artifact.EntryPointRoutineId);
     }
 
@@ -106,10 +117,11 @@ public static class BytecodeModuleSerializer
         if (artifact.ArtifactSchemaVersion is int schemaVersion
             && schemaVersion != CurrentArtifactSchemaVersion
             && schemaVersion != 3
+            && schemaVersion != 4
             && schemaVersion != LegacyArtifactSchemaVersion)
         {
             throw new InvalidOperationException(
-                $"JSON-снимок байткода имеет неподдерживаемую версию схемы {schemaVersion}. Поддерживаются версии {LegacyArtifactSchemaVersion}, 3 и {CurrentArtifactSchemaVersion}.");
+                $"JSON-снимок байткода имеет неподдерживаемую версию схемы {schemaVersion}. Поддерживаются версии {LegacyArtifactSchemaVersion}, 3, 4 и {CurrentArtifactSchemaVersion}.");
         }
 
         if (artifact.Header is null)
@@ -158,23 +170,141 @@ public static class BytecodeModuleSerializer
         BytecodeRoutineArtifact routine,
         Dictionary<string, FunctionSymbol> functionSymbols,
         Dictionary<string, VariableSymbol> variableSymbols,
-        IReadOnlyDictionary<string, UserDefinedTypeSymbol> userDefinedTypes)
+        IReadOnlyDictionary<string, UserDefinedTypeSymbol> userDefinedTypes,
+        bool adaptLegacySlotLayout)
     {
+        var parameterVariables = routine.ParameterVariables
+            .Select((variable, index) => GetOrCreateParameterSymbol(variable, index, variableSymbols, userDefinedTypes))
+            .ToArray();
+        var localVariables = routine.LocalVariables
+            .Select(variable => GetOrCreateVariableSymbol(variable, variableSymbols, userDefinedTypes))
+            .ToArray();
+        var instructions = routine.Instructions
+            .OrderBy(static instruction => instruction.Index)
+            .Select(FromArtifact)
+            .ToArray();
+        var localSlotCount = routine.LocalSlotCount;
+
+        // Слитая раскладка слотов (схема 5): параметры занимают первые слоты
+        // таблицы локальных переменных, операнды локальных слотов сдвигаются
+        // на число параметров, аргументные опкоды заменяются общими локальными
+        // без сдвига (позиция параметра в слитой раскладке совпадает со старой).
+        if (adaptLegacySlotLayout && routine.ParameterCount > 0)
+        {
+            localVariables = parameterVariables.Concat(localVariables).ToArray();
+            localSlotCount = routine.ParameterCount + localSlotCount;
+            instructions = AdaptLegacySlotLayout(instructions, routine.ParameterCount);
+        }
+
         return new BytecodeRoutine(
             routine.Id,
             routine.Name,
             FromArtifact(routine.Location),
             ResolveType(routine.ResultType, userDefinedTypes),
             routine.ParameterCount,
-            routine.LocalSlotCount,
-            routine.Instructions.OrderBy(static instruction => instruction.Index).Select(FromArtifact).ToArray(),
+            localSlotCount,
+            instructions,
             routine.IsEntryPoint,
             routine.Symbol is null ? null : GetOrCreateFunctionSymbol(routine.Symbol, functionSymbols, variableSymbols, userDefinedTypes),
-            routine.ParameterVariables
-                .Select((variable, index) => GetOrCreateParameterSymbol(variable, index, variableSymbols, userDefinedTypes))
-                .ToArray(),
-            routine.LocalVariables.Select(variable => GetOrCreateVariableSymbol(variable, variableSymbols, userDefinedTypes)).ToArray(),
+            parameterVariables,
+            localVariables,
             routine.CapturedVariables.Select(variable => GetOrCreateVariableSymbol(variable, variableSymbols, userDefinedTypes)).ToArray());
+    }
+
+    /// <summary>
+    /// Индексы операндов, хранящие локальные слоты, для опкодов прежних схем.
+    /// Опкоды FOR-машины хранят слоты в начале списка операндов, цели переходов
+    /// и служебные значения сдвигать нельзя.
+    /// </summary>
+    private static readonly Dictionary<Opcode, int[]> LegacyLocalSlotOperandIndexes = new()
+    {
+        [Opcode.LoadLocal] = [0],
+        [Opcode.StoreLocal] = [0],
+        [Opcode.FreshLocal] = [0],
+        [Opcode.ClearForEachItem] = [0],
+        [Opcode.AppendStringLocal] = [0],
+        [Opcode.JumpIfForDoneLocal] = [0],
+        [Opcode.AdvanceForLoopLocal] = [0],
+        [Opcode.ValidateForStep] = [0, 1, 2],
+        [Opcode.StepForLoopLocal] = [0, 1, 2],
+        [Opcode.BindArrayElement] = [0, 1, 2]
+    };
+
+    private static BytecodeInstruction[] AdaptLegacySlotLayout(BytecodeInstruction[] instructions, int parameterOffset)
+    {
+        var adapted = new BytecodeInstruction[instructions.Length];
+        for (var index = 0; index < instructions.Length; index++)
+        {
+            var source = instructions[index];
+            var opcode = source.Opcode;
+            var operands = source.Operands.ToArray();
+
+            if (LegacyLocalSlotOperandIndexes.TryGetValue(opcode, out var slotIndexes))
+            {
+                foreach (var operandIndex in slotIndexes)
+                {
+                    if ((uint)operandIndex < (uint)operands.Length)
+                    {
+                        operands[operandIndex] += parameterOffset;
+                    }
+                }
+            }
+            else
+            {
+                switch (opcode)
+                {
+                    case Opcode.LoadArgument:
+                        opcode = Opcode.LoadLocal;
+                        break;
+                    case Opcode.StoreArgument:
+                        opcode = Opcode.StoreLocal;
+                        break;
+                    case Opcode.AppendStringArgument:
+                        opcode = Opcode.AppendStringLocal;
+                        break;
+                    case Opcode.Input:
+                    {
+                        // Пары «вид цели, слот» после двух служебных операндов:
+                        // локальные слоты сдвигаются, отдельный вид аргументов
+                        // заменяется локальным без сдвига.
+                        for (var target = 2; target + 1 < operands.Length; target += 2)
+                        {
+                            if (operands[target] == 1)
+                            {
+                                operands[target + 1] += parameterOffset;
+                            }
+                            else if (operands[target] == 2)
+                            {
+                                operands[target] = 1;
+                            }
+                        }
+
+                        break;
+                    }
+                    case Opcode.PushErrorHandler:
+                    {
+                        // Операнды: цели обработчика, вид цели, слот цели.
+                        if (operands.Length >= 5)
+                        {
+                            if (operands[3] == 1)
+                            {
+                                operands[4] += parameterOffset;
+                            }
+                            else if (operands[3] == 2)
+                            {
+                                operands[3] = 1;
+                            }
+                        }
+
+                        break;
+                    }
+                }
+            }
+
+            adapted[index] = new BytecodeInstruction(opcode, operands);
+        }
+
+        return adapted;
     }
 
     private static BytecodeInstruction FromArtifact(BytecodeInstructionArtifact instruction)
@@ -212,11 +342,13 @@ public static class BytecodeModuleSerializer
             builtin.Function is null ? null : GetOrCreateFunctionSymbol(builtin.Function, functionSymbols, variableSymbols, userDefinedTypes));
     }
 
-    private static BytecodeDebugInfo FromArtifact(BytecodeDebugInfoArtifact debugInfo)
+    private static BytecodeDebugInfo FromArtifact(
+        BytecodeDebugInfoArtifact debugInfo,
+        IReadOnlyDictionary<int, int> legacyParameterOffsets)
     {
         return new BytecodeDebugInfo(
             debugInfo.InstructionMap.Select(FromArtifact).ToArray(),
-            debugInfo.Routines.Select(FromArtifact).ToArray());
+            debugInfo.Routines.Select(routine => FromArtifact(routine, legacyParameterOffsets)).ToArray());
     }
 
     private static SourceInstructionMap FromArtifact(SourceInstructionMapArtifact map)
@@ -227,12 +359,27 @@ public static class BytecodeModuleSerializer
             FromArtifact(map.Location));
     }
 
-    private static BytecodeRoutineDebugInfo FromArtifact(BytecodeRoutineDebugInfoArtifact routine)
+    private static BytecodeRoutineDebugInfo FromArtifact(
+        BytecodeRoutineDebugInfoArtifact routine,
+        IReadOnlyDictionary<int, int> legacyParameterOffsets)
     {
+        // Слитая раскладка слотов: локальные имена прежних схем сдвигаются на
+        // число параметров процедуры; имена параметров уже занимают слоты 0..N-1.
+        var localNames = routine.LocalNames;
+        if (legacyParameterOffsets.TryGetValue(routine.RoutineId, out var offset) && offset > 0)
+        {
+            var shiftedLocalNames = new Dictionary<int, string>(routine.LocalNames.Count);
+            foreach (var pair in routine.LocalNames)
+            {
+                shiftedLocalNames[pair.Key + offset] = pair.Value;
+            }
+
+            localNames = shiftedLocalNames;
+        }
         return new BytecodeRoutineDebugInfo(
             routine.RoutineId,
             routine.ParameterNames,
-            routine.LocalNames,
+            localNames,
             routine.BlockRanges.Select(FromArtifact).ToArray());
     }
 

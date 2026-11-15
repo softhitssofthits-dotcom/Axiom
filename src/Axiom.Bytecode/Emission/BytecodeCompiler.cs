@@ -166,7 +166,7 @@ public sealed partial class BytecodeCompiler
             return null;
         }
 
-        var localVariables = CreateRoutineLocalVariables(localSlots);
+        var localVariables = CreateRoutineLocalVariables(parameterSlots, localSlots);
 
         _routineDebugInfo.Add(new BytecodeRoutineDebugInfo(
             routine.Id,
@@ -181,7 +181,7 @@ public sealed partial class BytecodeCompiler
             routine.Location,
             routine.ResultType,
             parameterCount: parameterSlots.Count,
-            localSlotCount: localSlots.Count,
+            localSlotCount: parameterSlots.Count + localSlots.Count,
             instructions.ToArray(),
             routine.IsEntryPoint,
             routine.Symbol,

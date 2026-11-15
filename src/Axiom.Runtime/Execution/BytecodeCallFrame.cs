@@ -20,7 +20,6 @@ internal sealed class BytecodeCallFrame
 
     public BytecodeCallFrame(
         BytecodeRoutine routine,
-        BytecodeVariableSlot[] arguments,
         VmValue[] locals,
         int?[] localFixedStringLengths,
         BytecodeVariableSlot[] captures,
@@ -29,14 +28,12 @@ internal sealed class BytecodeCallFrame
         VmInstruction[]? decodedInstructions = null)
     {
         ArgumentNullException.ThrowIfNull(routine);
-        ArgumentNullException.ThrowIfNull(arguments);
         ArgumentNullException.ThrowIfNull(locals);
         ArgumentNullException.ThrowIfNull(localFixedStringLengths);
         ArgumentNullException.ThrowIfNull(captures);
 
         Routine = routine;
         DecodedInstructions = decodedInstructions ?? DecodeRoutineInstructions(routine);
-        Arguments = arguments;
         _locals = locals;
         _localFixedStringLengths = localFixedStringLengths;
         _sharedLocals = locals.Length == 0 ? null : new BytecodeVariableSlot?[locals.Length];
@@ -62,7 +59,8 @@ internal sealed class BytecodeCallFrame
         return decoded;
     }
 
-    public BytecodeVariableSlot[] Arguments { get; }
+    /// <summary>Число слотов параметров; они занимают первые позиции слитной раскладки.</summary>
+    public int ParameterSlotCount => Routine.ParameterCount;
 
     public BytecodeVariableSlot[] Captures { get; private set; }
 
@@ -101,7 +99,7 @@ internal sealed class BytecodeCallFrame
     /// Освобождает ссылки завершённого кадра до помещения в пул. Значения
     /// захваченных ячеек остаются живыми через сами слоты замыканий.
     /// </summary>
-    public void ReleaseReferences(bool keepReusableIntegerSlots)
+    public void ReleaseReferences()
     {
         ClearCallbackState();
         _visibleVariables = null;
@@ -123,12 +121,6 @@ internal sealed class BytecodeCallFrame
 
         _hasSharedLocals = false;
         _freshFlatRecordsBySlot.Clear();
-
-        for (var index = 0; index < Arguments.Length; index++)
-        {
-            if (!keepReusableIntegerSlots || Arguments[index] is not { } slot || !slot.PrepareForReuse())
-                Arguments[index] = null!;
-        }
     }
 
     public int LocalCount => _locals.Length;
@@ -141,7 +133,6 @@ internal sealed class BytecodeCallFrame
     public int ErrorHandlerCount => _errorHandlers.Count;
 
     public void Reset(
-        BytecodeVariableSlot[] arguments,
         BytecodeVariableSlot[] captures,
         TextLocation callSiteLocation,
         VmValue[] defaultLocals)
@@ -168,11 +159,6 @@ internal sealed class BytecodeCallFrame
 
         _hasSharedLocals = false;
         _freshFlatRecordsBySlot.Clear();
-
-        for (var index = 0; index < Arguments.Length; index++)
-        {
-            Arguments[index] = arguments[index];
-        }
     }
 
     public void PushErrorHandler(BytecodeErrorHandlerFrame handler)
@@ -613,6 +599,114 @@ internal sealed class BytecodeCallFrame
 
     public BytecodeVariableSlot? GetExistingLocalSlot(int slot) => _sharedLocals?[slot];
 
+    /// <summary>
+    /// Устанавливает параметры вызова по слитной раскладке кадра (localsplus):
+    /// BYVAL-значения снимаются со стека вызывателя тегированными
+    /// <see cref="VmValue"/> — немедленные INTEGER, LONG и DOUBLE переживают
+    /// передачу без материализации и аллокаций, — а ячейки BYREF занимают
+    /// общие слоты тех же позиций. Вызывается после Reset, до входа в тело.
+    /// </summary>
+    internal void InstallParametersFromStack(
+        BytecodeEvaluationStack sourceStack,
+        int byValCount,
+        BytecodeVariableSlot?[]? byRefSlots)
+    {
+        InstallByRefParameterSlots(byRefSlots);
+
+        // Повреждённый внешний байткод может заявить больше аргументов, чем
+        // лежит на стеке: даём прежнюю чистую ошибку вместо выхода за границы.
+        if (byValCount < 0 || sourceStack.Count < byValCount)
+        {
+            throw new InvalidOperationException(
+                $"Стек вычисления опустел при снятии аргументов для процедуры '{Routine.Name}'.");
+        }
+
+        var taken = 0;
+        var parameterSlotCount = Routine.ParameterCount;
+        for (var slot = 0; slot < parameterSlotCount && taken < byValCount; slot++)
+        {
+            if (_sharedLocals is not null && _sharedLocals[slot] is not null)
+            {
+                continue;
+            }
+
+            // Нижний BYVAL-аргумент лежит глубже остальных: первый параметр —
+            // на глубине byValCount - 1 от вершины стека.
+            _locals[slot] = sourceStack.PeekVmValue(byValCount - 1 - taken);
+            taken++;
+        }
+
+        if (taken != byValCount)
+        {
+            throw new InvalidOperationException(
+                $"Процедура '{Routine.Name}' приняла {byValCount} BYVAL-аргументов при {parameterSlotCount} слотах параметров.");
+        }
+
+        sourceStack.DiscardTop(byValCount);
+    }
+
+    /// <summary>
+    /// Устанавливает параметры из готового набора значений (возобновление
+    /// обратных вызовов). При <paramref name="byValValuesAreSnapshots"/>, равном
+    /// false, значения копируются для хранения; при true принимаются как есть.
+    /// </summary>
+    internal void InstallParameterValues(
+        ReadOnlySpan<RuntimeValue> values,
+        BytecodeVariableSlot?[]? byRefSlots,
+        bool byValValuesAreSnapshots)
+    {
+        InstallByRefParameterSlots(byRefSlots);
+
+        var taken = 0;
+        var parameterSlotCount = Routine.ParameterCount;
+        for (var slot = 0; slot < parameterSlotCount && taken < values.Length; slot++)
+        {
+            if (_sharedLocals is not null && _sharedLocals[slot] is not null)
+            {
+                continue;
+            }
+
+            var value = values[taken++];
+            if (!byValValuesAreSnapshots)
+            {
+                value = value.CopyForStorage();
+            }
+
+            var fixedStringLength = _localFixedStringLengths[slot];
+            _locals[slot] = fixedStringLength is null && value.Type is not UserDefinedTypeSymbol && !value.RequiresCopyForStorage
+                ? VmValue.FromRuntime(value)
+                : VmValue.FromObject(BytecodeVariableSlot.NormalizeForStorage(value, fixedStringLength));
+        }
+
+        if (taken != values.Length)
+        {
+            throw new InvalidOperationException(
+                $"Процедура '{Routine.Name}' приняла {values.Length} BYVAL-аргументов при {parameterSlotCount} слотах параметров.");
+        }
+    }
+
+    private void InstallByRefParameterSlots(BytecodeVariableSlot?[]? byRefSlots)
+    {
+        if (byRefSlots is null)
+        {
+            return;
+        }
+
+        var parameterSlotCount = Routine.ParameterCount;
+        for (var index = 0; index < byRefSlots.Length && index < parameterSlotCount; index++)
+        {
+            if (byRefSlots[index] is not { } cell)
+            {
+                continue;
+            }
+
+            _sharedLocals ??= new BytecodeVariableSlot?[_locals.Length];
+            _sharedLocals[index] = cell;
+            _locals[index] = VmValue.FromObject(RuntimeValue.Void);
+            _hasSharedLocals = true;
+        }
+    }
+
     private void InvalidateLocalVariableBindings()
     {
         _visibleVariables = null;
@@ -760,14 +854,10 @@ internal sealed class BytecodeCallFrame
     {
         var visibleVariables = new Dictionary<VariableSymbol, BytecodeVariableSlot>();
         var routine = frame.Routine;
-        var arguments = frame.Arguments;
         var captures = frame.Captures;
 
-        for (var index = 0; index < routine.ParameterVariables.Count && index < arguments.Length; index++)
-        {
-            visibleVariables[routine.ParameterVariables[index]] = arguments[index];
-        }
-
+        // Слитая раскладка: параметры занимают первые слоты списка LocalVariables,
+        // поэтому один обход покрывает параметры и локальные переменные.
         for (var index = 0; index < routine.LocalVariables.Count && index < frame.LocalCount; index++)
         {
             visibleVariables[routine.LocalVariables[index]] = frame.GetOrCreateLocalSlot(index);

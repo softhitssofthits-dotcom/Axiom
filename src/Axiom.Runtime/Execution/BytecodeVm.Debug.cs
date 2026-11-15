@@ -257,11 +257,9 @@ public sealed partial class BytecodeVm
 
         foreach (var frameSnapshot in snapshot.CallFramesBottomToTop)
         {
-            var arguments = CreateSlotsFromSnapshots(frameSnapshot.Arguments, sharedValues);
             var (locals, localFixedStringLengths, localSlots) = CreateLocalStateFromSnapshots(frameSnapshot.Locals, sharedValues);
             var frame = new BytecodeCallFrame(
                 frameSnapshot.Routine,
-                arguments,
                 locals,
                 localFixedStringLengths,
                 [],
@@ -314,20 +312,6 @@ public sealed partial class BytecodeVm
         _suppressLineBreakpointsUntilDifferentLine = null;
         _debugStepBoundary = null;
         RefreshFastInstructionPathFlag();
-    }
-
-    private static BytecodeVariableSlot[] CreateSlotsFromSnapshots(
-        IReadOnlyList<BytecodeVariableSlotSnapshot> snapshots,
-        Dictionary<object, object> sharedValues)
-    {
-        var slots = new BytecodeVariableSlot[snapshots.Count];
-
-        for (var index = 0; index < snapshots.Count; index++)
-        {
-            slots[index] = CloneSnapshotSlot(snapshots[index].Slot, sharedValues);
-        }
-
-        return slots;
     }
 
     private static BytecodeVariableSlot[] RestoreCapturedSlots(
@@ -421,8 +405,9 @@ public sealed partial class BytecodeVm
         BytecodeCallFrame frame,
         Dictionary<object, object> sharedValues)
     {
-        if (!TryCreateSlotSnapshots(frame.Arguments, sharedValues, out var argumentSnapshots)
-            || !TryCreateLocalSnapshots(frame, sharedValues, out var localSnapshots)
+        // Слитая раскладка: снимок локальных слотов покрывает и параметры,
+        // занимающие первые позиции того же массива.
+        if (!TryCreateLocalSnapshots(frame, sharedValues, out var localSnapshots)
             || !TryCreateSlotSnapshots(frame.Captures, sharedValues, out var captureSnapshots)
             || !TryCreateEvaluationStackSnapshot(frame.EvaluationStack, sharedValues, out var evaluationStackSnapshot))
         {
@@ -448,7 +433,6 @@ public sealed partial class BytecodeVm
 
         return new BytecodeCallFrameSnapshot(
             frame.Routine,
-            argumentSnapshots,
             localSnapshots,
             captureSnapshots,
             frame.CallSiteLocation,

@@ -307,7 +307,9 @@ public sealed partial class BytecodeCompiler
         {
             if (parameterSlots.TryGetValue(parameter, out slot))
             {
-                opcode = instruction.Kind == LoweredInstructionKind.StoreVariable ? Opcode.StoreArgument : Opcode.LoadArgument;
+                // Слитая раскладка кадра: параметр исполняется общими
+                // LoadLocal/StoreLocal в первых слотах локального пространства.
+                opcode = instruction.Kind == LoweredInstructionKind.StoreVariable ? Opcode.StoreLocal : Opcode.LoadLocal;
                 return true;
             }
 

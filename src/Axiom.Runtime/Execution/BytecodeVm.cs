@@ -529,18 +529,6 @@ public sealed partial class BytecodeVm
                         ExecuteAppendStringLocal(frame, instruction, ip);
                         break;
 
-                    case Opcode.LoadArgument:
-                        PushArgumentValueOntoStack(frame, stack, instruction.A);
-                        break;
-
-                    case Opcode.StoreArgument:
-                        frame.Arguments[instruction.A].Store(PopValue(frame, ip));
-                        break;
-
-                    case Opcode.AppendStringArgument:
-                        ExecuteAppendStringSlot(frame.Arguments[instruction.A], PopValue(frame, ip), instruction.B != 0);
-                        break;
-
                     case Opcode.LoadCapture:
                         stack.Push(frame.Captures[instruction.A].Value);
                         break;
@@ -1170,137 +1158,40 @@ public sealed partial class BytecodeVm
         return decoded;
     }
 
+    /// <summary>
+    /// Создаёт кадр из готового набора значений параметров (возобновление
+    /// обратных вызовов): BYVAL-значения копируются в первые слоты слитной
+    /// раскладки, ячейки BYREF занимают общие слоты тех же позиций.
+    /// </summary>
     private BytecodeCallFrame CreateFrame(
         BytecodeRoutine routine,
         ReadOnlySpan<RuntimeValue> arguments,
         BytecodeVariableSlot[] captures,
         TextLocation callSiteLocation,
-        BytecodeVariableSlot[]? byRefArgumentSlots = null,
+        BytecodeVariableSlot?[]? byRefArgumentSlots = null,
         bool byValValuesAreSnapshots = false)
     {
         var template = _prepared.GetFrameTemplate(routine.Id);
-        if (_framePool.TryTake(routine.Id, out var cachedFrame)
-            && cachedFrame.Arguments.Length == routine.ParameterCount)
-        {
-            // Собственные byval-ячейки кадра сбрасываются на новые значения;
-            // иностранные BYREF-слоты подставляются без изменения и при выходе
-            // кадра не возвращаются в пул, поскольку не помечены повторными.
-            FillArgumentSlots(cachedFrame.Arguments, arguments, byRefArgumentSlots, byValValuesAreSnapshots);
-            cachedFrame.Reset(cachedFrame.Arguments, captures, callSiteLocation, template.DefaultLocals);
-            return cachedFrame;
-        }
-
-        var argumentSlots = CreateArgumentSlots(routine, arguments, byRefArgumentSlots, byValValuesAreSnapshots);
-        return CreateFrameWithSlots(routine, argumentSlots, captures, callSiteLocation, template);
-    }
-
-    private BytecodeCallFrame CreateFrameWithSlots(
-        BytecodeRoutine routine,
-        BytecodeVariableSlot[] argumentSlots,
-        BytecodeVariableSlot[] captures,
-        TextLocation callSiteLocation,
-        RoutineFrameTemplate template)
-    {
         if (_framePool.TryTake(routine.Id, out var cachedFrame))
         {
-            cachedFrame.Reset(argumentSlots, captures, callSiteLocation, template.DefaultLocals);
+            cachedFrame.Reset(captures, callSiteLocation, template.DefaultLocals);
+            cachedFrame.InstallParameterValues(arguments, byRefArgumentSlots, byValValuesAreSnapshots);
             return cachedFrame;
         }
 
-        VmValue[] locals;
-        int?[] localFixedStringLengths;
-
-        if (routine.LocalSlotCount == 0)
-        {
-            locals = Array.Empty<VmValue>();
-            localFixedStringLengths = Array.Empty<int?>();
-        }
-        else
-        {
-            locals = (VmValue[])template.DefaultLocals.Clone();
-            localFixedStringLengths = template.LocalFixedStringLengths;
-        }
-
-        return new BytecodeCallFrame(
+        var locals = routine.LocalSlotCount == 0
+            ? Array.Empty<VmValue>()
+            : (VmValue[])template.DefaultLocals.Clone();
+        var frame = new BytecodeCallFrame(
             routine,
-            argumentSlots,
             locals,
-            localFixedStringLengths,
+            template.LocalFixedStringLengths,
             captures,
             callSiteLocation,
             routine.MaxEvaluationStackDepth,
             _prepared.GetDecodedInstructions(routine.Id, _fuseDecodedInstructions));
-    }
-
-    private static BytecodeVariableSlot[] CreateArgumentSlots(
-        BytecodeRoutine routine,
-        ReadOnlySpan<RuntimeValue> arguments,
-        BytecodeVariableSlot[]? byRefArgumentSlots,
-        bool byValValuesAreSnapshots)
-    {
-        if (routine.ParameterCount == 0)
-        {
-            return Array.Empty<BytecodeVariableSlot>();
-        }
-
-        var argumentSlots = new BytecodeVariableSlot[routine.ParameterCount];
-        var byValIndex = 0;
-
-        for (var index = 0; index < argumentSlots.Length; index++)
-        {
-            if (byRefArgumentSlots is not null
-                && index < byRefArgumentSlots.Length
-                && byRefArgumentSlots[index] is not null)
-            {
-                argumentSlots[index] = byRefArgumentSlots[index];
-                continue;
-            }
-
-            var value = byValIndex < arguments.Length ? arguments[byValIndex] : RuntimeValue.Void;
-            argumentSlots[index] = byValValuesAreSnapshots
-                ? BytecodeVariableSlot.AdoptReusable(value)
-                : BytecodeVariableSlot.AdoptReusable(value.CopyForStorage());
-            byValIndex++;
-        }
-
-        return argumentSlots;
-    }
-
-    // Заполняет массив ячеек кэшированного кадра на месте: собственные ячейки
-    // byval-аргументов сбрасываются на новые значения, иностранные BYREF-слоты
-    // подставляются без изменения. Ячейка без признака повторного использования
-    // (глобальный accessor, локальная или помеченная вышедшей ячейка) не
-    // сбрасывается и заменяется новой.
-    private static void FillArgumentSlots(
-        BytecodeVariableSlot[] argumentSlots,
-        ReadOnlySpan<RuntimeValue> arguments,
-        BytecodeVariableSlot[]? byRefArgumentSlots,
-        bool byValValuesAreSnapshots)
-    {
-        var byValIndex = 0;
-
-        for (var index = 0; index < argumentSlots.Length; index++)
-        {
-            if (byRefArgumentSlots is not null
-                && index < byRefArgumentSlots.Length
-                && byRefArgumentSlots[index] is not null)
-            {
-                argumentSlots[index] = byRefArgumentSlots[index];
-                continue;
-            }
-
-            var value = byValIndex < arguments.Length ? arguments[byValIndex] : RuntimeValue.Void;
-            if (!byValValuesAreSnapshots)
-            {
-                value = value.CopyForStorage();
-            }
-
-            var slot = argumentSlots[index];
-            argumentSlots[index] = slot is not null && slot.TryResetValue(value)
-                ? slot
-                : BytecodeVariableSlot.AdoptReusable(value);
-            byValIndex++;
-        }
+        frame.InstallParameterValues(arguments, byRefArgumentSlots, byValValuesAreSnapshots);
+        return frame;
     }
 
     private void ExecuteCurrentInstruction(int runtimeFailureBoundaryDepth = 0)
@@ -1448,22 +1339,6 @@ public sealed partial class BytecodeVm
     }
 
     /// <summary>
-    /// Чтение аргумента в стек с распаковкой немедленных INTEGER и DOUBLE;
-    /// единая реализация для обоих путей исполнения.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void PushArgumentValueOntoStack(BytecodeCallFrame frame, BytecodeEvaluationStack stack, int slot)
-    {
-        var argument = frame.Arguments[slot];
-        if (argument.TryGetImmediateInteger(out var integerArgument))
-            stack.PushInteger(integerArgument);
-        else if (argument.TryGetImmediateDouble(out var doubleArgumentValue))
-            stack.PushDouble(doubleArgumentValue);
-        else
-            stack.Push(argument.Value);
-    }
-
-    /// <summary>
     /// Единый обработчик инструкции по образцу единственного определения
     /// инструкции в CPython (Python/bytecodes.c): логика каждого опкода
     /// описана ровно один раз. Отладочный путь вызывает метод напрямую,
@@ -1548,18 +1423,6 @@ public sealed partial class BytecodeVm
 
             case Opcode.AppendStringLocal:
                 ExecuteAppendStringLocal(frame, instruction, instructionIndex);
-                break;
-
-            case Opcode.LoadArgument:
-                PushArgumentValueOntoStack(frame, frame.EvaluationStack, instruction.GetOperand(0));
-                break;
-
-            case Opcode.StoreArgument:
-                frame.Arguments[instruction.GetOperand(0)].Store(PopValue(frame, instructionIndex));
-                break;
-
-            case Opcode.AppendStringArgument:
-                ExecuteAppendStringSlot(frame.Arguments[instruction.GetOperand(0)], PopValue(frame, instructionIndex), instruction.GetOperand(1) != 0);
                 break;
 
             case Opcode.LoadCapture:
@@ -2410,7 +2273,7 @@ public sealed partial class BytecodeVm
     private void CacheReusableFrame(BytecodeCallFrame frame)
     {
         // В наблюдаемом и отладочном режимах сохраняем прежнее владение ячейками.
-        frame.ReleaseReferences(keepReusableIntegerSlots: !NeedsExecutionSnapshot());
+        frame.ReleaseReferences();
         _framePool.Store(frame.Routine.Id, frame);
     }
 

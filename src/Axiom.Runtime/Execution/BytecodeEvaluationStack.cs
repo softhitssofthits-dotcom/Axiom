@@ -223,6 +223,25 @@ internal sealed class BytecodeEvaluationStack
 
     public void DiscardTop(int count) => Count -= count;
 
+    /// <summary>
+    /// Снимает верхние <paramref name="count"/> значений в слоты
+    /// <paramref name="destination"/>[0..count) без материализации: тегированное
+    /// представление копируется как есть, поэтому немедленные INTEGER, LONG и
+    /// DOUBLE переживают передачу. Порядок: destination[0] получает самый нижний
+    /// из переносимых (первый аргумент вызова). Ожидается, что на стеке есть
+    /// count значений; опустошение проверяет вызывающий код.
+    /// </summary>
+    public void CopyTopInto(int count, VmValue[] destination)
+    {
+        var sourceStart = Count - count;
+        for (var index = 0; index < count; index++)
+        {
+            destination[index] = _items[sourceStart + index];
+        }
+
+        Count = sourceStart;
+    }
+
     public void ReplaceIntegerOperands(int result)
     {
         Count -= 2;

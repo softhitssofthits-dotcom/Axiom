@@ -308,26 +308,6 @@ public sealed partial class BytecodeVm
         frame.StoreLocalValue(slot, value);
     }
 
-    private static RuntimeValue LoadArgument(BytecodeCallFrame frame, int slot, int instructionIndex)
-    {
-        if (slot < 0 || slot >= frame.Arguments.Length)
-        {
-            throw CreateInvalidSlotException(frame, "аргументный", slot, instructionIndex);
-        }
-
-        return frame.Arguments[slot].Value;
-    }
-
-    private static void StoreArgument(BytecodeCallFrame frame, int slot, RuntimeValue value, int instructionIndex)
-    {
-        if (slot < 0 || slot >= frame.Arguments.Length)
-        {
-            throw CreateInvalidSlotException(frame, "аргументный", slot, instructionIndex);
-        }
-
-        frame.Arguments[slot].Store(value);
-    }
-
     private static RuntimeValue LoadCapture(BytecodeCallFrame frame, int slot, int instructionIndex)
     {
         if (slot < 0 || slot >= frame.Captures.Length)

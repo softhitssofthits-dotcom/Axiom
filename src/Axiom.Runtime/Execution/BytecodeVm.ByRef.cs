@@ -34,7 +34,9 @@ public sealed partial class BytecodeVm
         return sourceKind switch
         {
             ByRefArgumentSourceKind.Global => CreateGlobalVariableSlot(sourceSlot),
-            ByRefArgumentSourceKind.Argument => MarkSlotEscaped(callerFrame.Arguments[sourceSlot]),
+            // Слитая раскладка: параметр вызывателя адресуется как его локальный
+            // слот — общий механизм ячеек идентичен для параметров и локалей.
+            ByRefArgumentSourceKind.Argument => MarkSlotEscaped(callerFrame.GetOrCreateLocalSlot(sourceSlot)),
             ByRefArgumentSourceKind.Local => MarkSlotEscaped(callerFrame.GetOrCreateLocalSlot(sourceSlot)),
             ByRefArgumentSourceKind.Capture => MarkSlotEscaped(callerFrame.Captures[sourceSlot]),
             _ => throw new InvalidOperationException($"Unsupported BYREF source kind '{sourceKind}'.")

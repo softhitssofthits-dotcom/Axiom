@@ -238,7 +238,6 @@ public sealed partial class BytecodeCompiler
         {
             Opcode.StoreGlobal => Opcode.AppendStringGlobal,
             Opcode.StoreLocal => Opcode.AppendStringLocal,
-            Opcode.StoreArgument => Opcode.AppendStringArgument,
             Opcode.StoreCapture => Opcode.AppendStringCapture,
             _ => (Opcode?)null
         };
@@ -281,7 +280,9 @@ public sealed partial class BytecodeCompiler
         {
             if (parameterSlots.TryGetValue(parameter, out slot))
             {
-                opcode = isStore ? Opcode.StoreArgument : Opcode.LoadArgument;
+                // Слитая раскладка кадра: параметр занимает локальный слот со
+                // своим порядковым номером и исполняется общими LoadLocal/StoreLocal.
+                opcode = isStore ? Opcode.StoreLocal : Opcode.LoadLocal;
                 return true;
             }
 

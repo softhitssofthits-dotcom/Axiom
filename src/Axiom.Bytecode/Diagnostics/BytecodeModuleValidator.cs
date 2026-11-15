@@ -1103,6 +1103,23 @@ public sealed partial class BytecodeModuleValidator
         for (var index = 0; index < routine.LocalVariables.Count; index++)
         {
             var variable = routine.LocalVariables[index];
+            // Слитая раскладка слотов (localsplus): первые N записей таблицы
+            // локальных слотов — параметры в порядке объявлений (уже проверены
+            // выше), остальные — локальные переменные без признака глобальной.
+            if (index < routine.ParameterVariables.Count)
+            {
+                if (variable is not ParameterSymbol parameter || parameter.Ordinal != index)
+                {
+                    Report(
+                        "BC4059",
+                        $"Процедура '{routine.Name}' содержит некорректную запись параметра в локальном слоте {index}.",
+                        module,
+                        routine.Id);
+                }
+
+                continue;
+            }
+
             if (variable is null || variable.IsGlobal || variable is ParameterSymbol)
             {
                 Report(

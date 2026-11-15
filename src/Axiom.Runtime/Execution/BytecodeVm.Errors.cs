@@ -209,11 +209,9 @@ public sealed partial class BytecodeVm
                 break;
 
             case 1:
+                // Слитая раскладка: CATCH в параметр тоже исполняется локальной
+                // записью, параметр занимает локальный слот кадра.
                 frame.StoreLocalValue(handler.CatchTargetSlot, value);
-                break;
-
-            case 2:
-                frame.Arguments[handler.CatchTargetSlot].Store(value);
                 break;
 
             case 3:

@@ -176,34 +176,39 @@ public sealed partial class BytecodeVm
         }
 
         var captures = GetFunctionCaptures(function);
-        BytecodeCallFrame frame;
-        var count = invoke.Arguments.Length;
-        if (count is 1 or 2 && routine.ParameterCount == count
-            && _framePool.Contains(routine.Id))
+        // Значения копируются до изъятия кадра из пула, как в прежнем общем
+        // пути: копирование может завершиться ошибкой или вызвать проверку
+        // отмены, и тогда кадр остаётся в пуле.
+        var argumentCopies = new RuntimeValue[invoke.Arguments.Length];
+        for (var index = 0; index < argumentCopies.Length; index++)
         {
-            // Копии и новые ячейки создаются до изъятия кадра, как в общем пути:
-            // копирование может завершиться ошибкой или вызвать проверку отмены.
-            var first = BytecodeVariableSlot.Adopt(invoke.Arguments[0].CopyForStorage());
-            var second = count == 2 ? BytecodeVariableSlot.Adopt(invoke.Arguments[1].CopyForStorage()) : null;
-            var template = _prepared.GetFrameTemplate(routine.Id);
-            if (_framePool.TryTake(routine.Id, out var cachedFrame))
-            {
-                cachedFrame.Arguments[0] = first;
-                if (second is not null)
-                    cachedFrame.Arguments[1] = second;
-                cachedFrame.Reset(cachedFrame.Arguments, captures, invoke.Location, template.DefaultLocals);
-                frame = cachedFrame;
-            }
-            else
-            {
-                BytecodeVariableSlot[] slots = second is null ? [first] : [first, second];
-                frame = CreateFrameWithSlots(routine, slots, captures, invoke.Location, template);
-            }
+            argumentCopies[index] = invoke.Arguments[index].CopyForStorage();
+        }
+
+        BytecodeCallFrame frame;
+        var template = _prepared.GetFrameTemplate(routine.Id);
+        if (_framePool.TryTake(routine.Id, out var cachedFrame))
+        {
+            cachedFrame.Reset(captures, invoke.Location, template.DefaultLocals);
+            cachedFrame.InstallParameterValues(argumentCopies, null, byValValuesAreSnapshots: true);
+            frame = cachedFrame;
         }
         else
         {
-            frame = CreateFrame(routine, invoke.Arguments, captures, invoke.Location);
+            var locals = routine.LocalSlotCount == 0
+                ? Array.Empty<VmValue>()
+                : (VmValue[])template.DefaultLocals.Clone();
+            frame = new BytecodeCallFrame(
+                routine,
+                locals,
+                template.LocalFixedStringLengths,
+                captures,
+                invoke.Location,
+                routine.MaxEvaluationStackDepth,
+                _prepared.GetDecodedInstructions(routine.Id, _fuseDecodedInstructions));
+            frame.InstallParameterValues(argumentCopies, null, byValValuesAreSnapshots: true);
         }
+
         frame.CallbackContinuation = invoke.Continuation;
         frame.CallbackCompletion = completion;
         frame.IsInputHandlerFrame = invoke.IsInputHandler;

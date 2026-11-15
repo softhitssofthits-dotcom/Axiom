@@ -17,7 +17,6 @@ internal sealed record BytecodeVmStateSnapshot(
 
 internal sealed record BytecodeCallFrameSnapshot(
     BytecodeRoutine Routine,
-    IReadOnlyList<BytecodeVariableSlotSnapshot> Arguments,
     IReadOnlyList<BytecodeVariableSlotSnapshot> Locals,
     IReadOnlyList<BytecodeVariableSlotSnapshot> Captures,
     TextLocation CallSiteLocation,

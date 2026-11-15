@@ -28,6 +28,10 @@ public sealed partial class BytecodeCompiler
         IReadOnlySet<VariableSymbol> liftedEntryGlobals)
     {
         var slots = new Dictionary<VariableSymbol, int>();
+        // Слитая раскладка слотов кадра (localsplus): параметры занимают первые
+        // N слотов по порядку объявления, локальные переменные продолжают
+        // нумерацию без отдельного пространства слотов.
+        var localOffset = parameterSlots.Count;
 
         foreach (var variable in routine.LocalVariables)
         {
@@ -44,7 +48,7 @@ public sealed partial class BytecodeCompiler
 
             if (!slots.ContainsKey(variable))
             {
-                slots[variable] = slots.Count;
+                slots[variable] = localOffset + slots.Count;
             }
         }
 
@@ -89,9 +93,19 @@ public sealed partial class BytecodeCompiler
         }
     }
 
-    private static VariableSymbol[] CreateRoutineLocalVariables(IReadOnlyDictionary<VariableSymbol, int> localSlots)
+    private static VariableSymbol[] CreateRoutineLocalVariables(
+        IReadOnlyDictionary<ParameterSymbol, int> parameterSlots,
+        IReadOnlyDictionary<VariableSymbol, int> localSlots)
     {
-        var variables = new VariableSymbol[localSlots.Count];
+        // Единый список слотов кадра: параметры в позициях 0..N-1, локальные
+        // переменные далее. Тип параметра в слоте нужен немедленным записям
+        // и созданию значений по умолчанию во время исполнения.
+        var variables = new VariableSymbol[parameterSlots.Count + localSlots.Count];
+        foreach (var (parameter, slot) in parameterSlots)
+        {
+            variables[slot] = parameter;
+        }
+
         foreach (var (variable, slot) in localSlots)
         {
             variables[slot] = variable.IsGlobal

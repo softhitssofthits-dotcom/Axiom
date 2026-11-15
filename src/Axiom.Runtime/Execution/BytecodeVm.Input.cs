@@ -83,8 +83,9 @@ public sealed partial class BytecodeVm
         return targetKind switch
         {
             0 => ResolveGlobalInputTarget(slot, instructionIndex),
+            // Слитая раскладка: INPUT в параметр адресуется как локальный слот;
+            // прежний вид 2 (отдельное пространство аргументов) больше не эмитится.
             1 => ResolveLocalInputTarget(routine, slot, instructionIndex),
-            2 => ResolveArgumentInputTarget(routine, slot, instructionIndex),
             3 => ResolveCaptureInputTarget(routine, slot, instructionIndex),
             _ => ReportInvalidRuntimeState<InputTarget>(
                 $"Bytecode VM получила неизвестный вид цели INPUT {targetKind}.",
@@ -114,17 +115,6 @@ public sealed partial class BytecodeVm
         return new InputTarget(1, slot, variable.Name, variable.Type, variable.FixedStringLength);
     }
 
-    private static InputTarget ResolveArgumentInputTarget(BytecodeRoutine routine, int slot, int instructionIndex)
-    {
-        if (slot < 0 || slot >= routine.ParameterVariables.Count)
-        {
-            throw CreateInvalidSlotException(routine, "аргументный", slot, instructionIndex);
-        }
-
-        var variable = routine.ParameterVariables[slot];
-        return new InputTarget(2, slot, variable.Name, variable.Type, variable.FixedStringLength);
-    }
-
     private static InputTarget ResolveCaptureInputTarget(BytecodeRoutine routine, int slot, int instructionIndex)
     {
         if (slot < 0 || slot >= routine.CapturedVariables.Count)
@@ -152,10 +142,6 @@ public sealed partial class BytecodeVm
 
             case 1:
                 StoreLocal(frame, target.Slot, value, instructionIndex);
-                break;
-
-            case 2:
-                StoreArgument(frame, target.Slot, value, instructionIndex);
                 break;
 
             case 3:
