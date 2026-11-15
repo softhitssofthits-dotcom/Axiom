@@ -32,125 +32,77 @@ public sealed partial class BytecodeVm
             InvalidateReverseExecutionHistory();
         }
 
-        // CINT над непосредственным INTEGER не меняет значение и не требует упаковки.
-        if (executionInfo.CanonicalId == BuiltinFunctionId.CInt && argumentCount == 1
-            && executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
-            && frame.EvaluationStack.TryGetImmediateInteger(out _))
-            return;
-
-        // CINT над непосредственным LONG: та же проверка диапазона и та же
-        // диагностика, что и в общем пути, без материализации и без нового
-        // делегата отчёта (колбэк кэшируется в исполнителе).
-        if (executionInfo.CanonicalId == BuiltinFunctionId.CInt && argumentCount == 1
-            && executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
-            && frame.EvaluationStack.TryGetImmediateLong(out var longForCint))
+        // Быстрый путь привязан к функции при подготовке модуля: вызов сразу
+        // попадает в свой обработчик, а не прогоняет лестницу чужих проверок.
+        switch (executionInfo.FastPath)
         {
-            frame.EvaluationStack.ReplaceTopWithInteger(RuntimeArithmeticHelpers.ToInt32Checked(
-                longForCint,
-                ResolveLocation(frame.Routine.Id, instructionIndex),
-                "Результат CINT(value)",
-                _reportOverflow));
-            return;
-        }
+            case BuiltinFastPathKind.CIntImmediate:
+                if (argumentCount == 1 && executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
+                    && TryHandleCIntImmediate(frame, executionInfo, instructionIndex))
+                    return;
+                break;
 
-        if (executionInfo.CanonicalId == BuiltinFunctionId.CInt && argumentCount == 1
-            && executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
-            && frame.EvaluationStack.TryGetImmediateDouble(out var doubleForCint))
-        {
-            frame.EvaluationStack.ReplaceTopWithInteger(RuntimeArithmeticHelpers.ToInt32Checked(
-                doubleForCint,
-                ResolveLocation(frame.Routine.Id, instructionIndex),
-                "Результат CINT(value)",
-                _reportOverflow));
-            return;
-        }
+            case BuiltinFastPathKind.CLngImmediate:
+                if (argumentCount == 1 && executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
+                    && TryHandleCLngImmediate(frame))
+                    return;
+                break;
 
-        // CLNG над непосредственным LONG не меняет значение; над INTEGER
-        // расширяет вид без материализации; над DOUBLE и прочими типами —
-        // общий путь с прежней диагностикой диапазона.
-        if (executionInfo.CanonicalId == BuiltinFunctionId.CLng && argumentCount == 1
-            && executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe)
-        {
-            var clngStack = frame.EvaluationStack;
-            if (clngStack.TryGetImmediateLong(out _))
-                return;
+            case BuiltinFastPathKind.AbsImmediate:
+                if (argumentCount == 1 && executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
+                    && TryHandleAbsImmediate(frame))
+                    return;
+                break;
 
-            if (clngStack.TryGetImmediateInteger(out var integerForLong))
+            case BuiltinFastPathKind.ArrayPushImmediate:
+                if (argumentCount == 2 && !executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
+                    && TryHandleArrayPushImmediate(frame))
+                    return;
+                break;
+
+            case BuiltinFastPathKind.ImmediateDoubleMath:
+                if (argumentCount == 1 && executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
+                    && frame.EvaluationStack.TryGetImmediateDouble(out var mathOperand)
+                    && TryComputeImmediateDoubleMath(executionInfo.CanonicalId, mathOperand, out var mathResult))
+                {
+                    frame.EvaluationStack.ReplaceTopWithDouble(mathResult);
+                    return;
+                }
+
+                break;
+
+            case BuiltinFastPathKind.FastGraphics:
+                if (TryExecuteFastGraphicsBuiltin(frame, executionInfo, instructionIndex, out var fastResult))
+                {
+                    if (executionInfo.ReturnsValue)
+                    {
+                        frame.EvaluationStack.PushUnchecked(fastResult);
+                    }
+
+                    if (!executionInfo.IsReverseExecutionSafe)
+                    {
+                        InvalidateReverseExecutionHistory();
+                    }
+
+                    return;
+                }
+
+                break;
+
+            case BuiltinFastPathKind.ArrayCallbackDirect:
             {
-                clngStack.ReplaceTopWithLong(integerForLong);
-                return;
-            }
-        }
-
-        if (executionInfo.CanonicalId == BuiltinFunctionId.Abs && argumentCount == 1
-            && executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
-            && frame.EvaluationStack.TryGetImmediateInteger(out var integerValue) && integerValue != int.MinValue)
-        {
-            frame.EvaluationStack.ReplaceImmediateInteger(integerValue < 0 ? -integerValue : integerValue);
-            return;
-        }
-
-        // ARRAYPUSH с непосредственным значением добавляет элемент в плотное
-        // типизированное хранилище без материализации аргумента. Несовпадение
-        // формы (не одномерный корневой массив, вид, неплотное хранилище) —
-        // общий путь с прежними проверками.
-        if (executionInfo.CanonicalId == BuiltinFunctionId.ArrayPush && argumentCount == 2
-            && !executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
-            && frame.EvaluationStack.PeekVmValue(1).Object is { } peekedPushTarget
-            && peekedPushTarget.Type is ArrayTypeSymbol && peekedPushTarget.Value is RuntimeArrayValue pushArray
-            && pushArray.Rank == 1 && !pushArray.IsView && pushArray.IsAllocated
-            && pushArray.UpperBound < int.MaxValue)
-        {
-            if (pushArray.ElementType == TypeSymbol.Integer
-                && frame.EvaluationStack.TryGetImmediateInteger(out var pushInteger)
-                && pushArray.TryAppendOneDimensionalInteger(pushInteger))
-            {
-                frame.EvaluationStack.DiscardTop(2);
-                return;
+                var callbackLocation = executionInfo.Execution.RequiresLocation
+                    ? ResolveLocation(frame.Routine.Id, instructionIndex)
+                    : FallbackRuntimeLocation;
+                if (executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
+                    && TryExecuteArrayCallbackDirect(frame, executionInfo.CanonicalId, instructionIndex, callbackLocation))
+                    return;
+                break;
             }
 
-            if (pushArray.ElementType == TypeSymbol.Long
-                && frame.EvaluationStack.TryGetImmediateLong(out var pushLong)
-                && pushArray.TryAppendOneDimensionalLong(pushLong))
-            {
-                frame.EvaluationStack.DiscardTop(2);
-                return;
-            }
-
-            if (pushArray.ElementType == TypeSymbol.Double
-                && frame.EvaluationStack.TryGetImmediateDouble(out var pushDouble)
-                && pushArray.TryAppendOneDimensionalDouble(pushDouble))
-            {
-                frame.EvaluationStack.DiscardTop(2);
-                return;
-            }
-        }
-
-        // Одноместные математические функции над непосредственным DOUBLE
-        // вычисляются без материализации аргумента и результата. Нарушение
-        // домена и не конечный результат уходят в общий путь с прежними
-        // диагностиками и прежней обработкой.
-        if (argumentCount == 1 && executionInfo.ReturnsValue && executionInfo.IsReverseExecutionSafe
-            && frame.EvaluationStack.TryGetImmediateDouble(out var mathOperand)
-            && TryComputeImmediateDoubleMath(executionInfo.CanonicalId, mathOperand, out var mathResult))
-        {
-            frame.EvaluationStack.ReplaceTopWithDouble(mathResult);
-            return;
-        }
-
-        if (TryExecuteFastGraphicsBuiltin(frame, executionInfo, instructionIndex, out var fastResult))
-        {
-            if (executionInfo.ReturnsValue)
-            {
-                frame.EvaluationStack.PushUnchecked(fastResult);
-            }
-
-            if (!executionInfo.IsReverseExecutionSafe)
-            {
-                InvalidateReverseExecutionHistory();
-            }
-
-            return;
+            case BuiltinFastPathKind.None:
+            default:
+                break;
         }
 
         var location = executionInfo.Execution.RequiresLocation
@@ -184,6 +136,109 @@ public sealed partial class BytecodeVm
         {
             InvalidateReverseExecutionHistory();
         }
+    }
+
+    // CINT над непосредственным INTEGER не меняет значение и не требует упаковки;
+    // над LONG и DOUBLE — та же проверка диапазона и та же диагностика, что и в
+    // общем пути, без материализации.
+    private bool TryHandleCIntImmediate(BytecodeCallFrame frame, BuiltinExecutionInfo executionInfo, int instructionIndex)
+    {
+        var stack = frame.EvaluationStack;
+        if (stack.TryGetImmediateInteger(out _))
+            return true;
+
+        if (stack.TryGetImmediateLong(out var longForCint))
+        {
+            stack.ReplaceTopWithInteger(RuntimeArithmeticHelpers.ToInt32Checked(
+                longForCint,
+                ResolveLocation(frame.Routine.Id, instructionIndex),
+                "Результат CINT(value)",
+                _reportOverflow));
+            return true;
+        }
+
+        if (stack.TryGetImmediateDouble(out var doubleForCint))
+        {
+            stack.ReplaceTopWithInteger(RuntimeArithmeticHelpers.ToInt32Checked(
+                doubleForCint,
+                ResolveLocation(frame.Routine.Id, instructionIndex),
+                "Результат CINT(value)",
+                _reportOverflow));
+            return true;
+        }
+
+        return false;
+    }
+
+    // CLNG над непосредственным LONG не меняет значение; над INTEGER расширяет
+    // вид без материализации; над DOUBLE и прочими типами — общий путь.
+    private bool TryHandleCLngImmediate(BytecodeCallFrame frame)
+    {
+        var stack = frame.EvaluationStack;
+        if (stack.TryGetImmediateLong(out _))
+            return true;
+
+        if (stack.TryGetImmediateInteger(out var integerForLong))
+        {
+            stack.ReplaceTopWithLong(integerForLong);
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool TryHandleAbsImmediate(BytecodeCallFrame frame)
+    {
+        if (frame.EvaluationStack.TryGetImmediateInteger(out var integerValue) && integerValue != int.MinValue)
+        {
+            frame.EvaluationStack.ReplaceImmediateInteger(integerValue < 0 ? -integerValue : integerValue);
+            return true;
+        }
+
+        return false;
+    }
+
+    // ARRAYPUSH с непосредственным значением добавляет элемент в плотное
+    // типизированное хранилище без материализации аргумента. Несовпадение
+    // формы (не одномерный корневой массив, вид, неплотное хранилище) —
+    // общий путь с прежними проверками.
+    private bool TryHandleArrayPushImmediate(BytecodeCallFrame frame)
+    {
+        if (frame.EvaluationStack.PeekVmValue(1).Object is not { } peekedPushTarget
+            || peekedPushTarget.Type is not ArrayTypeSymbol
+            || peekedPushTarget.Value is not RuntimeArrayValue pushArray
+            || pushArray.Rank != 1 || pushArray.IsView || !pushArray.IsAllocated
+            || pushArray.UpperBound >= int.MaxValue)
+        {
+            return false;
+        }
+
+        var stack = frame.EvaluationStack;
+        if (pushArray.ElementType == TypeSymbol.Integer
+            && stack.TryGetImmediateInteger(out var pushInteger)
+            && pushArray.TryAppendOneDimensionalInteger(pushInteger))
+        {
+            stack.DiscardTop(2);
+            return true;
+        }
+
+        if (pushArray.ElementType == TypeSymbol.Long
+            && stack.TryGetImmediateLong(out var pushLong)
+            && pushArray.TryAppendOneDimensionalLong(pushLong))
+        {
+            stack.DiscardTop(2);
+            return true;
+        }
+
+        if (pushArray.ElementType == TypeSymbol.Double
+            && stack.TryGetImmediateDouble(out var pushDouble)
+            && pushArray.TryAppendOneDimensionalDouble(pushDouble))
+        {
+            stack.DiscardTop(2);
+            return true;
+        }
+
+        return false;
     }
 
     private bool TryExecuteArrayCallbackDirect(BytecodeCallFrame frame, BuiltinFunctionId builtin,
@@ -1036,14 +1091,46 @@ public sealed partial class BytecodeVm
         }
     }
 
+    /// <summary>
+    /// Вид быстрого пути встроенной функции, привязанный один раз при подготовке
+    /// модуля: вызов больше не прогоняет лестницу чужих проверок CINT, ABS,
+    /// ARRAYPUSH и графики, а сразу попадает в свой обработчик или в общий путь.
+    /// </summary>
+    internal enum BuiltinFastPathKind
+    {
+        None,
+        CIntImmediate,
+        CLngImmediate,
+        AbsImmediate,
+        ArrayPushImmediate,
+        ImmediateDoubleMath,
+        FastGraphics,
+        ArrayCallbackDirect
+    }
+
     private sealed class BuiltinExecutionInfo
     {
-        public BuiltinExecutionInfo(BuiltinExecution execution, bool returnsValue, bool isReverseExecutionSafe, BuiltinFunctionId canonicalId)
+        public BuiltinExecutionInfo(
+            BuiltinExecution execution,
+            bool returnsValue,
+            bool isReverseExecutionSafe,
+            BuiltinFunctionId canonicalId)
+            : this(execution, returnsValue, isReverseExecutionSafe, canonicalId, ClassifyFastPath(canonicalId))
+        {
+        }
+
+        public BuiltinExecutionInfo(
+            BuiltinExecution execution,
+            bool returnsValue,
+            bool isReverseExecutionSafe,
+            BuiltinFunctionId canonicalId,
+            BuiltinFastPathKind fastPath)
         {
             Execution = execution;
             ReturnsValue = returnsValue;
             IsReverseExecutionSafe = isReverseExecutionSafe;
             CanonicalId = canonicalId;
+            FastPath = fastPath;
         }
 
         public BuiltinExecution Execution { get; }
@@ -1053,6 +1140,76 @@ public sealed partial class BytecodeVm
         public bool IsReverseExecutionSafe { get; }
 
         public BuiltinFunctionId CanonicalId { get; }
+
+        public BuiltinFastPathKind FastPath { get; }
+
+        /// <summary>
+        /// Классификация по каноническому идентификатору. Множества совпадают с
+        /// обработчиками быстрых путей; прочие идентификаторы дают общий путь.
+        /// </summary>
+        public static BuiltinFastPathKind ClassifyFastPath(BuiltinFunctionId id)
+        {
+            switch (id)
+            {
+                case BuiltinFunctionId.CInt:
+                    return BuiltinFastPathKind.CIntImmediate;
+                case BuiltinFunctionId.CLng:
+                    return BuiltinFastPathKind.CLngImmediate;
+                case BuiltinFunctionId.Abs:
+                    return BuiltinFastPathKind.AbsImmediate;
+                case BuiltinFunctionId.ArrayPush:
+                    return BuiltinFastPathKind.ArrayPushImmediate;
+                case BuiltinFunctionId.ArrayEvery:
+                case BuiltinFunctionId.ArraySome:
+                case BuiltinFunctionId.ArrayFilter:
+                case BuiltinFunctionId.ArrayMap:
+                case BuiltinFunctionId.ArrayReduce:
+                    return BuiltinFastPathKind.ArrayCallbackDirect;
+                case BuiltinFunctionId.Sin:
+                case BuiltinFunctionId.Cos:
+                case BuiltinFunctionId.Tan:
+                case BuiltinFunctionId.Atn:
+                case BuiltinFunctionId.Cbrt:
+                case BuiltinFunctionId.Exp:
+                case BuiltinFunctionId.Asinh:
+                case BuiltinFunctionId.Sinh:
+                case BuiltinFunctionId.Cosh:
+                case BuiltinFunctionId.Sqr:
+                case BuiltinFunctionId.Log:
+                case BuiltinFunctionId.Log10:
+                case BuiltinFunctionId.Log2:
+                case BuiltinFunctionId.Asin:
+                case BuiltinFunctionId.Acos:
+                case BuiltinFunctionId.Acosh:
+                case BuiltinFunctionId.Atanh:
+                    return BuiltinFastPathKind.ImmediateDoubleMath;
+                case BuiltinFunctionId.Rgb:
+                case BuiltinFunctionId.LoadImage:
+                case BuiltinFunctionId.LoadSprite:
+                case BuiltinFunctionId.LoadTileset:
+                case BuiltinFunctionId.LoadTilesetMargin:
+                case BuiltinFunctionId.LoadTilesetMarginSpacing:
+                case BuiltinFunctionId.LoadTilemap:
+                case BuiltinFunctionId.ImageWidth:
+                case BuiltinFunctionId.ImageHeight:
+                case BuiltinFunctionId.SpriteWidth:
+                case BuiltinFunctionId.SpriteHeight:
+                case BuiltinFunctionId.SpriteCount:
+                case BuiltinFunctionId.TileCount:
+                case BuiltinFunctionId.TileWidth:
+                case BuiltinFunctionId.TileHeight:
+                case BuiltinFunctionId.MapWidth:
+                case BuiltinFunctionId.MapHeight:
+                case BuiltinFunctionId.MapPixelWidth:
+                case BuiltinFunctionId.MapPixelHeight:
+                case BuiltinFunctionId.MapTileWidth:
+                case BuiltinFunctionId.MapTileHeight:
+                case BuiltinFunctionId.MapLayerCount:
+                    return BuiltinFastPathKind.FastGraphics;
+                default:
+                    return BuiltinFastPathKind.None;
+            }
+        }
     }
 
 }
