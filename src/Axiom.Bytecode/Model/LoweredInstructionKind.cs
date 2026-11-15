@@ -28,6 +28,8 @@ public enum LoweredInstructionKind
     CloseFile,
     ValidateTypeInvariant,
     ValidateForStep,
+    JumpIfForDoneLocal,
+    AdvanceForLoopLocal,
     StatementBoundary,
     RegisterKeyHandler,
     UnregisterKeyHandler,

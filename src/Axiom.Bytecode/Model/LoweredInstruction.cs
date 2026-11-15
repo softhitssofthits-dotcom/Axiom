@@ -321,6 +321,43 @@ public sealed class LoweredInstruction
         return new LoweredInstruction(LoweredInstructionKind.ValidateForStep, location);
     }
 
+    /// <summary>
+    /// Прямая эмиссия проверки завершения локального цикла FOR: понижатель
+    /// знает переменные счётчика, конца и шага и метку выхода, поэтому эмиттер
+    /// разрешает слоты и цель без обратного распознавания шаблона.
+    /// </summary>
+    public static LoweredInstruction JumpIfForDoneLocal(
+        TextLocation location,
+        VariableSymbol counterVariable,
+        VariableSymbol endVariable,
+        VariableSymbol stepVariable,
+        string endLabel)
+    {
+        ArgumentNullException.ThrowIfNull(counterVariable);
+        ArgumentNullException.ThrowIfNull(endVariable);
+        ArgumentNullException.ThrowIfNull(stepVariable);
+        ArgumentException.ThrowIfNullOrWhiteSpace(endLabel);
+        return new LoweredInstruction(
+            LoweredInstructionKind.JumpIfForDoneLocal,
+            location,
+            variables: [counterVariable, endVariable, stepVariable],
+            label: endLabel);
+    }
+
+    /// <summary>Прямая эмиссия инкремента счётчика локального цикла FOR.</summary>
+    public static LoweredInstruction AdvanceForLoopLocal(
+        TextLocation location,
+        VariableSymbol counterVariable,
+        VariableSymbol stepVariable)
+    {
+        ArgumentNullException.ThrowIfNull(counterVariable);
+        ArgumentNullException.ThrowIfNull(stepVariable);
+        return new LoweredInstruction(
+            LoweredInstructionKind.AdvanceForLoopLocal,
+            location,
+            variables: [counterVariable, stepVariable]);
+    }
+
     public static LoweredInstruction StatementBoundary(TextLocation location)
     {
         return new LoweredInstruction(LoweredInstructionKind.StatementBoundary, location);

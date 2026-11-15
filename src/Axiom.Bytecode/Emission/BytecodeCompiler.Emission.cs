@@ -42,6 +42,8 @@ public sealed partial class BytecodeCompiler
             LoweredInstructionKind.CloseFile => new BytecodeInstruction(Opcode.CloseFile),
             LoweredInstructionKind.ValidateTypeInvariant => EmitValidateTypeInvariant(instruction),
             LoweredInstructionKind.ValidateForStep => new BytecodeInstruction(Opcode.ValidateForStep),
+            LoweredInstructionKind.JumpIfForDoneLocal => EmitJumpIfForDoneLocal(routine, instruction, parameterSlots, localSlots, captureSlots, labelTargets),
+            LoweredInstructionKind.AdvanceForLoopLocal => EmitAdvanceForLoopLocal(routine, instruction, parameterSlots, localSlots, captureSlots),
             LoweredInstructionKind.StatementBoundary => new BytecodeInstruction(Opcode.StatementBoundary),
             LoweredInstructionKind.RegisterKeyHandler => new BytecodeInstruction(
                 Opcode.RegisterKeyHandler,
@@ -252,6 +254,76 @@ public sealed partial class BytecodeCompiler
         }
 
         return new BytecodeInstruction(opcode.Value, [slot, instruction.Preserve ? 1 : 0]);
+    }
+
+    // Прямая эмиссия проверки завершения локального цикла FOR: понижатель
+    // передаёт переменные счётчика, конца и шага (не глобальные) и метку выхода.
+    private BytecodeInstruction? EmitJumpIfForDoneLocal(
+        LoweredRoutine routine,
+        LoweredInstruction instruction,
+        IReadOnlyDictionary<ParameterSymbol, int> parameterSlots,
+        IReadOnlyDictionary<VariableSymbol, int> localSlots,
+        IReadOnlyDictionary<VariableSymbol, int> captureSlots,
+        IReadOnlyDictionary<string, int> labelTargets)
+    {
+        if (instruction.Variables.Count != 3
+            || !TryResolveForMachineSlot(routine, instruction, parameterSlots, localSlots, captureSlots, instruction.Variables[0], out var currentSlot)
+            || !TryResolveForMachineSlot(routine, instruction, parameterSlots, localSlots, captureSlots, instruction.Variables[1], out var endSlot)
+            || !TryResolveForMachineSlot(routine, instruction, parameterSlots, localSlots, captureSlots, instruction.Variables[2], out var stepSlot))
+        {
+            Report(
+                "BC5024",
+                $"Эмиттер байткода не смог разрешить локальные слоты цикла FOR в процедуре '{routine.Name}'.",
+                instruction.Location);
+            return null;
+        }
+
+        if (instruction.Label is null || !labelTargets.TryGetValue(instruction.Label, out var endTarget))
+        {
+            Report(
+                "BC5012",
+                $"Эмиттер байткода не нашёл метку '{instruction.Label ?? "<null>"}' в процедуре '{routine.Name}'.",
+                instruction.Location);
+            return null;
+        }
+
+        return new BytecodeInstruction(Opcode.JumpIfForDoneLocal, [currentSlot, endSlot, stepSlot, endTarget]);
+    }
+
+    private BytecodeInstruction? EmitAdvanceForLoopLocal(
+        LoweredRoutine routine,
+        LoweredInstruction instruction,
+        IReadOnlyDictionary<ParameterSymbol, int> parameterSlots,
+        IReadOnlyDictionary<VariableSymbol, int> localSlots,
+        IReadOnlyDictionary<VariableSymbol, int> captureSlots)
+    {
+        if (instruction.Variables.Count != 2
+            || !TryResolveForMachineSlot(routine, instruction, parameterSlots, localSlots, captureSlots, instruction.Variables[0], out var currentSlot)
+            || !TryResolveForMachineSlot(routine, instruction, parameterSlots, localSlots, captureSlots, instruction.Variables[1], out var stepSlot))
+        {
+            Report(
+                "BC5024",
+                $"Эмиттер байткода не смог разрешить локальные слоты цикла FOR в процедуре '{routine.Name}'.",
+                instruction.Location);
+            return null;
+        }
+
+        return new BytecodeInstruction(Opcode.AdvanceForLoopLocal, [currentSlot, stepSlot]);
+    }
+
+    private bool TryResolveForMachineSlot(
+        LoweredRoutine routine,
+        LoweredInstruction instruction,
+        IReadOnlyDictionary<ParameterSymbol, int> parameterSlots,
+        IReadOnlyDictionary<VariableSymbol, int> localSlots,
+        IReadOnlyDictionary<VariableSymbol, int> captureSlots,
+        VariableSymbol variable,
+        out int slot)
+    {
+        slot = default;
+        var loadInstruction = LoweredInstruction.LoadVariable(instruction.Location, variable);
+        return TryResolveVariableSlot(routine, loadInstruction, parameterSlots, localSlots, captureSlots, out var opcode, out slot)
+            && opcode == Opcode.LoadLocal;
     }
 
     private bool TryResolveVariableSlot(

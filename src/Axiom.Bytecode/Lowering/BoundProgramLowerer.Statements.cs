@@ -379,24 +379,42 @@ public sealed partial class BoundProgramLowerer
         instructions.Add(LoweredInstruction.LabelMarker(forStatement.Location, checkLabel));
         EmitLoopIterationBoundary(forStatement.Location, instructions);
 
-        instructions.Add(LoweredInstruction.LoadVariable(forStatement.StepExpression.Location, stepVariable));
-        instructions.Add(LoweredInstruction.LoadLiteral(forStatement.StepExpression.Location, CreateZeroLiteral(forStatement.Variable.Type), forStatement.Variable.Type));
-        instructions.Add(LoweredInstruction.BinaryOperation(forStatement.StepExpression.Location, SyntaxKind.GreaterToken));
-        instructions.Add(LoweredInstruction.JumpIfFalse(forStatement.StepExpression.Location, negativeStepLabel));
+        // Локальный цикл FOR (счётчик — не глобальная переменная) эмитируется
+        // напрямую в инструкции FOR-машины: проверка завершения одной
+        // инструкцией вместо 15-шагового знакового ветвления, инкремент —
+        // вместо четырёх стековых операций. Глобальный счётчик сохраняет
+        // прежнюю развёртку, исполняемую общими путями.
+        var useForMachine = !forStatement.Variable.IsGlobal;
+        if (useForMachine)
+        {
+            instructions.Add(LoweredInstruction.JumpIfForDoneLocal(
+                forStatement.Location,
+                forStatement.Variable,
+                endVariable,
+                stepVariable,
+                endLabel));
+        }
+        else
+        {
+            instructions.Add(LoweredInstruction.LoadVariable(forStatement.StepExpression.Location, stepVariable));
+            instructions.Add(LoweredInstruction.LoadLiteral(forStatement.StepExpression.Location, CreateZeroLiteral(forStatement.Variable.Type), forStatement.Variable.Type));
+            instructions.Add(LoweredInstruction.BinaryOperation(forStatement.StepExpression.Location, SyntaxKind.GreaterToken));
+            instructions.Add(LoweredInstruction.JumpIfFalse(forStatement.StepExpression.Location, negativeStepLabel));
 
-        instructions.Add(LoweredInstruction.LoadVariable(forStatement.Location, forStatement.Variable));
-        instructions.Add(LoweredInstruction.LoadVariable(forStatement.EndExpression.Location, endVariable));
-        instructions.Add(LoweredInstruction.BinaryOperation(forStatement.EndExpression.Location, SyntaxKind.GreaterToken));
-        instructions.Add(LoweredInstruction.JumpIfTrue(forStatement.EndExpression.Location, endLabel));
-        instructions.Add(LoweredInstruction.Jump(forStatement.Location, bodyLabel));
+            instructions.Add(LoweredInstruction.LoadVariable(forStatement.Location, forStatement.Variable));
+            instructions.Add(LoweredInstruction.LoadVariable(forStatement.EndExpression.Location, endVariable));
+            instructions.Add(LoweredInstruction.BinaryOperation(forStatement.EndExpression.Location, SyntaxKind.GreaterToken));
+            instructions.Add(LoweredInstruction.JumpIfTrue(forStatement.EndExpression.Location, endLabel));
+            instructions.Add(LoweredInstruction.Jump(forStatement.Location, bodyLabel));
 
-        instructions.Add(LoweredInstruction.LabelMarker(forStatement.StepExpression.Location, negativeStepLabel));
-        instructions.Add(LoweredInstruction.LoadVariable(forStatement.Location, forStatement.Variable));
-        instructions.Add(LoweredInstruction.LoadVariable(forStatement.EndExpression.Location, endVariable));
-        instructions.Add(LoweredInstruction.BinaryOperation(forStatement.EndExpression.Location, SyntaxKind.LessToken));
-        instructions.Add(LoweredInstruction.JumpIfTrue(forStatement.EndExpression.Location, endLabel));
+            instructions.Add(LoweredInstruction.LabelMarker(forStatement.StepExpression.Location, negativeStepLabel));
+            instructions.Add(LoweredInstruction.LoadVariable(forStatement.Location, forStatement.Variable));
+            instructions.Add(LoweredInstruction.LoadVariable(forStatement.EndExpression.Location, endVariable));
+            instructions.Add(LoweredInstruction.BinaryOperation(forStatement.EndExpression.Location, SyntaxKind.LessToken));
+            instructions.Add(LoweredInstruction.JumpIfTrue(forStatement.EndExpression.Location, endLabel));
 
-        instructions.Add(LoweredInstruction.LabelMarker(forStatement.Location, bodyLabel));
+            instructions.Add(LoweredInstruction.LabelMarker(forStatement.Location, bodyLabel));
+        }
 
         _forExitLabels.Push(new LoopExitContext(endLabel, _activeFinallyContexts.Count));
         _forContinueLabels.Push(new LoopExitContext(continueLabel, _activeFinallyContexts.Count));
@@ -414,10 +432,21 @@ public sealed partial class BoundProgramLowerer
         }
 
         instructions.Add(LoweredInstruction.LabelMarker(forStatement.Location, continueLabel));
-        instructions.Add(LoweredInstruction.LoadVariable(forStatement.Location, forStatement.Variable));
-        instructions.Add(LoweredInstruction.LoadVariable(forStatement.StepExpression.Location, stepVariable));
-        instructions.Add(LoweredInstruction.BinaryOperation(forStatement.StepExpression.Location, SyntaxKind.PlusToken));
-        instructions.Add(LoweredInstruction.StoreVariable(forStatement.StepExpression.Location, forStatement.Variable));
+        if (useForMachine)
+        {
+            instructions.Add(LoweredInstruction.AdvanceForLoopLocal(
+                forStatement.Location,
+                forStatement.Variable,
+                stepVariable));
+        }
+        else
+        {
+            instructions.Add(LoweredInstruction.LoadVariable(forStatement.Location, forStatement.Variable));
+            instructions.Add(LoweredInstruction.LoadVariable(forStatement.StepExpression.Location, stepVariable));
+            instructions.Add(LoweredInstruction.BinaryOperation(forStatement.StepExpression.Location, SyntaxKind.PlusToken));
+            instructions.Add(LoweredInstruction.StoreVariable(forStatement.StepExpression.Location, forStatement.Variable));
+        }
+
         instructions.Add(LoweredInstruction.Jump(forStatement.Location, checkLabel));
         instructions.Add(LoweredInstruction.LabelMarker(forStatement.Location, endLabel));
     }

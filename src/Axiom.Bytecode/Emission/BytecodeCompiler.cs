@@ -202,13 +202,6 @@ public sealed partial class BytecodeCompiler
 
     private readonly record struct ConstantKey(BytecodeConstantKind Kind, object? Value);
 
-    private readonly record struct CollapsedLocalForLoopCheck(
-        int CurrentSlot,
-        int EndSlot,
-        int StepSlot,
-        string EndLabel,
-        TextLocation Location);
-
     private readonly record struct BuiltinBindingKey(BuiltinFunctionId Id, string Signature)
     {
         public static BuiltinBindingKey Create(FunctionSymbol function, BuiltinFunctionId id)
