@@ -698,9 +698,10 @@ public sealed partial class BytecodeVm
                         ExecuteStoreElement(frame, instruction, ip);
                         break;
 
-                    case Opcode.CreateRecord:
-                        if (instruction.IsFreshRecordLocal
-                            && frame.TryGetReusableFreshFlatRecord(
+                    case Opcode.CreateRecordLocal:
+                        // Слитая пара CreateRecord+StoreLocal (суперинструкция
+                        // декодированного потока): запись сразу попадает в слот.
+                        if (frame.TryGetReusableFreshFlatRecord(
                                 instruction.B,
                                 ReadDebugName(instruction.GetOperand(0)),
                                 out var reusedRecordWrapper,
@@ -731,25 +732,27 @@ public sealed partial class BytecodeVm
                         }
 
                         ExecuteCreateRecord(frame, instruction, ip);
-                        if (instruction.IsFreshRecordLocal)
-                        {
-                            // Точка отмены и исходный индекс второй инструкции
-                            // остаются между созданием и записью в локальный слот.
-                            ip++;
-                            if (CheckCancellationRequested())
-                                return;
-                            frame.InstructionPointer = ip + 1;
-                            var fresh = PopValue(frame, ip);
+                        // Точка отмены и исходный индекс второй инструкции
+                        // остаются между созданием и записью в локальный слот.
+                        ip++;
+                        if (CheckCancellationRequested())
+                            return;
+                        frame.InstructionPointer = ip + 1;
+                        var fresh = PopValue(frame, ip);
 
-                            if (frame.TryAdoptFreshFlatRecord(instruction.B, fresh))
-                            {
-                                frame.RememberFreshFlatRecord(instruction.B, fresh);
-                            }
-                            else
-                            {
-                                frame.StoreLocalValue(instruction.B, fresh);
-                            }
+                        if (frame.TryAdoptFreshFlatRecord(instruction.B, fresh))
+                        {
+                            frame.RememberFreshFlatRecord(instruction.B, fresh);
                         }
+                        else
+                        {
+                            frame.StoreLocalValue(instruction.B, fresh);
+                        }
+
+                        break;
+
+                    case Opcode.CreateRecord:
+                        ExecuteCreateRecord(frame, instruction, ip);
                         break;
 
                     case Opcode.LoadFieldOrdinal:
@@ -1053,7 +1056,13 @@ public sealed partial class BytecodeVm
             if (source[index].Opcode == Opcode.CreateRecord && source[index].OperandCount == 1
                 && source[index + 1].Opcode == Opcode.StoreLocal && source[index + 1].OperandCount == 1)
             {
-                decoded[index] = VmInstruction.CreateFreshRecordLocal(source[index].GetOperand(0), source[index + 1].GetOperand(0));
+                decoded[index] = new VmInstruction(
+                    Opcode.CreateRecordLocal,
+                    source[index].GetOperand(0),
+                    source[index + 1].GetOperand(0),
+                    0,
+                    0,
+                    0);
                 index++;
             }
         }
@@ -1637,6 +1646,14 @@ public sealed partial class BytecodeVm
 
             case Opcode.CreateRecord:
                 ExecuteCreateRecord(frame, instruction, instructionIndex);
+                break;
+
+            case Opcode.CreateRecordLocal:
+                // Слитная форма не встречается в неслитном потоке отладчика;
+                // ветвь для полноты исполняет те же создание и запись общими
+                // путями без быстрой ветки переиспользования.
+                ExecuteCreateRecord(frame, instruction, instructionIndex);
+                frame.StoreLocalValue(instruction.GetOperand(1), PopValue(frame, instructionIndex));
                 break;
 
             case Opcode.LoadFieldOrdinal:

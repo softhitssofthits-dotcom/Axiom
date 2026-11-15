@@ -73,6 +73,9 @@ internal static class BytecodeStackEffect
             case Opcode.JumpIfForDoneLocal:
             case Opcode.AdvanceForLoopLocal:
             case Opcode.StepForLoopLocal:
+            // Слитная пара CreateRecord+StoreLocal декодированного потока:
+            // запись уходит в локальный слот, стек не меняется.
+            case Opcode.CreateRecordLocal:
                 return true;
 
             case Opcode.StoreGlobal:
