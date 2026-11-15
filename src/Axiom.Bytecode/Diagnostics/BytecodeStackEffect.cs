@@ -4,9 +4,43 @@ namespace Axiom.Bytecode;
 
 internal static class BytecodeStackEffect
 {
+    // Единая точная таблица стек-эффектов (аналог _PyOpcode_StackEffect CPython).
+    // Перегрузка с процедурами используется валидатором, перегрузка с делегатом
+    // результата — расчётом глубины стека на этапе компиляции и сериализации,
+    // когда экземпляры BytecodeRoutine ещё не построены.
     internal static bool TryGet(
         BytecodeInstruction instruction,
         IReadOnlyDictionary<int, BytecodeRoutine> routinesById,
+        IReadOnlyDictionary<int, BuiltinBinding> builtinsById,
+        out int popCount,
+        out int pushCount)
+    {
+        return TryGet(
+            instruction,
+            id => routinesById.TryGetValue(id, out var routine) ? routine.ResultType : null,
+            builtinsById,
+            out popCount,
+            out pushCount);
+    }
+
+    internal static bool TryGet(
+        BytecodeInstruction instruction,
+        IReadOnlyDictionary<int, TypeSymbol> resultTypesById,
+        IReadOnlyDictionary<int, BuiltinBinding> builtinsById,
+        out int popCount,
+        out int pushCount)
+    {
+        return TryGet(
+            instruction,
+            id => resultTypesById.TryGetValue(id, out var resultType) ? resultType : null,
+            builtinsById,
+            out popCount,
+            out pushCount);
+    }
+
+    internal static bool TryGet(
+        BytecodeInstruction instruction,
+        Func<int, TypeSymbol?> resultTypeById,
         IReadOnlyDictionary<int, BuiltinBinding> builtinsById,
         out int popCount,
         out int pushCount)
@@ -231,13 +265,19 @@ internal static class BytecodeStackEffect
 
             case Opcode.Call:
             case Opcode.CallByRef:
-                if (instruction.OperandCount < 2 || !routinesById.TryGetValue(instruction.GetOperand(0), out var targetRoutine))
+                if (instruction.OperandCount < 2)
+                {
+                    return false;
+                }
+
+                var targetResultType = resultTypeById(instruction.GetOperand(0));
+                if (targetResultType is null)
                 {
                     return false;
                 }
 
                 popCount = instruction.Opcode == Opcode.CallByRef ? instruction.GetOperand(2) : instruction.GetOperand(1);
-                pushCount = targetRoutine.ResultType == TypeSymbol.Void ? 0 : 1;
+                pushCount = targetResultType == TypeSymbol.Void ? 0 : 1;
                 return true;
 
             case Opcode.CallBuiltin:

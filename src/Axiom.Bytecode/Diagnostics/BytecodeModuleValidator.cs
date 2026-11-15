@@ -3525,41 +3525,7 @@ public sealed partial class BytecodeModuleValidator
         int instructionIndex,
         BytecodeInstruction instruction)
     {
-        switch (instruction.Opcode)
-        {
-            case Opcode.Jump:
-                if (instruction.OperandCount >= 1)
-                {
-                    yield return instruction.GetOperand(0);
-                }
-                break;
-
-            case Opcode.JumpIfLess:
-            case Opcode.JumpIfLessOrEqual:
-            case Opcode.JumpIfGreater:
-            case Opcode.JumpIfGreaterOrEqual:
-            case Opcode.JumpIfEqual:
-            case Opcode.JumpIfNotEqual:
-            case Opcode.JumpIfTrue:
-            case Opcode.JumpIfFalse:
-                if (instruction.OperandCount >= 1)
-                {
-                    yield return instruction.GetOperand(0);
-                }
-
-                if (instructionIndex + 1 < routine.Instructions.Count)
-                {
-                    yield return instructionIndex + 1;
-                }
-                break;
-
-            default:
-                if (instructionIndex + 1 < routine.Instructions.Count)
-                {
-                    yield return instructionIndex + 1;
-                }
-                break;
-        }
+        return BytecodeStackDepth.GetSuccessorInstructionIndices(routine.Instructions.Count, instructionIndex, instruction);
     }
 
     private void EnqueueStackSuccessor(

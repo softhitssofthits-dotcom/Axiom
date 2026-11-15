@@ -102,12 +102,23 @@ public static class BytecodeModuleSerializer
             ? artifact.Routines.ToDictionary(static routine => routine.Id, static routine => routine.ParameterCount)
             : new Dictionary<int, int>();
 
+        // Точная высота стека вычислений считается при загрузке: привязки
+        // встроенных функций и типы результатов целей вызова известны до
+        // построения процедур.
+        var builtinBindings = artifact.Builtins
+            .Select(builtin => FromArtifact(builtin, functionSymbols, variableSymbols, userDefinedTypes))
+            .ToArray();
+        var builtinsById = builtinBindings.ToDictionary(static binding => binding.Id);
+        var resultTypesById = artifact.Routines.ToDictionary(
+            static routine => routine.Id,
+            routine => ResolveType(routine.ResultType, userDefinedTypes));
+
         return new BytecodeModule(
             FromArtifact(artifact.Header),
             new ConstantPool(artifact.ConstantPool.OrderBy(static entry => entry.Index).Select(FromArtifact).ToArray()),
-            artifact.Routines.Select(routine => FromArtifact(routine, functionSymbols, variableSymbols, userDefinedTypes, adaptLegacySlots)).ToArray(),
+            artifact.Routines.Select(routine => FromArtifact(routine, functionSymbols, variableSymbols, userDefinedTypes, adaptLegacySlots, resultTypesById, builtinsById)).ToArray(),
             artifact.Globals.Select(global => FromArtifact(global, userDefinedTypes)).ToArray(),
-            artifact.Builtins.Select(builtin => FromArtifact(builtin, functionSymbols, variableSymbols, userDefinedTypes)).ToArray(),
+            builtinBindings,
             artifact.DebugInfo is null ? null : FromArtifact(artifact.DebugInfo, legacyParameterOffsets),
             artifact.EntryPointRoutineId);
     }
@@ -171,7 +182,9 @@ public static class BytecodeModuleSerializer
         Dictionary<string, FunctionSymbol> functionSymbols,
         Dictionary<string, VariableSymbol> variableSymbols,
         IReadOnlyDictionary<string, UserDefinedTypeSymbol> userDefinedTypes,
-        bool adaptLegacySlotLayout)
+        bool adaptLegacySlotLayout,
+        IReadOnlyDictionary<int, TypeSymbol> resultTypesById,
+        IReadOnlyDictionary<int, BuiltinBinding> builtinsById)
     {
         var parameterVariables = routine.ParameterVariables
             .Select((variable, index) => GetOrCreateParameterSymbol(variable, index, variableSymbols, userDefinedTypes))
@@ -204,6 +217,7 @@ public static class BytecodeModuleSerializer
             routine.ParameterCount,
             localSlotCount,
             instructions,
+            BytecodeStackDepth.ComputeMaxEvaluationStackDepth(instructions, resultTypesById, builtinsById),
             routine.IsEntryPoint,
             routine.Symbol is null ? null : GetOrCreateFunctionSymbol(routine.Symbol, functionSymbols, variableSymbols, userDefinedTypes),
             parameterVariables,

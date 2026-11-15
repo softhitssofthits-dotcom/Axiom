@@ -18,6 +18,7 @@ public sealed partial class BytecodeCompiler
     private readonly Dictionary<int, IReadOnlyList<VariableSymbol>> _transitiveCaptures = [];
     private readonly List<SourceInstructionMap> _instructionMap = [];
     private readonly List<BytecodeRoutineDebugInfo> _routineDebugInfo = [];
+    private readonly Dictionary<int, TypeSymbol> _routineResultTypesById = [];
 
     public BytecodeCompilerResult Compile(LoweredProgram program)
     {
@@ -84,6 +85,7 @@ public sealed partial class BytecodeCompiler
         _builtinIndices.Clear();
         _builtins.Clear();
         _routineIds.Clear();
+        _routineResultTypesById.Clear();
         _transitiveCaptures.Clear();
         _instructionMap.Clear();
         _routineDebugInfo.Clear();
@@ -94,6 +96,10 @@ public sealed partial class BytecodeCompiler
         foreach (var routine in routines)
         {
             RegisterConstant(BytecodeConstantKind.RoutineName, routine.Name);
+            // Тип результата каждой процедуры известен до эмиссии: он нужен
+            // расчёту максимальной высоты стека для целей Call/CallByRef,
+            // скомпилированных раньше самой цели.
+            _routineResultTypesById[routine.Id] = routine.ResultType;
 
             if (routine.Symbol is null)
             {
@@ -183,6 +189,10 @@ public sealed partial class BytecodeCompiler
             parameterCount: parameterSlots.Count,
             localSlotCount: parameterSlots.Count + localSlots.Count,
             instructions.ToArray(),
+            BytecodeStackDepth.ComputeMaxEvaluationStackDepth(
+                instructions,
+                _routineResultTypesById,
+                _builtins.ToDictionary(static binding => binding.Id)),
             routine.IsEntryPoint,
             routine.Symbol,
             parameterSlots.OrderBy(static pair => pair.Value).Select(static pair => (VariableSymbol)pair.Key).ToArray(),

@@ -15,6 +15,7 @@ public sealed class BytecodeRoutine
         int parameterCount,
         int localSlotCount,
         IReadOnlyList<BytecodeInstruction> instructions,
+        int maxEvaluationStackDepth = 1,
         bool isEntryPoint = false,
         FunctionSymbol? symbol = null,
         IReadOnlyList<VariableSymbol>? parameterVariables = null,
@@ -24,6 +25,7 @@ public sealed class BytecodeRoutine
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentNullException.ThrowIfNull(resultType);
         ArgumentNullException.ThrowIfNull(instructions);
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxEvaluationStackDepth, 1);
 
         Id = id;
         Name = name;
@@ -33,7 +35,12 @@ public sealed class BytecodeRoutine
         LocalSlotCount = localSlotCount;
         _instructionArray = instructions as BytecodeInstruction[] ?? instructions.ToArray();
         Instructions = _instructionArray;
-        MaxEvaluationStackDepth = EstimateMaxEvaluationStackDepth(_instructionArray);
+        // Точная максимальная высота стека вычислений (аналог co_stacksize
+        // CPython) считается один раз при компиляции или загрузке снимка через
+        // BytecodeStackDepth и передаётся готовым числом. Значение по умолчанию
+        // предназначено только для утилит и тестов: недооценка приводит к
+        // перевыделению массива стека через Grow, но не к ошибкам исполнения.
+        MaxEvaluationStackDepth = maxEvaluationStackDepth;
         IsEntryPoint = isEntryPoint;
         Symbol = symbol;
         ParameterVariables = parameterVariables ?? Array.Empty<VariableSymbol>();
@@ -70,115 +77,4 @@ public sealed class BytecodeRoutine
     public IReadOnlyList<VariableSymbol> LocalVariables { get; }
 
     public IReadOnlyList<VariableSymbol> CapturedVariables { get; }
-
-    private static int EstimateMaxEvaluationStackDepth(IReadOnlyList<BytecodeInstruction> instructions)
-    {
-        var depth = 0;
-        var maxDepth = 0;
-
-        foreach (var instruction in instructions)
-        {
-            depth += GetStackDelta(instruction);
-            if (depth < 0)
-            {
-                depth = 0;
-            }
-
-            if (depth > maxDepth)
-            {
-                maxDepth = depth;
-            }
-        }
-
-        return Math.Max(1, maxDepth);
-    }
-
-    private static int GetStackDelta(BytecodeInstruction instruction)
-    {
-        return instruction.Opcode switch
-        {
-            Opcode.PushConst => 1,
-            Opcode.PushIntegerZero => 1,
-            Opcode.PushIntegerOne => 1,
-            Opcode.LoadFunction => 1,
-            Opcode.LoadBuiltinFunction => 1,
-            Opcode.LoadGlobal => 1,
-            Opcode.StoreGlobal => -1,
-            Opcode.LoadLocal => 1,
-            Opcode.StoreLocal => -1,
-            Opcode.FreshLocal => 0,
-            Opcode.BindArrayElement => 0,
-            Opcode.ClearForEachItem => 0,
-            Opcode.LoadArgument => 1,
-            Opcode.StoreArgument => -1,
-            Opcode.LoadCapture => 1,
-            Opcode.StoreCapture => -1,
-            Opcode.Pop => -1,
-            Opcode.Negate => 0,
-            Opcode.Concat => -1,
-            Opcode.Add => -1,
-            Opcode.AddLongInteger => -1,
-            Opcode.Subtract => -1,
-            Opcode.Multiply => -1,
-            Opcode.Power => -1,
-            Opcode.Divide => -1,
-            Opcode.IntegralDivide => -1,
-            Opcode.Modulo => -1,
-            Opcode.Not => 0,
-            Opcode.And => -1,
-            Opcode.Or => -1,
-            Opcode.Xor => -1,
-            Opcode.Eqv => -1,
-            Opcode.Imp => -1,
-            Opcode.CompareEqual => -1,
-            Opcode.CompareNotEqual => -1,
-            Opcode.CompareLess => -1,
-            Opcode.CompareLessOrEqual => -1,
-            Opcode.CompareGreater => -1,
-            Opcode.CompareGreaterOrEqual => -1,
-            Opcode.ShiftLeft => -1,
-            Opcode.ShiftRight => -1,
-            Opcode.Jump => 0,
-            Opcode.JumpIfEqual => -2,
-            Opcode.JumpIfNotEqual => -2,
-            Opcode.JumpIfLess => -2,
-            Opcode.JumpIfLessOrEqual => -2,
-            Opcode.JumpIfGreater => -2,
-            Opcode.JumpIfGreaterOrEqual => -2,
-            Opcode.JumpIfForDoneLocal => 0,
-            Opcode.JumpIfTrue => -1,
-            Opcode.JumpIfFalse => -1,
-            Opcode.Call => 0,
-            Opcode.CallByRef => 0,
-            Opcode.CallValue => 0,
-            Opcode.Return => 0,
-            Opcode.RedimArray => -1,
-            // Образец массива заменяется независимым массивом того же типа.
-            Opcode.NewArray => 0,
-            Opcode.GetArrayStructuralVersion => 0,
-            Opcode.EraseArray => -1,
-            Opcode.LoadElement => 0,
-            Opcode.StoreElement => -2,
-            Opcode.CreateRecord => 1,
-            Opcode.LoadFieldOrdinal => 0,
-            Opcode.LoadField => 0,
-            Opcode.StoreFieldOrdinal => -2,
-            Opcode.StoreField => -2,
-            Opcode.CallBuiltin => 0,
-            Opcode.ValidateTypeInvariant => -1,
-            Opcode.ValidateForStep => -1,
-            Opcode.AdvanceForLoopLocal => 0,
-            Opcode.PrintValue => -1,
-            Opcode.PrintUsing => -1 - instruction.GetOperand(0),
-            Opcode.PrintSeparator => 0,
-            Opcode.PrintLine => 0,
-            Opcode.Input => 0,
-            Opcode.Sleep => -instruction.GetOperand(0),
-            Opcode.OpenFile => instruction.OperandCount == 3 ? -2 : -1,
-            Opcode.CloseFile => 0,
-            Opcode.Convert => 0,
-            Opcode.Viewport => -instruction.GetOperand(0),
-            _ => 0
-        };
-    }
 }
