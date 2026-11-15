@@ -1,24 +1,11 @@
 {
   "language": "0.12.18",
-  "compiler": "0.13.93",
+  "compiler": "0.13.94",
   "ide": "0.15.11",
   "compilerOnlyChange": {
-    "version": "0.13.93",
-    "reason": "Внутренняя подготовка и кэширование неизменяемых таблиц модуля в BytecodeVm (PreparedBytecodeModule) без изменения нормативного договора языка.",
+    "version": "0.13.94",
+    "reason": "Внутреннее объединение двух диспетчеров опкодов BytecodeVm в единый обработчик инструкции и восстановление паритета LoadGlobal/StoreGlobal без изменения нормативного договора языка.",
     "paths": [
-      "src/Axiom.Runtime/Execution/BytecodeVm.BuiltinCalls.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.Callbacks.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.Calls.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.Debug.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.Dictionary.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.FileIO.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.Graphics.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.Input.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.Output.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.PreparedModule.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.Records.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.Set.cs",
-      "src/Axiom.Runtime/Execution/BytecodeVm.Storage.cs",
       "src/Axiom.Runtime/Execution/BytecodeVm.cs"
     ]
   }

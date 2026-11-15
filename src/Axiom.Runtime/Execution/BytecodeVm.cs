@@ -422,18 +422,10 @@ public sealed partial class BytecodeVm
                         break;
 
                     case Opcode.StoreLocal:
-                        var localSlot = instruction.A;
-                        if (stack.TryGetImmediateInteger(out var immediateInteger)
-                            && frame.TryStoreImmediateInteger(localSlot, immediateInteger))
-                            stack.DiscardTop(1);
-                        else if (stack.TryGetImmediateLong(out var immediateLong)
-                            && frame.TryStoreImmediateLong(localSlot, immediateLong))
-                            stack.DiscardTop(1);
-                        else if (stack.TryGetImmediateDouble(out var immediateDouble)
-                            && frame.TryStoreImmediateDouble(localSlot, immediateDouble))
+                        if (TryStoreLocalImmediates(frame, stack, instruction.A))
                             stack.DiscardTop(1);
                         else
-                            frame.StoreLocalValue(localSlot, PopValue(frame, ip));
+                            frame.StoreLocalValue(instruction.A, PopValue(frame, ip));
                         break;
 
                     case Opcode.PushConst:
@@ -455,18 +447,10 @@ public sealed partial class BytecodeVm
                         break;
 
                     case Opcode.StoreGlobal:
-                        var globalSlot = instruction.A;
-                        if (stack.TryGetImmediateInteger(out var storeGlobalInteger)
-                            && TryStoreGlobalImmediateInteger(globalSlot, storeGlobalInteger))
-                            stack.DiscardTop(1);
-                        else if (stack.TryGetImmediateLong(out var storeGlobalLong)
-                            && TryStoreGlobalImmediateLong(globalSlot, storeGlobalLong))
-                            stack.DiscardTop(1);
-                        else if (stack.TryGetImmediateDouble(out var storeGlobalDouble)
-                            && TryStoreGlobalImmediateDouble(globalSlot, storeGlobalDouble))
+                        if (TryStoreGlobalImmediates(instruction.A, stack))
                             stack.DiscardTop(1);
                         else
-                            StoreGlobalUnchecked(globalSlot, PopValue(frame, ip));
+                            StoreGlobalUnchecked(instruction.A, PopValue(frame, ip));
                         break;
 
                     case Opcode.Pop:
@@ -525,14 +509,6 @@ public sealed partial class BytecodeVm
 
                         break;
 
-                    case Opcode.LoadFunction:
-                        stack.Push(LoadFunctionValue(frame, instruction.A, ip));
-                        break;
-
-                    case Opcode.LoadBuiltinFunction:
-                        stack.Push(LoadBuiltinFunctionValue(frame, instruction.A, ip));
-                        break;
-
                     case Opcode.AppendStringGlobal:
                         ExecuteAppendStringGlobal(frame, instruction, ip);
                         break;
@@ -554,13 +530,7 @@ public sealed partial class BytecodeVm
                         break;
 
                     case Opcode.LoadArgument:
-                        var argument = frame.Arguments[instruction.A];
-                        if (argument.TryGetImmediateInteger(out var integerArgument))
-                            stack.PushInteger(integerArgument);
-                        else if (argument.TryGetImmediateDouble(out var doubleArgumentValue))
-                            stack.PushDouble(doubleArgumentValue);
-                        else
-                            stack.Push(argument.Value);
+                        PushArgumentValueOntoStack(frame, stack, instruction.A);
                         break;
 
                     case Opcode.StoreArgument:
@@ -720,28 +690,8 @@ public sealed partial class BytecodeVm
                         ExecuteJumpIfBooleanInstruction(frame, instruction, invertCondition: true);
                         break;
 
-                    case Opcode.OpenFile:
-                        ExecuteOpenFile(frame, instruction, ip);
-                        break;
-
-                    case Opcode.CloseFile:
-                        ExecuteCloseFile(frame, ip);
-                        break;
-
-                    case Opcode.RedimArray:
-                        ExecuteRedimArray(frame, instruction, ip);
-                        break;
-
-                    case Opcode.NewArray:
-                        ExecuteNewArray(frame, instruction, ip);
-                        break;
-
                     case Opcode.GetArrayStructuralVersion:
                         ExecuteGetArrayStructuralVersion(frame, ip);
-                        break;
-
-                    case Opcode.EraseArray:
-                        ExecuteEraseArray(frame, ip);
                         break;
 
                     case Opcode.LoadElement:
@@ -828,74 +778,6 @@ public sealed partial class BytecodeVm
                         ValidateTypeInvariant(frame, instruction, ip);
                         break;
 
-                    case Opcode.CreateDictionary:
-                        ExecuteCreateDictionary(frame, instruction, ip);
-                        break;
-
-                    case Opcode.LoadDictionaryValue:
-                        ExecuteLoadDictionaryValue(frame, instruction, ip);
-                        break;
-
-                    case Opcode.StoreDictionaryValue:
-                        ExecuteStoreDictionaryValue(frame, instruction, ip);
-                        break;
-
-                    case Opcode.DictionaryAdd:
-                        ExecuteDictionaryAdd(frame, instruction, ip);
-                        break;
-
-                    case Opcode.DictionaryExists:
-                        ExecuteDictionaryExists(frame, instruction, ip);
-                        break;
-
-                    case Opcode.DictionaryRemove:
-                        ExecuteDictionaryRemove(frame, instruction, ip);
-                        break;
-
-                    case Opcode.DictionaryKeys:
-                        ExecuteDictionaryKeys(frame, instruction, ip);
-                        break;
-
-                    case Opcode.DictionaryCount:
-                        ExecuteDictionaryCount(frame, instruction, ip);
-                        break;
-
-                    case Opcode.DictionaryTryGetValue:
-                        ExecuteDictionaryTryGetValue(frame, instruction, ip);
-                        break;
-
-                    case Opcode.CreateSet:
-                        ExecuteCreateSet(frame, instruction, ip);
-                        break;
-
-                    case Opcode.SetAdd:
-                        ExecuteSetAdd(frame, instruction, ip);
-                        break;
-
-                    case Opcode.SetContains:
-                        ExecuteSetContains(frame, instruction, ip);
-                        break;
-
-                    case Opcode.SetRemove:
-                        ExecuteSetRemove(frame, instruction, ip);
-                        break;
-
-                    case Opcode.SetCount:
-                        ExecuteSetCount(frame, instruction, ip);
-                        break;
-
-                    case Opcode.SetToArray:
-                        ExecuteSetToArray(frame, instruction, ip);
-                        break;
-
-                    case Opcode.SetUnionWith:
-                        ExecuteSetUnionWith(frame, instruction, ip);
-                        break;
-
-                    case Opcode.SetIntersectWith:
-                        ExecuteSetIntersectWith(frame, instruction, ip);
-                        break;
-
                     case Opcode.ValidateForStep:
                         ValidateForStep(frame, ip);
                         break;
@@ -924,238 +806,12 @@ public sealed partial class BytecodeVm
                         FlushPendingOutput(forceEmptyLine: true);
                         break;
 
-                    case Opcode.Input:
-                        ExecuteInput(frame, instruction, ip);
-                        break;
-
-                    case Opcode.Sleep:
-                        ExecuteSleepInstruction(frame, instruction, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.ReseedRandom:
-                        ExecuteReseedRandomInstruction(frame, instruction, ip);
-                        break;
-
                     case Opcode.FormatInterpolatedPart:
                         ExecuteFormatInterpolatedPart(frame, ip);
                         break;
 
-                    case Opcode.Screen:
-                        ExecuteScreenInstruction(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.Canvas:
-                        ExecuteCanvasInstruction(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.Smooth:
-                        _host.SetGraphicsSmoothing(instruction.A != 0);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.BeginFrame:
-                        ExecuteBeginFrameInstruction(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.Present:
-                        ExecutePresentInstruction(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.Camera:
-                        ExecuteCameraInstruction(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.Viewport:
-                        ExecuteViewportInstruction(frame, instruction, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.ResetCamera:
-                        ExecuteResetCameraInstruction(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.View:
-                        ExecuteViewInstruction(frame, instruction, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.ViewPrint:
-                        ExecuteViewPrintInstruction(frame, instruction, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.Window:
-                        ExecuteWindowInstruction(frame, instruction, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.Cls:
-                        ExecuteClsInstruction(frame, instruction, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.Color:
-                        ExecuteColorInstruction(frame, instruction, ip);
-                        break;
-
-                    case Opcode.Locate:
-                        ExecuteLocateInstruction(frame, ip);
-                        break;
-
-                    case Opcode.Palette:
-                        ExecutePaletteInstruction(frame, instruction, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.PCopy:
-                        ExecutePCopyInstruction(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.PSet:
-                        ExecutePSetInstruction(frame, instruction, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.Get:
-                        ExecuteGetInstruction(frame, instruction, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.Put:
-                        ExecutePutInstruction(frame, instruction, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.Line:
-                        ExecuteLineInstruction(frame, instruction, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.Circle:
-                        ExecuteCircleInstruction(frame, instruction, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.Paint:
-                        ExecutePaintInstruction(frame, instruction, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.Draw:
-                        ExecuteDrawInstruction(frame, instruction, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.DrawRect:
-                        ExecuteDrawRectInstruction(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.FillRect:
-                        ExecuteFillRectInstruction(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.DrawLine:
-                        ExecuteDrawLineInstruction(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.DrawCircle:
-                        ExecuteDrawCircleInstruction(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.FillCircle:
-                        ExecuteFillCircleInstruction(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.DrawImage:
-                        ExecuteDrawImageInstruction(frame, instruction, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.DrawSprite:
-                        ExecuteDrawSpriteInstruction(frame, instruction, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.DrawTile:
-                        ExecuteDrawTileInstruction(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.DrawTilemap:
-                        ExecuteDrawTilemapInstruction(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.DrawTileLayer:
-                        ExecuteDrawTileLayerInstruction(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.SetMapTile:
-                        ExecuteSetMapTileInstruction(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.DrawText:
-                        ExecuteDrawTextInstruction(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
                     case Opcode.StatementBoundary:
                         ExecuteStatementBoundary(ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.RegisterKeyHandler:
-                        ExecuteRegisterKeyHandler(frame, ip, instruction);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.UnregisterKeyHandler:
-                        ExecuteUnregisterKeyHandler(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.PauseKeyHandler:
-                        ExecutePauseKeyHandler(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.ResumeKeyHandler:
-                        ExecuteResumeKeyHandler(frame, ip);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.RegisterMouseHandler:
-                        ExecuteRegisterMouseHandler(frame, ip, instruction);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.UnregisterMouseHandler:
-                        ExecuteUnregisterMouseHandler(frame, ip, instruction);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.PauseMouseHandler:
-                        ExecutePauseMouseHandler(frame, ip, instruction);
-                        InvalidateReverseExecutionHistory();
-                        break;
-
-                    case Opcode.ResumeMouseHandler:
-                        ExecuteResumeMouseHandler(frame, ip, instruction);
                         InvalidateReverseExecutionHistory();
                         break;
 
@@ -1172,10 +828,10 @@ public sealed partial class BytecodeVm
                         break;
 
                     default:
-                        ReportInvalidRuntimeState(
-                            $"Bytecode VM пока не поддерживает opcode '{instruction.Opcode}'.",
-                            ResolveLocation(frame.Routine.Id, ip));
-                        throw new RuntimeFailureException();
+                        // Все прочие опкоды — единый обработчик инструкции: одна
+                        // реализация для плотного цикла и отладчика (Проблема 2).
+                        ExecuteInstruction(frame, instruction, ip);
+                        break;
                     }
                 }
 
@@ -1754,6 +1410,68 @@ public sealed partial class BytecodeVm
             : shouldCaptureReversibleState ? TryCreateReversibleStateSnapshot(snapshot!) : null;
     }
 
+    /// <summary>
+    /// Общая цепочка немедленных записей в локальный слот (INTEGER, LONG, DOUBLE)
+    /// для обоих путей исполнения: плотного цикла и единого обработчика. Одна
+    /// реализация вместо двух развёрнутых копий исключает расхождение ветвей
+    /// немедленных записей (см. DebugPathImmediateStoreParityTests).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool TryStoreLocalImmediates(BytecodeCallFrame frame, BytecodeEvaluationStack stack, int slot)
+    {
+        if (stack.TryGetImmediateInteger(out var immediateInteger)
+            && frame.TryStoreImmediateInteger(slot, immediateInteger))
+            return true;
+        if (stack.TryGetImmediateLong(out var immediateLong)
+            && frame.TryStoreImmediateLong(slot, immediateLong))
+            return true;
+        return stack.TryGetImmediateDouble(out var immediateDouble)
+            && frame.TryStoreImmediateDouble(slot, immediateDouble);
+    }
+
+    /// <summary>
+    /// Общая цепочка немедленных записей в глобальный слот (INTEGER, LONG, DOUBLE)
+    /// для обоих путей исполнения. При отказе по объявленному типу вызывающий
+    /// код использует прежний общий путь записи.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool TryStoreGlobalImmediates(int slot, BytecodeEvaluationStack stack)
+    {
+        if (stack.TryGetImmediateInteger(out var storeGlobalInteger)
+            && TryStoreGlobalImmediateInteger(slot, storeGlobalInteger))
+            return true;
+        if (stack.TryGetImmediateLong(out var storeGlobalLong)
+            && TryStoreGlobalImmediateLong(slot, storeGlobalLong))
+            return true;
+        return stack.TryGetImmediateDouble(out var storeGlobalDouble)
+            && TryStoreGlobalImmediateDouble(slot, storeGlobalDouble);
+    }
+
+    /// <summary>
+    /// Чтение аргумента в стек с распаковкой немедленных INTEGER и DOUBLE;
+    /// единая реализация для обоих путей исполнения.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void PushArgumentValueOntoStack(BytecodeCallFrame frame, BytecodeEvaluationStack stack, int slot)
+    {
+        var argument = frame.Arguments[slot];
+        if (argument.TryGetImmediateInteger(out var integerArgument))
+            stack.PushInteger(integerArgument);
+        else if (argument.TryGetImmediateDouble(out var doubleArgumentValue))
+            stack.PushDouble(doubleArgumentValue);
+        else
+            stack.Push(argument.Value);
+    }
+
+    /// <summary>
+    /// Единый обработчик инструкции по образцу единственного определения
+    /// инструкции в CPython (Python/bytecodes.c): логика каждого опкода
+    /// описана ровно один раз. Отладочный путь вызывает метод напрямую,
+    /// плотный цикл RunCurrentFrameFast направляет сюда все не входящие
+    /// в его горячее ядро опкоды через default:. Холодные опкоды, слитные
+    /// формы и специализированные потоки обрабатываются здесь; ветви,
+    /// дублировавшиеся ранее между двумя диспетчерами, устранены.
+    /// </summary>
     private void ExecuteInstruction(BytecodeCallFrame frame, VmInstruction instruction, int instructionIndex)
     {
         switch (instruction.Opcode)
@@ -1781,22 +1499,17 @@ public sealed partial class BytecodeVm
                 break;
 
             case Opcode.LoadGlobal:
-                frame.EvaluationStack.Push(LoadGlobalUnchecked(instruction.GetOperand(0)));
+                // Паритет с плотным циклом: чтение без материализации
+                // (накопитель строк снимается копией, записи TYPE создаются
+                // при первом чтении), а не материализующий LoadGlobalUnchecked.
+                PushGlobalValueOntoEvaluationStack(frame.EvaluationStack, instruction.GetOperand(0));
                 break;
 
             case Opcode.StoreGlobal:
-                var globalSlot = instruction.GetOperand(0);
-                if (frame.EvaluationStack.TryGetImmediateInteger(out var storeGlobalInteger)
-                    && TryStoreGlobalImmediateInteger(globalSlot, storeGlobalInteger))
-                    frame.EvaluationStack.DiscardTop(1);
-                else if (frame.EvaluationStack.TryGetImmediateLong(out var storeGlobalLong)
-                    && TryStoreGlobalImmediateLong(globalSlot, storeGlobalLong))
-                    frame.EvaluationStack.DiscardTop(1);
-                else if (frame.EvaluationStack.TryGetImmediateDouble(out var storeGlobalDouble)
-                    && TryStoreGlobalImmediateDouble(globalSlot, storeGlobalDouble))
+                if (TryStoreGlobalImmediates(instruction.GetOperand(0), frame.EvaluationStack))
                     frame.EvaluationStack.DiscardTop(1);
                 else
-                    StoreGlobal(globalSlot, PopValue(frame, instructionIndex));
+                    StoreGlobalUnchecked(instruction.GetOperand(0), PopValue(frame, instructionIndex));
                 break;
 
             case Opcode.AppendStringGlobal:
@@ -1808,32 +1521,17 @@ public sealed partial class BytecodeVm
                 break;
 
             case Opcode.LoadLocalPair:
-                // Отладочный путь исполняет ту же слитную форму одним шагом:
-                // указатель пропускает второй слот пары (см. DecodeInstructions).
-                frame.PushLocalValueOntoEvaluationStack(instruction.GetOperand(0));
-                frame.PushLocalValueOntoEvaluationStack(instruction.GetOperand(1));
-                frame.InstructionPointer = instructionIndex + 2;
-                break;
-
             case Opcode.LoadLocalConst:
-                frame.PushLocalValueOntoEvaluationStack(instruction.GetOperand(0));
-                frame.EvaluationStack.PushUnchecked(ReadConstantUnchecked(instruction.GetOperand(1)));
-                frame.InstructionPointer = instructionIndex + 2;
+                // Слитная пара исполняется общим обработчиком (см. DecodeInstructions):
+                // указатель пропускает второй слот пары.
+                ExecuteFusedLoadPair(frame, instruction, instructionIndex);
                 break;
 
             case Opcode.StoreLocal:
-                var localSlot = instruction.GetOperand(0);
-                if (frame.EvaluationStack.TryGetImmediateInteger(out var immediateInteger)
-                    && frame.TryStoreImmediateInteger(localSlot, immediateInteger))
-                    frame.EvaluationStack.DiscardTop(1);
-                else if (frame.EvaluationStack.TryGetImmediateLong(out var immediateLong)
-                    && frame.TryStoreImmediateLong(localSlot, immediateLong))
-                    frame.EvaluationStack.DiscardTop(1);
-                else if (frame.EvaluationStack.TryGetImmediateDouble(out var immediateDouble)
-                    && frame.TryStoreImmediateDouble(localSlot, immediateDouble))
+                if (TryStoreLocalImmediates(frame, frame.EvaluationStack, instruction.GetOperand(0)))
                     frame.EvaluationStack.DiscardTop(1);
                 else
-                    frame.StoreLocalValue(localSlot, PopValue(frame, instructionIndex));
+                    frame.StoreLocalValue(instruction.GetOperand(0), PopValue(frame, instructionIndex));
                 break;
 
             case Opcode.FreshLocal:
@@ -1853,13 +1551,7 @@ public sealed partial class BytecodeVm
                 break;
 
             case Opcode.LoadArgument:
-                var argument = frame.Arguments[instruction.GetOperand(0)];
-                if (argument.TryGetImmediateInteger(out var integerArgument))
-                    frame.EvaluationStack.PushInteger(integerArgument);
-                else if (argument.TryGetImmediateDouble(out var doubleArgumentValue))
-                    frame.EvaluationStack.PushDouble(doubleArgumentValue);
-                else
-                    frame.EvaluationStack.Push(argument.Value);
+                PushArgumentValueOntoStack(frame, frame.EvaluationStack, instruction.GetOperand(0));
                 break;
 
             case Opcode.StoreArgument:
