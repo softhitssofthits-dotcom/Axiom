@@ -132,6 +132,12 @@ public sealed partial class BytecodeVm
     private BytecodeVmStopState? _stopState;
     private BytecodeVmExecutionSnapshot? _skipStopOnceAt;
     private BytecodeVmStateSnapshot? _previousReversibleStateSnapshot;
+
+    // Ключ исходной строки последнего захваченного обратимого снимка:
+    // снимки создаются только при смене (RoutineId, CallDepth, SourceLine),
+    // промежуточные снимки одной строки откатом никогда не выбираются.
+    private (int RoutineId, int CallDepth, string? Document, int Line)? _lastReversibleSnapshotLine;
+    private Dictionary<int, IReadOnlyList<(int Start, int End, int Slot)>>? _forEachItemRangesByRoutineId;
     private Diagnostic? _lastRuntimeFailureDiagnostic;
     private string? _lastRuntimeErrorMessage;
     private SourceLine? _suppressLineBreakpointsUntilDifferentLine;
@@ -1237,7 +1243,18 @@ public sealed partial class BytecodeVm
         }
 
         var shouldCaptureReversibleState = ShouldCaptureReversibleStateHistory();
-        var stateBeforeInstruction = SelectReversibleSnapshot(canCheckStopFirst, shouldCaptureReversibleState, snapshot);
+        // Обратимый снимок создаётся только при входе на новую исходную строку:
+        // откат всегда восстанавливает состояние перед первой инструкцией
+        // предыдущей строки, поэтому промежуточные снимки одной строки никогда
+        // не выбираются. Цепочка сохраняется: следующий снимок строки сцепляется
+        // с последним снимком предыдущей строки.
+        var lineChanged = _instructionObserver is not null
+            || snapshot is null
+            || _lastReversibleSnapshotLine is null
+            || _lastReversibleSnapshotLine != (snapshot.RoutineId, snapshot.CallDepth, snapshot.SourceLocation.Document, snapshot.SourceLocation.Line);
+        var stateBeforeInstruction = lineChanged
+            ? SelectReversibleSnapshot(canCheckStopFirst, shouldCaptureReversibleState, snapshot)
+            : _previousReversibleStateSnapshot;
         if (snapshot is not null)
         {
             _instructionObserver?.Invoke(snapshot);
@@ -1249,7 +1266,12 @@ public sealed partial class BytecodeVm
             return;
         }
 
-        _previousReversibleStateSnapshot = stateBeforeInstruction;
+        if (lineChanged)
+        {
+            _previousReversibleStateSnapshot = stateBeforeInstruction;
+            _lastReversibleSnapshotLine = (snapshot.RoutineId, snapshot.CallDepth, snapshot.SourceLocation.Document, snapshot.SourceLocation.Line);
+        }
+
         frame.InstructionPointer++;
         try
         {

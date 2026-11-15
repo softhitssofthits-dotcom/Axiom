@@ -60,38 +60,67 @@ public sealed partial class BytecodeVm
         return null;
     }
 
-    private static bool IsForEachItemInstructionScopeActive(BytecodeCallFrame frame, int localSlot)
+    private bool IsForEachItemInstructionScopeActive(BytecodeCallFrame frame, int localSlot)
     {
-        var instructions = frame.DecodedInstructions;
+        var ranges = GetForEachItemRanges(frame);
         var instructionPointer = frame.InstructionPointer;
-
-        for (var start = 0; start < instructions.Length; start++)
+        foreach (var (start, end, slot) in ranges)
         {
-            var instruction = instructions[start];
-            if (instruction.Opcode is not (Opcode.FreshLocal or Opcode.BindArrayElement)
-                || instruction.GetOperand(0) != localSlot)
+            if (slot == localSlot && instructionPointer >= start && instructionPointer <= end)
             {
-                continue;
-            }
-
-            for (var end = start + 1; end < instructions.Length; end++)
-            {
-                var clear = instructions[end];
-                if (clear.Opcode != Opcode.ClearForEachItem || clear.GetOperand(0) != localSlot)
-                {
-                    continue;
-                }
-
-                if (instructionPointer >= start && instructionPointer <= end)
-                {
-                    return true;
-                }
-
-                break;
+                return true;
             }
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Диапазоны [StartIp, EndIp, Slot] циклов FOR EACH потока процедуры:
+    /// пара FreshLocal/BindArrayElement и парная ClearForEachItem. Строится
+    /// один раз на процедуру и кэшируется, поэтому пауза отладчика больше не
+    /// сканирует инструкции квадратично.
+    /// </summary>
+    private IReadOnlyList<(int Start, int End, int Slot)> GetForEachItemRanges(BytecodeCallFrame frame)
+    {
+        var routineId = frame.Routine.Id;
+        if (_forEachItemRangesByRoutineId is null)
+        {
+            _forEachItemRangesByRoutineId = new Dictionary<int, IReadOnlyList<(int, int, int)>>();
+        }
+
+        if (_forEachItemRangesByRoutineId.TryGetValue(routineId, out var cached))
+        {
+            return cached;
+        }
+
+        var instructions = frame.DecodedInstructions;
+        var ranges = new List<(int Start, int End, int Slot)>();
+        for (var start = 0; start < instructions.Length; start++)
+        {
+            var instruction = instructions[start];
+            if (instruction.Opcode is not (Opcode.FreshLocal or Opcode.BindArrayElement))
+            {
+                continue;
+            }
+
+            var slot = instruction.GetOperand(0);
+            for (var end = start + 1; end < instructions.Length; end++)
+            {
+                var clear = instructions[end];
+                if (clear.Opcode != Opcode.ClearForEachItem || clear.GetOperand(0) != slot)
+                {
+                    continue;
+                }
+
+                ranges.Add((start, end, slot));
+                break;
+            }
+        }
+
+        IReadOnlyList<(int, int, int)> result = ranges;
+        _forEachItemRangesByRoutineId[routineId] = result;
+        return result;
     }
 
     private BytecodeVmExecutionSnapshot CreateExecutionSnapshot(
@@ -541,6 +570,7 @@ public sealed partial class BytecodeVm
     private void InvalidateReverseExecutionHistory()
     {
         _previousReversibleStateSnapshot = null;
+        _lastReversibleSnapshotLine = null;
     }
 
     private void InvalidateReverseExecutionHistoryIfOutputIsNotReversible()
