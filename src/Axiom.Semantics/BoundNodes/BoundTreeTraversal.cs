@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Linq.Expressions;
 using System.Reflection;
 using Axiom.Syntax;
 
@@ -13,6 +14,13 @@ namespace Axiom.Semantics;
 public static class BoundTreeTraversal
 {
     private static readonly ConcurrentDictionary<Type, PropertyInfo[]> Properties = new();
+
+    /// <summary>
+    /// Скомпилированные геттеры публичных свойств каждого типа контейнера:
+    /// правило отбора свойств задаётся тем же отражением один раз на тип,
+    /// а чтение значения выполняется как обычный вызов без рефлексии.
+    /// </summary>
+    private static readonly ConcurrentDictionary<Type, Func<object, object?>[]> CompiledGetters = new();
 
     /// <summary>
     /// Обходит <paramref name="root"/> и возвращает каждый объект не более одного
@@ -47,15 +55,35 @@ public static class BoundTreeTraversal
 
             var type = value.GetType();
             if (!IsTreeContainer(type)) continue;
-            foreach (var property in Properties.GetOrAdd(type, static t => t.GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                .Where(static p => p.GetIndexParameters().Length == 0).ToArray()))
+            foreach (var getter in CompiledGetters.GetOrAdd(type, CompilePropertyGetters))
             {
-                if (property.GetValue(value) is { } child && child is not string && !child.GetType().IsValueType)
+                if (getter(value) is { } child && child is not string && !child.GetType().IsValueType)
                 {
                     pending.Push(child);
                 }
             }
         }
+    }
+
+    private static Func<object, object?>[] CompilePropertyGetters(Type type)
+    {
+        var properties = Properties.GetOrAdd(
+            type,
+            static t => t.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                .Where(static p => p.GetIndexParameters().Length == 0).ToArray());
+
+        var getters = new Func<object, object?>[properties.Length];
+        for (var index = 0; index < properties.Length; index++)
+        {
+            var property = properties[index];
+            var target = Expression.Parameter(typeof(object), "node");
+            var body = Expression.Convert(
+                Expression.Property(Expression.Convert(target, type), property),
+                typeof(object));
+            getters[index] = Expression.Lambda<Func<object, object?>>(body, target).Compile();
+        }
+
+        return getters;
     }
 
     private static bool IsTreeContainer(Type type)
