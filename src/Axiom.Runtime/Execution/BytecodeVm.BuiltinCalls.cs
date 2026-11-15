@@ -100,6 +100,23 @@ public sealed partial class BytecodeVm
                 break;
             }
 
+            case BuiltinFastPathKind.PackedDateAddDay:
+                // DATEADD("d", n, дата): сдвиг номера дня без создания
+                // RuntimeValue и боксинга; прочие интервалы и формы —
+                // общий путь с прежними диагностиками.
+                if (argumentCount == 3 && executionInfo.ReturnsValue
+                    && executionInfo.IsReverseExecutionSafe
+                    && TryHandlePackedDateAddDay(frame))
+                    return;
+                break;
+            case BuiltinFastPathKind.PackedTemporalNow:
+                // Текущая дата/время без создания RuntimeValue и боксинга:
+                // упакованное значение строится сразу в стеке кадра.
+                if (argumentCount == 0 && executionInfo.ReturnsValue
+                    && TryHandlePackedTemporalNow(frame, executionInfo.CanonicalId))
+                    return;
+                break;
+
             case BuiltinFastPathKind.None:
             default:
                 break;
@@ -241,6 +258,69 @@ public sealed partial class BytecodeVm
         return false;
     }
 
+    // DATEADD("d", n, дата): дата читается упакованной (номер дня),
+    // количество — непосредственным INTEGER, интервал — строкой "d".
+    // Результат пишется упакованным без материализации. Выход за диапазон
+    // DateOnly и прочие интервалы уходят в общий путь с прежними
+    // диагностиками.
+    private bool TryHandlePackedDateAddDay(BytecodeCallFrame frame)
+    {
+        var stack = frame.EvaluationStack;
+        if (stack.Count < 3
+            || stack.PeekVmValue(0).Kind != VmValueKind.Date
+            || !stack.TryGetImmediateInteger(out var number, 1))
+        {
+            return false;
+        }
+
+        var intervalValue = stack.PeekVmValue(2).Object;
+        if (intervalValue is null || intervalValue.Type != TypeSymbol.String
+            || intervalValue.AsString() != "d")
+        {
+            return false;
+        }
+
+        var resultDayNumber = frame.EvaluationStack.PeekVmValue(0).Integer + number;
+        if (resultDayNumber < 0 || resultDayNumber > 3652058)
+        {
+            return false;
+        }
+
+        stack.DiscardTop(3);
+        stack.PushVmValue(VmValue.FromDate(DateOnly.FromDayNumber(resultDayNumber)));
+        return true;
+    }
+    // Нуль-аргументные календарные built-in: текущий момент читается у
+    // хоста, усекается до секунды и пишется в стек упакованным значением
+    // без материализации. Семантика совпадает с общим путём, включая
+    // сброс истории обратного исполнения (выполняется до быстрого пути).
+    private bool TryHandlePackedTemporalNow(BytecodeCallFrame frame, BuiltinFunctionId builtin)
+    {
+        var stack = frame.EvaluationStack;
+        switch (builtin)
+        {
+            case BuiltinFunctionId.Date:
+                stack.PushVmValue(VmValue.FromDate(DateOnly.FromDateTime(CurrentLocalInstant())));
+                return true;
+            case BuiltinFunctionId.Time:
+                stack.PushVmValue(VmValue.FromTime(TimeOnly.FromDateTime(CurrentLocalInstant())));
+                return true;
+            case BuiltinFunctionId.Now:
+                stack.PushVmValue(VmValue.FromDateTime(CurrentLocalInstant()));
+                return true;
+            case BuiltinFunctionId.UtcDate:
+                stack.PushVmValue(VmValue.FromDate(DateOnly.FromDateTime(CurrentUtcInstant())));
+                return true;
+            case BuiltinFunctionId.UtcTime:
+                stack.PushVmValue(VmValue.FromTime(TimeOnly.FromDateTime(CurrentUtcInstant())));
+                return true;
+            case BuiltinFunctionId.UtcNow:
+                stack.PushVmValue(VmValue.FromDateTime(CurrentUtcInstant()));
+                return true;
+            default:
+                return false;
+        }
+    }
     private bool TryExecuteArrayCallbackDirect(BytecodeCallFrame frame, BuiltinFunctionId builtin,
         int instructionIndex, TextLocation location)
     {
@@ -1105,7 +1185,9 @@ public sealed partial class BytecodeVm
         ArrayPushImmediate,
         ImmediateDoubleMath,
         FastGraphics,
-        ArrayCallbackDirect
+        ArrayCallbackDirect,
+        PackedTemporalNow,
+        PackedDateAddDay
     }
 
     private sealed class BuiltinExecutionInfo
@@ -1159,12 +1241,21 @@ public sealed partial class BytecodeVm
                     return BuiltinFastPathKind.AbsImmediate;
                 case BuiltinFunctionId.ArrayPush:
                     return BuiltinFastPathKind.ArrayPushImmediate;
+                case BuiltinFunctionId.DateAddDateValue:
+                    return BuiltinFastPathKind.PackedDateAddDay;
                 case BuiltinFunctionId.ArrayEvery:
                 case BuiltinFunctionId.ArraySome:
                 case BuiltinFunctionId.ArrayFilter:
                 case BuiltinFunctionId.ArrayMap:
                 case BuiltinFunctionId.ArrayReduce:
                     return BuiltinFastPathKind.ArrayCallbackDirect;
+                case BuiltinFunctionId.Date:
+                case BuiltinFunctionId.Time:
+                case BuiltinFunctionId.Now:
+                case BuiltinFunctionId.UtcDate:
+                case BuiltinFunctionId.UtcTime:
+                case BuiltinFunctionId.UtcNow:
+                    return BuiltinFastPathKind.PackedTemporalNow;
                 case BuiltinFunctionId.Sin:
                 case BuiltinFunctionId.Cos:
                 case BuiltinFunctionId.Tan:

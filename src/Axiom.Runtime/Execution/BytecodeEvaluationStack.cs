@@ -109,6 +109,31 @@ internal sealed class BytecodeEvaluationStack
     }
 
     /// <summary>
+    /// Читает два операнда как упакованную пару одного календарного вида
+    /// (DATE, TIME, DATETIME или UTCDATETIME). Смешанные сочетания и прочие
+    /// типы отвергаются: их обрабатывает прежний общий путь.
+    /// </summary>
+    public bool TryGetTemporalOperands(VmValueKind kind, out long left, out long right)
+    {
+        var index = Count - 2;
+        if (index < 0
+            || _items[index].Kind != kind
+            || _items[index + 1].Kind != kind)
+        {
+            left = right = 0;
+            return false;
+        }
+
+        // DATE хранит номер дня в Integer-слоте union, TIME/DATETIME — тики
+        // в Long-слоте; оба читаются из одного значения без материализации.
+        var leftValue = _items[index];
+        var rightValue = _items[index + 1];
+        left = kind == VmValueKind.Date ? leftValue.Integer : leftValue.Long;
+        right = kind == VmValueKind.Date ? rightValue.Integer : rightValue.Long;
+        return true;
+    }
+
+    /// <summary>
     /// Читает два операнда как DOUBLE, когда оба представлены DOUBLE-значением.
     /// Прочие типы отвергаются: смешанные сочетания обрабатывает прежний путь.
     /// </summary>

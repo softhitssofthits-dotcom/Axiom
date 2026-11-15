@@ -600,6 +600,23 @@ internal sealed class BytecodeCallFrame
     public BytecodeVariableSlot? GetExistingLocalSlot(int slot) => _sharedLocals?[slot];
 
     /// <summary>
+    /// Упакованная запись календарного значения в локальный слот: объявленный
+    /// тип слота обязан совпадать с видом упакованного значения; общий слот
+    /// (BYREF, замыкание) даёт отказ общему пути записи.
+    /// </summary>
+    internal bool TryStoreImmediateTemporal(int slot, VmValue packed, TypeSymbol declaredType)
+    {
+        if ((uint)slot >= (uint)Routine.LocalVariables.Count
+            || Routine.LocalVariables[slot].Type != declaredType
+            || (_hasSharedLocals && _sharedLocals![slot] is not null))
+        {
+            return false;
+        }
+
+        _locals[slot] = packed;
+        return true;
+    }
+    /// <summary>
     /// Устанавливает параметры вызова по слитной раскладке кадра (localsplus):
     /// BYVAL-значения снимаются со стека вызывателя тегированными
     /// <see cref="VmValue"/> — немедленные INTEGER, LONG и DOUBLE переживают

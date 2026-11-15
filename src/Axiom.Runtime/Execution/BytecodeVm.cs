@@ -424,6 +424,8 @@ public sealed partial class BytecodeVm
                     case Opcode.StoreLocal:
                         if (TryStoreLocalImmediates(frame, stack, instruction.A))
                             stack.DiscardTop(1);
+                        else if (TryStoreLocalTemporalImmediates(frame, stack, instruction.A))
+                            stack.DiscardTop(1);
                         else
                             frame.StoreLocalValue(instruction.A, PopValue(frame, ip));
                         break;
@@ -448,6 +450,8 @@ public sealed partial class BytecodeVm
 
                     case Opcode.StoreGlobal:
                         if (TryStoreGlobalImmediates(instruction.A, stack))
+                            stack.DiscardTop(1);
+                        else if (TryStoreGlobalTemporalImmediates(instruction.A, stack))
                             stack.DiscardTop(1);
                         else
                             StoreGlobalUnchecked(instruction.A, PopValue(frame, ip));
@@ -1330,6 +1334,33 @@ public sealed partial class BytecodeVm
     }
 
     /// <summary>
+    /// Упакованная запись календарного значения в локальный слот: дата со
+    /// стека переносится тегированным значением без материализации, если
+    /// объявленный тип слота совпадает и слот не является общим.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool TryStoreLocalTemporalImmediates(BytecodeCallFrame frame, BytecodeEvaluationStack stack, int slot)
+    {
+        var packed = stack.PeekVmValue(0);
+        var kind = packed.Kind;
+        if (kind is not (VmValueKind.Date or VmValueKind.Time
+            or VmValueKind.DateTime or VmValueKind.UtcDateTime)
+            || (uint)slot >= (uint)frame.Routine.LocalVariables.Count)
+        {
+            return false;
+        }
+
+        var declaredType = kind switch
+        {
+            VmValueKind.Date => TypeSymbol.Date,
+            VmValueKind.Time => TypeSymbol.Time,
+            VmValueKind.DateTime => TypeSymbol.DateTime,
+            _ => TypeSymbol.UtcDateTime
+        };
+        return frame.TryStoreImmediateTemporal(slot, packed, declaredType);
+    }
+
+    /// <summary>
     /// Общая цепочка немедленных записей в глобальный слот (INTEGER, LONG, DOUBLE)
     /// для обоих путей исполнения. При отказе по объявленному типу вызывающий
     /// код использует прежний общий путь записи.
@@ -1345,6 +1376,41 @@ public sealed partial class BytecodeVm
             return true;
         return stack.TryGetImmediateDouble(out var storeGlobalDouble)
             && TryStoreGlobalImmediateDouble(slot, storeGlobalDouble);
+    }
+
+    /// <summary>
+    /// Упакованная запись календарного значения в глобальный слот: дата
+    /// переносится тегированным значением без материализации при совпадении
+    /// объявленного типа и существовании слота.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool TryStoreGlobalTemporalImmediates(int slot, BytecodeEvaluationStack stack)
+    {
+        var packed = stack.PeekVmValue(0);
+        var kind = packed.Kind;
+        if (kind is not (VmValueKind.Date or VmValueKind.Time
+            or VmValueKind.DateTime or VmValueKind.UtcDateTime)
+            || (uint)slot >= (uint)_globalValuesBySlot.Length
+            || !_hasGlobalSlot[slot]
+            || !_prepared.TryGetGlobal(slot, out var global))
+        {
+            return false;
+        }
+
+        var declaredType = kind switch
+        {
+            VmValueKind.Date => TypeSymbol.Date,
+            VmValueKind.Time => TypeSymbol.Time,
+            VmValueKind.DateTime => TypeSymbol.DateTime,
+            _ => TypeSymbol.UtcDateTime
+        };
+        if (global.Type != declaredType)
+        {
+            return false;
+        }
+
+        _globalValuesBySlot[slot] = packed;
+        return true;
     }
 
     /// <summary>
@@ -1392,6 +1458,8 @@ public sealed partial class BytecodeVm
             case Opcode.StoreGlobal:
                 if (TryStoreGlobalImmediates(instruction.GetOperand(0), frame.EvaluationStack))
                     frame.EvaluationStack.DiscardTop(1);
+                else if (TryStoreGlobalTemporalImmediates(instruction.GetOperand(0), frame.EvaluationStack))
+                    frame.EvaluationStack.DiscardTop(1);
                 else
                     StoreGlobalUnchecked(instruction.GetOperand(0), PopValue(frame, instructionIndex));
                 break;
@@ -1413,6 +1481,8 @@ public sealed partial class BytecodeVm
 
             case Opcode.StoreLocal:
                 if (TryStoreLocalImmediates(frame, frame.EvaluationStack, instruction.GetOperand(0)))
+                    frame.EvaluationStack.DiscardTop(1);
+                else if (TryStoreLocalTemporalImmediates(frame, frame.EvaluationStack, instruction.GetOperand(0)))
                     frame.EvaluationStack.DiscardTop(1);
                 else
                     frame.StoreLocalValue(instruction.GetOperand(0), PopValue(frame, instructionIndex));

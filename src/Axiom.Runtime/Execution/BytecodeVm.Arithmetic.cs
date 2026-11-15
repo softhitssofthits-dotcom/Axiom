@@ -657,9 +657,48 @@ public sealed partial class BytecodeVm
     private static bool TryConsumeNumericComparison(BytecodeEvaluationStack stack, Opcode opcode, out bool result)
     {
         return TryConsumeIntegerComparison(stack, opcode, out result)
-            || TryConsumeLongComparison(stack, opcode, out result);
+            || TryConsumeLongComparison(stack, opcode, out result)
+            || TryConsumeTemporalComparison(stack, opcode, out result);
     }
 
+    // Упакованные календарные операнды сравниваются по номеру дня или тикам
+    // без материализации: пара DATE, TIME, DATETIME или UTCDATETIME одного
+    // вида снимается со стека и заменяется непосредственным BOOLEAN.
+    private static bool TryConsumeTemporalComparison(BytecodeEvaluationStack stack, Opcode opcode, out bool result)
+    {
+        result = false;
+        var index = stack.Count - 2;
+        if (index < 0)
+        {
+            return false;
+        }
+
+        var leftKind = stack.PeekVmValue(1).Kind;
+        if (leftKind is not (VmValueKind.Date or VmValueKind.Time
+            or VmValueKind.DateTime or VmValueKind.UtcDateTime)
+            || stack.PeekVmValue(0).Kind != leftKind)
+        {
+            return false;
+        }
+
+        if (!stack.TryGetTemporalOperands(leftKind, out var left, out var right))
+        {
+            return false;
+        }
+
+        result = opcode switch
+        {
+            Opcode.CompareEqual => left == right,
+            Opcode.CompareNotEqual => left != right,
+            Opcode.CompareLess => left < right,
+            Opcode.CompareLessOrEqual => left <= right,
+            Opcode.CompareGreater => left > right,
+            Opcode.CompareGreaterOrEqual => left >= right,
+            _ => false
+        };
+        stack.DiscardTop(2);
+        return true;
+    }
     private void ExecuteJumpIfEqualInstruction(BytecodeCallFrame frame,  VmInstruction instruction, int instructionIndex)
     {
         var stack = frame.EvaluationStack;
